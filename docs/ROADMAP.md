@@ -140,9 +140,19 @@ This is a solo-developer project. Each phase is independently shippable and test
 | 1 | Tech tree, basic events, eras | Unit + data tests | ✅ Done |
 | 2 | Storyteller, exploration, multi-city | Integration tests | ✅ Done |
 | 2.5 | Colonist (pawn) micro-layer — needs, skills, mood, jobs | Unit tests | ✅ Done |
-| 2.6 | Pawn-driven drama (injury, mood breaks, recruitment) | Unit + data tests | ⏳ In progress |
-| 3 | LLM narrator | Protocol stub tests | ⬜ Planned (low prio) |
-| 4 | Home Hub bridge | Stub tests | ⬜ Deferred (hub not stable) |
+| 2.6 | Pawn-driven drama (injury, mood breaks, recruitment) | Unit + data tests | ✅ Done |
+| 2.7 | Pawn skill growth + mental breaks | Unit tests | ✅ Done |
+| 3 | Spatial hex world map — procedural generation (options), dynamic region events, iPad-ready map UI | Unit tests | ✅ Done |
+| 4 | LLM narrator | Protocol stub tests | ⬜ Planned (low prio) |
+| 5 | Home Hub bridge | Stub tests | ⬜ Deferred (hub not stable) |
+
+### Next candidates
+
+- **Graphics pass** on the hex map (textures/sprites per biome & site, colonist
+  art) — the map view is the surface this lands on.
+- **Colony tile map** (in-settlement RimWorld layout) as a deeper spatial layer.
+- More region kinds put to work: dungeons (expeditions with combat/loot), ruins
+  (lore + bonuses), anomalies (shifting biomes).
 
 ## Direction note (2026-06-01)
 

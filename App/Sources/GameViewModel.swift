@@ -67,7 +67,10 @@ final class GameViewModel {
     }
 
     func startNewGame() {
-        world = GameWorldFactory.newGame(registry: registry)
+        // A fresh random seed per playthrough → a different procedural world,
+        // while remaining fully deterministic once started.
+        let seed = UInt64.random(in: UInt64.min...UInt64.max)
+        world = GameWorldFactory.newGame(registry: registry, seed: seed)
         lastSessionEvents = []
         persist()
     }
@@ -105,7 +108,21 @@ final class GameViewModel {
 
     var foundableRegions: [Region] { ExpansionEngine.foundableRegions(world) }
 
+    var regions: [Region] { world.regions }
+
     func biomeName(_ id: String) -> String { registry.biome(id)?.name ?? id }
+
+    func canExplore(_ region: Region) -> Bool {
+        world.activeExpedition == nil && exploreableRegions.contains { $0.id == region.id }
+    }
+
+    func canFound(_ region: Region) -> Bool {
+        foundableRegions.contains { $0.id == region.id }
+    }
+
+    func settlement(in region: Region) -> Settlement? {
+        world.settlements.first { $0.regionID == region.id }
+    }
 
     var capitalPawns: [Pawn] { capital?.pawns ?? [] }
 

@@ -7,7 +7,7 @@ struct EndlessFrontierApp: App {
 
     var body: some Scene {
         WindowGroup {
-            DashboardView(game: game)
+            RootView(game: game)
                 .preferredColorScheme(.dark)
                 .task { game.openSession() }
                 .onChange(of: scenePhase) { _, phase in

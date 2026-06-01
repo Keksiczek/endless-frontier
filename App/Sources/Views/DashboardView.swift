@@ -25,7 +25,6 @@ struct DashboardView: View {
                     eraSection
                     ColonistsPanel(game: game)
                     TechBuildPanel(game: game)
-                    FrontierPanel(game: game)
                 }
                 .padding(20)
             }
