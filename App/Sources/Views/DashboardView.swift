@@ -23,6 +23,7 @@ struct DashboardView: View {
                         settlementSection(capital)
                     }
                     eraSection
+                    ColonistsPanel(game: game)
                     TechBuildPanel(game: game)
                     FrontierPanel(game: game)
                 }

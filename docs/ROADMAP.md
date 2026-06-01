@@ -139,5 +139,16 @@ This is a solo-developer project. Each phase is independently shippable and test
 | 0 | Ticking world, persisted state | Unit tests | ✅ Done |
 | 1 | Tech tree, basic events, eras | Unit + data tests | ✅ Done |
 | 2 | Storyteller, exploration, multi-city | Integration tests | ✅ Done |
-| 3 | LLM narrator | Protocol stub tests | ⏳ Next |
-| 4 | Home Hub bridge | Stub tests | ⬜ Planned |
+| 2.5 | Colonist (pawn) micro-layer — needs, skills, mood, jobs | Unit tests | ✅ Done |
+| 2.6 | Pawn-driven drama (injury, mood breaks, recruitment) | Unit + data tests | ⏳ In progress |
+| 3 | LLM narrator | Protocol stub tests | ⬜ Planned (low prio) |
+| 4 | Home Hub bridge | Stub tests | ⬜ Deferred (hub not stable) |
+
+## Direction note (2026-06-01)
+
+Pivot toward a **RimWorld-style colony builder**: the macro civ/era systems
+stay, but the heart of the game is the **colonist (pawn) layer** — named
+characters with needs, skills, moods and jobs. This is also the foundation a
+future **graphics** layer renders, and the rich material a later **LLM
+narrator** describes. Build order from here: deepen pawns + pawn-driven events →
+(eventually) spatial tile map + graphics → LLM narrator → Home Hub.

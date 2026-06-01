@@ -53,6 +53,22 @@ public enum GameEngine {
         return s
     }
 
+    /// Reassigns a colonist to a different kind of work.
+    public static func assignWork(
+        _ state: WorldState,
+        settlementID: UUID,
+        pawnID: UUID,
+        work: WorkKind
+    ) -> WorldState {
+        guard let si = state.settlements.firstIndex(where: { $0.id == settlementID }),
+              let pi = state.settlements[si].pawns.firstIndex(where: { $0.id == pawnID }) else {
+            return state
+        }
+        var s = state
+        s.settlements[si].pawns[pi].assignedWork = work
+        return s
+    }
+
     /// Founds an outpost in a fully-explored, unsettled region.
     public static func foundOutpost(
         _ state: WorldState,

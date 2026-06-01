@@ -80,6 +80,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public var regionID: UUID?
     public var foundedTick: Int
     public var population: Double
+    public var pawns: [Pawn]
     public var buildings: [BuildingInstance]
     public var storage: Resources
     public var storageCapacity: Double
@@ -92,6 +93,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         regionID: UUID? = nil,
         foundedTick: Int = 0,
         population: Double = 50,
+        pawns: [Pawn] = [],
         buildings: [BuildingInstance] = [],
         storage: Resources = Resources(),
         storageCapacity: Double = 500,
@@ -103,6 +105,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.regionID = regionID
         self.foundedTick = foundedTick
         self.population = population
+        self.pawns = pawns
         self.buildings = buildings
         self.storage = storage
         self.storageCapacity = storageCapacity

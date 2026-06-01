@@ -56,6 +56,9 @@ public enum ResourceLoop {
         s.stats.morale += (moraleTarget - s.stats.morale) * 0.1
         s.stats = s.stats.clamped()
 
+        // 6. Individual colonists: needs, mood, skilled work, morale pull.
+        s = PawnEngine.advanceOneTick(s)
+
         return s
     }
 

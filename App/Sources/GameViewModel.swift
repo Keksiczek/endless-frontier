@@ -107,6 +107,14 @@ final class GameViewModel {
 
     func biomeName(_ id: String) -> String { registry.biome(id)?.name ?? id }
 
+    var capitalPawns: [Pawn] { capital?.pawns ?? [] }
+
+    func assignWork(pawnID: UUID, to work: WorkKind) {
+        guard let capital else { return }
+        world = GameEngine.assignWork(world, settlementID: capital.id, pawnID: pawnID, work: work)
+        persist()
+    }
+
     func expeditionDuration(for region: Region) -> Int {
         ExplorationEngine.expeditionDuration(to: region, config: registry.config)
     }

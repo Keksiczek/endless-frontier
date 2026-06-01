@@ -29,6 +29,7 @@ public enum GameWorldFactory {
             regionID: region.id,
             foundedTick: 0,
             population: 50,
+            pawns: starterPawns(),
             buildings: buildings,
             storage: [.food: 200, .materials: 120, .energy: 0, .knowledge: 0, .influence: 20],
             storageCapacity: registry.config.defaultStorageCapacity,
@@ -56,6 +57,21 @@ public enum GameWorldFactory {
             settlements: [settlement],
             regions: [startingRegion] + unknownRegions(registry: registry, excluding: startingBiome)
         )
+    }
+
+    /// The founding colonists. A handful of named characters with distinct
+    /// trades — the people the player manages and the narrator can name.
+    private static func starterPawns() -> [Pawn] {
+        [
+            Pawn(name: "Mara", trait: .hardWorker, skills: [.farming: 8, .logging: 4],
+                 assignedWork: .farming),
+            Pawn(name: "Joss", trait: .optimist, skills: [.logging: 7, .mining: 5],
+                 assignedWork: .logging),
+            Pawn(name: "Eli", trait: .none, skills: [.research: 6, .trade: 3],
+                 assignedWork: .research),
+            Pawn(name: "Nadia", trait: .pessimist, skills: [.farming: 5, .trade: 6],
+                 assignedWork: .farming)
+        ]
     }
 
     /// A small frontier of unknown regions the player can later explore.

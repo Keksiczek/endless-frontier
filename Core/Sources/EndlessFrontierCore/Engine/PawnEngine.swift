@@ -1,0 +1,71 @@
+import Foundation
+
+/// Per-tick simulation of individual colonists (pawns): need decay, eating,
+/// mood, skill-based work output, and the colony morale they drive.
+///
+/// Pure and deterministic. Tuning lives as named constants here for now; it
+/// can move into `WorldConfig` once the values settle.
+public enum PawnEngine {
+    // Need decay per tick (points lost).
+    static let hungerDecay: Double = 0.6
+    static let restDecay: Double = 0.4
+    static let recreationDecay: Double = 0.3
+    // Passive recovery per tick for rest/recreation (sleep & downtime, abstracted).
+    static let restRecovery: Double = 0.5
+    static let recreationRecovery: Double = 0.35
+    // Eating: food consumed per pawn per tick to restore hunger.
+    static let foodPerMeal: Double = 0.2
+    static let hungerPerMeal: Double = 3.0
+    // Work output per skill point per tick for the assigned resource.
+    static let outputPerSkill: Double = 0.15
+    // How strongly colony morale tracks average pawn mood.
+    static let moraleFollowRate: Double = 0.1
+
+    /// Advances every pawn in a settlement one tick and returns the updated
+    /// settlement (needs, mood, eaten food, work output, morale drift).
+    public static func advanceOneTick(_ settlement: Settlement) -> Settlement {
+        guard !settlement.pawns.isEmpty else { return settlement }
+        var s = settlement
+        var food = s.storage[.food]
+        var output = Resources()
+
+        s.pawns = s.pawns.map { pawn in
+            var p = pawn
+            // Needs decay.
+            p.needs.hunger -= hungerDecay
+            p.needs.rest = p.needs.rest - restDecay + restRecovery
+            p.needs.recreation = p.needs.recreation - recreationDecay + recreationRecovery
+
+            // Eat if food is available.
+            if food >= foodPerMeal, p.needs.hunger < 100 {
+                food -= foodPerMeal
+                p.needs.hunger += hungerPerMeal
+            }
+            p.needs = p.needs.clamped()
+
+            // Mood from needs + trait, clamped.
+            p.mood = min(max(p.needs.average + p.trait.moodModifier, 0), 100)
+
+            // Work output for the assigned resource, scaled by skill and mood.
+            if let resource = p.assignedWork.resource {
+                let moodFactor = 0.5 + 0.5 * (p.mood / 100)   // 0.5…1.0
+                output[resource] = output[resource]
+                    + Double(p.skill(p.assignedWork)) * outputPerSkill * moodFactor
+            }
+            return p
+        }
+
+        // Commit eaten food and work output to storage.
+        s.storage[.food] = food
+        for resource in ResourceType.allCases where output[resource] != 0 {
+            s.storage[resource] = min(s.storage[resource] + output[resource], s.storageCapacity)
+        }
+
+        // Colony morale drifts toward the colonists' average mood.
+        let averageMood = s.pawns.reduce(0) { $0 + $1.mood } / Double(s.pawns.count)
+        s.stats.morale += (averageMood - s.stats.morale) * moraleFollowRate
+        s.stats = s.stats.clamped()
+
+        return s
+    }
+}
