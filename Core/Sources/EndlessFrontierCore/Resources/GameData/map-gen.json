@@ -1,8 +1,8 @@
 {
   "mapRadius": 3,
-  "ruinsChance": 0.12,
-  "dungeonChance": 0.06,
-  "anomalyChance": 0.05,
+  "ruinsChance": 0.10,
+  "dungeonChance": 0.05,
+  "anomalyChance": 0.04,
   "biomeWeights": {
     "plains": 1.4,
     "forest": 1.2,
@@ -12,5 +12,7 @@
     "mountains": 0.6
   },
   "dungeonHazardBonus": 3,
-  "anomalyHazardBonus": 2
+  "anomalyHazardBonus": 2,
+  "hazardPerRing": 0.6,
+  "specialChancePerRing": 0.015
 }
