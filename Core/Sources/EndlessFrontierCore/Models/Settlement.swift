@@ -63,10 +63,20 @@ public struct BuildingInstance: Codable, Sendable, Identifiable, Equatable {
     }
 }
 
+/// The role of a settlement. Outposts are small and can be upgraded to cities
+/// once they meet population and stability thresholds. The capital is the
+/// origin settlement and is always considered connected.
+public enum SettlementKind: String, Codable, Sendable, Equatable {
+    case capital
+    case city
+    case outpost
+}
+
 /// An independent economic and political unit (settlement, outpost or city).
 public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public let id: UUID
     public var name: String
+    public var kind: SettlementKind
     public var regionID: UUID?
     public var foundedTick: Int
     public var population: Double
@@ -78,6 +88,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public init(
         id: UUID = UUID(),
         name: String,
+        kind: SettlementKind = .city,
         regionID: UUID? = nil,
         foundedTick: Int = 0,
         population: Double = 50,
@@ -88,6 +99,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     ) {
         self.id = id
         self.name = name
+        self.kind = kind
         self.regionID = regionID
         self.foundedTick = foundedTick
         self.population = population

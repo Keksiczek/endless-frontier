@@ -2,6 +2,13 @@
 
 This is a solo-developer project. Each phase is independently shippable and testable. Later phases build on earlier ones without breaking them.
 
+> **Status (2026-06-01):** Phases 0, 1, and 2 are implemented and tested (45
+> tests, `swift test`). The deterministic core lives in the `Core/` Swift
+> Package; a SwiftUI app (`App/`) drives it. Next up: Phase 3 (LLM narrator).
+> Open follow-ups from the Phase 2 review (`.claude/reviews/phase2-local-review.md`):
+> add a `schemaVersion` + save migration before public release, and revisit the
+> isolation-penalty curve for balance.
+
 ---
 
 ## Phase 0 — Bare-bones simulation sandbox
@@ -127,10 +134,10 @@ This is a solo-developer project. Each phase is independently shippable and test
 
 ## Milestone summary
 
-| Phase | Key feature | Testable? |
-|---|---|---|
-| 0 | Ticking world, persisted state | Unit tests |
-| 1 | Tech tree, basic events, eras | Unit + data tests |
-| 2 | Storyteller, exploration, multi-city | Integration tests |
-| 3 | LLM narrator | Protocol stub tests |
-| 4 | Home Hub bridge | Stub tests |
+| Phase | Key feature | Testable? | Status |
+|---|---|---|---|
+| 0 | Ticking world, persisted state | Unit tests | ✅ Done |
+| 1 | Tech tree, basic events, eras | Unit + data tests | ✅ Done |
+| 2 | Storyteller, exploration, multi-city | Integration tests | ✅ Done |
+| 3 | LLM narrator | Protocol stub tests | ⏳ Next |
+| 4 | Home Hub bridge | Stub tests | ⬜ Planned |

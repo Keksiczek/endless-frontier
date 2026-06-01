@@ -72,6 +72,17 @@ final class GameViewModel {
         persist()
     }
 
+    func explore(_ regionID: UUID) {
+        world = GameEngine.startExpedition(world, targetRegionID: regionID, registry: registry)
+        persist()
+    }
+
+    func foundOutpost(in regionID: UUID) {
+        let existing = world.settlements.count
+        world = GameEngine.foundOutpost(world, regionID: regionID, name: "Outpost \(existing)", registry: registry)
+        persist()
+    }
+
     // MARK: - Derived view data
 
     var capital: Settlement? { world.settlements.first }
@@ -86,6 +97,22 @@ final class GameViewModel {
 
     var availableTechs: [TechDefinition] {
         registry.availableTechs(researched: world.researchedTechs)
+    }
+
+    var activeExpedition: Expedition? { world.activeExpedition }
+
+    var exploreableRegions: [Region] { ExplorationEngine.exploreableRegions(world) }
+
+    var foundableRegions: [Region] { ExpansionEngine.foundableRegions(world) }
+
+    func biomeName(_ id: String) -> String { registry.biome(id)?.name ?? id }
+
+    func expeditionDuration(for region: Region) -> Int {
+        ExplorationEngine.expeditionDuration(to: region, config: registry.config)
+    }
+
+    func regionName(_ id: UUID) -> String {
+        world.regions.first { $0.id == id }?.name ?? "Unknown"
     }
 
     var buildableBuildings: [BuildingDefinition] {

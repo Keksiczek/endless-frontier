@@ -17,7 +17,14 @@ public enum TickEngine {
         let interval = max(1, registry.config.plannerInterval)
         for _ in 0..<ticks {
             s = ResourceLoop.advanceOneTick(s, registry: registry)
+            s = MultiCityEngine.advanceOneTick(s, registry: registry)
             s.tick += 1
+            let scheduled = ScheduledEffectEngine.advanceOneTick(s, registry: registry)
+            s = scheduled.state
+            fired.append(contentsOf: scheduled.fired)
+            let exploration = ExplorationEngine.advanceOneTick(s, registry: registry)
+            s = exploration.state
+            fired.append(contentsOf: exploration.fired)
             s = TechEngine.advanceResearch(s, registry: registry)
             s = EraEngine.checkAdvancement(s, registry: registry)
             if s.tick % interval == 0 {

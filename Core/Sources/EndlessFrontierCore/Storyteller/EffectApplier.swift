@@ -26,8 +26,19 @@ public enum EffectApplier {
     ) -> WorldState {
         var s = state
         switch effect {
-        case let .resourceDelta(resource, delta, scope, _):
-            applyResourceDelta(&s, resource: resource, delta: delta, scope: scope)
+        case let .resourceDelta(resource, delta, scope, duration):
+            if let duration, duration > 0 {
+                // Spread the total delta evenly across the duration as a drip.
+                let perTick = delta / Double(duration)
+                s.scheduledEffects.append(
+                    ScheduledEffect(
+                        kind: .resource(resource: resource, perTick: perTick, scope: scope),
+                        ticksRemaining: duration
+                    )
+                )
+            } else {
+                applyResourceDelta(&s, resource: resource, delta: delta, scope: scope)
+            }
         case let .statDelta(path, delta):
             applyStatDelta(&s, path: path, delta: delta)
         case let .unlockTech(techID):
@@ -37,9 +48,13 @@ public enum EffectApplier {
                     s = TechEngine.applyEffects(of: tech, to: s)
                 }
             }
-        case .triggerEvent:
-            // Phase 2: scheduled chained events. No-op in Phase 1.
-            break
+        case let .triggerEvent(eventID, delay):
+            s.scheduledEffects.append(
+                ScheduledEffect(
+                    kind: .triggerEvent(eventID: eventID),
+                    firesAtTick: s.tick + max(1, delay)
+                )
+            )
         case let .setWorldFlag(flag, value):
             s.worldFlags[flag] = value
         }
@@ -64,7 +79,9 @@ public enum EffectApplier {
         return s
     }
 
-    private static func applyResourceDelta(
+    /// Applies an instant resource delta (used directly by the scheduled
+    /// drip engine, and internally for non-duration effects).
+    static func applyResourceDelta(
         _ s: inout WorldState,
         resource: ResourceType,
         delta: Double,

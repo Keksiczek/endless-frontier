@@ -48,6 +48,15 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     public var maxMinorEventsPerCycle: Int
     public var tensionBands: [TensionBand]
 
+    // Exploration & expansion
+    public var baseExpeditionTicks: Int
+    public var ticksPerHazard: Int
+    public var expeditionFoodCost: Double
+    public var expeditionMaterialsCost: Double
+    public var cityUpgradePopulation: Double
+    public var cityUpgradeStability: Double
+    public var isolationStabilityPenalty: Double
+
     public static let `default` = WorldConfig(
         realSecondsPerTick: 60,
         maxOfflineTicks: 43_200,
@@ -72,7 +81,14 @@ public struct WorldConfig: Codable, Sendable, Equatable {
             TensionBand(maxTension: 60, disasterWeight: 1.0, opportunityWeight: 1.0, flavorWeight: 1.0),
             TensionBand(maxTension: 80, disasterWeight: 1.8, opportunityWeight: 0.6, flavorWeight: 0.5),
             TensionBand(maxTension: 100, disasterWeight: 3.0, opportunityWeight: 0.3, flavorWeight: 0.1)
-        ]
+        ],
+        baseExpeditionTicks: 50,
+        ticksPerHazard: 10,
+        expeditionFoodCost: 30,
+        expeditionMaterialsCost: 15,
+        cityUpgradePopulation: 80,
+        cityUpgradeStability: 50,
+        isolationStabilityPenalty: 0.5
     )
 
     public init(
@@ -94,7 +110,14 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         mercyEventThreshold: Double,
         maxMajorEventsPerCycle: Int,
         maxMinorEventsPerCycle: Int,
-        tensionBands: [TensionBand]
+        tensionBands: [TensionBand],
+        baseExpeditionTicks: Int,
+        ticksPerHazard: Int,
+        expeditionFoodCost: Double,
+        expeditionMaterialsCost: Double,
+        cityUpgradePopulation: Double,
+        cityUpgradeStability: Double,
+        isolationStabilityPenalty: Double
     ) {
         self.realSecondsPerTick = realSecondsPerTick
         self.maxOfflineTicks = maxOfflineTicks
@@ -115,12 +138,24 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         self.maxMajorEventsPerCycle = maxMajorEventsPerCycle
         self.maxMinorEventsPerCycle = maxMinorEventsPerCycle
         self.tensionBands = tensionBands
+        self.baseExpeditionTicks = baseExpeditionTicks
+        self.ticksPerHazard = ticksPerHazard
+        self.expeditionFoodCost = expeditionFoodCost
+        self.expeditionMaterialsCost = expeditionMaterialsCost
+        self.cityUpgradePopulation = cityUpgradePopulation
+        self.cityUpgradeStability = cityUpgradeStability
+        self.isolationStabilityPenalty = isolationStabilityPenalty
     }
 
     // Custom decoding: every field falls back to the default when absent,
     // so the JSON file can be partial during balance iteration.
     private enum CodingKeys: String, CodingKey {
-        case tick, tension, resources, stability, events
+        case tick, tension, resources, stability, events, exploration
+    }
+    private enum ExplorationKeys: String, CodingKey {
+        case baseExpeditionTicks, ticksPerHazard, expeditionFoodCost,
+             expeditionMaterialsCost, cityUpgradePopulation, cityUpgradeStability,
+             isolationStabilityPenalty
     }
     private enum TickKeys: String, CodingKey {
         case realSecondsPerTick, maxOfflineTicks, plannerInterval
@@ -172,6 +207,15 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         maxMajorEventsPerCycle = (try? ev?.decodeIfPresent(Int.self, forKey: .maxMajorEventsPerCycle)) ?? d.maxMajorEventsPerCycle
         maxMinorEventsPerCycle = (try? ev?.decodeIfPresent(Int.self, forKey: .maxMinorEventsPerCycle)) ?? d.maxMinorEventsPerCycle
         tensionBands = (try? ev?.decodeIfPresent([TensionBand].self, forKey: .tensionBands)) ?? d.tensionBands
+
+        let exp = try? c.nestedContainer(keyedBy: ExplorationKeys.self, forKey: .exploration)
+        baseExpeditionTicks = (try? exp?.decodeIfPresent(Int.self, forKey: .baseExpeditionTicks)) ?? d.baseExpeditionTicks
+        ticksPerHazard = (try? exp?.decodeIfPresent(Int.self, forKey: .ticksPerHazard)) ?? d.ticksPerHazard
+        expeditionFoodCost = (try? exp?.decodeIfPresent(Double.self, forKey: .expeditionFoodCost)) ?? d.expeditionFoodCost
+        expeditionMaterialsCost = (try? exp?.decodeIfPresent(Double.self, forKey: .expeditionMaterialsCost)) ?? d.expeditionMaterialsCost
+        cityUpgradePopulation = (try? exp?.decodeIfPresent(Double.self, forKey: .cityUpgradePopulation)) ?? d.cityUpgradePopulation
+        cityUpgradeStability = (try? exp?.decodeIfPresent(Double.self, forKey: .cityUpgradeStability)) ?? d.cityUpgradeStability
+        isolationStabilityPenalty = (try? exp?.decodeIfPresent(Double.self, forKey: .isolationStabilityPenalty)) ?? d.isolationStabilityPenalty
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -205,5 +249,14 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         try ev.encode(maxMajorEventsPerCycle, forKey: .maxMajorEventsPerCycle)
         try ev.encode(maxMinorEventsPerCycle, forKey: .maxMinorEventsPerCycle)
         try ev.encode(tensionBands, forKey: .tensionBands)
+
+        var exp = c.nestedContainer(keyedBy: ExplorationKeys.self, forKey: .exploration)
+        try exp.encode(baseExpeditionTicks, forKey: .baseExpeditionTicks)
+        try exp.encode(ticksPerHazard, forKey: .ticksPerHazard)
+        try exp.encode(expeditionFoodCost, forKey: .expeditionFoodCost)
+        try exp.encode(expeditionMaterialsCost, forKey: .expeditionMaterialsCost)
+        try exp.encode(cityUpgradePopulation, forKey: .cityUpgradePopulation)
+        try exp.encode(cityUpgradeStability, forKey: .cityUpgradeStability)
+        try exp.encode(isolationStabilityPenalty, forKey: .isolationStabilityPenalty)
     }
 }

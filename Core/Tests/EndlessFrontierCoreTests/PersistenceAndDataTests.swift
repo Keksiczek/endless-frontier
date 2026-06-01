@@ -54,7 +54,8 @@ struct BundledDataTests {
         let registry = try GameDataRegistry.bundled()
         let world = GameWorldFactory.newGame(registry: registry)
         #expect(world.settlements.count == 1)
-        #expect(world.regions.count == 1)
+        #expect(world.regions.count >= 1)
+        #expect(world.regions.filter { $0.explorationState == .fullyExplored }.count == 1)
         #expect(world.settlements[0].population > 0)
         #expect(world.worldFlags["biome:plains_present"] == true)
     }

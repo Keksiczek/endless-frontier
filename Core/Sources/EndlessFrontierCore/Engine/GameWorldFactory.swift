@@ -25,6 +25,7 @@ public enum GameWorldFactory {
 
         let settlement = Settlement(
             name: "First Light",
+            kind: .capital,
             regionID: region.id,
             foundedTick: 0,
             population: 50,
@@ -53,7 +54,22 @@ public enum GameWorldFactory {
             unlockedBuildings: unlocked,
             worldFlags: flags,
             settlements: [settlement],
-            regions: [startingRegion]
+            regions: [startingRegion] + unknownRegions(registry: registry, excluding: startingBiome)
         )
+    }
+
+    /// A small frontier of unknown regions the player can later explore.
+    /// Biomes are drawn from the data, skipping the starting biome.
+    private static func unknownRegions(registry: GameDataRegistry, excluding startingBiome: String) -> [Region] {
+        let biomeIDs = registry.biomes.keys.sorted().filter { $0 != startingBiome }
+        let names = ["The Reach", "Far Hollow", "Greywater", "Stormwatch", "The Verge"]
+        return biomeIDs.prefix(names.count).enumerated().map { index, biomeID in
+            Region(
+                name: names[index],
+                biomeID: biomeID,
+                hazardLevel: registry.biome(biomeID)?.baseHazard ?? 1,
+                explorationState: .unknown
+            )
+        }
     }
 }

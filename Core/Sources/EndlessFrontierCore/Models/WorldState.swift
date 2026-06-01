@@ -86,9 +86,12 @@ public struct WorldState: Codable, Sendable, Equatable {
 
     public var settlements: [Settlement]
     public var regions: [Region]
+    public var tradeRoutes: [TradeRoute]
+    public var activeExpedition: Expedition?
 
     public var eventHistory: [HistoricalEvent]
     public var eventCooldowns: [String: Int]  // templateID -> tick when it last fired
+    public var scheduledEffects: [ScheduledEffect]
 
     public init(
         tick: Int = 0,
@@ -103,8 +106,11 @@ public struct WorldState: Codable, Sendable, Equatable {
         worldFlags: [String: Bool] = [:],
         settlements: [Settlement] = [],
         regions: [Region] = [],
+        tradeRoutes: [TradeRoute] = [],
+        activeExpedition: Expedition? = nil,
         eventHistory: [HistoricalEvent] = [],
-        eventCooldowns: [String: Int] = [:]
+        eventCooldowns: [String: Int] = [:],
+        scheduledEffects: [ScheduledEffect] = []
     ) {
         self.tick = tick
         self.lastRealTimestamp = lastRealTimestamp
@@ -118,8 +124,11 @@ public struct WorldState: Codable, Sendable, Equatable {
         self.worldFlags = worldFlags
         self.settlements = settlements
         self.regions = regions
+        self.tradeRoutes = tradeRoutes
+        self.activeExpedition = activeExpedition
         self.eventHistory = eventHistory
         self.eventCooldowns = eventCooldowns
+        self.scheduledEffects = scheduledEffects
     }
 
     /// Total population across all settlements.

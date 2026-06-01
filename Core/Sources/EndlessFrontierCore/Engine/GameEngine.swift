@@ -53,6 +53,41 @@ public enum GameEngine {
         return s
     }
 
+    /// Founds an outpost in a fully-explored, unsettled region.
+    public static func foundOutpost(
+        _ state: WorldState,
+        regionID: UUID,
+        name: String,
+        registry: GameDataRegistry
+    ) -> WorldState {
+        ExpansionEngine.foundOutpost(state, regionID: regionID, name: name, registry: registry)
+    }
+
+    /// Establishes a standing trade route between two settlements.
+    public static func addTradeRoute(
+        _ state: WorldState,
+        from: UUID,
+        to: UUID,
+        resource: ResourceType,
+        amountPerTick: Double
+    ) -> WorldState {
+        guard state.settlements.contains(where: { $0.id == from }),
+              state.settlements.contains(where: { $0.id == to }),
+              from != to else { return state }
+        var s = state
+        s.tradeRoutes.append(TradeRoute(fromID: from, toID: to, resource: resource, amountPerTick: amountPerTick))
+        return s
+    }
+
+    /// Sends an expedition to an unknown region (cost + duration applied).
+    public static func startExpedition(
+        _ state: WorldState,
+        targetRegionID: UUID,
+        registry: GameDataRegistry
+    ) -> WorldState {
+        ExplorationEngine.startExpedition(state, targetRegionID: targetRegionID, registry: registry)
+    }
+
     /// Resolves a player choice on an event: pays the choice cost (if any) and
     /// applies the choice's effects. Returns unchanged state when the choice
     /// can't be found or afforded.

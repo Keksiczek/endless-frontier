@@ -10,7 +10,7 @@ import Foundation
 /// - `settlement:any.stability` (requires at least one settlement)
 /// - `settlement:closest.defense`
 public struct StatPath: Codable, Sendable, Equatable {
-    public enum Target: String, Sendable, Equatable {
+    public enum Target: String, Codable, Sendable, Equatable {
         case global
         case settlementAll
         case settlementAny

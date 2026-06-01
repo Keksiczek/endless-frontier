@@ -32,5 +32,14 @@
       { "maxTension": 80, "disasterWeight": 1.8, "opportunityWeight": 0.6, "flavorWeight": 0.5 },
       { "maxTension": 100, "disasterWeight": 3.0, "opportunityWeight": 0.3, "flavorWeight": 0.1 }
     ]
+  },
+  "exploration": {
+    "baseExpeditionTicks": 50,
+    "ticksPerHazard": 10,
+    "expeditionFoodCost": 30,
+    "expeditionMaterialsCost": 15,
+    "cityUpgradePopulation": 80,
+    "cityUpgradeStability": 50,
+    "isolationStabilityPenalty": 0.5
   }
 }

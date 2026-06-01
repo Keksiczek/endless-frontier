@@ -100,11 +100,23 @@ public enum StoryPlanner {
         registry: GameDataRegistry,
         fired: inout [HistoricalEvent]
     ) -> WorldState {
+        let (next, record) = fireTemplate(template, in: state, registry: registry)
+        fired.append(record)
+        return next
+    }
+
+    /// Fires a single template: applies its base effects, records it in
+    /// history, and sets its cooldown. Shared by the planner and the
+    /// scheduled-effect engine (delayed `trigger_event`).
+    public static func fireTemplate(
+        _ template: EventTemplate,
+        in state: WorldState,
+        registry: GameDataRegistry
+    ) -> (WorldState, HistoricalEvent) {
         var s = EffectApplier.apply(template.effects, to: state, registry: registry)
         let record = HistoricalEvent(templateID: template.id, type: template.type, tick: s.tick)
         s.eventHistory.append(record)
         s.eventCooldowns[template.id] = s.tick
-        fired.append(record)
-        return s
+        return (s, record)
     }
 }
