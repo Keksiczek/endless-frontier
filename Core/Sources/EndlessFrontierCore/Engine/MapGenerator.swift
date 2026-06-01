@@ -1,66 +1,105 @@
 import Foundation
 
-/// Procedurally generates a hex world map from a seed and `MapGenConfig`.
+/// Procedurally generates the hex world map. Generation is **per-hex**: a
+/// region's content is a pure function of `(mapSeed, coord)`, so any hex can be
+/// generated lazily, in any order, and always comes out the same. That makes
+/// the map both fully reproducible *and* endlessly extensible — as the player
+/// pushes outward, new rings are generated on demand and the frontier never
+/// ends.
 ///
-/// Deterministic: a given seed always yields the same map. Varied: different
-/// seeds (and config knobs) produce different biome layouts, special sites,
-/// and hazards — the basis for replayable worlds.
+/// Difficulty scales with distance from the homeland (more hazard, more
+/// special sites), so there is always a reason — and a risk — to explore
+/// further.
 public enum MapGenerator {
     static let regionNames = [
         "The Reach", "Far Hollow", "Greywater", "Stormwatch", "The Verge",
         "Ashfall", "Dimming Wood", "Saltmere", "Highmoor", "Blackvale",
         "Sunder Flats", "Coldspring", "Ember Hills", "Mistfen", "Thornmarch",
-        "Duskwater", "Ironcrag", "Palewood", "Redhollow", "Windmere"
+        "Duskwater", "Ironcrag", "Palewood", "Redhollow", "Windmere",
+        "Hagstone", "Brackenfell", "Lornwood", "Mirefax", "Caldgrave"
     ]
 
-    /// Builds all regions for a new world. The homeland sits at the origin and
-    /// starts fully explored; every other hex is unknown until reached.
-    public static func generate(seed: UInt64, registry: GameDataRegistry) -> [Region] {
-        let config = registry.mapGen
+    /// Deterministic per-hex seed.
+    static func hexSeed(_ mapSeed: UInt64, _ coord: HexCoord) -> UInt64 {
+        var h = mapSeed &* 0x9E37_79B9_7F4A_7C15
+        h = (h ^ UInt64(bitPattern: Int64(coord.q))) &* 0xD1B5_4A32_D192_ED03
+        h = (h ^ UInt64(bitPattern: Int64(coord.r))) &* 0xCBF2_9CE4_8422_2325
+        return h ^ (h >> 29)
+    }
+
+    /// The region at a coordinate. Pure: same `(mapSeed, coord)` → same region.
+    public static func region(at coord: HexCoord, mapSeed: UInt64, registry: GameDataRegistry) -> Region {
         let biomeIDs = registry.biomes.keys.sorted()
         let homelandBiome = biomeIDs.contains("plains") ? "plains" : (biomeIDs.first ?? "plains")
+        var rng = SeededRNG(seed: hexSeed(mapSeed, coord))
 
-        var rng = SeededRNG(seed: seed ^ 0x4D41_5047_454E_0001)
-        var nameIndex = 0
-
-        return HexCoord.disc(radius: max(1, config.mapRadius)).map { coord in
-            if coord == .origin {
-                return Region(
-                    id: rng.nextUUID(),
-                    name: "Homeland",
-                    coord: .origin,
-                    kind: .homeland,
-                    biomeID: homelandBiome,
-                    hazardLevel: registry.biome(homelandBiome)?.baseHazard ?? 0,
-                    explorationState: .fullyExplored
-                )
-            }
-
-            let kind = rollKind(config: config, rng: &rng)
-            let biomeID = rollBiome(biomeIDs: biomeIDs, config: config, rng: &rng)
-            let baseHazard = registry.biome(biomeID)?.baseHazard ?? 1
-            let hazard = baseHazard + hazardBonus(for: kind, config: config)
-            let name = regionNames.isEmpty ? "Region \(coord.q),\(coord.r)"
-                : regionNames[nameIndex % regionNames.count]
-            nameIndex += 1
-
+        if coord == .origin {
             return Region(
                 id: rng.nextUUID(),
-                name: name,
-                coord: coord,
-                kind: kind,
-                biomeID: biomeID,
-                hazardLevel: hazard,
-                explorationState: .unknown
+                name: "Homeland",
+                coord: .origin,
+                kind: .homeland,
+                biomeID: homelandBiome,
+                hazardLevel: registry.biome(homelandBiome)?.baseHazard ?? 0,
+                explorationState: .fullyExplored
             )
+        }
+
+        let config = registry.mapGen
+        let ring = coord.distance(to: .origin)
+        let kind = rollKind(config: config, ring: ring, rng: &rng)
+        let biomeID = rollBiome(biomeIDs: biomeIDs, config: config, rng: &rng)
+        let baseHazard = registry.biome(biomeID)?.baseHazard ?? 1
+        let hazard = baseHazard
+            + hazardBonus(for: kind, config: config)
+            + Int(Double(ring) * config.hazardPerRing)
+        let name = regionNames.isEmpty ? "Region \(coord.q),\(coord.r)"
+            : regionNames[nameIndex(coord) % regionNames.count]
+
+        return Region(
+            id: rng.nextUUID(),
+            name: name,
+            coord: coord,
+            kind: kind,
+            biomeID: biomeID,
+            hazardLevel: hazard,
+            explorationState: .unknown
+        )
+    }
+
+    /// The initial world: a disc of regions of radius `mapRadius`. Only a
+    /// starting frontier — the world grows beyond it as the player explores.
+    public static func generate(seed: UInt64, registry: GameDataRegistry) -> [Region] {
+        HexCoord.disc(radius: max(1, registry.mapGen.mapRadius))
+            .map { region(at: $0, mapSeed: seed, registry: registry) }
+    }
+
+    /// Ensures every neighbour of `coord` exists in `regions`, generating the
+    /// missing ones (unknown). Called when a region is revealed so the frontier
+    /// keeps expanding outward without bound.
+    public static func expandFrontier(
+        around coord: HexCoord,
+        regions: inout [Region],
+        mapSeed: UInt64,
+        registry: GameDataRegistry
+    ) {
+        let existing = Set(regions.map(\.coord))
+        for neighbour in coord.neighbors() where !existing.contains(neighbour) {
+            regions.append(region(at: neighbour, mapSeed: mapSeed, registry: registry))
         }
     }
 
-    static func rollKind(config: MapGenConfig, rng: inout SeededRNG) -> RegionKind {
+    // MARK: - Rolls
+
+    static func rollKind(config: MapGenConfig, ring: Int, rng: inout SeededRNG) -> RegionKind {
+        let bonus = Double(ring) * config.specialChancePerRing
+        let ruins = config.ruinsChance + bonus
+        let dungeon = config.dungeonChance + bonus
+        let anomaly = config.anomalyChance + bonus
         let roll = rng.nextUnit()
-        if roll < config.ruinsChance { return .ruins }
-        if roll < config.ruinsChance + config.dungeonChance { return .dungeon }
-        if roll < config.ruinsChance + config.dungeonChance + config.anomalyChance { return .anomaly }
+        if roll < ruins { return .ruins }
+        if roll < ruins + dungeon { return .dungeon }
+        if roll < ruins + dungeon + anomaly { return .anomaly }
         return .wilderness
     }
 
@@ -77,5 +116,10 @@ public enum MapGenerator {
         case .anomaly: return config.anomalyHazardBonus
         default: return 0
         }
+    }
+
+    /// Stable name index for a coordinate (so a hex always keeps its name).
+    static func nameIndex(_ coord: HexCoord) -> Int {
+        abs(coord.q &* 73_856_093 ^ coord.r &* 19_349_663)
     }
 }

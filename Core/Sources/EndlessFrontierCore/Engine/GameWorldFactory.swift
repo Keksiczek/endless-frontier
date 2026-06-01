@@ -46,6 +46,7 @@ public enum GameWorldFactory {
             tick: 0,
             lastRealTimestamp: now,
             rngSeed: seed,
+            mapSeed: seed,
             era: .earlySettlement,
             unlockedBuildings: unlocked,
             worldFlags: flags,

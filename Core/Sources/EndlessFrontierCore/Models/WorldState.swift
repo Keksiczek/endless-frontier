@@ -74,6 +74,7 @@ public struct WorldState: Codable, Sendable, Equatable {
     public var tick: Int
     public var lastRealTimestamp: Date
     public var rngSeed: UInt64
+    public var mapSeed: UInt64      // stable seed for per-hex map generation (never mutated)
     public var era: Era
 
     public var researchedTechs: Set<String>
@@ -97,6 +98,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         tick: Int = 0,
         lastRealTimestamp: Date = Date(timeIntervalSince1970: 0),
         rngSeed: UInt64 = 0x5EED_F00D,
+        mapSeed: UInt64 = 0x5EED_F00D,
         era: Era = .earlySettlement,
         researchedTechs: Set<String> = [],
         activeResearch: String? = nil,
@@ -115,6 +117,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         self.tick = tick
         self.lastRealTimestamp = lastRealTimestamp
         self.rngSeed = rngSeed
+        self.mapSeed = mapSeed
         self.era = era
         self.researchedTechs = researchedTechs
         self.activeResearch = activeResearch

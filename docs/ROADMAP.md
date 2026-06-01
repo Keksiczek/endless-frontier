@@ -160,5 +160,17 @@ Pivot toward a **RimWorld-style colony builder**: the macro civ/era systems
 stay, but the heart of the game is the **colonist (pawn) layer** — named
 characters with needs, skills, moods and jobs. This is also the foundation a
 future **graphics** layer renders, and the rich material a later **LLM
-narrator** describes. Build order from here: deepen pawns + pawn-driven events →
-(eventually) spatial tile map + graphics → LLM narrator → Home Hub.
+narrator** describes.
+
+**Single endless world, not many short runs.** The goal is *one* persistent
+world the player keeps for weeks — always more to explore and expand, never a
+"you finished the map" wall. The world map is therefore generated **per-hex**
+(content = f(mapSeed, coord)) and **grows on demand**: every region you reveal
+opens new unknown neighbours, so the frontier extends outward without bound.
+Difficulty scales with distance from the homeland, so pushing further is always
+both worthwhile and risky. (A new game picks a fresh map seed, but you mostly
+live in the one world that save holds.)
+
+Build order from here: graphics pass on the (endless) map → in-settlement
+colony tile layer → put dungeons/ruins/anomalies to work → LLM narrator →
+Home Hub.

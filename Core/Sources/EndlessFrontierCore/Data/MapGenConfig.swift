@@ -16,15 +16,22 @@ public struct MapGenConfig: Codable, Sendable, Equatable {
     /// Extra hazard added on top of a biome's base hazard, by region kind.
     public var dungeonHazardBonus: Int
     public var anomalyHazardBonus: Int
+    /// Distance scaling: the further a hex is from the homeland, the more
+    /// dangerous and the more likely to hold a special site. This keeps the
+    /// (endless) frontier perpetually worth pushing into.
+    public var hazardPerRing: Double
+    public var specialChancePerRing: Double
 
     public static let `default` = MapGenConfig(
         mapRadius: 3,
-        ruinsChance: 0.12,
-        dungeonChance: 0.06,
-        anomalyChance: 0.05,
+        ruinsChance: 0.10,
+        dungeonChance: 0.05,
+        anomalyChance: 0.04,
         biomeWeights: [:],
         dungeonHazardBonus: 3,
-        anomalyHazardBonus: 2
+        anomalyHazardBonus: 2,
+        hazardPerRing: 0.6,
+        specialChancePerRing: 0.015
     )
 
     public init(
@@ -34,7 +41,9 @@ public struct MapGenConfig: Codable, Sendable, Equatable {
         anomalyChance: Double,
         biomeWeights: [String: Double],
         dungeonHazardBonus: Int,
-        anomalyHazardBonus: Int
+        anomalyHazardBonus: Int,
+        hazardPerRing: Double,
+        specialChancePerRing: Double
     ) {
         self.mapRadius = mapRadius
         self.ruinsChance = ruinsChance
@@ -43,12 +52,15 @@ public struct MapGenConfig: Codable, Sendable, Equatable {
         self.biomeWeights = biomeWeights
         self.dungeonHazardBonus = dungeonHazardBonus
         self.anomalyHazardBonus = anomalyHazardBonus
+        self.hazardPerRing = hazardPerRing
+        self.specialChancePerRing = specialChancePerRing
     }
 
     // Resilient decoding: any missing field falls back to the default.
     private enum CodingKeys: String, CodingKey {
         case mapRadius, ruinsChance, dungeonChance, anomalyChance,
-             biomeWeights, dungeonHazardBonus, anomalyHazardBonus
+             biomeWeights, dungeonHazardBonus, anomalyHazardBonus,
+             hazardPerRing, specialChancePerRing
     }
 
     public init(from decoder: Decoder) throws {
@@ -61,5 +73,7 @@ public struct MapGenConfig: Codable, Sendable, Equatable {
         biomeWeights = (try? c.decodeIfPresent([String: Double].self, forKey: .biomeWeights)) ?? d.biomeWeights
         dungeonHazardBonus = (try? c.decodeIfPresent(Int.self, forKey: .dungeonHazardBonus)) ?? d.dungeonHazardBonus
         anomalyHazardBonus = (try? c.decodeIfPresent(Int.self, forKey: .anomalyHazardBonus)) ?? d.anomalyHazardBonus
+        hazardPerRing = (try? c.decodeIfPresent(Double.self, forKey: .hazardPerRing)) ?? d.hazardPerRing
+        specialChancePerRing = (try? c.decodeIfPresent(Double.self, forKey: .specialChancePerRing)) ?? d.specialChancePerRing
     }
 }

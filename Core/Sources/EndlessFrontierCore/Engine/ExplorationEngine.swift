@@ -72,6 +72,14 @@ public enum ExplorationEngine {
             if let flag = registry.biome(s.regions[index].biomeID)?.worldFlag {
                 s.worldFlags[flag] = true
             }
+            // Grow the world: reveal opens up new unknown neighbours, so the
+            // frontier always extends further out — endlessly.
+            MapGenerator.expandFrontier(
+                around: s.regions[index].coord,
+                regions: &s.regions,
+                mapSeed: s.mapSeed,
+                registry: registry
+            )
         }
         let record = HistoricalEvent(templateID: "region_discovered", type: .flavor, tick: s.tick)
         s.eventHistory.append(record)
