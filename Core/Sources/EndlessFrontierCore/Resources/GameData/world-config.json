@@ -1,0 +1,36 @@
+{
+  "tick": {
+    "realSecondsPerTick": 60,
+    "maxOfflineTicks": 43200,
+    "plannerInterval": 10
+  },
+  "tension": {
+    "threatMultiplier": 0.4,
+    "prosperityDampener": 0.2,
+    "disasterSpikeDecayTicks": 30,
+    "disasterSpikePerEvent": 8,
+    "boomDampenerTicks": 20,
+    "boomDampenerPerEvent": 3,
+    "deficitSpikePerResource": 8,
+    "eraRampPerEra": 5
+  },
+  "resources": {
+    "foodPerPersonPerTick": 0.1,
+    "defaultStorageCapacity": 500
+  },
+  "stability": {
+    "collapseThreshold": 10,
+    "warningThreshold": 20,
+    "mercyEventThreshold": 10
+  },
+  "events": {
+    "maxMajorEventsPerCycle": 1,
+    "maxMinorEventsPerCycle": 3,
+    "tensionBands": [
+      { "maxTension": 30, "disasterWeight": 0.5, "opportunityWeight": 1.5, "flavorWeight": 2.0 },
+      { "maxTension": 60, "disasterWeight": 1.0, "opportunityWeight": 1.0, "flavorWeight": 1.0 },
+      { "maxTension": 80, "disasterWeight": 1.8, "opportunityWeight": 0.6, "flavorWeight": 0.5 },
+      { "maxTension": 100, "disasterWeight": 3.0, "opportunityWeight": 0.3, "flavorWeight": 0.1 }
+    ]
+  }
+}

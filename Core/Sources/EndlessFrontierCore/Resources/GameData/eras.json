@@ -1,0 +1,44 @@
+[
+  {
+    "era": "ancient",
+    "milestones": [
+      { "type": "tech_researched", "techId": "writing" },
+      { "type": "global_stat", "stat": "prosperity", "min": 35 },
+      { "type": "population_total", "min": 60 }
+    ]
+  },
+  {
+    "era": "medieval",
+    "milestones": [
+      { "type": "tech_researched", "techId": "currency" },
+      { "type": "global_stat", "stat": "prosperity", "min": 45 },
+      { "type": "settlement_count", "min": 2 },
+      { "type": "population_total", "min": 200 }
+    ]
+  },
+  {
+    "era": "early_industrial",
+    "milestones": [
+      { "type": "tech_researched", "techId": "scholarship" },
+      { "type": "global_stat", "stat": "prosperity", "min": 55 },
+      { "type": "settlement_count", "min": 3 },
+      { "type": "population_total", "min": 600 }
+    ]
+  },
+  {
+    "era": "modern",
+    "milestones": [
+      { "type": "global_stat", "stat": "prosperity", "min": 65 },
+      { "type": "settlement_count", "min": 4 },
+      { "type": "population_total", "min": 1500 }
+    ]
+  },
+  {
+    "era": "near_future",
+    "milestones": [
+      { "type": "global_stat", "stat": "prosperity", "min": 75 },
+      { "type": "settlement_count", "min": 5 },
+      { "type": "population_total", "min": 4000 }
+    ]
+  }
+]

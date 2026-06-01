@@ -1,0 +1,276 @@
+[
+  {
+    "id": "drought",
+    "type": "disaster",
+    "name": "Drought",
+    "era": ["early_settlement", "ancient", "medieval"],
+    "weight": 12,
+    "cooldown_ticks": 120,
+    "conditions": [
+      { "worldFlag": "biome:plains_present", "present": true }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "food", "delta": -100, "scope": "global", "duration_ticks": 20 },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -8 }
+    ],
+    "choices": [
+      {
+        "id": "pray",
+        "label": "Hold a prayer ceremony",
+        "description": "Boost morale at the cost of influence.",
+        "cost": { "influence": 10 },
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 5 }
+        ]
+      },
+      {
+        "id": "ration",
+        "label": "Implement food rationing",
+        "description": "Recover some food but hurt morale further.",
+        "cost": {},
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -5 },
+          { "type": "resource_delta", "resource": "food", "delta": 40, "scope": "global" }
+        ]
+      },
+      {
+        "id": "ignore",
+        "label": "Trust the season will turn",
+        "description": "Do nothing.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A prolonged dry spell withers crops across the plains. Wells run low and tempers run high."
+  },
+  {
+    "id": "good_harvest",
+    "type": "opportunity",
+    "name": "Bountiful Harvest",
+    "era": ["early_settlement", "ancient", "medieval"],
+    "weight": 15,
+    "cooldown_ticks": 80,
+    "conditions": [
+      { "stat": "global.prosperity", "min": 30 }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "food", "delta": 200, "scope": "global" },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 10 }
+    ],
+    "choices": [
+      {
+        "id": "feast",
+        "label": "Hold a feast",
+        "description": "Spend food to greatly boost morale.",
+        "cost": { "food": 80 },
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 15 },
+          { "type": "stat_delta", "stat": "global.prosperity", "delta": 5 }
+        ]
+      },
+      {
+        "id": "store",
+        "label": "Store the surplus",
+        "description": "Save it for harder times.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "The harvest this season exceeded all expectations. Granaries overflow and smiles are common on the streets."
+  },
+  {
+    "id": "bandit_raid",
+    "type": "threat",
+    "name": "Bandit Raid",
+    "era": ["early_settlement", "ancient", "medieval"],
+    "weight": 10,
+    "cooldown_ticks": 100,
+    "conditions": [
+      { "stat": "global.threatLevel", "min": 30 },
+      { "stat": "global.stability", "max": 70 }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "materials", "delta": -80, "scope": "global" },
+      { "type": "stat_delta", "stat": "settlement:any.stability", "delta": -15 }
+    ],
+    "choices": [
+      {
+        "id": "fight",
+        "label": "Send militia to repel the raiders",
+        "description": "Costs materials but ends the threat decisively.",
+        "cost": { "materials": 40 },
+        "effects": [
+          { "type": "stat_delta", "stat": "global.threatLevel", "delta": -10 },
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 8 }
+        ]
+      },
+      {
+        "id": "bribe",
+        "label": "Pay them off",
+        "description": "Costs influence but keeps people safe.",
+        "cost": { "influence": 30 },
+        "effects": [
+          { "type": "stat_delta", "stat": "global.threatLevel", "delta": 5 }
+        ]
+      },
+      {
+        "id": "endure",
+        "label": "Shelter and endure",
+        "description": "No further cost.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A band of raiders struck the outer farms under cover of darkness, making off with supplies."
+  },
+  {
+    "id": "traveling_scholar",
+    "type": "opportunity",
+    "name": "Traveling Scholar",
+    "era": ["early_settlement", "ancient", "medieval", "early_industrial"],
+    "weight": 8,
+    "cooldown_ticks": 60,
+    "conditions": [
+      { "techResearched": "writing" }
+    ],
+    "effects": [],
+    "choices": [
+      {
+        "id": "invite",
+        "label": "Invite them to stay and teach",
+        "description": "Spend food and influence; gain a burst of knowledge.",
+        "cost": { "food": 30, "influence": 20 },
+        "effects": [
+          { "type": "resource_delta", "resource": "knowledge", "delta": 80, "scope": "global" }
+        ]
+      },
+      {
+        "id": "trade_info",
+        "label": "Trade maps for their manuscripts",
+        "description": "Give up some influence, gain knowledge.",
+        "cost": { "influence": 15 },
+        "effects": [
+          { "type": "resource_delta", "resource": "knowledge", "delta": 40, "scope": "global" },
+          { "type": "set_world_flag", "flag": "scholar_network", "value": true }
+        ]
+      },
+      {
+        "id": "decline",
+        "label": "Politely decline",
+        "description": "The scholar moves on.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A learned wanderer arrives at the gates, offering wisdom in exchange for hospitality."
+  },
+  {
+    "id": "wildfire",
+    "type": "disaster",
+    "name": "Wildfire",
+    "era": ["early_settlement", "ancient"],
+    "weight": 8,
+    "cooldown_ticks": 150,
+    "conditions": [
+      { "worldFlag": "biome:forest_present", "present": true }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "food", "delta": -60, "scope": "global" },
+      { "type": "resource_delta", "resource": "materials", "delta": -50, "scope": "global" },
+      { "type": "stat_delta", "stat": "settlement:any.stability", "delta": -10 }
+    ],
+    "choices": [
+      {
+        "id": "fight_fire",
+        "label": "Organize a firefighting brigade",
+        "description": "Costs energy, saves materials.",
+        "cost": { "energy": 20 },
+        "effects": [
+          { "type": "resource_delta", "resource": "materials", "delta": 30, "scope": "global" }
+        ]
+      },
+      {
+        "id": "evacuate",
+        "label": "Evacuate outlying farms",
+        "description": "Save the people but lose the crops.",
+        "cost": {},
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 5 }
+        ]
+      }
+    ],
+    "narrative_hint": "Flames leap through the forest and into the outer farmlands. The sky turns orange with smoke."
+  },
+  {
+    "id": "trade_caravan",
+    "type": "opportunity",
+    "name": "Merchant Caravan",
+    "era": ["ancient", "medieval", "early_industrial", "modern"],
+    "weight": 14,
+    "cooldown_ticks": 50,
+    "conditions": [
+      { "stat": "global.influence", "min": 20 }
+    ],
+    "effects": [],
+    "choices": [
+      {
+        "id": "buy_food",
+        "label": "Buy food stores",
+        "description": "Spend influence to acquire food.",
+        "cost": { "influence": 25 },
+        "effects": [
+          { "type": "resource_delta", "resource": "food", "delta": 120, "scope": "global" }
+        ]
+      },
+      {
+        "id": "buy_materials",
+        "label": "Buy construction materials",
+        "description": "Spend influence to acquire materials.",
+        "cost": { "influence": 25 },
+        "effects": [
+          { "type": "resource_delta", "resource": "materials", "delta": 100, "scope": "global" }
+        ]
+      },
+      {
+        "id": "sell_surplus",
+        "label": "Sell surplus food",
+        "description": "Convert food into influence.",
+        "cost": { "food": 80 },
+        "effects": [
+          { "type": "resource_delta", "resource": "influence", "delta": 40, "scope": "global" }
+        ]
+      }
+    ],
+    "narrative_hint": "A long merchant caravan arrives at the gates, laden with goods from distant lands."
+  },
+  {
+    "id": "pioneers_set_out",
+    "type": "flavor",
+    "name": "Pioneers Set Out",
+    "era": [],
+    "weight": 6,
+    "cooldown_ticks": 200,
+    "conditions": [
+      { "settlementCount": true, "min": 2 }
+    ],
+    "effects": [
+      { "type": "stat_delta", "stat": "global.prosperity", "delta": 3 }
+    ],
+    "choices": [],
+    "narrative_hint": "Word spreads of settlers striking out to build new homes beyond the horizon."
+  },
+  {
+    "id": "calm_season",
+    "type": "flavor",
+    "name": "A Calm Season",
+    "era": [],
+    "weight": 10,
+    "cooldown_ticks": 30,
+    "conditions": [],
+    "effects": [
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 1 }
+    ],
+    "choices": [],
+    "narrative_hint": "The days pass quietly. Children play in the square and the work goes steadily on."
+  }
+]

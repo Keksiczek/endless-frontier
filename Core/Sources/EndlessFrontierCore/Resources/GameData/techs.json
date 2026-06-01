@@ -1,0 +1,70 @@
+[
+  {
+    "id": "basic_tools",
+    "name": "Basic Tools",
+    "era": "early_settlement",
+    "requires": [],
+    "cost": { "knowledge": 30 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "quarry" }
+    ],
+    "description": "Stone and bone tools make every task a little easier."
+  },
+  {
+    "id": "agriculture",
+    "name": "Agriculture",
+    "era": "early_settlement",
+    "requires": ["basic_tools"],
+    "cost": { "knowledge": 50 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "farm_advanced" }
+    ],
+    "description": "Deliberate cultivation frees hands for other work."
+  },
+  {
+    "id": "writing",
+    "name": "Writing",
+    "era": "early_settlement",
+    "requires": ["basic_tools"],
+    "cost": { "knowledge": 60 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "library" },
+      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 1, "mode": "additive" }
+    ],
+    "description": "Recording knowledge unlocks civilization's memory."
+  },
+  {
+    "id": "bronze_tools",
+    "name": "Bronze Working",
+    "era": "ancient",
+    "requires": ["basic_tools"],
+    "cost": { "knowledge": 90 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "windmill" }
+    ],
+    "description": "Bronze tools and weapons mark a new age of capability."
+  },
+  {
+    "id": "currency",
+    "name": "Currency",
+    "era": "ancient",
+    "requires": ["writing"],
+    "cost": { "knowledge": 110 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "trade_post" },
+      { "type": "unlock_event_category", "eventCategory": "trade" }
+    ],
+    "description": "Coinage lubricates trade across the whole region."
+  },
+  {
+    "id": "scholarship",
+    "name": "Scholarship",
+    "era": "medieval",
+    "requires": ["writing", "currency"],
+    "cost": { "knowledge": 200 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "school" }
+    ],
+    "description": "Formal education compounds knowledge across generations."
+  }
+]

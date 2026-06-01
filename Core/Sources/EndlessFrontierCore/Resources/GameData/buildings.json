@@ -1,0 +1,112 @@
+[
+  {
+    "id": "hut",
+    "era": "early_settlement",
+    "name": "Dwelling Hut",
+    "cost": { "materials": 10 },
+    "workers": 0,
+    "production": {},
+    "consumption": {},
+    "morale_effect": 2,
+    "description": "Simple shelter that keeps the community content."
+  },
+  {
+    "id": "farm_basic",
+    "era": "early_settlement",
+    "name": "Subsistence Farm",
+    "cost": { "materials": 20 },
+    "workers": 2,
+    "production": { "food": 6 },
+    "consumption": {},
+    "morale_effect": 1,
+    "description": "A simple farm feeding a small community."
+  },
+  {
+    "id": "lumberyard",
+    "era": "early_settlement",
+    "name": "Lumberyard",
+    "cost": { "materials": 15 },
+    "workers": 2,
+    "production": { "materials": 4 },
+    "consumption": {},
+    "morale_effect": 0,
+    "description": "Harvests timber from the surrounding land."
+  },
+  {
+    "id": "hunters_lodge",
+    "era": "early_settlement",
+    "name": "Hunter's Lodge",
+    "cost": { "materials": 18 },
+    "workers": 2,
+    "production": { "food": 4 },
+    "consumption": {},
+    "morale_effect": 0,
+    "description": "Hunters bring in game to supplement the harvest."
+  },
+  {
+    "id": "quarry",
+    "era": "early_settlement",
+    "name": "Stone Quarry",
+    "cost": { "materials": 25 },
+    "workers": 3,
+    "production": { "materials": 6 },
+    "consumption": {},
+    "morale_effect": -1,
+    "description": "Backbreaking work, but the stone fuels construction."
+  },
+  {
+    "id": "farm_advanced",
+    "era": "ancient",
+    "name": "Irrigated Farm",
+    "cost": { "materials": 40, "knowledge": 10 },
+    "workers": 3,
+    "production": { "food": 12 },
+    "consumption": {},
+    "morale_effect": 1,
+    "description": "Irrigation multiplies the yield of every field."
+  },
+  {
+    "id": "library",
+    "era": "early_settlement",
+    "name": "Library",
+    "cost": { "materials": 30 },
+    "workers": 1,
+    "production": { "knowledge": 4 },
+    "consumption": {},
+    "morale_effect": 1,
+    "description": "Recorded knowledge accelerates research."
+  },
+  {
+    "id": "windmill",
+    "era": "ancient",
+    "name": "Windmill",
+    "cost": { "materials": 35 },
+    "workers": 1,
+    "production": { "energy": 5 },
+    "consumption": {},
+    "morale_effect": 0,
+    "description": "Harnesses the wind to grind grain and power workshops."
+  },
+  {
+    "id": "trade_post",
+    "era": "ancient",
+    "name": "Trade Post",
+    "cost": { "materials": 30 },
+    "workers": 2,
+    "production": { "influence": 3 },
+    "consumption": { "food": 1 },
+    "morale_effect": 1,
+    "description": "Caravans and traders extend the settlement's reach."
+  },
+  {
+    "id": "school",
+    "era": "medieval",
+    "name": "School",
+    "cost": { "materials": 50, "knowledge": 20 },
+    "workers": 3,
+    "production": { "knowledge": 8 },
+    "consumption": { "energy": 1 },
+    "morale_effect": 2,
+    "description": "Educates the next generation of thinkers."
+  }
+]

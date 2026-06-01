@@ -1,0 +1,44 @@
+[
+  {
+    "id": "plains",
+    "name": "Plains",
+    "base_hazard": 1,
+    "resource_affinity": { "food": 1.2, "materials": 0.8 },
+    "world_flag": "biome:plains_present"
+  },
+  {
+    "id": "forest",
+    "name": "Forest",
+    "base_hazard": 2,
+    "resource_affinity": { "materials": 1.3, "food": 0.9 },
+    "world_flag": "biome:forest_present"
+  },
+  {
+    "id": "desert",
+    "name": "Desert",
+    "base_hazard": 4,
+    "resource_affinity": { "energy": 1.2, "food": 0.5 },
+    "world_flag": "biome:desert_present"
+  },
+  {
+    "id": "tundra",
+    "name": "Tundra",
+    "base_hazard": 5,
+    "resource_affinity": { "food": 0.6, "knowledge": 1.1 },
+    "world_flag": "biome:tundra_present"
+  },
+  {
+    "id": "mountains",
+    "name": "Mountains",
+    "base_hazard": 6,
+    "resource_affinity": { "materials": 1.5, "energy": 1.1, "food": 0.4 },
+    "world_flag": "biome:mountains_present"
+  },
+  {
+    "id": "coast",
+    "name": "Coast",
+    "base_hazard": 3,
+    "resource_affinity": { "food": 1.1, "influence": 1.3 },
+    "world_flag": "biome:coast_present"
+  }
+]
