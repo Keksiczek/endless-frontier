@@ -4,26 +4,43 @@
 
 Endless Frontier is a persistent civilization / colony simulation for iOS (Swift / SwiftUI). It is a solo-developer project built incrementally in phases. Read `docs/DESIGN.md` and `docs/ROADMAP.md` before touching any code.
 
-## Repository layout (target — not all directories exist yet)
+## Repository layout
+
+The simulation is a **platform-agnostic Swift Package** (`Core/`), so the
+deterministic engine builds and tests with `swift test` on macOS — no iOS
+simulator needed. The iOS app (`App/`) is a thin SwiftUI shell that depends on
+the package. This is the physical realisation of the "three layers strictly
+separated" rule: Layers 1 & 2 live in the package, the UI lives in the app.
 
 ```
-EndlessFrontier/              Xcode project root
+endless-frontier/
 ├── CLAUDE.md                 This file
 ├── docs/
 │   ├── DESIGN.md             Full game design document
 │   ├── ROADMAP.md            Phased implementation plan
 │   ├── architecture/         Architecture diagrams
-│   └── data-schemas/         JSON schemas for game data
-├── EndlessFrontier/          Swift source
-│   ├── App/                  App entry point, DI container
-│   ├── Models/               WorldState, Settlement, Resource, etc.
-│   ├── Engine/               TickEngine, TechEngine, ExplorationEngine
-│   ├── Storyteller/          TensionCalc, EventRegistry, StoryPlanner
-│   ├── Narrator/             LLMNarratorProtocol, StubNarrator, LocalLLMNarrator
-│   ├── GameData/             JSON files: buildings, techs, eras, biomes, events
-│   └── UI/                   SwiftUI views
-└── EndlessFrontierTests/     Unit + integration tests
+│   ├── data-schemas/         JSON schemas for game data
+│   └── events/               Authored event content (reference)
+├── Core/                     Swift Package — EndlessFrontierCore
+│   ├── Package.swift
+│   ├── Sources/EndlessFrontierCore/
+│   │   ├── Models/           WorldState, Settlement, Region, Resources, Era
+│   │   ├── Engine/           SeededRNG, ResourceLoop, TickEngine, TechEngine,
+│   │   │                     EraEngine, GameEngine, GameWorldFactory
+│   │   ├── Storyteller/      StatPath, EventEffect/Condition/Template,
+│   │   │                     WorldQuery, EffectApplier, TensionCalculator,
+│   │   │                     StoryPlanner
+│   │   ├── Data/             *Definition types + GameDataRegistry, WorldConfig
+│   │   ├── Persistence/      WorldStore (JSON on disk)
+│   │   └── Resources/GameData/  buildings/techs/eras/biomes/events/world-config
+│   └── Tests/EndlessFrontierCoreTests/
+└── App/                      iOS app (XcodeGen-generated project)
+    ├── project.yml           Run `xcodegen generate` to (re)create the project
+    └── Sources/              SwiftUI: EndlessFrontierApp, GameViewModel, Views/
 ```
+
+> **Layer 3 (LLM narrator)** is not built yet (Phase 3). It will be a separate
+> module/protocol the app talks to; the Core stays narrator-agnostic.
 
 ## Key design rules
 
@@ -39,12 +56,26 @@ EndlessFrontier/              Xcode project root
 
 ## Current phase
 
-**Phase 0 — not started.** See `docs/ROADMAP.md` for deliverables.
+**Phase 0 ✅ and Phase 1 ✅ complete.** The deterministic core, data-driven
+content (buildings/techs/eras/biomes/events), tech & era progression, and the
+full storyteller engine (tension + planner) are implemented and tested (29
+tests). A SwiftUI dashboard app reads the live world. Next: Phase 2
+(exploration, multi-city, scheduled/duration effects) — see `docs/ROADMAP.md`.
 
 ## Running tests
 
+The core is tested without a simulator:
+
 ```bash
-xcodebuild test -scheme EndlessFrontier -destination 'platform=iOS Simulator,name=iPhone 16'
+cd Core && swift test
+```
+
+Build the iOS app (regenerate the project first if `project.yml` changed):
+
+```bash
+cd App && xcodegen generate
+xcodebuild -project App/EndlessFrontier.xcodeproj -scheme EndlessFrontier \
+  -destination 'platform=iOS Simulator,name=iPhone 16' build
 ```
 
 ## Coding conventions (Swift)
@@ -58,14 +89,17 @@ xcodebuild test -scheme EndlessFrontier -destination 'platform=iOS Simulator,nam
 
 ## Data file locations
 
+All under `Core/Sources/EndlessFrontierCore/Resources/GameData/`, loaded at
+startup by `GameDataRegistry.bundled()`:
+
 | File | Purpose |
 |---|---|
-| `GameData/buildings.json` | Building definitions |
-| `GameData/techs.json` | Tech tree DAG |
-| `GameData/eras.json` | Era milestones |
-| `GameData/biomes.json` | Biome definitions |
-| `GameData/events.json` | Event templates (storyteller) |
-| `GameData/world-config.json` | Tuning constants (tick rate, tension formula, etc.) |
+| `buildings.json` | Building definitions |
+| `techs.json` | Tech tree DAG |
+| `eras.json` | Era milestones |
+| `biomes.json` | Biome definitions |
+| `events.json` | Event templates (storyteller) |
+| `world-config.json` | Tuning constants (tick rate, tension formula, etc.) |
 
 The JSON schemas live in `docs/data-schemas/`. Validate new data files against the schema before committing.
 

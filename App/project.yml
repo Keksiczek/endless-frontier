@@ -1,0 +1,31 @@
+name: EndlessFrontier
+options:
+  bundleIdPrefix: com.keks.endlessfrontier
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+packages:
+  EndlessFrontierCore:
+    path: ../Core
+
+targets:
+  EndlessFrontier:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    dependencies:
+      - package: EndlessFrontierCore
+        product: EndlessFrontierCore
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.keks.endlessfrontier
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: 1
+        SWIFT_VERSION: "6.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait"
