@@ -80,29 +80,35 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     public var name: String
     public var trait: PawnTrait
     public var skills: [WorkKind: Int]   // 0…20 per work kind
+    public var skillXP: [WorkKind: Double]  // progress toward the next level
     public var needs: PawnNeeds
     public var mood: Double              // 0…100, derived from needs + trait
     public var assignedWork: WorkKind
     public var health: Double            // 0…100
+    public var isBroken: Bool            // mental break — stops working until mood recovers
 
     public init(
         id: UUID = UUID(),
         name: String,
         trait: PawnTrait = .none,
         skills: [WorkKind: Int] = [:],
+        skillXP: [WorkKind: Double] = [:],
         needs: PawnNeeds = PawnNeeds(),
         mood: Double = 70,
         assignedWork: WorkKind = .idle,
-        health: Double = 100
+        health: Double = 100,
+        isBroken: Bool = false
     ) {
         self.id = id
         self.name = name
         self.trait = trait
         self.skills = skills
+        self.skillXP = skillXP
         self.needs = needs
         self.mood = mood
         self.assignedWork = assignedWork
         self.health = health
+        self.isBroken = isBroken
     }
 
     public func skill(_ kind: WorkKind) -> Int { skills[kind] ?? 0 }

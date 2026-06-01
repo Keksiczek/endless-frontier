@@ -25,6 +25,14 @@ public enum PawnEngine {
     static let healthRecovery: Double = 0.3
     // Colony morale hit when a colonist dies.
     static let deathMoralePenalty: Double = 10.0
+    // Skill growth: XP gained per tick of assigned work, XP per level, and cap.
+    static let xpPerTickWorking: Double = 0.5
+    static let xpPerLevel: Double = 100
+    static let maxSkill: Int = 20
+    // Mood break thresholds (hysteresis) and the morale drain while broken.
+    static let breakEnterMood: Double = 20
+    static let breakExitMood: Double = 40
+    static let brokenMoraleDrain: Double = 0.3
 
     /// Advances every pawn in a settlement one tick and returns the updated
     /// settlement (needs, mood, eaten food, work output, morale drift).
@@ -59,11 +67,27 @@ public enum PawnEngine {
             // Mood from needs + trait, clamped.
             p.mood = min(max(p.needs.average + p.trait.moodModifier, 0), 100)
 
-            // Work output for the assigned resource, scaled by skill and mood.
-            if let resource = p.assignedWork.resource {
+            // Mental break with hysteresis: break at very low mood, recover
+            // only once mood climbs back above the higher threshold.
+            if p.mood < breakEnterMood {
+                p.isBroken = true
+            } else if p.mood >= breakExitMood {
+                p.isBroken = false
+            }
+
+            // Work output + learning-by-doing, only when working (not broken).
+            if !p.isBroken, let resource = p.assignedWork.resource {
                 let moodFactor = 0.5 + 0.5 * (p.mood / 100)   // 0.5…1.0
                 output[resource] = output[resource]
                     + Double(p.skill(p.assignedWork)) * outputPerSkill * moodFactor
+
+                var xp = (p.skillXP[p.assignedWork] ?? 0) + xpPerTickWorking
+                let level = p.skill(p.assignedWork)
+                if xp >= xpPerLevel, level < maxSkill {
+                    p.skills[p.assignedWork] = level + 1
+                    xp -= xpPerLevel
+                }
+                p.skillXP[p.assignedWork] = xp
             }
             return p
         }
@@ -87,6 +111,11 @@ public enum PawnEngine {
         if !s.pawns.isEmpty {
             let averageMood = s.pawns.reduce(0) { $0 + $1.mood } / Double(s.pawns.count)
             s.stats.morale += (averageMood - s.stats.morale) * moraleFollowRate
+        }
+        // Colonists in a mental break weigh on the whole colony.
+        let brokenCount = s.pawns.filter(\.isBroken).count
+        if brokenCount > 0 {
+            s.stats.morale -= brokenMoraleDrain * Double(brokenCount)
         }
         s.stats = s.stats.clamped()
 
