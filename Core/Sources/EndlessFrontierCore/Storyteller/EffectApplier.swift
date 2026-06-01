@@ -57,6 +57,14 @@ public enum EffectApplier {
             )
         case let .setWorldFlag(flag, value):
             s.worldFlags[flag] = value
+        case let .pawnHealthDelta(delta, selector):
+            applyToPawns(&s, selector: selector) { $0.health = clamp01_100($0.health + delta) }
+        case let .pawnMoodDelta(delta, selector):
+            applyToPawns(&s, selector: selector) { $0.mood = clamp01_100($0.mood + delta) }
+        case .addPawn:
+            addPawn(&s)
+        case let .removePawn(selector):
+            removePawn(&s, selector: selector)
         }
         return s
     }
@@ -119,5 +127,56 @@ public enum EffectApplier {
 
     private static func clampToStorage(_ value: Double, _ capacity: Double) -> Double {
         min(max(value, 0), capacity)
+    }
+
+    private static func clamp01_100(_ value: Double) -> Double {
+        min(max(value, 0), 100)
+    }
+
+    // MARK: - Pawn effects (capital settlement)
+
+    /// Resolves which colonists a selector targets. Deterministic; ties resolve
+    /// to the earliest index.
+    static func selectedPawnIndices(_ pawns: [Pawn], _ selector: PawnSelector) -> [Int] {
+        guard !pawns.isEmpty else { return [] }
+        switch selector {
+        case .all:
+            return Array(pawns.indices)
+        case .first:
+            return [pawns.startIndex]
+        case .lowestHealth:
+            return [pawns.indices.min { pawns[$0].health < pawns[$1].health }!]
+        case .lowestMood:
+            return [pawns.indices.min { pawns[$0].mood < pawns[$1].mood }!]
+        }
+    }
+
+    private static func applyToPawns(
+        _ s: inout WorldState,
+        selector: PawnSelector,
+        _ transform: (inout Pawn) -> Void
+    ) {
+        guard let capital = s.settlements.indices.first else { return }
+        for index in selectedPawnIndices(s.settlements[capital].pawns, selector) {
+            transform(&s.settlements[capital].pawns[index])
+        }
+    }
+
+    private static func addPawn(_ s: inout WorldState) {
+        guard let capital = s.settlements.indices.first else { return }
+        let seed = UInt64(bitPattern: Int64(s.tick)) &+ UInt64(s.settlements[capital].pawns.count) &+ 1
+        s.settlements[capital].pawns.append(PawnFactory.generate(seed: seed))
+        s.settlements[capital].population += 1
+    }
+
+    private static func removePawn(_ s: inout WorldState, selector: PawnSelector) {
+        guard let capital = s.settlements.indices.first else { return }
+        let remove = Set(selectedPawnIndices(s.settlements[capital].pawns, selector))
+        guard !remove.isEmpty else { return }
+        s.settlements[capital].pawns = s.settlements[capital].pawns
+            .enumerated()
+            .filter { !remove.contains($0.offset) }
+            .map(\.element)
+        s.settlements[capital].population = max(0, s.settlements[capital].population - Double(remove.count))
     }
 }

@@ -8,6 +8,10 @@ public enum EventEffect: Codable, Sendable, Equatable {
     case unlockTech(techID: String)
     case triggerEvent(eventID: String, delayTicks: Int)
     case setWorldFlag(flag: String, value: Bool)
+    case pawnHealthDelta(delta: Double, selector: PawnSelector)
+    case pawnMoodDelta(delta: Double, selector: PawnSelector)
+    case addPawn
+    case removePawn(selector: PawnSelector)
 
     private enum CodingKeys: String, CodingKey {
         case type
@@ -21,6 +25,7 @@ public enum EventEffect: Codable, Sendable, Equatable {
         case delayTicks = "delay_ticks"
         case flag
         case value
+        case selector
     }
 
     private static func scope(from raw: String?) -> StatPath.Target {
@@ -61,6 +66,19 @@ public enum EventEffect: Codable, Sendable, Equatable {
             let flag = try c.decode(String.self, forKey: .flag)
             let value = try c.decodeIfPresent(Bool.self, forKey: .value) ?? true
             self = .setWorldFlag(flag: flag, value: value)
+        case "pawn_health":
+            let delta = try c.decode(Double.self, forKey: .delta)
+            let selector = try c.decodeIfPresent(PawnSelector.self, forKey: .selector) ?? .all
+            self = .pawnHealthDelta(delta: delta, selector: selector)
+        case "pawn_mood":
+            let delta = try c.decode(Double.self, forKey: .delta)
+            let selector = try c.decodeIfPresent(PawnSelector.self, forKey: .selector) ?? .all
+            self = .pawnMoodDelta(delta: delta, selector: selector)
+        case "add_pawn":
+            self = .addPawn
+        case "remove_pawn":
+            let selector = try c.decodeIfPresent(PawnSelector.self, forKey: .selector) ?? .first
+            self = .removePawn(selector: selector)
         default:
             throw DecodingError.dataCorruptedError(
                 forKey: .type,
@@ -94,6 +112,19 @@ public enum EventEffect: Codable, Sendable, Equatable {
             try c.encode("set_world_flag", forKey: .type)
             try c.encode(flag, forKey: .flag)
             try c.encode(value, forKey: .value)
+        case let .pawnHealthDelta(delta, selector):
+            try c.encode("pawn_health", forKey: .type)
+            try c.encode(delta, forKey: .delta)
+            try c.encode(selector, forKey: .selector)
+        case let .pawnMoodDelta(delta, selector):
+            try c.encode("pawn_mood", forKey: .type)
+            try c.encode(delta, forKey: .delta)
+            try c.encode(selector, forKey: .selector)
+        case .addPawn:
+            try c.encode("add_pawn", forKey: .type)
+        case let .removePawn(selector):
+            try c.encode("remove_pawn", forKey: .type)
+            try c.encode(selector, forKey: .selector)
         }
     }
 }

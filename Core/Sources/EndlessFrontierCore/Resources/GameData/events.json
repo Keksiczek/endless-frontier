@@ -272,5 +272,84 @@
     ],
     "choices": [],
     "narrative_hint": "The days pass quietly. Children play in the square and the work goes steadily on."
+  },
+  {
+    "id": "colonist_illness",
+    "type": "disaster",
+    "name": "A Colonist Falls Ill",
+    "era": [],
+    "weight": 9,
+    "cooldown_ticks": 90,
+    "conditions": [],
+    "effects": [
+      { "type": "pawn_health", "delta": -35, "selector": "lowest_health" }
+    ],
+    "choices": [
+      {
+        "id": "treat",
+        "label": "Devote knowledge to a cure",
+        "description": "Spend knowledge to heal the sick colonist.",
+        "cost": { "knowledge": 30 },
+        "effects": [
+          { "type": "pawn_health", "delta": 40, "selector": "lowest_health" }
+        ]
+      },
+      {
+        "id": "rest",
+        "label": "Let them rest and recover",
+        "description": "Trust their constitution. No cost.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A fever takes hold of one of the colonists. Without care it could turn deadly."
+  },
+  {
+    "id": "wanderer_joins",
+    "type": "opportunity",
+    "name": "A Wanderer Arrives",
+    "era": [],
+    "weight": 10,
+    "cooldown_ticks": 120,
+    "conditions": [
+      { "stat": "global.prosperity", "min": 35 }
+    ],
+    "effects": [],
+    "choices": [
+      {
+        "id": "welcome",
+        "label": "Welcome them to the colony",
+        "description": "A new colonist joins your settlement.",
+        "cost": { "food": 20 },
+        "effects": [
+          { "type": "add_pawn" }
+        ]
+      },
+      {
+        "id": "turn_away",
+        "label": "Turn them away",
+        "description": "One fewer mouth to feed.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A lone traveller approaches the gates, asking to join the colony and share its fortunes."
+  },
+  {
+    "id": "shared_feast",
+    "type": "opportunity",
+    "name": "A Shared Feast",
+    "era": [],
+    "weight": 8,
+    "cooldown_ticks": 70,
+    "conditions": [
+      { "stat": "settlement:any.food", "min": 150 }
+    ],
+    "effects": [
+      { "type": "pawn_mood", "delta": 12, "selector": "all" },
+      { "type": "resource_delta", "resource": "food", "delta": -60, "scope": "global" }
+    ],
+    "choices": [],
+    "narrative_hint": "Tables groan under the weight of the harvest. For one night, every colonist eats their fill."
   }
 ]

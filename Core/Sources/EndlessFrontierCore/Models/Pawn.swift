@@ -45,6 +45,15 @@ public struct PawnNeeds: Codable, Sendable, Equatable {
     }
 }
 
+/// Selects which colonist(s) a pawn-targeting event effect applies to.
+/// Deterministic — no randomness — so the simulation stays reproducible.
+public enum PawnSelector: String, Codable, Sendable, Equatable {
+    case all
+    case first
+    case lowestHealth = "lowest_health"
+    case lowestMood = "lowest_mood"
+}
+
 /// A personality trait that shifts mood and (optionally) skill aptitude.
 public enum PawnTrait: String, Codable, Sendable, CaseIterable, Equatable {
     case optimist

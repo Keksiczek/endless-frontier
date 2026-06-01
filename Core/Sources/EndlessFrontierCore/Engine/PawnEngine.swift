@@ -20,6 +20,11 @@ public enum PawnEngine {
     static let outputPerSkill: Double = 0.15
     // How strongly colony morale tracks average pawn mood.
     static let moraleFollowRate: Double = 0.1
+    // Health: starvation damage when hunger is empty, passive recovery otherwise.
+    static let starvationHealthDamage: Double = 2.0
+    static let healthRecovery: Double = 0.3
+    // Colony morale hit when a colonist dies.
+    static let deathMoralePenalty: Double = 10.0
 
     /// Advances every pawn in a settlement one tick and returns the updated
     /// settlement (needs, mood, eaten food, work output, morale drift).
@@ -43,6 +48,14 @@ public enum PawnEngine {
             }
             p.needs = p.needs.clamped()
 
+            // Health: starvation hurts, otherwise the body slowly recovers.
+            if p.needs.hunger <= 0 {
+                p.health -= starvationHealthDamage
+            } else {
+                p.health = min(100, p.health + healthRecovery)
+            }
+            p.health = max(0, p.health)
+
             // Mood from needs + trait, clamped.
             p.mood = min(max(p.needs.average + p.trait.moodModifier, 0), 100)
 
@@ -61,9 +74,20 @@ public enum PawnEngine {
             s.storage[resource] = min(s.storage[resource] + output[resource], s.storageCapacity)
         }
 
+        // Remove colonists who have died; each death wounds colony morale and
+        // the macro headcount.
+        let deaths = s.pawns.filter { $0.health <= 0 }.count
+        if deaths > 0 {
+            s.pawns.removeAll { $0.health <= 0 }
+            s.population = max(0, s.population - Double(deaths))
+            s.stats.morale -= deathMoralePenalty * Double(deaths)
+        }
+
         // Colony morale drifts toward the colonists' average mood.
-        let averageMood = s.pawns.reduce(0) { $0 + $1.mood } / Double(s.pawns.count)
-        s.stats.morale += (averageMood - s.stats.morale) * moraleFollowRate
+        if !s.pawns.isEmpty {
+            let averageMood = s.pawns.reduce(0) { $0 + $1.mood } / Double(s.pawns.count)
+            s.stats.morale += (averageMood - s.stats.morale) * moraleFollowRate
+        }
         s.stats = s.stats.clamped()
 
         return s

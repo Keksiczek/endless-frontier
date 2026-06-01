@@ -27,6 +27,24 @@ public struct SeededRNG: RandomNumberGenerator {
         Double(next() >> 11) * (1.0 / 9_007_199_254_740_992.0)
     }
 
+    /// A deterministic `UUID` drawn from the generator — used to give
+    /// runtime-generated entities (e.g. recruited colonists) stable ids so
+    /// persisted state stays reproducible for a given seed.
+    public mutating func nextUUID() -> UUID {
+        let hi = next()
+        let lo = next()
+        return UUID(uuid: (
+            UInt8(truncatingIfNeeded: hi >> 56), UInt8(truncatingIfNeeded: hi >> 48),
+            UInt8(truncatingIfNeeded: hi >> 40), UInt8(truncatingIfNeeded: hi >> 32),
+            UInt8(truncatingIfNeeded: hi >> 24), UInt8(truncatingIfNeeded: hi >> 16),
+            UInt8(truncatingIfNeeded: hi >> 8), UInt8(truncatingIfNeeded: hi),
+            UInt8(truncatingIfNeeded: lo >> 56), UInt8(truncatingIfNeeded: lo >> 48),
+            UInt8(truncatingIfNeeded: lo >> 40), UInt8(truncatingIfNeeded: lo >> 32),
+            UInt8(truncatingIfNeeded: lo >> 24), UInt8(truncatingIfNeeded: lo >> 16),
+            UInt8(truncatingIfNeeded: lo >> 8), UInt8(truncatingIfNeeded: lo)
+        ))
+    }
+
     /// Weighted choice. Returns the index selected proportionally to
     /// `weights`, or `nil` if the list is empty or all weights are zero.
     public mutating func weightedIndex(_ weights: [Double]) -> Int? {
