@@ -55,21 +55,26 @@ struct WorldMapView: View {
         let isFrontier = game.canExplore(region)
 
         ZStack {
-            HexTileShape()
-                .fill(isUnknown ? Theme.surface.opacity(0.85) : BiomePalette.color(region.biomeID))
+            if isUnknown {
+                HexTileShape().fill(Theme.surface.opacity(0.9))
+                HexTileShape().fill(
+                    .radialGradient(Gradient(colors: [Color.white.opacity(0.04), .clear]),
+                                    center: .center, startRadius: 0, endRadius: size.width / 2)
+                )
+                Image(systemName: isFrontier ? "questionmark" : "circle.dotted")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(isFrontier ? Theme.accent : Theme.textDim.opacity(0.45))
+            } else {
+                HexTerrainView(region: region)
+                marker(region)
+            }
+
             HexTileShape()
                 .stroke(strokeColor(isSelected: isSelected, isFrontier: isFrontier),
                         lineWidth: isSelected ? 3 : (isFrontier ? 2 : 1))
-
-            if isUnknown {
-                Image(systemName: isFrontier ? "questionmark" : "circle.dotted")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(isFrontier ? Theme.accent : Theme.textDim.opacity(0.5))
-            } else {
-                marker(region)
-            }
         }
         .frame(width: size.width, height: size.height)
+        .shadow(color: isSelected ? Theme.accent.opacity(0.6) : .clear, radius: 10)
         .contentShape(HexTileShape())
         .onTapGesture { selectedRegionID = region.id }
     }
@@ -77,17 +82,20 @@ struct WorldMapView: View {
     @ViewBuilder
     private func marker(_ region: Region) -> some View {
         let isExpeditionTarget = game.activeExpedition?.targetRegionID == region.id
-        VStack(spacing: 2) {
-            if game.settlement(in: region) != nil {
-                Image(systemName: "house.fill").foregroundStyle(.white)
-            } else if isExpeditionTarget {
-                Image(systemName: "figure.walk").foregroundStyle(.white)
-            } else if let symbol = region.kind.mapSymbol {
-                Image(systemName: symbol).foregroundStyle(.white.opacity(0.9))
-            }
+        if let symbol = markerSymbol(region, isExpeditionTarget: isExpeditionTarget) {
+            Image(systemName: symbol)
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(.white)
+                .padding(6)
+                .background(Color.black.opacity(0.35), in: Circle())
+                .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
         }
-        .font(.system(size: 15, weight: .semibold))
-        .shadow(radius: 1)
+    }
+
+    private func markerSymbol(_ region: Region, isExpeditionTarget: Bool) -> String? {
+        if game.settlement(in: region) != nil { return "house.fill" }
+        if isExpeditionTarget { return "figure.walk" }
+        return region.kind.mapSymbol
     }
 
     private func strokeColor(isSelected: Bool, isFrontier: Bool) -> Color {

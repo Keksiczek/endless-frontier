@@ -15,6 +15,40 @@ enum BiomePalette {
         default: return Color(red: 0.45, green: 0.47, blue: 0.45)
         }
     }
+
+    /// Top (lit) and bottom (shadowed) colours for the terrain gradient.
+    static func gradient(_ biomeID: String) -> (Color, Color) {
+        let base = color(biomeID)
+        return (base.adjusted(by: 0.12), base.adjusted(by: -0.14))
+    }
+
+    /// Colour for decorative terrain detail (trees, peaks, dunes, …).
+    static func detail(_ biomeID: String) -> Color {
+        switch biomeID {
+        case "plains": return Color(red: 0.40, green: 0.55, blue: 0.24)
+        case "forest": return Color(red: 0.16, green: 0.34, blue: 0.22)
+        case "desert": return Color(red: 0.70, green: 0.58, blue: 0.32)
+        case "tundra": return Color.white
+        case "mountains": return Color(red: 0.38, green: 0.38, blue: 0.42)
+        case "coast": return Color(red: 0.85, green: 0.92, blue: 0.97)
+        default: return Color.black.opacity(0.5)
+        }
+    }
+}
+
+private extension Color {
+    /// Lighten (positive) or darken (negative) a colour in sRGB.
+    func adjusted(by amount: Double) -> Color {
+        #if canImport(UIKit)
+        let ui = UIColor(self)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        ui.getRed(&r, green: &g, blue: &b, alpha: &a)
+        let d = CGFloat(amount)
+        return Color(red: min(max(r + d, 0), 1), green: min(max(g + d, 0), 1), blue: min(max(b + d, 0), 1))
+        #else
+        return self
+        #endif
+    }
 }
 
 extension RegionKind {
