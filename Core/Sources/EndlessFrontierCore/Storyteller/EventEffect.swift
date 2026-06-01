@@ -12,6 +12,8 @@ public enum EventEffect: Codable, Sendable, Equatable {
     case pawnMoodDelta(delta: Double, selector: PawnSelector)
     case addPawn
     case removePawn(selector: PawnSelector)
+    case regionHazardDelta(delta: Int, selector: RegionSelector)
+    case regionKindChange(kind: RegionKind, selector: RegionSelector)
 
     private enum CodingKeys: String, CodingKey {
         case type
@@ -26,6 +28,7 @@ public enum EventEffect: Codable, Sendable, Equatable {
         case flag
         case value
         case selector
+        case kind
     }
 
     private static func scope(from raw: String?) -> StatPath.Target {
@@ -79,6 +82,14 @@ public enum EventEffect: Codable, Sendable, Equatable {
         case "remove_pawn":
             let selector = try c.decodeIfPresent(PawnSelector.self, forKey: .selector) ?? .first
             self = .removePawn(selector: selector)
+        case "region_hazard":
+            let delta = try c.decode(Int.self, forKey: .delta)
+            let selector = try c.decodeIfPresent(RegionSelector.self, forKey: .selector) ?? .anyExplored
+            self = .regionHazardDelta(delta: delta, selector: selector)
+        case "region_kind":
+            let kind = try c.decode(RegionKind.self, forKey: .kind)
+            let selector = try c.decodeIfPresent(RegionSelector.self, forKey: .selector) ?? .anyExplored
+            self = .regionKindChange(kind: kind, selector: selector)
         default:
             throw DecodingError.dataCorruptedError(
                 forKey: .type,
@@ -124,6 +135,14 @@ public enum EventEffect: Codable, Sendable, Equatable {
             try c.encode("add_pawn", forKey: .type)
         case let .removePawn(selector):
             try c.encode("remove_pawn", forKey: .type)
+            try c.encode(selector, forKey: .selector)
+        case let .regionHazardDelta(delta, selector):
+            try c.encode("region_hazard", forKey: .type)
+            try c.encode(delta, forKey: .delta)
+            try c.encode(selector, forKey: .selector)
+        case let .regionKindChange(kind, selector):
+            try c.encode("region_kind", forKey: .type)
+            try c.encode(kind, forKey: .kind)
             try c.encode(selector, forKey: .selector)
         }
     }

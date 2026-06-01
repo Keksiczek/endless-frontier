@@ -14,7 +14,15 @@ struct ExplorationTests {
         let unknown = world.regions.filter { $0.explorationState == .unknown }
         #expect(explored.count == 1)
         #expect(unknown.count >= 1)
-        #expect(ExplorationEngine.exploreableRegions(world).count == unknown.count)
+        // Exploration is adjacency-gated: only unknown regions next to a known
+        // one are reachable, so the frontier is a subset of all unknowns.
+        let frontier = ExplorationEngine.exploreableRegions(world)
+        #expect(frontier.count >= 1)
+        #expect(frontier.count <= unknown.count)
+        let knownCoords = Set(world.regions.filter { $0.explorationState != .unknown }.map(\.coord))
+        #expect(frontier.allSatisfy { region in
+            region.coord.neighbors().contains { knownCoords.contains($0) }
+        })
     }
 
     @Test("Starting an expedition costs resources and sets it active")

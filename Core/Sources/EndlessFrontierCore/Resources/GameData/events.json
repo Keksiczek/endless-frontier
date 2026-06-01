@@ -351,5 +351,53 @@
     ],
     "choices": [],
     "narrative_hint": "Tables groan under the weight of the harvest. For one night, every colonist eats their fill."
+  },
+  {
+    "id": "creeping_blight",
+    "type": "threat",
+    "name": "Creeping Blight",
+    "era": [],
+    "weight": 7,
+    "cooldown_ticks": 140,
+    "conditions": [
+      { "stat": "global.threatLevel", "min": 25 }
+    ],
+    "effects": [
+      { "type": "region_hazard", "delta": 2, "selector": "any_explored" },
+      { "type": "stat_delta", "stat": "global.threatLevel", "delta": 4 }
+    ],
+    "choices": [
+      {
+        "id": "purge",
+        "label": "Send workers to cleanse the land",
+        "description": "Spend materials to push the blight back.",
+        "cost": { "materials": 50 },
+        "effects": [
+          { "type": "region_hazard", "delta": -2, "selector": "highest_hazard" }
+        ]
+      },
+      {
+        "id": "abandon",
+        "label": "Let the wilds reclaim it",
+        "description": "Do nothing.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A strange rot spreads across the land beyond the walls, turning safe ground treacherous."
+  },
+  {
+    "id": "ruins_surface",
+    "type": "opportunity",
+    "name": "Ancient Ruins Surface",
+    "era": [],
+    "weight": 6,
+    "cooldown_ticks": 200,
+    "conditions": [],
+    "effects": [
+      { "type": "region_kind", "kind": "ruins", "selector": "any_unknown" }
+    ],
+    "choices": [],
+    "narrative_hint": "Shifting earth reveals the bones of an older world — ancient ruins, waiting beyond the frontier."
   }
 ]

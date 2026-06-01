@@ -1,21 +1,17 @@
 import Foundation
 
-/// Builds the initial world for a new game: one starting settlement in one
-/// revealed region, with starter buildings and resources.
+/// Builds the initial world for a new game: a procedurally generated hex map
+/// with the capital settled in the homeland region at its centre.
 public enum GameWorldFactory {
     public static func newGame(
         registry: GameDataRegistry,
         seed: UInt64 = 0x5EED_F00D,
         now: Date = Date()
     ) -> WorldState {
-        let startingBiome = registry.biomes["plains"]?.id ?? registry.biomes.keys.sorted().first ?? "plains"
-
-        let region = Region(
-            name: "Homeland",
-            biomeID: startingBiome,
-            hazardLevel: registry.biome(startingBiome)?.baseHazard ?? 0,
-            explorationState: .fullyExplored
-        )
+        // Procedurally generate the world map (homeland at the origin).
+        var regions = MapGenerator.generate(seed: seed, registry: registry)
+        let homelandIndex = regions.firstIndex { $0.kind == .homeland } ?? 0
+        let homeland = regions[homelandIndex]
 
         // Starter buildings, only those that actually exist in the data.
         let starterBuildingIDs = ["farm_basic", "lumberyard", "hut"]
@@ -26,7 +22,7 @@ public enum GameWorldFactory {
         let settlement = Settlement(
             name: "First Light",
             kind: .capital,
-            regionID: region.id,
+            regionID: homeland.id,
             foundedTick: 0,
             population: 50,
             pawns: starterPawns(),
@@ -36,15 +32,14 @@ public enum GameWorldFactory {
             stats: SettlementStats(stability: 60, morale: 60)
         )
 
-        var startingRegion = region
-        startingRegion.settlementIDs = [settlement.id]
+        regions[homelandIndex].settlementIDs = [settlement.id]
 
+        // Reveal the homeland's biome so biome-gated events can fire there.
         var flags: [String: Bool] = [:]
-        if let flag = registry.biome(startingBiome)?.worldFlag {
+        if let flag = registry.biome(homeland.biomeID)?.worldFlag {
             flags[flag] = true
         }
 
-        // Unlock starter buildings so the player can rebuild them.
         let unlocked = Set(starterBuildingIDs.filter { registry.building($0) != nil })
 
         return WorldState(
@@ -55,7 +50,7 @@ public enum GameWorldFactory {
             unlockedBuildings: unlocked,
             worldFlags: flags,
             settlements: [settlement],
-            regions: [startingRegion] + unknownRegions(registry: registry, excluding: startingBiome)
+            regions: regions
         )
     }
 
@@ -72,20 +67,5 @@ public enum GameWorldFactory {
             Pawn(name: "Nadia", trait: .pessimist, skills: [.farming: 5, .trade: 6],
                  assignedWork: .farming)
         ]
-    }
-
-    /// A small frontier of unknown regions the player can later explore.
-    /// Biomes are drawn from the data, skipping the starting biome.
-    private static func unknownRegions(registry: GameDataRegistry, excluding startingBiome: String) -> [Region] {
-        let biomeIDs = registry.biomes.keys.sorted().filter { $0 != startingBiome }
-        let names = ["The Reach", "Far Hollow", "Greywater", "Stormwatch", "The Verge"]
-        return biomeIDs.prefix(names.count).enumerated().map { index, biomeID in
-            Region(
-                name: names[index],
-                biomeID: biomeID,
-                hazardLevel: registry.biome(biomeID)?.baseHazard ?? 1,
-                explorationState: .unknown
-            )
-        }
     }
 }

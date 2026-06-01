@@ -65,6 +65,14 @@ public enum EffectApplier {
             addPawn(&s)
         case let .removePawn(selector):
             removePawn(&s, selector: selector)
+        case let .regionHazardDelta(delta, selector):
+            if let index = regionIndex(in: s, selector: selector) {
+                s.regions[index].hazardLevel = max(0, s.regions[index].hazardLevel + delta)
+            }
+        case let .regionKindChange(kind, selector):
+            if let index = regionIndex(in: s, selector: selector) {
+                s.regions[index].kind = kind
+            }
         }
         return s
     }
@@ -167,6 +175,21 @@ public enum EffectApplier {
         let seed = UInt64(bitPattern: Int64(s.tick)) &+ UInt64(s.settlements[capital].pawns.count) &+ 1
         s.settlements[capital].pawns.append(PawnFactory.generate(seed: seed))
         s.settlements[capital].population += 1
+    }
+
+    /// Resolves which region a dynamic event targets. Deterministic.
+    static func regionIndex(in state: WorldState, selector: RegionSelector) -> Int? {
+        let regions = state.regions
+        switch selector {
+        case .anyExplored:
+            return regions.firstIndex { $0.explorationState != .unknown && $0.kind != .homeland }
+        case .anyUnknown:
+            return regions.firstIndex { $0.explorationState == .unknown }
+        case .highestHazard:
+            return regions.indices.max { regions[$0].hazardLevel < regions[$1].hazardLevel }
+        case .lowestHazard:
+            return regions.indices.min { regions[$0].hazardLevel < regions[$1].hazardLevel }
+        }
     }
 
     private static func removePawn(_ s: inout WorldState, selector: PawnSelector) {

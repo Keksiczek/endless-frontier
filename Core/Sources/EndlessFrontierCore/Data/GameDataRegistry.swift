@@ -23,6 +23,7 @@ public struct GameDataRegistry: Sendable {
     public let biomes: [String: BiomeDefinition]
     public let events: [EventTemplate]
     public let config: WorldConfig
+    public let mapGen: MapGenConfig
 
     public init(
         buildings: [BuildingDefinition] = [],
@@ -30,7 +31,8 @@ public struct GameDataRegistry: Sendable {
         eras: [EraDefinition] = [],
         biomes: [BiomeDefinition] = [],
         events: [EventTemplate] = [],
-        config: WorldConfig = .default
+        config: WorldConfig = .default,
+        mapGen: MapGenConfig = .default
     ) {
         self.buildings = Dictionary(uniqueKeysWithValues: buildings.map { ($0.id, $0) })
         self.techs = Dictionary(uniqueKeysWithValues: techs.map { ($0.id, $0) })
@@ -38,6 +40,7 @@ public struct GameDataRegistry: Sendable {
         self.biomes = Dictionary(uniqueKeysWithValues: biomes.map { ($0.id, $0) })
         self.events = events
         self.config = config
+        self.mapGen = mapGen
     }
 
     public func building(_ id: String) -> BuildingDefinition? { buildings[id] }
@@ -75,13 +78,16 @@ public struct GameDataRegistry: Sendable {
                 throw GameDataError.decodingFailed(name, underlying: error)
             }
         }
+        // map-gen is optional: fall back to defaults if the file is absent.
+        let mapGen = (try? load(MapGenConfig.self, "map-gen")) ?? .default
         return GameDataRegistry(
             buildings: try load([BuildingDefinition].self, "buildings"),
             techs: try load([TechDefinition].self, "techs"),
             eras: try load([EraDefinition].self, "eras"),
             biomes: try load([BiomeDefinition].self, "biomes"),
             events: try load([EventTemplate].self, "events"),
-            config: try load(WorldConfig.self, "world-config")
+            config: try load(WorldConfig.self, "world-config"),
+            mapGen: mapGen
         )
     }
 }

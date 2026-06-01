@@ -3,9 +3,19 @@ import Foundation
 /// Exploration: sending expeditions to reveal unknown regions, which unlocks
 /// new biomes (and the events gated on them) and new places to settle.
 public enum ExplorationEngine {
-    /// Regions the player can currently send an expedition to (unknown regions).
+    /// Regions the player can send an expedition to: unknown regions adjacent
+    /// to an already-known (explored or settled) region. This makes discovery
+    /// gradual and spatial — the frontier expands outward from what you hold.
     public static func exploreableRegions(_ state: WorldState) -> [Region] {
-        state.regions.filter { $0.explorationState == .unknown }
+        let knownCoords = Set(
+            state.regions
+                .filter { $0.explorationState != .unknown }
+                .map(\.coord)
+        )
+        return state.regions.filter { region in
+            region.explorationState == .unknown
+                && region.coord.neighbors().contains { knownCoords.contains($0) }
+        }
     }
 
     /// Duration in ticks for an expedition to `region`, scaled by hazard.

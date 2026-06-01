@@ -1,0 +1,16 @@
+{
+  "mapRadius": 3,
+  "ruinsChance": 0.12,
+  "dungeonChance": 0.06,
+  "anomalyChance": 0.05,
+  "biomeWeights": {
+    "plains": 1.4,
+    "forest": 1.2,
+    "coast": 1.0,
+    "desert": 0.8,
+    "tundra": 0.7,
+    "mountains": 0.6
+  },
+  "dungeonHazardBonus": 3,
+  "anomalyHazardBonus": 2
+}
