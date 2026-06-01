@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "TechDefinition",
+  "description": "Schema for the tech tree DAG in Endless Frontier.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "name", "era", "cost"],
+    "properties": {
+      "id": { "type": "string" },
+      "name": { "type": "string" },
+      "era": {
+        "type": "string",
+        "enum": ["early_settlement", "ancient", "medieval", "early_industrial", "modern", "near_future"]
+      },
+      "requires": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Tech IDs that must be researched before this one becomes available."
+      },
+      "cost": {
+        "type": "object",
+        "required": ["knowledge"],
+        "properties": {
+          "knowledge": { "type": "integer", "minimum": 1 },
+          "influence": { "type": "integer", "minimum": 0 },
+          "materials": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "effects": {
+        "type": "array",
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["type", "buildingId"],
+              "properties": {
+                "type": { "const": "unlock_building" },
+                "buildingId": { "type": "string" }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["type", "stat", "delta"],
+              "properties": {
+                "type": { "const": "modifier" },
+                "stat": { "type": "string" },
+                "delta": { "type": "number" },
+                "mode": {
+                  "type": "string",
+                  "enum": ["additive", "multiplicative"],
+                  "default": "additive"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["type", "eventCategory"],
+              "properties": {
+                "type": { "const": "unlock_event_category" },
+                "eventCategory": { "type": "string" }
+              }
+            }
+          ]
+        }
+      },
+      "description": { "type": "string" },
+      "icon": { "type": "string", "description": "SF Symbol name or asset name." }
+    }
+  }
+}

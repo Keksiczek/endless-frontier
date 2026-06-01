@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "WorldConfig",
+  "description": "Tuning constants for the Endless Frontier simulation. Edit to balance the game without changing code.",
+  "type": "object",
+  "properties": {
+    "tick": {
+      "type": "object",
+      "description": "Tick timing.",
+      "properties": {
+        "realSecondsPerTick": {
+          "type": "number",
+          "default": 60,
+          "description": "How many real-world seconds equal one simulation tick."
+        },
+        "maxOfflineTicks": {
+          "type": "integer",
+          "default": 43200,
+          "description": "Maximum ticks applied on app open (43200 = 30 days at 1 tick/min)."
+        },
+        "plannerInterval": {
+          "type": "integer",
+          "default": 10,
+          "description": "Storyteller planner runs every N ticks."
+        }
+      }
+    },
+    "tension": {
+      "type": "object",
+      "description": "Coefficients for the tension formula.",
+      "properties": {
+        "threatMultiplier": { "type": "number", "default": 0.4 },
+        "prosperityDampener": { "type": "number", "default": 0.2 },
+        "disasterSpikeDecayTicks": { "type": "integer", "default": 30 },
+        "disasterSpikePerEvent": { "type": "number", "default": 8 },
+        "boomDampenerTicks": { "type": "integer", "default": 20 },
+        "boomDampenerPerEvent": { "type": "number", "default": 3 },
+        "deficitSpikePerResource": { "type": "number", "default": 8 },
+        "eraRampPerEra": { "type": "number", "default": 5 }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "description": "Global resource defaults.",
+      "properties": {
+        "foodPerPersonPerTick": { "type": "number", "default": 0.1 },
+        "defaultStorageCapacity": { "type": "integer", "default": 500 }
+      }
+    },
+    "stability": {
+      "type": "object",
+      "properties": {
+        "collapseThreshold": { "type": "number", "default": 10 },
+        "warningThreshold": { "type": "number", "default": 20 },
+        "mercyEventThreshold": { "type": "number", "default": 10 }
+      }
+    },
+    "exploration": {
+      "type": "object",
+      "properties": {
+        "baseExpeditionTicks": { "type": "integer", "default": 50 },
+        "ticksPerDistanceUnit": { "type": "integer", "default": 10 },
+        "hazardTickMultiplier": { "type": "number", "default": 0.1 },
+        "baseExpeditionFoodCost": { "type": "integer", "default": 30 },
+        "baseExpeditionMaterialsCost": { "type": "integer", "default": 15 }
+      }
+    },
+    "events": {
+      "type": "object",
+      "properties": {
+        "maxMajorEventsPerCycle": { "type": "integer", "default": 1 },
+        "maxMinorEventsPerCycle": { "type": "integer", "default": 3 },
+        "tensionBands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "maxTension": { "type": "number" },
+              "disasterWeight": { "type": "number" },
+              "opportunityWeight": { "type": "number" },
+              "flavorWeight": { "type": "number" }
+            }
+          },
+          "default": [
+            { "maxTension": 30, "disasterWeight": 0.5, "opportunityWeight": 1.5, "flavorWeight": 2.0 },
+            { "maxTension": 60, "disasterWeight": 1.0, "opportunityWeight": 1.0, "flavorWeight": 1.0 },
+            { "maxTension": 80, "disasterWeight": 1.8, "opportunityWeight": 0.6, "flavorWeight": 0.5 },
+            { "maxTension": 100, "disasterWeight": 3.0, "opportunityWeight": 0.3, "flavorWeight": 0.1 }
+          ]
+        }
+      }
+    }
+  }
+}

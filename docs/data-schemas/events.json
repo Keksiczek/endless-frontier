@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "EventTemplate",
+  "description": "Schema for Endless Frontier event template data files.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "type", "name", "era", "weight", "narrative_hint"],
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "Unique snake_case identifier."
+      },
+      "type": {
+        "type": "string",
+        "enum": ["disaster", "threat", "opportunity", "quest", "flavor"],
+        "description": "Determines tension weight multiplier and UI presentation."
+      },
+      "name": {
+        "type": "string",
+        "description": "Display name shown in the event card."
+      },
+      "era": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": ["early_settlement", "ancient", "medieval", "early_industrial", "modern", "near_future"]
+        },
+        "description": "Eras in which this event can fire. Empty = all eras."
+      },
+      "weight": {
+        "type": "number",
+        "minimum": 1,
+        "description": "Base probability weight before tension modifiers."
+      },
+      "cooldown_ticks": {
+        "type": "integer",
+        "minimum": 0,
+        "default": 50,
+        "description": "Minimum ticks before this event can fire again."
+      },
+      "conditions": {
+        "type": "array",
+        "description": "All conditions must be satisfied for the event to be eligible.",
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["stat", "min"],
+              "properties": {
+                "stat": { "type": "string" },
+                "min": { "type": "number" }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["stat", "max"],
+              "properties": {
+                "stat": { "type": "string" },
+                "max": { "type": "number" }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["worldFlag", "present"],
+              "properties": {
+                "worldFlag": { "type": "string" },
+                "present": { "type": "boolean" }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["techResearched"],
+              "properties": {
+                "techResearched": { "type": "string" }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["settlementCount", "min"],
+              "properties": {
+                "settlementCount": { "type": "boolean" },
+                "min": { "type": "integer" }
+              }
+            }
+          ]
+        }
+      },
+      "effects": {
+        "type": "array",
+        "description": "World state changes applied when the event fires (or when a choice is made).",
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["type", "resource", "delta"],
+              "properties": {
+                "type": { "const": "resource_delta" },
+                "resource": { "type": "string" },
+                "delta": { "type": "number" },
+                "scope": {
+                  "type": "string",
+                  "enum": ["global", "settlement:any", "settlement:all", "settlement:closest"],
+                  "default": "global"
+                },
+                "duration_ticks": { "type": "integer" }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["type", "stat", "delta"],
+              "properties": {
+                "type": { "const": "stat_delta" },
+                "stat": { "type": "string" },
+                "delta": { "type": "number" }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["type", "techId"],
+              "properties": {
+                "type": { "const": "unlock_tech" },
+                "techId": { "type": "string" }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["type", "eventId"],
+              "properties": {
+                "type": { "const": "trigger_event" },
+                "eventId": { "type": "string" },
+                "delay_ticks": { "type": "integer", "default": 0 }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["type", "flag"],
+              "properties": {
+                "type": { "const": "set_world_flag" },
+                "flag": { "type": "string" },
+                "value": {}
+              }
+            }
+          ]
+        }
+      },
+      "choices": {
+        "type": "array",
+        "description": "Player choices shown in the event card. If empty, the event auto-resolves.",
+        "items": {
+          "type": "object",
+          "required": ["id", "label", "effects"],
+          "properties": {
+            "id": { "type": "string" },
+            "label": { "type": "string" },
+            "description": { "type": "string" },
+            "cost": {
+              "type": "object",
+              "additionalProperties": { "type": "number" }
+            },
+            "requires": {
+              "type": "object",
+              "description": "Conditions that must be true for this choice to be available.",
+              "additionalProperties": true
+            },
+            "effects": {
+              "type": "array",
+              "items": {}
+            }
+          }
+        }
+      },
+      "narrative_hint": {
+        "type": "string",
+        "description": "Short fallback prose used when LLM narrator is unavailable."
+      }
+    }
+  }
+}
