@@ -7,6 +7,7 @@ public enum ObjectivesEngine {
     public static func current(_ state: WorldState, registry: GameDataRegistry, limit: Int = 6) -> [Objective] {
         var objectives: [Objective] = []
         objectives += colonistObjectives(state)
+        objectives += defenseObjectives(state)
         objectives += housingObjectives(state, registry: registry)
         objectives += eraObjectives(state, registry: registry)
         objectives += researchObjectives(state, registry: registry)
@@ -34,6 +35,19 @@ public enum ObjectivesEngine {
     }
 
     // MARK: - Sources
+
+    private static func defenseObjectives(_ state: WorldState) -> [Objective] {
+        guard state.globalStats.threatLevel >= 50, let capital = state.settlements.first else { return [] }
+        let effectiveDefense = capital.stats.defense + EffectApplier.militiaDefense(capital.pawns)
+        guard effectiveDefense < 25 else { return [] }
+        return [Objective(
+            id: "prepare_defense",
+            title: "Prepare your defenses",
+            detail: "Threat is rising and \(capital.name) is poorly defended. Build walls, arm colonists with weapons, or raise the threat away.",
+            progress: min(1, effectiveDefense / 25),
+            category: .colonists, priority: 2
+        )]
+    }
 
     private static func colonistObjectives(_ state: WorldState) -> [Objective] {
         var result: [Objective] = []

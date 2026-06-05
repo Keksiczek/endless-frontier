@@ -85,15 +85,19 @@ public enum EffectApplier {
     /// Deterministic — no RNG.
     static func resolveRaid(_ s: inout WorldState, strength: Double) {
         guard let capital = s.settlements.indices.first else { return }
-        let defense = s.settlements[capital].stats.defense
 
-        if defense >= strength {
+        // Defense = fortifications (walls/artifacts) + the colonists who muster
+        // to fight. Armed colonists are far more effective.
+        let militia = militiaDefense(s.settlements[capital].pawns)
+        let effectiveDefense = s.settlements[capital].stats.defense + militia
+
+        if effectiveDefense >= strength {
             s.settlements[capital].stats = s.settlements[capital].stats.applying(delta: 6, to: "morale")
             s.globalStats = s.globalStats.applying(delta: -8, to: "threatLevel")
             return
         }
 
-        let deficit = strength - defense
+        let deficit = strength - effectiveDefense
         applyResourceDelta(&s, resource: .materials, delta: -deficit * 4, scope: .global)
         applyResourceDelta(&s, resource: .food, delta: -deficit * 2, scope: .global)
         s.settlements[capital].stats = s.settlements[capital].stats
@@ -101,18 +105,34 @@ public enum EffectApplier {
             .applying(delta: -deficit * 0.3, to: "morale")
         s.globalStats = s.globalStats.applying(delta: -4, to: "threatLevel")
 
-        // Wound the most vulnerable colonist; a heavy raid can be lethal.
-        if let pawnIndex = s.settlements[capital].pawns.indices
-            .min(by: { s.settlements[capital].pawns[$0].health < s.settlements[capital].pawns[$1].health }) {
+        // Casualties scale with how badly the defense was overrun, spread across
+        // the most vulnerable defenders. Armed colonists take less harm.
+        let woundCount = min(s.settlements[capital].pawns.count, max(1, Int(deficit / 18)))
+        var deaths = 0
+        for _ in 0..<woundCount {
+            guard let pawnIndex = s.settlements[capital].pawns.indices
+                .filter({ s.settlements[capital].pawns[$0].health > 0 })
+                .min(by: { s.settlements[capital].pawns[$0].health < s.settlements[capital].pawns[$1].health }) else { break }
             var pawn = s.settlements[capital].pawns[pawnIndex]
-            pawn.health = max(0, pawn.health - deficit * 2)
-            if pawn.health <= 0 {
-                s.settlements[capital].pawns.remove(at: pawnIndex)
-                s.settlements[capital].population = max(0, s.settlements[capital].population - 1)
-                s.settlements[capital].stats = s.settlements[capital].stats.applying(delta: -10, to: "morale")
-            } else {
-                s.settlements[capital].pawns[pawnIndex] = pawn
-            }
+            let armored = pawn.equipment[.weapon] != nil ? 0.5 : 1.0
+            pawn.health = max(0, pawn.health - deficit * 1.5 * armored)
+            s.settlements[capital].pawns[pawnIndex] = pawn
+            if pawn.health <= 0 { deaths += 1 }
+        }
+        if deaths > 0 {
+            s.settlements[capital].pawns.removeAll { $0.health <= 0 }
+            s.settlements[capital].population = max(0, s.settlements[capital].population - Double(deaths))
+            s.settlements[capital].stats = s.settlements[capital].stats.applying(delta: -10 * Double(deaths), to: "morale")
+        }
+    }
+
+    /// The defensive value the colonists themselves provide: everyone fights a
+    /// little, the armed fight much more, scaled by health; the broken don't.
+    static func militiaDefense(_ pawns: [Pawn]) -> Double {
+        pawns.reduce(0) { acc, pawn in
+            guard !pawn.isBroken, pawn.health > 0 else { return acc }
+            let armed = pawn.equipment[.weapon] != nil ? 6.0 : 0.0
+            return acc + (2.0 + armed) * (pawn.health / 100)
         }
     }
 
