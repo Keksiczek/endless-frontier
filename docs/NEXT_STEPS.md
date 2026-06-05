@@ -77,6 +77,26 @@ caravan-as-pawns; connector lines / graph layout for the tech tree.
 13. Accessibility (VoiceOver, Dynamic Type) and Czech/English localization.
 14. Multiple saves + optional iCloud sync; audio & haptics.
 
+## In-settlement colony layer (started 2026-06-05)
+
+The RimWorld-style base layer has its **engine foundation** in place
+(`ColonyMap` model + `ColonyBuilder` engine, with tests):
+
+- Each settlement can hold an optional square build grid (`colony: ColonyMap?`,
+  backward-compatible — `nil` on old saves and until build mode is opened).
+- `ColonyBuilder.place` / `remove` place and demolish buildings on tiles and
+  keep the count-based `buildings` economy ledger in sync (the resource loop is
+  untouched).
+- `ColonyBuilder.assign` / `unassign` put named colonists to work on a specific
+  placed building (work kind derived from what the building produces), honouring
+  the building's worker cap.
+
+**Still open** (the visible/interactive half): a SwiftUI grid view to see and
+edit the layout (tap a tile → build/demolish, tap a colonist → assign), then the
+art pass renders sprites on those tiles. Also: connect `ColonyBuilder` through
+`GameEngine` + `GameViewModel`, and have `GameWorldFactory` seed a starting
+layout from the capital's initial buildings.
+
 ## Known debt
 
 - `schemaVersion` exists; write migration steps when field *meaning* changes.

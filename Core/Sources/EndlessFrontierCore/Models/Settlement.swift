@@ -86,6 +86,9 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public var storageCapacity: Double
     public var stats: SettlementStats
     public var inventory: [ItemInstance]   // unequipped items + active artifacts
+    /// Optional in-settlement spatial layout (the RimWorld-style colony grid).
+    /// `nil` until the player opens build mode; the economy never depends on it.
+    public var colony: ColonyMap?
 
     public init(
         id: UUID = UUID(),
@@ -99,7 +102,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         storage: Resources = Resources(),
         storageCapacity: Double = 500,
         stats: SettlementStats = SettlementStats(),
-        inventory: [ItemInstance] = []
+        inventory: [ItemInstance] = [],
+        colony: ColonyMap? = nil
     ) {
         self.id = id
         self.name = name
@@ -113,5 +117,6 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.storageCapacity = storageCapacity
         self.stats = stats
         self.inventory = inventory
+        self.colony = colony
     }
 }
