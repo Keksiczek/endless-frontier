@@ -128,6 +128,10 @@ final class GameViewModel {
         registry.availableTechs(researched: world.researchedTechs)
     }
 
+    func housingCapacity(_ settlement: Settlement) -> Int {
+        Int(ResourceLoop.housingCapacity(settlement, registry: registry).rounded())
+    }
+
     var activeExpedition: Expedition? { world.activeExpedition }
 
     var exploreableRegions: [Region] { ExplorationEngine.exploreableRegions(world) }

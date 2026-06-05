@@ -8,7 +8,18 @@
     "production": {},
     "consumption": {},
     "morale_effect": 2,
-    "description": "Simple shelter that keeps the community content."
+    "housing": 30,
+    "description": "Simple shelter that keeps the community content and housed."
+  },
+  {
+    "id": "longhouse",
+    "era": "early_settlement",
+    "name": "Longhouse",
+    "cost": { "materials": 35 },
+    "workers": 0,
+    "morale_effect": 1,
+    "housing": 70,
+    "description": "Communal housing that shelters many families under one roof."
   },
   {
     "id": "farm_basic",

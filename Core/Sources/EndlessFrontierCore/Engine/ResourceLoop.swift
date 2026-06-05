@@ -3,6 +3,16 @@ import Foundation
 /// The deterministic per-tick economic update: production, consumption,
 /// population dynamics, morale drift, and recomputation of global stats.
 public enum ResourceLoop {
+    /// Base shelter every settlement has before any housing is built.
+    public static let baseHousing: Double = 30
+
+    /// How many colonists a settlement can house (base + housing buildings).
+    public static func housingCapacity(_ settlement: Settlement, registry: GameDataRegistry) -> Double {
+        baseHousing + settlement.buildings.reduce(0.0) { acc, instance in
+            acc + (registry.building(instance.definitionID)?.housing ?? 0) * Double(instance.count)
+        }
+    }
+
     public static func advanceOneTick(_ state: WorldState, registry: GameDataRegistry) -> WorldState {
         var s = state
         let config = registry.config
@@ -39,13 +49,19 @@ public enum ResourceLoop {
         let starving = storage[.food] < 0
         s.storage = storage.clamped(lower: 0, upper: s.storageCapacity)
 
-        // 4. Population dynamics.
+        // 4. Population dynamics — growth is capped by available housing.
+        let capacity = housingCapacity(s, registry: registry)
         if starving {
             s.population = max(0, s.population * 0.99)
             s.stats.morale -= 1
         } else {
-            let growthFactor = (s.stats.morale - 50) / 5000   // ±1%/tick at morale extremes
+            let headroom = capacity > 0 ? max(0, 1 - s.population / capacity) : 0
+            var growthFactor = (s.stats.morale - 50) / 5000   // ±1%/tick at morale extremes
+            if growthFactor > 0 { growthFactor *= headroom }  // positive growth needs room
             s.population = max(0, s.population + s.population * growthFactor)
+            if capacity > 0, s.population > capacity {
+                s.stats.morale -= 0.5                          // overcrowding
+            }
         }
 
         // 5. Morale drifts gently toward a building-driven target.

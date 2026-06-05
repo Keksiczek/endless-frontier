@@ -13,6 +13,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
     public let consumption: Resources
     public let moraleEffect: Double
     public let defense: Double
+    public let housing: Double
     public let description: String
 
     public init(
@@ -25,6 +26,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         consumption: Resources = Resources(),
         moraleEffect: Double = 0,
         defense: Double = 0,
+        housing: Double = 0,
         description: String = ""
     ) {
         self.id = id
@@ -36,13 +38,14 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         self.consumption = consumption
         self.moraleEffect = moraleEffect
         self.defense = defense
+        self.housing = housing
         self.description = description
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, era, name, cost, workers, production, consumption
         case moraleEffect = "morale_effect"
-        case defense
+        case defense, housing
         case description
     }
 
@@ -57,6 +60,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         consumption = try c.decodeIfPresent(Resources.self, forKey: .consumption) ?? Resources()
         moraleEffect = try c.decodeIfPresent(Double.self, forKey: .moraleEffect) ?? 0
         defense = try c.decodeIfPresent(Double.self, forKey: .defense) ?? 0
+        housing = try c.decodeIfPresent(Double.self, forKey: .housing) ?? 0
         description = try c.decodeIfPresent(String.self, forKey: .description) ?? ""
     }
 }

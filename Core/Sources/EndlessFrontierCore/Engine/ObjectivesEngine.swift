@@ -7,6 +7,7 @@ public enum ObjectivesEngine {
     public static func current(_ state: WorldState, registry: GameDataRegistry, limit: Int = 6) -> [Objective] {
         var objectives: [Objective] = []
         objectives += colonistObjectives(state)
+        objectives += housingObjectives(state, registry: registry)
         objectives += eraObjectives(state, registry: registry)
         objectives += researchObjectives(state, registry: registry)
         objectives += siteObjectives(state)
@@ -14,6 +15,22 @@ public enum ObjectivesEngine {
         objectives += expansionObjectives(state)
 
         return Array(objectives.sorted { $0.priority < $1.priority }.prefix(limit))
+    }
+
+    private static func housingObjectives(_ state: WorldState, registry: GameDataRegistry) -> [Objective] {
+        for settlement in state.settlements {
+            let capacity = ResourceLoop.housingCapacity(settlement, registry: registry)
+            if capacity > 0, settlement.population >= capacity * 0.85 {
+                return [Objective(
+                    id: "build_housing",
+                    title: "Build more housing",
+                    detail: "\(settlement.name) is filling up (\(Int(settlement.population))/\(Int(capacity))). Crowding stalls growth and dents morale.",
+                    progress: min(1, settlement.population / capacity),
+                    category: .expand, priority: 4
+                )]
+            }
+        }
+        return []
     }
 
     // MARK: - Sources

@@ -88,7 +88,8 @@ struct DashboardView: View {
             HStack {
                 SectionHeader(title: settlement.name)
                 Spacer()
-                Label("\(Int(settlement.population.rounded()))", systemImage: "person.2.fill")
+                Label("\(Int(settlement.population.rounded()))/\(game.housingCapacity(settlement))",
+                      systemImage: "person.2.fill")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Theme.textDim)
             }
