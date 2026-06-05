@@ -65,8 +65,101 @@
     "cost": { "knowledge": 200 },
     "effects": [
       { "type": "unlock_building", "buildingId": "school" },
-      { "type": "unlock_building", "buildingId": "barracks" }
+      { "type": "unlock_building", "buildingId": "barracks" },
+      { "type": "unlock_building", "buildingId": "university" }
     ],
     "description": "Formal education compounds knowledge across generations."
+  },
+  {
+    "id": "pottery",
+    "name": "Pottery",
+    "era": "early_settlement",
+    "requires": ["basic_tools"],
+    "cost": { "knowledge": 35 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "granary" }
+    ],
+    "description": "Fired clay stores grain and water against hard times."
+  },
+  {
+    "id": "masonry",
+    "name": "Masonry",
+    "era": "ancient",
+    "requires": ["bronze_tools"],
+    "cost": { "knowledge": 120 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "stone_walls" },
+      { "type": "unlock_building", "buildingId": "aqueduct" }
+    ],
+    "description": "Cut stone raises walls and carries water across the land."
+  },
+  {
+    "id": "mathematics",
+    "name": "Mathematics",
+    "era": "ancient",
+    "requires": ["writing"],
+    "cost": { "knowledge": 130 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "observatory" },
+      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 1, "mode": "additive" }
+    ],
+    "description": "Number and proof unlock the deeper patterns of the world."
+  },
+  {
+    "id": "engineering",
+    "name": "Engineering",
+    "era": "medieval",
+    "requires": ["masonry", "currency"],
+    "cost": { "knowledge": 220 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "workshop" }
+    ],
+    "description": "Gears, levers and mills turn ingenuity into output."
+  },
+  {
+    "id": "banking",
+    "name": "Banking",
+    "era": "medieval",
+    "requires": ["currency"],
+    "cost": { "knowledge": 200 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "bank" }
+    ],
+    "description": "Credit lets influence flow faster than coin alone."
+  },
+  {
+    "id": "guilds",
+    "name": "Guilds",
+    "era": "medieval",
+    "requires": ["currency"],
+    "cost": { "knowledge": 190 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "market" },
+      { "type": "unlock_event_category", "eventCategory": "commerce" }
+    ],
+    "description": "Organised trades raise standards and bind the region in commerce."
+  },
+  {
+    "id": "steam_power",
+    "name": "Steam Power",
+    "era": "early_industrial",
+    "requires": ["engineering"],
+    "cost": { "knowledge": 360 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "factory" },
+      { "type": "unlock_building", "buildingId": "power_plant" }
+    ],
+    "description": "Harnessed steam drives the engines of an industrial age."
+  },
+  {
+    "id": "machining",
+    "name": "Machining",
+    "era": "early_industrial",
+    "requires": ["steam_power"],
+    "cost": { "knowledge": 420 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "foundry" }
+    ],
+    "description": "Precise tools make precise tools — industry compounds itself."
   }
 ]

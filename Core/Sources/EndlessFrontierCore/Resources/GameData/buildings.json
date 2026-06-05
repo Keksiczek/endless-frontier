@@ -150,5 +150,126 @@
     "defense": 40,
     "morale_effect": 1,
     "description": "Trained soldiers stand ready to defend the settlement."
+  },
+  {
+    "id": "granary",
+    "era": "early_settlement",
+    "name": "Granary",
+    "cost": { "materials": 20 },
+    "workers": 1,
+    "production": { "food": 2 },
+    "morale_effect": 2,
+    "description": "Stores grain against the lean months."
+  },
+  {
+    "id": "well",
+    "era": "early_settlement",
+    "name": "Well",
+    "cost": { "materials": 12 },
+    "morale_effect": 3,
+    "description": "Clean water raises spirits and health."
+  },
+  {
+    "id": "observatory",
+    "era": "ancient",
+    "name": "Observatory",
+    "cost": { "materials": 40, "knowledge": 15 },
+    "workers": 2,
+    "production": { "knowledge": 8 },
+    "morale_effect": 1,
+    "description": "Charting the heavens advances the sciences."
+  },
+  {
+    "id": "stone_walls",
+    "era": "ancient",
+    "name": "Stone Walls",
+    "cost": { "materials": 80 },
+    "workers": 2,
+    "defense": 45,
+    "morale_effect": 1,
+    "description": "Mortared ramparts that turn back all but the largest hosts."
+  },
+  {
+    "id": "aqueduct",
+    "era": "ancient",
+    "name": "Aqueduct",
+    "cost": { "materials": 60, "knowledge": 10 },
+    "workers": 1,
+    "morale_effect": 3,
+    "housing": 20,
+    "description": "Fresh water carried for miles lets the city grow and thrive."
+  },
+  {
+    "id": "university",
+    "era": "medieval",
+    "name": "University",
+    "cost": { "materials": 90, "knowledge": 40 },
+    "workers": 4,
+    "production": { "knowledge": 16 },
+    "consumption": { "energy": 2 },
+    "morale_effect": 2,
+    "description": "A seat of higher learning that compounds discovery."
+  },
+  {
+    "id": "market",
+    "era": "medieval",
+    "name": "Market",
+    "cost": { "materials": 55 },
+    "workers": 3,
+    "production": { "influence": 5 },
+    "consumption": { "food": 1 },
+    "morale_effect": 2,
+    "description": "Bustling stalls knit the region together in trade."
+  },
+  {
+    "id": "bank",
+    "era": "medieval",
+    "name": "Bank",
+    "cost": { "materials": 70, "knowledge": 25 },
+    "workers": 3,
+    "production": { "influence": 9 },
+    "description": "Credit and coin extend the colony's reach across the map."
+  },
+  {
+    "id": "workshop",
+    "era": "medieval",
+    "name": "Workshop",
+    "cost": { "materials": 60, "knowledge": 15 },
+    "workers": 4,
+    "production": { "materials": 11 },
+    "consumption": { "energy": 1 },
+    "description": "Skilled artisans multiply what raw labour can produce."
+  },
+  {
+    "id": "factory",
+    "era": "early_industrial",
+    "name": "Factory",
+    "cost": { "materials": 120, "knowledge": 40 },
+    "workers": 6,
+    "production": { "materials": 28 },
+    "consumption": { "energy": 4 },
+    "pollution": 30,
+    "description": "Mass production on a scale never before seen — at a cost to the air."
+  },
+  {
+    "id": "foundry",
+    "era": "early_industrial",
+    "name": "Foundry",
+    "cost": { "materials": 100, "knowledge": 30 },
+    "workers": 5,
+    "production": { "materials": 18 },
+    "consumption": { "energy": 2 },
+    "pollution": 20,
+    "description": "Roaring furnaces smelt metal for the industrial age."
+  },
+  {
+    "id": "power_plant",
+    "era": "early_industrial",
+    "name": "Power Plant",
+    "cost": { "materials": 110, "knowledge": 35 },
+    "workers": 4,
+    "production": { "energy": 22 },
+    "pollution": 25,
+    "description": "Burns coal to power the machines of a modern colony."
   }
 ]

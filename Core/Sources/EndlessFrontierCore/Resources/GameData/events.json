@@ -435,5 +435,183 @@
       }
     ],
     "narrative_hint": "Smoke on the horizon: a raider warband tests your defenses. Walls and trained hands decide who pays the price."
+  },
+  {
+    "id": "plague",
+    "type": "disaster",
+    "name": "Plague",
+    "era": [],
+    "weight": 7,
+    "cooldown_ticks": 180,
+    "conditions": [
+      { "stat": "global.threatLevel", "min": 20 }
+    ],
+    "effects": [
+      { "type": "pawn_health", "delta": -22, "selector": "all" },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -6 }
+    ],
+    "choices": [
+      {
+        "id": "quarantine",
+        "label": "Quarantine the sick",
+        "description": "Spend knowledge to contain the outbreak.",
+        "cost": { "knowledge": 40 },
+        "effects": [
+          { "type": "pawn_health", "delta": 15, "selector": "all" }
+        ]
+      },
+      {
+        "id": "endure_plague",
+        "label": "Endure and pray",
+        "description": "No cost; the sickness runs its course.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A sickness moves through the colony, fevered and merciless. Every hour of delay costs lives."
+  },
+  {
+    "id": "migration_wave",
+    "type": "opportunity",
+    "name": "Wave of Migrants",
+    "era": [],
+    "weight": 9,
+    "cooldown_ticks": 110,
+    "conditions": [
+      { "stat": "global.prosperity", "min": 40 }
+    ],
+    "effects": [],
+    "choices": [
+      {
+        "id": "welcome_all",
+        "label": "Welcome the newcomers",
+        "description": "Two new colonists join — if you can feed them.",
+        "cost": { "food": 60 },
+        "effects": [
+          { "type": "add_pawn" },
+          { "type": "add_pawn" }
+        ]
+      },
+      {
+        "id": "welcome_some",
+        "label": "Take in a single family",
+        "description": "One new colonist joins.",
+        "cost": { "food": 25 },
+        "effects": [
+          { "type": "add_pawn" }
+        ]
+      },
+      {
+        "id": "turn_away_migrants",
+        "label": "Close the gates",
+        "description": "Spare the stores, but lose the goodwill.",
+        "cost": {},
+        "effects": [
+          { "type": "stat_delta", "stat": "global.prosperity", "delta": -2 }
+        ]
+      }
+    ],
+    "narrative_hint": "Word of your colony's fortune has spread. A column of hopeful migrants waits at the gates."
+  },
+  {
+    "id": "harvest_festival",
+    "type": "flavor",
+    "name": "Harvest Festival",
+    "era": [],
+    "weight": 9,
+    "cooldown_ticks": 60,
+    "conditions": [],
+    "effects": [
+      { "type": "pawn_mood", "delta": 6, "selector": "all" },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 2 }
+    ],
+    "choices": [],
+    "narrative_hint": "Lanterns, music and laughter fill the square as the colony celebrates the season's bounty."
+  },
+  {
+    "id": "golden_age",
+    "type": "opportunity",
+    "name": "A Golden Age",
+    "era": [],
+    "weight": 5,
+    "cooldown_ticks": 250,
+    "conditions": [
+      { "stat": "global.prosperity", "min": 70 }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "knowledge", "delta": 120, "scope": "global" },
+      { "type": "resource_delta", "resource": "influence", "delta": 80, "scope": "global" },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 8 }
+    ],
+    "choices": [],
+    "narrative_hint": "Art, learning and trade flourish together. Future generations will call these the golden years."
+  },
+  {
+    "id": "earthquake",
+    "type": "disaster",
+    "name": "Earthquake",
+    "era": [],
+    "weight": 6,
+    "cooldown_ticks": 170,
+    "conditions": [
+      { "worldFlag": "biome:mountains_present", "present": true }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "materials", "delta": -80, "scope": "global" },
+      { "type": "region_hazard", "delta": 2, "selector": "any_explored" },
+      { "type": "stat_delta", "stat": "settlement:any.stability", "delta": -12 }
+    ],
+    "choices": [
+      {
+        "id": "rebuild",
+        "label": "Rebuild at once",
+        "description": "Spend materials to restore stability quickly.",
+        "cost": { "materials": 40 },
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.stability", "delta": 8 }
+        ]
+      },
+      {
+        "id": "make_do",
+        "label": "Make do with what stands",
+        "description": "No cost.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "The ground heaves and stone cracks. Walls crumble and the earth itself feels untrustworthy."
+  },
+  {
+    "id": "market_day",
+    "type": "opportunity",
+    "name": "Great Market Day",
+    "era": [],
+    "weight": 12,
+    "cooldown_ticks": 55,
+    "conditions": [
+      { "techResearched": "currency" }
+    ],
+    "effects": [],
+    "choices": [
+      {
+        "id": "sell_goods",
+        "label": "Sell surplus materials",
+        "description": "Trade materials for influence.",
+        "cost": { "materials": 80 },
+        "effects": [
+          { "type": "resource_delta", "resource": "influence", "delta": 55, "scope": "global" }
+        ]
+      },
+      {
+        "id": "buy_food_market",
+        "label": "Buy in bulk",
+        "description": "Spend influence on a haul of food.",
+        "cost": { "influence": 30 },
+        "effects": [
+          { "type": "resource_delta", "resource": "food", "delta": 150, "scope": "global" }
+        ]
+      }
+    ],
+    "narrative_hint": "Traders from across the region converge for a great market day. Fortunes can shift in an afternoon."
   }
 ]

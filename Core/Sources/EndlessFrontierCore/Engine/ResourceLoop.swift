@@ -5,6 +5,8 @@ import Foundation
 public enum ResourceLoop {
     /// Base shelter every settlement has before any housing is built.
     public static let baseHousing: Double = 30
+    /// Pollution above this level begins to drag morale down.
+    public static let pollutionMoraleThreshold: Double = 40
 
     /// How many colonists a settlement can house (base + housing buildings).
     public static func housingCapacity(_ settlement: Settlement, registry: GameDataRegistry) -> Double {
@@ -76,9 +78,19 @@ public enum ResourceLoop {
             acc + (registry.building(instance.definitionID)?.defense ?? 0) * Double(instance.count)
         }
         s.stats.defense += (buildingDefense - s.stats.defense) * 0.15
+
+        // 7. Pollution drifts toward what industry emits; heavy pollution hurts
+        //    morale — the price of industrial production.
+        let buildingPollution = s.buildings.reduce(0.0) { acc, instance in
+            acc + (registry.building(instance.definitionID)?.pollution ?? 0) * Double(instance.count)
+        }
+        s.stats.pollution += (buildingPollution - s.stats.pollution) * 0.1
+        if s.stats.pollution > pollutionMoraleThreshold {
+            s.stats.morale -= (s.stats.pollution - pollutionMoraleThreshold) * 0.02
+        }
         s.stats = s.stats.clamped()
 
-        // 7. Individual colonists: needs, mood, skilled work, morale pull.
+        // 8. Individual colonists: needs, mood, skilled work, morale pull.
         s = PawnEngine.advanceOneTick(s)
 
         return s
