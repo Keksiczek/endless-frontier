@@ -34,18 +34,20 @@ the world the player acts on.** Priorities:
    charts resources/morale/population/threat, then tune `world-config.json` /
    `map-gen.json`. Run on a real iPad/iPhone to feel pacing.
 
-## Tier 2 — deepen what the player acts on
+## Tier 2 — deepen what the player acts on  ✅ DONE
 
-3. **Colonists in outposts.** Pawns, equipment, raids, sites and crafting are
-   all capital-only. Give every settlement real colonists and per-settlement
-   management — the biggest structural gap now.
-4. **Combat with teeth.** Raids are abstract (defense vs strength). Use the
-   actual colonists + weapons as defenders; let the player assign a militia,
-   with casualties and heroics. Makes weapons and barracks matter more.
-5. **Inter-settlement economy.** Trade routes exist but are minimal. Caravans,
-   specialised settlements (mining town vs farm town), supply chains.
-6. **Tech-tree screen.** The tree is sizeable now — a visual planner to choose a
-   path, rather than a flat list.
+3. ✅ **Colonists in outposts.** Founded outposts arrive with real colonists; the
+   app lets you switch settlements and manage each one's people/gear.
+4. ✅ **Combat with teeth.** Raids defended by a colonist militia (armed colonists
+   fight harder, real casualties).
+5. ✅ **Inter-settlement economy.** Trade-route management UI (caravans + the
+   isolation-connectivity that keeps outposts stable).
+6. ✅ **Tech-tree screen.** Era-grouped tech tree with status/prereqs and research
+   selection (its own tab).
+
+Remaining within Tier 2 / next refinements: crafting & building are still
+capital-scoped (make them per-selected-settlement); specialised settlements and
+caravan-as-pawns; connector lines / graph layout for the tech tree.
 
 ## Tier 3 — breadth & long game
 

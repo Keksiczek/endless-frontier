@@ -154,6 +154,27 @@ final class GameViewModel {
         registry.availableTechs(researched: world.researchedTechs)
     }
 
+    enum TechStatus { case researched, active, available, locked }
+
+    func techStatus(_ tech: TechDefinition) -> TechStatus {
+        if world.researchedTechs.contains(tech.id) { return .researched }
+        if world.activeResearch == tech.id { return .active }
+        if tech.requires.allSatisfy(world.researchedTechs.contains) { return .available }
+        return .locked
+    }
+
+    /// All techs grouped by era (era order) for the tech-tree screen.
+    var techsByEra: [(era: Era, techs: [TechDefinition])] {
+        Dictionary(grouping: Array(registry.techs.values), by: \.era)
+            .map { (era: $0.key, techs: $0.value.sorted { $0.knowledgeCost < $1.knowledgeCost }) }
+            .sorted { $0.era.index < $1.era.index }
+    }
+
+    func researchProgressFraction(_ tech: TechDefinition) -> Double? {
+        guard world.activeResearch == tech.id, tech.knowledgeCost > 0 else { return nil }
+        return min(1, world.researchProgress / tech.knowledgeCost)
+    }
+
     func housingCapacity(_ settlement: Settlement) -> Int {
         Int(ResourceLoop.housingCapacity(settlement, registry: registry).rounded())
     }

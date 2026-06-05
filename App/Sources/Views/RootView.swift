@@ -11,6 +11,9 @@ struct RootView: View {
 
             WorldMapScreen(game: game)
                 .tabItem { Label("World", systemImage: "map.fill") }
+
+            TechTreeView(game: game)
+                .tabItem { Label("Tech", systemImage: "lightbulb.fill") }
         }
         .tint(Theme.accent)
     }
