@@ -45,7 +45,9 @@ public enum MultiCityEngine {
         for route in s.tradeRoutes {
             guard let from = s.settlements.firstIndex(where: { $0.id == route.fromID }),
                   let to = s.settlements.firstIndex(where: { $0.id == route.toID }) else { continue }
-            let available = min(route.amountPerTick, s.settlements[from].storage[route.resource])
+            // A mercantile source settlement pushes more goods per tick.
+            let throughput = route.amountPerTick * s.settlements[from].specialization.profile.tradeThroughput
+            let available = min(throughput, s.settlements[from].storage[route.resource])
             guard available > 0 else { continue }
             let capacity = s.settlements[to].storageCapacity
             let room = max(0, capacity - s.settlements[to].storage[route.resource])

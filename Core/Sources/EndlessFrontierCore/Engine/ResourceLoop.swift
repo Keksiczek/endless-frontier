@@ -29,14 +29,20 @@ public enum ResourceLoop {
         config: WorldConfig
     ) -> Settlement {
         var s = settlement
+        let profile = s.specialization.profile
 
-        // 1. Net production/consumption from buildings.
+        // 1. Net production/consumption from buildings. A settlement's
+        //    specialisation multiplies its gross production (not consumption),
+        //    so e.g. an agricultural town grows far more food than it would
+        //    balanced, at the cost of whatever it down-weights.
         var net = Resources()
         for instance in s.buildings {
             guard let def = registry.building(instance.definitionID) else { continue }
+            let count = Double(instance.count)
             for resource in ResourceType.allCases {
-                let perBuilding = def.production[resource] - def.consumption[resource]
-                net[resource] = net[resource] + perBuilding * Double(instance.count)
+                let produced = def.production[resource] * profile.productionMultiplier(resource)
+                let consumed = def.consumption[resource]
+                net[resource] = net[resource] + (produced - consumed) * count
             }
         }
 
@@ -83,7 +89,7 @@ public enum ResourceLoop {
         let buildingDefense = s.buildings.reduce(0.0) { acc, instance in
             acc + (registry.building(instance.definitionID)?.defense ?? 0) * Double(instance.count)
         }
-        let defenseTarget = buildingDefense + ItemEngine.colonyDefenseBonus(s, registry: registry)
+        let defenseTarget = buildingDefense + ItemEngine.colonyDefenseBonus(s, registry: registry) + profile.defenseFlat
         s.stats.defense += (defenseTarget - s.stats.defense) * 0.15
 
         // 7. Pollution drifts toward what industry emits; heavy pollution hurts
@@ -91,7 +97,8 @@ public enum ResourceLoop {
         let buildingPollution = s.buildings.reduce(0.0) { acc, instance in
             acc + (registry.building(instance.definitionID)?.pollution ?? 0) * Double(instance.count)
         }
-        s.stats.pollution += (buildingPollution - s.stats.pollution) * 0.1
+        let pollutionTarget = buildingPollution + profile.pollutionFlat
+        s.stats.pollution += (pollutionTarget - s.stats.pollution) * 0.1
         if s.stats.pollution > pollutionMoraleThreshold {
             s.stats.morale -= (s.stats.pollution - pollutionMoraleThreshold) * 0.02
         }
@@ -118,10 +125,12 @@ public enum ResourceLoop {
         var knowledge = 0.0
         var influence = 0.0
         for settlement in state.settlements {
+            let profile = settlement.specialization.profile
             for instance in settlement.buildings {
                 guard let def = registry.building(instance.definitionID) else { continue }
-                knowledge += def.production[.knowledge] * Double(instance.count)
-                influence += def.production[.influence] * Double(instance.count)
+                let count = Double(instance.count)
+                knowledge += def.production[.knowledge] * profile.productionMultiplier(.knowledge) * count
+                influence += def.production[.influence] * profile.productionMultiplier(.influence) * count
             }
         }
         g.knowledgeOutput = knowledge

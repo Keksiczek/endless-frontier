@@ -86,6 +86,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public var storageCapacity: Double
     public var stats: SettlementStats
     public var inventory: [ItemInstance]   // unequipped items + active artifacts
+    public var specialization: SettlementSpecialization
 
     public init(
         id: UUID = UUID(),
@@ -99,7 +100,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         storage: Resources = Resources(),
         storageCapacity: Double = 500,
         stats: SettlementStats = SettlementStats(),
-        inventory: [ItemInstance] = []
+        inventory: [ItemInstance] = [],
+        specialization: SettlementSpecialization = .balanced
     ) {
         self.id = id
         self.name = name
@@ -113,5 +115,31 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.storageCapacity = storageCapacity
         self.stats = stats
         self.inventory = inventory
+        self.specialization = specialization
+    }
+
+    // MARK: - Codable (resilient to pre-specialisation saves)
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, kind, regionID, foundedTick, population, pawns
+        case buildings, storage, storageCapacity, stats, inventory, specialization
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        kind = try c.decode(SettlementKind.self, forKey: .kind)
+        regionID = try c.decodeIfPresent(UUID.self, forKey: .regionID)
+        foundedTick = try c.decode(Int.self, forKey: .foundedTick)
+        population = try c.decode(Double.self, forKey: .population)
+        pawns = try c.decode([Pawn].self, forKey: .pawns)
+        buildings = try c.decode([BuildingInstance].self, forKey: .buildings)
+        storage = try c.decode(Resources.self, forKey: .storage)
+        storageCapacity = try c.decode(Double.self, forKey: .storageCapacity)
+        stats = try c.decode(SettlementStats.self, forKey: .stats)
+        inventory = try c.decode([ItemInstance].self, forKey: .inventory)
+        // Saves written before specialisations default to neutral.
+        specialization = try c.decodeIfPresent(SettlementSpecialization.self, forKey: .specialization) ?? .balanced
     }
 }

@@ -54,6 +54,18 @@ public enum GameEngine {
         return s
     }
 
+    /// Sets a settlement's economic specialisation, reshaping its production.
+    public static func setSpecialization(
+        _ state: WorldState,
+        settlementID: UUID,
+        specialization: SettlementSpecialization
+    ) -> WorldState {
+        guard let i = state.settlements.firstIndex(where: { $0.id == settlementID }) else { return state }
+        var s = state
+        s.settlements[i].specialization = specialization
+        return s
+    }
+
     /// Reassigns a colonist to a different kind of work.
     public static func assignWork(
         _ state: WorldState,

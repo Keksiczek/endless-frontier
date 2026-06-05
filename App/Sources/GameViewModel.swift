@@ -259,6 +259,12 @@ final class GameViewModel {
         persist()
     }
 
+    func setSpecialization(_ specialization: SettlementSpecialization) {
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.setSpecialization(world, settlementID: settlement.id, specialization: specialization)
+        persist()
+    }
+
     func assignWork(pawnID: UUID, to work: WorkKind) {
         guard let settlement = selectedSettlement else { return }
         world = GameEngine.assignWork(world, settlementID: settlement.id, pawnID: pawnID, work: work)
