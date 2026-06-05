@@ -86,6 +86,28 @@ final class GameViewModel {
         persist()
     }
 
+    private(set) var lastSiteOutcome: SiteOutcome?
+
+    func interactWithSite(_ regionID: UUID) {
+        let (newState, outcome) = GameEngine.interactWithSite(world, regionID: regionID, registry: registry)
+        world = newState
+        lastSiteOutcome = outcome
+        persist()
+    }
+
+    func dismissSiteOutcome() { lastSiteOutcome = nil }
+
+    /// Player-facing label for the site action available in a region, if any.
+    func siteActionLabel(for region: Region) -> String? {
+        guard region.hasActiveSite else { return nil }
+        switch region.kind {
+        case .ruins: return "Excavate Ruins"
+        case .dungeon: return "Delve Dungeon"
+        case .anomaly: return "Probe Anomaly"
+        default: return nil
+        }
+    }
+
     // MARK: - Derived view data
 
     var capital: Settlement? { world.settlements.first }

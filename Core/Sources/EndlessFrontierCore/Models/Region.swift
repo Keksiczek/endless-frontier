@@ -40,6 +40,8 @@ public struct Region: Codable, Sendable, Identifiable, Equatable {
     public var explorationState: ExplorationState
     public var resourceDeposits: Resources
     public var settlementIDs: [UUID]
+    /// Whether a special site (ruins/dungeon/anomaly) here has been exploited.
+    public var siteCleared: Bool
 
     public init(
         id: UUID = UUID(),
@@ -50,7 +52,8 @@ public struct Region: Codable, Sendable, Identifiable, Equatable {
         hazardLevel: Int = 0,
         explorationState: ExplorationState = .unknown,
         resourceDeposits: Resources = Resources(),
-        settlementIDs: [UUID] = []
+        settlementIDs: [UUID] = [],
+        siteCleared: Bool = false
     ) {
         self.id = id
         self.name = name
@@ -61,5 +64,14 @@ public struct Region: Codable, Sendable, Identifiable, Equatable {
         self.explorationState = explorationState
         self.resourceDeposits = resourceDeposits
         self.settlementIDs = settlementIDs
+        self.siteCleared = siteCleared
+    }
+
+    /// `true` if this region has an interactable special site that's explored
+    /// and not yet cleared.
+    public var hasActiveSite: Bool {
+        explorationState == .fullyExplored
+            && !siteCleared
+            && [.ruins, .dungeon, .anomaly].contains(kind)
     }
 }

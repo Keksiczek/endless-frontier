@@ -36,6 +36,18 @@ struct WorldMapScreen: View {
         }
         .foregroundStyle(Theme.text)
         .animation(.snappy, value: selectedRegionID)
+        .alert("Site Explored", isPresented: siteOutcomeBinding, presenting: game.lastSiteOutcome) { _ in
+            Button("Continue") { game.dismissSiteOutcome() }
+        } message: { outcome in
+            Text(outcome.narrative)
+        }
+    }
+
+    private var siteOutcomeBinding: Binding<Bool> {
+        Binding(
+            get: { game.lastSiteOutcome != nil },
+            set: { if !$0 { game.dismissSiteOutcome() } }
+        )
     }
 
     @ViewBuilder
@@ -102,11 +114,17 @@ struct RegionDetailCard: View {
         } else if game.activeExpedition?.targetRegionID == region.id {
             Text("Expedition under way — \(game.activeExpedition?.ticksRemaining ?? 0) ticks left")
                 .font(.caption).foregroundStyle(Theme.textDim)
-        } else if game.canFound(region) {
-            actionButton("Found Outpost", systemImage: "house.lodge.fill") { game.foundOutpost(in: region.id) }
-        } else if region.explorationState == .unknown {
-            Text("Explore an adjacent region first.")
-                .font(.caption).foregroundStyle(Theme.textDim)
+        } else {
+            if let siteLabel = game.siteActionLabel(for: region) {
+                actionButton(siteLabel, systemImage: "flashlight.on.fill") { game.interactWithSite(region.id) }
+            }
+            if game.canFound(region) {
+                actionButton("Found Outpost", systemImage: "house.lodge.fill") { game.foundOutpost(in: region.id) }
+            }
+            if region.explorationState == .unknown {
+                Text("Explore an adjacent region first.")
+                    .font(.caption).foregroundStyle(Theme.textDim)
+            }
         }
     }
 

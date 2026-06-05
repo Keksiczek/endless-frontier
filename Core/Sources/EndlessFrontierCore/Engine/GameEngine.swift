@@ -69,6 +69,19 @@ public enum GameEngine {
         return s
     }
 
+    /// Interacts with the special site (ruins/dungeon/anomaly) in a region.
+    /// Returns the new state and the outcome, or unchanged state + `nil`.
+    public static func interactWithSite(
+        _ state: WorldState,
+        regionID: UUID,
+        registry: GameDataRegistry
+    ) -> (WorldState, SiteOutcome?) {
+        if let (newState, outcome) = SiteEngine.interact(state, regionID: regionID, registry: registry) {
+            return (newState, outcome)
+        }
+        return (state, nil)
+    }
+
     /// Founds an outpost in a fully-explored, unsettled region.
     public static func foundOutpost(
         _ state: WorldState,
