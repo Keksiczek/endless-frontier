@@ -49,6 +49,20 @@ struct ColonistsPanel: View {
                 workMenu(pawn)
             }
             moodBar(pawn.mood)
+            if let equipment = pawn.equipment, let def = game.itemDefinition(equipment) {
+                Button {
+                    game.unequip(pawn.id)
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "shield.lefthalf.filled")
+                        Text(def.name).font(.caption2.weight(.medium))
+                        Spacer()
+                        Text("Unequip").font(.caption2)
+                    }
+                    .foregroundStyle(def.rarity.color)
+                }
+                .buttonStyle(.plain)
+            }
         }
         .padding(.vertical, 10).padding(.horizontal, 12)
         .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))

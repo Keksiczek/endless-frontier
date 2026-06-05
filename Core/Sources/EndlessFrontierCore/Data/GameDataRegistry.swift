@@ -22,6 +22,7 @@ public struct GameDataRegistry: Sendable {
     public let eras: [Era: EraDefinition]
     public let biomes: [String: BiomeDefinition]
     public let events: [EventTemplate]
+    public let items: [String: ItemDefinition]
     public let config: WorldConfig
     public let mapGen: MapGenConfig
 
@@ -31,6 +32,7 @@ public struct GameDataRegistry: Sendable {
         eras: [EraDefinition] = [],
         biomes: [BiomeDefinition] = [],
         events: [EventTemplate] = [],
+        items: [ItemDefinition] = [],
         config: WorldConfig = .default,
         mapGen: MapGenConfig = .default
     ) {
@@ -39,6 +41,7 @@ public struct GameDataRegistry: Sendable {
         self.eras = Dictionary(uniqueKeysWithValues: eras.map { ($0.era, $0) })
         self.biomes = Dictionary(uniqueKeysWithValues: biomes.map { ($0.id, $0) })
         self.events = events
+        self.items = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })
         self.config = config
         self.mapGen = mapGen
     }
@@ -46,6 +49,7 @@ public struct GameDataRegistry: Sendable {
     public func building(_ id: String) -> BuildingDefinition? { buildings[id] }
     public func tech(_ id: String) -> TechDefinition? { techs[id] }
     public func biome(_ id: String) -> BiomeDefinition? { biomes[id] }
+    public func item(_ id: String) -> ItemDefinition? { items[id] }
     public func eraDefinition(_ era: Era) -> EraDefinition? { eras[era] }
 
     /// Techs whose prerequisites are all met and that aren't yet researched.
@@ -78,14 +82,16 @@ public struct GameDataRegistry: Sendable {
                 throw GameDataError.decodingFailed(name, underlying: error)
             }
         }
-        // map-gen is optional: fall back to defaults if the file is absent.
+        // map-gen and items are optional: fall back if the file is absent.
         let mapGen = (try? load(MapGenConfig.self, "map-gen")) ?? .default
+        let items = (try? load([ItemDefinition].self, "items")) ?? []
         return GameDataRegistry(
             buildings: try load([BuildingDefinition].self, "buildings"),
             techs: try load([TechDefinition].self, "techs"),
             eras: try load([EraDefinition].self, "eras"),
             biomes: try load([BiomeDefinition].self, "biomes"),
             events: try load([EventTemplate].self, "events"),
+            items: items,
             config: try load(WorldConfig.self, "world-config"),
             mapGen: mapGen
         )

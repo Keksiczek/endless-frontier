@@ -1,0 +1,136 @@
+[
+  {
+    "id": "worn_tools",
+    "name": "Worn Tools",
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [ { "type": "skill_bonus", "work": "farming", "amount": 2 } ],
+    "description": "Chipped but serviceable. A farmer works a little faster."
+  },
+  {
+    "id": "sturdy_axe",
+    "name": "Sturdy Axe",
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [ { "type": "skill_bonus", "work": "logging", "amount": 2 } ],
+    "description": "A good axe makes short work of tall trees."
+  },
+  {
+    "id": "miners_pick",
+    "name": "Miner's Pick",
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [ { "type": "skill_bonus", "work": "mining", "amount": 3 } ],
+    "description": "Balanced and sharp — stone yields more readily."
+  },
+  {
+    "id": "scholars_quill",
+    "name": "Scholar's Quill",
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [ { "type": "skill_bonus", "work": "research", "amount": 3 } ],
+    "description": "Ideas flow faster from a fine pen."
+  },
+  {
+    "id": "merchants_ledger",
+    "name": "Merchant's Ledger",
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [ { "type": "skill_bonus", "work": "trade", "amount": 3 } ],
+    "description": "Every deal recorded, every advantage pressed."
+  },
+  {
+    "id": "lucky_charm",
+    "name": "Lucky Charm",
+    "rarity": "rare",
+    "slot": "equipment",
+    "effects": [ { "type": "mood_bonus", "amount": 10 } ],
+    "description": "Its bearer always seems to keep their spirits up."
+  },
+  {
+    "id": "healers_kit",
+    "name": "Healer's Kit",
+    "rarity": "rare",
+    "slot": "equipment",
+    "effects": [ { "type": "health_regen", "amount": 1.5 } ],
+    "description": "Salves and bandages that knit wounds quickly."
+  },
+  {
+    "id": "masterwork_pick",
+    "name": "Masterwork Pick",
+    "rarity": "epic",
+    "slot": "equipment",
+    "effects": [ { "type": "skill_bonus", "work": "mining", "amount": 6 } ],
+    "description": "Forged by a true master — it bites stone like timber."
+  },
+  {
+    "id": "ancient_talisman",
+    "name": "Ancient Talisman",
+    "rarity": "epic",
+    "slot": "equipment",
+    "effects": [
+      { "type": "mood_bonus", "amount": 8 },
+      { "type": "health_regen", "amount": 1.5 }
+    ],
+    "description": "A relic that wards both body and mind."
+  },
+  {
+    "id": "crown_of_ages",
+    "name": "Crown of Ages",
+    "rarity": "legendary",
+    "slot": "equipment",
+    "effects": [
+      { "type": "mood_bonus", "amount": 20 },
+      { "type": "skill_bonus", "work": "trade", "amount": 5 }
+    ],
+    "description": "Worn by leaders of forgotten empires. None who carry it despair."
+  },
+  {
+    "id": "harvest_idol",
+    "name": "Harvest Idol",
+    "rarity": "uncommon",
+    "slot": "artifact",
+    "effects": [ { "type": "colony_production", "resource": "food", "perTick": 3 } ],
+    "description": "A carved figure that seems to bless the fields."
+  },
+  {
+    "id": "forge_totem",
+    "name": "Forge Totem",
+    "rarity": "rare",
+    "slot": "artifact",
+    "effects": [ { "type": "colony_production", "resource": "materials", "perTick": 4 } ],
+    "description": "Set by the kilns, it lends strength to every smith."
+  },
+  {
+    "id": "beacon_stone",
+    "name": "Beacon Stone",
+    "rarity": "rare",
+    "slot": "artifact",
+    "effects": [ { "type": "colony_defense", "amount": 18 } ],
+    "description": "A watch-stone that warns of danger long before it arrives."
+  },
+  {
+    "id": "prosperity_relic",
+    "name": "Relic of Prosperity",
+    "rarity": "epic",
+    "slot": "artifact",
+    "effects": [ { "type": "colony_morale", "amount": 8 } ],
+    "description": "Its presence lifts the whole colony's heart."
+  },
+  {
+    "id": "eternal_engine",
+    "name": "Eternal Engine",
+    "rarity": "legendary",
+    "slot": "artifact",
+    "effects": [ { "type": "colony_production", "resource": "energy", "perTick": 10 } ],
+    "description": "An impossible machine that never stops turning."
+  },
+  {
+    "id": "world_seed",
+    "name": "World Seed",
+    "rarity": "legendary",
+    "slot": "artifact",
+    "effects": [ { "type": "colony_production", "resource": "knowledge", "perTick": 8 } ],
+    "description": "A shard of first creation that whispers endless secrets."
+  }
+]

@@ -36,7 +36,11 @@ public enum PawnEngine {
 
     /// Advances every pawn in a settlement one tick and returns the updated
     /// settlement (needs, mood, eaten food, work output, morale drift).
-    public static func advanceOneTick(_ settlement: Settlement) -> Settlement {
+    /// `registry` resolves equipment buffs; an empty registry = no items.
+    public static func advanceOneTick(
+        _ settlement: Settlement,
+        registry: GameDataRegistry = GameDataRegistry()
+    ) -> Settlement {
         guard !settlement.pawns.isEmpty else { return settlement }
         var s = settlement
         var food = s.storage[.food]
@@ -56,16 +60,18 @@ public enum PawnEngine {
             }
             p.needs = p.needs.clamped()
 
-            // Health: starvation hurts, otherwise the body slowly recovers.
+            // Health: starvation hurts, otherwise the body slowly recovers
+            // (equipment can speed recovery).
             if p.needs.hunger <= 0 {
                 p.health -= starvationHealthDamage
             } else {
-                p.health = min(100, p.health + healthRecovery)
+                p.health = min(100, p.health + healthRecovery + ItemEngine.healthRegenBonus(p, registry: registry))
             }
             p.health = max(0, p.health)
 
-            // Mood from needs + trait, clamped.
-            p.mood = min(max(p.needs.average + p.trait.moodModifier, 0), 100)
+            // Mood from needs + trait + equipment, clamped.
+            p.mood = min(max(p.needs.average + p.trait.moodModifier
+                             + ItemEngine.moodBonus(p, registry: registry), 0), 100)
 
             // Mental break with hysteresis: break at very low mood, recover
             // only once mood climbs back above the higher threshold.
@@ -78,8 +84,10 @@ public enum PawnEngine {
             // Work output + learning-by-doing, only when working (not broken).
             if !p.isBroken, let resource = p.assignedWork.resource {
                 let moodFactor = 0.5 + 0.5 * (p.mood / 100)   // 0.5…1.0
+                let effectiveSkill = p.skill(p.assignedWork)
+                    + ItemEngine.skillBonus(p, work: p.assignedWork, registry: registry)
                 output[resource] = output[resource]
-                    + Double(p.skill(p.assignedWork)) * outputPerSkill * moodFactor
+                    + Double(effectiveSkill) * outputPerSkill * moodFactor
 
                 var xp = (p.skillXP[p.assignedWork] ?? 0) + xpPerTickWorking
                 let level = p.skill(p.assignedWork)

@@ -69,6 +69,48 @@ public enum GameEngine {
         return s
     }
 
+    /// Equips an inventory item onto a colonist. Equipment only; any currently
+    /// held item returns to the inventory. Returns unchanged state on failure.
+    public static func equipItem(
+        _ state: WorldState,
+        settlementID: UUID,
+        pawnID: UUID,
+        itemID: UUID,
+        registry: GameDataRegistry
+    ) -> WorldState {
+        guard let si = state.settlements.firstIndex(where: { $0.id == settlementID }),
+              let ii = state.settlements[si].inventory.firstIndex(where: { $0.id == itemID }),
+              let pi = state.settlements[si].pawns.firstIndex(where: { $0.id == pawnID }),
+              let def = registry.item(state.settlements[si].inventory[ii].definitionID),
+              def.slot == .equipment else {
+            return state
+        }
+        var s = state
+        let item = s.settlements[si].inventory.remove(at: ii)
+        if let previous = s.settlements[si].pawns[pi].equipment {
+            s.settlements[si].inventory.append(previous)
+        }
+        s.settlements[si].pawns[pi].equipment = item
+        return s
+    }
+
+    /// Returns a colonist's equipped item to the settlement inventory.
+    public static func unequipItem(
+        _ state: WorldState,
+        settlementID: UUID,
+        pawnID: UUID
+    ) -> WorldState {
+        guard let si = state.settlements.firstIndex(where: { $0.id == settlementID }),
+              let pi = state.settlements[si].pawns.firstIndex(where: { $0.id == pawnID }),
+              let item = state.settlements[si].pawns[pi].equipment else {
+            return state
+        }
+        var s = state
+        s.settlements[si].inventory.append(item)
+        s.settlements[si].pawns[pi].equipment = nil
+        return s
+    }
+
     /// Interacts with the special site (ruins/dungeon/anomaly) in a region.
     /// Returns the new state and the outcome, or unchanged state + `nil`.
     public static func interactWithSite(

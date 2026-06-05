@@ -86,6 +86,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     public var assignedWork: WorkKind
     public var health: Double            // 0…100
     public var isBroken: Bool            // mental break — stops working until mood recovers
+    public var equipment: ItemInstance?  // a carried equipment item, if any
 
     public init(
         id: UUID = UUID(),
@@ -97,7 +98,8 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         mood: Double = 70,
         assignedWork: WorkKind = .idle,
         health: Double = 100,
-        isBroken: Bool = false
+        isBroken: Bool = false,
+        equipment: ItemInstance? = nil
     ) {
         self.id = id
         self.name = name
@@ -109,6 +111,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         self.assignedWork = assignedWork
         self.health = health
         self.isBroken = isBroken
+        self.equipment = equipment
     }
 
     public func skill(_ kind: WorkKind) -> Int { skills[kind] ?? 0 }

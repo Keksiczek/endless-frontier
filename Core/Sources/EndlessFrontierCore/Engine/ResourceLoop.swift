@@ -40,6 +40,12 @@ public enum ResourceLoop {
             }
         }
 
+        // 1b. Colony artifacts add passive production.
+        let artifactProduction = ItemEngine.colonyProduction(s, registry: registry)
+        for resource in ResourceType.allCases {
+            net[resource] = net[resource] + artifactProduction[resource]
+        }
+
         // 2. Population food upkeep.
         net[.food] = net[.food] - s.population * config.foodPerPersonPerTick
 
@@ -70,14 +76,15 @@ public enum ResourceLoop {
         let buildingMorale = s.buildings.reduce(0.0) { acc, instance in
             acc + (registry.building(instance.definitionID)?.moraleEffect ?? 0) * Double(instance.count)
         }
-        let moraleTarget = min(100, max(0, 50 + buildingMorale))
+        let moraleTarget = min(100, max(0, 50 + buildingMorale + ItemEngine.colonyMoraleBonus(s, registry: registry)))
         s.stats.morale += (moraleTarget - s.stats.morale) * 0.1
 
-        // 6. Defense drifts toward what the settlement's fortifications provide.
+        // 6. Defense drifts toward fortifications (buildings + artifacts).
         let buildingDefense = s.buildings.reduce(0.0) { acc, instance in
             acc + (registry.building(instance.definitionID)?.defense ?? 0) * Double(instance.count)
         }
-        s.stats.defense += (buildingDefense - s.stats.defense) * 0.15
+        let defenseTarget = buildingDefense + ItemEngine.colonyDefenseBonus(s, registry: registry)
+        s.stats.defense += (defenseTarget - s.stats.defense) * 0.15
 
         // 7. Pollution drifts toward what industry emits; heavy pollution hurts
         //    morale — the price of industrial production.
@@ -91,7 +98,7 @@ public enum ResourceLoop {
         s.stats = s.stats.clamped()
 
         // 8. Individual colonists: needs, mood, skilled work, morale pull.
-        s = PawnEngine.advanceOneTick(s)
+        s = PawnEngine.advanceOneTick(s, registry: registry)
 
         return s
     }

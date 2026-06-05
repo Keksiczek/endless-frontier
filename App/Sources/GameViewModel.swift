@@ -156,6 +156,25 @@ final class GameViewModel {
 
     var capitalPawns: [Pawn] { capital?.pawns ?? [] }
 
+    var capitalInventory: [ItemInstance] { capital?.inventory ?? [] }
+
+    func itemDefinition(_ instance: ItemInstance) -> ItemDefinition? {
+        registry.item(instance.definitionID)
+    }
+
+    func equip(_ itemID: UUID, toPawn pawnID: UUID) {
+        guard let capital else { return }
+        world = GameEngine.equipItem(world, settlementID: capital.id, pawnID: pawnID,
+                                     itemID: itemID, registry: registry)
+        persist()
+    }
+
+    func unequip(_ pawnID: UUID) {
+        guard let capital else { return }
+        world = GameEngine.unequipItem(world, settlementID: capital.id, pawnID: pawnID)
+        persist()
+    }
+
     func assignWork(pawnID: UUID, to work: WorkKind) {
         guard let capital else { return }
         world = GameEngine.assignWork(world, settlementID: capital.id, pawnID: pawnID, work: work)

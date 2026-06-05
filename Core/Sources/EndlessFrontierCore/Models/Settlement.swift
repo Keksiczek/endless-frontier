@@ -85,6 +85,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public var storage: Resources
     public var storageCapacity: Double
     public var stats: SettlementStats
+    public var inventory: [ItemInstance]   // unequipped items + active artifacts
 
     public init(
         id: UUID = UUID(),
@@ -97,7 +98,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         buildings: [BuildingInstance] = [],
         storage: Resources = Resources(),
         storageCapacity: Double = 500,
-        stats: SettlementStats = SettlementStats()
+        stats: SettlementStats = SettlementStats(),
+        inventory: [ItemInstance] = []
     ) {
         self.id = id
         self.name = name
@@ -110,5 +112,6 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.storage = storage
         self.storageCapacity = storageCapacity
         self.stats = stats
+        self.inventory = inventory
     }
 }
