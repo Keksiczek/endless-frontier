@@ -40,7 +40,8 @@
     "requires": ["basic_tools"],
     "cost": { "knowledge": 90 },
     "effects": [
-      { "type": "unlock_building", "buildingId": "windmill" }
+      { "type": "unlock_building", "buildingId": "windmill" },
+      { "type": "unlock_building", "buildingId": "watchtower" }
     ],
     "description": "Bronze tools and weapons mark a new age of capability."
   },
@@ -63,7 +64,8 @@
     "requires": ["writing", "currency"],
     "cost": { "knowledge": 200 },
     "effects": [
-      { "type": "unlock_building", "buildingId": "school" }
+      { "type": "unlock_building", "buildingId": "school" },
+      { "type": "unlock_building", "buildingId": "barracks" }
     ],
     "description": "Formal education compounds knowledge across generations."
   }

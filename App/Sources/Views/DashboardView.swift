@@ -94,6 +94,7 @@ struct DashboardView: View {
             }
             StatBar(label: "Stability", value: settlement.stats.stability, tint: Theme.good)
             StatBar(label: "Morale", value: settlement.stats.morale, tint: Theme.accent)
+            StatBar(label: "Defense", value: settlement.stats.defense, tint: Theme.good)
             StatBar(label: "Prosperity", value: game.world.globalStats.prosperity, tint: Theme.good)
             StatBar(label: "Threat", value: game.world.globalStats.threatLevel, tint: Theme.danger)
         }

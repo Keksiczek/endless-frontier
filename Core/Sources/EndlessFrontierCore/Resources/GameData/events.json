@@ -399,5 +399,41 @@
     ],
     "choices": [],
     "narrative_hint": "Shifting earth reveals the bones of an older world — ancient ruins, waiting beyond the frontier."
+  },
+  {
+    "id": "raider_warband",
+    "type": "threat",
+    "name": "Raider Warband",
+    "era": [],
+    "weight": 11,
+    "cooldown_ticks": 90,
+    "conditions": [
+      { "stat": "global.threatLevel", "min": 40 }
+    ],
+    "effects": [
+      { "type": "raid", "strength": 25 }
+    ],
+    "choices": [
+      {
+        "id": "muster",
+        "label": "Muster every able hand",
+        "description": "Spend materials to reinforce the defense for this attack.",
+        "cost": { "materials": 40 },
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 6 },
+          { "type": "stat_delta", "stat": "global.threatLevel", "delta": -8 }
+        ]
+      },
+      {
+        "id": "pay_tribute",
+        "label": "Pay tribute to be left alone",
+        "description": "Buy them off with influence.",
+        "cost": { "influence": 35 },
+        "effects": [
+          { "type": "stat_delta", "stat": "global.threatLevel", "delta": -12 }
+        ]
+      }
+    ],
+    "narrative_hint": "Smoke on the horizon: a raider warband tests your defenses. Walls and trained hands decide who pays the price."
   }
 ]

@@ -108,5 +108,36 @@
     "consumption": { "energy": 1 },
     "morale_effect": 2,
     "description": "Educates the next generation of thinkers."
+  },
+  {
+    "id": "palisade",
+    "era": "early_settlement",
+    "name": "Wooden Palisade",
+    "cost": { "materials": 30 },
+    "workers": 1,
+    "defense": 12,
+    "morale_effect": 1,
+    "description": "A timber wall and ditch — the first line against raiders."
+  },
+  {
+    "id": "watchtower",
+    "era": "ancient",
+    "name": "Watchtower",
+    "cost": { "materials": 45 },
+    "workers": 2,
+    "defense": 20,
+    "morale_effect": 1,
+    "description": "Spotters give the colony time to muster against attack."
+  },
+  {
+    "id": "barracks",
+    "era": "medieval",
+    "name": "Barracks",
+    "cost": { "materials": 70, "knowledge": 10 },
+    "workers": 4,
+    "consumption": { "food": 2 },
+    "defense": 40,
+    "morale_effect": 1,
+    "description": "Trained soldiers stand ready to defend the settlement."
   }
 ]

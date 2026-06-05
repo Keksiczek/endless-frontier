@@ -14,6 +14,7 @@ public enum EventEffect: Codable, Sendable, Equatable {
     case removePawn(selector: PawnSelector)
     case regionHazardDelta(delta: Int, selector: RegionSelector)
     case regionKindChange(kind: RegionKind, selector: RegionSelector)
+    case raid(strength: Double)
 
     private enum CodingKeys: String, CodingKey {
         case type
@@ -29,6 +30,7 @@ public enum EventEffect: Codable, Sendable, Equatable {
         case value
         case selector
         case kind
+        case strength
     }
 
     private static func scope(from raw: String?) -> StatPath.Target {
@@ -90,6 +92,8 @@ public enum EventEffect: Codable, Sendable, Equatable {
             let kind = try c.decode(RegionKind.self, forKey: .kind)
             let selector = try c.decodeIfPresent(RegionSelector.self, forKey: .selector) ?? .anyExplored
             self = .regionKindChange(kind: kind, selector: selector)
+        case "raid":
+            self = .raid(strength: try c.decode(Double.self, forKey: .strength))
         default:
             throw DecodingError.dataCorruptedError(
                 forKey: .type,
@@ -144,6 +148,9 @@ public enum EventEffect: Codable, Sendable, Equatable {
             try c.encode("region_kind", forKey: .type)
             try c.encode(kind, forKey: .kind)
             try c.encode(selector, forKey: .selector)
+        case let .raid(strength):
+            try c.encode("raid", forKey: .type)
+            try c.encode(strength, forKey: .strength)
         }
     }
 }

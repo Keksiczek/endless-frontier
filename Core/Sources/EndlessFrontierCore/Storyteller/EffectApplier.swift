@@ -73,8 +73,47 @@ public enum EffectApplier {
             if let index = regionIndex(in: s, selector: selector) {
                 s.regions[index].kind = kind
             }
+        case let .raid(strength):
+            resolveRaid(&s, strength: strength)
         }
         return s
+    }
+
+    /// Resolves a raid against the capital's defense. If defended, it's
+    /// repelled with a morale lift; otherwise the shortfall in defense
+    /// determines the damage to resources, stability, morale and a colonist.
+    /// Deterministic — no RNG.
+    static func resolveRaid(_ s: inout WorldState, strength: Double) {
+        guard let capital = s.settlements.indices.first else { return }
+        let defense = s.settlements[capital].stats.defense
+
+        if defense >= strength {
+            s.settlements[capital].stats = s.settlements[capital].stats.applying(delta: 6, to: "morale")
+            s.globalStats = s.globalStats.applying(delta: -8, to: "threatLevel")
+            return
+        }
+
+        let deficit = strength - defense
+        applyResourceDelta(&s, resource: .materials, delta: -deficit * 4, scope: .global)
+        applyResourceDelta(&s, resource: .food, delta: -deficit * 2, scope: .global)
+        s.settlements[capital].stats = s.settlements[capital].stats
+            .applying(delta: -deficit * 0.5, to: "stability")
+            .applying(delta: -deficit * 0.3, to: "morale")
+        s.globalStats = s.globalStats.applying(delta: -4, to: "threatLevel")
+
+        // Wound the most vulnerable colonist; a heavy raid can be lethal.
+        if let pawnIndex = s.settlements[capital].pawns.indices
+            .min(by: { s.settlements[capital].pawns[$0].health < s.settlements[capital].pawns[$1].health }) {
+            var pawn = s.settlements[capital].pawns[pawnIndex]
+            pawn.health = max(0, pawn.health - deficit * 2)
+            if pawn.health <= 0 {
+                s.settlements[capital].pawns.remove(at: pawnIndex)
+                s.settlements[capital].population = max(0, s.settlements[capital].population - 1)
+                s.settlements[capital].stats = s.settlements[capital].stats.applying(delta: -10, to: "morale")
+            } else {
+                s.settlements[capital].pawns[pawnIndex] = pawn
+            }
+        }
     }
 
     /// Deducts a choice's cost from the capital settlement if affordable.

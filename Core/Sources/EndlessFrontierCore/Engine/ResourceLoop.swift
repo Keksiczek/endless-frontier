@@ -54,9 +54,15 @@ public enum ResourceLoop {
         }
         let moraleTarget = min(100, max(0, 50 + buildingMorale))
         s.stats.morale += (moraleTarget - s.stats.morale) * 0.1
+
+        // 6. Defense drifts toward what the settlement's fortifications provide.
+        let buildingDefense = s.buildings.reduce(0.0) { acc, instance in
+            acc + (registry.building(instance.definitionID)?.defense ?? 0) * Double(instance.count)
+        }
+        s.stats.defense += (buildingDefense - s.stats.defense) * 0.15
         s.stats = s.stats.clamped()
 
-        // 6. Individual colonists: needs, mood, skilled work, morale pull.
+        // 7. Individual colonists: needs, mood, skilled work, morale pull.
         s = PawnEngine.advanceOneTick(s)
 
         return s
