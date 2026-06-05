@@ -61,8 +61,8 @@ final class GameViewModel {
     }
 
     func build(_ buildingID: String) {
-        guard let capital = world.settlements.first else { return }
-        world = GameEngine.build(world, settlementID: capital.id, buildingID: buildingID, registry: registry)
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.build(world, settlementID: settlement.id, buildingID: buildingID, registry: registry)
         persist()
     }
 
@@ -241,7 +241,7 @@ final class GameViewModel {
     }
 
     var availableRecipes: [RecipeDefinition] {
-        CraftingEngine.availableRecipes(world, registry: registry)
+        CraftingEngine.availableRecipes(world, settlementID: selectedSettlement?.id, registry: registry)
     }
 
     func recipeOutputName(_ recipe: RecipeDefinition) -> String {
@@ -255,7 +255,7 @@ final class GameViewModel {
     func itemName(_ id: String) -> String { registry.item(id)?.name ?? id }
 
     func craft(_ recipeID: String) {
-        world = GameEngine.craft(world, recipeID: recipeID, registry: registry)
+        world = GameEngine.craft(world, recipeID: recipeID, settlementID: selectedSettlement?.id, registry: registry)
         persist()
     }
 

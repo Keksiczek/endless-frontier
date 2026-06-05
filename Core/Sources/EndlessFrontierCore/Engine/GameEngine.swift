@@ -30,8 +30,9 @@ public enum GameEngine {
         TechEngine.setResearch(state, techID: techID, registry: registry)
     }
 
-    /// Constructs one building in a settlement if it is unlocked and the
-    /// capital can pay the cost. Returns unchanged state on failure.
+    /// Constructs one building in a settlement if it is unlocked and that
+    /// settlement can pay the cost from its own storage. Returns unchanged
+    /// state on failure.
     public static func build(
         _ state: WorldState,
         settlementID: UUID,
@@ -41,7 +42,7 @@ public enum GameEngine {
         guard let def = registry.building(buildingID),
               state.unlockedBuildings.contains(buildingID) || def.era == .earlySettlement,
               let settlementIndex = state.settlements.firstIndex(where: { $0.id == settlementID }),
-              let paid = EffectApplier.payCost(def.cost, from: state) else {
+              let paid = EffectApplier.payCost(def.cost, from: state, settlementID: settlementID) else {
             return state
         }
         var s = paid
@@ -113,13 +114,15 @@ public enum GameEngine {
         return s
     }
 
-    /// Crafts a recipe at the capital (consumes materials + resources).
+    /// Crafts a recipe at a settlement (consumes its materials + resources).
+    /// When `settlementID` is `nil` the capital crafts, as before.
     public static func craft(
         _ state: WorldState,
         recipeID: String,
+        settlementID: UUID? = nil,
         registry: GameDataRegistry
     ) -> WorldState {
-        CraftingEngine.craft(state, recipeID: recipeID, registry: registry)
+        CraftingEngine.craft(state, recipeID: recipeID, settlementID: settlementID, registry: registry)
     }
 
     /// Interacts with the special site (ruins/dungeon/anomaly) in a region.

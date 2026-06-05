@@ -136,21 +136,34 @@ public enum EffectApplier {
         }
     }
 
-    /// Deducts a choice's cost from the capital settlement if affordable.
+    /// Deducts a cost from a settlement's storage if affordable. When
+    /// `settlementID` is `nil` (or unknown) the cost is paid by the capital
+    /// settlement — preserving the original capital-scoped behaviour used by
+    /// event choices. Player actions that target a specific settlement
+    /// (building, founding) pass that settlement's id so it pays its own way.
     /// Returns `nil` when the cost cannot be paid.
-    public static func payCost(_ cost: Resources, from state: WorldState) -> WorldState? {
-        guard let capitalIndex = state.settlements.indices.first else {
+    public static func payCost(
+        _ cost: Resources,
+        from state: WorldState,
+        settlementID: UUID? = nil
+    ) -> WorldState? {
+        let payerIndex: Int
+        if let settlementID, let i = state.settlements.firstIndex(where: { $0.id == settlementID }) {
+            payerIndex = i
+        } else if let first = state.settlements.indices.first {
+            payerIndex = first
+        } else {
             return cost.amounts.isEmpty ? state : nil
         }
         var s = state
-        var storage = s.settlements[capitalIndex].storage
+        var storage = s.settlements[payerIndex].storage
         for resource in ResourceType.allCases where cost[resource] > 0 {
             if storage[resource] < cost[resource] { return nil }
         }
         for resource in ResourceType.allCases where cost[resource] > 0 {
             storage[resource] = storage[resource] - cost[resource]
         }
-        s.settlements[capitalIndex].storage = storage
+        s.settlements[payerIndex].storage = storage
         return s
     }
 

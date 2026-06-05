@@ -45,9 +45,10 @@ the world the player acts on.** Priorities:
 6. ✅ **Tech-tree screen.** Era-grouped tech tree with status/prereqs and research
    selection (its own tab).
 
-Remaining within Tier 2 / next refinements: crafting & building are still
-capital-scoped (make them per-selected-settlement); specialised settlements and
-caravan-as-pawns; connector lines / graph layout for the tech tree.
+Remaining within Tier 2 / next refinements: ✅ crafting & building are now
+per-selected-settlement (each settlement pays from and stocks its own storage);
+still open — specialised settlements and caravan-as-pawns; connector lines /
+graph layout for the tech tree.
 
 ## Tier 3 — breadth & long game
 
