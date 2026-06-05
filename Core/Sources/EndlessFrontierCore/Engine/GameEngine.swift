@@ -161,6 +161,13 @@ public enum GameEngine {
         return s
     }
 
+    /// Removes a trade route by id.
+    public static func removeTradeRoute(_ state: WorldState, routeID: UUID) -> WorldState {
+        var s = state
+        s.tradeRoutes.removeAll { $0.id == routeID }
+        return s
+    }
+
     /// Sends an expedition to an unknown region (cost + duration applied).
     public static func startExpedition(
         _ state: WorldState,

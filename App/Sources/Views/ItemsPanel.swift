@@ -76,6 +76,12 @@ struct ItemsPanel: View {
     @ViewBuilder
     private func trailing(_ instance: ItemInstance, _ def: ItemDefinition) -> some View {
         switch def.slot {
+        case .material:
+            Text("Material")
+                .font(.caption2.weight(.bold))
+                .padding(.horizontal, 8).padding(.vertical, 4)
+                .background(Theme.surface, in: Capsule())
+                .foregroundStyle(Theme.textDim)
         case .artifact:
             Text("Active")
                 .font(.caption2.weight(.bold))

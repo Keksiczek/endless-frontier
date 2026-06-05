@@ -29,6 +29,7 @@ struct DashboardView: View {
                     ColonistsPanel(game: game)
                     ItemsPanel(game: game)
                     CraftingPanel(game: game)
+                    TradePanel(game: game)
                     TechBuildPanel(game: game)
                 }
                 .padding(20)

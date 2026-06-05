@@ -201,6 +201,24 @@ final class GameViewModel {
         persist()
     }
 
+    // MARK: - Trade
+
+    var tradeRoutes: [TradeRoute] { world.tradeRoutes }
+
+    func settlementName(_ id: UUID) -> String {
+        world.settlements.first { $0.id == id }?.name ?? "?"
+    }
+
+    func addTradeRoute(from: UUID, to: UUID, resource: ResourceType, amount: Double) {
+        world = GameEngine.addTradeRoute(world, from: from, to: to, resource: resource, amountPerTick: amount)
+        persist()
+    }
+
+    func removeTradeRoute(_ routeID: UUID) {
+        world = GameEngine.removeTradeRoute(world, routeID: routeID)
+        persist()
+    }
+
     var availableRecipes: [RecipeDefinition] {
         CraftingEngine.availableRecipes(world, registry: registry)
     }
