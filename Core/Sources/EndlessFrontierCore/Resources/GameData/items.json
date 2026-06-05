@@ -209,5 +209,156 @@
     "slot": "artifact",
     "effects": [ { "type": "colony_production", "resource": "knowledge", "perTick": 8 } ],
     "description": "A shard of first creation that whispers endless secrets."
+  },
+  {
+    "id": "steel_ingot",
+    "name": "Steel Ingot",
+    "rarity": "uncommon",
+    "slot": "material",
+    "description": "Carbon-tempered iron — stronger, lighter, the stuff of modern industry."
+  },
+  {
+    "id": "circuit_board",
+    "name": "Circuit Board",
+    "rarity": "rare",
+    "slot": "material",
+    "description": "Etched copper and silicon — the nervous system of every modern machine."
+  },
+  {
+    "id": "fusion_cell",
+    "name": "Fusion Cell",
+    "rarity": "epic",
+    "slot": "material",
+    "description": "A sealed sliver of caged starfire, humming with contained power."
+  },
+  {
+    "id": "chainsaw",
+    "name": "Chainsaw",
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [ { "type": "skill_bonus", "work": "logging", "amount": 4 } ],
+    "description": "A snarling blade that fells in seconds what once took an hour."
+  },
+  {
+    "id": "power_drill",
+    "name": "Power Drill",
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [ { "type": "skill_bonus", "work": "mining", "amount": 5 } ],
+    "description": "Diamond-tipped and motor-driven — stone gives way like sand."
+  },
+  {
+    "id": "auto_harvester",
+    "name": "Auto-Harvester",
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [ { "type": "skill_bonus", "work": "farming", "amount": 5 } ],
+    "description": "One operator reaps what a whole crew once did."
+  },
+  {
+    "id": "kevlar_vest",
+    "name": "Kevlar Vest",
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [ { "type": "health_regen", "amount": 2.5 } ],
+    "description": "Woven fibre that stops what steel never could."
+  },
+  {
+    "id": "exosuit",
+    "name": "Powered Exosuit",
+    "rarity": "epic",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      { "type": "health_regen", "amount": 3.5 },
+      { "type": "mood_bonus", "amount": 4 }
+    ],
+    "description": "Hydraulic muscle and armour plate — its wearer shrugs off the impossible."
+  },
+  {
+    "id": "powered_armor",
+    "name": "Sentinel Power Armor",
+    "rarity": "legendary",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      { "type": "health_regen", "amount": 5.0 },
+      { "type": "mood_bonus", "amount": 8 }
+    ],
+    "description": "A walking fortress. Few threats in any era can touch its bearer."
+  },
+  {
+    "id": "research_terminal",
+    "name": "Research Terminal",
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [ { "type": "skill_bonus", "work": "research", "amount": 5 } ],
+    "description": "A personal console that turns any thinker into a one-person institute."
+  },
+  {
+    "id": "morale_booster",
+    "name": "Morale Broadcaster",
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [ { "type": "mood_bonus", "amount": 12 } ],
+    "description": "A pocket device that pipes in music, news and good cheer all day."
+  },
+  {
+    "id": "neural_implant",
+    "name": "Neural Implant",
+    "rarity": "epic",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      { "type": "skill_bonus", "work": "research", "amount": 6 },
+      { "type": "mood_bonus", "amount": 5 }
+    ],
+    "description": "A mind laced with circuitry — thought itself runs faster and calmer."
+  },
+  {
+    "id": "automation_hub",
+    "name": "Automation Hub",
+    "rarity": "epic",
+    "slot": "artifact",
+    "effects": [ { "type": "colony_production", "resource": "materials", "perTick": 8 } ],
+    "description": "A control node that drives idle machines across the whole colony."
+  },
+  {
+    "id": "med_bay",
+    "name": "Automated Med-Bay",
+    "rarity": "epic",
+    "slot": "artifact",
+    "effects": [ { "type": "colony_morale", "amount": 10 } ],
+    "description": "Tireless surgeons of steel keep every colonist on their feet."
+  },
+  {
+    "id": "fusion_core_relic",
+    "name": "Stabilised Fusion Core",
+    "rarity": "legendary",
+    "slot": "artifact",
+    "effects": [ { "type": "colony_production", "resource": "energy", "perTick": 14 } ],
+    "description": "A perfected reactor heart that pours out power for a whole settlement."
+  },
+  {
+    "id": "orbital_uplink",
+    "name": "Orbital Uplink",
+    "rarity": "legendary",
+    "slot": "artifact",
+    "effects": [ { "type": "colony_production", "resource": "knowledge", "perTick": 12 } ],
+    "description": "A direct line to the satellites — the sum of human knowledge, on tap."
+  },
+  {
+    "id": "planetary_shield",
+    "name": "Planetary Shield Generator",
+    "rarity": "legendary",
+    "slot": "artifact",
+    "effects": [ { "type": "colony_defense", "amount": 40 } ],
+    "description": "A dome of force no raider, beast or storm has ever broken."
   }
 ]

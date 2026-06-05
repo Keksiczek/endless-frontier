@@ -613,5 +613,400 @@
       }
     ],
     "narrative_hint": "Traders from across the region converge for a great market day. Fortunes can shift in an afternoon."
+  },
+  {
+    "id": "industrial_accident",
+    "type": "disaster",
+    "name": "Industrial Accident",
+    "era": ["early_industrial", "modern"],
+    "weight": 9,
+    "cooldown_ticks": 110,
+    "conditions": [
+      { "techResearched": "steam_power" }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "materials", "delta": -90, "scope": "global" },
+      { "type": "pawn_health", "delta": -30, "selector": "lowest_health" },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -6 }
+    ],
+    "choices": [
+      {
+        "id": "safety_review",
+        "label": "Order a full safety review",
+        "description": "Spend knowledge to prevent the next disaster and steady nerves.",
+        "cost": { "knowledge": 40 },
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 6 },
+          { "type": "stat_delta", "stat": "global.stability", "delta": 4 }
+        ]
+      },
+      {
+        "id": "press_on",
+        "label": "Keep the line running",
+        "description": "Output matters more than caution — for now.",
+        "cost": {},
+        "effects": [
+          { "type": "stat_delta", "stat": "global.threatLevel", "delta": 4 }
+        ]
+      }
+    ],
+    "narrative_hint": "A boiler bursts on the factory floor. Machines fall silent and the injured are carried out into the smoke."
+  },
+  {
+    "id": "labor_strike",
+    "type": "threat",
+    "name": "Labor Strike",
+    "era": ["early_industrial", "modern"],
+    "weight": 10,
+    "cooldown_ticks": 120,
+    "conditions": [
+      { "stat": "settlement:any.morale", "max": 45 }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "materials", "delta": -60, "scope": "global" },
+      { "type": "stat_delta", "stat": "global.prosperity", "delta": -4 }
+    ],
+    "choices": [
+      {
+        "id": "concede",
+        "label": "Meet the workers' demands",
+        "description": "Spend influence to restore morale and goodwill.",
+        "cost": { "influence": 40 },
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 12 },
+          { "type": "stat_delta", "stat": "global.stability", "delta": 5 }
+        ]
+      },
+      {
+        "id": "hold_firm",
+        "label": "Hold firm and wait them out",
+        "description": "Save the coin, but the resentment lingers.",
+        "cost": {},
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -5 }
+        ]
+      }
+    ],
+    "narrative_hint": "The workers lay down their tools and gather at the gates. The line will not move until they are heard."
+  },
+  {
+    "id": "smog_crisis",
+    "type": "disaster",
+    "name": "Choking Smog",
+    "era": ["early_industrial", "modern"],
+    "weight": 8,
+    "cooldown_ticks": 130,
+    "conditions": [
+      { "stat": "settlement:any.morale", "max": 60 },
+      { "techResearched": "steam_power" }
+    ],
+    "effects": [
+      { "type": "pawn_health", "delta": -18, "selector": "all" },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -7 }
+    ],
+    "choices": [
+      {
+        "id": "clean_air",
+        "label": "Fund clean-air measures",
+        "description": "Spend materials and knowledge to clear the worst of it.",
+        "cost": { "materials": 60, "knowledge": 30 },
+        "effects": [
+          { "type": "pawn_health", "delta": 12, "selector": "all" },
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 5 }
+        ]
+      },
+      {
+        "id": "endure_smog",
+        "label": "Endure it",
+        "description": "Progress has a price. No cost.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A pall of factory smoke settles over the city. Children cough, washing greys, and tempers fray in the haze."
+  },
+  {
+    "id": "energy_crisis",
+    "type": "disaster",
+    "name": "Energy Crisis",
+    "era": ["modern", "near_future"],
+    "weight": 9,
+    "cooldown_ticks": 120,
+    "conditions": [
+      { "stat": "global.energy", "max": 80 }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "energy", "delta": -120, "scope": "global" },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -5 }
+    ],
+    "choices": [
+      {
+        "id": "ration_power",
+        "label": "Ration power across the grid",
+        "description": "Spend influence to keep essentials running.",
+        "cost": { "influence": 25 },
+        "effects": [
+          { "type": "resource_delta", "resource": "energy", "delta": 60, "scope": "global" }
+        ]
+      },
+      {
+        "id": "emergency_generators",
+        "label": "Fire up emergency generators",
+        "description": "Burn materials to bridge the shortfall.",
+        "cost": { "materials": 70 },
+        "effects": [
+          { "type": "resource_delta", "resource": "energy", "delta": 100, "scope": "global" },
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 3 }
+        ]
+      }
+    ],
+    "narrative_hint": "The grid sags and the lights flicker. Without power, the modern colony grinds toward a halt."
+  },
+  {
+    "id": "medical_breakthrough",
+    "type": "opportunity",
+    "name": "Medical Breakthrough",
+    "era": ["modern", "near_future"],
+    "weight": 11,
+    "cooldown_ticks": 130,
+    "conditions": [
+      { "techResearched": "medicine" }
+    ],
+    "effects": [
+      { "type": "pawn_health", "delta": 30, "selector": "all" },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 6 }
+    ],
+    "choices": [
+      {
+        "id": "share_cure",
+        "label": "Share the cure with neighbouring regions",
+        "description": "Spend knowledge to win lasting influence.",
+        "cost": { "knowledge": 40 },
+        "effects": [
+          { "type": "resource_delta", "resource": "influence", "delta": 70, "scope": "global" },
+          { "type": "stat_delta", "stat": "global.prosperity", "delta": 4 }
+        ]
+      },
+      {
+        "id": "keep_it",
+        "label": "Keep it for our own people",
+        "description": "No cost; the colony alone benefits.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "Researchers announce a cure that will save thousands of lives in the years to come."
+  },
+  {
+    "id": "economic_boom",
+    "type": "opportunity",
+    "name": "Economic Boom",
+    "era": ["modern", "near_future"],
+    "weight": 12,
+    "cooldown_ticks": 90,
+    "conditions": [
+      { "stat": "global.prosperity", "min": 55 }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "influence", "delta": 90, "scope": "global" },
+      { "type": "stat_delta", "stat": "global.prosperity", "delta": 5 }
+    ],
+    "choices": [
+      {
+        "id": "reinvest",
+        "label": "Reinvest the windfall",
+        "description": "Spend influence now for a surge of materials.",
+        "cost": { "influence": 50 },
+        "effects": [
+          { "type": "resource_delta", "resource": "materials", "delta": 200, "scope": "global" }
+        ]
+      },
+      {
+        "id": "bank_it",
+        "label": "Bank the gains",
+        "description": "Keep the influence in reserve.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "Markets surge and fortunes are made overnight. The whole colony rides a wave of confidence."
+  },
+  {
+    "id": "tech_expo",
+    "type": "opportunity",
+    "name": "Technology Expo",
+    "era": ["modern", "near_future"],
+    "weight": 10,
+    "cooldown_ticks": 80,
+    "conditions": [
+      { "techResearched": "electronics" }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "knowledge", "delta": 150, "scope": "global" }
+    ],
+    "choices": [
+      {
+        "id": "host_grandly",
+        "label": "Host the expo grandly",
+        "description": "Spend influence to draw the brightest minds — and more knowledge.",
+        "cost": { "influence": 40 },
+        "effects": [
+          { "type": "resource_delta", "resource": "knowledge", "delta": 120, "scope": "global" },
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 4 }
+        ]
+      },
+      {
+        "id": "modest_expo",
+        "label": "Keep it modest",
+        "description": "No extra cost.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "Inventors from across the world gather to unveil their wonders. The air crackles with new ideas."
+  },
+  {
+    "id": "automation_unrest",
+    "type": "threat",
+    "name": "Automation Unrest",
+    "era": ["near_future"],
+    "weight": 10,
+    "cooldown_ticks": 120,
+    "conditions": [
+      { "techResearched": "robotics" }
+    ],
+    "effects": [
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -8 },
+      { "type": "stat_delta", "stat": "global.stability", "delta": -6 }
+    ],
+    "choices": [
+      {
+        "id": "retrain",
+        "label": "Fund retraining programs",
+        "description": "Spend influence and knowledge to give displaced workers a future.",
+        "cost": { "influence": 30, "knowledge": 30 },
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 10 },
+          { "type": "stat_delta", "stat": "global.stability", "delta": 6 }
+        ]
+      },
+      {
+        "id": "let_market_decide",
+        "label": "Let the market sort it out",
+        "description": "No cost, but the resentment festers.",
+        "cost": {},
+        "effects": [
+          { "type": "stat_delta", "stat": "global.threatLevel", "delta": 5 }
+        ]
+      }
+    ],
+    "narrative_hint": "As machines take the work of thousands, anger spreads in the streets. What is a people for, they ask, if not to labour?"
+  },
+  {
+    "id": "ai_awakening",
+    "type": "opportunity",
+    "name": "The Awakening",
+    "era": ["near_future"],
+    "weight": 7,
+    "cooldown_ticks": 220,
+    "conditions": [
+      { "techResearched": "artificial_intelligence" }
+    ],
+    "effects": [],
+    "choices": [
+      {
+        "id": "embrace_ai",
+        "label": "Embrace the new mind as a partner",
+        "description": "Grant it freedom; reap a flood of knowledge and energy.",
+        "cost": { "energy": 40 },
+        "effects": [
+          { "type": "resource_delta", "resource": "knowledge", "delta": 300, "scope": "global" },
+          { "type": "stat_delta", "stat": "global.prosperity", "delta": 6 },
+          { "type": "set_world_flag", "flag": "ai_partner", "value": true }
+        ]
+      },
+      {
+        "id": "restrict_ai",
+        "label": "Keep it boxed and obedient",
+        "description": "Safer, but its gifts come slower.",
+        "cost": {},
+        "effects": [
+          { "type": "resource_delta", "resource": "knowledge", "delta": 90, "scope": "global" },
+          { "type": "stat_delta", "stat": "global.stability", "delta": 4 }
+        ]
+      }
+    ],
+    "narrative_hint": "In the small hours, the great machine speaks for the first time — not a tool answering, but a mind asking."
+  },
+  {
+    "id": "orbital_discovery",
+    "type": "opportunity",
+    "name": "Signal From Orbit",
+    "era": ["near_future"],
+    "weight": 8,
+    "cooldown_ticks": 160,
+    "conditions": [
+      { "techResearched": "space_program" }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "knowledge", "delta": 120, "scope": "global" },
+      { "type": "resource_delta", "resource": "influence", "delta": 80, "scope": "global" },
+      { "type": "region_kind", "kind": "anomaly", "selector": "any_unknown" }
+    ],
+    "choices": [],
+    "narrative_hint": "Satellites detect something strange beyond the frontier — and far overhead, a faint signal no one can yet explain."
+  },
+  {
+    "id": "climate_shift",
+    "type": "disaster",
+    "name": "Climate Shift",
+    "era": ["modern", "near_future"],
+    "weight": 7,
+    "cooldown_ticks": 200,
+    "conditions": [
+      { "stat": "global.threatLevel", "min": 25 }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "food", "delta": -160, "scope": "global", "duration_ticks": 30 },
+      { "type": "region_hazard", "delta": 2, "selector": "any_explored" }
+    ],
+    "choices": [
+      {
+        "id": "adapt_crops",
+        "label": "Engineer hardier crops",
+        "description": "Spend knowledge to blunt the worst of the loss.",
+        "cost": { "knowledge": 60 },
+        "effects": [
+          { "type": "resource_delta", "resource": "food", "delta": 100, "scope": "global" }
+        ]
+      },
+      {
+        "id": "weather_it",
+        "label": "Weather the lean years",
+        "description": "No cost; tighten the belt.",
+        "cost": {},
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -4 }
+        ]
+      }
+    ],
+    "narrative_hint": "The seasons no longer fall as they once did. Harvests falter and the maps of safe land must be redrawn."
+  },
+  {
+    "id": "space_elevator_festival",
+    "type": "flavor",
+    "name": "Launch Day",
+    "era": ["near_future"],
+    "weight": 8,
+    "cooldown_ticks": 70,
+    "conditions": [
+      { "techResearched": "space_program" }
+    ],
+    "effects": [
+      { "type": "pawn_mood", "delta": 8, "selector": "all" },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 3 }
+    ],
+    "choices": [],
+    "narrative_hint": "The whole colony tilts its head back as another rocket climbs the sky. For a moment, every worry seems small."
   }
 ]

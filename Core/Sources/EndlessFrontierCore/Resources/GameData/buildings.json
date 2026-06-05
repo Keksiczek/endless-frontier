@@ -271,5 +271,213 @@
     "production": { "energy": 22 },
     "pollution": 25,
     "description": "Burns coal to power the machines of a modern colony."
+  },
+  {
+    "id": "railyard",
+    "era": "early_industrial",
+    "name": "Railyard",
+    "cost": { "materials": 130, "knowledge": 40 },
+    "workers": 4,
+    "production": { "influence": 6, "materials": 6 },
+    "consumption": { "energy": 3 },
+    "morale_effect": 1,
+    "description": "Freight rolls in and out day and night, knitting the realm together."
+  },
+  {
+    "id": "chemical_plant",
+    "era": "early_industrial",
+    "name": "Chemical Plant",
+    "cost": { "materials": 140, "knowledge": 50 },
+    "workers": 5,
+    "production": { "materials": 14 },
+    "consumption": { "energy": 3 },
+    "pollution": 28,
+    "description": "Fertilisers, dyes and fuels pour from the vats — and so does the smog."
+  },
+  {
+    "id": "hospital",
+    "era": "early_industrial",
+    "name": "Hospital",
+    "cost": { "materials": 120, "knowledge": 40 },
+    "workers": 4,
+    "consumption": { "energy": 2 },
+    "morale_effect": 5,
+    "housing": 20,
+    "description": "Wards and surgeons keep the colony hale through plague and injury."
+  },
+  {
+    "id": "hydro_dam",
+    "era": "modern",
+    "name": "Hydroelectric Dam",
+    "cost": { "materials": 200, "knowledge": 60 },
+    "workers": 3,
+    "production": { "energy": 40 },
+    "morale_effect": 1,
+    "description": "A wall of concrete turns a river's weight into clean, steady power."
+  },
+  {
+    "id": "oil_refinery",
+    "era": "modern",
+    "name": "Oil Refinery",
+    "cost": { "materials": 180, "knowledge": 60 },
+    "workers": 5,
+    "production": { "energy": 30 },
+    "pollution": 35,
+    "description": "Crude becomes fuel — the lifeblood of an age of engines."
+  },
+  {
+    "id": "vehicle_works",
+    "era": "modern",
+    "name": "Vehicle Works",
+    "cost": { "materials": 170, "knowledge": 50 },
+    "workers": 5,
+    "production": { "materials": 22, "influence": 4 },
+    "consumption": { "energy": 4 },
+    "pollution": 20,
+    "description": "Cars, tractors and trucks roll off the line and out into the world."
+  },
+  {
+    "id": "assembly_plant",
+    "era": "modern",
+    "name": "Assembly Plant",
+    "cost": { "materials": 220, "knowledge": 80 },
+    "workers": 7,
+    "production": { "materials": 40 },
+    "consumption": { "energy": 6 },
+    "pollution": 25,
+    "description": "The assembly line at full roar — output on a scale the founders never dreamed."
+  },
+  {
+    "id": "apartment_block",
+    "era": "modern",
+    "name": "Apartment Block",
+    "cost": { "materials": 160 },
+    "workers": 0,
+    "morale_effect": 1,
+    "housing": 250,
+    "description": "Stacked dwellings house a whole district on a single plot."
+  },
+  {
+    "id": "clinic",
+    "era": "modern",
+    "name": "Medical Clinic",
+    "cost": { "materials": 130, "knowledge": 50 },
+    "workers": 3,
+    "consumption": { "energy": 2 },
+    "morale_effect": 5,
+    "description": "Modern medicine on every street corner — illness loses its terror."
+  },
+  {
+    "id": "electronics_lab",
+    "era": "modern",
+    "name": "Electronics Lab",
+    "cost": { "materials": 160, "knowledge": 90 },
+    "workers": 4,
+    "production": { "knowledge": 22 },
+    "consumption": { "energy": 4 },
+    "description": "Circuits and signals — the workshops where the information age is born."
+  },
+  {
+    "id": "data_center",
+    "era": "modern",
+    "name": "Data Center",
+    "cost": { "materials": 240, "knowledge": 120 },
+    "workers": 4,
+    "production": { "knowledge": 38 },
+    "consumption": { "energy": 8 },
+    "pollution": 5,
+    "description": "Halls of humming machines remember and reason for the whole civilisation."
+  },
+  {
+    "id": "research_campus",
+    "era": "modern",
+    "name": "Research Campus",
+    "cost": { "materials": 220, "knowledge": 110 },
+    "workers": 6,
+    "production": { "knowledge": 30 },
+    "consumption": { "energy": 4 },
+    "morale_effect": 2,
+    "description": "A city of laboratories where the next era is invented."
+  },
+  {
+    "id": "solar_array",
+    "era": "near_future",
+    "name": "Solar Array",
+    "cost": { "materials": 220, "knowledge": 90 },
+    "workers": 1,
+    "production": { "energy": 35 },
+    "description": "Fields of panels drink the sun and give back boundless clean power."
+  },
+  {
+    "id": "wind_farm",
+    "era": "near_future",
+    "name": "Wind Farm",
+    "cost": { "materials": 200, "knowledge": 80 },
+    "workers": 1,
+    "production": { "energy": 28 },
+    "description": "Rows of turbines turn the open sky into a power station."
+  },
+  {
+    "id": "automated_factory",
+    "era": "near_future",
+    "name": "Automated Factory",
+    "cost": { "materials": 320, "knowledge": 160 },
+    "workers": 2,
+    "production": { "materials": 60 },
+    "consumption": { "energy": 12 },
+    "pollution": 10,
+    "description": "Robots run the floor end to end; a handful of overseers is all it takes."
+  },
+  {
+    "id": "fusion_reactor",
+    "era": "near_future",
+    "name": "Fusion Reactor",
+    "cost": { "materials": 400, "knowledge": 240 },
+    "workers": 4,
+    "production": { "energy": 90 },
+    "morale_effect": 1,
+    "description": "A miniature star held in magnetic chains — power without limit or smoke."
+  },
+  {
+    "id": "ai_core",
+    "era": "near_future",
+    "name": "AI Core",
+    "cost": { "materials": 360, "knowledge": 300 },
+    "workers": 2,
+    "production": { "knowledge": 60 },
+    "consumption": { "energy": 14 },
+    "description": "A thinking machine that researches, plans and dreams faster than any academy."
+  },
+  {
+    "id": "spaceport",
+    "era": "near_future",
+    "name": "Spaceport",
+    "cost": { "materials": 500, "knowledge": 260 },
+    "workers": 8,
+    "production": { "influence": 30, "knowledge": 10 },
+    "consumption": { "energy": 10 },
+    "morale_effect": 3,
+    "description": "Rockets climb the sky from here — the colony's reach leaves the ground entirely."
+  },
+  {
+    "id": "orbital_array",
+    "era": "near_future",
+    "name": "Orbital Array",
+    "cost": { "materials": 420, "knowledge": 280 },
+    "workers": 3,
+    "production": { "knowledge": 24, "influence": 18 },
+    "consumption": { "energy": 8 },
+    "description": "Satellites watch, relay and survey — knowledge and influence rain down from orbit."
+  },
+  {
+    "id": "arcology",
+    "era": "near_future",
+    "name": "Arcology",
+    "cost": { "materials": 480, "knowledge": 200 },
+    "workers": 4,
+    "consumption": { "energy": 8 },
+    "morale_effect": 5,
+    "housing": 600,
+    "description": "A self-contained city in a single structure — a million live, work and thrive within."
   }
 ]

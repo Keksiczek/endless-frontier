@@ -51,12 +51,22 @@ caravan-as-pawns; connector lines / graph layout for the tech tree.
 
 ## Tier 3 — breadth & long game
 
-7. **Later eras (modern / near-future)** content + an end-game/legacy/prestige
-   loop for the truly long single world.
+7. **Later eras (modern / near-future)** content — ✅ first pass done (2026-06-05):
+   the tech tree now runs unbroken from early-industrial through modern into
+   near-future (electricity → computing → robotics → fusion → AI → space →
+   megastructures), with ~20 new buildings (clean power, automation, data
+   centres, arcologies), late-era events (energy crisis, automation unrest, AI
+   awakening, orbital signals, climate shift) and two endgame quest chains
+   (*The Electric Age*, *Dawn of Tomorrow*) plus a population/expansion chain
+   (*A Thriving World*). Era advancement into modern/near-future is now gated on
+   the new techs. **Still open**: an end-game/legacy/prestige loop, and balance
+   tuning of the new late-game numbers (knowledge costs, building yields).
 8. **Repeatable site content**: dungeons you can re-delve at rising difficulty,
    ruins with lore unlocks, anomalies as ongoing event sources.
-9. **More RPG**: set bonuses, item upgrading/enchanting, more crafting tiers,
-   colonist traits that interact with gear.
+9. **More RPG**: set bonuses, item upgrading/enchanting — ✅ a modern/future
+   crafting tier was added (steel → circuit board → fusion cell feeding
+   exosuits, power armour, neural implants, colony artifacts). Still open: set
+   bonuses, item upgrading/enchanting, traits that interact with gear.
 10. **LLM narrator** (originally Phase 3): lots to narrate now — named
     colonists, their fates, quests, raids, golden ages. Optional, offline-first.
 

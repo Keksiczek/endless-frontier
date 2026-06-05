@@ -85,5 +85,90 @@
         }
       }
     ]
+  },
+  {
+    "id": "the_electric_age",
+    "name": "The Electric Age",
+    "description": "Steam was only the beginning. Light the world with tamed lightning.",
+    "trigger": [ { "techResearched": "steam_power" } ],
+    "stages": [
+      {
+        "description": "Harness Electricity.",
+        "goals": [ { "techResearched": "electricity" } ],
+        "reward": {
+          "effects": [ { "type": "resource_delta", "resource": "influence", "delta": 80, "scope": "global" } ],
+          "itemID": "research_terminal"
+        }
+      },
+      {
+        "description": "Raise prosperity to 65 — a truly modern society.",
+        "goals": [ { "stat": "global.prosperity", "min": 65 } ],
+        "reward": { "effects": [ { "type": "resource_delta", "resource": "materials", "delta": 200, "scope": "global" } ] }
+      },
+      {
+        "description": "Master Computing.",
+        "goals": [ { "techResearched": "computing" } ],
+        "reward": {
+          "effects": [ { "type": "resource_delta", "resource": "knowledge", "delta": 200, "scope": "global" } ],
+          "itemID": "automation_hub"
+        }
+      }
+    ]
+  },
+  {
+    "id": "dawn_of_tomorrow",
+    "name": "Dawn of Tomorrow",
+    "description": "Robots, fusion, and the road to the stars. Lead your people into the future.",
+    "trigger": [ { "techResearched": "computing" } ],
+    "stages": [
+      {
+        "description": "Develop Robotics.",
+        "goals": [ { "techResearched": "robotics" } ],
+        "reward": {
+          "effects": [ { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 8 } ],
+          "itemID": "exosuit"
+        }
+      },
+      {
+        "description": "Achieve Fusion Power.",
+        "goals": [ { "techResearched": "fusion_power" } ],
+        "reward": {
+          "effects": [ { "type": "resource_delta", "resource": "energy", "delta": 300, "scope": "global" } ],
+          "itemID": "fusion_core_relic"
+        }
+      },
+      {
+        "description": "Launch a Space Program.",
+        "goals": [ { "techResearched": "space_program" } ],
+        "reward": {
+          "effects": [
+            { "type": "resource_delta", "resource": "influence", "delta": 250, "scope": "global" },
+            { "type": "stat_delta", "stat": "global.prosperity", "delta": 8 }
+          ],
+          "itemID": "orbital_uplink"
+        }
+      }
+    ]
+  },
+  {
+    "id": "a_thriving_world",
+    "name": "A Thriving World",
+    "description": "A single town was the seed. Grow it into a civilisation that spans the map.",
+    "trigger": [ { "stat": "global.population", "min": 1000 } ],
+    "stages": [
+      {
+        "description": "Govern five settlements at once.",
+        "goals": [ { "settlementCount": true, "min": 5 } ],
+        "reward": { "effects": [ { "type": "resource_delta", "resource": "influence", "delta": 150, "scope": "global" } ] }
+      },
+      {
+        "description": "Shelter a population of 4,000 souls.",
+        "goals": [ { "stat": "global.population", "min": 4000 } ],
+        "reward": {
+          "effects": [ { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 12 } ],
+          "itemID": "planetary_shield"
+        }
+      }
+    ]
   }
 ]
