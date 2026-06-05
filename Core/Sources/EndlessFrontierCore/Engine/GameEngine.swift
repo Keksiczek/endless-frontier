@@ -195,4 +195,69 @@ public enum GameEngine {
         }
         return EffectApplier.apply(choice.effects, to: paid, registry: registry)
     }
+
+    // MARK: - Colony layout (in-settlement base building)
+
+    /// Places a building on a settlement's colony grid, paying its cost from the
+    /// capital. Validates that the building is unlocked and the tile is free.
+    /// Returns unchanged state on failure.
+    public static func placeBuilding(
+        _ state: WorldState,
+        settlementID: UUID,
+        buildingID: String,
+        at coord: TileCoord,
+        registry: GameDataRegistry
+    ) -> WorldState {
+        guard let def = registry.building(buildingID),
+              state.unlockedBuildings.contains(buildingID) || def.era == .earlySettlement,
+              let si = state.settlements.firstIndex(where: { $0.id == settlementID }),
+              ColonyBuilder.canPlace(state.settlements[si], definitionID: buildingID, at: coord, registry: registry),
+              let paid = EffectApplier.payCost(def.cost, from: state) else {
+            return state
+        }
+        var s = paid
+        guard let place = s.settlements.firstIndex(where: { $0.id == settlementID }) else { return state }
+        s.settlements[place] = ColonyBuilder.place(
+            s.settlements[place], definitionID: buildingID, at: coord, registry: registry
+        )
+        return s
+    }
+
+    /// Demolishes whatever stands on a colony tile (no refund).
+    public static func demolish(
+        _ state: WorldState,
+        settlementID: UUID,
+        at coord: TileCoord
+    ) -> WorldState {
+        guard let si = state.settlements.firstIndex(where: { $0.id == settlementID }) else { return state }
+        var s = state
+        s.settlements[si] = ColonyBuilder.remove(s.settlements[si], at: coord)
+        return s
+    }
+
+    /// Puts a colonist to work on a specific placed building.
+    public static func assignToBuilding(
+        _ state: WorldState,
+        settlementID: UUID,
+        pawnID: UUID,
+        placementID: UUID,
+        registry: GameDataRegistry
+    ) -> WorldState {
+        guard let si = state.settlements.firstIndex(where: { $0.id == settlementID }) else { return state }
+        var s = state
+        s.settlements[si] = ColonyBuilder.assign(s.settlements[si], pawnID: pawnID, to: placementID, registry: registry)
+        return s
+    }
+
+    /// Frees a colonist from any building in a settlement and sets them idle.
+    public static func unassignFromBuilding(
+        _ state: WorldState,
+        settlementID: UUID,
+        pawnID: UUID
+    ) -> WorldState {
+        guard let si = state.settlements.firstIndex(where: { $0.id == settlementID }) else { return state }
+        var s = state
+        s.settlements[si] = ColonyBuilder.unassign(s.settlements[si], pawnID: pawnID)
+        return s
+    }
 }

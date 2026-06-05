@@ -121,4 +121,35 @@ struct ColonyBuilderTests {
         #expect(decoded == world)
         #expect(decoded.settlements[0].colony?.placements.first?.coord == TileCoord(1, 2))
     }
+
+    @Test("Seeded layout mirrors the building ledger, one tile per building")
+    func seededLayout() {
+        let buildings = [BuildingInstance(definitionID: "farm", count: 2),
+                         BuildingInstance(definitionID: "library", count: 1)]
+        let map = ColonyBuilder.seededLayout(for: buildings)
+        #expect(map.placements.count == 3)
+        #expect(map.placements.filter { $0.definitionID == "farm" }.count == 2)
+    }
+
+    @Test("GameEngine.placeBuilding pays the cost and lays the tile")
+    func enginePlacePays() throws {
+        let reg = try GameDataRegistry.bundled()
+        let cap = Settlement(name: "C", kind: .capital, storage: [.materials: 100], storageCapacity: 9999)
+        let world = WorldState(settlements: [cap])
+        let after = GameEngine.placeBuilding(world, settlementID: cap.id,
+                                             buildingID: "farm_basic", at: TileCoord(0, 0), registry: reg)
+        #expect(after.settlements[0].storage[.materials] == 80)   // farm_basic costs 20 materials
+        #expect(after.settlements[0].colony?.placements.count == 1)
+        #expect(after.settlements[0].buildings.first { $0.definitionID == "farm_basic" }?.count == 1)
+    }
+
+    @Test("GameEngine.placeBuilding is rejected when the cost can't be paid")
+    func enginePlaceUnaffordable() throws {
+        let reg = try GameDataRegistry.bundled()
+        let cap = Settlement(name: "C", kind: .capital, storage: [.materials: 5], storageCapacity: 9999)
+        let world = WorldState(settlements: [cap])
+        let after = GameEngine.placeBuilding(world, settlementID: cap.id,
+                                             buildingID: "farm_basic", at: TileCoord(0, 0), registry: reg)
+        #expect(after == world)
+    }
 }

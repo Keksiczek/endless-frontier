@@ -167,6 +167,56 @@ public enum ColonyBuilder {
         return best
     }
 
+    /// Lays a settlement's existing buildings out on a fresh grid, one tile per
+    /// building (filling rows left to right). Used to seed the layout for a new
+    /// game *without* touching the economy ledger — the caller already holds the
+    /// matching `buildings`, so this only mirrors them spatially.
+    public static func seededLayout(
+        for buildings: [BuildingInstance],
+        width: Int = defaultWidth,
+        height: Int = defaultHeight
+    ) -> ColonyMap {
+        var map = ColonyMap(width: width, height: height)
+        var index = 0
+        for instance in buildings {
+            for _ in 0..<max(1, instance.count) {
+                let coord = TileCoord(index % width, index / width)
+                guard map.isInBounds(coord) else { return map }
+                map.placements.append(
+                    BuildingPlacement(
+                        id: placementID(instance.definitionID, coord),
+                        definitionID: instance.definitionID,
+                        coord: coord
+                    )
+                )
+                index += 1
+            }
+        }
+        return map
+    }
+
+    /// Best-effort: assigns a colonist to the first placed building that employs
+    /// their current work and still has room. Leaves them as-is if none fits.
+    public static func autoAssign(
+        _ settlement: Settlement,
+        pawnID: UUID,
+        registry: GameDataRegistry
+    ) -> Settlement {
+        guard let map = settlement.colony,
+              let pawn = settlement.pawns.first(where: { $0.id == pawnID }) else {
+            return settlement
+        }
+        for placement in map.placements {
+            guard let def = registry.building(placement.definitionID) else { continue }
+            if workKind(for: def) == pawn.assignedWork,
+               def.workers > 0,
+               placement.assignedPawnIDs.count < def.workers {
+                return assign(settlement, pawnID: pawnID, to: placement.id, registry: registry)
+            }
+        }
+        return settlement
+    }
+
     // MARK: - Deterministic placement ids
 
     /// A stable id for a placement, hashed from its definition and tile so the

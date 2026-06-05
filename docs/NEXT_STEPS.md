@@ -91,11 +91,20 @@ The RimWorld-style base layer has its **engine foundation** in place
   placed building (work kind derived from what the building produces), honouring
   the building's worker cap.
 
-**Still open** (the visible/interactive half): a SwiftUI grid view to see and
-edit the layout (tap a tile → build/demolish, tap a colonist → assign), then the
-art pass renders sprites on those tiles. Also: connect `ColonyBuilder` through
-`GameEngine` + `GameViewModel`, and have `GameWorldFactory` seed a starting
-layout from the capital's initial buildings.
+The **interactive half is now wired** too (2026-06-05):
+
+- `GameEngine` exposes `placeBuilding` (pays cost from the capital) / `demolish`
+  / `assignToBuilding` / `unassignFromBuilding`, and `GameViewModel` surfaces
+  them plus `viewedColony` and `placeableBuildings`.
+- `GameWorldFactory` seeds the capital's starting layout from its buildings and
+  auto-staffs the founding colonists onto matching buildings.
+- New **"Base" tab** (`ColonyMapScreen`): a tile grid with Inspect / Build /
+  Demolish modes, a building palette, and a per-building inspector to assign and
+  remove colonists. Uses SF Symbols as placeholders.
+
+**Still open**: the art pass renders sprites onto these tiles (the grid is the
+surface it lands on); seed layouts for founded outposts too; richer building
+footprints (multi-tile) and adjacency bonuses if desired.
 
 ## Known debt
 

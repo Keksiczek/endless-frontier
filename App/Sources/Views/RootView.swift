@@ -9,6 +9,9 @@ struct RootView: View {
             DashboardView(game: game)
                 .tabItem { Label("Colony", systemImage: "house.fill") }
 
+            ColonyMapScreen(game: game)
+                .tabItem { Label("Base", systemImage: "square.grid.3x3.fill") }
+
             WorldMapScreen(game: game)
                 .tabItem { Label("World", systemImage: "map.fill") }
 

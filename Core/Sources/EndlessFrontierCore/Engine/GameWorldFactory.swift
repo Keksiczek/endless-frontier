@@ -19,7 +19,7 @@ public enum GameWorldFactory {
             .filter { registry.building($0) != nil }
             .map { BuildingInstance(definitionID: $0, count: 1) }
 
-        let settlement = Settlement(
+        var settlement = Settlement(
             name: "First Light",
             kind: .capital,
             regionID: homeland.id,
@@ -29,8 +29,14 @@ public enum GameWorldFactory {
             buildings: buildings,
             storage: [.food: 200, .materials: 120, .energy: 0, .knowledge: 0, .influence: 20],
             storageCapacity: registry.config.defaultStorageCapacity,
-            stats: SettlementStats(stability: 60, morale: 60)
+            stats: SettlementStats(stability: 60, morale: 60),
+            colony: ColonyBuilder.seededLayout(for: buildings)
         )
+
+        // Put the founding colonists to work on the buildings that suit them.
+        for pawn in settlement.pawns {
+            settlement = ColonyBuilder.autoAssign(settlement, pawnID: pawn.id, registry: registry)
+        }
 
         regions[homelandIndex].settlementIDs = [settlement.id]
 
