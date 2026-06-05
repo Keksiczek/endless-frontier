@@ -72,6 +72,13 @@ public struct Resources: Codable, Sendable, Equatable, ExpressibleByDictionaryLi
         ResourceType.allCases.filter { self[$0] < 0 }.count
     }
 
+    /// Compares by effective value, so a missing key and an explicit zero are
+    /// equal (`Resources([.energy: 0]) == Resources()`). This keeps equality
+    /// stable across the zero-stripping JSON encoding.
+    public static func == (lhs: Resources, rhs: Resources) -> Bool {
+        ResourceType.allCases.allSatisfy { lhs[$0] == rhs[$0] }
+    }
+
     // MARK: - Codable (object keyed by resource raw value)
 
     public init(from decoder: Decoder) throws {
