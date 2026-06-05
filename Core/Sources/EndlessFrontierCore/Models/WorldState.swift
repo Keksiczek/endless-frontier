@@ -99,6 +99,8 @@ public struct WorldState: Codable, Sendable, Equatable {
     public var eventHistory: [HistoricalEvent]
     public var eventCooldowns: [String: Int]  // templateID -> tick when it last fired
     public var scheduledEffects: [ScheduledEffect]
+    public var activeQuests: [QuestProgress]
+    public var completedQuests: Set<String>
 
     public init(
         schemaVersion: Int = WorldState.currentSchemaVersion,
@@ -119,7 +121,9 @@ public struct WorldState: Codable, Sendable, Equatable {
         activeExpedition: Expedition? = nil,
         eventHistory: [HistoricalEvent] = [],
         eventCooldowns: [String: Int] = [:],
-        scheduledEffects: [ScheduledEffect] = []
+        scheduledEffects: [ScheduledEffect] = [],
+        activeQuests: [QuestProgress] = [],
+        completedQuests: Set<String> = []
     ) {
         self.schemaVersion = schemaVersion
         self.tick = tick
@@ -140,6 +144,8 @@ public struct WorldState: Codable, Sendable, Equatable {
         self.eventHistory = eventHistory
         self.eventCooldowns = eventCooldowns
         self.scheduledEffects = scheduledEffects
+        self.activeQuests = activeQuests
+        self.completedQuests = completedQuests
     }
 
     /// Total population across all settlements.
@@ -159,7 +165,8 @@ public struct WorldState: Codable, Sendable, Equatable {
         case schemaVersion, tick, lastRealTimestamp, rngSeed, mapSeed, era,
              researchedTechs, activeResearch, researchProgress, globalStats,
              unlockedBuildings, worldFlags, settlements, regions, tradeRoutes,
-             activeExpedition, eventHistory, eventCooldowns, scheduledEffects
+             activeExpedition, eventHistory, eventCooldowns, scheduledEffects,
+             activeQuests, completedQuests
     }
 
     public init(from decoder: Decoder) throws {
@@ -186,6 +193,8 @@ public struct WorldState: Codable, Sendable, Equatable {
         eventHistory = value(.eventHistory, [])
         eventCooldowns = value(.eventCooldowns, [:])
         scheduledEffects = value(.scheduledEffects, [])
+        activeQuests = value(.activeQuests, [])
+        completedQuests = value(.completedQuests, [])
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -209,5 +218,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         try c.encode(eventHistory, forKey: .eventHistory)
         try c.encode(eventCooldowns, forKey: .eventCooldowns)
         try c.encode(scheduledEffects, forKey: .scheduledEffects)
+        try c.encode(activeQuests, forKey: .activeQuests)
+        try c.encode(completedQuests, forKey: .completedQuests)
     }
 }

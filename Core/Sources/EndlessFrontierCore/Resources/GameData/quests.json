@@ -1,0 +1,89 @@
+[
+  {
+    "id": "founding_a_home",
+    "name": "Founding a Home",
+    "description": "Turn a fragile camp into a settlement that will endure.",
+    "trigger": [],
+    "stages": [
+      {
+        "description": "Grow the colony to 70 souls.",
+        "goals": [ { "stat": "global.population", "min": 70 } ],
+        "reward": { "effects": [ { "type": "resource_delta", "resource": "materials", "delta": 60, "scope": "global" } ] }
+      },
+      {
+        "description": "Record your laws — research Writing.",
+        "goals": [ { "techResearched": "writing" } ],
+        "reward": {
+          "effects": [ { "type": "resource_delta", "resource": "knowledge", "delta": 40, "scope": "global" } ],
+          "itemID": "leather_garb"
+        }
+      }
+    ]
+  },
+  {
+    "id": "reach_outward",
+    "name": "Reach Outward",
+    "description": "One settlement is a start. An empire needs more.",
+    "trigger": [ { "stat": "global.population", "min": 60 } ],
+    "stages": [
+      {
+        "description": "Found a second settlement.",
+        "goals": [ { "settlementCount": true, "min": 2 } ],
+        "reward": { "effects": [ { "type": "resource_delta", "resource": "influence", "delta": 40, "scope": "global" } ] }
+      },
+      {
+        "description": "Establish a third settlement.",
+        "goals": [ { "settlementCount": true, "min": 3 } ],
+        "reward": {
+          "effects": [ { "type": "resource_delta", "resource": "materials", "delta": 100, "scope": "global" } ],
+          "itemID": "beacon_stone"
+        }
+      }
+    ]
+  },
+  {
+    "id": "into_the_depths",
+    "name": "Into the Depths",
+    "description": "The map's dark places hold danger — and reward.",
+    "trigger": [ { "stat": "global.threatLevel", "min": 20 } ],
+    "stages": [
+      {
+        "description": "Clear a dungeon on the world map.",
+        "goals": [ { "worldFlag": "cleared:dungeon", "present": true } ],
+        "reward": {
+          "effects": [ { "type": "resource_delta", "resource": "materials", "delta": 80, "scope": "global" } ],
+          "itemID": "iron_ingot"
+        }
+      },
+      {
+        "description": "Probe an anomaly and survive its secrets.",
+        "goals": [ { "worldFlag": "cleared:anomaly", "present": true } ],
+        "reward": {
+          "effects": [ { "type": "resource_delta", "resource": "knowledge", "delta": 80, "scope": "global" } ],
+          "itemID": "ancient_alloy"
+        }
+      }
+    ]
+  },
+  {
+    "id": "age_of_industry",
+    "name": "An Age of Industry",
+    "description": "Lead your people from coin and craft into the machine age.",
+    "trigger": [ { "techResearched": "currency" } ],
+    "stages": [
+      {
+        "description": "Raise prosperity to 55.",
+        "goals": [ { "stat": "global.prosperity", "min": 55 } ],
+        "reward": { "effects": [ { "type": "resource_delta", "resource": "influence", "delta": 60, "scope": "global" } ] }
+      },
+      {
+        "description": "Harness Steam Power.",
+        "goals": [ { "techResearched": "steam_power" } ],
+        "reward": {
+          "effects": [ { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 10 } ],
+          "itemID": "eternal_engine"
+        }
+      }
+    ]
+  }
+]

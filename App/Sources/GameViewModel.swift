@@ -120,6 +120,14 @@ final class GameViewModel {
         ObjectivesEngine.current(world, registry: registry)
     }
 
+    var activeQuests: [(definition: QuestDefinition, progress: QuestProgress)] {
+        world.activeQuests.compactMap { progress in
+            registry.quest(progress.questID).map { (definition: $0, progress: progress) }
+        }
+    }
+
+    var completedQuestCount: Int { world.completedQuests.count }
+
     var tension: Double {
         TensionCalculator.calculate(world, config: registry.config)
     }

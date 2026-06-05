@@ -1,66 +1,73 @@
 # Endless Frontier — What to Build Next
 
-Snapshot (2026-06-02): Core sim is deep and well-tested (112 tests). The game
-has colonists, an endless hex world, special sites, raids/defense, housing,
-pollution, cross-era content, objectives, and resilient saves. A SwiftUI app
-drives it with procedural map terrain. Below is the prioritised backlog.
+Snapshot (2026-06-02): the Core simulation is deep and heavily tested
+(**133 tests**). What exists now:
 
-## Tier 1 — highest value next
+- **Colonists** with needs, skills (learning by doing), mood, mental breaks,
+  health, starvation→death, equipment in 3 slots.
+- **Endless hex world**: per-hex procedural generation, frontier that expands as
+  you explore, distance-scaled difficulty, dynamic region events.
+- **Special sites**: ruins / dungeons / anomalies with risk-reward and loot.
+- **RPG layer**: items with rarity, equipment + colony artifacts, **materials +
+  crafting (recipes)**, drops scaling with distance.
+- **Quests**: multi-stage chains with rewards (items + effects).
+- **Systems**: raids & defense, housing & population cap, pollution, tech/era
+  progression, cross-era content (24 buildings, 14 techs, ~25 events),
+  objectives, resilient saves.
+- **App**: SwiftUI dashboard (objectives, quests, colonists, items, crafting,
+  research/build) + interactive procedural hex **World map** (pan/zoom,
+  expeditions, founding, site interactions), iPad-adaptive.
 
-1. **Play it on a real device.** Build & run on an iPad/iPhone to actually feel
-   the loop and the map (the local simulator has been slow). This will surface
-   the most important balance/UX issues fast.
-2. **Real graphics pass.** The asset specs and AI prompts already exist
+The systems are rich; the gap now is **presentation, balance, and the breadth of
+the world the player acts on.** Priorities:
+
+## Tier 1 — make it look and feel like a game
+
+1. **Real art pass.** Biome tile sprites, rarity-framed item icons, colonist
+   portraits, site/marker art. Assets/prompts already drafted
    (`docs/ASSET_SPECIFICATION.md`, `docs/AI_PROMPT_LIBRARY.md`,
-   `docs/LEONARDO_EXPLORATION_PROMPTS.md`). Generate biome tiles, region-site
-   icons and colonist art (Leonardo / Recraft / fal.ai), drop them into an asset
-   catalog, and swap the procedural Canvas terrain for sprites (keep procedural
-   as fallback). Add light motion (water shimmer, frontier pulse, drifting fog).
-3. **Balance pass via a sim harness.** Add a headless "auto-play" test that runs
-   thousands of ticks and reports resource/morale/population/threat curves, then
-   tune `world-config.json` / `map-gen.json` so a long game neither stalls nor
-   runs away. Cheap to add given determinism.
+   `docs/LEONARDO_EXPLORATION_PROMPTS.md`). Generate (Leonardo / Recraft /
+   fal.ai), bundle in an asset catalog, swap the procedural Canvas for sprites
+   (keep procedural fallback). Add subtle motion (water, fog, frontier pulse).
+2. **Play on device + balance harness.** With this much interplay, balance is
+   the main risk. Add a headless auto-play test that runs thousands of ticks and
+   charts resources/morale/population/threat, then tune `world-config.json` /
+   `map-gen.json`. Run on a real iPad/iPhone to feel pacing.
 
-## Tier 2 — deepen the loop
+## Tier 2 — deepen what the player acts on
 
-4. **Colonists in outposts.** Pawns currently live only in the capital; effects,
-   raids and sites target the capital. Give every settlement real colonists and
-   let the player manage them per-settlement.
-5. **Quests / story chains.** The `quest` event type exists but is unused. Add
-   multi-step directed quests (trigger → objective → reward) for long-term goals
-   beyond the live Objectives list.
-6. **Local region resources.** `Region.resourceDeposits` is modelled but unused.
-   Tie a settlement's production bonuses to the deposits of the region it sits
-   in, so *where* you settle matters.
-7. **Tech-tree screen.** Visualise the DAG (it's a flat list today) so players
-   can plan a research path.
+3. **Colonists in outposts.** Pawns, equipment, raids, sites and crafting are
+   all capital-only. Give every settlement real colonists and per-settlement
+   management — the biggest structural gap now.
+4. **Combat with teeth.** Raids are abstract (defense vs strength). Use the
+   actual colonists + weapons as defenders; let the player assign a militia,
+   with casualties and heroics. Makes weapons and barracks matter more.
+5. **Inter-settlement economy.** Trade routes exist but are minimal. Caravans,
+   specialised settlements (mining town vs farm town), supply chains.
+6. **Tech-tree screen.** The tree is sizeable now — a visual planner to choose a
+   path, rather than a flat list.
 
-## Tier 3 — breadth & later eras
+## Tier 3 — breadth & long game
 
-8. **Modern / near-future content.** Buildings, techs and events for eras 5–6,
-   plus an end-game/legacy or prestige loop for the truly long game.
-9. **Put special sites to fuller use.** Dungeons as repeatable risk/reward
-   delves, ruins as lore unlocks, anomalies as ongoing dynamic-event sources.
-10. **LLM narrator (originally Phase 3).** Now there's a lot to narrate (named
-    colonists, their fates, raids, golden ages). `LLMNarratorProtocol` +
-    `StubNarrator` + a local model; turns event data into a rich chronicle. Ties
-    into the personal Home Hub later.
+7. **Later eras (modern / near-future)** content + an end-game/legacy/prestige
+   loop for the truly long single world.
+8. **Repeatable site content**: dungeons you can re-delve at rising difficulty,
+   ruins with lore unlocks, anomalies as ongoing event sources.
+9. **More RPG**: set bonuses, item upgrading/enchanting, more crafting tiers,
+   colonist traits that interact with gear.
+10. **LLM narrator** (originally Phase 3): lots to narrate now — named
+    colonists, their fates, quests, raids, golden ages. Optional, offline-first.
 
 ## Tier 4 — product polish
 
-11. **Onboarding / tutorial** and a settings screen (tick rate, new game/reset,
-    enable narrator).
-12. **Local notifications** for the "while you were away" summary on reopen.
-13. **Accessibility & i18n**: finish VoiceOver labels, Dynamic Type, and
-    consider Czech/English localization.
-14. **Save management**: multiple saves and optional iCloud sync.
-15. **Audio & haptics** for key actions and events.
+11. Onboarding/tutorial, settings (tick rate, reset, toggles).
+12. Local notifications for the "while you were away" summary.
+13. Accessibility (VoiceOver, Dynamic Type) and Czech/English localization.
+14. Multiple saves + optional iCloud sync; audio & haptics.
 
-## Known follow-ups / debt
+## Known debt
 
-- `schemaVersion` is in place; write actual migration steps when field meaning
-  (not just presence) changes.
-- Isolation-penalty and pollution curves are first-pass numbers — revisit in the
-  balance pass.
-- Outpost founding cost is a hardcoded constant; move to `world-config.json` if
-  it needs tuning.
+- `schemaVersion` exists; write migration steps when field *meaning* changes.
+- Balance numbers (pollution, isolation, loot, quest rewards) are first-pass.
+- A few costs are hardcoded constants (outpost founding, pawn tuning) that could
+  move into config for easier balancing.

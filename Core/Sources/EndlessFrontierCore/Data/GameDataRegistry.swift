@@ -24,6 +24,7 @@ public struct GameDataRegistry: Sendable {
     public let events: [EventTemplate]
     public let items: [String: ItemDefinition]
     public let recipes: [String: RecipeDefinition]
+    public let quests: [String: QuestDefinition]
     public let config: WorldConfig
     public let mapGen: MapGenConfig
 
@@ -35,6 +36,7 @@ public struct GameDataRegistry: Sendable {
         events: [EventTemplate] = [],
         items: [ItemDefinition] = [],
         recipes: [RecipeDefinition] = [],
+        quests: [QuestDefinition] = [],
         config: WorldConfig = .default,
         mapGen: MapGenConfig = .default
     ) {
@@ -45,6 +47,7 @@ public struct GameDataRegistry: Sendable {
         self.events = events
         self.items = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })
         self.recipes = Dictionary(uniqueKeysWithValues: recipes.map { ($0.id, $0) })
+        self.quests = Dictionary(uniqueKeysWithValues: quests.map { ($0.id, $0) })
         self.config = config
         self.mapGen = mapGen
     }
@@ -53,6 +56,7 @@ public struct GameDataRegistry: Sendable {
     public func tech(_ id: String) -> TechDefinition? { techs[id] }
     public func biome(_ id: String) -> BiomeDefinition? { biomes[id] }
     public func item(_ id: String) -> ItemDefinition? { items[id] }
+    public func quest(_ id: String) -> QuestDefinition? { quests[id] }
     public func eraDefinition(_ era: Era) -> EraDefinition? { eras[era] }
 
     /// Techs whose prerequisites are all met and that aren't yet researched.
@@ -89,6 +93,7 @@ public struct GameDataRegistry: Sendable {
         let mapGen = (try? load(MapGenConfig.self, "map-gen")) ?? .default
         let items = (try? load([ItemDefinition].self, "items")) ?? []
         let recipes = (try? load([RecipeDefinition].self, "recipes")) ?? []
+        let quests = (try? load([QuestDefinition].self, "quests")) ?? []
         return GameDataRegistry(
             buildings: try load([BuildingDefinition].self, "buildings"),
             techs: try load([TechDefinition].self, "techs"),
@@ -97,6 +102,7 @@ public struct GameDataRegistry: Sendable {
             events: try load([EventTemplate].self, "events"),
             items: items,
             recipes: recipes,
+            quests: quests,
             config: try load(WorldConfig.self, "world-config"),
             mapGen: mapGen
         )

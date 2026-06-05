@@ -13,6 +13,7 @@ public enum WorldQuery {
         case "threatLevel": return state.globalStats.threatLevel
         case "knowledgeOutput": return state.globalStats.knowledgeOutput
         case "influenceOutput": return state.globalStats.influenceOutput
+        case "population": return state.totalPopulation
         default:
             if let resource = ResourceType(rawValue: stat) {
                 return state.settlements.reduce(0) { $0 + $1.storage[resource] }

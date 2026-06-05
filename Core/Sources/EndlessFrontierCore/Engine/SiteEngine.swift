@@ -59,6 +59,7 @@ public enum SiteEngine {
         }
 
         s.regions[index].siteCleared = true
+        s.worldFlags["cleared:\(region.kind.rawValue)"] = true   // enables quest goals
         let record = HistoricalEvent(templateID: "site_\(region.kind.rawValue)", type: siteEventType(region.kind), tick: s.tick)
         s.eventHistory.append(record)
         return (s, outcome)

@@ -27,6 +27,7 @@ public enum TickEngine {
             fired.append(contentsOf: exploration.fired)
             s = TechEngine.advanceResearch(s, registry: registry)
             s = EraEngine.checkAdvancement(s, registry: registry)
+            s = QuestEngine.advance(s, registry: registry)
             if s.tick % interval == 0 {
                 let result = StoryPlanner.run(s, registry: registry)
                 s = result.state

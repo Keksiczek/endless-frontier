@@ -19,6 +19,7 @@ struct DashboardView: View {
                             .frontierCard()
                     }
                     ObjectivesPanel(game: game)
+                    QuestsPanel(game: game)
                     resourcesSection
                     if let capital = game.capital {
                         settlementSection(capital)
