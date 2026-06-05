@@ -116,6 +116,10 @@ final class GameViewModel {
         EraEngine.progressToNextEra(world, registry: registry)
     }
 
+    var objectives: [Objective] {
+        ObjectivesEngine.current(world, registry: registry)
+    }
+
     var tension: Double {
         TensionCalculator.calculate(world, config: registry.config)
     }

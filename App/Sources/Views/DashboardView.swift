@@ -18,6 +18,7 @@ struct DashboardView: View {
                             .foregroundStyle(Theme.danger)
                             .frontierCard()
                     }
+                    ObjectivesPanel(game: game)
                     resourcesSection
                     if let capital = game.capital {
                         settlementSection(capital)
