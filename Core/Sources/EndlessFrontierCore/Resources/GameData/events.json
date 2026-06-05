@@ -1008,5 +1008,516 @@
     ],
     "choices": [],
     "narrative_hint": "The whole colony tilts its head back as another rocket climbs the sky. For a moment, every worry seems small."
+  },
+  {
+    "id": "cold_snap",
+    "type": "disaster",
+    "name": "Cold Snap",
+    "era": [],
+    "weight": 8,
+    "cooldown_ticks": 130,
+    "conditions": [
+      { "worldFlag": "biome:tundra_present", "present": true }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "food", "delta": -80, "scope": "global", "duration_ticks": 20 },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -5 }
+    ],
+    "choices": [
+      {
+        "id": "stockpile_fuel",
+        "label": "Stockpile fuel and bundle up",
+        "description": "Spend materials to keep everyone warm and fed.",
+        "cost": { "materials": 40 },
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 6 },
+          { "type": "resource_delta", "resource": "food", "delta": 30, "scope": "global" }
+        ]
+      },
+      {
+        "id": "endure_cold",
+        "label": "Huddle together and endure",
+        "description": "No cost; wait for the thaw.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A brutal freeze grips the land. Crops blacken in the fields and every hearth burns through its woodpile."
+  },
+  {
+    "id": "heat_wave",
+    "type": "disaster",
+    "name": "Heat Wave",
+    "era": [],
+    "weight": 8,
+    "cooldown_ticks": 130,
+    "conditions": [
+      { "worldFlag": "biome:desert_present", "present": true }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "food", "delta": -70, "scope": "global" },
+      { "type": "pawn_health", "delta": -10, "selector": "all" },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -4 }
+    ],
+    "choices": [
+      {
+        "id": "dig_wells",
+        "label": "Dig deeper wells",
+        "description": "Spend materials to keep water flowing.",
+        "cost": { "materials": 35 },
+        "effects": [
+          { "type": "pawn_health", "delta": 8, "selector": "all" },
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 4 }
+        ]
+      },
+      {
+        "id": "ration_water",
+        "label": "Ration water carefully",
+        "description": "No cost; tighten every tap.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "The sun hammers down for weeks without relief. Wells run shallow and the work slows to a crawl in the heat."
+  },
+  {
+    "id": "solar_flare",
+    "type": "disaster",
+    "name": "Solar Flare",
+    "era": ["early_industrial", "modern", "near_future"],
+    "weight": 8,
+    "cooldown_ticks": 120,
+    "conditions": [
+      { "techResearched": "steam_power" }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "energy", "delta": -150, "scope": "global" },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -3 }
+    ],
+    "choices": [
+      {
+        "id": "manual_override",
+        "label": "Run everything by hand",
+        "description": "Spend influence to keep the essentials going.",
+        "cost": { "influence": 20 },
+        "effects": [
+          { "type": "resource_delta", "resource": "energy", "delta": 80, "scope": "global" }
+        ]
+      },
+      {
+        "id": "wait_out_flare",
+        "label": "Wait for the skies to settle",
+        "description": "No cost; the machines sleep until it passes.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A storm on the sun lashes the sky. Circuits fry, grids fail, and the colony falls suddenly, eerily quiet."
+  },
+  {
+    "id": "eclipse",
+    "type": "flavor",
+    "name": "Eclipse",
+    "era": [],
+    "weight": 6,
+    "cooldown_ticks": 90,
+    "conditions": [],
+    "effects": [
+      { "type": "pawn_mood", "delta": -4, "selector": "all" }
+    ],
+    "choices": [],
+    "narrative_hint": "The sun goes dark in the middle of the day. The old folk mutter omens, and even the brave feel a chill."
+  },
+  {
+    "id": "infestation",
+    "type": "threat",
+    "name": "Infestation",
+    "era": [],
+    "weight": 8,
+    "cooldown_ticks": 140,
+    "conditions": [
+      { "stat": "global.threatLevel", "min": 25 }
+    ],
+    "effects": [
+      { "type": "pawn_health", "delta": -22, "selector": "lowest_health" },
+      { "type": "resource_delta", "resource": "food", "delta": -50, "scope": "global" },
+      { "type": "stat_delta", "stat": "global.threatLevel", "delta": 4 }
+    ],
+    "choices": [
+      {
+        "id": "smoke_them_out",
+        "label": "Smoke the nest out",
+        "description": "Spend materials to destroy the infestation.",
+        "cost": { "materials": 45 },
+        "effects": [
+          { "type": "stat_delta", "stat": "global.threatLevel", "delta": -8 },
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 4 }
+        ]
+      },
+      {
+        "id": "seal_tunnels",
+        "label": "Seal the tunnels and hope",
+        "description": "No cost, but they may return.",
+        "cost": {},
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -4 }
+        ]
+      }
+    ],
+    "narrative_hint": "Something has burrowed up beneath the storehouses — chittering, many-legged, and hungry."
+  },
+  {
+    "id": "toxic_fallout",
+    "type": "disaster",
+    "name": "Toxic Fallout",
+    "era": [],
+    "weight": 6,
+    "cooldown_ticks": 180,
+    "conditions": [
+      { "stat": "global.threatLevel", "min": 30 }
+    ],
+    "effects": [
+      { "type": "pawn_health", "delta": -16, "selector": "all" },
+      { "type": "resource_delta", "resource": "food", "delta": -60, "scope": "global" },
+      { "type": "region_hazard", "delta": 2, "selector": "any_explored" }
+    ],
+    "choices": [
+      {
+        "id": "shelter_indoors",
+        "label": "Keep everyone sheltered",
+        "description": "Spend materials to seal the buildings.",
+        "cost": { "materials": 50 },
+        "effects": [
+          { "type": "pawn_health", "delta": 10, "selector": "all" }
+        ]
+      },
+      {
+        "id": "endure_fallout",
+        "label": "Press on through it",
+        "description": "No cost; the work cannot stop.",
+        "cost": {},
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -4 }
+        ]
+      }
+    ],
+    "narrative_hint": "A sickly haze drifts in on the wind, settling on every leaf and roof. Going outside means breathing poison."
+  },
+  {
+    "id": "crop_blight",
+    "type": "disaster",
+    "name": "Crop Blight",
+    "era": [],
+    "weight": 9,
+    "cooldown_ticks": 110,
+    "conditions": [
+      { "worldFlag": "biome:plains_present", "present": true }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "food", "delta": -90, "scope": "global", "duration_ticks": 15 }
+    ],
+    "choices": [
+      {
+        "id": "burn_fields",
+        "label": "Burn the infected fields",
+        "description": "Spend materials to stop the spread and salvage the rest.",
+        "cost": { "materials": 30 },
+        "effects": [
+          { "type": "resource_delta", "resource": "food", "delta": 50, "scope": "global" }
+        ]
+      },
+      {
+        "id": "salvage_crop",
+        "label": "Salvage what you can",
+        "description": "No cost; take the loss.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A grey rot creeps across the grainfields overnight, withering stalks faster than anyone can cut them."
+  },
+  {
+    "id": "cargo_pod",
+    "type": "opportunity",
+    "name": "Fallen Cargo",
+    "era": [],
+    "weight": 10,
+    "cooldown_ticks": 90,
+    "conditions": [],
+    "effects": [
+      { "type": "resource_delta", "resource": "materials", "delta": 120, "scope": "global" }
+    ],
+    "choices": [
+      {
+        "id": "share_find",
+        "label": "Share the find with neighbours",
+        "description": "Give up some materials to earn lasting goodwill.",
+        "cost": { "materials": 40 },
+        "effects": [
+          { "type": "resource_delta", "resource": "influence", "delta": 50, "scope": "global" }
+        ]
+      },
+      {
+        "id": "keep_cargo",
+        "label": "Keep it all",
+        "description": "Finders keepers.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A bundle of crates tumbles off a passing caravan and is left behind in the dust — abandoned, and yours for the taking."
+  },
+  {
+    "id": "transport_survivor",
+    "type": "opportunity",
+    "name": "A Lone Survivor",
+    "era": [],
+    "weight": 9,
+    "cooldown_ticks": 120,
+    "conditions": [],
+    "effects": [],
+    "choices": [
+      {
+        "id": "nurse_to_health",
+        "label": "Nurse them back to health",
+        "description": "Spend food and knowledge; gain a grateful new colonist.",
+        "cost": { "food": 25, "knowledge": 15 },
+        "effects": [
+          { "type": "add_pawn" },
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 3 }
+        ]
+      },
+      {
+        "id": "leave_survivor",
+        "label": "Leave them to their fate",
+        "description": "One fewer mouth to feed.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A wounded traveller is found at the edge of the fields, half-dead and clutching the wreckage of a long journey."
+  },
+  {
+    "id": "refugees_pursued",
+    "type": "threat",
+    "name": "Refugees in Flight",
+    "era": [],
+    "weight": 8,
+    "cooldown_ticks": 140,
+    "conditions": [
+      { "stat": "global.prosperity", "min": 30 }
+    ],
+    "effects": [],
+    "choices": [
+      {
+        "id": "shelter_refugees",
+        "label": "Take them in",
+        "description": "Two join your colony — but their pursuers are not far behind.",
+        "cost": { "food": 50 },
+        "effects": [
+          { "type": "add_pawn" },
+          { "type": "add_pawn" },
+          { "type": "stat_delta", "stat": "global.threatLevel", "delta": 8 }
+        ]
+      },
+      {
+        "id": "turn_refugees_away",
+        "label": "Send them onward",
+        "description": "Spare yourself the danger, and the guilt.",
+        "cost": {},
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -3 }
+        ]
+      }
+    ],
+    "narrative_hint": "A band of frightened refugees begs for shelter at your gates. Behind them, on the horizon, rises a column of dust."
+  },
+  {
+    "id": "mad_animal",
+    "type": "threat",
+    "name": "Maddened Beast",
+    "era": [],
+    "weight": 9,
+    "cooldown_ticks": 100,
+    "conditions": [
+      { "worldFlag": "biome:forest_present", "present": true }
+    ],
+    "effects": [
+      { "type": "pawn_health", "delta": -25, "selector": "lowest_health" },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -2 }
+    ],
+    "choices": [
+      {
+        "id": "hunt_beast",
+        "label": "Hunt it down",
+        "description": "Spend materials; the kill yields meat and hide.",
+        "cost": { "materials": 20 },
+        "effects": [
+          { "type": "resource_delta", "resource": "food", "delta": 60, "scope": "global" },
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 3 }
+        ]
+      },
+      {
+        "id": "drive_off_beast",
+        "label": "Drive it off",
+        "description": "No cost; chase it back into the trees.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A great beast charges out of the treeline, eyes wild and foaming — it will not stop until it is stopped."
+  },
+  {
+    "id": "wild_herd",
+    "type": "opportunity",
+    "name": "Migrating Herd",
+    "era": [],
+    "weight": 11,
+    "cooldown_ticks": 70,
+    "conditions": [
+      { "worldFlag": "biome:plains_present", "present": true }
+    ],
+    "effects": [],
+    "choices": [
+      {
+        "id": "organize_hunt",
+        "label": "Organize a great hunt",
+        "description": "Bring in a windfall of meat for the stores.",
+        "cost": {},
+        "effects": [
+          { "type": "resource_delta", "resource": "food", "delta": 120, "scope": "global" },
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 3 }
+        ]
+      },
+      {
+        "id": "let_herd_pass",
+        "label": "Let them pass in peace",
+        "description": "No cost; admire them from afar.",
+        "cost": {},
+        "effects": [
+          { "type": "pawn_mood", "delta": 4, "selector": "all" }
+        ]
+      }
+    ],
+    "narrative_hint": "A vast herd flows across the plains like a river of muscle and horn — a season's worth of food, if you act."
+  },
+  {
+    "id": "inspiration_insight",
+    "type": "opportunity",
+    "name": "A Flash of Insight",
+    "era": [],
+    "weight": 9,
+    "cooldown_ticks": 90,
+    "conditions": [
+      { "techResearched": "writing" }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "knowledge", "delta": 90, "scope": "global" },
+      { "type": "pawn_mood", "delta": 6, "selector": "all" }
+    ],
+    "choices": [],
+    "narrative_hint": "In the dead of night, one of your thinkers sits bolt upright with the answer to a problem that has vexed the colony for years."
+  },
+  {
+    "id": "psychic_drone",
+    "type": "threat",
+    "name": "Psychic Drone",
+    "era": ["modern", "near_future"],
+    "weight": 7,
+    "cooldown_ticks": 150,
+    "conditions": [
+      { "stat": "global.threatLevel", "min": 30 }
+    ],
+    "effects": [
+      { "type": "pawn_mood", "delta": -12, "selector": "all" },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -5 }
+    ],
+    "choices": [
+      {
+        "id": "psychic_shielding",
+        "label": "Build psychic shielding",
+        "description": "Spend energy and knowledge to dampen the signal.",
+        "cost": { "energy": 30, "knowledge": 30 },
+        "effects": [
+          { "type": "pawn_mood", "delta": 8, "selector": "all" },
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 4 }
+        ]
+      },
+      {
+        "id": "endure_drone",
+        "label": "Grit your teeth and bear it",
+        "description": "No cost; the headache will pass. Eventually.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A maddening hum sits just below hearing, fraying every nerve in the colony. No one can say where it comes from."
+  },
+  {
+    "id": "volcanic_winter",
+    "type": "disaster",
+    "name": "Volcanic Winter",
+    "era": [],
+    "weight": 5,
+    "cooldown_ticks": 200,
+    "conditions": [
+      { "worldFlag": "biome:mountains_present", "present": true }
+    ],
+    "effects": [
+      { "type": "resource_delta", "resource": "food", "delta": -140, "scope": "global", "duration_ticks": 30 },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -5 }
+    ],
+    "choices": [
+      {
+        "id": "trade_for_food",
+        "label": "Trade abroad for food",
+        "description": "Spend influence to import grain through the long dark.",
+        "cost": { "influence": 40 },
+        "effects": [
+          { "type": "resource_delta", "resource": "food", "delta": 120, "scope": "global" }
+        ]
+      },
+      {
+        "id": "ration_winter",
+        "label": "Ration through the dark",
+        "description": "No cost; survive on what you have.",
+        "cost": {},
+        "effects": [
+          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -3 }
+        ]
+      }
+    ],
+    "narrative_hint": "Far-off mountains roar and the sky fills with ash. The sun dims for months, and the cold creeps into everything."
+  },
+  {
+    "id": "flu_season",
+    "type": "disaster",
+    "name": "Flu Season",
+    "era": [],
+    "weight": 9,
+    "cooldown_ticks": 100,
+    "conditions": [],
+    "effects": [
+      { "type": "pawn_health", "delta": -15, "selector": "all" }
+    ],
+    "choices": [
+      {
+        "id": "herbal_remedies",
+        "label": "Brew herbal remedies",
+        "description": "Spend knowledge to ease the worst of it.",
+        "cost": { "knowledge": 20 },
+        "effects": [
+          { "type": "pawn_health", "delta": 10, "selector": "all" }
+        ]
+      },
+      {
+        "id": "bed_rest",
+        "label": "Order bed rest",
+        "description": "No cost; let it run its course.",
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": "A wave of coughing and fever moves through the colony. It is rarely deadly — but it lays the strongest low for days."
   }
 ]
