@@ -21,8 +21,9 @@ struct DashboardView: View {
                     ObjectivesPanel(game: game)
                     QuestsPanel(game: game)
                     resourcesSection
-                    if let capital = game.capital {
-                        settlementSection(capital)
+                    SettlementPicker(game: game)
+                    if let settlement = game.selectedSettlement {
+                        settlementSection(settlement)
                     }
                     eraSection
                     ColonistsPanel(game: game)
@@ -76,8 +77,8 @@ struct DashboardView: View {
                 ForEach(ResourceType.allCases, id: \.self) { type in
                     ResourceChip(
                         type: type,
-                        amount: game.capital?.storage[type] ?? 0,
-                        capacity: game.capital?.storageCapacity ?? 0
+                        amount: game.selectedSettlement?.storage[type] ?? 0,
+                        capacity: game.selectedSettlement?.storageCapacity ?? 0
                     )
                 }
             }

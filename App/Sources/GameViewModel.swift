@@ -112,6 +112,24 @@ final class GameViewModel {
 
     var capital: Settlement? { world.settlements.first }
 
+    /// Which settlement the colony panels are currently looking at.
+    var selectedSettlementID: UUID?
+
+    var settlements: [Settlement] { world.settlements }
+
+    var selectedSettlement: Settlement? {
+        if let id = selectedSettlementID, let match = world.settlements.first(where: { $0.id == id }) {
+            return match
+        }
+        return capital
+    }
+
+    func selectSettlement(_ id: UUID) { selectedSettlementID = id }
+
+    var viewedPawns: [Pawn] { selectedSettlement?.pawns ?? [] }
+
+    var viewedInventory: [ItemInstance] { selectedSettlement?.inventory ?? [] }
+
     var eraProgress: Double {
         EraEngine.progressToNextEra(world, registry: registry)
     }
@@ -171,15 +189,15 @@ final class GameViewModel {
     }
 
     func equip(_ itemID: UUID, toPawn pawnID: UUID) {
-        guard let capital else { return }
-        world = GameEngine.equipItem(world, settlementID: capital.id, pawnID: pawnID,
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.equipItem(world, settlementID: settlement.id, pawnID: pawnID,
                                      itemID: itemID, registry: registry)
         persist()
     }
 
     func unequip(_ pawnID: UUID, slot: EquipmentSlot) {
-        guard let capital else { return }
-        world = GameEngine.unequipItem(world, settlementID: capital.id, pawnID: pawnID, slot: slot)
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.unequipItem(world, settlementID: settlement.id, pawnID: pawnID, slot: slot)
         persist()
     }
 
@@ -203,8 +221,8 @@ final class GameViewModel {
     }
 
     func assignWork(pawnID: UUID, to work: WorkKind) {
-        guard let capital else { return }
-        world = GameEngine.assignWork(world, settlementID: capital.id, pawnID: pawnID, work: work)
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.assignWork(world, settlementID: settlement.id, pawnID: pawnID, work: work)
         persist()
     }
 

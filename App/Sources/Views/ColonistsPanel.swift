@@ -7,12 +7,12 @@ struct ColonistsPanel: View {
     @Bindable var game: GameViewModel
 
     var body: some View {
-        if game.capitalPawns.isEmpty {
+        if game.viewedPawns.isEmpty {
             EmptyView()
         } else {
             VStack(alignment: .leading, spacing: 12) {
                 SectionHeader(title: "Colonists")
-                ForEach(game.capitalPawns) { pawn in
+                ForEach(game.viewedPawns) { pawn in
                     pawnRow(pawn)
                 }
             }

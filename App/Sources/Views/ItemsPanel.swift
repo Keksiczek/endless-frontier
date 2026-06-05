@@ -39,11 +39,11 @@ struct ItemsPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(title: "Relics & Gear")
-            if game.capitalInventory.isEmpty {
+            if game.viewedInventory.isEmpty {
                 Text("Delve ruins and dungeons on the World map to recover relics and gear.")
                     .font(.caption).foregroundStyle(Theme.textDim)
             } else {
-                ForEach(game.capitalInventory) { instance in
+                ForEach(game.viewedInventory) { instance in
                     if let def = game.itemDefinition(instance) {
                         row(instance, def)
                     }
@@ -84,7 +84,7 @@ struct ItemsPanel: View {
                 .foregroundStyle(Theme.good)
         case .equipment:
             Menu {
-                ForEach(game.capitalPawns) { pawn in
+                ForEach(game.viewedPawns) { pawn in
                     Button(pawn.name) { game.equip(instance.id, toPawn: pawn.id) }
                 }
             } label: {

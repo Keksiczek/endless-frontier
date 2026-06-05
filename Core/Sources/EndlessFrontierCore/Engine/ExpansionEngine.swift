@@ -30,6 +30,7 @@ public enum ExpansionEngine {
             regionID: regionID,
             foundedTick: s.tick,
             population: 20,
+            pawns: settlers(seedBase: settlerSeed(state: s, region: state.regions[regionIndex])),
             buildings: [],
             storage: [.food: 40, .materials: 20],
             storageCapacity: registry.config.defaultStorageCapacity,
@@ -38,5 +39,22 @@ public enum ExpansionEngine {
         s.settlements.append(outpost)
         s.regions[regionIndex].settlementIDs.append(outpost.id)
         return s
+    }
+
+    /// Two founding colonists for a new outpost — generated deterministically
+    /// so each settlement is a real, living community from day one.
+    private static func settlers(seedBase: UInt64) -> [Pawn] {
+        [
+            PawnFactory.generate(seed: seedBase),
+            PawnFactory.generate(seed: seedBase &+ 0x9E37_79B9)
+        ]
+    }
+
+    private static func settlerSeed(state: WorldState, region: Region) -> UInt64 {
+        var h = state.mapSeed &* 0xD1B5_4A32_D192_ED03
+        h = (h ^ UInt64(bitPattern: Int64(region.coord.q))) &* 0x0100_0000_01B3
+        h = (h ^ UInt64(bitPattern: Int64(region.coord.r))) &* 0x0100_0000_01B3
+        h = (h ^ UInt64(bitPattern: Int64(state.tick)))
+        return h ^ (h >> 27)
     }
 }
