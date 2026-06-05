@@ -51,5 +51,134 @@
     "requiresBuilding": "workshop",
     "requiresTech": "scholarship",
     "description": "Lost wardens' craft, recovered for a new age."
+  },
+  {
+    "id": "smelt_steel",
+    "name": "Smelt Steel Ingot",
+    "outputItemID": "steel_ingot",
+    "materials": { "iron_ingot": 2 },
+    "resourceCost": { "materials": 20, "energy": 5 },
+    "requiresBuilding": "foundry",
+    "requiresTech": "machining",
+    "description": "Carbon and iron, fused in the furnace into something far stronger."
+  },
+  {
+    "id": "fab_circuit_board",
+    "name": "Fabricate Circuit Board",
+    "outputItemID": "circuit_board",
+    "materials": { "steel_ingot": 1 },
+    "resourceCost": { "materials": 15, "energy": 8, "knowledge": 10 },
+    "requiresBuilding": "electronics_lab",
+    "requiresTech": "electronics",
+    "description": "Etch, plate and solder — the brain of every modern device."
+  },
+  {
+    "id": "charge_fusion_cell",
+    "name": "Charge Fusion Cell",
+    "outputItemID": "fusion_cell",
+    "materials": { "circuit_board": 2, "ancient_alloy": 1 },
+    "resourceCost": { "materials": 40, "energy": 30, "knowledge": 40 },
+    "requiresBuilding": "fusion_reactor",
+    "requiresTech": "fusion_power",
+    "description": "A sliver of contained starfire, sealed and ready to power anything."
+  },
+  {
+    "id": "craft_chainsaw",
+    "name": "Assemble Chainsaw",
+    "outputItemID": "chainsaw",
+    "materials": { "steel_ingot": 1, "timber_bundle": 1 },
+    "resourceCost": { "materials": 25 },
+    "requiresBuilding": "workshop",
+    "description": "Steel teeth on a roaring motor — the logger's best friend."
+  },
+  {
+    "id": "craft_power_drill",
+    "name": "Build Power Drill",
+    "outputItemID": "power_drill",
+    "materials": { "steel_ingot": 2, "circuit_board": 1 },
+    "resourceCost": { "materials": 40, "energy": 10 },
+    "requiresBuilding": "vehicle_works",
+    "requiresTech": "electronics",
+    "description": "A motorised, diamond-tipped drill that chews through any seam."
+  },
+  {
+    "id": "craft_auto_harvester",
+    "name": "Build Auto-Harvester",
+    "outputItemID": "auto_harvester",
+    "materials": { "steel_ingot": 2, "circuit_board": 1 },
+    "resourceCost": { "materials": 40 },
+    "requiresBuilding": "assembly_plant",
+    "requiresTech": "mass_production",
+    "description": "A self-guided reaper that works a field while one hand watches."
+  },
+  {
+    "id": "craft_kevlar_vest",
+    "name": "Weave Kevlar Vest",
+    "outputItemID": "kevlar_vest",
+    "materials": { "steel_ingot": 2 },
+    "resourceCost": { "materials": 35, "knowledge": 20 },
+    "requiresBuilding": "chemical_plant",
+    "requiresTech": "chemistry",
+    "description": "Synthetic fibre stronger than steel for a fraction of the weight."
+  },
+  {
+    "id": "craft_exosuit",
+    "name": "Assemble Powered Exosuit",
+    "outputItemID": "exosuit",
+    "materials": { "steel_ingot": 3, "circuit_board": 2 },
+    "resourceCost": { "materials": 80, "energy": 20, "knowledge": 40 },
+    "requiresBuilding": "assembly_plant",
+    "requiresTech": "robotics",
+    "description": "Servo-driven armour that lends its wearer mechanical strength."
+  },
+  {
+    "id": "craft_powered_armor",
+    "name": "Forge Sentinel Power Armor",
+    "outputItemID": "powered_armor",
+    "materials": { "fusion_cell": 1, "circuit_board": 2, "steel_ingot": 2 },
+    "resourceCost": { "materials": 120, "energy": 40, "knowledge": 80 },
+    "requiresBuilding": "automated_factory",
+    "requiresTech": "artificial_intelligence",
+    "description": "The pinnacle of personal protection — a fortress that walks."
+  },
+  {
+    "id": "craft_research_terminal",
+    "name": "Build Research Terminal",
+    "outputItemID": "research_terminal",
+    "materials": { "circuit_board": 1 },
+    "resourceCost": { "materials": 20, "knowledge": 30 },
+    "requiresBuilding": "electronics_lab",
+    "requiresTech": "electronics",
+    "description": "A personal console that turns any mind into a research institute."
+  },
+  {
+    "id": "craft_neural_implant",
+    "name": "Fabricate Neural Implant",
+    "outputItemID": "neural_implant",
+    "materials": { "circuit_board": 2, "spirit_essence": 1 },
+    "resourceCost": { "knowledge": 120, "energy": 20 },
+    "requiresBuilding": "research_campus",
+    "requiresTech": "artificial_intelligence",
+    "description": "Circuitry laced into living thought — genius, made permanent."
+  },
+  {
+    "id": "craft_automation_hub",
+    "name": "Construct Automation Hub",
+    "outputItemID": "automation_hub",
+    "materials": { "circuit_board": 3, "steel_ingot": 2 },
+    "resourceCost": { "materials": 100, "knowledge": 60 },
+    "requiresBuilding": "research_campus",
+    "requiresTech": "robotics",
+    "description": "A master control node that drives every idle machine in the colony."
+  },
+  {
+    "id": "craft_fusion_core_relic",
+    "name": "Stabilise Fusion Core",
+    "outputItemID": "fusion_core_relic",
+    "materials": { "fusion_cell": 2, "ancient_alloy": 1 },
+    "resourceCost": { "materials": 150, "energy": 60, "knowledge": 100 },
+    "requiresBuilding": "fusion_reactor",
+    "requiresTech": "fusion_power",
+    "description": "A perfected reactor heart that powers a whole settlement for good."
   }
 ]

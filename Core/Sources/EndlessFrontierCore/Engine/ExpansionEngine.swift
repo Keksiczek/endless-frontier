@@ -24,18 +24,32 @@ public enum ExpansionEngine {
             return state
         }
         var s = paid
-        let outpost = Settlement(
+
+        // A new outpost arrives as a real, small base: a couple of starter
+        // buildings (only those the data actually defines), laid out on its own
+        // colony grid, with its settlers put to work.
+        let starterBuildingIDs = ["farm_basic", "hut"]
+        let buildings = starterBuildingIDs
+            .filter { registry.building($0) != nil }
+            .map { BuildingInstance(definitionID: $0, count: 1) }
+
+        var outpost = Settlement(
             name: name,
             kind: .outpost,
             regionID: regionID,
             foundedTick: s.tick,
             population: 20,
             pawns: settlers(seedBase: settlerSeed(state: s, region: state.regions[regionIndex])),
-            buildings: [],
+            buildings: buildings,
             storage: [.food: 40, .materials: 20],
             storageCapacity: registry.config.defaultStorageCapacity,
-            stats: SettlementStats(stability: 50, morale: 55)
+            stats: SettlementStats(stability: 50, morale: 55),
+            colony: ColonyBuilder.seededLayout(for: buildings, registry: registry)
         )
+        for pawn in outpost.pawns {
+            outpost = ColonyBuilder.autoAssign(outpost, pawnID: pawn.id, registry: registry)
+        }
+
         s.settlements.append(outpost)
         s.regions[regionIndex].settlementIDs.append(outpost.id)
         return s

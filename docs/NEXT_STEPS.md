@@ -30,9 +30,12 @@ the world the player acts on.** Priorities:
    fal.ai), bundle in an asset catalog, swap the procedural Canvas for sprites
    (keep procedural fallback). Add subtle motion (water, fog, frontier pulse).
 2. **Play on device + balance harness.** With this much interplay, balance is
-   the main risk. Add a headless auto-play test that runs thousands of ticks and
-   charts resources/morale/population/threat, then tune `world-config.json` /
-   `map-gen.json`. Run on a real iPad/iPhone to feel pacing.
+   the main risk. ✅ A headless auto-play harness now exists
+   (`BalanceHarnessTests.autoPlayTrace`): it plays ~12k ticks with a simple
+   policy, asserts invariants, and writes a CSV time-series
+   (`ef-balance-trace.csv`) of resources/morale/population/prosperity/threat/
+   tension for charting. **Still open**: actually tune `world-config.json` /
+   `map-gen.json` from the trace, and run on a real iPad/iPhone to feel pacing.
 
 ## Tier 2 — deepen what the player acts on  ✅ DONE
 
@@ -51,12 +54,22 @@ caravan-as-pawns; connector lines / graph layout for the tech tree.
 
 ## Tier 3 — breadth & long game
 
-7. **Later eras (modern / near-future)** content + an end-game/legacy/prestige
-   loop for the truly long single world.
+7. **Later eras (modern / near-future)** content — ✅ first pass done (2026-06-05):
+   the tech tree now runs unbroken from early-industrial through modern into
+   near-future (electricity → computing → robotics → fusion → AI → space →
+   megastructures), with ~20 new buildings (clean power, automation, data
+   centres, arcologies), late-era events (energy crisis, automation unrest, AI
+   awakening, orbital signals, climate shift) and two endgame quest chains
+   (*The Electric Age*, *Dawn of Tomorrow*) plus a population/expansion chain
+   (*A Thriving World*). Era advancement into modern/near-future is now gated on
+   the new techs. **Still open**: an end-game/legacy/prestige loop, and balance
+   tuning of the new late-game numbers (knowledge costs, building yields).
 8. **Repeatable site content**: dungeons you can re-delve at rising difficulty,
    ruins with lore unlocks, anomalies as ongoing event sources.
-9. **More RPG**: set bonuses, item upgrading/enchanting, more crafting tiers,
-   colonist traits that interact with gear.
+9. **More RPG**: set bonuses, item upgrading/enchanting — ✅ a modern/future
+   crafting tier was added (steel → circuit board → fusion cell feeding
+   exosuits, power armour, neural implants, colony artifacts). Still open: set
+   bonuses, item upgrading/enchanting, traits that interact with gear.
 10. **LLM narrator** (originally Phase 3): lots to narrate now — named
     colonists, their fates, quests, raids, golden ages. Optional, offline-first.
 
@@ -66,6 +79,52 @@ caravan-as-pawns; connector lines / graph layout for the tech tree.
 12. Local notifications for the "while you were away" summary.
 13. Accessibility (VoiceOver, Dynamic Type) and Czech/English localization.
 14. Multiple saves + optional iCloud sync; audio & haptics.
+
+## In-settlement colony layer (started 2026-06-05)
+
+The RimWorld-style base layer has its **engine foundation** in place
+(`ColonyMap` model + `ColonyBuilder` engine, with tests):
+
+- Each settlement can hold an optional square build grid (`colony: ColonyMap?`,
+  backward-compatible — `nil` on old saves and until build mode is opened).
+- `ColonyBuilder.place` / `remove` place and demolish buildings on tiles and
+  keep the count-based `buildings` economy ledger in sync (the resource loop is
+  untouched).
+- `ColonyBuilder.assign` / `unassign` put named colonists to work on a specific
+  placed building (work kind derived from what the building produces), honouring
+  the building's worker cap.
+
+The **interactive half is now wired** too (2026-06-05):
+
+- `GameEngine` exposes `placeBuilding` (pays cost from the capital) / `demolish`
+  / `assignToBuilding` / `unassignFromBuilding`, and `GameViewModel` surfaces
+  them plus `viewedColony` and `placeableBuildings`.
+- `GameWorldFactory` seeds the capital's starting layout from its buildings and
+  auto-staffs the founding colonists onto matching buildings.
+- New **"Base" tab** (`ColonyMapScreen`): a tile grid with Inspect / Build /
+  Demolish modes, a building palette, and a per-building inspector to assign and
+  remove colonists. Uses SF Symbols as placeholders.
+
+Layout now **matters mechanically** (2026-06-05): buildings carry data-driven
+`adjacency` synergies (`AdjacencyRule` in `buildings.json`) — e.g. a farm next to
+a well/granary yields extra food, a library next to a school/university yields
+extra knowledge, industry chains (workshop→foundry→factory) compound materials.
+`ColonyBonus` computes them; `ResourceLoop` feeds them into per-tick production
+and morale; the Base screen shows the active synergy total and per-building
+hints. Founded **outposts** now also arrive as real, laid-out, auto-staffed
+bases.
+
+**Multi-tile footprints + zones** landed (2026-06-05): buildings carry a
+`footprint` (e.g. factory/university 2×2, arcology 3×3) and occupy their whole
+footprint on the grid; `ColonyBuilder` places/removes/collision-checks by
+footprint. Painted amenity **zones** (park/plaza/garden) lift morale (capped via
+`ColonyBonus.maxZoneMorale`) and have their own Base-screen mode. Saves stay
+backward-compatible (new fields decode-if-present, defaulting to 1×1 / no zones).
+
+**Still open**: the art pass renders sprites onto these tiles (the grid is the
+surface it lands on — separate PR); tuning the synergy/zone/footprint numbers
+from the balance trace; optional room detection (enclosed areas) for further
+bonuses.
 
 ## Known debt
 
