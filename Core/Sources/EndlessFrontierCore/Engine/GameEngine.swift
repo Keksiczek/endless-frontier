@@ -69,8 +69,9 @@ public enum GameEngine {
         return s
     }
 
-    /// Equips an inventory item onto a colonist. Equipment only; any currently
-    /// held item returns to the inventory. Returns unchanged state on failure.
+    /// Equips an inventory item onto a colonist, into the item's body slot.
+    /// Any item already in that slot returns to the inventory. Returns
+    /// unchanged state on failure.
     public static func equipItem(
         _ state: WorldState,
         settlementID: UUID,
@@ -82,33 +83,43 @@ public enum GameEngine {
               let ii = state.settlements[si].inventory.firstIndex(where: { $0.id == itemID }),
               let pi = state.settlements[si].pawns.firstIndex(where: { $0.id == pawnID }),
               let def = registry.item(state.settlements[si].inventory[ii].definitionID),
-              def.slot == .equipment else {
+              def.slot == .equipment, let slot = def.equipSlot else {
             return state
         }
         var s = state
         let item = s.settlements[si].inventory.remove(at: ii)
-        if let previous = s.settlements[si].pawns[pi].equipment {
+        if let previous = s.settlements[si].pawns[pi].equipment[slot] {
             s.settlements[si].inventory.append(previous)
         }
-        s.settlements[si].pawns[pi].equipment = item
+        s.settlements[si].pawns[pi].equipment[slot] = item
         return s
     }
 
-    /// Returns a colonist's equipped item to the settlement inventory.
+    /// Returns the item in a colonist's given slot to the settlement inventory.
     public static func unequipItem(
         _ state: WorldState,
         settlementID: UUID,
-        pawnID: UUID
+        pawnID: UUID,
+        slot: EquipmentSlot
     ) -> WorldState {
         guard let si = state.settlements.firstIndex(where: { $0.id == settlementID }),
               let pi = state.settlements[si].pawns.firstIndex(where: { $0.id == pawnID }),
-              let item = state.settlements[si].pawns[pi].equipment else {
+              let item = state.settlements[si].pawns[pi].equipment[slot] else {
             return state
         }
         var s = state
         s.settlements[si].inventory.append(item)
-        s.settlements[si].pawns[pi].equipment = nil
+        s.settlements[si].pawns[pi].equipment[slot] = nil
         return s
+    }
+
+    /// Crafts a recipe at the capital (consumes materials + resources).
+    public static func craft(
+        _ state: WorldState,
+        recipeID: String,
+        registry: GameDataRegistry
+    ) -> WorldState {
+        CraftingEngine.craft(state, recipeID: recipeID, registry: registry)
     }
 
     /// Interacts with the special site (ruins/dungeon/anomaly) in a region.

@@ -19,7 +19,7 @@ struct ItemTests {
     func equipmentSkillBonus() throws {
         let r = try reg()
         var pawn = Pawn(name: "Miner", skills: [.mining: 5], assignedWork: .mining)
-        pawn.equipment = ItemInstance(definitionID: "masterwork_pick")   // mining +6
+        pawn.equipment[.weapon] = ItemInstance(definitionID: "masterwork_pick")   // mining +6
         #expect(ItemEngine.skillBonus(pawn, work: .mining, registry: r) == 6)
     }
 
@@ -30,7 +30,7 @@ struct ItemTests {
             var pawn = Pawn(name: "M", skills: [.mining: 5],
                             needs: PawnNeeds(hunger: 100, rest: 100, recreation: 100),
                             assignedWork: .mining)
-            if equipped { pawn.equipment = ItemInstance(definitionID: "masterwork_pick") }
+            if equipped { pawn.equipment[.weapon] = ItemInstance(definitionID: "masterwork_pick") }
             return Settlement(name: "C", kind: .capital, population: 1, pawns: [pawn],
                               storage: [.food: 500], storageCapacity: 9999)
         }
@@ -60,11 +60,11 @@ struct ItemTests {
 
         let equipped = GameEngine.equipItem(world, settlementID: capital.id, pawnID: pawn.id,
                                              itemID: item.id, registry: r)
-        #expect(equipped.settlements[0].pawns[0].equipment != nil)
+        #expect(equipped.settlements[0].pawns[0].equipment[.weapon] != nil)   // axe → weapon slot
         #expect(equipped.settlements[0].inventory.isEmpty)
 
-        let unequipped = GameEngine.unequipItem(equipped, settlementID: capital.id, pawnID: pawn.id)
-        #expect(unequipped.settlements[0].pawns[0].equipment == nil)
+        let unequipped = GameEngine.unequipItem(equipped, settlementID: capital.id, pawnID: pawn.id, slot: .weapon)
+        #expect(unequipped.settlements[0].pawns[0].equipment[.weapon] == nil)
         #expect(unequipped.settlements[0].inventory.count == 1)
     }
 

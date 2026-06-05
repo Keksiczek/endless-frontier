@@ -26,11 +26,20 @@ public enum ItemRarity: String, Codable, Sendable, CaseIterable, Comparable {
 }
 
 /// Where an item applies its effects.
-/// - `equipment` buffs the colonist who carries it.
+/// - `equipment` buffs the colonist who carries it (in a specific body slot).
 /// - `artifact` buffs the whole colony while held in a settlement's vault.
+/// - `material` is a crafting ingredient with no direct effect.
 public enum ItemSlot: String, Codable, Sendable, Equatable {
     case equipment
     case artifact
+    case material
+}
+
+/// A colonist's equipment slots. A pawn may carry one item per slot.
+public enum EquipmentSlot: String, Codable, Sendable, Equatable, CaseIterable {
+    case weapon
+    case armor
+    case trinket
 }
 
 /// A buff granted by an item. Tagged union keyed on `type`.
@@ -104,21 +113,23 @@ public struct ItemDefinition: Codable, Sendable, Identifiable, Equatable {
     public let name: String
     public let rarity: ItemRarity
     public let slot: ItemSlot
+    public let equipSlot: EquipmentSlot?   // which body slot, for equipment items
     public let effects: [ItemEffect]
     public let description: String
 
     public init(id: String, name: String, rarity: ItemRarity, slot: ItemSlot,
-                effects: [ItemEffect] = [], description: String = "") {
+                equipSlot: EquipmentSlot? = nil, effects: [ItemEffect] = [], description: String = "") {
         self.id = id
         self.name = name
         self.rarity = rarity
         self.slot = slot
+        self.equipSlot = equipSlot
         self.effects = effects
         self.description = description
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, rarity, slot, effects, description
+        case id, name, rarity, slot, equipSlot, effects, description
     }
 
     public init(from decoder: Decoder) throws {
@@ -127,6 +138,7 @@ public struct ItemDefinition: Codable, Sendable, Identifiable, Equatable {
         name = try c.decode(String.self, forKey: .name)
         rarity = try c.decode(ItemRarity.self, forKey: .rarity)
         slot = try c.decode(ItemSlot.self, forKey: .slot)
+        equipSlot = try c.decodeIfPresent(EquipmentSlot.self, forKey: .equipSlot)
         effects = try c.decodeIfPresent([ItemEffect].self, forKey: .effects) ?? []
         description = try c.decodeIfPresent(String.self, forKey: .description) ?? ""
     }

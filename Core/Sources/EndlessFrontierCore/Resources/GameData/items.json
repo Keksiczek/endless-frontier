@@ -4,6 +4,7 @@
     "name": "Worn Tools",
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "weapon",
     "effects": [ { "type": "skill_bonus", "work": "farming", "amount": 2 } ],
     "description": "Chipped but serviceable. A farmer works a little faster."
   },
@@ -12,6 +13,7 @@
     "name": "Sturdy Axe",
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "weapon",
     "effects": [ { "type": "skill_bonus", "work": "logging", "amount": 2 } ],
     "description": "A good axe makes short work of tall trees."
   },
@@ -20,14 +22,73 @@
     "name": "Miner's Pick",
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "weapon",
     "effects": [ { "type": "skill_bonus", "work": "mining", "amount": 3 } ],
     "description": "Balanced and sharp — stone yields more readily."
+  },
+  {
+    "id": "iron_scythe",
+    "name": "Iron Scythe",
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [ { "type": "skill_bonus", "work": "farming", "amount": 4 } ],
+    "description": "A keen blade that brings in the harvest in half the time."
+  },
+  {
+    "id": "masterwork_pick",
+    "name": "Masterwork Pick",
+    "rarity": "epic",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [ { "type": "skill_bonus", "work": "mining", "amount": 6 } ],
+    "description": "Forged by a true master — it bites stone like timber."
+  },
+  {
+    "id": "leather_garb",
+    "name": "Leather Garb",
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [ { "type": "health_regen", "amount": 0.5 } ],
+    "description": "Tough hides that turn the worst of the weather and the work."
+  },
+  {
+    "id": "chainmail",
+    "name": "Chainmail",
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [ { "type": "health_regen", "amount": 1.0 } ],
+    "description": "Interlocking rings that keep a colonist whole through danger."
+  },
+  {
+    "id": "plate_armor",
+    "name": "Plate Armor",
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [ { "type": "health_regen", "amount": 2.0 } ],
+    "description": "Heavy and protective — little gets through tempered steel."
+  },
+  {
+    "id": "warden_plate",
+    "name": "Warden's Plate",
+    "rarity": "epic",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      { "type": "health_regen", "amount": 3.0 },
+      { "type": "mood_bonus", "amount": 5 }
+    ],
+    "description": "Armor of the old wardens — its bearer feels invincible."
   },
   {
     "id": "scholars_quill",
     "name": "Scholar's Quill",
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [ { "type": "skill_bonus", "work": "research", "amount": 3 } ],
     "description": "Ideas flow faster from a fine pen."
   },
@@ -36,6 +97,7 @@
     "name": "Merchant's Ledger",
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [ { "type": "skill_bonus", "work": "trade", "amount": 3 } ],
     "description": "Every deal recorded, every advantage pressed."
   },
@@ -44,30 +106,16 @@
     "name": "Lucky Charm",
     "rarity": "rare",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [ { "type": "mood_bonus", "amount": 10 } ],
     "description": "Its bearer always seems to keep their spirits up."
-  },
-  {
-    "id": "healers_kit",
-    "name": "Healer's Kit",
-    "rarity": "rare",
-    "slot": "equipment",
-    "effects": [ { "type": "health_regen", "amount": 1.5 } ],
-    "description": "Salves and bandages that knit wounds quickly."
-  },
-  {
-    "id": "masterwork_pick",
-    "name": "Masterwork Pick",
-    "rarity": "epic",
-    "slot": "equipment",
-    "effects": [ { "type": "skill_bonus", "work": "mining", "amount": 6 } ],
-    "description": "Forged by a true master — it bites stone like timber."
   },
   {
     "id": "ancient_talisman",
     "name": "Ancient Talisman",
     "rarity": "epic",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       { "type": "mood_bonus", "amount": 8 },
       { "type": "health_regen", "amount": 1.5 }
@@ -79,11 +127,40 @@
     "name": "Crown of Ages",
     "rarity": "legendary",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       { "type": "mood_bonus", "amount": 20 },
       { "type": "skill_bonus", "work": "trade", "amount": 5 }
     ],
     "description": "Worn by leaders of forgotten empires. None who carry it despair."
+  },
+  {
+    "id": "timber_bundle",
+    "name": "Timber Bundle",
+    "rarity": "common",
+    "slot": "material",
+    "description": "Seasoned wood, ready for the workshop."
+  },
+  {
+    "id": "iron_ingot",
+    "name": "Iron Ingot",
+    "rarity": "common",
+    "slot": "material",
+    "description": "A bar of smelted iron — the backbone of good gear."
+  },
+  {
+    "id": "ancient_alloy",
+    "name": "Ancient Alloy",
+    "rarity": "rare",
+    "slot": "material",
+    "description": "A metal whose making was lost to time. Stronger than steel."
+  },
+  {
+    "id": "spirit_essence",
+    "name": "Spirit Essence",
+    "rarity": "epic",
+    "slot": "material",
+    "description": "A captured wisp of something not entirely of this world."
   },
   {
     "id": "harvest_idol",

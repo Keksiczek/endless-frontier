@@ -1,0 +1,55 @@
+[
+  {
+    "id": "craft_chainmail",
+    "name": "Forge Chainmail",
+    "outputItemID": "chainmail",
+    "materials": { "iron_ingot": 2 },
+    "resourceCost": { "materials": 25 },
+    "description": "Hammer iron into interlocking rings of protection."
+  },
+  {
+    "id": "craft_leather_garb",
+    "name": "Stitch Leather Garb",
+    "outputItemID": "leather_garb",
+    "materials": { "timber_bundle": 1 },
+    "resourceCost": { "materials": 10 },
+    "description": "Cure and stitch hides into hard-wearing garb."
+  },
+  {
+    "id": "craft_iron_scythe",
+    "name": "Forge Iron Scythe",
+    "outputItemID": "iron_scythe",
+    "materials": { "iron_ingot": 2, "timber_bundle": 1 },
+    "resourceCost": { "materials": 20 },
+    "requiresBuilding": "workshop",
+    "description": "A workshop blade that doubles a farmer's reach."
+  },
+  {
+    "id": "craft_masterwork_pick",
+    "name": "Forge Masterwork Pick",
+    "outputItemID": "masterwork_pick",
+    "materials": { "iron_ingot": 2, "ancient_alloy": 1 },
+    "resourceCost": { "materials": 40 },
+    "requiresBuilding": "workshop",
+    "description": "Only a true workshop can shape a pick this fine."
+  },
+  {
+    "id": "craft_plate_armor",
+    "name": "Forge Plate Armor",
+    "outputItemID": "plate_armor",
+    "materials": { "iron_ingot": 3, "ancient_alloy": 1 },
+    "resourceCost": { "materials": 50 },
+    "requiresBuilding": "workshop",
+    "description": "Tempered plates that turn aside the worst blows."
+  },
+  {
+    "id": "craft_warden_plate",
+    "name": "Forge Warden's Plate",
+    "outputItemID": "warden_plate",
+    "materials": { "ancient_alloy": 2, "spirit_essence": 1 },
+    "resourceCost": { "materials": 60, "knowledge": 30 },
+    "requiresBuilding": "workshop",
+    "requiresTech": "scholarship",
+    "description": "Lost wardens' craft, recovered for a new age."
+  }
+]

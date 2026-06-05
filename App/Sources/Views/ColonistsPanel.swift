@@ -49,19 +49,21 @@ struct ColonistsPanel: View {
                 workMenu(pawn)
             }
             moodBar(pawn.mood)
-            if let equipment = pawn.equipment, let def = game.itemDefinition(equipment) {
-                Button {
-                    game.unequip(pawn.id)
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "shield.lefthalf.filled")
-                        Text(def.name).font(.caption2.weight(.medium))
-                        Spacer()
-                        Text("Unequip").font(.caption2)
+            ForEach(EquipmentSlot.allCases, id: \.self) { slot in
+                if let instance = pawn.equipment[slot], let def = game.itemDefinition(instance) {
+                    Button {
+                        game.unequip(pawn.id, slot: slot)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: slotIcon(slot))
+                            Text(def.name).font(.caption2.weight(.medium))
+                            Spacer()
+                            Text("Unequip").font(.caption2)
+                        }
+                        .foregroundStyle(def.rarity.color)
                     }
-                    .foregroundStyle(def.rarity.color)
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
         }
         .padding(.vertical, 10).padding(.horizontal, 12)
@@ -123,5 +125,13 @@ struct ColonistsPanel: View {
 
     private func traitLabel(_ trait: PawnTrait) -> String {
         trait.rawValue.replacingOccurrences(of: "_", with: " ").capitalized
+    }
+
+    private func slotIcon(_ slot: EquipmentSlot) -> String {
+        switch slot {
+        case .weapon: return "hammer.fill"
+        case .armor: return "shield.lefthalf.filled"
+        case .trinket: return "sparkles"
+        }
     }
 }

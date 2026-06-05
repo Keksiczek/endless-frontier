@@ -23,6 +23,7 @@ public struct GameDataRegistry: Sendable {
     public let biomes: [String: BiomeDefinition]
     public let events: [EventTemplate]
     public let items: [String: ItemDefinition]
+    public let recipes: [String: RecipeDefinition]
     public let config: WorldConfig
     public let mapGen: MapGenConfig
 
@@ -33,6 +34,7 @@ public struct GameDataRegistry: Sendable {
         biomes: [BiomeDefinition] = [],
         events: [EventTemplate] = [],
         items: [ItemDefinition] = [],
+        recipes: [RecipeDefinition] = [],
         config: WorldConfig = .default,
         mapGen: MapGenConfig = .default
     ) {
@@ -42,6 +44,7 @@ public struct GameDataRegistry: Sendable {
         self.biomes = Dictionary(uniqueKeysWithValues: biomes.map { ($0.id, $0) })
         self.events = events
         self.items = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })
+        self.recipes = Dictionary(uniqueKeysWithValues: recipes.map { ($0.id, $0) })
         self.config = config
         self.mapGen = mapGen
     }
@@ -82,9 +85,10 @@ public struct GameDataRegistry: Sendable {
                 throw GameDataError.decodingFailed(name, underlying: error)
             }
         }
-        // map-gen and items are optional: fall back if the file is absent.
+        // map-gen, items and recipes are optional: fall back if absent.
         let mapGen = (try? load(MapGenConfig.self, "map-gen")) ?? .default
         let items = (try? load([ItemDefinition].self, "items")) ?? []
+        let recipes = (try? load([RecipeDefinition].self, "recipes")) ?? []
         return GameDataRegistry(
             buildings: try load([BuildingDefinition].self, "buildings"),
             techs: try load([TechDefinition].self, "techs"),
@@ -92,6 +96,7 @@ public struct GameDataRegistry: Sendable {
             biomes: try load([BiomeDefinition].self, "biomes"),
             events: try load([EventTemplate].self, "events"),
             items: items,
+            recipes: recipes,
             config: try load(WorldConfig.self, "world-config"),
             mapGen: mapGen
         )

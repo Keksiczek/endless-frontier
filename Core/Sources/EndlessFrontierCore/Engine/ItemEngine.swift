@@ -6,8 +6,9 @@ public enum ItemEngine {
     // MARK: - Equipment (per colonist)
 
     private static func equippedEffects(_ pawn: Pawn, registry: GameDataRegistry) -> [ItemEffect] {
-        guard let instance = pawn.equipment, let def = registry.item(instance.definitionID) else { return [] }
-        return def.effects
+        pawn.equipment.values
+            .compactMap { registry.item($0.definitionID) }
+            .flatMap(\.effects)
     }
 
     public static func skillBonus(_ pawn: Pawn, work: WorkKind, registry: GameDataRegistry) -> Int {

@@ -169,9 +169,28 @@ final class GameViewModel {
         persist()
     }
 
-    func unequip(_ pawnID: UUID) {
+    func unequip(_ pawnID: UUID, slot: EquipmentSlot) {
         guard let capital else { return }
-        world = GameEngine.unequipItem(world, settlementID: capital.id, pawnID: pawnID)
+        world = GameEngine.unequipItem(world, settlementID: capital.id, pawnID: pawnID, slot: slot)
+        persist()
+    }
+
+    var availableRecipes: [RecipeDefinition] {
+        CraftingEngine.availableRecipes(world, registry: registry)
+    }
+
+    func recipeOutputName(_ recipe: RecipeDefinition) -> String {
+        registry.item(recipe.outputItemID)?.name ?? recipe.outputItemID
+    }
+
+    func recipeOutputRarity(_ recipe: RecipeDefinition) -> ItemRarity? {
+        registry.item(recipe.outputItemID)?.rarity
+    }
+
+    func itemName(_ id: String) -> String { registry.item(id)?.name ?? id }
+
+    func craft(_ recipeID: String) {
+        world = GameEngine.craft(world, recipeID: recipeID, registry: registry)
         persist()
     }
 
