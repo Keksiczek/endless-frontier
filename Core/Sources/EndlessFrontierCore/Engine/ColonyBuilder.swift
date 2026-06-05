@@ -25,39 +25,42 @@ public enum ColonyBuilder {
         return s
     }
 
-    /// `true` if `definitionID` can be placed at `coord` right now (in bounds,
-    /// tile free, and the building exists). A `nil` map is treated as an empty
-    /// default-sized grid, since `place` will create one.
+    /// `true` if `definitionID` can be placed with its top-left at `coord` right
+    /// now: its whole footprint is in bounds, every tile is free, and the
+    /// building exists. A `nil` map is treated as an empty default-sized grid,
+    /// since `place` will create one.
     public static func canPlace(
         _ settlement: Settlement,
         definitionID: String,
         at coord: TileCoord,
         registry: GameDataRegistry
     ) -> Bool {
-        guard registry.building(definitionID) != nil else { return false }
+        guard let def = registry.building(definitionID) else { return false }
         let map = settlement.colony ?? ColonyMap(width: defaultWidth, height: defaultHeight)
-        return map.isInBounds(coord) && map.placement(at: coord) == nil
+        return fits(def.footprint, at: coord, in: map)
     }
 
-    /// Places a building on the grid at `coord` and increments the matching
-    /// `BuildingInstance` count. Creates the grid if the settlement has none.
-    /// Returns the settlement unchanged if the action is invalid.
+    /// Places a building (with its footprint) on the grid with its top-left at
+    /// `coord` and increments the matching `BuildingInstance` count. Creates the
+    /// grid if the settlement has none. Unchanged if the action is invalid.
     public static func place(
         _ settlement: Settlement,
         definitionID: String,
         at coord: TileCoord,
         registry: GameDataRegistry
     ) -> Settlement {
-        guard registry.building(definitionID) != nil else { return settlement }
+        guard let def = registry.building(definitionID) else { return settlement }
         var s = ensureMap(settlement)
-        guard var map = s.colony, map.isInBounds(coord), map.placement(at: coord) == nil else {
+        guard var map = s.colony, fits(def.footprint, at: coord, in: map) else {
             return settlement
         }
 
         let placement = BuildingPlacement(
             id: placementID(definitionID, coord),
             definitionID: definitionID,
-            coord: coord
+            coord: coord,
+            width: def.footprint.width,
+            height: def.footprint.height
         )
         map.placements.append(placement)
         s.colony = map
@@ -77,7 +80,7 @@ public enum ColonyBuilder {
     public static func remove(_ settlement: Settlement, at coord: TileCoord) -> Settlement {
         var s = settlement
         guard var map = s.colony,
-              let index = map.placements.firstIndex(where: { $0.coord == coord }) else {
+              let index = map.placements.firstIndex(where: { $0.covers(coord) }) else {
             return settlement
         }
         let removed = map.placements[index]
@@ -167,32 +170,85 @@ public enum ColonyBuilder {
         return best
     }
 
-    /// Lays a settlement's existing buildings out on a fresh grid, one tile per
-    /// building (filling rows left to right). Used to seed the layout for a new
-    /// game *without* touching the economy ledger — the caller already holds the
-    /// matching `buildings`, so this only mirrors them spatially.
+    /// Lays a settlement's existing buildings out on a fresh grid, scanning for
+    /// the first spot each footprint fits (row by row). Used to seed the layout
+    /// for a new game *without* touching the economy ledger — the caller already
+    /// holds the matching `buildings`, so this only mirrors them spatially.
     public static func seededLayout(
         for buildings: [BuildingInstance],
+        registry: GameDataRegistry,
         width: Int = defaultWidth,
         height: Int = defaultHeight
     ) -> ColonyMap {
         var map = ColonyMap(width: width, height: height)
-        var index = 0
         for instance in buildings {
+            let size = registry.building(instance.definitionID)?.footprint ?? TileSize()
             for _ in 0..<max(1, instance.count) {
-                let coord = TileCoord(index % width, index / width)
-                guard map.isInBounds(coord) else { return map }
+                guard let coord = firstFit(size, in: map) else { return map }
                 map.placements.append(
                     BuildingPlacement(
                         id: placementID(instance.definitionID, coord),
                         definitionID: instance.definitionID,
-                        coord: coord
+                        coord: coord,
+                        width: size.width,
+                        height: size.height
                     )
                 )
-                index += 1
             }
         }
         return map
+    }
+
+    // MARK: - Zones (amenity designations)
+
+    /// Paints a zone of `kind` onto `coord` (replacing any existing zone there).
+    /// Creates the grid if the settlement has none. Zones are independent of
+    /// buildings.
+    public static func paintZone(
+        _ settlement: Settlement,
+        at coord: TileCoord,
+        kind: ZoneKind
+    ) -> Settlement {
+        var s = ensureMap(settlement)
+        guard var map = s.colony, map.isInBounds(coord) else { return settlement }
+        map.zones.removeAll { $0.coord == coord }
+        map.zones.append(ZoneTile(coord: coord, kind: kind))
+        s.colony = map
+        return s
+    }
+
+    /// Clears any zone painted on `coord`.
+    public static func eraseZone(_ settlement: Settlement, at coord: TileCoord) -> Settlement {
+        var s = settlement
+        guard var map = s.colony else { return settlement }
+        map.zones.removeAll { $0.coord == coord }
+        s.colony = map
+        return s
+    }
+
+    // MARK: - Footprint placement helpers
+
+    /// `true` if a `size` footprint with its top-left at `coord` fits in `map`
+    /// (all tiles in bounds and unoccupied).
+    static func fits(_ size: TileSize, at coord: TileCoord, in map: ColonyMap) -> Bool {
+        for dy in 0..<size.height {
+            for dx in 0..<size.width {
+                let tile = TileCoord(coord.x + dx, coord.y + dy)
+                if !map.isInBounds(tile) || map.placement(at: tile) != nil { return false }
+            }
+        }
+        return true
+    }
+
+    /// The first top-left (row-major) where a `size` footprint fits, if any.
+    static func firstFit(_ size: TileSize, in map: ColonyMap) -> TileCoord? {
+        for y in 0..<map.height {
+            for x in 0..<map.width {
+                let coord = TileCoord(x, y)
+                if fits(size, at: coord, in: map) { return coord }
+            }
+        }
+        return nil
     }
 
     /// Best-effort: assigns a colonist to the first placed building that employs

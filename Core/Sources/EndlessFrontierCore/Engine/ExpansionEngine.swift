@@ -44,7 +44,7 @@ public enum ExpansionEngine {
             storage: [.food: 40, .materials: 20],
             storageCapacity: registry.config.defaultStorageCapacity,
             stats: SettlementStats(stability: 50, morale: 55),
-            colony: ColonyBuilder.seededLayout(for: buildings)
+            colony: ColonyBuilder.seededLayout(for: buildings, registry: registry)
         )
         for pawn in outpost.pawns {
             outpost = ColonyBuilder.autoAssign(outpost, pawnID: pawn.id, registry: registry)

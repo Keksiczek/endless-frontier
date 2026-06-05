@@ -124,11 +124,41 @@ struct ColonyBuilderTests {
 
     @Test("Seeded layout mirrors the building ledger, one tile per building")
     func seededLayout() {
+        let reg = Fixtures.registry()
         let buildings = [BuildingInstance(definitionID: "farm", count: 2),
                          BuildingInstance(definitionID: "library", count: 1)]
-        let map = ColonyBuilder.seededLayout(for: buildings)
+        let map = ColonyBuilder.seededLayout(for: buildings, registry: reg)
         #expect(map.placements.count == 3)
         #expect(map.placements.filter { $0.definitionID == "farm" }.count == 2)
+    }
+
+    private func keepRegistry() -> GameDataRegistry {
+        Fixtures.registry(buildings: [
+            BuildingDefinition(id: "keep", era: .earlySettlement, name: "Keep",
+                               footprint: TileSize(width: 2, height: 2))
+        ])
+    }
+
+    @Test("A multi-tile building occupies its whole footprint")
+    func multiTileFootprint() {
+        let reg = keepRegistry()
+        let s = ColonyBuilder.place(Settlement(name: "T", kind: .capital),
+                                    definitionID: "keep", at: TileCoord(0, 0), registry: reg)
+        #expect(s.colony?.placements.count == 1)
+        #expect(s.colony?.placement(at: TileCoord(1, 1))?.definitionID == "keep")  // covers far corner
+        #expect(s.colony?.freeTiles == 12 * 12 - 4)
+    }
+
+    @Test("A footprint can't overlap another building; demolishing any tile removes it")
+    func footprintCollisionAndRemoval() {
+        let reg = keepRegistry()
+        var s = ColonyBuilder.place(Settlement(name: "T", kind: .capital),
+                                    definitionID: "keep", at: TileCoord(0, 0), registry: reg)
+        let overlap = ColonyBuilder.place(s, definitionID: "keep", at: TileCoord(1, 1), registry: reg)
+        #expect(overlap.colony?.placements.count == 1)   // rejected — shares a tile
+
+        s = ColonyBuilder.remove(s, at: TileCoord(1, 0))  // a non-origin covered tile
+        #expect(s.colony?.placements.isEmpty == true)
     }
 
     @Test("GameEngine.placeBuilding pays the cost and lays the tile")

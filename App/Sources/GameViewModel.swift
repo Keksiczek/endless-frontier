@@ -328,6 +328,18 @@ final class GameViewModel {
         return ColonyBonus.adjacencyMorale(settlement, registry: registry)
     }
 
+    func paintZone(_ kind: ZoneKind, at coord: TileCoord) {
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.paintZone(world, settlementID: settlement.id, at: coord, kind: kind)
+        persist()
+    }
+
+    func eraseZone(at coord: TileCoord) {
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.eraseZone(world, settlementID: settlement.id, at: coord)
+        persist()
+    }
+
     /// Human-readable synergy descriptions for a building, for the inspector.
     func synergyText(for def: BuildingDefinition) -> [String] {
         def.adjacency.map { rule in

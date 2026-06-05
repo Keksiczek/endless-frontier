@@ -2,9 +2,10 @@ import SwiftUI
 import EndlessFrontierCore
 
 /// The in-settlement base layer: see your colony's layout on a tile grid,
-/// build and demolish, and put named colonists to work on specific buildings.
-/// This is the spatial RimWorld-style surface the art pass will later render
-/// with real sprites instead of SF Symbols.
+/// build (multi-tile footprints) and demolish, paint amenity zones, and put
+/// named colonists to work on specific buildings. This is the spatial
+/// RimWorld-style surface the art pass will later render with real sprites
+/// instead of SF Symbols.
 struct ColonyMapScreen: View {
     @Bindable var game: GameViewModel
 
@@ -12,11 +13,13 @@ struct ColonyMapScreen: View {
         case inspect = "Inspect"
         case build = "Build"
         case demolish = "Demolish"
+        case zone = "Zone"
         var id: String { rawValue }
     }
 
     @State private var mode: Mode = .inspect
     @State private var selectedBuilding: String?
+    @State private var selectedZone: ZoneKind = .park
     @State private var selectedCoord: TileCoord?
 
     /// The grid to render — a default empty one until the player first builds.
@@ -31,6 +34,7 @@ struct ColonyMapScreen: View {
                     SettlementPicker(game: game)
                     modePicker
                     if mode == .build { buildPalette }
+                    if mode == .zone { zonePalette }
                     gridCard
                     if let coord = selectedCoord, let placement = colony.placement(at: coord) {
                         inspector(placement)
@@ -47,7 +51,7 @@ struct ColonyMapScreen: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Base").font(.system(.largeTitle, design: .serif).weight(.bold))
-            Text("Lay out your colony and put colonists to work.")
+            Text("Lay out your colony, paint amenities, and put colonists to work.")
                 .font(.subheadline).foregroundStyle(Theme.textDim)
         }
     }
@@ -78,10 +82,15 @@ struct ColonyMapScreen: View {
 
     private func paletteCell(_ def: BuildingDefinition) -> some View {
         let isSelected = selectedBuilding == def.id
+        let multiTile = def.footprint.width > 1 || def.footprint.height > 1
         return VStack(spacing: 4) {
             Image(systemName: buildingIcon(def)).font(.title3)
             Text(def.name).font(.caption2.weight(.medium)).lineLimit(1)
             Text(costSummary(def.cost)).font(.caption2).foregroundStyle(Theme.textDim)
+            if multiTile {
+                Text("\(def.footprint.width)×\(def.footprint.height)")
+                    .font(.caption2.weight(.semibold)).foregroundStyle(Theme.accent)
+            }
         }
         .frame(width: 96)
         .padding(.vertical, 10)
@@ -92,6 +101,31 @@ struct ColonyMapScreen: View {
                 .strokeBorder(isSelected ? Theme.accent : Color.clear, lineWidth: 1)
         )
         .foregroundStyle(game.canAfford(def.cost) ? Theme.text : Theme.textDim)
+    }
+
+    // MARK: - Zone palette
+
+    private var zonePalette: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Choose a zone")
+            HStack(spacing: 10) {
+                ForEach(ZoneKind.allCases, id: \.self) { kind in
+                    Button { selectedZone = kind } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: zoneIcon(kind))
+                            Text(kind.displayName).font(.caption.weight(.medium))
+                        }
+                        .padding(.horizontal, 12).padding(.vertical, 8)
+                        .background(selectedZone == kind ? zoneColor(kind).opacity(0.25) : Theme.surfaceInset,
+                                    in: Capsule())
+                        .overlay(Capsule().strokeBorder(selectedZone == kind ? zoneColor(kind) : .clear, lineWidth: 1))
+                        .foregroundStyle(selectedZone == kind ? zoneColor(kind) : Theme.text)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .frontierCard()
     }
 
     // MARK: - Grid
@@ -142,15 +176,26 @@ struct ColonyMapScreen: View {
 
     private func tile(_ coord: TileCoord) -> some View {
         let placement = colony.placement(at: coord)
-        let isSelected = selectedCoord == coord
+        let isOrigin = placement?.coord == coord
+        let zone = colony.zoneKind(at: coord)
+        let isSelected = placement != nil && placement?.coord == selectedCoord
+        let baseFill: Color = {
+            if placement != nil { return Theme.surfaceRaised }
+            if let zone { return zoneColor(zone).opacity(0.30) }
+            return Theme.surfaceInset
+        }()
         return RoundedRectangle(cornerRadius: 4, style: .continuous)
-            .fill(placement == nil ? Theme.surfaceInset : Theme.surfaceRaised)
+            .fill(baseFill)
             .frame(width: 26, height: 26)
             .overlay {
-                if let placement, let def = game.buildingDefinition(placement.definitionID) {
+                if isOrigin, let placement, let def = game.buildingDefinition(placement.definitionID) {
                     Image(systemName: buildingIcon(def))
                         .font(.system(size: 12))
                         .foregroundStyle(tileColor(placement))
+                } else if placement == nil, let zone {
+                    Image(systemName: zoneIcon(zone))
+                        .font(.system(size: 9))
+                        .foregroundStyle(zoneColor(zone))
                 }
             }
             .overlay {
@@ -226,12 +271,18 @@ struct ColonyMapScreen: View {
     private func tap(_ coord: TileCoord) {
         switch mode {
         case .inspect:
-            selectedCoord = colony.placement(at: coord) != nil ? coord : nil
+            selectedCoord = colony.placement(at: coord)?.coord
         case .build:
             if let id = selectedBuilding { game.placeBuilding(id, at: coord) }
         case .demolish:
             game.demolish(at: coord)
-            if selectedCoord == coord { selectedCoord = nil }
+            if let selected = selectedCoord, colony.placement(at: selected) == nil { selectedCoord = nil }
+        case .zone:
+            if colony.zoneKind(at: coord) == selectedZone {
+                game.eraseZone(at: coord)
+            } else {
+                game.paintZone(selectedZone, at: coord)
+            }
         }
     }
 
@@ -240,10 +291,12 @@ struct ColonyMapScreen: View {
         case .inspect:
             return "Tap a building to see who works there and assign colonists."
         case .build:
-            guard let id = selectedBuilding else { return "Pick a building above, then tap an empty tile." }
-            return "Tap an empty tile to build \(game.buildingName(id))."
+            guard let id = selectedBuilding else { return "Pick a building above, then tap a tile for its top-left." }
+            return "Tap a tile to build \(game.buildingName(id)) (its footprint fills down and right)."
         case .demolish:
             return "Tap a building to tear it down."
+        case .zone:
+            return "Tap tiles to paint a \(selectedZone.displayName) zone; tap again to clear it. Zones lift morale."
         }
     }
 
@@ -268,6 +321,22 @@ struct ColonyMapScreen: View {
         return placement.assignedPawnIDs.isEmpty ? Theme.accent : Theme.good
     }
 
+    private func zoneColor(_ kind: ZoneKind) -> Color {
+        switch kind {
+        case .park: return Theme.good
+        case .plaza: return Theme.accent
+        case .garden: return Color(red: 0.55, green: 0.74, blue: 0.45)
+        }
+    }
+
+    private func zoneIcon(_ kind: ZoneKind) -> String {
+        switch kind {
+        case .park: return "tree.fill"
+        case .plaza: return "building.columns.fill"
+        case .garden: return "leaf.fill"
+        }
+    }
+
     private func costSummary(_ cost: Resources) -> String {
         let parts = ResourceType.allCases
             .filter { cost[$0] > 0 }
@@ -278,6 +347,9 @@ struct ColonyMapScreen: View {
     private func tileAccessibility(_ coord: TileCoord, _ placement: BuildingPlacement?) -> String {
         if let placement, let def = game.buildingDefinition(placement.definitionID) {
             return "\(def.name), \(placement.assignedPawnIDs.count) workers"
+        }
+        if let zone = colony.zoneKind(at: coord) {
+            return "\(zone.displayName) zone, tile \(coord.x), \(coord.y)"
         }
         return "Empty tile \(coord.x), \(coord.y)"
     }

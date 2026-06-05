@@ -228,6 +228,7 @@
       { "neighbor": "library", "resource": "knowledge", "bonus": 3 },
       { "neighbor": "observatory", "resource": "knowledge", "bonus": 2 }
     ],
+    "footprint": { "w": 2, "h": 2 },
     "description": "A seat of higher learning that compounds discovery."
   },
   {
@@ -284,6 +285,7 @@
       { "neighbor": "power_plant", "resource": "materials", "bonus": 4 },
       { "neighbor": "foundry", "resource": "materials", "bonus": 3 }
     ],
+    "footprint": { "w": 2, "h": 2 },
     "description": "Mass production on a scale never before seen — at a cost to the air."
   },
   {
@@ -299,6 +301,7 @@
       { "neighbor": "factory", "resource": "materials", "bonus": 4 },
       { "neighbor": "quarry", "resource": "materials", "bonus": 2 }
     ],
+    "footprint": { "w": 2, "h": 2 },
     "description": "Roaring furnaces smelt metal for the industrial age."
   },
   {
@@ -309,6 +312,7 @@
     "workers": 4,
     "production": { "energy": 22 },
     "pollution": 25,
+    "footprint": { "w": 2, "h": 2 },
     "description": "Burns coal to power the machines of a modern colony."
   },
   {
@@ -384,6 +388,7 @@
     "production": { "materials": 40 },
     "consumption": { "energy": 6 },
     "pollution": 25,
+    "footprint": { "w": 2, "h": 2 },
     "description": "The assembly line at full roar — output on a scale the founders never dreamed."
   },
   {
@@ -429,6 +434,7 @@
       { "neighbor": "research_campus", "resource": "knowledge", "bonus": 4 },
       { "neighbor": "ai_core", "resource": "knowledge", "bonus": 6 }
     ],
+    "footprint": { "w": 2, "h": 2 },
     "description": "Halls of humming machines remember and reason for the whole civilisation."
   },
   {
@@ -443,6 +449,7 @@
     "adjacency": [
       { "neighbor": "data_center", "resource": "knowledge", "bonus": 4 }
     ],
+    "footprint": { "w": 2, "h": 2 },
     "description": "A city of laboratories where the next era is invented."
   },
   {
@@ -482,6 +489,7 @@
     "workers": 4,
     "production": { "energy": 90 },
     "morale_effect": 1,
+    "footprint": { "w": 2, "h": 2 },
     "description": "A miniature star held in magnetic chains — power without limit or smoke."
   },
   {
@@ -503,6 +511,7 @@
     "production": { "influence": 30, "knowledge": 10 },
     "consumption": { "energy": 10 },
     "morale_effect": 3,
+    "footprint": { "w": 2, "h": 2 },
     "description": "Rockets climb the sky from here — the colony's reach leaves the ground entirely."
   },
   {
@@ -524,6 +533,7 @@
     "consumption": { "energy": 8 },
     "morale_effect": 5,
     "housing": 600,
+    "footprint": { "w": 3, "h": 3 },
     "description": "A self-contained city in a single structure — a million live, work and thrive within."
   }
 ]

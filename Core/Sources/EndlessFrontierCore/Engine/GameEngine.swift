@@ -260,4 +260,29 @@ public enum GameEngine {
         s.settlements[si] = ColonyBuilder.unassign(s.settlements[si], pawnID: pawnID)
         return s
     }
+
+    /// Paints an amenity zone tile (park/plaza/garden) on a settlement's grid.
+    public static func paintZone(
+        _ state: WorldState,
+        settlementID: UUID,
+        at coord: TileCoord,
+        kind: ZoneKind
+    ) -> WorldState {
+        guard let si = state.settlements.firstIndex(where: { $0.id == settlementID }) else { return state }
+        var s = state
+        s.settlements[si] = ColonyBuilder.paintZone(s.settlements[si], at: coord, kind: kind)
+        return s
+    }
+
+    /// Clears any amenity zone on a colony tile.
+    public static func eraseZone(
+        _ state: WorldState,
+        settlementID: UUID,
+        at coord: TileCoord
+    ) -> WorldState {
+        guard let si = state.settlements.firstIndex(where: { $0.id == settlementID }) else { return state }
+        var s = state
+        s.settlements[si] = ColonyBuilder.eraseZone(s.settlements[si], at: coord)
+        return s
+    }
 }

@@ -114,9 +114,17 @@ and morale; the Base screen shows the active synergy total and per-building
 hints. Founded **outposts** now also arrive as real, laid-out, auto-staffed
 bases.
 
+**Multi-tile footprints + zones** landed (2026-06-05): buildings carry a
+`footprint` (e.g. factory/university 2×2, arcology 3×3) and occupy their whole
+footprint on the grid; `ColonyBuilder` places/removes/collision-checks by
+footprint. Painted amenity **zones** (park/plaza/garden) lift morale (capped via
+`ColonyBonus.maxZoneMorale`) and have their own Base-screen mode. Saves stay
+backward-compatible (new fields decode-if-present, defaulting to 1×1 / no zones).
+
 **Still open**: the art pass renders sprites onto these tiles (the grid is the
-surface it lands on); multi-tile building footprints; designated zones/rooms;
-and tuning the synergy/adjacency numbers from the balance trace.
+surface it lands on — separate PR); tuning the synergy/zone/footprint numbers
+from the balance trace; optional room detection (enclosed areas) for further
+bonuses.
 
 ## Known debt
 
