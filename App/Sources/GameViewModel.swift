@@ -316,6 +316,29 @@ final class GameViewModel {
         persist()
     }
 
+    /// Per-tick production gained from the current layout's adjacency synergies.
+    var viewedAdjacencyProduction: Resources {
+        guard let settlement = selectedSettlement else { return Resources() }
+        return ColonyBonus.adjacencyProduction(settlement, registry: registry)
+    }
+
+    /// Morale gained from the current layout's adjacency synergies.
+    var viewedAdjacencyMorale: Double {
+        guard let settlement = selectedSettlement else { return 0 }
+        return ColonyBonus.adjacencyMorale(settlement, registry: registry)
+    }
+
+    /// Human-readable synergy descriptions for a building, for the inspector.
+    func synergyText(for def: BuildingDefinition) -> [String] {
+        def.adjacency.map { rule in
+            let neighbour = buildingName(rule.neighbor)
+            if let resource = rule.resource, rule.bonus != 0 {
+                return "+\(Int(rule.bonus)) \(resource.displayName.lowercased()) next to \(neighbour)"
+            }
+            return "+\(Int(rule.morale)) morale next to \(neighbour)"
+        }
+    }
+
     func expeditionDuration(for region: Region) -> Int {
         ExplorationEngine.expeditionDuration(to: region, config: registry.config)
     }

@@ -30,9 +30,12 @@ the world the player acts on.** Priorities:
    fal.ai), bundle in an asset catalog, swap the procedural Canvas for sprites
    (keep procedural fallback). Add subtle motion (water, fog, frontier pulse).
 2. **Play on device + balance harness.** With this much interplay, balance is
-   the main risk. Add a headless auto-play test that runs thousands of ticks and
-   charts resources/morale/population/threat, then tune `world-config.json` /
-   `map-gen.json`. Run on a real iPad/iPhone to feel pacing.
+   the main risk. ✅ A headless auto-play harness now exists
+   (`BalanceHarnessTests.autoPlayTrace`): it plays ~12k ticks with a simple
+   policy, asserts invariants, and writes a CSV time-series
+   (`ef-balance-trace.csv`) of resources/morale/population/prosperity/threat/
+   tension for charting. **Still open**: actually tune `world-config.json` /
+   `map-gen.json` from the trace, and run on a real iPad/iPhone to feel pacing.
 
 ## Tier 2 — deepen what the player acts on  ✅ DONE
 
@@ -102,9 +105,18 @@ The **interactive half is now wired** too (2026-06-05):
   Demolish modes, a building palette, and a per-building inspector to assign and
   remove colonists. Uses SF Symbols as placeholders.
 
+Layout now **matters mechanically** (2026-06-05): buildings carry data-driven
+`adjacency` synergies (`AdjacencyRule` in `buildings.json`) — e.g. a farm next to
+a well/granary yields extra food, a library next to a school/university yields
+extra knowledge, industry chains (workshop→foundry→factory) compound materials.
+`ColonyBonus` computes them; `ResourceLoop` feeds them into per-tick production
+and morale; the Base screen shows the active synergy total and per-building
+hints. Founded **outposts** now also arrive as real, laid-out, auto-staffed
+bases.
+
 **Still open**: the art pass renders sprites onto these tiles (the grid is the
-surface it lands on); seed layouts for founded outposts too; richer building
-footprints (multi-tile) and adjacency bonuses if desired.
+surface it lands on); multi-tile building footprints; designated zones/rooms;
+and tuning the synergy/adjacency numbers from the balance trace.
 
 ## Known debt
 

@@ -46,6 +46,13 @@ public enum ResourceLoop {
             net[resource] = net[resource] + artifactProduction[resource]
         }
 
+        // 1c. Layout synergies: buildings placed next to complementary
+        //     neighbours on the colony grid produce a little extra.
+        let adjacencyProduction = ColonyBonus.adjacencyProduction(s, registry: registry)
+        for resource in ResourceType.allCases {
+            net[resource] = net[resource] + adjacencyProduction[resource]
+        }
+
         // 2. Population food upkeep.
         net[.food] = net[.food] - s.population * config.foodPerPersonPerTick
 
@@ -76,7 +83,9 @@ public enum ResourceLoop {
         let buildingMorale = s.buildings.reduce(0.0) { acc, instance in
             acc + (registry.building(instance.definitionID)?.moraleEffect ?? 0) * Double(instance.count)
         }
-        let moraleTarget = min(100, max(0, 50 + buildingMorale + ItemEngine.colonyMoraleBonus(s, registry: registry)))
+        let moraleTarget = min(100, max(0, 50 + buildingMorale
+                                        + ItemEngine.colonyMoraleBonus(s, registry: registry)
+                                        + ColonyBonus.adjacencyMorale(s, registry: registry)))
         s.stats.morale += (moraleTarget - s.stats.morale) * 0.1
 
         // 6. Defense drifts toward fortifications (buildings + artifacts).

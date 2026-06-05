@@ -105,9 +105,27 @@ struct ColonyMapScreen: View {
                     .font(.caption).foregroundStyle(Theme.textDim)
             }
             ScrollView(.horizontal, showsIndicators: false) { grid }
+            if let synergySummary {
+                HStack(spacing: 6) {
+                    Image(systemName: "sparkles").foregroundStyle(Theme.good)
+                    Text("Synergies: \(synergySummary)").font(.caption).foregroundStyle(Theme.good)
+                }
+            }
             Text(hint).font(.caption).foregroundStyle(Theme.textDim)
         }
         .frontierCard()
+    }
+
+    /// A one-line summary of the layout bonuses the current arrangement earns.
+    private var synergySummary: String? {
+        let production = game.viewedAdjacencyProduction
+        let morale = game.viewedAdjacencyMorale
+        var parts: [String] = []
+        for resource in ResourceType.allCases where production[resource] != 0 {
+            parts.append("+\(Int(production[resource])) \(resource.displayName.lowercased())")
+        }
+        if morale != 0 { parts.append("+\(Int(morale)) morale") }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     private var grid: some View {
@@ -162,6 +180,16 @@ struct ColonyMapScreen: View {
                         .foregroundStyle(Theme.textDim)
                 }
                 .font(.caption)
+
+                let synergies = game.synergyText(for: def)
+                if !synergies.isEmpty {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(synergies, id: \.self) { line in
+                            Label(line, systemImage: "sparkles")
+                                .font(.caption2).foregroundStyle(Theme.textDim)
+                        }
+                    }
+                }
             }
 
             ForEach(placement.assignedPawnIDs, id: \.self) { pid in

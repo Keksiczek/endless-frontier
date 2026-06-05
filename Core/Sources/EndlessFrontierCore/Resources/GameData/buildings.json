@@ -9,6 +9,9 @@
     "consumption": {},
     "morale_effect": 2,
     "housing": 30,
+    "adjacency": [
+      { "neighbor": "well", "morale": 2 }
+    ],
     "description": "Simple shelter that keeps the community content and housed."
   },
   {
@@ -30,6 +33,11 @@
     "production": { "food": 6 },
     "consumption": {},
     "morale_effect": 1,
+    "adjacency": [
+      { "neighbor": "well", "resource": "food", "bonus": 2 },
+      { "neighbor": "granary", "resource": "food", "bonus": 1 },
+      { "neighbor": "aqueduct", "morale": 1 }
+    ],
     "description": "A simple farm feeding a small community."
   },
   {
@@ -85,6 +93,11 @@
     "production": { "knowledge": 4 },
     "consumption": {},
     "morale_effect": 1,
+    "adjacency": [
+      { "neighbor": "school", "resource": "knowledge", "bonus": 2 },
+      { "neighbor": "university", "resource": "knowledge", "bonus": 3 },
+      { "neighbor": "observatory", "resource": "knowledge", "bonus": 2 }
+    ],
     "description": "Recorded knowledge accelerates research."
   },
   {
@@ -118,6 +131,9 @@
     "production": { "knowledge": 8 },
     "consumption": { "energy": 1 },
     "morale_effect": 2,
+    "adjacency": [
+      { "neighbor": "library", "resource": "knowledge", "bonus": 2 }
+    ],
     "description": "Educates the next generation of thinkers."
   },
   {
@@ -208,6 +224,10 @@
     "production": { "knowledge": 16 },
     "consumption": { "energy": 2 },
     "morale_effect": 2,
+    "adjacency": [
+      { "neighbor": "library", "resource": "knowledge", "bonus": 3 },
+      { "neighbor": "observatory", "resource": "knowledge", "bonus": 2 }
+    ],
     "description": "A seat of higher learning that compounds discovery."
   },
   {
@@ -219,6 +239,10 @@
     "production": { "influence": 5 },
     "consumption": { "food": 1 },
     "morale_effect": 2,
+    "adjacency": [
+      { "neighbor": "trade_post", "resource": "influence", "bonus": 2 },
+      { "neighbor": "bank", "resource": "influence", "bonus": 3 }
+    ],
     "description": "Bustling stalls knit the region together in trade."
   },
   {
@@ -228,6 +252,9 @@
     "cost": { "materials": 70, "knowledge": 25 },
     "workers": 3,
     "production": { "influence": 9 },
+    "adjacency": [
+      { "neighbor": "market", "resource": "influence", "bonus": 2 }
+    ],
     "description": "Credit and coin extend the colony's reach across the map."
   },
   {
@@ -238,6 +265,10 @@
     "workers": 4,
     "production": { "materials": 11 },
     "consumption": { "energy": 1 },
+    "adjacency": [
+      { "neighbor": "foundry", "resource": "materials", "bonus": 3 },
+      { "neighbor": "quarry", "resource": "materials", "bonus": 2 }
+    ],
     "description": "Skilled artisans multiply what raw labour can produce."
   },
   {
@@ -249,6 +280,10 @@
     "production": { "materials": 28 },
     "consumption": { "energy": 4 },
     "pollution": 30,
+    "adjacency": [
+      { "neighbor": "power_plant", "resource": "materials", "bonus": 4 },
+      { "neighbor": "foundry", "resource": "materials", "bonus": 3 }
+    ],
     "description": "Mass production on a scale never before seen — at a cost to the air."
   },
   {
@@ -260,6 +295,10 @@
     "production": { "materials": 18 },
     "consumption": { "energy": 2 },
     "pollution": 20,
+    "adjacency": [
+      { "neighbor": "factory", "resource": "materials", "bonus": 4 },
+      { "neighbor": "quarry", "resource": "materials", "bonus": 2 }
+    ],
     "description": "Roaring furnaces smelt metal for the industrial age."
   },
   {
@@ -386,6 +425,10 @@
     "production": { "knowledge": 38 },
     "consumption": { "energy": 8 },
     "pollution": 5,
+    "adjacency": [
+      { "neighbor": "research_campus", "resource": "knowledge", "bonus": 4 },
+      { "neighbor": "ai_core", "resource": "knowledge", "bonus": 6 }
+    ],
     "description": "Halls of humming machines remember and reason for the whole civilisation."
   },
   {
@@ -397,6 +440,9 @@
     "production": { "knowledge": 30 },
     "consumption": { "energy": 4 },
     "morale_effect": 2,
+    "adjacency": [
+      { "neighbor": "data_center", "resource": "knowledge", "bonus": 4 }
+    ],
     "description": "A city of laboratories where the next era is invented."
   },
   {
