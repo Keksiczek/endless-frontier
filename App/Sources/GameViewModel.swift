@@ -240,6 +240,31 @@ final class GameViewModel {
         persist()
     }
 
+    // MARK: - Caravans
+
+    var caravans: [Caravan] { world.caravans }
+
+    /// How many colonists a settlement could spare as an escort.
+    func availableEscort(_ settlementID: UUID) -> Int {
+        world.settlements.first { $0.id == settlementID }?.pawns.count ?? 0
+    }
+
+    /// Dispatches a caravan escorted by the origin's first `guards` colonists.
+    func dispatchCaravan(from: UUID, to: UUID, resource: ResourceType, amount: Double, guards: Int) {
+        guard let origin = world.settlements.first(where: { $0.id == from }) else { return }
+        let guardIDs = Array(origin.pawns.prefix(max(0, guards)).map(\.id))
+        world = GameEngine.dispatchCaravan(world, originID: from, destinationID: to,
+                                           resource: resource, amount: amount, guardIDs: guardIDs)
+        persist()
+    }
+
+    func canDispatchCaravan(from: UUID, to: UUID, resource: ResourceType, amount: Double, guards: Int) -> Bool {
+        guard let origin = world.settlements.first(where: { $0.id == from }) else { return false }
+        let guardIDs = Array(origin.pawns.prefix(max(0, guards)).map(\.id))
+        return CaravanEngine.canDispatch(world, originID: from, destinationID: to,
+                                         resource: resource, amount: amount, guardIDs: guardIDs)
+    }
+
     var availableRecipes: [RecipeDefinition] {
         CraftingEngine.availableRecipes(world, settlementID: selectedSettlement?.id, registry: registry)
     }

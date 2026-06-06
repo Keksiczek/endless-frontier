@@ -94,6 +94,7 @@ public struct WorldState: Codable, Sendable, Equatable {
     public var settlements: [Settlement]
     public var regions: [Region]
     public var tradeRoutes: [TradeRoute]
+    public var caravans: [Caravan]
     public var activeExpedition: Expedition?
 
     public var eventHistory: [HistoricalEvent]
@@ -118,6 +119,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         settlements: [Settlement] = [],
         regions: [Region] = [],
         tradeRoutes: [TradeRoute] = [],
+        caravans: [Caravan] = [],
         activeExpedition: Expedition? = nil,
         eventHistory: [HistoricalEvent] = [],
         eventCooldowns: [String: Int] = [:],
@@ -140,6 +142,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         self.settlements = settlements
         self.regions = regions
         self.tradeRoutes = tradeRoutes
+        self.caravans = caravans
         self.activeExpedition = activeExpedition
         self.eventHistory = eventHistory
         self.eventCooldowns = eventCooldowns
@@ -165,8 +168,8 @@ public struct WorldState: Codable, Sendable, Equatable {
         case schemaVersion, tick, lastRealTimestamp, rngSeed, mapSeed, era,
              researchedTechs, activeResearch, researchProgress, globalStats,
              unlockedBuildings, worldFlags, settlements, regions, tradeRoutes,
-             activeExpedition, eventHistory, eventCooldowns, scheduledEffects,
-             activeQuests, completedQuests
+             caravans, activeExpedition, eventHistory, eventCooldowns,
+             scheduledEffects, activeQuests, completedQuests
     }
 
     public init(from decoder: Decoder) throws {
@@ -189,6 +192,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         settlements = value(.settlements, [])
         regions = value(.regions, [])
         tradeRoutes = value(.tradeRoutes, [])
+        caravans = value(.caravans, [])
         activeExpedition = (try? c.decodeIfPresent(Expedition.self, forKey: .activeExpedition)) ?? nil
         eventHistory = value(.eventHistory, [])
         eventCooldowns = value(.eventCooldowns, [:])
@@ -214,6 +218,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         try c.encode(settlements, forKey: .settlements)
         try c.encode(regions, forKey: .regions)
         try c.encode(tradeRoutes, forKey: .tradeRoutes)
+        try c.encode(caravans, forKey: .caravans)
         try c.encodeIfPresent(activeExpedition, forKey: .activeExpedition)
         try c.encode(eventHistory, forKey: .eventHistory)
         try c.encode(eventCooldowns, forKey: .eventCooldowns)

@@ -47,8 +47,11 @@ the world the player acts on.** Priorities:
 
 Remaining within Tier 2 / next refinements: ✅ crafting & building are now
 per-selected-settlement (each settlement pays from and stocks its own storage);
-still open — specialised settlements and caravan-as-pawns; connector lines /
-graph layout for the tech tree.
+✅ specialised settlements (agricultural/industrial/scholarly/fortified/
+mercantile, each reshaping production); ✅ caravan-as-pawns (escorted batch
+shipments that travel, can be ambushed, and migrate their guards to the
+destination); still open — connector lines / graph layout for the tech tree
+(graphics-adjacent).
 
 ## Tier 3 — breadth & long game
 

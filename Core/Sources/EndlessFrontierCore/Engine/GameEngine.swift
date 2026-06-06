@@ -66,6 +66,20 @@ public enum GameEngine {
         return s
     }
 
+    /// Dispatches an escorted caravan carrying `amount` of `resource` from one
+    /// settlement to another. Returns unchanged state if it can't be sent.
+    public static func dispatchCaravan(
+        _ state: WorldState,
+        originID: UUID,
+        destinationID: UUID,
+        resource: ResourceType,
+        amount: Double,
+        guardIDs: [UUID]
+    ) -> WorldState {
+        CaravanEngine.dispatch(state, originID: originID, destinationID: destinationID,
+                               resource: resource, amount: amount, guardIDs: guardIDs)
+    }
+
     /// Reassigns a colonist to a different kind of work.
     public static func assignWork(
         _ state: WorldState,

@@ -18,6 +18,7 @@ public enum TickEngine {
         for _ in 0..<ticks {
             s = ResourceLoop.advanceOneTick(s, registry: registry)
             s = MultiCityEngine.advanceOneTick(s, registry: registry)
+            s = CaravanEngine.advanceOneTick(s, registry: registry)
             s.tick += 1
             let scheduled = ScheduledEffectEngine.advanceOneTick(s, registry: registry)
             s = scheduled.state
