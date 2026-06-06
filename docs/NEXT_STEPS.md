@@ -1,7 +1,7 @@
 # Endless Frontier — What to Build Next
 
-Snapshot (2026-06-02): the Core simulation is deep and heavily tested
-(**133 tests**). What exists now:
+Snapshot (2026-06-06): the Core simulation is deep and heavily tested
+(**179 tests**). What exists now:
 
 - **Colonists** with needs, skills (learning by doing), mood, mental breaks,
   health, starvation→death, equipment in 3 slots.
@@ -29,10 +29,12 @@ the world the player acts on.** Priorities:
    `docs/LEONARDO_EXPLORATION_PROMPTS.md`). Generate (Leonardo / Recraft /
    fal.ai), bundle in an asset catalog, swap the procedural Canvas for sprites
    (keep procedural fallback). Add subtle motion (water, fog, frontier pulse).
-2. **Play on device + balance harness.** With this much interplay, balance is
-   the main risk. Add a headless auto-play test that runs thousands of ticks and
-   charts resources/morale/population/threat, then tune `world-config.json` /
-   `map-gen.json`. Run on a real iPad/iPhone to feel pacing.
+2. **Play on device + balance harness.** ✅ Balance harness done —
+   `BalanceHarness.run` auto-plays a fresh world and returns a
+   population/morale/stability/threat/food/materials/knowledge time-series, with
+   regression tests asserting a managed colony survives and metrics stay bounded
+   (`BalanceTests`). Still to do: tune `world-config.json` / `map-gen.json` from
+   its output, and run on a real iPad/iPhone to feel pacing.
 
 ## Tier 2 — deepen what the player acts on  ✅ DONE
 
