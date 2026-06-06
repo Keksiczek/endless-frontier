@@ -43,7 +43,7 @@ struct CaravanTests {
         w = CaravanEngine.dispatch(w, originID: w.settlements[0].id, destinationID: w.settlements[1].id,
                                    resource: .food, amount: 40, guardIDs: [g.id])
         w.globalStats.threatLevel = 0                        // no ambushes possible
-        for _ in 0..<4 { w = CaravanEngine.advanceOneTick(w, registry: r) }  // fallback travel = 4 ticks
+        for _ in 0..<4 { w = CaravanEngine.advanceOneTick(w, registry: r).state }  // fallback travel = 4 ticks
         #expect(w.caravans.isEmpty)
         #expect(w.settlements[1].storage[.food] == 40)       // cargo arrived
         #expect(w.settlements[1].pawns.contains { $0.id == g.id })   // guard migrated in
@@ -88,9 +88,26 @@ struct CaravanTests {
         let lost = Caravan(originID: w.settlements[0].id, destinationID: w.settlements[1].id,
                            resource: .food, cargo: 50, guards: [], ticksRemaining: 1, totalTicks: 4)
         w.caravans = [lost]
-        w = CaravanEngine.advanceOneTick(w, registry: r)
+        w = CaravanEngine.advanceOneTick(w, registry: r).state
         #expect(w.caravans.isEmpty)
         #expect(w.settlements[1].storage[.food] == 0)   // captured — nothing delivered
+    }
+
+    @Test("Arrival reports a chronicle event for the away-summary")
+    func arrivalEmitsEvent() throws {
+        let r = try reg()
+        let g = escort("Ada")
+        var w = twoTowns(guards: [g])
+        w = CaravanEngine.dispatch(w, originID: w.settlements[0].id, destinationID: w.settlements[1].id,
+                                   resource: .food, amount: 40, guardIDs: [g.id])
+        w.globalStats.threatLevel = 0
+        var fired: [HistoricalEvent] = []
+        for _ in 0..<4 {
+            let step = CaravanEngine.advanceOneTick(w, registry: r)
+            w = step.state
+            fired.append(contentsOf: step.fired)
+        }
+        #expect(fired.contains { $0.templateID == "caravan_arrived" })
     }
 
     @Test("Caravans are deterministic and survive a save round-trip")

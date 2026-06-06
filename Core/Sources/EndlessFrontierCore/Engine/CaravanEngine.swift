@@ -81,27 +81,41 @@ public enum CaravanEngine {
 
     /// Advances every in-flight caravan by one tick: rolls for ambush, then
     /// either delivers (on arrival), drops it (if wiped out), or keeps it
-    /// traveling.
-    public static func advanceOneTick(_ state: WorldState, registry: GameDataRegistry) -> WorldState {
-        guard !state.caravans.isEmpty else { return state }
+    /// traveling. Returns chronicle entries for ambushes, losses and arrivals
+    /// so the "while you were away" summary can report them.
+    public static func advanceOneTick(_ state: WorldState, registry: GameDataRegistry) -> PlannerResult {
+        guard !state.caravans.isEmpty else { return PlannerResult(state: state, fired: []) }
         var s = state
         var stillTraveling: [Caravan] = []
+        var fired: [HistoricalEvent] = []
         for var caravan in s.caravans {
             caravan.ticksRemaining -= 1
             resolveTravelTick(&caravan, threat: s.globalStats.threatLevel, mapSeed: s.mapSeed, tick: s.tick)
 
             // An escort wiped out on the road means the caravan is taken: cargo
             // and any survivors are lost.
-            if caravan.guards.isEmpty { continue }
+            if caravan.guards.isEmpty {
+                fired.append(HistoricalEvent(templateID: "caravan_lost", type: .disaster, tick: s.tick))
+                continue
+            }
+            switch caravan.status {
+            case .raided:
+                fired.append(HistoricalEvent(templateID: "caravan_ambushed", type: .threat, tick: s.tick))
+            case .skirmished:
+                fired.append(HistoricalEvent(templateID: "caravan_skirmish", type: .flavor, tick: s.tick))
+            case .traveling:
+                break
+            }
 
             if caravan.ticksRemaining <= 0 {
                 deliver(caravan, into: &s)
+                fired.append(HistoricalEvent(templateID: "caravan_arrived", type: .opportunity, tick: s.tick))
             } else {
                 stillTraveling.append(caravan)
             }
         }
         s.caravans = stillTraveling
-        return s
+        return PlannerResult(state: s, fired: fired)
     }
 
     // MARK: - Internals
