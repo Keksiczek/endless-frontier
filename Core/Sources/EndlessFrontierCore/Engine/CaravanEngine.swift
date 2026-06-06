@@ -90,7 +90,9 @@ public enum CaravanEngine {
         var fired: [HistoricalEvent] = []
         for var caravan in s.caravans {
             caravan.ticksRemaining -= 1
-            resolveTravelTick(&caravan, threat: s.globalStats.threatLevel, mapSeed: s.mapSeed, tick: s.tick)
+            let originMercantile = s.settlements.first { $0.id == caravan.originID }?.specialization == .mercantile
+            resolveTravelTick(&caravan, threat: s.globalStats.threatLevel,
+                              originMercantile: originMercantile, mapSeed: s.mapSeed, tick: s.tick)
 
             // An escort wiped out on the road means the caravan is taken: cargo
             // and any survivors are lost.
@@ -127,14 +129,32 @@ public enum CaravanEngine {
     /// One leg of travel: maybe an ambush, resolved against the escort's
     /// militia strength. Cargo bleeds and the weakest guard is wounded when the
     /// raiders break through.
-    static func resolveTravelTick(_ caravan: inout Caravan, threat: Double, mapSeed: UInt64, tick: Int) {
+    static func resolveTravelTick(
+        _ caravan: inout Caravan,
+        threat: Double,
+        originMercantile: Bool,
+        mapSeed: UInt64,
+        tick: Int
+    ) {
         var rng = SeededRNG(seed: travelSeed(caravanID: caravan.id, mapSeed: mapSeed, tick: tick))
-        let chance = min(maxAmbushChance, max(0, threat / 100 * 0.3))
+        let chance = ambushChance(threat: threat, guards: caravan.guards, originMercantile: originMercantile)
         guard rng.nextUnit() < chance else {
             caravan.status = .traveling
             return
         }
         applyAmbush(&caravan, threat: threat)
+    }
+
+    /// Per-tick ambush probability. Rises with threat, but a skilled trading
+    /// escort (the `trade` skill) and a mercantile home settlement both keep
+    /// the roads safer — so investment in trade pays off in fewer raids.
+    static func ambushChance(threat: Double, guards: [Pawn], originMercantile: Bool) -> Double {
+        let base = max(0, threat / 100 * 0.3)
+        let avgTrade = guards.isEmpty ? 0
+            : Double(guards.map { $0.skill(.trade) }.reduce(0, +)) / Double(guards.count)
+        let skillFactor = max(0.4, 1 - avgTrade * 0.05)   // each trade level −5%, floored at −60%
+        let mercantileFactor = originMercantile ? 0.6 : 1.0
+        return min(maxAmbushChance, base * skillFactor * mercantileFactor)
     }
 
     /// Resolves an ambush that *has* occurred against the escort's militia

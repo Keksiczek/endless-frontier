@@ -26,6 +26,11 @@ public enum MultiCityEngine {
             adjacency[route.fromID, default: []].insert(route.toID)
             adjacency[route.toID, default: []].insert(route.fromID)
         }
+        // An in-flight caravan keeps its endpoints supplied for the journey.
+        for caravan in state.caravans {
+            adjacency[caravan.originID, default: []].insert(caravan.destinationID)
+            adjacency[caravan.destinationID, default: []].insert(caravan.originID)
+        }
 
         var connected: Set<UUID> = [capital.id]
         var frontier: [UUID] = [capital.id]

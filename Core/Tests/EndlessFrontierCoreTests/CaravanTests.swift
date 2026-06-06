@@ -110,6 +110,28 @@ struct CaravanTests {
         #expect(fired.contains { $0.templateID == "caravan_arrived" })
     }
 
+    @Test("A skilled, mercantile-backed escort faces fewer ambushes")
+    func tradeReducesAmbushChance() {
+        let rookie = [escort("R")]                                  // trade skill 0
+        let veteran = [Pawn(name: "V", skills: [.trade: 6])]        // seasoned trader
+        let base = CaravanEngine.ambushChance(threat: 100, guards: rookie, originMercantile: false)
+        let skilled = CaravanEngine.ambushChance(threat: 100, guards: veteran, originMercantile: false)
+        let merchant = CaravanEngine.ambushChance(threat: 100, guards: rookie, originMercantile: true)
+        #expect(skilled < base)
+        #expect(merchant < base)
+    }
+
+    @Test("An in-flight caravan keeps its destination connected")
+    func caravanEstablishesConnectivity() {
+        let g = escort("Ada")
+        var w = twoTowns(guards: [g])
+        let destID = w.settlements[1].id
+        #expect(!MultiCityEngine.connectedSettlementIDs(w).contains(destID))   // no link yet
+        w = CaravanEngine.dispatch(w, originID: w.settlements[0].id, destinationID: destID,
+                                   resource: .food, amount: 20, guardIDs: [g.id])
+        #expect(MultiCityEngine.connectedSettlementIDs(w).contains(destID))    // caravan bridges it
+    }
+
     @Test("Caravans are deterministic and survive a save round-trip")
     func deterministicAndCodable() throws {
         let g = escort("Ada")

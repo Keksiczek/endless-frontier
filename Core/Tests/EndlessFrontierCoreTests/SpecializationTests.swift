@@ -100,6 +100,18 @@ struct SpecializationTests {
         #expect(a.settlements[0].storage[.food] == b.settlements[0].storage[.food])
     }
 
+    @Test("Switching specialisation costs stability; re-confirming the same one does not")
+    func switchingCostsStability() throws {
+        var s = Settlement(name: "S", kind: .capital, specialization: .balanced)
+        s.stats.stability = 80
+        let w = WorldState(settlements: [s])
+        let switched = GameEngine.setSpecialization(w, settlementID: s.id, specialization: .industrial)
+        #expect(switched.settlements[0].stats.stability < 80)
+        // Re-confirming the same specialisation is a no-op for stability.
+        let again = GameEngine.setSpecialization(switched, settlementID: s.id, specialization: .industrial)
+        #expect(again.settlements[0].stats.stability == switched.settlements[0].stats.stability)
+    }
+
     @Test("Specialisation survives a save round-trip")
     func roundTrips() throws {
         let original = world(spec: .industrial, buildings: ["quarry"])

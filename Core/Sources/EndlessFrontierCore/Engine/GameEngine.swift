@@ -62,9 +62,18 @@ public enum GameEngine {
     ) -> WorldState {
         guard let i = state.settlements.firstIndex(where: { $0.id == settlementID }) else { return state }
         var s = state
+        // Re-tooling a settlement's economy is disruptive: switching costs a
+        // one-off hit to stability, so specialisation is a commitment, not a
+        // free per-tick toggle.
+        if s.settlements[i].specialization != specialization {
+            s.settlements[i].stats.stability = max(0, s.settlements[i].stats.stability - specializationSwitchStabilityCost)
+        }
         s.settlements[i].specialization = specialization
         return s
     }
+
+    /// Stability lost when a settlement changes its specialisation.
+    static let specializationSwitchStabilityCost: Double = 8
 
     /// Dispatches an escorted caravan carrying `amount` of `resource` from one
     /// settlement to another. Returns unchanged state if it can't be sent.
