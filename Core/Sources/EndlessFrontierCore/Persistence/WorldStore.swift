@@ -16,11 +16,13 @@ public struct WorldStore: Sendable {
         return documents.appendingPathComponent("endless-frontier-world.json")
     }
 
-    /// Returns the saved world, or `nil` if no save exists yet.
+    /// Returns the saved world (migrated up to the current schema), or `nil` if
+    /// no save exists yet.
     public func load() throws -> WorldState? {
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
         let data = try Data(contentsOf: url)
-        return try Self.decoder.decode(WorldState.self, from: data)
+        let decoded = try Self.decoder.decode(WorldState.self, from: data)
+        return SaveMigrator.migrate(decoded)
     }
 
     /// Atomically writes the world to disk.
