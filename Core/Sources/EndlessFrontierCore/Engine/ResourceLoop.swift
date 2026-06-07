@@ -7,6 +7,11 @@ public enum ResourceLoop {
     public static let baseHousing: Double = 30
     /// Pollution above this level begins to drag morale down.
     public static let pollutionMoraleThreshold: Double = 40
+    /// Baseline the threat level decays toward in the founding era.
+    public static let baseThreat: Double = 10
+    /// Extra threat baseline per era advanced — later eras are more dangerous,
+    /// so raids and defense actually engage as a long-lived civilization grows.
+    public static let eraThreatRampPerEra: Double = 6
 
     /// How many colonists a settlement can house (base + housing buildings).
     public static func housingCapacity(_ settlement: Settlement, registry: GameDataRegistry) -> Double {
@@ -139,8 +144,10 @@ public enum ResourceLoop {
         // Prosperity drifts toward average morale.
         g.prosperity += (avgMorale - g.prosperity) * 0.05
 
-        // Threat decays gently toward a low baseline (events spike it back up).
-        g.threatLevel += (10 - g.threatLevel) * 0.02
+        // Threat decays toward a baseline that climbs with each era, so a
+        // long-lived civilization faces rising danger (events still spike it).
+        let threatBaseline = baseThreat + Double(state.era.index) * eraThreatRampPerEra
+        g.threatLevel += (threatBaseline - g.threatLevel) * 0.02
 
         return g.clamped()
     }

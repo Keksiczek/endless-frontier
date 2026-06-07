@@ -36,11 +36,11 @@ the world the player acts on.** Priorities:
    progress) and stays within bounds (`BalanceTests`).
 
    **Tuning targets found from an 800-tick auto-played run (still to apply):**
-   - **Threat is inert in a peaceful single-city game** — `globalStats.threat`
-     sits at its 10 baseline the whole run, so raids/defense never engage. Add a
-     slow era/time threat ramp (the decay target in
-     `ResourceLoop.recomputeGlobalStats` is a hardcoded 10) or bias the
-     storyteller toward threat in long calm stretches.
+   - ✅ **Threat is inert in a peaceful single-city game** — fixed:
+     `ResourceLoop.recomputeGlobalStats` now decays threat toward a baseline
+     that climbs `eraThreatRampPerEra` (6) per era, so danger escalates as the
+     civilization advances and raids/defense engage in the long game. (Could
+     still bias the storyteller toward threat in long calm stretches.)
    - **Materials are trivially abundant** — storage pegs at the 500 cap almost
      immediately and never moves; consider lower early materials production or a
      bigger sink.

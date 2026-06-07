@@ -51,6 +51,18 @@ struct BalanceTests {
         #expect(final.knowledgeOutput > 0 || final.era != .earlySettlement)
     }
 
+    @Test("Threat baseline climbs with era so danger escalates")
+    func threatRampsWithEra() throws {
+        let r = try reg()
+        func threatAfterDrift(era: Era) -> Double {
+            var w = WorldState(era: era, settlements: [Settlement(name: "S", population: 0)])
+            w.globalStats.threatLevel = 10
+            for _ in 0..<60 { w = ResourceLoop.advanceOneTick(w, registry: r) }
+            return w.globalStats.threatLevel
+        }
+        #expect(threatAfterDrift(era: .ancient) > threatAfterDrift(era: .earlySettlement))
+    }
+
     @Test("Different seeds produce different histories")
     func seedsDiverge() throws {
         let r = try reg()
