@@ -98,6 +98,7 @@ struct DashboardView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Theme.textDim)
             }
+            specializationControl(settlement)
             StatBar(label: "Stability", value: settlement.stats.stability, tint: Theme.good)
             StatBar(label: "Morale", value: settlement.stats.morale, tint: Theme.accent)
             StatBar(label: "Defense", value: settlement.stats.defense, tint: Theme.good)
@@ -105,6 +106,42 @@ struct DashboardView: View {
             StatBar(label: "Threat", value: game.world.globalStats.threatLevel, tint: Theme.danger)
         }
         .frontierCard()
+    }
+
+    /// Picks the settlement's economic vocation; the summary spells out the
+    /// trade-off so the choice is legible at the point of use.
+    private func specializationControl(_ settlement: Settlement) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("Specialisation")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Theme.textDim)
+                Spacer()
+                Menu {
+                    ForEach(SettlementSpecialization.allCases, id: \.self) { spec in
+                        Button {
+                            game.setSpecialization(spec)
+                        } label: {
+                            Label(spec.displayName,
+                                  systemImage: settlement.specialization == spec ? "checkmark" : "")
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(settlement.specialization.displayName)
+                            .font(.caption.weight(.semibold))
+                        Image(systemName: "chevron.up.chevron.down").font(.caption2)
+                    }
+                    .foregroundStyle(Theme.accent)
+                }
+            }
+            Text(settlement.specialization.summary)
+                .font(.caption2)
+                .foregroundStyle(Theme.textDim)
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     // MARK: - Era progress

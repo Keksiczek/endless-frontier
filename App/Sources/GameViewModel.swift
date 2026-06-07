@@ -61,8 +61,8 @@ final class GameViewModel {
     }
 
     func build(_ buildingID: String) {
-        guard let capital = world.settlements.first else { return }
-        world = GameEngine.build(world, settlementID: capital.id, buildingID: buildingID, registry: registry)
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.build(world, settlementID: settlement.id, buildingID: buildingID, registry: registry)
         persist()
     }
 
@@ -240,8 +240,33 @@ final class GameViewModel {
         persist()
     }
 
+    // MARK: - Caravans
+
+    var caravans: [Caravan] { world.caravans }
+
+    /// How many colonists a settlement could spare as an escort.
+    func availableEscort(_ settlementID: UUID) -> Int {
+        world.settlements.first { $0.id == settlementID }?.pawns.count ?? 0
+    }
+
+    /// Dispatches a caravan escorted by the origin's first `guards` colonists.
+    func dispatchCaravan(from: UUID, to: UUID, resource: ResourceType, amount: Double, guards: Int) {
+        guard let origin = world.settlements.first(where: { $0.id == from }) else { return }
+        let guardIDs = Array(origin.pawns.prefix(max(0, guards)).map(\.id))
+        world = GameEngine.dispatchCaravan(world, originID: from, destinationID: to,
+                                           resource: resource, amount: amount, guardIDs: guardIDs)
+        persist()
+    }
+
+    func canDispatchCaravan(from: UUID, to: UUID, resource: ResourceType, amount: Double, guards: Int) -> Bool {
+        guard let origin = world.settlements.first(where: { $0.id == from }) else { return false }
+        let guardIDs = Array(origin.pawns.prefix(max(0, guards)).map(\.id))
+        return CaravanEngine.canDispatch(world, originID: from, destinationID: to,
+                                         resource: resource, amount: amount, guardIDs: guardIDs)
+    }
+
     var availableRecipes: [RecipeDefinition] {
-        CraftingEngine.availableRecipes(world, registry: registry)
+        CraftingEngine.availableRecipes(world, settlementID: selectedSettlement?.id, registry: registry)
     }
 
     func recipeOutputName(_ recipe: RecipeDefinition) -> String {
@@ -255,7 +280,13 @@ final class GameViewModel {
     func itemName(_ id: String) -> String { registry.item(id)?.name ?? id }
 
     func craft(_ recipeID: String) {
-        world = GameEngine.craft(world, recipeID: recipeID, registry: registry)
+        world = GameEngine.craft(world, recipeID: recipeID, settlementID: selectedSettlement?.id, registry: registry)
+        persist()
+    }
+
+    func setSpecialization(_ specialization: SettlementSpecialization) {
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.setSpecialization(world, settlementID: settlement.id, specialization: specialization)
         persist()
     }
 

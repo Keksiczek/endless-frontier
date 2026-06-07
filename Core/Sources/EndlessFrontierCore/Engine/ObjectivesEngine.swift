@@ -14,6 +14,8 @@ public enum ObjectivesEngine {
         objectives += siteObjectives(state)
         objectives += explorationObjectives(state)
         objectives += expansionObjectives(state)
+        objectives += tradeObjectives(state)
+        objectives += specializationObjectives(state)
 
         return Array(objectives.sorted { $0.priority < $1.priority }.prefix(limit))
     }
@@ -169,6 +171,39 @@ public enum ObjectivesEngine {
             title: "Found a new outpost",
             detail: "Charted land is ready to settle. Expand your reach.",
             category: .expand, priority: 30
+        )]
+    }
+
+    /// Nudges the player to supply a settlement that is cut off from the
+    /// capital (and isn't already the target of a caravan) — it loses stability
+    /// while isolated.
+    private static func tradeObjectives(_ state: WorldState) -> [Objective] {
+        guard state.settlements.count > 1 else { return [] }
+        let connected = MultiCityEngine.connectedSettlementIDs(state)
+        guard let stranded = state.settlements.first(where: { settlement in
+            settlement.kind != .capital
+                && !connected.contains(settlement.id)
+                && !state.caravans.contains { $0.destinationID == settlement.id }
+        }) else { return [] }
+        return [Objective(
+            id: "supply_\(stranded.id)",
+            title: "Supply \(stranded.name)",
+            detail: "\(stranded.name) is cut off from the capital and bleeding stability. Run a trade route or send a caravan.",
+            category: .expand, priority: 27
+        )]
+    }
+
+    /// Suggests giving an established, still-balanced settlement an economic
+    /// focus, surfacing the specialisation mechanic.
+    private static func specializationObjectives(_ state: WorldState) -> [Objective] {
+        guard let target = state.settlements.first(where: {
+            $0.specialization == .balanced && $0.population >= 20
+        }) else { return [] }
+        return [Objective(
+            id: "specialise_\(target.id)",
+            title: "Specialise \(target.name)",
+            detail: "Give \(target.name) an economic focus — farming, industry, scholarship, defense or trade — to sharpen its output.",
+            category: .expand, priority: 34
         )]
     }
 }

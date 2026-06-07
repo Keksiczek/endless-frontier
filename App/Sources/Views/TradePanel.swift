@@ -10,17 +10,121 @@ struct TradePanel: View {
     @State private var toID: UUID?
     @State private var resource: ResourceType = .food
     @State private var amount: Double = 5
+    @State private var caravanCargo: Double = 25
+    @State private var escort: Int = 1
 
     var body: some View {
         if game.settlements.count > 1 {
-            VStack(alignment: .leading, spacing: 12) {
-                SectionHeader(title: "Trade Routes")
-                ForEach(game.tradeRoutes) { route in
-                    routeRow(route)
+            VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 12) {
+                    SectionHeader(title: "Trade Routes")
+                    ForEach(game.tradeRoutes) { route in
+                        routeRow(route)
+                    }
+                    creator
                 }
-                creator
+                caravanSection
             }
             .frontierCard()
+        }
+    }
+
+    // MARK: - Caravans
+
+    private var caravanSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Caravans")
+            Text("A one-off escorted shipment. Guards travel with the goods, can be ambushed, and settle at the destination.")
+                .font(.caption2)
+                .foregroundStyle(Theme.textDim)
+            ForEach(game.caravans) { caravan in
+                caravanRow(caravan)
+            }
+            caravanDispatcher
+        }
+    }
+
+    private func caravanRow(_ caravan: Caravan) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                Image(systemName: caravan.resource.symbolName).foregroundStyle(Theme.accent).frame(width: 20)
+                Text("\(game.settlementName(caravan.originID)) → \(game.settlementName(caravan.destinationID))")
+                    .font(.subheadline.weight(.medium))
+                Spacer()
+                Label("\(caravan.guards.count)", systemImage: "shield.lefthalf.filled")
+                    .font(.caption2).foregroundStyle(Theme.textDim)
+                Text("\(Int(caravan.cargo))").font(.caption.monospacedDigit()).foregroundStyle(Theme.textDim)
+            }
+            HStack(spacing: 8) {
+                ProgressView(value: caravan.progress).tint(statusTint(caravan.status))
+                Text(statusLabel(caravan.status))
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(statusTint(caravan.status))
+            }
+        }
+        .padding(.vertical, 8).padding(.horizontal, 10)
+        .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private var caravanDispatcher: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                settlementMenu(title: "From", selection: $fromID)
+                Image(systemName: "arrow.right").foregroundStyle(Theme.textDim)
+                settlementMenu(title: "To", selection: $toID)
+            }
+            HStack {
+                Menu {
+                    ForEach(ResourceType.allCases, id: \.self) { r in
+                        Button(r.displayName) { resource = r }
+                    }
+                } label: {
+                    chip(label: resource.displayName, icon: resource.symbolName)
+                }
+                Stepper("\(Int(caravanCargo)) cargo", value: $caravanCargo, in: 5...500, step: 5)
+                    .font(.caption)
+            }
+            HStack {
+                Stepper("\(escort) escort", value: $escort, in: 1...maxEscort)
+                    .font(.caption)
+                Spacer()
+                Button("Send") {
+                    if let f = resolvedFrom, let t = resolvedTo, f != t {
+                        game.dispatchCaravan(from: f, to: t, resource: resource, amount: caravanCargo, guards: escort)
+                    }
+                }
+                .font(.caption.weight(.semibold))
+                .padding(.horizontal, 12).padding(.vertical, 6)
+                .background(canSend ? Theme.accent.opacity(0.18) : Theme.surfaceInset, in: Capsule())
+                .foregroundStyle(canSend ? Theme.accent : Theme.textDim)
+                .buttonStyle(.plain)
+                .disabled(!canSend)
+            }
+        }
+    }
+
+    private var maxEscort: Int {
+        max(1, resolvedFrom.map(game.availableEscort) ?? 1)
+    }
+
+    private var canSend: Bool {
+        guard let f = resolvedFrom, let t = resolvedTo else { return false }
+        return game.canDispatchCaravan(from: f, to: t, resource: resource, amount: caravanCargo, guards: escort)
+    }
+
+    private func statusTint(_ status: CaravanStatus) -> Color {
+        switch status {
+        case .traveling: return Theme.accent
+        case .skirmished: return Theme.good
+        case .raided: return Theme.danger
+        }
+    }
+
+    private func statusLabel(_ status: CaravanStatus) -> String {
+        switch status {
+        case .traveling: return "On the road"
+        case .skirmished: return "Ambush repelled"
+        case .raided: return "Raided!"
         }
     }
 

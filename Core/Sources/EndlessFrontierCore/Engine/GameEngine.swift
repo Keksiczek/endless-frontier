@@ -30,8 +30,9 @@ public enum GameEngine {
         TechEngine.setResearch(state, techID: techID, registry: registry)
     }
 
-    /// Constructs one building in a settlement if it is unlocked and the
-    /// capital can pay the cost. Returns unchanged state on failure.
+    /// Constructs one building in a settlement if it is unlocked and that
+    /// settlement can pay the cost from its own storage. Returns unchanged
+    /// state on failure.
     public static func build(
         _ state: WorldState,
         settlementID: UUID,
@@ -41,7 +42,7 @@ public enum GameEngine {
         guard let def = registry.building(buildingID),
               state.unlockedBuildings.contains(buildingID) || def.era == .earlySettlement,
               let settlementIndex = state.settlements.firstIndex(where: { $0.id == settlementID }),
-              let paid = EffectApplier.payCost(def.cost, from: state) else {
+              let paid = EffectApplier.payCost(def.cost, from: state, settlementID: settlementID) else {
             return state
         }
         var s = paid
@@ -51,6 +52,41 @@ public enum GameEngine {
             s.settlements[settlementIndex].buildings.append(BuildingInstance(definitionID: buildingID, count: 1))
         }
         return s
+    }
+
+    /// Sets a settlement's economic specialisation, reshaping its production.
+    public static func setSpecialization(
+        _ state: WorldState,
+        settlementID: UUID,
+        specialization: SettlementSpecialization
+    ) -> WorldState {
+        guard let i = state.settlements.firstIndex(where: { $0.id == settlementID }) else { return state }
+        var s = state
+        // Re-tooling a settlement's economy is disruptive: switching costs a
+        // one-off hit to stability, so specialisation is a commitment, not a
+        // free per-tick toggle.
+        if s.settlements[i].specialization != specialization {
+            s.settlements[i].stats.stability = max(0, s.settlements[i].stats.stability - specializationSwitchStabilityCost)
+        }
+        s.settlements[i].specialization = specialization
+        return s
+    }
+
+    /// Stability lost when a settlement changes its specialisation.
+    static let specializationSwitchStabilityCost: Double = 8
+
+    /// Dispatches an escorted caravan carrying `amount` of `resource` from one
+    /// settlement to another. Returns unchanged state if it can't be sent.
+    public static func dispatchCaravan(
+        _ state: WorldState,
+        originID: UUID,
+        destinationID: UUID,
+        resource: ResourceType,
+        amount: Double,
+        guardIDs: [UUID]
+    ) -> WorldState {
+        CaravanEngine.dispatch(state, originID: originID, destinationID: destinationID,
+                               resource: resource, amount: amount, guardIDs: guardIDs)
     }
 
     /// Reassigns a colonist to a different kind of work.
@@ -113,13 +149,15 @@ public enum GameEngine {
         return s
     }
 
-    /// Crafts a recipe at the capital (consumes materials + resources).
+    /// Crafts a recipe at a settlement (consumes its materials + resources).
+    /// When `settlementID` is `nil` the capital crafts, as before.
     public static func craft(
         _ state: WorldState,
         recipeID: String,
+        settlementID: UUID? = nil,
         registry: GameDataRegistry
     ) -> WorldState {
-        CraftingEngine.craft(state, recipeID: recipeID, registry: registry)
+        CraftingEngine.craft(state, recipeID: recipeID, settlementID: settlementID, registry: registry)
     }
 
     /// Interacts with the special site (ruins/dungeon/anomaly) in a region.

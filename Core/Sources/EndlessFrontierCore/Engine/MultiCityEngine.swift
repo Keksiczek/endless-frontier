@@ -26,6 +26,11 @@ public enum MultiCityEngine {
             adjacency[route.fromID, default: []].insert(route.toID)
             adjacency[route.toID, default: []].insert(route.fromID)
         }
+        // An in-flight caravan keeps its endpoints supplied for the journey.
+        for caravan in state.caravans {
+            adjacency[caravan.originID, default: []].insert(caravan.destinationID)
+            adjacency[caravan.destinationID, default: []].insert(caravan.originID)
+        }
 
         var connected: Set<UUID> = [capital.id]
         var frontier: [UUID] = [capital.id]
@@ -45,7 +50,9 @@ public enum MultiCityEngine {
         for route in s.tradeRoutes {
             guard let from = s.settlements.firstIndex(where: { $0.id == route.fromID }),
                   let to = s.settlements.firstIndex(where: { $0.id == route.toID }) else { continue }
-            let available = min(route.amountPerTick, s.settlements[from].storage[route.resource])
+            // A mercantile source settlement pushes more goods per tick.
+            let throughput = route.amountPerTick * s.settlements[from].specialization.profile.tradeThroughput
+            let available = min(throughput, s.settlements[from].storage[route.resource])
             guard available > 0 else { continue }
             let capacity = s.settlements[to].storageCapacity
             let room = max(0, capacity - s.settlements[to].storage[route.resource])

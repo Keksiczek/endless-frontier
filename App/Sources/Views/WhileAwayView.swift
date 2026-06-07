@@ -34,11 +34,31 @@ struct WhileAwayView: View {
         .preferredColorScheme(.dark)
     }
 
-    private struct Entry { let tick: Int; let template: EventTemplate? ; let type: EventType }
+    private struct Entry { let tick: Int; let templateID: String; let template: EventTemplate?; let type: EventType }
 
     private var grouped: [Entry] {
         events.map { e in
-            Entry(tick: e.tick, template: registry.events.first { $0.id == e.templateID }, type: e.type)
+            Entry(tick: e.tick, templateID: e.templateID,
+                  template: registry.events.first { $0.id == e.templateID }, type: e.type)
+        }
+    }
+
+    /// Copy for engine-emitted "system" events that have no storyteller
+    /// template (caravans, discoveries). Falls back to a title-cased id.
+    private func systemCopy(_ id: String) -> (name: String, hint: String) {
+        switch id {
+        case "caravan_arrived":
+            return ("Caravan Arrived", "An escorted shipment reached its destination; its guards settled in.")
+        case "caravan_ambushed":
+            return ("Caravan Ambushed", "Raiders struck a caravan on the road — cargo and lives were lost.")
+        case "caravan_skirmish":
+            return ("Caravan Skirmish", "A caravan's escort beat off an ambush and pressed on.")
+        case "caravan_lost":
+            return ("Caravan Lost", "A caravan was overrun and taken — its goods and escort are gone.")
+        case "region_discovered":
+            return ("New Region Discovered", "Your explorers charted new ground at the frontier.")
+        default:
+            return (id.replacingOccurrences(of: "_", with: " ").capitalized, "")
         }
     }
 
@@ -48,9 +68,9 @@ struct WhileAwayView: View {
                 .foregroundStyle(color(entry.type))
                 .frame(width: 24)
             VStack(alignment: .leading, spacing: 3) {
-                Text(entry.template?.name ?? "Event")
+                Text(entry.template?.name ?? systemCopy(entry.templateID).name)
                     .font(.subheadline.weight(.semibold))
-                Text(entry.template?.narrativeHint ?? "")
+                Text(entry.template?.narrativeHint ?? systemCopy(entry.templateID).hint)
                     .font(.footnote)
                     .foregroundStyle(Theme.textDim)
                 Text("Tick \(entry.tick)")

@@ -11,7 +11,7 @@ struct CraftingPanel: View {
             EmptyView()
         } else {
             VStack(alignment: .leading, spacing: 10) {
-                SectionHeader(title: "Crafting")
+                SectionHeader(title: craftingTitle)
                 ForEach(recipes) { recipe in
                     row(recipe)
                 }
@@ -39,6 +39,15 @@ struct CraftingPanel: View {
         }
         .padding(.vertical, 8).padding(.horizontal, 10)
         .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    /// Crafting draws on the selected settlement's materials; name it when the
+    /// player runs more than one settlement.
+    private var craftingTitle: String {
+        if game.settlements.count > 1, let settlement = game.selectedSettlement {
+            return "Crafting — \(settlement.name)"
+        }
+        return "Crafting"
     }
 
     private func cost(_ recipe: RecipeDefinition) -> String {

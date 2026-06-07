@@ -1,7 +1,7 @@
 # Endless Frontier — What to Build Next
 
-Snapshot (2026-06-02): the Core simulation is deep and heavily tested
-(**133 tests**). What exists now:
+Snapshot (2026-06-06): the Core simulation is deep and heavily tested
+(**179 tests**). What exists now:
 
 - **Colonists** with needs, skills (learning by doing), mood, mental breaks,
   health, starvation→death, equipment in 3 slots.
@@ -29,13 +29,26 @@ the world the player acts on.** Priorities:
    `docs/LEONARDO_EXPLORATION_PROMPTS.md`). Generate (Leonardo / Recraft /
    fal.ai), bundle in an asset catalog, swap the procedural Canvas for sprites
    (keep procedural fallback). Add subtle motion (water, fog, frontier pulse).
-2. **Play on device + balance harness.** With this much interplay, balance is
-   the main risk. ✅ A headless auto-play harness now exists
-   (`BalanceHarnessTests.autoPlayTrace`): it plays ~12k ticks with a simple
-   policy, asserts invariants, and writes a CSV time-series
-   (`ef-balance-trace.csv`) of resources/morale/population/prosperity/threat/
-   tension for charting. **Still open**: actually tune `world-config.json` /
-   `map-gen.json` from the trace, and run on a real iPad/iPhone to feel pacing.
+2. **Play on device + balance harness.** ✅ Balance harness done —
+   `BalanceHarness.run` auto-plays a fresh world (diversified greedy building +
+   research) and returns a time-series; `BalanceHarness.csv` exports it.
+   Regression tests assert a managed colony survives, develops (knowledge / era
+   progress) and stays within bounds (`BalanceTests`).
+
+   **Tuning targets found from an 800-tick auto-played run (still to apply):**
+   - ✅ **Threat is inert in a peaceful single-city game** — fixed:
+     `ResourceLoop.recomputeGlobalStats` now decays threat toward a baseline
+     that climbs `eraThreatRampPerEra` (6) per era, so danger escalates as the
+     civilization advances and raids/defense engage in the long game. (Could
+     still bias the storyteller toward threat in long calm stretches.)
+   - **Materials are trivially abundant** — storage pegs at the 500 cap almost
+     immediately and never moves; consider lower early materials production or a
+     bigger sink.
+   - **Stability is static** at 60 with one settlement (only isolation/events/
+     raids move it) — fine, but means single-city play has no stability tension.
+
+   Still to do: apply the above to `world-config.json`, and run on a real
+   iPad/iPhone to feel pacing.
 
 ## Tier 2 — deepen what the player acts on  ✅ DONE
 
@@ -48,9 +61,13 @@ the world the player acts on.** Priorities:
 6. ✅ **Tech-tree screen.** Era-grouped tech tree with status/prereqs and research
    selection (its own tab).
 
-Remaining within Tier 2 / next refinements: crafting & building are still
-capital-scoped (make them per-selected-settlement); specialised settlements and
-caravan-as-pawns; connector lines / graph layout for the tech tree.
+Remaining within Tier 2 / next refinements: ✅ crafting & building are now
+per-selected-settlement (each settlement pays from and stocks its own storage);
+✅ specialised settlements (agricultural/industrial/scholarly/fortified/
+mercantile, each reshaping production); ✅ caravan-as-pawns (escorted batch
+shipments that travel, can be ambushed, and migrate their guards to the
+destination); still open — connector lines / graph layout for the tech tree
+(graphics-adjacent).
 
 ## Tier 3 — breadth & long game
 

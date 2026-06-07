@@ -51,7 +51,7 @@ struct TechBuildPanel: View {
 
     private var buildSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "Build")
+            SectionHeader(title: buildTitle)
             if game.buildableBuildings.isEmpty {
                 Text("Research unlocks new buildings.")
                     .font(.subheadline).foregroundStyle(Theme.textDim)
@@ -101,8 +101,17 @@ struct TechBuildPanel: View {
         return parts.isEmpty ? "Free" : parts.joined(separator: ", ")
     }
 
+    /// Construction is scoped to the selected settlement; show whose it is once
+    /// the player has more than one place to build.
+    private var buildTitle: String {
+        if game.settlements.count > 1, let settlement = game.selectedSettlement {
+            return "Build — \(settlement.name)"
+        }
+        return "Build"
+    }
+
     private func canAfford(_ cost: Resources) -> Bool {
-        guard let capital = game.capital else { return false }
-        return ResourceType.allCases.allSatisfy { capital.storage[$0] >= cost[$0] }
+        guard let settlement = game.selectedSettlement else { return false }
+        return ResourceType.allCases.allSatisfy { settlement.storage[$0] >= cost[$0] }
     }
 }
