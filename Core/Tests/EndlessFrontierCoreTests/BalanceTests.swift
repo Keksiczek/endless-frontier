@@ -41,6 +41,16 @@ struct BalanceTests {
         #expect(a == b)
     }
 
+    @Test("A managed colony develops over a long run (knowledge accrues / era advances)")
+    func colonyDevelops() throws {
+        let r = try reg()
+        let series = BalanceHarness.run(seed: 0xC0FFEE, ticks: 800, sampleEvery: 100, registry: r)
+        let final = series.last!
+        // The harness diversifies its building mix, so the economy actually
+        // develops: it produces knowledge and pushes past the first era.
+        #expect(final.knowledgeOutput > 0 || final.era != .earlySettlement)
+    }
+
     @Test("Different seeds produce different histories")
     func seedsDiverge() throws {
         let r = try reg()

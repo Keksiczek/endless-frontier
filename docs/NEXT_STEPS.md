@@ -30,11 +30,25 @@ the world the player acts on.** Priorities:
    fal.ai), bundle in an asset catalog, swap the procedural Canvas for sprites
    (keep procedural fallback). Add subtle motion (water, fog, frontier pulse).
 2. **Play on device + balance harness.** ✅ Balance harness done —
-   `BalanceHarness.run` auto-plays a fresh world and returns a
-   population/morale/stability/threat/food/materials/knowledge time-series, with
-   regression tests asserting a managed colony survives and metrics stay bounded
-   (`BalanceTests`). Still to do: tune `world-config.json` / `map-gen.json` from
-   its output, and run on a real iPad/iPhone to feel pacing.
+   `BalanceHarness.run` auto-plays a fresh world (diversified greedy building +
+   research) and returns a time-series; `BalanceHarness.csv` exports it.
+   Regression tests assert a managed colony survives, develops (knowledge / era
+   progress) and stays within bounds (`BalanceTests`).
+
+   **Tuning targets found from an 800-tick auto-played run (still to apply):**
+   - **Threat is inert in a peaceful single-city game** — `globalStats.threat`
+     sits at its 10 baseline the whole run, so raids/defense never engage. Add a
+     slow era/time threat ramp (the decay target in
+     `ResourceLoop.recomputeGlobalStats` is a hardcoded 10) or bias the
+     storyteller toward threat in long calm stretches.
+   - **Materials are trivially abundant** — storage pegs at the 500 cap almost
+     immediately and never moves; consider lower early materials production or a
+     bigger sink.
+   - **Stability is static** at 60 with one settlement (only isolation/events/
+     raids move it) — fine, but means single-city play has no stability tension.
+
+   Still to do: apply the above to `world-config.json`, and run on a real
+   iPad/iPhone to feel pacing.
 
 ## Tier 2 — deepen what the player acts on  ✅ DONE
 

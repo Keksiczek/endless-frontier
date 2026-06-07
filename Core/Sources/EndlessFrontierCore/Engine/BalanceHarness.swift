@@ -58,9 +58,16 @@ public enum BalanceHarness {
             let buildable = registry.buildings.values.filter {
                 s.unlockedBuildings.contains($0.id) || $0.era == .earlySettlement
             }
+            // Build the affordable building the capital has the *fewest* of
+            // (cheaper breaks ties), so the economy diversifies — food, housing
+            // and knowledge all develop — instead of spamming one cheap hut.
+            let counts = capital.buildings.reduce(into: [String: Int]()) { $0[$1.definitionID, default: 0] += $1.count }
             if let pick = buildable
                 .filter({ canAfford($0.cost, capital) })
-                .min(by: { totalCost($0) < totalCost($1) }) {
+                .min(by: { a, b in
+                    let ca = counts[a.id] ?? 0, cb = counts[b.id] ?? 0
+                    return ca != cb ? ca < cb : totalCost(a) < totalCost(b)
+                }) {
                 s = GameEngine.build(s, settlementID: capital.id, buildingID: pick.id, registry: registry)
             }
         }
@@ -85,6 +92,15 @@ public enum BalanceHarness {
             settlements: s.settlements.count,
             era: s.era
         )
+    }
+
+    /// Formats a run as CSV for charting or eyeballing in a spreadsheet.
+    public static func csv(_ series: [BalanceSnapshot]) -> String {
+        var lines = ["tick,population,morale,stability,threat,food,materials,knowledge,settlements,era"]
+        for s in series {
+            lines.append("\(s.tick),\(s.population),\(s.morale),\(s.stability),\(s.threat),\(s.food),\(s.materials),\(s.knowledgeOutput),\(s.settlements),\(s.era)")
+        }
+        return lines.joined(separator: "\n")
     }
 
     static func totalCost(_ def: BuildingDefinition) -> Double {
