@@ -296,6 +296,92 @@ final class GameViewModel {
         persist()
     }
 
+    // MARK: - Colony layout (in-settlement base building)
+
+    /// The build grid of the settlement currently being viewed.
+    var viewedColony: ColonyMap? { selectedSettlement?.colony }
+
+    /// Buildings the player can lay down right now (unlocked or early-era).
+    var placeableBuildings: [BuildingDefinition] {
+        registry.buildings.values
+            .filter { world.unlockedBuildings.contains($0.id) || $0.era == .earlySettlement }
+            .sorted { $0.name < $1.name }
+    }
+
+    func buildingDefinition(_ id: String) -> BuildingDefinition? { registry.building(id) }
+
+    func buildingName(_ id: String) -> String { registry.building(id)?.name ?? id }
+
+    func canAfford(_ cost: Resources) -> Bool {
+        guard let capital else { return false }
+        return ResourceType.allCases.allSatisfy { capital.storage[$0] >= cost[$0] }
+    }
+
+    func pawnName(_ id: UUID) -> String {
+        selectedSettlement?.pawns.first { $0.id == id }?.name ?? "?"
+    }
+
+    func placeBuilding(_ buildingID: String, at coord: TileCoord) {
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.placeBuilding(world, settlementID: settlement.id,
+                                         buildingID: buildingID, at: coord, registry: registry)
+        persist()
+    }
+
+    func demolish(at coord: TileCoord) {
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.demolish(world, settlementID: settlement.id, at: coord)
+        persist()
+    }
+
+    func assignPawn(_ pawnID: UUID, toPlacement placementID: UUID) {
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.assignToBuilding(world, settlementID: settlement.id,
+                                            pawnID: pawnID, placementID: placementID, registry: registry)
+        persist()
+    }
+
+    func unassignPawn(_ pawnID: UUID) {
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.unassignFromBuilding(world, settlementID: settlement.id, pawnID: pawnID)
+        persist()
+    }
+
+    /// Per-tick production gained from the current layout's adjacency synergies.
+    var viewedAdjacencyProduction: Resources {
+        guard let settlement = selectedSettlement else { return Resources() }
+        return ColonyBonus.adjacencyProduction(settlement, registry: registry)
+    }
+
+    /// Morale gained from the current layout's adjacency synergies.
+    var viewedAdjacencyMorale: Double {
+        guard let settlement = selectedSettlement else { return 0 }
+        return ColonyBonus.adjacencyMorale(settlement, registry: registry)
+    }
+
+    func paintZone(_ kind: ZoneKind, at coord: TileCoord) {
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.paintZone(world, settlementID: settlement.id, at: coord, kind: kind)
+        persist()
+    }
+
+    func eraseZone(at coord: TileCoord) {
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.eraseZone(world, settlementID: settlement.id, at: coord)
+        persist()
+    }
+
+    /// Human-readable synergy descriptions for a building, for the inspector.
+    func synergyText(for def: BuildingDefinition) -> [String] {
+        def.adjacency.map { rule in
+            let neighbour = buildingName(rule.neighbor)
+            if let resource = rule.resource, rule.bonus != 0 {
+                return "+\(Int(rule.bonus)) \(resource.displayName.lowercased()) next to \(neighbour)"
+            }
+            return "+\(Int(rule.morale)) morale next to \(neighbour)"
+        }
+    }
+
     func expeditionDuration(for region: Region) -> Int {
         ExplorationEngine.expeditionDuration(to: region, config: registry.config)
     }

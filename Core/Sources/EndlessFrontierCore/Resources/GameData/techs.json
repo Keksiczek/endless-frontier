@@ -161,5 +161,184 @@
       { "type": "unlock_building", "buildingId": "foundry" }
     ],
     "description": "Precise tools make precise tools — industry compounds itself."
+  },
+  {
+    "id": "railways",
+    "name": "Railways",
+    "era": "early_industrial",
+    "requires": ["machining"],
+    "cost": { "knowledge": 480 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "railyard" },
+      { "type": "modifier", "stat": "global.influenceOutput", "delta": 1, "mode": "additive" }
+    ],
+    "description": "Iron roads bind distant settlements into one swift economy."
+  },
+  {
+    "id": "chemistry",
+    "name": "Chemistry",
+    "era": "early_industrial",
+    "requires": ["machining"],
+    "cost": { "knowledge": 500 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "chemical_plant" },
+      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 1, "mode": "additive" }
+    ],
+    "description": "Understanding matter itself unlocks fertilisers, fuels and medicines."
+  },
+  {
+    "id": "sanitation",
+    "name": "Sanitation",
+    "era": "early_industrial",
+    "requires": ["engineering"],
+    "cost": { "knowledge": 460 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "hospital" }
+    ],
+    "description": "Clean water and sewers end the plagues that once thinned every city."
+  },
+  {
+    "id": "electricity",
+    "name": "Electricity",
+    "era": "modern",
+    "requires": ["steam_power"],
+    "cost": { "knowledge": 620 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "hydro_dam" },
+      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 1, "mode": "additive" }
+    ],
+    "description": "Tamed lightning lights the night and powers a new age of machines."
+  },
+  {
+    "id": "combustion",
+    "name": "Combustion Engine",
+    "era": "modern",
+    "requires": ["chemistry"],
+    "cost": { "knowledge": 640 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "oil_refinery" },
+      { "type": "unlock_building", "buildingId": "vehicle_works" }
+    ],
+    "description": "Burning fuel in a cylinder gives industry legs and wheels of its own."
+  },
+  {
+    "id": "mass_production",
+    "name": "Mass Production",
+    "era": "modern",
+    "requires": ["railways", "combustion"],
+    "cost": { "knowledge": 760 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "assembly_plant" },
+      { "type": "unlock_building", "buildingId": "apartment_block" }
+    ],
+    "description": "The assembly line turns scarce goods into everyday abundance."
+  },
+  {
+    "id": "medicine",
+    "name": "Modern Medicine",
+    "era": "modern",
+    "requires": ["sanitation", "chemistry"],
+    "cost": { "knowledge": 700 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "clinic" },
+      { "type": "unlock_event_category", "eventCategory": "medicine" }
+    ],
+    "description": "Antiseptics and vaccines turn once-fatal ailments into minor setbacks."
+  },
+  {
+    "id": "electronics",
+    "name": "Electronics",
+    "era": "modern",
+    "requires": ["electricity"],
+    "cost": { "knowledge": 820 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "electronics_lab" },
+      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 2, "mode": "additive" }
+    ],
+    "description": "Vacuum tubes and transistors begin to think faster than any clerk."
+  },
+  {
+    "id": "computing",
+    "name": "Computing",
+    "era": "modern",
+    "requires": ["electronics", "mathematics"],
+    "cost": { "knowledge": 980 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "data_center" },
+      { "type": "unlock_building", "buildingId": "research_campus" },
+      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 2, "mode": "additive" }
+    ],
+    "description": "Machines that compute let knowledge compound at the speed of thought."
+  },
+  {
+    "id": "renewables",
+    "name": "Renewable Power",
+    "era": "near_future",
+    "requires": ["electricity"],
+    "cost": { "knowledge": 1100 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "solar_array" },
+      { "type": "unlock_building", "buildingId": "wind_farm" }
+    ],
+    "description": "Sun and wind give limitless power without the soot of the old plants."
+  },
+  {
+    "id": "robotics",
+    "name": "Robotics",
+    "era": "near_future",
+    "requires": ["mass_production", "computing"],
+    "cost": { "knowledge": 1300 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "automated_factory" }
+    ],
+    "description": "Tireless machines take over the line, freeing every hand for greater work."
+  },
+  {
+    "id": "fusion_power",
+    "name": "Fusion Power",
+    "era": "near_future",
+    "requires": ["renewables", "computing"],
+    "cost": { "knowledge": 1600 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "fusion_reactor" }
+    ],
+    "description": "A captive star in a bottle — energy beyond anything the world has known."
+  },
+  {
+    "id": "artificial_intelligence",
+    "name": "Artificial Intelligence",
+    "era": "near_future",
+    "requires": ["computing", "robotics"],
+    "cost": { "knowledge": 1800 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "ai_core" },
+      { "type": "unlock_event_category", "eventCategory": "ai" },
+      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 4, "mode": "additive" }
+    ],
+    "description": "Minds of our own making advise, design and dream alongside us."
+  },
+  {
+    "id": "space_program",
+    "name": "Space Program",
+    "era": "near_future",
+    "requires": ["fusion_power", "robotics"],
+    "cost": { "knowledge": 2000 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "spaceport" },
+      { "type": "unlock_building", "buildingId": "orbital_array" },
+      { "type": "unlock_event_category", "eventCategory": "orbital" }
+    ],
+    "description": "The frontier turns upward: orbit, the moons, and everything beyond."
+  },
+  {
+    "id": "megastructures",
+    "name": "Megastructures",
+    "era": "near_future",
+    "requires": ["fusion_power"],
+    "cost": { "knowledge": 2200 },
+    "effects": [
+      { "type": "unlock_building", "buildingId": "arcology" }
+    ],
+    "description": "Single buildings the size of cities house millions in comfort."
   }
 ]

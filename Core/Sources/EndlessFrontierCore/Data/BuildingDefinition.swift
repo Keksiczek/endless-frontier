@@ -1,5 +1,54 @@
 import Foundation
 
+/// A building's footprint on the colony grid, in tiles. Defaults to 1×1.
+/// Decoded from a JSON object like `{ "w": 2, "h": 2 }`.
+public struct TileSize: Codable, Sendable, Equatable {
+    public let width: Int
+    public let height: Int
+
+    public init(width: Int = 1, height: Int = 1) {
+        self.width = max(1, width)
+        self.height = max(1, height)
+    }
+
+    private enum CodingKeys: String, CodingKey { case width = "w", height = "h" }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        width = max(1, try c.decodeIfPresent(Int.self, forKey: .width) ?? 1)
+        height = max(1, try c.decodeIfPresent(Int.self, forKey: .height) ?? 1)
+    }
+}
+
+/// A layout synergy: a building gains a bonus for each orthogonally-adjacent
+/// neighbour of a given kind on the colony grid. Data-defined so designers can
+/// tune which buildings reward being placed together. A rule grants *either* a
+/// per-tick production bonus (`resource` + `bonus`) or a morale bonus
+/// (`morale`).
+public struct AdjacencyRule: Codable, Sendable, Equatable {
+    public let neighbor: String       // building id that triggers the bonus
+    public let resource: ResourceType?
+    public let bonus: Double
+    public let morale: Double
+
+    public init(neighbor: String, resource: ResourceType? = nil, bonus: Double = 0, morale: Double = 0) {
+        self.neighbor = neighbor
+        self.resource = resource
+        self.bonus = bonus
+        self.morale = morale
+    }
+
+    private enum CodingKeys: String, CodingKey { case neighbor, resource, bonus, morale }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        neighbor = try c.decode(String.self, forKey: .neighbor)
+        resource = try c.decodeIfPresent(ResourceType.self, forKey: .resource)
+        bonus = try c.decodeIfPresent(Double.self, forKey: .bonus) ?? 0
+        morale = try c.decodeIfPresent(Double.self, forKey: .morale) ?? 0
+    }
+}
+
 /// A data-defined building. Loaded from `buildings.json`. The resource loop
 /// reads `production` and `consumption` each tick; `workers` gates how many
 /// of a building a settlement's population can staff.
@@ -15,6 +64,8 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
     public let defense: Double
     public let housing: Double
     public let pollution: Double
+    public let footprint: TileSize
+    public let adjacency: [AdjacencyRule]
     public let description: String
 
     public init(
@@ -29,6 +80,8 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         defense: Double = 0,
         housing: Double = 0,
         pollution: Double = 0,
+        footprint: TileSize = TileSize(),
+        adjacency: [AdjacencyRule] = [],
         description: String = ""
     ) {
         self.id = id
@@ -42,13 +95,15 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         self.defense = defense
         self.housing = housing
         self.pollution = pollution
+        self.footprint = footprint
+        self.adjacency = adjacency
         self.description = description
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, era, name, cost, workers, production, consumption
         case moraleEffect = "morale_effect"
-        case defense, housing, pollution
+        case defense, housing, pollution, footprint, adjacency
         case description
     }
 
@@ -65,6 +120,8 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         defense = try c.decodeIfPresent(Double.self, forKey: .defense) ?? 0
         housing = try c.decodeIfPresent(Double.self, forKey: .housing) ?? 0
         pollution = try c.decodeIfPresent(Double.self, forKey: .pollution) ?? 0
+        footprint = try c.decodeIfPresent(TileSize.self, forKey: .footprint) ?? TileSize()
+        adjacency = try c.decodeIfPresent([AdjacencyRule].self, forKey: .adjacency) ?? []
         description = try c.decodeIfPresent(String.self, forKey: .description) ?? ""
     }
 }

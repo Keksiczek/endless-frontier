@@ -28,6 +28,7 @@
   {
     "era": "modern",
     "milestones": [
+      { "type": "tech_researched", "techId": "electricity" },
       { "type": "global_stat", "stat": "prosperity", "min": 65 },
       { "type": "settlement_count", "min": 4 },
       { "type": "population_total", "min": 1500 }
@@ -36,6 +37,7 @@
   {
     "era": "near_future",
     "milestones": [
+      { "type": "tech_researched", "techId": "computing" },
       { "type": "global_stat", "stat": "prosperity", "min": 75 },
       { "type": "settlement_count", "min": 5 },
       { "type": "population_total", "min": 4000 }
