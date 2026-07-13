@@ -87,6 +87,9 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public var stats: SettlementStats
     public var inventory: [ItemInstance]   // unequipped items + active artifacts
     public var specialization: SettlementSpecialization
+    /// Optional in-settlement spatial layout (the RimWorld-style colony grid).
+    /// `nil` until the player opens build mode; the economy never depends on it.
+    public var colony: ColonyMap?
 
     public init(
         id: UUID = UUID(),
@@ -101,7 +104,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         storageCapacity: Double = 500,
         stats: SettlementStats = SettlementStats(),
         inventory: [ItemInstance] = [],
-        specialization: SettlementSpecialization = .balanced
+        specialization: SettlementSpecialization = .balanced,
+        colony: ColonyMap? = nil
     ) {
         self.id = id
         self.name = name
@@ -116,13 +120,14 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.stats = stats
         self.inventory = inventory
         self.specialization = specialization
+        self.colony = colony
     }
 
     // MARK: - Codable (resilient to pre-specialisation saves)
 
     private enum CodingKeys: String, CodingKey {
         case id, name, kind, regionID, foundedTick, population, pawns
-        case buildings, storage, storageCapacity, stats, inventory, specialization
+        case buildings, storage, storageCapacity, stats, inventory, specialization, colony
     }
 
     public init(from decoder: Decoder) throws {
@@ -141,5 +146,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         inventory = try c.decode([ItemInstance].self, forKey: .inventory)
         // Saves written before specialisations default to neutral.
         specialization = try c.decodeIfPresent(SettlementSpecialization.self, forKey: .specialization) ?? .balanced
+        // Saves written before the colony grid have no layout yet.
+        colony = try c.decodeIfPresent(ColonyMap.self, forKey: .colony)
     }
 }
