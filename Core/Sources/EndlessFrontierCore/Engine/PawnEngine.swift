@@ -39,7 +39,8 @@ public enum PawnEngine {
     /// `registry` resolves equipment buffs; an empty registry = no items.
     public static func advanceOneTick(
         _ settlement: Settlement,
-        registry: GameDataRegistry = GameDataRegistry()
+        registry: GameDataRegistry = GameDataRegistry(),
+        tick: Int = 0
     ) -> Settlement {
         guard !settlement.pawns.isEmpty else { return settlement }
         var s = settlement
@@ -86,8 +87,9 @@ public enum PawnEngine {
                 let moodFactor = 0.5 + 0.5 * (p.mood / 100)   // 0.5…1.0
                 let effectiveSkill = p.skill(p.assignedWork)
                     + ItemEngine.skillBonus(p, work: p.assignedWork, registry: registry)
+                let seasonFactor = registry.config.seasonYieldMultiplier(for: resource, tick: tick)
                 output[resource] = output[resource]
-                    + Double(effectiveSkill) * outputPerSkill * moodFactor
+                    + Double(effectiveSkill) * outputPerSkill * moodFactor * seasonFactor
 
                 var xp = (p.skillXP[p.assignedWork] ?? 0) + xpPerTickWorking
                 let level = p.skill(p.assignedWork)

@@ -23,7 +23,7 @@ public enum ResourceLoop {
     public static func advanceOneTick(_ state: WorldState, registry: GameDataRegistry) -> WorldState {
         var s = state
         let config = registry.config
-        s.settlements = s.settlements.map { advanceSettlement($0, registry: registry, config: config) }
+        s.settlements = s.settlements.map { advanceSettlement($0, registry: registry, config: config, tick: state.tick) }
         s.globalStats = recomputeGlobalStats(s, registry: registry)
         return s
     }
@@ -31,7 +31,8 @@ public enum ResourceLoop {
     static func advanceSettlement(
         _ settlement: Settlement,
         registry: GameDataRegistry,
-        config: WorldConfig
+        config: WorldConfig,
+        tick: Int = 0
     ) -> Settlement {
         var s = settlement
         let profile = s.specialization.profile
@@ -45,7 +46,9 @@ public enum ResourceLoop {
             guard let def = registry.building(instance.definitionID) else { continue }
             let count = Double(instance.count)
             for resource in ResourceType.allCases {
-                let produced = def.production[resource] * profile.productionMultiplier(resource)
+                let produced = def.production[resource]
+                    * profile.productionMultiplier(resource)
+                    * config.seasonYieldMultiplier(for: resource, tick: tick)
                 let consumed = def.consumption[resource]
                 net[resource] = net[resource] + (produced - consumed) * count
             }
@@ -119,7 +122,7 @@ public enum ResourceLoop {
         s.stats = s.stats.clamped()
 
         // 8. Individual colonists: needs, mood, skilled work, morale pull.
-        s = PawnEngine.advanceOneTick(s, registry: registry)
+        s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick)
 
         return s
     }

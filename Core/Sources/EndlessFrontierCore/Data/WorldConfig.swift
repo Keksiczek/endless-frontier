@@ -24,6 +24,12 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     public var maxOfflineTicks: Int
     public var plannerInterval: Int
 
+    // Calendar: year length and per-season yield multipliers, indexed by
+    // `Season.rawValue` (spring, summer, autumn, winter).
+    public var ticksPerYear: Int
+    public var seasonFoodYield: [Double]
+    public var seasonMaterialsYield: [Double]
+
     // Tension coefficients
     public var threatMultiplier: Double
     public var prosperityDampener: Double
@@ -61,6 +67,9 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         realSecondsPerTick: 60,
         maxOfflineTicks: 43_200,
         plannerInterval: 10,
+        ticksPerYear: 60,
+        seasonFoodYield: [1.0, 1.5, 0.8, 0.3],
+        seasonMaterialsYield: [1.0, 1.2, 0.9, 0.7],
         threatMultiplier: 0.4,
         prosperityDampener: 0.2,
         disasterSpikeDecayTicks: 30,
@@ -95,6 +104,9 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         realSecondsPerTick: Double,
         maxOfflineTicks: Int,
         plannerInterval: Int,
+        ticksPerYear: Int,
+        seasonFoodYield: [Double],
+        seasonMaterialsYield: [Double],
         threatMultiplier: Double,
         prosperityDampener: Double,
         disasterSpikeDecayTicks: Int,
@@ -122,6 +134,9 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         self.realSecondsPerTick = realSecondsPerTick
         self.maxOfflineTicks = maxOfflineTicks
         self.plannerInterval = plannerInterval
+        self.ticksPerYear = ticksPerYear
+        self.seasonFoodYield = seasonFoodYield
+        self.seasonMaterialsYield = seasonMaterialsYield
         self.threatMultiplier = threatMultiplier
         self.prosperityDampener = prosperityDampener
         self.disasterSpikeDecayTicks = disasterSpikeDecayTicks
@@ -147,10 +162,24 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         self.isolationStabilityPenalty = isolationStabilityPenalty
     }
 
+    /// The seasonal multiplier applied to gross production of `resource` at
+    /// `tick`. Food and materials follow the calendar; everything else is
+    /// season-agnostic. Malformed tables (≠ 4 entries) are treated as neutral.
+    public func seasonYieldMultiplier(for resource: ResourceType, tick: Int) -> Double {
+        let table: [Double]
+        switch resource {
+        case .food: table = seasonFoodYield
+        case .materials: table = seasonMaterialsYield
+        default: return 1
+        }
+        guard table.count == 4 else { return 1 }
+        return table[Season(tick: tick, ticksPerYear: ticksPerYear).rawValue]
+    }
+
     // Custom decoding: every field falls back to the default when absent,
     // so the JSON file can be partial during balance iteration.
     private enum CodingKeys: String, CodingKey {
-        case tick, tension, resources, stability, events, exploration
+        case tick, tension, resources, stability, events, exploration, calendar
     }
     private enum ExplorationKeys: String, CodingKey {
         case baseExpeditionTicks, ticksPerHazard, expeditionFoodCost,
@@ -159,6 +188,9 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     }
     private enum TickKeys: String, CodingKey {
         case realSecondsPerTick, maxOfflineTicks, plannerInterval
+    }
+    private enum CalendarKeys: String, CodingKey {
+        case ticksPerYear, seasonFoodYield, seasonMaterialsYield
     }
     private enum TensionKeys: String, CodingKey {
         case threatMultiplier, prosperityDampener, disasterSpikeDecayTicks,
@@ -183,6 +215,11 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         realSecondsPerTick = (try? tick?.decodeIfPresent(Double.self, forKey: .realSecondsPerTick)) ?? d.realSecondsPerTick
         maxOfflineTicks = (try? tick?.decodeIfPresent(Int.self, forKey: .maxOfflineTicks)) ?? d.maxOfflineTicks
         plannerInterval = (try? tick?.decodeIfPresent(Int.self, forKey: .plannerInterval)) ?? d.plannerInterval
+
+        let calendar = try? c.nestedContainer(keyedBy: CalendarKeys.self, forKey: .calendar)
+        ticksPerYear = (try? calendar?.decodeIfPresent(Int.self, forKey: .ticksPerYear)) ?? d.ticksPerYear
+        seasonFoodYield = (try? calendar?.decodeIfPresent([Double].self, forKey: .seasonFoodYield)) ?? d.seasonFoodYield
+        seasonMaterialsYield = (try? calendar?.decodeIfPresent([Double].self, forKey: .seasonMaterialsYield)) ?? d.seasonMaterialsYield
 
         let tension = try? c.nestedContainer(keyedBy: TensionKeys.self, forKey: .tension)
         threatMultiplier = (try? tension?.decodeIfPresent(Double.self, forKey: .threatMultiplier)) ?? d.threatMultiplier
@@ -225,6 +262,11 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         try tick.encode(realSecondsPerTick, forKey: .realSecondsPerTick)
         try tick.encode(maxOfflineTicks, forKey: .maxOfflineTicks)
         try tick.encode(plannerInterval, forKey: .plannerInterval)
+
+        var calendar = c.nestedContainer(keyedBy: CalendarKeys.self, forKey: .calendar)
+        try calendar.encode(ticksPerYear, forKey: .ticksPerYear)
+        try calendar.encode(seasonFoodYield, forKey: .seasonFoodYield)
+        try calendar.encode(seasonMaterialsYield, forKey: .seasonMaterialsYield)
 
         var tension = c.nestedContainer(keyedBy: TensionKeys.self, forKey: .tension)
         try tension.encode(threatMultiplier, forKey: .threatMultiplier)
