@@ -34,7 +34,9 @@ public enum GameWorldFactory {
             storage: [.food: 200, .materials: 120, .energy: 0, .knowledge: 0, .influence: 20],
             storageCapacity: registry.config.defaultStorageCapacity,
             stats: SettlementStats(stability: 60, morale: 60),
-            colony: ColonyBuilder.seededLayout(for: buildings, registry: registry)
+            colony: ColonyBuilder.seededLayout(for: buildings, registry: registry),
+            localMap: LocalMapGenerator.generate(mapSeed: seed, regionID: homeland.id,
+                                                 biome: registry.biome(homeland.biomeID))
         )
 
         // Put the founding colonists to work on the buildings that suit them.

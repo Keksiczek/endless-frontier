@@ -116,10 +116,13 @@ public enum ResourceLoop {
         }
         s.stats = s.stats.clamped()
 
-        // 8. Individual colonists: needs, mood, skilled work, morale pull.
+        // 8. Put any idle adults (new arrivals, those who came of age) to work.
+        s = LaborEngine.assignIdleAdults(s, registry: registry)
+
+        // 9. Individual colonists: needs, mood, skilled work, morale pull.
         s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick)
 
-        // 9. The life cycle: aging, deaths, pregnancies and births.
+        // 10. The life cycle: aging, deaths, pregnancies and births.
         s = PopulationEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: mapSeed)
 
         return s

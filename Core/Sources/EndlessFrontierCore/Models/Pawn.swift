@@ -8,16 +8,33 @@ public enum WorkKind: String, Codable, Sendable, CaseIterable, Equatable {
     case mining
     case research
     case trade
+    case foraging   // herbs → knowledge/medicine
+    case hunting    // game → food
+    case healing    // tends the sick (no resource)
+    case building   // raises structures (no resource)
+    case scouting   // reveals the fog of war (no resource)
+    case priest     // tends faith (no resource)
     case idle
 
     /// The resource this work contributes to, if any.
     public var resource: ResourceType? {
         switch self {
-        case .farming: return .food
+        case .farming, .hunting: return .food
         case .logging, .mining: return .materials
-        case .research: return .knowledge
+        case .research, .foraging: return .knowledge
         case .trade: return .influence
-        case .idle: return nil
+        case .healing, .building, .scouting, .priest, .idle: return nil
+        }
+    }
+
+    /// The local-map deposit this work harvests, if any.
+    public var harvestedDeposit: LocalResourceKind? {
+        switch self {
+        case .farming: return .field
+        case .logging: return .forest
+        case .mining: return .stone
+        case .foraging: return .herbs
+        default: return nil
         }
     }
 }

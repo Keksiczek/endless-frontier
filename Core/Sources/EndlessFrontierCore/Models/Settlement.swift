@@ -93,6 +93,9 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     /// Optional in-settlement spatial layout (the RimWorld-style colony grid).
     /// `nil` until the player opens build mode; the economy never depends on it.
     public var colony: ColonyMap?
+    /// The living outdoor map — river, deposits, fog of war, points of interest.
+    /// `nil` for pre-V2 saves; generated on demand from the world seed.
+    public var localMap: LocalMap?
 
     public init(
         id: UUID = UUID(),
@@ -108,7 +111,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         stats: SettlementStats = SettlementStats(),
         inventory: [ItemInstance] = [],
         specialization: SettlementSpecialization = .balanced,
-        colony: ColonyMap? = nil
+        colony: ColonyMap? = nil,
+        localMap: LocalMap? = nil
     ) {
         self.id = id
         self.name = name
@@ -124,13 +128,14 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.inventory = inventory
         self.specialization = specialization
         self.colony = colony
+        self.localMap = localMap
     }
 
     // MARK: - Codable (resilient to pre-specialisation saves)
 
     private enum CodingKeys: String, CodingKey {
         case id, name, kind, regionID, foundedTick, pawns, deathTallies
-        case buildings, storage, storageCapacity, stats, inventory, specialization, colony
+        case buildings, storage, storageCapacity, stats, inventory, specialization, colony, localMap
     }
 
     public init(from decoder: Decoder) throws {
@@ -151,5 +156,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         specialization = try c.decodeIfPresent(SettlementSpecialization.self, forKey: .specialization) ?? .balanced
         // Saves written before the colony grid have no layout yet.
         colony = try c.decodeIfPresent(ColonyMap.self, forKey: .colony)
+        // Pre-V2 saves have no local map; it regenerates from the world seed.
+        localMap = try c.decodeIfPresent(LocalMap.self, forKey: .localMap)
     }
 }
