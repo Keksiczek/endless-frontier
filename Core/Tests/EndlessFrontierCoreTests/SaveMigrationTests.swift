@@ -49,16 +49,28 @@ struct SaveMigrationTests {
         #expect(SaveMigrator.migrate(future, to: 1, steps: [:]) == future)
     }
 
-    @Test("WorldStore.load migrates a legacy save on disk")
-    func loadMigratesFromDisk() throws {
+    @Test("WorldStore.load discards a pre-V2 save so the player starts fresh")
+    func loadResetsLegacySave() throws {
         let tmp = FileManager.default.temporaryDirectory
             .appendingPathComponent("ef-migration-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: tmp) }
         let store = WorldStore(url: tmp)
-        // Persist a save carrying an old schema version.
-        let legacy = WorldState(schemaVersion: 0, settlements: [Settlement(name: "Old")])
+        // A save from before V2 (incompatible population semantics) is not loaded.
+        let legacy = WorldState(schemaVersion: 1, settlements: [Settlement(name: "Old")])
         try store.save(legacy)
+        #expect(try store.load() == nil)
+    }
+
+    @Test("WorldStore.load round-trips a current V2 save")
+    func loadKeepsCurrentSave() throws {
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ef-current-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: tmp) }
+        let store = WorldStore(url: tmp)
+        let world = WorldState(settlements: [Settlement(name: "New")])
+        try store.save(world)
         let loaded = try store.load()
         #expect(loaded?.schemaVersion == WorldState.currentSchemaVersion)
+        #expect(loaded?.settlements.first?.name == "New")
     }
 }

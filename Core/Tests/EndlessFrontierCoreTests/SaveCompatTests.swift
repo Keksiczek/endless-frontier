@@ -14,13 +14,17 @@ struct SaveCompatTests {
         #expect(world.settlements.isEmpty)              // defaulted
         #expect(world.regions.isEmpty)                  // defaulted
         #expect(world.scheduledEffects.isEmpty)         // defaulted
-        #expect(world.schemaVersion == WorldState.currentSchemaVersion)
+        // A save without a schemaVersion predates versioning → treated as
+        // legacy v1, so the loader knows to reset it.
+        #expect(world.schemaVersion == 1)
     }
 
-    @Test("An empty object decodes to a default world")
+    @Test("An empty object decodes to a legacy-versioned default world")
     func emptySaveLoads() throws {
         let world = try JSONDecoder().decode(WorldState.self, from: Data("{}".utf8))
-        #expect(world == WorldState())
+        // Same as a default world apart from the legacy schema version.
+        #expect(world.schemaVersion == 1)
+        #expect(world == WorldState(schemaVersion: 1))
     }
 
     @Test("Encode carries the schema version")

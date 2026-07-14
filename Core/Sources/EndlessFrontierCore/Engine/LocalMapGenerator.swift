@@ -54,7 +54,15 @@ public enum LocalMapGenerator {
             LocalPOI(id: index, kind: kind, position: landPoint(river: river, rng: &rng))
         }
 
-        var map = LocalMap(river: river, nodes: nodes, pois: pois)
+        // A starting herd and mild predator pressure, jittered by seed.
+        let capacity = 70 + rng.nextUnit() * 40   // 70…110
+        let wildlife = WildlifeState(
+            deerHerd: capacity * (0.4 + rng.nextUnit() * 0.3),
+            deerCapacity: capacity,
+            predatorPressure: 8 + rng.nextUnit() * 8
+        )
+
+        var map = LocalMap(river: river, nodes: nodes, pois: pois, wildlife: wildlife)
         // The settlement sits at the centre; its surroundings start revealed.
         map.reveal(around: LocalPoint(x: 0.5, y: 0.5), radius: 0.28)
         return map

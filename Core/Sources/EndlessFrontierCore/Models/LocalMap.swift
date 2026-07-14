@@ -92,10 +92,32 @@ public struct RiverShape: Codable, Sendable, Equatable {
     }
 }
 
+/// The wild animals sharing a settlement's map: a deer herd that hunters cull
+/// for food and predators that pressure the colony. Live simulation state.
+public struct WildlifeState: Codable, Sendable, Equatable {
+    /// Current head of game.
+    public var deerHerd: Double
+    /// The land's carrying capacity for the herd.
+    public var deerCapacity: Double
+    /// How dangerous the predators are right now (0…100) — drives attack rolls.
+    public var predatorPressure: Double
+
+    public init(deerHerd: Double = 40, deerCapacity: Double = 80, predatorPressure: Double = 10) {
+        self.deerHerd = deerHerd
+        self.deerCapacity = deerCapacity
+        self.predatorPressure = predatorPressure
+    }
+
+    /// How well-stocked the herd is (0…1) — hunting yield scales with this.
+    public var herdFraction: Double {
+        deerCapacity > 0 ? min(1, deerHerd / deerCapacity) : 0
+    }
+}
+
 /// The living outdoor map of a single settlement: the river, harvestable
-/// deposits, points of interest and the fog of war. Generated deterministically
-/// from `(mapSeed, regionID)`, then evolved as live state (deposits deplete,
-/// scouts reveal fog, POIs get discovered).
+/// deposits, points of interest, wildlife and the fog of war. Generated
+/// deterministically from `(mapSeed, regionID)`, then evolved as live state
+/// (deposits deplete, scouts reveal fog, POIs get discovered, herds move).
 ///
 /// Distinct from `ColonyMap`, which is the built-structures tile grid; this is
 /// the surrounding wilderness the civilisation lives in.
@@ -107,6 +129,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
     public var river: RiverShape
     public var nodes: [ResourceNode]
     public var pois: [LocalPOI]
+    public var wildlife: WildlifeState
     /// Indices (`row * gridColumns + column`) of revealed fog cells.
     public var exploredCells: Set<Int>
 
@@ -114,12 +137,29 @@ public struct LocalMap: Codable, Sendable, Equatable {
         river: RiverShape,
         nodes: [ResourceNode],
         pois: [LocalPOI],
+        wildlife: WildlifeState = WildlifeState(),
         exploredCells: Set<Int> = []
     ) {
         self.river = river
         self.nodes = nodes
         self.pois = pois
+        self.wildlife = wildlife
         self.exploredCells = exploredCells
+    }
+
+    // MARK: - Codable (resilient: wildlife was added after the first cut)
+
+    private enum CodingKeys: String, CodingKey {
+        case river, nodes, pois, wildlife, exploredCells
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        river = try c.decode(RiverShape.self, forKey: .river)
+        nodes = try c.decode([ResourceNode].self, forKey: .nodes)
+        pois = try c.decode([LocalPOI].self, forKey: .pois)
+        wildlife = try c.decodeIfPresent(WildlifeState.self, forKey: .wildlife) ?? WildlifeState()
+        exploredCells = try c.decodeIfPresent(Set<Int>.self, forKey: .exploredCells) ?? []
     }
 
     /// Fraction of the map revealed (0…1).

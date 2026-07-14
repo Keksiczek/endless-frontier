@@ -24,7 +24,8 @@ public enum ResourceLoop {
         var s = state
         let config = registry.config
         s.settlements = s.settlements.map {
-            advanceSettlement($0, registry: registry, config: config, tick: state.tick, mapSeed: state.mapSeed)
+            advanceSettlement($0, registry: registry, config: config,
+                              tick: state.tick, mapSeed: state.mapSeed, era: state.era)
         }
         s.globalStats = recomputeGlobalStats(s, registry: registry)
         return s
@@ -35,7 +36,8 @@ public enum ResourceLoop {
         registry: GameDataRegistry,
         config: WorldConfig,
         tick: Int = 0,
-        mapSeed: UInt64 = 0
+        mapSeed: UInt64 = 0,
+        era: Era = .earlySettlement
     ) -> Settlement {
         var s = settlement
         let profile = s.specialization.profile
@@ -120,11 +122,97 @@ public enum ResourceLoop {
         s = LaborEngine.assignIdleAdults(s, registry: registry)
 
         // 9. Individual colonists: needs, mood, skilled work, morale pull.
-        s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick)
+        //    Gathering work is scaled by how full the local deposits & herd are.
+        s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick,
+                                      gatheringFactors: gatheringFactors(s.localMap))
 
-        // 10. The life cycle: aging, deaths, pregnancies and births.
+        // 10. Deposits deplete under the harvest and regrow with the seasons.
+        s = evolveDeposits(s, registry: registry, tick: tick, config: config)
+
+        // 11. Wildlife: the herd grows and is culled; predators may strike.
+        s = WildlifeEngine.advanceOneTick(s, registry: registry, tick: tick, era: era, mapSeed: mapSeed)
+
+        // 12. The life cycle: aging, deaths, pregnancies and births.
         s = PopulationEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: mapSeed)
 
+        return s
+    }
+
+    /// How full each local deposit kind is, as a gathering-efficiency factor.
+    /// A brimming forest yields at full rate; a nearly-exhausted one still
+    /// yields something (colonists range farther), so it's a soft floor.
+    static let depositFloorFactor: Double = 0.35
+    /// Harvest a single assigned worker pulls from a deposit each tick.
+    static let harvestPerWorker: Double = 0.45
+    /// Fraction of a node's capacity it regrows each tick (before seasonality).
+    static let depositRegrowthFraction: Double = 0.0009
+
+    /// Per-work gathering-efficiency factors: each deposit-backed work scaled
+    /// by how full its pool is, plus hunting scaled by the herd. Fed to
+    /// `PawnEngine` so a depleted resource pulls its workers' output down.
+    static func gatheringFactors(_ localMap: LocalMap?) -> [WorkKind: Double] {
+        guard let localMap else { return [:] }
+        var poolByKind: [LocalResourceKind: (amount: Double, capacity: Double)] = [:]
+        for node in localMap.nodes {
+            var entry = poolByKind[node.kind] ?? (0, 0)
+            entry.amount += node.amount
+            entry.capacity += node.capacity
+            poolByKind[node.kind] = entry
+        }
+        var factors: [WorkKind: Double] = [:]
+        for (kind, entry) in poolByKind {
+            let fraction = entry.capacity > 0 ? entry.amount / entry.capacity : 1
+            factors[kind.work] = depositFloorFactor + (1 - depositFloorFactor) * fraction
+        }
+        factors[.hunting] = WildlifeEngine.huntingFactor(localMap.wildlife)
+        return factors
+    }
+
+    /// Depletes deposits by what the settlement's gatherers pulled this tick,
+    /// then regrows every node toward its capacity at a season-scaled rate.
+    static func evolveDeposits(
+        _ settlement: Settlement,
+        registry: GameDataRegistry,
+        tick: Int,
+        config: WorldConfig
+    ) -> Settlement {
+        guard var map = settlement.localMap, !map.nodes.isEmpty else { return settlement }
+        let ticksPerYear = config.ticksPerYear
+
+        // Demand per deposit kind from the workers assigned to harvest it.
+        var demand: [LocalResourceKind: Double] = [:]
+        for pawn in settlement.pawns where pawn.isAdult(ticksPerYear: ticksPerYear) && !pawn.isBroken {
+            if let deposit = pawn.assignedWork.harvestedDeposit {
+                let resource = pawn.assignedWork.resource ?? .food
+                let season = config.seasonYieldMultiplier(for: resource, tick: tick)
+                demand[deposit, default: 0] += harvestPerWorker * season
+            }
+        }
+
+        // Deplete proportionally across the nodes of each kind.
+        for kind in Set(map.nodes.map(\.kind)) {
+            let want = demand[kind, default: 0]
+            guard want > 0 else { continue }
+            let indices = map.nodes.indices.filter { map.nodes[$0].kind == kind }
+            let available = indices.reduce(0.0) { $0 + map.nodes[$1].amount }
+            guard available > 0 else { continue }
+            let taken = min(want, available)
+            for i in indices {
+                let share = map.nodes[i].amount / available
+                map.nodes[i].amount = max(0, map.nodes[i].amount - taken * share)
+            }
+        }
+
+        // Regrow toward capacity, faster in the growing seasons.
+        for i in map.nodes.indices {
+            let resource: ResourceType = map.nodes[i].kind == .field ? .food : .materials
+            let season = config.seasonYieldMultiplier(for: resource, tick: tick)
+            let regrow = map.nodes[i].capacity * depositRegrowthFraction * season
+            map.nodes[i].amount = min(map.nodes[i].capacity, map.nodes[i].amount + regrow)
+        }
+
+        var s = settlement
+        s.localMap = map
         return s
     }
 

@@ -74,7 +74,16 @@ public struct WorldState: Codable, Sendable, Equatable {
     /// Bump when the meaning of persisted fields changes in a way that needs a
     /// migration step (not merely adding a new field — those are handled
     /// gracefully by the resilient decoder below).
-    public static let currentSchemaVersion = 1
+    ///
+    /// v2 is the "Endless Frontier V2" world: population became derived from
+    /// pawns (every inhabitant is a colonist with genes/age/wealth) and each
+    /// settlement gained a living local map. v1 saves are not migratable —
+    /// their macro `population` no longer has meaning — so they are reset.
+    public static let currentSchemaVersion = 2
+
+    /// The oldest save the current build can load. Older saves are discarded
+    /// and the player starts a fresh V2 world.
+    public static let minimumSupportedSchemaVersion = 2
 
     public var schemaVersion: Int
     public var tick: Int
@@ -177,7 +186,9 @@ public struct WorldState: Codable, Sendable, Equatable {
         func value<T: Decodable>(_ key: CodingKeys, _ fallback: T) -> T {
             (try? c.decodeIfPresent(T.self, forKey: key)) ?? fallback
         }
-        schemaVersion = value(.schemaVersion, WorldState.currentSchemaVersion)
+        // A save missing the key predates versioning → treat as the oldest
+        // (legacy v1), so the loader can decide to reset it.
+        schemaVersion = value(.schemaVersion, 1)
         tick = value(.tick, 0)
         lastRealTimestamp = value(.lastRealTimestamp, Date(timeIntervalSince1970: 0))
         rngSeed = value(.rngSeed, 0x5EED_F00D)

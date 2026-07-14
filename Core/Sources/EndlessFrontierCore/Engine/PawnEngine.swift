@@ -42,68 +42,78 @@ public enum PawnEngine {
     public static func advanceOneTick(
         _ settlement: Settlement,
         registry: GameDataRegistry = GameDataRegistry(),
-        tick: Int = 0
+        tick: Int = 0,
+        gatheringFactors: [WorkKind: Double] = [:]
     ) -> Settlement {
         guard !settlement.pawns.isEmpty else { return settlement }
         var s = settlement
         var food = s.storage[.food]
         var output = Resources()
+        let ticksPerYear = registry.config.ticksPerYear
+        let adultAgeTicks = Pawn.adultAgeYears * ticksPerYear
+        // Season factors are constant across the settlement's pawns this tick.
+        var seasonByResource: [ResourceType: Double] = [:]
+        for resource in ResourceType.allCases {
+            seasonByResource[resource] = registry.config.seasonYieldMultiplier(for: resource, tick: tick)
+        }
 
-        s.pawns = s.pawns.map { pawn in
-            var p = pawn
+        // Mutate pawns in place (index loop) to avoid rebuilding the array and
+        // copying every pawn's dictionaries each tick — this runs up to 43,200
+        // times on offline catch-up, so allocation churn matters.
+        for i in s.pawns.indices {
             // Needs decay.
-            p.needs.hunger -= hungerDecay
-            p.needs.rest = p.needs.rest - restDecay + restRecovery
-            p.needs.recreation = p.needs.recreation - recreationDecay + recreationRecovery
+            s.pawns[i].needs.hunger -= hungerDecay
+            s.pawns[i].needs.rest = s.pawns[i].needs.rest - restDecay + restRecovery
+            s.pawns[i].needs.recreation = s.pawns[i].needs.recreation - recreationDecay + recreationRecovery
 
             // Eat if hungry and food is available.
-            if food >= foodPerMeal, p.needs.hunger < mealHungerThreshold {
+            if food >= foodPerMeal, s.pawns[i].needs.hunger < mealHungerThreshold {
                 food -= foodPerMeal
-                p.needs.hunger += hungerPerMeal
+                s.pawns[i].needs.hunger += hungerPerMeal
             }
-            p.needs = p.needs.clamped()
+            s.pawns[i].needs = s.pawns[i].needs.clamped()
 
-            // Health: starvation hurts, otherwise the body slowly recovers
-            // (equipment can speed recovery).
-            if p.needs.hunger <= 0 {
-                p.health -= starvationHealthDamage
+            // Health: starvation hurts, otherwise the body slowly recovers.
+            let hasEquipment = !s.pawns[i].equipment.isEmpty
+            if s.pawns[i].needs.hunger <= 0 {
+                s.pawns[i].health -= starvationHealthDamage
             } else {
-                p.health = min(100, p.health + healthRecovery + ItemEngine.healthRegenBonus(p, registry: registry))
+                let regen = hasEquipment ? ItemEngine.healthRegenBonus(s.pawns[i], registry: registry) : 0
+                s.pawns[i].health = min(100, s.pawns[i].health + healthRecovery + regen)
             }
-            p.health = max(0, p.health)
+            s.pawns[i].health = max(0, s.pawns[i].health)
 
             // Mood from needs + trait + equipment, clamped.
-            p.mood = min(max(p.needs.average + p.trait.moodModifier
-                             + ItemEngine.moodBonus(p, registry: registry), 0), 100)
+            let moodBonus = hasEquipment ? ItemEngine.moodBonus(s.pawns[i], registry: registry) : 0
+            s.pawns[i].mood = min(max(s.pawns[i].needs.average + s.pawns[i].trait.moodModifier + moodBonus, 0), 100)
 
-            // Mental break with hysteresis: break at very low mood, recover
-            // only once mood climbs back above the higher threshold.
-            if p.mood < breakEnterMood {
-                p.isBroken = true
-            } else if p.mood >= breakExitMood {
-                p.isBroken = false
+            // Mental break with hysteresis.
+            if s.pawns[i].mood < breakEnterMood {
+                s.pawns[i].isBroken = true
+            } else if s.pawns[i].mood >= breakExitMood {
+                s.pawns[i].isBroken = false
             }
 
-            // Work output + learning-by-doing — adults only, and not while
-            // broken. Children eat and grow; they don't work.
-            if !p.isBroken, p.isAdult(ticksPerYear: registry.config.ticksPerYear),
-               let resource = p.assignedWork.resource {
-                let moodFactor = 0.5 + 0.5 * (p.mood / 100)   // 0.5…1.0
-                let effectiveSkill = p.skill(p.assignedWork)
-                    + ItemEngine.skillBonus(p, work: p.assignedWork, registry: registry)
-                let seasonFactor = registry.config.seasonYieldMultiplier(for: resource, tick: tick)
+            // Work output + learning-by-doing — adults only, and not broken.
+            if !s.pawns[i].isBroken, s.pawns[i].age >= adultAgeTicks,
+               let resource = s.pawns[i].assignedWork.resource {
+                let work = s.pawns[i].assignedWork
+                let moodFactor = 0.5 + 0.5 * (s.pawns[i].mood / 100)   // 0.5…1.0
+                let skillBonus = hasEquipment ? ItemEngine.skillBonus(s.pawns[i], work: work, registry: registry) : 0
+                let effectiveSkill = s.pawns[i].skill(work) + skillBonus
+                let seasonFactor = seasonByResource[resource] ?? 1
+                let gatherFactor = gatheringFactors[work] ?? 1.0
                 output[resource] = output[resource]
-                    + Double(effectiveSkill) * outputPerSkill * moodFactor * seasonFactor
+                    + Double(effectiveSkill) * outputPerSkill * moodFactor * seasonFactor * gatherFactor
 
-                var xp = (p.skillXP[p.assignedWork] ?? 0) + xpPerTickWorking
-                let level = p.skill(p.assignedWork)
+                var xp = (s.pawns[i].skillXP[work] ?? 0) + xpPerTickWorking
+                let level = s.pawns[i].skill(work)
                 if xp >= xpPerLevel, level < maxSkill {
-                    p.skills[p.assignedWork] = level + 1
+                    s.pawns[i].skills[work] = level + 1
                     xp -= xpPerLevel
                 }
-                p.skillXP[p.assignedWork] = xp
+                s.pawns[i].skillXP[work] = xp
             }
-            return p
         }
 
         // Commit eaten food and work output to storage.

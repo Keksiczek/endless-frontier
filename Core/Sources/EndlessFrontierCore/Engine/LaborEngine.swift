@@ -26,26 +26,30 @@ public enum LaborEngine {
     /// Puts every idle adult in the settlement to work, each filling whatever
     /// role is furthest below its quota at that moment.
     public static func assignIdleAdults(_ settlement: Settlement, registry: GameDataRegistry) -> Settlement {
-        let ticksPerYear = registry.config.ticksPerYear
-        let adults = settlement.pawns.filter { $0.isAdult(ticksPerYear: ticksPerYear) }
-        guard !adults.isEmpty else { return settlement }
+        let adultAgeTicks = Pawn.adultAgeYears * registry.config.ticksPerYear
+        // Cheap early-out for the common case (nobody idle): most ticks nothing
+        // needs assigning, and this runs every tick on offline catch-up.
+        guard settlement.pawns.contains(where: { $0.assignedWork == .idle && $0.age >= adultAgeTicks })
+        else { return settlement }
 
-        let idleIndices = settlement.pawns.indices.filter {
-            settlement.pawns[$0].assignedWork == .idle
-                && settlement.pawns[$0].isAdult(ticksPerYear: ticksPerYear)
+        var adultCount = 0
+        var counts: [WorkKind: Int] = [:]
+        var idleIndices: [Int] = []
+        for (i, pawn) in settlement.pawns.enumerated() where pawn.age >= adultAgeTicks {
+            adultCount += 1
+            if pawn.assignedWork == .idle {
+                idleIndices.append(i)
+            } else {
+                counts[pawn.assignedWork, default: 0] += 1
+            }
         }
         guard !idleIndices.isEmpty else { return settlement }
 
         var s = settlement
-        let adultCount = Double(adults.count)
-        // Live tally of who does what, updated as we place each worker.
-        var counts: [WorkKind: Int] = [:]
-        for pawn in s.pawns where pawn.assignedWork != .idle {
-            counts[pawn.assignedWork, default: 0] += 1
-        }
+        let adultCountD = Double(adultCount)
 
         for index in idleIndices {
-            let best = neediestRole(counts: counts, adultCount: adultCount, population: adults.count)
+            let best = neediestRole(counts: counts, adultCount: adultCountD, population: adultCount)
             s.pawns[index].assignedWork = best
             counts[best, default: 0] += 1
         }
