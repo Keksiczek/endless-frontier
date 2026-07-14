@@ -53,19 +53,23 @@ struct WorldMapScreen: View {
     @ViewBuilder
     private var detailPanel: some View {
         ScrollView {
-            if let region = selectedRegion {
-                RegionDetailCard(game: game, region: region) { selectedRegionID = nil }
-                    .padding(16)
-            } else {
-                VStack(spacing: 10) {
-                    Image(systemName: "hand.tap.fill").font(.title)
-                    Text("Select a region")
-                        .font(.subheadline)
+            VStack(spacing: 16) {
+                if let region = selectedRegion {
+                    RegionDetailCard(game: game, region: region) { selectedRegionID = nil }
+                } else if game.world.tribes.isEmpty {
+                    VStack(spacing: 10) {
+                        Image(systemName: "hand.tap.fill").font(.title)
+                        Text(AppStrings.language == .cs ? "Vyber region" : "Select a region")
+                            .font(.subheadline)
+                    }
+                    .foregroundStyle(Theme.textDim)
+                    .frame(maxWidth: .infinity, minHeight: 160)
+                    .padding(.top, 40)
                 }
-                .foregroundStyle(Theme.textDim)
-                .frame(maxWidth: .infinity, minHeight: 200)
-                .padding(.top, 60)
+                // Peoples who grew out of your own settlement.
+                TribesPanel(game: game)
             }
+            .padding(16)
         }
     }
 }

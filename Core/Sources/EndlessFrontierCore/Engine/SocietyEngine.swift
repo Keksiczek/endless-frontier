@@ -63,8 +63,9 @@ public enum SocietyEngine {
                 s.pendingLawProposal = proposal
             }
         }
-        // Faith and the chronicle close the year.
+        // Faith, the neighbours, and the chronicle close the year.
         s = FaithEngine.advanceYear(s, registry: registry)
+        s = DiplomacyEngine.advanceYear(s, registry: registry)
         s = ChronicleEngine.record(s, registry: registry)
         return s
     }
