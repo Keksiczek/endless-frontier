@@ -30,7 +30,7 @@ struct CombatTests {
         let reg = Fixtures.registry()
         func world(armed: Bool) -> WorldState {
             let pawns = (0..<4).map { armed ? armedPawn("P\($0)") : Pawn(name: "P\($0)") }
-            var capital = Settlement(name: "C", kind: .capital, population: 4, pawns: pawns,
+            var capital = Settlement(name: "C", kind: .capital, pawns: pawns,
                                      storage: [.materials: 100, .food: 100], storageCapacity: 999)
             capital.stats.defense = 0
             return WorldState(settlements: [capital])

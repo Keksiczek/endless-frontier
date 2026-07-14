@@ -107,7 +107,7 @@ public enum SiteEngine {
                 if pawn.health <= 0 {
                     died = true
                     s.settlements[capital].pawns.remove(at: pawnIndex)
-                    s.settlements[capital].population = max(0, s.settlements[capital].population - 1)
+                    s.settlements[capital].deathTallies[PawnDeathCause.beast.rawValue, default: 0] += 1
                     s.settlements[capital].stats.morale = max(0, s.settlements[capital].stats.morale - 10)
                 } else {
                     s.settlements[capital].pawns[pawnIndex] = pawn

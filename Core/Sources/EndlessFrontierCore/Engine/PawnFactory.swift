@@ -9,7 +9,8 @@ public enum PawnFactory {
     ]
 
     /// Builds a colonist from a numeric seed (typically derived from world tick
-    /// and current colonist count).
+    /// and current colonist count). Recruits arrive as working-age adults with
+    /// their own genes.
     public static func generate(seed: UInt64) -> Pawn {
         var rng = SeededRNG(seed: seed ^ 0xA11CE_5EED)
         let name = names[Int(rng.next() % UInt64(names.count))]
@@ -19,12 +20,15 @@ public enum PawnFactory {
         let works = WorkKind.allCases.filter { $0 != .idle }
         let work = works[Int(rng.next() % UInt64(works.count))]
         let skillLevel = 3 + Int(rng.next() % 8)   // 3…10
+        let ageYears = 16 + Int(rng.next() % 25)   // 16…40
         return Pawn(
             id: rng.nextUUID(),
             name: name,
             trait: trait,
             skills: [work: skillLevel],
-            assignedWork: work
+            assignedWork: work,
+            age: ageYears * 60,   // in ticks at the standard 60 ticks/year
+            genes: .founder(using: &rng)
         )
     }
 }

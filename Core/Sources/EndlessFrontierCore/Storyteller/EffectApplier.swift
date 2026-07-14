@@ -121,7 +121,7 @@ public enum EffectApplier {
         }
         if deaths > 0 {
             s.settlements[capital].pawns.removeAll { $0.health <= 0 }
-            s.settlements[capital].population = max(0, s.settlements[capital].population - Double(deaths))
+            s.settlements[capital].deathTallies[PawnDeathCause.battle.rawValue, default: 0] += deaths
             s.settlements[capital].stats = s.settlements[capital].stats.applying(delta: -10 * Double(deaths), to: "morale")
         }
     }
@@ -246,7 +246,6 @@ public enum EffectApplier {
         guard let capital = s.settlements.indices.first else { return }
         let seed = UInt64(bitPattern: Int64(s.tick)) &+ UInt64(s.settlements[capital].pawns.count) &+ 1
         s.settlements[capital].pawns.append(PawnFactory.generate(seed: seed))
-        s.settlements[capital].population += 1
     }
 
     /// Resolves which region a dynamic event targets. Deterministic.
@@ -272,6 +271,5 @@ public enum EffectApplier {
             .enumerated()
             .filter { !remove.contains($0.offset) }
             .map(\.element)
-        s.settlements[capital].population = max(0, s.settlements[capital].population - Double(remove.count))
     }
 }

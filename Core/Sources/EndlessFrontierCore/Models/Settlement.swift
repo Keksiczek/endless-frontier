@@ -79,8 +79,11 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public var kind: SettlementKind
     public var regionID: UUID?
     public var foundedTick: Int
-    public var population: Double
+    /// Every inhabitant is a pawn; the headcount is derived, never stored.
+    public var population: Double { Double(pawns.count) }
     public var pawns: [Pawn]
+    /// Lifetime deaths by `PawnDeathCause.rawValue` — chronicle material.
+    public var deathTallies: [String: Int]
     public var buildings: [BuildingInstance]
     public var storage: Resources
     public var storageCapacity: Double
@@ -97,8 +100,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         kind: SettlementKind = .city,
         regionID: UUID? = nil,
         foundedTick: Int = 0,
-        population: Double = 50,
         pawns: [Pawn] = [],
+        deathTallies: [String: Int] = [:],
         buildings: [BuildingInstance] = [],
         storage: Resources = Resources(),
         storageCapacity: Double = 500,
@@ -112,8 +115,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.kind = kind
         self.regionID = regionID
         self.foundedTick = foundedTick
-        self.population = population
         self.pawns = pawns
+        self.deathTallies = deathTallies
         self.buildings = buildings
         self.storage = storage
         self.storageCapacity = storageCapacity
@@ -126,7 +129,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     // MARK: - Codable (resilient to pre-specialisation saves)
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, kind, regionID, foundedTick, population, pawns
+        case id, name, kind, regionID, foundedTick, pawns, deathTallies
         case buildings, storage, storageCapacity, stats, inventory, specialization, colony
     }
 
@@ -137,8 +140,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         kind = try c.decode(SettlementKind.self, forKey: .kind)
         regionID = try c.decodeIfPresent(UUID.self, forKey: .regionID)
         foundedTick = try c.decode(Int.self, forKey: .foundedTick)
-        population = try c.decode(Double.self, forKey: .population)
         pawns = try c.decode([Pawn].self, forKey: .pawns)
+        deathTallies = try c.decodeIfPresent([String: Int].self, forKey: .deathTallies) ?? [:]
         buildings = try c.decode([BuildingInstance].self, forKey: .buildings)
         storage = try c.decode(Resources.self, forKey: .storage)
         storageCapacity = try c.decode(Double.self, forKey: .storageCapacity)

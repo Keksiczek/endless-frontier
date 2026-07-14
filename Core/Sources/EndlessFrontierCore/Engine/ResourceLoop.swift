@@ -23,7 +23,9 @@ public enum ResourceLoop {
     public static func advanceOneTick(_ state: WorldState, registry: GameDataRegistry) -> WorldState {
         var s = state
         let config = registry.config
-        s.settlements = s.settlements.map { advanceSettlement($0, registry: registry, config: config, tick: state.tick) }
+        s.settlements = s.settlements.map {
+            advanceSettlement($0, registry: registry, config: config, tick: state.tick, mapSeed: state.mapSeed)
+        }
         s.globalStats = recomputeGlobalStats(s, registry: registry)
         return s
     }
@@ -32,7 +34,8 @@ public enum ResourceLoop {
         _ settlement: Settlement,
         registry: GameDataRegistry,
         config: WorldConfig,
-        tick: Int = 0
+        tick: Int = 0,
+        mapSeed: UInt64 = 0
     ) -> Settlement {
         var s = settlement
         let profile = s.specialization.profile
@@ -67,30 +70,22 @@ public enum ResourceLoop {
             net[resource] = net[resource] + adjacencyProduction[resource]
         }
 
-        // 2. Population food upkeep.
-        net[.food] = net[.food] - s.population * config.foodPerPersonPerTick
-
-        // 3. Apply to storage; remember if food went into deficit before clamp.
+        // 2. Apply building net production to storage. Food upkeep happens in
+        //    `PawnEngine` — every inhabitant is a pawn and eats real meals.
         var storage = s.storage
         for resource in ResourceType.allCases {
             storage[resource] = storage[resource] + net[resource]
         }
-        let starving = storage[.food] < 0
         s.storage = storage.clamped(lower: 0, upper: s.storageCapacity)
 
-        // 4. Population dynamics — growth is capped by available housing.
+        // 3. Population pressure: an empty larder and overcrowding both wear
+        //    on morale. Growth itself is births (`PopulationEngine`).
         let capacity = housingCapacity(s, registry: registry)
-        if starving {
-            s.population = max(0, s.population * 0.99)
+        if s.storage[.food] <= 0 {
             s.stats.morale -= 1
-        } else {
-            let headroom = capacity > 0 ? max(0, 1 - s.population / capacity) : 0
-            var growthFactor = (s.stats.morale - 50) / 5000   // ±1%/tick at morale extremes
-            if growthFactor > 0 { growthFactor *= headroom }  // positive growth needs room
-            s.population = max(0, s.population + s.population * growthFactor)
-            if capacity > 0, s.population > capacity {
-                s.stats.morale -= 0.5                          // overcrowding
-            }
+        }
+        if capacity > 0, s.population > capacity {
+            s.stats.morale -= 0.5                              // overcrowding
         }
 
         // 5. Morale drifts gently toward a building-driven target.
@@ -123,6 +118,9 @@ public enum ResourceLoop {
 
         // 8. Individual colonists: needs, mood, skilled work, morale pull.
         s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick)
+
+        // 9. The life cycle: aging, deaths, pregnancies and births.
+        s = PopulationEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: mapSeed)
 
         return s
     }

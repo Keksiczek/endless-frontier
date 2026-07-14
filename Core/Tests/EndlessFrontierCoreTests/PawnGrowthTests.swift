@@ -4,7 +4,7 @@ import Testing
 @Suite("Pawn growth & mood breaks")
 struct PawnGrowthTests {
     private func wellFed(_ pawn: Pawn) -> Settlement {
-        Settlement(name: "Camp", kind: .capital, population: 1, pawns: [pawn],
+        Settlement(name: "Camp", kind: .capital, pawns: [pawn],
                    storage: [.food: 500], storageCapacity: 500, stats: SettlementStats(morale: 60))
     }
 
@@ -35,7 +35,7 @@ struct PawnGrowthTests {
         let miserable = Pawn(name: "Glum", trait: .pessimist, skills: [.farming: 10],
                              needs: PawnNeeds(hunger: 5, rest: 5, recreation: 5),
                              mood: 10, assignedWork: .farming)
-        var s = Settlement(name: "Camp", kind: .capital, population: 1, pawns: [miserable],
+        var s = Settlement(name: "Camp", kind: .capital, pawns: [miserable],
                            storage: [.food: 0], storageCapacity: 500, stats: SettlementStats(morale: 60))
         let foodBefore = s.storage[.food]
         s = PawnEngine.advanceOneTick(s)

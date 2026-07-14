@@ -6,8 +6,7 @@ struct PawnDramaTests {
     private func registry() -> GameDataRegistry { Fixtures.registry() }
 
     private func worldWithPawns(_ pawns: [Pawn]) -> WorldState {
-        let capital = Settlement(name: "Capital", kind: .capital, population: Double(pawns.count),
-                                 pawns: pawns, storage: [.food: 200, .knowledge: 100], storageCapacity: 500)
+        let capital = Settlement(name: "Capital", kind: .capital,                                  pawns: pawns, storage: [.food: 200, .knowledge: 100], storageCapacity: 500)
         return WorldState(settlements: [capital])
     }
 
@@ -65,12 +64,18 @@ struct PawnDramaTests {
     @Test("Starvation eventually kills a colonist, hitting morale and headcount")
     func starvationDeath() {
         let frail = Pawn(name: "Frail", needs: PawnNeeds(hunger: 1, rest: 50, recreation: 50), health: 3)
-        var s = Settlement(name: "Camp", kind: .capital, population: 1, pawns: [frail],
+        var s = Settlement(name: "Camp", kind: .capital, pawns: [frail],
                            storage: [.food: 0], storageCapacity: 100, stats: SettlementStats(morale: 60))
-        // No food → hunger hits 0 → health drains → death.
-        for _ in 0..<5 { s = PawnEngine.advanceOneTick(s) }
+        // No food → hunger hits 0 → health drains → death (PawnEngine drains,
+        // PopulationEngine buries and tallies the cause).
+        let registry = GameDataRegistry()
+        for tick in 0..<5 {
+            s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick)
+            s = PopulationEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: 1)
+        }
         #expect(s.pawns.isEmpty)
         #expect(s.population == 0)
+        #expect(s.deathTallies[PawnDeathCause.starvation.rawValue] == 1)
         #expect(s.stats.morale < 60)
     }
 

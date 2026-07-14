@@ -19,13 +19,17 @@ public enum GameWorldFactory {
             .filter { registry.building($0) != nil }
             .map { BuildingInstance(definitionID: $0, count: 1) }
 
+        // The capital's identity must come from the seed: engines derive
+        // per-settlement RNG streams from the settlement id, so a random id
+        // would leak nondeterminism into every replay.
+        var idRNG = SeededRNG(seed: seed ^ 0x5E77_1E1D)
         var settlement = Settlement(
+            id: idRNG.nextUUID(),
             name: "First Light",
             kind: .capital,
             regionID: homeland.id,
             foundedTick: 0,
-            population: 50,
-            pawns: starterPawns(),
+            pawns: starterPawns(seed: seed),
             buildings: buildings,
             storage: [.food: 200, .materials: 120, .energy: 0, .knowledge: 0, .influence: 20],
             storageCapacity: registry.config.defaultStorageCapacity,
@@ -61,18 +65,21 @@ public enum GameWorldFactory {
         )
     }
 
-    /// The founding colonists. A handful of named characters with distinct
-    /// trades — the people the player manages and the narrator can name.
-    private static func starterPawns() -> [Pawn] {
-        [
+    /// The founding colonists: four named specialists the narrator can lean
+    /// on, plus a band of settlers — every inhabitant is a real pawn now.
+    private static func starterPawns(seed: UInt64) -> [Pawn] {
+        var rng = SeededRNG(seed: seed ^ 0xF0_0D_CAFE)
+        let named = [
             Pawn(name: "Mara", trait: .hardWorker, skills: [.farming: 8, .logging: 4],
-                 assignedWork: .farming),
+                 assignedWork: .farming, genes: .founder(using: &rng)),
             Pawn(name: "Joss", trait: .optimist, skills: [.logging: 7, .mining: 5],
-                 assignedWork: .logging),
+                 assignedWork: .logging, genes: .founder(using: &rng)),
             Pawn(name: "Eli", trait: .none, skills: [.research: 6, .trade: 3],
-                 assignedWork: .research),
+                 assignedWork: .research, genes: .founder(using: &rng)),
             Pawn(name: "Nadia", trait: .pessimist, skills: [.farming: 5, .trade: 6],
-                 assignedWork: .farming)
+                 assignedWork: .farming, genes: .founder(using: &rng))
         ]
+        let settlers = (0..<14).map { PawnFactory.generate(seed: rng.next() &+ UInt64($0)) }
+        return named + settlers
     }
 }

@@ -1,13 +1,21 @@
+import Foundation
 import Testing
 @testable import EndlessFrontierCore
 
 @Suite("Housing & population cap")
 struct HousingTests {
-    private func settlement(pop: Double, huts: Int, morale: Double = 80) -> Settlement {
-        Settlement(name: "Town", kind: .capital, population: pop,
-                   buildings: huts > 0 ? [BuildingInstance(definitionID: "hut", count: huts)] : [],
-                   storage: [.food: 500], storageCapacity: 999,
-                   stats: SettlementStats(morale: morale))
+    private func settlement(pop: Int, huts: Int, morale: Double = 80, fertility: Double = 0.5) -> Settlement {
+        let pawns = (0..<pop).map { i in
+            Pawn(
+                id: UUID(uuidString: String(format: "00000000-0000-0000-0001-%012d", i + 1))!,
+                name: "Villager \(i + 1)",
+                genes: Genes(fertility: fertility)
+            )
+        }
+        return Settlement(name: "Town", kind: .capital, pawns: pawns,
+                          buildings: huts > 0 ? [BuildingInstance(definitionID: "hut", count: huts)] : [],
+                          storage: [.food: 500], storageCapacity: 999,
+                          stats: SettlementStats(morale: morale))
     }
 
     @Test("Housing capacity is base plus building housing")
@@ -17,21 +25,23 @@ struct HousingTests {
         #expect(cap == ResourceLoop.baseHousing + 60)   // 2 huts * 30
     }
 
-    @Test("Population grows when there is housing headroom")
+    @Test("Population grows through births when there is housing headroom")
     func growsWithRoom() throws {
         let reg = try GameDataRegistry.bundled()
-        var world = WorldState(settlements: [settlement(pop: 10, huts: 1)])
-        world = TickEngine.advance(world, ticks: 20, registry: reg).state
+        // Very fertile founders + two years of ticks → at least one birth.
+        var world = WorldState(settlements: [settlement(pop: 10, huts: 1, fertility: 1.0)])
+        world = TickEngine.advance(world, ticks: 200, registry: reg).state
         #expect(world.settlements[0].population > 10)
+        #expect(world.settlements[0].pawns.contains { $0.age < 200 })   // an actual newborn
     }
 
-    @Test("Population does not grow past housing capacity")
+    @Test("No conceptions once population reaches housing capacity")
     func cappedAtCapacity() throws {
         let reg = try GameDataRegistry.bundled()
-        let cap = ResourceLoop.baseHousing + 30   // base + 1 hut = 60
-        var world = WorldState(settlements: [settlement(pop: cap, huts: 1)])
-        world = TickEngine.advance(world, ticks: 20, registry: reg).state
-        #expect(world.settlements[0].population <= cap + 0.5)
+        let cap = Int(ResourceLoop.baseHousing) + 30   // base + 1 hut = 60
+        var world = WorldState(settlements: [settlement(pop: cap, huts: 1, fertility: 1.0)])
+        world = TickEngine.advance(world, ticks: 100, registry: reg).state
+        #expect(world.settlements[0].population <= Double(cap))
     }
 
     @Test("Crowding surfaces a build-housing objective")

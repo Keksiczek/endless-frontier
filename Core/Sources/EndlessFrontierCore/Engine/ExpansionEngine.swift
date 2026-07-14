@@ -33,13 +33,16 @@ public enum ExpansionEngine {
             .filter { registry.building($0) != nil }
             .map { BuildingInstance(definitionID: $0, count: 1) }
 
+        // Deterministic identity: per-settlement RNG streams key off the id.
+        let seedBase = settlerSeed(state: s, region: state.regions[regionIndex])
+        var idRNG = SeededRNG(seed: seedBase ^ 0x0072_1D0F)
         var outpost = Settlement(
+            id: idRNG.nextUUID(),
             name: name,
             kind: .outpost,
             regionID: regionID,
             foundedTick: s.tick,
-            population: 20,
-            pawns: settlers(seedBase: settlerSeed(state: s, region: state.regions[regionIndex])),
+            pawns: settlers(seedBase: seedBase),
             buildings: buildings,
             storage: [.food: 40, .materials: 20],
             storageCapacity: registry.config.defaultStorageCapacity,
@@ -55,13 +58,10 @@ public enum ExpansionEngine {
         return s
     }
 
-    /// Two founding colonists for a new outpost — generated deterministically
+    /// The founding party of a new outpost — generated deterministically
     /// so each settlement is a real, living community from day one.
     private static func settlers(seedBase: UInt64) -> [Pawn] {
-        [
-            PawnFactory.generate(seed: seedBase),
-            PawnFactory.generate(seed: seedBase &+ 0x9E37_79B9)
-        ]
+        (0..<6).map { PawnFactory.generate(seed: seedBase &+ UInt64($0) &* 0x9E37_79B9) }
     }
 
     private static func settlerSeed(state: WorldState, region: Region) -> UInt64 {

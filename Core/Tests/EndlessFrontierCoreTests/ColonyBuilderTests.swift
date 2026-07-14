@@ -7,7 +7,7 @@ struct ColonyBuilderTests {
     private func town(pawnCount: Int = 0) -> Settlement {
         let pawns = (0..<pawnCount).map { Pawn(name: "P\($0)") }
         return Settlement(name: "Town", kind: .capital,
-                          population: Double(max(pawnCount, 1)), pawns: pawns)
+                          pawns: pawns)
     }
 
     @Test("Placing a building adds it to the grid and the ledger")

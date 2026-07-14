@@ -70,7 +70,7 @@ struct ContentIntegrityTests {
 @Suite("Pollution")
 struct PollutionTests {
     private func settlement(factories: Int) -> Settlement {
-        Settlement(name: "Town", kind: .capital, population: 20,
+        Settlement(name: "Town", kind: .capital, pawns: Fixtures.pawns(20),
                    buildings: factories > 0 ? [BuildingInstance(definitionID: "factory", count: factories)] : [],
                    storage: [.food: 500, .energy: 500], storageCapacity: 9999,
                    stats: SettlementStats(morale: 80))

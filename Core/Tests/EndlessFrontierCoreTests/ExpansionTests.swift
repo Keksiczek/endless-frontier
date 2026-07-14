@@ -9,7 +9,7 @@ struct ExpansionTests {
         let reg = Fixtures.registry()
         let region = Region(name: "Frontier", biomeID: "plains", explorationState: .fullyExplored)
         var capital = Settlement(
-            name: "Capital", kind: .capital, population: 50,
+            name: "Capital", kind: .capital, pawns: Fixtures.pawns(50),
             storage: [.materials: 200, .influence: 200], storageCapacity: 500
         )
         capital.buildings = [BuildingInstance(definitionID: "farm", count: 1)]
@@ -82,7 +82,7 @@ struct ExpansionTests {
     func outpostPromotion() {
         let (base, reg, regionID) = worldWithFrontier()
         var world = ExpansionEngine.foundOutpost(base, regionID: regionID, name: "Boomtown", registry: reg)
-        world.settlements[1].population = reg.config.cityUpgradePopulation + 10
+        world.settlements[1].pawns = Fixtures.pawns(Int(reg.config.cityUpgradePopulation) + 10)
         world.settlements[1].stats.stability = reg.config.cityUpgradeStability + 10
 
         let after = MultiCityEngine.promoteOutposts(world, config: reg.config)

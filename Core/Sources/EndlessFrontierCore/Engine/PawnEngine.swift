@@ -13,9 +13,13 @@ public enum PawnEngine {
     // Passive recovery per tick for rest/recreation (sleep & downtime, abstracted).
     static let restRecovery: Double = 0.5
     static let recreationRecovery: Double = 0.35
-    // Eating: food consumed per pawn per tick to restore hunger.
-    static let foodPerMeal: Double = 0.2
-    static let hungerPerMeal: Double = 3.0
+    // Eating: colonists eat once hunger dips below the threshold. At steady
+    // state this costs decay/hungerPerMeal × foodPerMeal ≈ 0.1 food per
+    // person per tick — the whole settlement's food upkeep, now that every
+    // inhabitant is a pawn.
+    static let foodPerMeal: Double = 1.0
+    static let hungerPerMeal: Double = 6.0
+    static let mealHungerThreshold: Double = 70
     // Work output per skill point per tick for the assigned resource.
     static let outputPerSkill: Double = 0.15
     // How strongly colony morale tracks average pawn mood.
@@ -23,8 +27,6 @@ public enum PawnEngine {
     // Health: starvation damage when hunger is empty, passive recovery otherwise.
     static let starvationHealthDamage: Double = 2.0
     static let healthRecovery: Double = 0.3
-    // Colony morale hit when a colonist dies.
-    static let deathMoralePenalty: Double = 10.0
     // Skill growth: XP gained per tick of assigned work, XP per level, and cap.
     static let xpPerTickWorking: Double = 0.5
     static let xpPerLevel: Double = 100
@@ -54,8 +56,8 @@ public enum PawnEngine {
             p.needs.rest = p.needs.rest - restDecay + restRecovery
             p.needs.recreation = p.needs.recreation - recreationDecay + recreationRecovery
 
-            // Eat if food is available.
-            if food >= foodPerMeal, p.needs.hunger < 100 {
+            // Eat if hungry and food is available.
+            if food >= foodPerMeal, p.needs.hunger < mealHungerThreshold {
                 food -= foodPerMeal
                 p.needs.hunger += hungerPerMeal
             }
@@ -82,8 +84,10 @@ public enum PawnEngine {
                 p.isBroken = false
             }
 
-            // Work output + learning-by-doing, only when working (not broken).
-            if !p.isBroken, let resource = p.assignedWork.resource {
+            // Work output + learning-by-doing — adults only, and not while
+            // broken. Children eat and grow; they don't work.
+            if !p.isBroken, p.isAdult(ticksPerYear: registry.config.ticksPerYear),
+               let resource = p.assignedWork.resource {
                 let moodFactor = 0.5 + 0.5 * (p.mood / 100)   // 0.5…1.0
                 let effectiveSkill = p.skill(p.assignedWork)
                     + ItemEngine.skillBonus(p, work: p.assignedWork, registry: registry)
@@ -108,14 +112,8 @@ public enum PawnEngine {
             s.storage[resource] = min(s.storage[resource] + output[resource], s.storageCapacity)
         }
 
-        // Remove colonists who have died; each death wounds colony morale and
-        // the macro headcount.
-        let deaths = s.pawns.filter { $0.health <= 0 }.count
-        if deaths > 0 {
-            s.pawns.removeAll { $0.health <= 0 }
-            s.population = max(0, s.population - Double(deaths))
-            s.stats.morale -= deathMoralePenalty * Double(deaths)
-        }
+        // Death (removal, cause tallies, inheritance, morale) is handled by
+        // `PopulationEngine`, which runs right after this engine each tick.
 
         // Colony morale drifts toward the colonists' average mood.
         if !s.pawns.isEmpty {

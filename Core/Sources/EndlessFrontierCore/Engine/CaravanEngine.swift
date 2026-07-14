@@ -59,7 +59,6 @@ public enum CaravanEngine {
         let guards = s.settlements[oi].pawns.filter { guardSet.contains($0.id) }
         // Remove guards and cargo from the origin.
         s.settlements[oi].pawns.removeAll { guardSet.contains($0.id) }
-        s.settlements[oi].population = max(0, s.settlements[oi].population - Double(guards.count))
         s.settlements[oi].storage[resource] = s.settlements[oi].storage[resource] - amount
 
         let destination = s.settlements.first { $0.id == destinationID }!
@@ -187,7 +186,6 @@ public enum CaravanEngine {
         let room = max(0, s.settlements[di].storageCapacity - s.settlements[di].storage[caravan.resource])
         s.settlements[di].storage[caravan.resource] = s.settlements[di].storage[caravan.resource] + min(caravan.cargo, room)
         s.settlements[di].pawns.append(contentsOf: caravan.guards)
-        s.settlements[di].population += Double(caravan.guards.count)
     }
 
     private static func dispatchSeed(state: WorldState, originID: UUID, destinationID: UUID) -> UInt64 {
