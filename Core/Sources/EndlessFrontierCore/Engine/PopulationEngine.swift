@@ -22,8 +22,10 @@ public enum PopulationEngine {
     static let fertileMaxYears = 46
     /// How long a pregnancy lasts, in ticks (half a year at 60 ticks/year).
     static let pregnancyTicks = 30
-    /// Per-tick conception chance for a fertile adult at neutral genes/mood.
-    static let baseBirthChancePerTick = 0.004
+    /// Per-tick conception chance for a fertile adult at neutral genes/mood,
+    /// in an empty settlement. Crowding damps it long before the housing cap
+    /// (see `headroomFactor`), so growth is an S-curve rather than a wall.
+    static let baseBirthChancePerTick = 0.0018
     /// Everyone lives at least this long; genes stretch it further.
     static let baseLifespanYears = 60.0
     static let lifespanCourageYears = 10.0
@@ -92,9 +94,10 @@ public enum PopulationEngine {
             }
         }
 
-        // 4. Conception: fertile, housed, in the mood.
-        let headroom = s.population < capacity
-        if headroom {
+        // 4. Conception: fertile, housed, in the mood. Crowding cools ardour
+        //    gradually — families slow long before the last hut is full.
+        let headroom = headroomFactor(population: s.population, capacity: capacity)
+        if headroom > 0 {
             for index in s.pawns.indices {
                 let pawn = s.pawns[index]
                 guard pawn.pregnancyTicksRemaining == 0 else { continue }
@@ -102,7 +105,7 @@ public enum PopulationEngine {
                 guard years >= fertileMinYears, years <= fertileMaxYears else { continue }
                 let moodFactor = min(1.5, max(0.3, pawn.mood / 70))
                 let chance = baseBirthChancePerTick * (pawn.genes.fertility * 2)
-                    * moodFactor * birthRateMultiplier
+                    * moodFactor * birthRateMultiplier * headroom
                 if rng.nextUnit() < chance {
                     s.pawns[index].pregnancyTicksRemaining = pregnancyTicks
                 }
@@ -110,6 +113,16 @@ public enum PopulationEngine {
         }
 
         return s
+    }
+
+    /// How freely a settlement breeds, given how full it already is: full
+    /// vigour when empty, tapering to nothing as the housing fills. Squaring
+    /// the fraction makes the last quarter of capacity fill slowly, which is
+    /// what stops a colony exploding into the thousands.
+    static func headroomFactor(population: Double, capacity: Double) -> Double {
+        guard capacity > 0 else { return 0 }
+        let free = max(0, 1 - population / capacity)
+        return free * free
     }
 
     /// The lifespan a colonist's genes grant, in years.

@@ -41,9 +41,40 @@ final class GameViewModel {
 
     // MARK: - Session lifecycle
 
+    /// True while a long absence is being simulated, so the UI can say so.
+    private(set) var isCatchingUp = false
+
     /// Advances the world by the real time elapsed since the last session.
-    func openSession(now: Date = Date()) {
-        let result = GameEngine.openSession(world, now: now, registry: registry)
+    ///
+    /// A month away is up to 43,200 ticks of a fully simulated colony — far too
+    /// much to run on the main actor, which would freeze the launch. The world
+    /// is a `Sendable` value and `TickEngine` is pure, so the catch-up is
+    /// computed off-thread and only the result is applied here.
+    func openSession(now: Date = Date()) async {
+        guard !isCatchingUp else { return }
+        let snapshot = world
+        let registry = registry
+
+        let ticks = TickEngine.ticksElapsed(
+            since: snapshot.lastRealTimestamp, until: now, config: registry.config)
+        // A short absence is cheap; don't pay for a thread hop.
+        if ticks <= shortCatchUpTicks {
+            apply(GameEngine.openSession(snapshot, now: now, registry: registry))
+            return
+        }
+
+        isCatchingUp = true
+        let result = await Task.detached(priority: .userInitiated) {
+            GameEngine.openSession(snapshot, now: now, registry: registry)
+        }.value
+        isCatchingUp = false
+        apply(result)
+    }
+
+    /// Ticks we're happy to simulate inline rather than hopping off the actor.
+    private let shortCatchUpTicks = 120
+
+    private func apply(_ result: PlannerResult) {
         world = result.state
         lastSessionEvents = result.fired
         persist()
