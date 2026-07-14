@@ -96,6 +96,14 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     /// The living outdoor map — river, deposits, fog of war, points of interest.
     /// `nil` for pre-V2 saves; generated on demand from the world seed.
     public var localMap: LocalMap?
+    /// Laws currently in force (see `SocietyEngine`).
+    public var laws: [LawInstance]
+    /// The colonist the assembly elected to lead — the player's voice in-world.
+    public var leaderID: UUID?
+    /// Wealth distribution: Gini and the class boundaries.
+    public var society: SocietyStats
+    /// Ticks left of a strike — gatherers have downed tools.
+    public var strikeTicksRemaining: Int
 
     public init(
         id: UUID = UUID(),
@@ -112,7 +120,11 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         inventory: [ItemInstance] = [],
         specialization: SettlementSpecialization = .balanced,
         colony: ColonyMap? = nil,
-        localMap: LocalMap? = nil
+        localMap: LocalMap? = nil,
+        laws: [LawInstance] = [],
+        leaderID: UUID? = nil,
+        society: SocietyStats = SocietyStats(),
+        strikeTicksRemaining: Int = 0
     ) {
         self.id = id
         self.name = name
@@ -129,6 +141,10 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.specialization = specialization
         self.colony = colony
         self.localMap = localMap
+        self.laws = laws
+        self.leaderID = leaderID
+        self.society = society
+        self.strikeTicksRemaining = strikeTicksRemaining
     }
 
     // MARK: - Codable (resilient to pre-specialisation saves)
@@ -136,6 +152,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case id, name, kind, regionID, foundedTick, pawns, deathTallies
         case buildings, storage, storageCapacity, stats, inventory, specialization, colony, localMap
+        case laws, leaderID, society, strikeTicksRemaining
     }
 
     public init(from decoder: Decoder) throws {
@@ -158,5 +175,10 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         colony = try c.decodeIfPresent(ColonyMap.self, forKey: .colony)
         // Pre-V2 saves have no local map; it regenerates from the world seed.
         localMap = try c.decodeIfPresent(LocalMap.self, forKey: .localMap)
+        // Society arrived after the first V2 cut.
+        laws = try c.decodeIfPresent([LawInstance].self, forKey: .laws) ?? []
+        leaderID = try c.decodeIfPresent(UUID.self, forKey: .leaderID)
+        society = try c.decodeIfPresent(SocietyStats.self, forKey: .society) ?? SocietyStats()
+        strikeTicksRemaining = try c.decodeIfPresent(Int.self, forKey: .strikeTicksRemaining) ?? 0
     }
 }

@@ -111,6 +111,9 @@ public struct WorldState: Codable, Sendable, Equatable {
     public var scheduledEffects: [ScheduledEffect]
     public var activeQuests: [QuestProgress]
     public var completedQuests: Set<String>
+    /// A motion the assembly has voted on and put before the leader (the
+    /// player) to ratify or veto. Only one sits at a time.
+    public var pendingLawProposal: LawProposal?
 
     public init(
         schemaVersion: Int = WorldState.currentSchemaVersion,
@@ -134,7 +137,8 @@ public struct WorldState: Codable, Sendable, Equatable {
         eventCooldowns: [String: Int] = [:],
         scheduledEffects: [ScheduledEffect] = [],
         activeQuests: [QuestProgress] = [],
-        completedQuests: Set<String> = []
+        completedQuests: Set<String> = [],
+        pendingLawProposal: LawProposal? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.tick = tick
@@ -158,6 +162,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         self.scheduledEffects = scheduledEffects
         self.activeQuests = activeQuests
         self.completedQuests = completedQuests
+        self.pendingLawProposal = pendingLawProposal
     }
 
     /// Total population across all settlements.
@@ -178,7 +183,7 @@ public struct WorldState: Codable, Sendable, Equatable {
              researchedTechs, activeResearch, researchProgress, globalStats,
              unlockedBuildings, worldFlags, settlements, regions, tradeRoutes,
              caravans, activeExpedition, eventHistory, eventCooldowns,
-             scheduledEffects, activeQuests, completedQuests
+             scheduledEffects, activeQuests, completedQuests, pendingLawProposal
     }
 
     public init(from decoder: Decoder) throws {
@@ -210,6 +215,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         scheduledEffects = value(.scheduledEffects, [])
         activeQuests = value(.activeQuests, [])
         completedQuests = value(.completedQuests, [])
+        pendingLawProposal = (try? c.decodeIfPresent(LawProposal.self, forKey: .pendingLawProposal)) ?? nil
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -236,5 +242,6 @@ public struct WorldState: Codable, Sendable, Equatable {
         try c.encode(scheduledEffects, forKey: .scheduledEffects)
         try c.encode(activeQuests, forKey: .activeQuests)
         try c.encode(completedQuests, forKey: .completedQuests)
+        try c.encodeIfPresent(pendingLawProposal, forKey: .pendingLawProposal)
     }
 }

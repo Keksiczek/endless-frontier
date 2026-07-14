@@ -143,6 +143,17 @@ final class GameViewModel {
 
     var ticksPerYear: Int { registry.config.ticksPerYear }
 
+    // MARK: - The assembly
+
+    /// The motion the council has put before you, if any.
+    var pendingProposal: LawProposal? { world.pendingLawProposal }
+
+    /// Ratify or veto the assembly's motion. Overruling them costs morale.
+    func resolveProposal(approve: Bool) {
+        world = GameEngine.resolveLawProposal(world, approve: approve, registry: registry)
+        persist()
+    }
+
     var objectives: [Objective] {
         ObjectivesEngine.current(world, registry: registry)
     }

@@ -1,9 +1,11 @@
 import SwiftUI
 import EndlessFrontierCore
 
-/// A read-only look at the settlement's society: who does what, and how wealth
-/// is spread. Elections, laws and votes arrive in the society phase — this is
-/// the window that will grow into the council chamber.
+/// The council chamber: the motion awaiting your word, the leader the assembly
+/// chose, the laws in force, and the shape of the society beneath them.
+///
+/// This is where being the Leader means something — the assembly votes, but you
+/// ratify or veto, and overruling them costs you standing.
 struct CouncilScreen: View {
     @Bindable var game: GameViewModel
 
@@ -11,17 +13,20 @@ struct CouncilScreen: View {
         ZStack {
             Theme.surface.ignoresSafeArea()
             ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
+                VStack(alignment: .leading, spacing: 20) {
                     header
+                    if let proposal = game.pendingProposal {
+                        MotionCard(game: game, proposal: proposal)
+                    }
                     if let settlement = game.selectedSettlement, !settlement.pawns.isEmpty {
-                        elder(settlement)
+                        leaderCard(settlement)
+                        lawsCard(settlement)
+                        inequalityCard(settlement)
                         roleDistribution(settlement)
-                        wealthClasses(settlement)
                     } else {
-                        Text(AppStrings.language == .cs ? "Zatím zde nikdo nežije." : "No one lives here yet.")
+                        Text(cs ? "Zatím zde nikdo nežije." : "No one lives here yet.")
                             .foregroundStyle(Theme.textDim)
                     }
-                    comingSoon
                 }
                 .padding(20)
             }
@@ -29,32 +34,113 @@ struct CouncilScreen: View {
         .foregroundStyle(Theme.text)
     }
 
+    private var cs: Bool { AppStrings.language == .cs }
+
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(AppStrings.tabCouncil)
                 .font(.system(.largeTitle, design: .serif).weight(.bold))
-            Text(AppStrings.language == .cs
-                 ? "Obraz společnosti tvé osady."
-                 : "The shape of your settlement's society.")
+            Text(cs ? "Sněm zasedá každých šest let. Poslední slovo máš ty."
+                    : "The assembly sits every six years. The last word is yours.")
                 .font(.subheadline).foregroundStyle(Theme.textDim)
         }
     }
 
-    // The eldest adult stands in for the leader until elections exist.
-    private func elder(_ settlement: Settlement) -> some View {
-        let elder = settlement.pawns.max { $0.age < $1.age }
+    // MARK: - Leader
+
+    private func leaderCard(_ settlement: Settlement) -> some View {
+        let leader = SocietyEngine.leader(of: settlement)
         return HStack(spacing: 12) {
             Image(systemName: "crown.fill").font(.title3).foregroundStyle(Theme.accent)
             VStack(alignment: .leading, spacing: 2) {
-                Text(AppStrings.language == .cs ? "Stařešina" : "Elder")
+                Text(cs ? "Zvolený vůdce" : "Elected leader")
                     .font(.caption).foregroundStyle(Theme.textDim)
-                Text(elder?.name ?? "—")
+                Text(leader?.name ?? (cs ? "Sněm nikoho nezvolil" : "No one elected"))
                     .font(.headline)
             }
             Spacer()
-            if let elder {
-                Text("\(elder.ageYears(ticksPerYear: game.ticksPerYear)) \(AppStrings.language == .cs ? "let" : "yrs")")
-                    .font(.subheadline.monospacedDigit()).foregroundStyle(Theme.textDim)
+            if let leader {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(AppStrings.roleName(leader.assignedWork))
+                        .font(.caption).foregroundStyle(Theme.textDim)
+                    Text("\(leader.ageYears(ticksPerYear: game.ticksPerYear)) \(cs ? "let" : "yrs")")
+                        .font(.subheadline.monospacedDigit())
+                }
+            }
+        }
+        .frontierCard()
+    }
+
+    // MARK: - Laws
+
+    private func lawsCard(_ settlement: Settlement) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: cs ? "Platná usnesení" : "Laws in force")
+            if settlement.laws.isEmpty {
+                Text(cs ? "Sněm zatím nic neschválil." : "The assembly has passed nothing yet.")
+                    .font(.callout).foregroundStyle(Theme.textDim)
+            } else {
+                ForEach(settlement.laws) { law in
+                    if let def = game.registry.law(law.definitionID) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            HStack {
+                                Text(def.name.resolve(AppStrings.language))
+                                    .font(.subheadline.weight(.semibold))
+                                Spacer()
+                                Text("\(cs ? "do roku" : "until year") \(year(law.expiresTick))")
+                                    .font(.caption.monospacedDigit()).foregroundStyle(Theme.textDim)
+                            }
+                            Text(def.summary.resolve(AppStrings.language))
+                                .font(.caption).foregroundStyle(Theme.textDim)
+                        }
+                        .padding(.vertical, 8).padding(.horizontal, 12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Theme.surfaceInset,
+                                    in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                }
+            }
+        }
+        .frontierCard()
+    }
+
+    private func year(_ tick: Int) -> Int {
+        Season.year(tick: tick, ticksPerYear: game.ticksPerYear)
+    }
+
+    // MARK: - Society
+
+    private func inequalityCard(_ settlement: Settlement) -> some View {
+        let split = Dictionary(grouping: settlement.pawns) {
+            settlement.society.wealthClass(of: $0.wealth)
+        }.mapValues(\.count)
+        let gini = settlement.society.gini
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                SectionHeader(title: cs ? "Vrstvy" : "Classes")
+                Spacer()
+                Text("Gini \(String(format: "%.2f", gini))")
+                    .font(.caption.monospacedDigit().weight(.semibold))
+                    .foregroundStyle(gini > 0.5 ? Theme.danger : Theme.textDim)
+            }
+            ForEach(WealthClass.allCases, id: \.self) { cls in
+                CountBar(label: AppStrings.wealthClassName(cls), count: split[cls] ?? 0,
+                         total: settlement.pawns.count, tint: classTint(cls))
+            }
+            if gini > 0.5 {
+                Label(cs ? "Nerovnost je vysoká — chudina může povstat."
+                         : "Inequality is stark — the poor may rise.",
+                      systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption).foregroundStyle(Theme.danger)
+            }
+            if settlement.society.revolts > 0 {
+                Text("\(cs ? "Vzpour" : "Uprisings"): \(settlement.society.revolts)")
+                    .font(.caption).foregroundStyle(Theme.textDim)
+            }
+            if settlement.strikeTicksRemaining > 0 {
+                Label(cs ? "Stávka! Sběrači složili nářadí." : "Strike! The gatherers have downed tools.",
+                      systemImage: "hand.raised.fill")
+                    .font(.caption.weight(.semibold)).foregroundStyle(Theme.danger)
             }
         }
         .frontierCard()
@@ -66,7 +152,7 @@ struct CouncilScreen: View {
         let ordered = counts.sorted { $0.value > $1.value }
         let maxCount = ordered.first?.value ?? 1
         return VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(title: AppStrings.language == .cs ? "Řemesla" : "Trades")
+            SectionHeader(title: cs ? "Řemesla" : "Trades")
             ForEach(ordered, id: \.key) { work, count in
                 CountBar(label: AppStrings.roleName(work), count: count, total: maxCount,
                          tint: Theme.roleShade(work))
@@ -75,37 +161,99 @@ struct CouncilScreen: View {
         .frontierCard()
     }
 
-    private func wealthClasses(_ settlement: Settlement) -> some View {
-        let split = Society.classSplit(settlement.pawns)
-        return VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(title: AppStrings.language == .cs ? "Vrstvy" : "Classes")
-            ForEach(WealthClass.allCases, id: \.self) { cls in
-                CountBar(label: AppStrings.wealthClassName(cls), count: split[cls] ?? 0,
-                         total: settlement.pawns.count, tint: classTint(cls))
-            }
-        }
-        .frontierCard()
-    }
-
-    private var comingSoon: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "hammer.fill").foregroundStyle(Theme.textDim)
-            Text(AppStrings.language == .cs
-                 ? "Volby vůdců, zákony a hlasování sněmu přijdou v další fázi."
-                 : "Elections, laws and council votes arrive in the next phase.")
-                .font(.caption).foregroundStyle(Theme.textDim)
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-    }
-
     private func classTint(_ cls: WealthClass) -> Color {
         switch cls {
         case .poor: return Theme.boneDim
         case .middle: return Theme.good
         case .wealthy: return Theme.accent
         }
+    }
+}
+
+/// The motion on the table: what the assembly voted, and the leader's answer.
+private struct MotionCard: View {
+    @Bindable var game: GameViewModel
+    let proposal: LawProposal
+
+    private var cs: Bool { AppStrings.language == .cs }
+
+    var body: some View {
+        let def = game.registry.law(proposal.definitionID)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 8) {
+                Image(systemName: "hand.raised.square.fill").foregroundStyle(Theme.accent)
+                Text(cs ? "Sněm žádá tvé slovo" : "The assembly awaits your word")
+                    .font(.caption.weight(.bold)).tracking(1.2)
+                    .foregroundStyle(Theme.accent)
+            }
+            VStack(alignment: .leading, spacing: 5) {
+                Text(def?.name.resolve(AppStrings.language) ?? proposal.definitionID)
+                    .font(.system(.title3, design: .serif).weight(.semibold))
+                if let summary = def?.summary.resolve(AppStrings.language) {
+                    Text(summary).font(.callout).foregroundStyle(Theme.textDim)
+                }
+            }
+            voteTally
+            HStack(spacing: 10) {
+                Button {
+                    game.resolveProposal(approve: false)
+                } label: {
+                    Label(cs ? "Vetovat" : "Veto", systemImage: "xmark")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .tint(Theme.danger)
+
+                Button {
+                    game.resolveProposal(approve: true)
+                } label: {
+                    Label(cs ? "Schválit" : "Ratify", systemImage: "checkmark")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Theme.accent)
+            }
+            Text(warning)
+                .font(.caption2).foregroundStyle(Theme.textDim)
+        }
+        .frontierCard()
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
+                .strokeBorder(Theme.accent.opacity(0.45), lineWidth: 1)
+        )
+    }
+
+    /// The vote as a bar — for on the left, against on the right.
+    private var voteTally: some View {
+        let total = max(1, proposal.votesFor + proposal.votesAgainst)
+        return VStack(alignment: .leading, spacing: 5) {
+            HStack {
+                Text("\(cs ? "PRO" : "FOR") \(proposal.votesFor)")
+                    .font(.caption.monospacedDigit().weight(.semibold))
+                    .foregroundStyle(Theme.good)
+                Spacer()
+                Text("\(proposal.votesAgainst) \(cs ? "PROTI" : "AGAINST")")
+                    .font(.caption.monospacedDigit().weight(.semibold))
+                    .foregroundStyle(Theme.danger)
+            }
+            GeometryReader { geo in
+                HStack(spacing: 2) {
+                    Capsule().fill(Theme.good)
+                        .frame(width: geo.size.width * CGFloat(proposal.votesFor) / CGFloat(total))
+                    Capsule().fill(Theme.danger.opacity(0.7))
+                }
+            }
+            .frame(height: 6)
+        }
+    }
+
+    private var warning: String {
+        if proposal.councilApproves {
+            return cs ? "Sněm je pro. Veto proti jeho vůli tě bude stát přízeň lidu."
+                      : "The assembly is in favour. Vetoing against them will cost you standing."
+        }
+        return cs ? "Sněm je proti. Schválit navzdory jeho vůli tě bude stát přízeň lidu."
+                  : "The assembly is against. Ratifying anyway will cost you standing."
     }
 }
 
@@ -131,24 +279,5 @@ struct CountBar: View {
             Text("\(count)").font(.caption.monospacedDigit().weight(.semibold))
                 .foregroundStyle(Theme.textDim).frame(width: 28, alignment: .trailing)
         }
-    }
-}
-
-/// Presentation-side society maths (until the society engine lands).
-enum Society {
-    /// Splits colonists into poor / middle / wealthy by wealth quantiles,
-    /// mirroring the civilisation sim's 40th/85th-percentile bands.
-    static func classSplit(_ pawns: [Pawn]) -> [WealthClass: Int] {
-        guard !pawns.isEmpty else { return [:] }
-        let sorted = pawns.map(\.wealth).sorted()
-        let q40 = sorted[Int(Double(sorted.count) * 0.4)]
-        let q85 = sorted[min(sorted.count - 1, Int(Double(sorted.count) * 0.85))]
-        var split: [WealthClass: Int] = [.poor: 0, .middle: 0, .wealthy: 0]
-        for w in pawns.map(\.wealth) {
-            if w < q40 { split[.poor, default: 0] += 1 }
-            else if w < q85 { split[.middle, default: 0] += 1 }
-            else { split[.wealthy, default: 0] += 1 }
-        }
-        return split
     }
 }

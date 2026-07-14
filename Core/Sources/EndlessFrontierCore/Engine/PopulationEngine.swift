@@ -43,7 +43,8 @@ public enum PopulationEngine {
         _ settlement: Settlement,
         registry: GameDataRegistry,
         tick: Int,
-        mapSeed: UInt64
+        mapSeed: UInt64,
+        birthRateMultiplier: Double = 1
     ) -> Settlement {
         guard !settlement.pawns.isEmpty else { return settlement }
         var s = settlement
@@ -100,7 +101,8 @@ public enum PopulationEngine {
                 let years = pawn.ageYears(ticksPerYear: ticksPerYear)
                 guard years >= fertileMinYears, years <= fertileMaxYears else { continue }
                 let moodFactor = min(1.5, max(0.3, pawn.mood / 70))
-                let chance = baseBirthChancePerTick * (pawn.genes.fertility * 2) * moodFactor
+                let chance = baseBirthChancePerTick * (pawn.genes.fertility * 2)
+                    * moodFactor * birthRateMultiplier
                 if rng.nextUnit() < chance {
                     s.pawns[index].pregnancyTicksRemaining = pregnancyTicks
                 }

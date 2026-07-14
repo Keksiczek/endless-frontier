@@ -39,10 +39,12 @@ struct OfflineCatchUpTests {
 
         #expect(result.state.tick == 12_000)
         #expect(result.state.totalPopulation > 0)
-        // Bounded by housing: never runs away.
+        // Bounded by housing: never runs away. Conception stops at capacity,
+        // but pregnancies already carried come to term, so a modest overshoot
+        // (larger while family-support laws are in force) is expected.
         let capital = result.state.settlements[0]
         let capacity = ResourceLoop.housingCapacity(capital, registry: registry)
-        #expect(capital.population <= capacity + 2)
+        #expect(capital.population <= capacity * 1.3)
     }
 
     @Test("Catch-up is deterministic across the full offline window")

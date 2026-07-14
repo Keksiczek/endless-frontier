@@ -43,7 +43,8 @@ public enum PawnEngine {
         _ settlement: Settlement,
         registry: GameDataRegistry = GameDataRegistry(),
         tick: Int = 0,
-        gatheringFactors: [WorkKind: Double] = [:]
+        gatheringFactors: [WorkKind: Double] = [:],
+        laws: LawModifiers = LawModifiers()
     ) -> Settlement {
         guard !settlement.pawns.isEmpty else { return settlement }
         var s = settlement
@@ -66,9 +67,10 @@ public enum PawnEngine {
             s.pawns[i].needs.rest = s.pawns[i].needs.rest - restDecay + restRecovery
             s.pawns[i].needs.recreation = s.pawns[i].needs.recreation - recreationDecay + recreationRecovery
 
-            // Eat if hungry and food is available.
-            if food >= foodPerMeal, s.pawns[i].needs.hunger < mealHungerThreshold {
-                food -= foodPerMeal
+            // Eat if hungry and food is available. Rationing stretches a meal.
+            let meal = foodPerMeal * laws.foodUpkeepMultiplier
+            if food >= meal, s.pawns[i].needs.hunger < mealHungerThreshold {
+                food -= meal
                 s.pawns[i].needs.hunger += hungerPerMeal
             }
             s.pawns[i].needs = s.pawns[i].needs.clamped()
@@ -103,8 +105,11 @@ public enum PawnEngine {
                 let effectiveSkill = s.pawns[i].skill(work) + skillBonus
                 let seasonFactor = seasonByResource[resource] ?? 1
                 let gatherFactor = gatheringFactors[work] ?? 1.0
+                // A school makes every scholar's year count for more.
+                let lawFactor = resource == .knowledge ? laws.knowledgeMultiplier : 1
                 output[resource] = output[resource]
-                    + Double(effectiveSkill) * outputPerSkill * moodFactor * seasonFactor * gatherFactor
+                    + Double(effectiveSkill) * outputPerSkill * moodFactor
+                    * seasonFactor * gatherFactor * lawFactor
 
                 var xp = (s.pawns[i].skillXP[work] ?? 0) + xpPerTickWorking
                 let level = s.pawns[i].skill(work)

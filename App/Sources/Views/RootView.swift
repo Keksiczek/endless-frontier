@@ -16,6 +16,8 @@ struct RootView: View {
 
             CouncilScreen(game: game)
                 .tabItem { Label(AppStrings.tabCouncil, systemImage: "person.3.fill") }
+                // A motion awaiting your word shouldn't be missable.
+                .badge(game.pendingProposal == nil ? 0 : 1)
 
             ChronicleScreen(game: game)
                 .tabItem { Label(AppStrings.tabChronicle, systemImage: "book.fill") }

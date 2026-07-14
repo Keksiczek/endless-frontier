@@ -54,7 +54,7 @@ enum AppStrings {
         }
     }
 
-    /// Wealth-class label from a pawn's standing (poor / middle / wealthy).
+    /// Wealth-class label for a colonist's standing.
     static func wealthClassName(_ cls: WealthClass) -> String {
         switch cls {
         case .poor:    return s("Poor", "Chudina")
@@ -76,11 +76,4 @@ enum AppStrings {
         case .nearFuture:      return "Blízká budoucnost"
         }
     }
-}
-
-/// A colonist's wealth standing, derived from their wealth relative to the
-/// settlement. Presentation-only (the Core class thresholds arrive in the
-/// society phase); here it drives the read-only Council preview.
-enum WealthClass: CaseIterable {
-    case poor, middle, wealthy
 }

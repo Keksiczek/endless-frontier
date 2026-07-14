@@ -41,6 +41,9 @@ public enum ResourceLoop {
     ) -> Settlement {
         var s = settlement
         let profile = s.specialization.profile
+        // Everything the settlement's laws currently do.
+        let laws = SocietyEngine.modifiers(s, registry: registry)
+        if s.strikeTicksRemaining > 0 { s.strikeTicksRemaining -= 1 }
 
         // 1. Net production/consumption from buildings. A settlement's
         //    specialisation multiplies its gross production (not consumption),
@@ -72,6 +75,9 @@ public enum ResourceLoop {
             net[resource] = net[resource] + adjacencyProduction[resource]
         }
 
+        // 1d. Standing laws: a trade road or a tithe brings in influence.
+        net[.influence] = net[.influence] + laws.influencePerTick
+
         // 2. Apply building net production to storage. Food upkeep happens in
         //    `PawnEngine` — every inhabitant is a pawn and eats real meals.
         var storage = s.storage
@@ -96,14 +102,16 @@ public enum ResourceLoop {
         }
         let moraleTarget = min(100, max(0, 50 + buildingMorale
                                         + ItemEngine.colonyMoraleBonus(s, registry: registry)
-                                        + ColonyBonus.adjacencyMorale(s, registry: registry)))
+                                        + ColonyBonus.adjacencyMorale(s, registry: registry)
+                                        + laws.moraleFlat))
         s.stats.morale += (moraleTarget - s.stats.morale) * 0.1
 
         // 6. Defense drifts toward fortifications (buildings + artifacts).
         let buildingDefense = s.buildings.reduce(0.0) { acc, instance in
             acc + (registry.building(instance.definitionID)?.defense ?? 0) * Double(instance.count)
         }
-        let defenseTarget = buildingDefense + ItemEngine.colonyDefenseBonus(s, registry: registry) + profile.defenseFlat
+        let defenseTarget = buildingDefense + ItemEngine.colonyDefenseBonus(s, registry: registry)
+            + profile.defenseFlat + laws.defenseFlat
         s.stats.defense += (defenseTarget - s.stats.defense) * 0.15
 
         // 7. Pollution drifts toward what industry emits; heavy pollution hurts
@@ -122,18 +130,29 @@ public enum ResourceLoop {
         s = LaborEngine.assignIdleAdults(s, registry: registry)
 
         // 9. Individual colonists: needs, mood, skilled work, morale pull.
-        //    Gathering work is scaled by how full the local deposits & herd are.
+        //    Gathering work is scaled by how full the local deposits & herd are;
+        //    a strike stops the gatherers altogether.
+        var factors = gatheringFactors(s.localMap)
+        if s.strikeTicksRemaining > 0 {
+            for work in [WorkKind.farming, .logging, .mining, .foraging, .hunting] {
+                factors[work] = 0
+            }
+        }
         s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick,
-                                      gatheringFactors: gatheringFactors(s.localMap))
+                                      gatheringFactors: factors, laws: laws)
 
-        // 10. Deposits deplete under the harvest and regrow with the seasons.
-        s = evolveDeposits(s, registry: registry, tick: tick, config: config)
+        // 10. Deposits deplete under the harvest and regrow with the seasons —
+        //     faster where the woods are protected by law.
+        s = evolveDeposits(s, registry: registry, tick: tick, config: config,
+                           regrowthMultiplier: laws.depositRegrowthMultiplier)
 
         // 11. Wildlife: the herd grows and is culled; predators may strike.
         s = WildlifeEngine.advanceOneTick(s, registry: registry, tick: tick, era: era, mapSeed: mapSeed)
 
-        // 12. The life cycle: aging, deaths, pregnancies and births.
-        s = PopulationEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: mapSeed)
+        // 12. The life cycle: aging, deaths, pregnancies and births — family
+        //     support puts more children in the cradles.
+        s = PopulationEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: mapSeed,
+                                            birthRateMultiplier: laws.birthRateMultiplier)
 
         return s
     }
@@ -174,7 +193,8 @@ public enum ResourceLoop {
         _ settlement: Settlement,
         registry: GameDataRegistry,
         tick: Int,
-        config: WorldConfig
+        config: WorldConfig,
+        regrowthMultiplier: Double = 1
     ) -> Settlement {
         guard var map = settlement.localMap, !map.nodes.isEmpty else { return settlement }
         let ticksPerYear = config.ticksPerYear
@@ -207,7 +227,7 @@ public enum ResourceLoop {
         for i in map.nodes.indices {
             let resource: ResourceType = map.nodes[i].kind == .field ? .food : .materials
             let season = config.seasonYieldMultiplier(for: resource, tick: tick)
-            let regrow = map.nodes[i].capacity * depositRegrowthFraction * season
+            let regrow = map.nodes[i].capacity * depositRegrowthFraction * season * regrowthMultiplier
             map.nodes[i].amount = min(map.nodes[i].capacity, map.nodes[i].amount + regrow)
         }
 

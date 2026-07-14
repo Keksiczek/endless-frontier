@@ -89,6 +89,16 @@ public enum GameEngine {
                                resource: resource, amount: amount, guardIDs: guardIDs)
     }
 
+    /// The leader's answer to the assembly's motion. Ratifying enacts the law;
+    /// vetoing shelves it. Overruling the council's vote costs morale.
+    public static func resolveLawProposal(
+        _ state: WorldState,
+        approve: Bool,
+        registry: GameDataRegistry
+    ) -> WorldState {
+        SocietyEngine.resolveProposal(state, approve: approve, registry: registry)
+    }
+
     /// Reassigns a colonist to a different kind of work.
     public static func assignWork(
         _ state: WorldState,
