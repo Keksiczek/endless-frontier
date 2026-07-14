@@ -114,6 +114,8 @@ public struct WorldState: Codable, Sendable, Equatable {
     /// A motion the assembly has voted on and put before the leader (the
     /// player) to ratify or veto. Only one sits at a time.
     public var pendingLawProposal: LawProposal?
+    /// One snapshot per in-game year — the chronicle's raw material.
+    public var records: [WorldRecord]
 
     public init(
         schemaVersion: Int = WorldState.currentSchemaVersion,
@@ -138,7 +140,8 @@ public struct WorldState: Codable, Sendable, Equatable {
         scheduledEffects: [ScheduledEffect] = [],
         activeQuests: [QuestProgress] = [],
         completedQuests: Set<String> = [],
-        pendingLawProposal: LawProposal? = nil
+        pendingLawProposal: LawProposal? = nil,
+        records: [WorldRecord] = []
     ) {
         self.schemaVersion = schemaVersion
         self.tick = tick
@@ -163,6 +166,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         self.activeQuests = activeQuests
         self.completedQuests = completedQuests
         self.pendingLawProposal = pendingLawProposal
+        self.records = records
     }
 
     /// Total population across all settlements.
@@ -183,7 +187,7 @@ public struct WorldState: Codable, Sendable, Equatable {
              researchedTechs, activeResearch, researchProgress, globalStats,
              unlockedBuildings, worldFlags, settlements, regions, tradeRoutes,
              caravans, activeExpedition, eventHistory, eventCooldowns,
-             scheduledEffects, activeQuests, completedQuests, pendingLawProposal
+             scheduledEffects, activeQuests, completedQuests, pendingLawProposal, records
     }
 
     public init(from decoder: Decoder) throws {
@@ -216,6 +220,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         activeQuests = value(.activeQuests, [])
         completedQuests = value(.completedQuests, [])
         pendingLawProposal = (try? c.decodeIfPresent(LawProposal.self, forKey: .pendingLawProposal)) ?? nil
+        records = value(.records, [])
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -243,5 +248,6 @@ public struct WorldState: Codable, Sendable, Equatable {
         try c.encode(activeQuests, forKey: .activeQuests)
         try c.encode(completedQuests, forKey: .completedQuests)
         try c.encodeIfPresent(pendingLawProposal, forKey: .pendingLawProposal)
+        try c.encode(records, forKey: .records)
     }
 }

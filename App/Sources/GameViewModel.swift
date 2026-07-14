@@ -154,6 +154,11 @@ final class GameViewModel {
         persist()
     }
 
+    /// Observations the chronicle reads out of the world's history.
+    var insights: [Insight] {
+        ChronicleEngine.insights(world, registry: registry)
+    }
+
     var objectives: [Objective] {
         ObjectivesEngine.current(world, registry: registry)
     }

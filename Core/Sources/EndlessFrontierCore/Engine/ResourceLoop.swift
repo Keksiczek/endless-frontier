@@ -103,7 +103,8 @@ public enum ResourceLoop {
         let moraleTarget = min(100, max(0, 50 + buildingMorale
                                         + ItemEngine.colonyMoraleBonus(s, registry: registry)
                                         + ColonyBonus.adjacencyMorale(s, registry: registry)
-                                        + laws.moraleFlat))
+                                        + laws.moraleFlat
+                                        + FaithEngine.moraleBonus(s, registry: registry)))
         s.stats.morale += (moraleTarget - s.stats.morale) * 0.1
 
         // 6. Defense drifts toward fortifications (buildings + artifacts).

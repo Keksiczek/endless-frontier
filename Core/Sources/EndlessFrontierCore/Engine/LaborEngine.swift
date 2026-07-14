@@ -22,6 +22,8 @@ public enum LaborEngine {
     /// Healing only becomes a staffed role once a settlement is large enough
     /// to spare the hands.
     static let healingMinPopulation = 16
+    /// A temple needs tending — but only once one stands.
+    static let priestShare = 0.04
 
     /// Puts every idle adult in the settlement to work, each filling whatever
     /// role is furthest below its quota at that moment.
@@ -48,8 +50,12 @@ public enum LaborEngine {
         var s = settlement
         let adultCountD = Double(adultCount)
 
+        // A temple in the settlement opens the priesthood as a trade.
+        let hasTemple = settlement.faith.hasTemple
+
         for index in idleIndices {
-            let best = neediestRole(counts: counts, adultCount: adultCountD, population: adultCount)
+            let best = neediestRole(counts: counts, adultCount: adultCountD,
+                                    population: adultCount, hasTemple: hasTemple)
             s.pawns[index].assignedWork = best
             counts[best, default: 0] += 1
         }
@@ -57,10 +63,15 @@ public enum LaborEngine {
     }
 
     /// The role furthest below its quota right now.
-    static func neediestRole(counts: [WorkKind: Int], adultCount: Double, population: Int) -> WorkKind {
+    static func neediestRole(
+        counts: [WorkKind: Int], adultCount: Double, population: Int, hasTemple: Bool = false
+    ) -> WorkKind {
+        var table = quotas
+        if hasTemple { table.append((.priest, priestShare)) }
+
         var best: WorkKind = .farming
         var bestDeficit = -Double.infinity
-        for (work, share) in quotas {
+        for (work, share) in table {
             if work == .healing, population < healingMinPopulation { continue }
             let current = Double(counts[work, default: 0]) / adultCount
             let deficit = share - current

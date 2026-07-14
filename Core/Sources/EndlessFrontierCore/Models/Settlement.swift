@@ -104,6 +104,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public var society: SocietyStats
     /// Ticks left of a strike — gatherers have downed tools.
     public var strikeTicksRemaining: Int
+    /// The settlement's faith: its cult, its devotion, its prophets.
+    public var faith: FaithState
 
     public init(
         id: UUID = UUID(),
@@ -124,7 +126,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         laws: [LawInstance] = [],
         leaderID: UUID? = nil,
         society: SocietyStats = SocietyStats(),
-        strikeTicksRemaining: Int = 0
+        strikeTicksRemaining: Int = 0,
+        faith: FaithState = FaithState()
     ) {
         self.id = id
         self.name = name
@@ -145,6 +148,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.leaderID = leaderID
         self.society = society
         self.strikeTicksRemaining = strikeTicksRemaining
+        self.faith = faith
     }
 
     // MARK: - Codable (resilient to pre-specialisation saves)
@@ -152,7 +156,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case id, name, kind, regionID, foundedTick, pawns, deathTallies
         case buildings, storage, storageCapacity, stats, inventory, specialization, colony, localMap
-        case laws, leaderID, society, strikeTicksRemaining
+        case laws, leaderID, society, strikeTicksRemaining, faith
     }
 
     public init(from decoder: Decoder) throws {
@@ -180,5 +184,6 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         leaderID = try c.decodeIfPresent(UUID.self, forKey: .leaderID)
         society = try c.decodeIfPresent(SocietyStats.self, forKey: .society) ?? SocietyStats()
         strikeTicksRemaining = try c.decodeIfPresent(Int.self, forKey: .strikeTicksRemaining) ?? 0
+        faith = try c.decodeIfPresent(FaithState.self, forKey: .faith) ?? FaithState()
     }
 }
