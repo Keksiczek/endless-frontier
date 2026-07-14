@@ -119,6 +119,12 @@ struct ColonistsPanel: View {
         case .mining: return "mountain.2.fill"
         case .research: return "book.fill"
         case .trade: return "bag.fill"
+        case .foraging: return "camera.macro"
+        case .hunting: return "hare.fill"
+        case .healing: return "cross.case.fill"
+        case .building: return "hammer.fill"
+        case .scouting: return "binoculars.fill"
+        case .priest: return "sparkles"
         case .idle: return "moon.zzz.fill"
         }
     }

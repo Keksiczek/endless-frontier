@@ -134,6 +134,15 @@ final class GameViewModel {
         EraEngine.progressToNextEra(world, registry: registry)
     }
 
+    /// The current in-game season and year, for the living-world chrome.
+    var season: Season { world.season(registry.config) }
+    var year: Int { world.year(registry.config) }
+
+    /// The living outdoor map of the settlement currently in view.
+    var viewedLocalMap: LocalMap? { selectedSettlement?.localMap }
+
+    var ticksPerYear: Int { registry.config.ticksPerYear }
+
     var objectives: [Objective] {
         ObjectivesEngine.current(world, registry: registry)
     }
