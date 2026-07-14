@@ -7,6 +7,7 @@ import EndlessFrontierCore
 struct SettlementCanvasView: View {
     let settlement: Settlement
     let map: LocalMap
+    let registry: GameDataRegistry
     let season: Season
     @Binding var selectedPawnID: UUID?
 
@@ -20,7 +21,8 @@ struct SettlementCanvasView: View {
                 Canvas { context, size in
                     SettlementRenderer.draw(
                         &context, size: size, settlement: settlement, map: map,
-                        time: t, season: season, selectedPawnID: selectedPawnID)
+                        registry: registry, time: t, season: season,
+                        selectedPawnID: selectedPawnID)
                 }
             }
             .background(Theme.ink)

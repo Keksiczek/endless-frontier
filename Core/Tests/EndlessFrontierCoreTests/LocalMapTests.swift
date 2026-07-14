@@ -51,25 +51,33 @@ struct LocalMapTests {
         #expect(map.exploredFraction > 0 && map.exploredFraction < 1)
     }
 
-    @Test("Revealing around a point uncovers cells and discovers POIs there")
+    @Test("Revealing around a point uncovers cells and discovers a hidden POI")
     func revealDiscoversPOIs() {
         var map = LocalMapGenerator.generate(mapSeed: 7, regionID: region, biome: nil)
-        let poi = map.pois[0]
-        #expect(!poi.discovered)
-        map.reveal(around: poi.position, radius: 0.15)
-        #expect(map.isExplored(poi.position))
-        #expect(map.pois[0].discovered)
+        // POIs near the centre are already revealed at founding; take one that
+        // still lies out in the fog.
+        guard let index = map.pois.firstIndex(where: { !$0.discovered }) else {
+            Issue.record("expected at least one undiscovered POI")
+            return
+        }
+        let position = map.pois[index].position
+        #expect(!map.isExplored(position))
+        map.reveal(around: position, radius: 0.15)
+        #expect(map.isExplored(position))
+        #expect(map.pois[index].discovered)
     }
 
-    @Test("Biome resource affinity adds deposits")
-    func biomeAffinity() {
-        let plains = BiomeDefinition(id: "plains", name: "Plains",
-                                     resourceAffinity: Resources([.food: 1]))
-        let neutral = LocalMapGenerator.generate(mapSeed: 5, regionID: region, biome: nil)
+    @Test("The biome decides what deposits the land offers")
+    func biomeShapesDeposits() {
+        let mountains = BiomeDefinition(id: "mountains", name: "Mountains")
+        let plains = BiomeDefinition(id: "plains", name: "Plains")
+        let rocky = LocalMapGenerator.generate(mapSeed: 5, regionID: region, biome: mountains)
         let fertile = LocalMapGenerator.generate(mapSeed: 5, regionID: region, biome: plains)
-        let neutralFields = neutral.nodes.filter { $0.kind == .field }.count
-        let fertileFields = fertile.nodes.filter { $0.kind == .field }.count
-        #expect(fertileFields == neutralFields + 1)
+
+        #expect(rocky.nodes.filter { $0.kind == .stone }.count
+                > fertile.nodes.filter { $0.kind == .stone }.count)
+        #expect(fertile.nodes.filter { $0.kind == .field }.count
+                > rocky.nodes.filter { $0.kind == .field }.count)
     }
 
     @Test("A new game's capital comes with a generated local map")

@@ -132,25 +132,43 @@ public struct LocalMap: Codable, Sendable, Equatable {
     public var wildlife: WildlifeState
     /// Indices (`row * gridColumns + column`) of revealed fog cells.
     public var exploredCells: Set<Int>
+    /// The biome this settlement sits in — drives ground cover and scenery.
+    public var biomeID: String
+    /// Seed for the ground-cover tiling (see `LocalTerrain`). Tiles are computed
+    /// on demand rather than stored, so saves stay small.
+    public var terrainSeed: UInt64
+    /// Decorative landscape features, placed by the seed.
+    public var scenery: [SceneryProp]
+
+    /// The ground cover of a grid cell, derived from the seed and the biome.
+    public func cover(column: Int, row: Int) -> GroundCover {
+        LocalTerrain.cover(terrainSeed: terrainSeed, biomeID: biomeID, column: column, row: row)
+    }
 
     public init(
         river: RiverShape,
         nodes: [ResourceNode],
         pois: [LocalPOI],
         wildlife: WildlifeState = WildlifeState(),
-        exploredCells: Set<Int> = []
+        exploredCells: Set<Int> = [],
+        biomeID: String = "plains",
+        terrainSeed: UInt64 = 0,
+        scenery: [SceneryProp] = []
     ) {
         self.river = river
         self.nodes = nodes
         self.pois = pois
         self.wildlife = wildlife
         self.exploredCells = exploredCells
+        self.biomeID = biomeID
+        self.terrainSeed = terrainSeed
+        self.scenery = scenery
     }
 
-    // MARK: - Codable (resilient: wildlife was added after the first cut)
+    // MARK: - Codable (resilient: fields were added incrementally)
 
     private enum CodingKeys: String, CodingKey {
-        case river, nodes, pois, wildlife, exploredCells
+        case river, nodes, pois, wildlife, exploredCells, biomeID, terrainSeed, scenery
     }
 
     public init(from decoder: Decoder) throws {
@@ -160,6 +178,9 @@ public struct LocalMap: Codable, Sendable, Equatable {
         pois = try c.decode([LocalPOI].self, forKey: .pois)
         wildlife = try c.decodeIfPresent(WildlifeState.self, forKey: .wildlife) ?? WildlifeState()
         exploredCells = try c.decodeIfPresent(Set<Int>.self, forKey: .exploredCells) ?? []
+        biomeID = try c.decodeIfPresent(String.self, forKey: .biomeID) ?? "plains"
+        terrainSeed = try c.decodeIfPresent(UInt64.self, forKey: .terrainSeed) ?? 0
+        scenery = try c.decodeIfPresent([SceneryProp].self, forKey: .scenery) ?? []
     }
 
     /// Fraction of the map revealed (0…1).

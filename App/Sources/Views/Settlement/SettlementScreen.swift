@@ -35,8 +35,8 @@ struct SettlementScreen: View {
         ZStack {
             if let map = game.viewedLocalMap, let settlement = game.selectedSettlement {
                 SettlementCanvasView(
-                    settlement: settlement, map: map, season: game.season,
-                    selectedPawnID: $selectedPawnID)
+                    settlement: settlement, map: map, registry: game.registry,
+                    season: game.season, selectedPawnID: $selectedPawnID)
                 .overlay(alignment: .topTrailing) {
                     MinimapView(map: map).padding(12)
                 }

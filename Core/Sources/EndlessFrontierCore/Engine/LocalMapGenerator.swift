@@ -3,37 +3,36 @@ import Foundation
 /// Deterministically builds a settlement's `LocalMap` from `(mapSeed, regionID)`
 /// and its biome, honouring the rule `content = f(mapSeed, coord)`: the same
 /// world always grows the same wilderness around the same settlement.
+///
+/// The biome decides the character of the place — how many fields and forests,
+/// what scenery stands on the ground, whether a river runs through it — so a
+/// mountain outpost and a coastal town read as genuinely different country.
 public enum LocalMapGenerator {
-    /// How many deposits of each kind a temperate map gets before biome affinity
-    /// nudges the counts.
-    static let baseFieldCount = 3
-    static let baseForestCount = 3
-    static let baseStoneCount = 2
-    static let baseHerbCount = 2
-
     public static func generate(
         mapSeed: UInt64,
         regionID: UUID,
         biome: BiomeDefinition?
     ) -> LocalMap {
         var rng = SeededRNG(seed: seed(mapSeed: mapSeed, regionID: regionID))
+        let biomeID = biome?.id ?? "plains"
 
-        // River: near the top or bottom edge, gently waving.
+        // A river crosses most country, but not the driest: a desert map gets a
+        // dry wash pushed to the very edge instead.
+        let riverBase: Double
+        if biomeID == "desert" {
+            riverBase = rng.nextUnit() < 0.5 ? 0.06 : 0.94
+        } else {
+            riverBase = rng.nextUnit() < 0.5 ? 0.16 : 0.82
+        }
         let river = RiverShape(
-            baseY: rng.nextUnit() < 0.5 ? 0.16 : 0.82,
-            amplitude: 0.03 + rng.nextUnit() * 0.05,
+            baseY: riverBase,
+            amplitude: 0.025 + rng.nextUnit() * 0.06,
             phase: rng.nextUnit() * 6.283185
         )
 
-        // Biome affinity scales deposit counts and richness a little.
-        let affinity = biome?.resourceAffinity ?? Resources()
-        func bonus(_ resource: ResourceType) -> Int {
-            affinity[resource] >= 1 ? 1 : 0
-        }
-
         var nodeID = 0
         func makeNodes(_ kind: LocalResourceKind, count: Int) -> [ResourceNode] {
-            (0..<count).map { _ in
+            (0..<max(0, count)).map { _ in
                 let position = landPoint(river: river, rng: &rng)
                 let capacity = 160 + rng.nextUnit() * 120   // 160…280
                 defer { nodeID += 1 }
@@ -42,44 +41,98 @@ public enum LocalMapGenerator {
             }
         }
 
+        // Biome shapes what the land actually offers.
+        let mix = depositMix(for: biomeID)
         var nodes: [ResourceNode] = []
-        nodes += makeNodes(.field, count: baseFieldCount + bonus(.food))
-        nodes += makeNodes(.forest, count: baseForestCount + bonus(.materials))
-        nodes += makeNodes(.stone, count: baseStoneCount + bonus(.materials))
-        nodes += makeNodes(.herbs, count: baseHerbCount + bonus(.knowledge))
+        nodes += makeNodes(.field, count: mix.fields)
+        nodes += makeNodes(.forest, count: mix.forests)
+        nodes += makeNodes(.stone, count: mix.stone)
+        nodes += makeNodes(.herbs, count: mix.herbs)
 
-        // Points of interest: a fixed cast, scattered farther out.
+        // Points of interest: a fixed cast, scattered across the map.
         let poiKinds: [LocalPOIKind] = [.ruins, .cave, .spring, .treasure]
         let pois = poiKinds.enumerated().map { index, kind in
             LocalPOI(id: index, kind: kind, position: landPoint(river: river, rng: &rng))
         }
 
-        // A starting herd and mild predator pressure, jittered by seed.
-        let capacity = 70 + rng.nextUnit() * 40   // 70…110
+        // Scenery: the landscape's furniture, biome-appropriate and seeded.
+        let (kinds, count) = LocalTerrain.sceneryMix(for: biomeID)
+        let scenery = (0..<count).map { index -> SceneryProp in
+            let kind = LocalTerrain.weighted(kinds, rng.nextUnit())
+            // Reeds and ponds belong by the water; everything else keeps its feet dry.
+            let wetLoving = (kind == .reeds || kind == .pond)
+            let position = wetLoving
+                ? riversidePoint(river: river, rng: &rng)
+                : landPoint(river: river, rng: &rng)
+            return SceneryProp(id: index, kind: kind, position: position,
+                               scale: 0.7 + rng.nextUnit() * 0.6)
+        }
+
+        // A herd sized by how much the land can feed.
+        let capacity = herdCapacity(for: biomeID, rng: &rng)
         let wildlife = WildlifeState(
             deerHerd: capacity * (0.4 + rng.nextUnit() * 0.3),
             deerCapacity: capacity,
             predatorPressure: 8 + rng.nextUnit() * 8
         )
 
-        var map = LocalMap(river: river, nodes: nodes, pois: pois, wildlife: wildlife)
+        var map = LocalMap(
+            river: river, nodes: nodes, pois: pois, wildlife: wildlife,
+            biomeID: biomeID,
+            terrainSeed: seed(mapSeed: mapSeed, regionID: regionID) ^ 0x7E_44_A1_04_5E_ED,
+            scenery: scenery)
         // The settlement sits at the centre; its surroundings start revealed.
         map.reveal(around: LocalPoint(x: 0.5, y: 0.5), radius: 0.28)
         return map
     }
 
+    /// How many deposits of each kind a biome yields.
+    static func depositMix(for biomeID: String) -> (fields: Int, forests: Int, stone: Int, herbs: Int) {
+        switch biomeID {
+        case "forest":    return (2, 6, 2, 3)
+        case "desert":    return (1, 1, 4, 1)
+        case "tundra":    return (1, 2, 3, 2)
+        case "mountains": return (1, 2, 6, 1)
+        case "coast":     return (3, 2, 2, 3)
+        default:          return (4, 3, 2, 2)   // plains & homeland
+        }
+    }
+
+    /// The land's carrying capacity for game.
+    static func herdCapacity(for biomeID: String, rng: inout SeededRNG) -> Double {
+        let base: Double
+        switch biomeID {
+        case "forest":    base = 110
+        case "plains":    base = 95
+        case "coast":     base = 80
+        case "tundra":    base = 55
+        case "mountains": base = 50
+        case "desert":    base = 35
+        default:          base = 90
+        }
+        return base * (0.85 + rng.nextUnit() * 0.3)
+    }
+
     /// A point on dry land (away from the river), biased toward the interior.
     private static func landPoint(river: RiverShape, rng: inout SeededRNG) -> LocalPoint {
         for _ in 0..<24 {
-            let x = 0.08 + rng.nextUnit() * 0.84
-            let y = 0.08 + rng.nextUnit() * 0.84
-            if abs(y - river.y(atX: x)) > 0.1 {
+            let x = 0.06 + rng.nextUnit() * 0.88
+            let y = 0.06 + rng.nextUnit() * 0.88
+            if abs(y - river.y(atX: x)) > 0.09 {
                 return LocalPoint(x: x, y: y)
             }
         }
-        // Fallback: opposite half from the river.
         let y = river.baseY < 0.5 ? 0.7 : 0.3
         return LocalPoint(x: 0.2 + rng.nextUnit() * 0.6, y: y)
+    }
+
+    /// A point hugging the riverbank — where reeds grow and ponds gather.
+    private static func riversidePoint(river: RiverShape, rng: inout SeededRNG) -> LocalPoint {
+        let x = 0.06 + rng.nextUnit() * 0.88
+        let side: Double = rng.nextUnit() < 0.5 ? -1 : 1
+        let offset = (0.03 + rng.nextUnit() * 0.05) * side
+        let y = min(0.96, max(0.04, river.y(atX: x) + offset))
+        return LocalPoint(x: x, y: y)
     }
 
     static func seed(mapSeed: UInt64, regionID: UUID) -> UInt64 {
