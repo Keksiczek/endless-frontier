@@ -15,6 +15,9 @@ final class GameViewModel {
     let registry: GameDataRegistry
     private let store: WorldStore
 
+    /// A running record of what each session did — for playtesting feedback.
+    let diagnostics = Diagnostics()
+
     init(registry: GameDataRegistry, store: WorldStore = WorldStore(url: WorldStore.defaultURL())) {
         self.registry = registry
         self.store = store
@@ -59,7 +62,7 @@ final class GameViewModel {
             since: snapshot.lastRealTimestamp, until: now, config: registry.config)
         // A short absence is cheap; don't pay for a thread hop.
         if ticks <= shortCatchUpTicks {
-            apply(GameEngine.openSession(snapshot, now: now, registry: registry))
+            apply(GameEngine.openSession(snapshot, now: now, registry: registry), before: snapshot)
             return
         }
 
@@ -68,20 +71,33 @@ final class GameViewModel {
             GameEngine.openSession(snapshot, now: now, registry: registry)
         }.value
         isCatchingUp = false
-        apply(result)
+        apply(result, before: snapshot)
     }
 
     /// Ticks we're happy to simulate inline rather than hopping off the actor.
     private let shortCatchUpTicks = 120
 
-    private func apply(_ result: PlannerResult) {
+    private func apply(_ result: PlannerResult, before: WorldState) {
         world = result.state
         lastSessionEvents = result.fired
+        diagnostics.recordSession(before: before, after: result.state,
+                                  fired: result.fired, registry: registry)
         persist()
     }
 
     func dismissSessionSummary() {
         lastSessionEvents = []
+    }
+
+    /// Diagnostics helper: fast-forward the world by `ticks` and record what
+    /// happened, so events (migrations, disasters…) can be reproduced without
+    /// waiting real time. Runs inline — intended for small jumps.
+    func debugAdvance(ticks: Int) {
+        let before = world
+        let result = TickEngine.advance(world, ticks: ticks, registry: registry)
+        var stamped = result.state
+        stamped.lastRealTimestamp = world.lastRealTimestamp   // don't skew real-time catch-up
+        apply(PlannerResult(state: stamped, fired: result.fired), before: before)
     }
 
     // MARK: - Player actions

@@ -6,6 +6,7 @@ import EndlessFrontierCore
 /// stores at a glance.
 struct StatusStrip: View {
     @Bindable var game: GameViewModel
+    @State private var showDiagnostics = false
 
     var body: some View {
         VStack(spacing: 10) {
@@ -19,9 +20,21 @@ struct StatusStrip: View {
                         .foregroundStyle(Theme.textDim)
                 }
                 Spacer()
+                Button {
+                    showDiagnostics = true
+                } label: {
+                    Image(systemName: "stethoscope")
+                        .font(.callout)
+                        .foregroundStyle(Theme.textDim)
+                }
+                .accessibilityLabel(AppStrings.language == .cs ? "Diagnostika" : "Diagnostics")
                 tensionPip
             }
             resourcePills
+        }
+        .sheet(isPresented: $showDiagnostics) {
+            DiagnosticsView(game: game)
+                .presentationBackground(Theme.surface)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
