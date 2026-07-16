@@ -30,11 +30,18 @@ public enum StoryPlanner {
         let eligible = registry.events.filter { isEligible($0, in: s) }
 
         // --- Major event slot ---
-        let majorTypes: Set<EventType> = tension > 40
-            ? [.disaster, .threat, .opportunity]
-            : [.opportunity, .quest]
-        let majorCandidates = eligible.filter { majorTypes.contains($0.type) }
+        //
+        // Every major kind is always in the pool; how likely each is to be
+        // *picked* is the tension band's job (`disasterWeight` runs 0.5 when
+        // calm to 3.0 when dire). This used to be a hard gate — below tension
+        // 40 the pool was opportunities only — which, since tension never in
+        // practice reached 40, meant no disaster or threat template could ever
+        // fire. Half the event book was unreachable. The band already expresses
+        // "calm ⇒ disasters are rare"; a wall on top of it only made them
+        // impossible.
+        let majorCandidates = eligible.filter { $0.type != .flavor }
         for _ in 0..<config.maxMajorEventsPerCycle {
+            guard rng.nextUnit() < majorChance(tension: tension, config: config) else { break }
             guard let picked = pick(from: majorCandidates, band: band, excluding: firedIDs(fired), rng: &rng) else { break }
             s = fire(picked, in: s, registry: registry, fired: &fired)
         }
@@ -42,6 +49,7 @@ public enum StoryPlanner {
         // --- Minor flavor slot(s) ---
         let flavorCandidates = eligible.filter { $0.type == .flavor }
         for _ in 0..<config.maxMinorEventsPerCycle {
+            guard rng.nextUnit() < config.minorEventChance else { break }
             guard let picked = pick(from: flavorCandidates, band: band, excluding: firedIDs(fired), rng: &rng) else { break }
             s = fire(picked, in: s, registry: registry, fired: &fired)
         }
@@ -62,6 +70,18 @@ public enum StoryPlanner {
     }
 
     // MARK: - Selection
+
+    /// How likely a major event is this cycle, rising with tension.
+    ///
+    /// The planner used to fire its full quota *every* cycle whenever any
+    /// candidate was off cooldown — there was no "nothing happens" outcome at
+    /// all, which is why 1,418 ticks produced over a hundred events and the
+    /// same few flavour templates repeated forever. Quiet is now the default,
+    /// and a colony in trouble is what makes the storyteller speak up.
+    static func majorChance(tension: Double, config: WorldConfig) -> Double {
+        let t = min(max(tension, 0), 100) / 100
+        return min(1, config.majorEventChance + t * config.majorEventTensionBoost)
+    }
 
     static func tensionBand(for tension: Double, config: WorldConfig) -> TensionBand {
         config.tensionBands.first { tension <= $0.maxTension } ?? config.tensionBands.last ?? TensionBand(

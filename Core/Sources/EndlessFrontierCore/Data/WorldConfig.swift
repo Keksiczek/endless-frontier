@@ -33,12 +33,22 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     // Tension coefficients
     public var threatMultiplier: Double
     public var prosperityDampener: Double
+    /// The prosperity a colony is "meant" to sit at. Prosperity is measured as
+    /// a departure from here, so wealth soothes and misery bites — rather than
+    /// a healthy colony's standing prosperity zeroing tension outright.
+    public var prosperityNeutral: Double
     public var disasterSpikeDecayTicks: Int
     public var disasterSpikePerEvent: Double
     public var boomDampenerTicks: Int
     public var boomDampenerPerEvent: Double
     public var deficitSpikePerResource: Double
     public var eraRampPerEra: Double
+    /// Population at which scale pressure starts (a hamlet attracts nobody).
+    public var scalePressureBasePopulation: Double
+    /// Tension added per doubling of population beyond the base.
+    public var scalePressurePerDoubling: Double
+    /// Ceiling on scale pressure, so a megacity is dangerous, not doomed.
+    public var scalePressureCap: Double
 
     // Resources
     public var foodPerPersonPerTick: Double
@@ -52,6 +62,13 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     // Events
     public var maxMajorEventsPerCycle: Int
     public var maxMinorEventsPerCycle: Int
+    /// Chance per cycle that a major event fires at zero tension.
+    public var majorEventChance: Double
+    /// Added to `majorEventChance` at maximum tension — drama clusters when
+    /// things are already going wrong.
+    public var majorEventTensionBoost: Double
+    /// Chance per cycle that a flavour event fires.
+    public var minorEventChance: Double
     public var tensionBands: [TensionBand]
 
     // Exploration & expansion
@@ -66,25 +83,32 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     public static let `default` = WorldConfig(
         realSecondsPerTick: 60,
         maxOfflineTicks: 43_200,
-        plannerInterval: 10,
+        plannerInterval: 30,
         ticksPerYear: 60,
         seasonFoodYield: [1.0, 1.5, 0.8, 0.3],
         seasonMaterialsYield: [1.0, 1.2, 0.9, 0.7],
         threatMultiplier: 0.4,
         prosperityDampener: 0.2,
+        prosperityNeutral: 50,
         disasterSpikeDecayTicks: 30,
         disasterSpikePerEvent: 8,
         boomDampenerTicks: 20,
         boomDampenerPerEvent: 3,
         deficitSpikePerResource: 8,
         eraRampPerEra: 5,
+        scalePressureBasePopulation: 30,
+        scalePressurePerDoubling: 4,
+        scalePressureCap: 25,
         foodPerPersonPerTick: 0.1,
         defaultStorageCapacity: 500,
         collapseThreshold: 10,
         warningThreshold: 20,
         mercyEventThreshold: 10,
         maxMajorEventsPerCycle: 1,
-        maxMinorEventsPerCycle: 3,
+        maxMinorEventsPerCycle: 1,
+        majorEventChance: 0.08,
+        majorEventTensionBoost: 0.25,
+        minorEventChance: 0.05,
         tensionBands: [
             TensionBand(maxTension: 30, disasterWeight: 0.5, opportunityWeight: 1.5, flavorWeight: 2.0),
             TensionBand(maxTension: 60, disasterWeight: 1.0, opportunityWeight: 1.0, flavorWeight: 1.0),
@@ -109,12 +133,16 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         seasonMaterialsYield: [Double],
         threatMultiplier: Double,
         prosperityDampener: Double,
+        prosperityNeutral: Double = 50,
         disasterSpikeDecayTicks: Int,
         disasterSpikePerEvent: Double,
         boomDampenerTicks: Int,
         boomDampenerPerEvent: Double,
         deficitSpikePerResource: Double,
         eraRampPerEra: Double,
+        scalePressureBasePopulation: Double = 30,
+        scalePressurePerDoubling: Double = 4,
+        scalePressureCap: Double = 25,
         foodPerPersonPerTick: Double,
         defaultStorageCapacity: Double,
         collapseThreshold: Double,
@@ -122,6 +150,9 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         mercyEventThreshold: Double,
         maxMajorEventsPerCycle: Int,
         maxMinorEventsPerCycle: Int,
+        majorEventChance: Double = 0.08,
+        majorEventTensionBoost: Double = 0.25,
+        minorEventChance: Double = 0.05,
         tensionBands: [TensionBand],
         baseExpeditionTicks: Int,
         ticksPerHazard: Int,
@@ -139,12 +170,16 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         self.seasonMaterialsYield = seasonMaterialsYield
         self.threatMultiplier = threatMultiplier
         self.prosperityDampener = prosperityDampener
+        self.prosperityNeutral = prosperityNeutral
         self.disasterSpikeDecayTicks = disasterSpikeDecayTicks
         self.disasterSpikePerEvent = disasterSpikePerEvent
         self.boomDampenerTicks = boomDampenerTicks
         self.boomDampenerPerEvent = boomDampenerPerEvent
         self.deficitSpikePerResource = deficitSpikePerResource
         self.eraRampPerEra = eraRampPerEra
+        self.scalePressureBasePopulation = scalePressureBasePopulation
+        self.scalePressurePerDoubling = scalePressurePerDoubling
+        self.scalePressureCap = scalePressureCap
         self.foodPerPersonPerTick = foodPerPersonPerTick
         self.defaultStorageCapacity = defaultStorageCapacity
         self.collapseThreshold = collapseThreshold
@@ -152,6 +187,9 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         self.mercyEventThreshold = mercyEventThreshold
         self.maxMajorEventsPerCycle = maxMajorEventsPerCycle
         self.maxMinorEventsPerCycle = maxMinorEventsPerCycle
+        self.majorEventChance = majorEventChance
+        self.majorEventTensionBoost = majorEventTensionBoost
+        self.minorEventChance = minorEventChance
         self.tensionBands = tensionBands
         self.baseExpeditionTicks = baseExpeditionTicks
         self.ticksPerHazard = ticksPerHazard
@@ -193,9 +231,10 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         case ticksPerYear, seasonFoodYield, seasonMaterialsYield
     }
     private enum TensionKeys: String, CodingKey {
-        case threatMultiplier, prosperityDampener, disasterSpikeDecayTicks,
-             disasterSpikePerEvent, boomDampenerTicks, boomDampenerPerEvent,
-             deficitSpikePerResource, eraRampPerEra
+        case threatMultiplier, prosperityDampener, prosperityNeutral,
+             disasterSpikeDecayTicks, disasterSpikePerEvent, boomDampenerTicks,
+             boomDampenerPerEvent, deficitSpikePerResource, eraRampPerEra,
+             scalePressureBasePopulation, scalePressurePerDoubling, scalePressureCap
     }
     private enum ResourceKeys: String, CodingKey {
         case foodPerPersonPerTick, defaultStorageCapacity
@@ -204,7 +243,8 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         case collapseThreshold, warningThreshold, mercyEventThreshold
     }
     private enum EventKeys: String, CodingKey {
-        case maxMajorEventsPerCycle, maxMinorEventsPerCycle, tensionBands
+        case maxMajorEventsPerCycle, maxMinorEventsPerCycle, majorEventChance,
+             majorEventTensionBoost, minorEventChance, tensionBands
     }
 
     public init(from decoder: Decoder) throws {
@@ -224,12 +264,16 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         let tension = try? c.nestedContainer(keyedBy: TensionKeys.self, forKey: .tension)
         threatMultiplier = (try? tension?.decodeIfPresent(Double.self, forKey: .threatMultiplier)) ?? d.threatMultiplier
         prosperityDampener = (try? tension?.decodeIfPresent(Double.self, forKey: .prosperityDampener)) ?? d.prosperityDampener
+        prosperityNeutral = (try? tension?.decodeIfPresent(Double.self, forKey: .prosperityNeutral)) ?? d.prosperityNeutral
         disasterSpikeDecayTicks = (try? tension?.decodeIfPresent(Int.self, forKey: .disasterSpikeDecayTicks)) ?? d.disasterSpikeDecayTicks
         disasterSpikePerEvent = (try? tension?.decodeIfPresent(Double.self, forKey: .disasterSpikePerEvent)) ?? d.disasterSpikePerEvent
         boomDampenerTicks = (try? tension?.decodeIfPresent(Int.self, forKey: .boomDampenerTicks)) ?? d.boomDampenerTicks
         boomDampenerPerEvent = (try? tension?.decodeIfPresent(Double.self, forKey: .boomDampenerPerEvent)) ?? d.boomDampenerPerEvent
         deficitSpikePerResource = (try? tension?.decodeIfPresent(Double.self, forKey: .deficitSpikePerResource)) ?? d.deficitSpikePerResource
         eraRampPerEra = (try? tension?.decodeIfPresent(Double.self, forKey: .eraRampPerEra)) ?? d.eraRampPerEra
+        scalePressureBasePopulation = (try? tension?.decodeIfPresent(Double.self, forKey: .scalePressureBasePopulation)) ?? d.scalePressureBasePopulation
+        scalePressurePerDoubling = (try? tension?.decodeIfPresent(Double.self, forKey: .scalePressurePerDoubling)) ?? d.scalePressurePerDoubling
+        scalePressureCap = (try? tension?.decodeIfPresent(Double.self, forKey: .scalePressureCap)) ?? d.scalePressureCap
 
         let res = try? c.nestedContainer(keyedBy: ResourceKeys.self, forKey: .resources)
         foodPerPersonPerTick = (try? res?.decodeIfPresent(Double.self, forKey: .foodPerPersonPerTick)) ?? d.foodPerPersonPerTick
@@ -243,6 +287,9 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         let ev = try? c.nestedContainer(keyedBy: EventKeys.self, forKey: .events)
         maxMajorEventsPerCycle = (try? ev?.decodeIfPresent(Int.self, forKey: .maxMajorEventsPerCycle)) ?? d.maxMajorEventsPerCycle
         maxMinorEventsPerCycle = (try? ev?.decodeIfPresent(Int.self, forKey: .maxMinorEventsPerCycle)) ?? d.maxMinorEventsPerCycle
+        majorEventChance = (try? ev?.decodeIfPresent(Double.self, forKey: .majorEventChance)) ?? d.majorEventChance
+        majorEventTensionBoost = (try? ev?.decodeIfPresent(Double.self, forKey: .majorEventTensionBoost)) ?? d.majorEventTensionBoost
+        minorEventChance = (try? ev?.decodeIfPresent(Double.self, forKey: .minorEventChance)) ?? d.minorEventChance
         tensionBands = (try? ev?.decodeIfPresent([TensionBand].self, forKey: .tensionBands)) ?? d.tensionBands
 
         let exp = try? c.nestedContainer(keyedBy: ExplorationKeys.self, forKey: .exploration)
@@ -271,12 +318,16 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         var tension = c.nestedContainer(keyedBy: TensionKeys.self, forKey: .tension)
         try tension.encode(threatMultiplier, forKey: .threatMultiplier)
         try tension.encode(prosperityDampener, forKey: .prosperityDampener)
+        try tension.encode(prosperityNeutral, forKey: .prosperityNeutral)
         try tension.encode(disasterSpikeDecayTicks, forKey: .disasterSpikeDecayTicks)
         try tension.encode(disasterSpikePerEvent, forKey: .disasterSpikePerEvent)
         try tension.encode(boomDampenerTicks, forKey: .boomDampenerTicks)
         try tension.encode(boomDampenerPerEvent, forKey: .boomDampenerPerEvent)
         try tension.encode(deficitSpikePerResource, forKey: .deficitSpikePerResource)
         try tension.encode(eraRampPerEra, forKey: .eraRampPerEra)
+        try tension.encode(scalePressureBasePopulation, forKey: .scalePressureBasePopulation)
+        try tension.encode(scalePressurePerDoubling, forKey: .scalePressurePerDoubling)
+        try tension.encode(scalePressureCap, forKey: .scalePressureCap)
 
         var res = c.nestedContainer(keyedBy: ResourceKeys.self, forKey: .resources)
         try res.encode(foodPerPersonPerTick, forKey: .foodPerPersonPerTick)
@@ -290,6 +341,9 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         var ev = c.nestedContainer(keyedBy: EventKeys.self, forKey: .events)
         try ev.encode(maxMajorEventsPerCycle, forKey: .maxMajorEventsPerCycle)
         try ev.encode(maxMinorEventsPerCycle, forKey: .maxMinorEventsPerCycle)
+        try ev.encode(majorEventChance, forKey: .majorEventChance)
+        try ev.encode(majorEventTensionBoost, forKey: .majorEventTensionBoost)
+        try ev.encode(minorEventChance, forKey: .minorEventChance)
         try ev.encode(tensionBands, forKey: .tensionBands)
 
         var exp = c.nestedContainer(keyedBy: ExplorationKeys.self, forKey: .exploration)

@@ -9,20 +9,48 @@ public enum TensionCalculator {
         let stats = state.globalStats
 
         let threat = stats.threatLevel * config.threatMultiplier
-        let prosperity = stats.prosperity * config.prosperityDampener
+        let comfort = comfort(prosperity: stats.prosperity, config: config)
         let disasterSpike = disasterSpike(state, config: config)
         let boomDampener = boomDampener(state, config: config)
         let deficitSpike = Double(depletedResourceCount(state)) * config.deficitSpikePerResource
         let eraRamp = Double(state.era.index) * config.eraRampPerEra
+        let scale = scalePressure(population: state.totalPopulation, config: config)
 
         let raw = baseTension
             + threat
-            - prosperity
+            - comfort
             + disasterSpike
             - boomDampener
             + deficitSpike
             + eraRamp
+            + scale
         return min(max(raw, 0), 100)
+    }
+
+    /// How much the colony's prosperity soothes (or, below neutral, sharpens)
+    /// tension — measured as a *departure from a neutral midpoint*.
+    ///
+    /// Prosperity chases average morale, so a healthy colony sits near 80
+    /// permanently. Taken as an absolute (`prosperity × 0.2 ≈ 16`) it dwarfed
+    /// base + threat (≈ 14) and clamped tension to exactly zero, forever: the
+    /// calm then selected the flavour-heavy band, whose events fed the boom
+    /// dampener, which drove tension lower still. Measuring against neutral
+    /// keeps prosperity a *dial* rather than an off-switch, and lets a
+    /// miserable colony read as genuinely tense.
+    static func comfort(prosperity: Double, config: WorldConfig) -> Double {
+        (prosperity - config.prosperityNeutral) * config.prosperityDampener
+    }
+
+    /// The upward pressure a growing civilisation puts on itself: a large, rich
+    /// settlement is a target and a logistical strain in a way a hamlet is not.
+    /// Doubling the population adds a fixed amount, so pressure keeps rising
+    /// across orders of magnitude without ever running away — this is what stops
+    /// a mature colony from being permanently, terminally safe.
+    static func scalePressure(population: Double, config: WorldConfig) -> Double {
+        let base = max(1, config.scalePressureBasePopulation)
+        guard population > base else { return 0 }
+        let doublings = log2(population / base)
+        return min(config.scalePressureCap, doublings * config.scalePressurePerDoubling)
     }
 
     /// Recent disasters/threats contribute decaying tension.

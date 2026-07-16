@@ -20,6 +20,17 @@ public enum ResourceLoop {
         }
     }
 
+    /// How much a settlement can stockpile (base + storage buildings), derived
+    /// the same way housing is. Capacity used to be a flat 500 for every
+    /// settlement in every era, so stores filled in the first years and stayed
+    /// pinned at the cap forever — nothing was ever scarce, and so no choice
+    /// ever cost anything. Deepening the stores is now something you build.
+    public static func storageCapacity(_ settlement: Settlement, registry: GameDataRegistry) -> Double {
+        registry.config.defaultStorageCapacity + settlement.buildings.reduce(0.0) { acc, instance in
+            acc + (registry.building(instance.definitionID)?.storage ?? 0) * Double(instance.count)
+        }
+    }
+
     public static func advanceOneTick(_ state: WorldState, registry: GameDataRegistry) -> WorldState {
         var s = state
         let config = registry.config
@@ -80,6 +91,10 @@ public enum ResourceLoop {
 
         // 2. Apply building net production to storage. Food upkeep happens in
         //    `PawnEngine` — every inhabitant is a pawn and eats real meals.
+        //    Capacity is re-derived from the standing buildings first, so a
+        //    save written before granaries granted storage simply picks up its
+        //    real capacity here rather than needing a migration.
+        s.storageCapacity = storageCapacity(s, registry: registry)
         var storage = s.storage
         for resource in ResourceType.allCases {
             storage[resource] = storage[resource] + net[resource]

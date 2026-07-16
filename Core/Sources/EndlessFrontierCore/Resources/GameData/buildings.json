@@ -120,6 +120,7 @@
     "production": { "influence": 3 },
     "consumption": { "food": 1 },
     "morale_effect": 1,
+    "storage": 150,
     "description": "Caravans and traders extend the settlement's reach."
   },
   {
@@ -175,6 +176,7 @@
     "workers": 1,
     "production": { "food": 2 },
     "morale_effect": 2,
+    "storage": 250,
     "description": "Stores grain against the lean months."
   },
   {
@@ -240,6 +242,7 @@
     "production": { "influence": 5 },
     "consumption": { "food": 1 },
     "morale_effect": 2,
+    "storage": 200,
     "adjacency": [
       { "neighbor": "trade_post", "resource": "influence", "bonus": 2 },
       { "neighbor": "bank", "resource": "influence", "bonus": 3 }
@@ -324,6 +327,7 @@
     "production": { "influence": 6, "materials": 6 },
     "consumption": { "energy": 3 },
     "morale_effect": 1,
+    "storage": 500,
     "description": "Freight rolls in and out day and night, knitting the realm together."
   },
   {
@@ -366,6 +370,7 @@
     "workers": 5,
     "production": { "energy": 30 },
     "pollution": 35,
+    "storage": 300,
     "description": "Crude becomes fuel — the lifeblood of an age of engines."
   },
   {
@@ -511,6 +516,7 @@
     "production": { "influence": 30, "knowledge": 10 },
     "consumption": { "energy": 10 },
     "morale_effect": 3,
+    "storage": 800,
     "footprint": { "w": 2, "h": 2 },
     "description": "Rockets climb the sky from here — the colony's reach leaves the ground entirely."
   },

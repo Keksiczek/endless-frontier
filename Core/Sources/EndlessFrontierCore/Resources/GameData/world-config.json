@@ -2,7 +2,7 @@
   "tick": {
     "realSecondsPerTick": 60,
     "maxOfflineTicks": 43200,
-    "plannerInterval": 10
+    "plannerInterval": 30
   },
   "calendar": {
     "ticksPerYear": 60,
@@ -12,12 +12,16 @@
   "tension": {
     "threatMultiplier": 0.4,
     "prosperityDampener": 0.2,
+    "prosperityNeutral": 50,
     "disasterSpikeDecayTicks": 30,
     "disasterSpikePerEvent": 8,
     "boomDampenerTicks": 20,
     "boomDampenerPerEvent": 3,
     "deficitSpikePerResource": 8,
-    "eraRampPerEra": 5
+    "eraRampPerEra": 5,
+    "scalePressureBasePopulation": 30,
+    "scalePressurePerDoubling": 4,
+    "scalePressureCap": 25
   },
   "resources": {
     "foodPerPersonPerTick": 0.1,
@@ -30,7 +34,10 @@
   },
   "events": {
     "maxMajorEventsPerCycle": 1,
-    "maxMinorEventsPerCycle": 3,
+    "maxMinorEventsPerCycle": 1,
+    "majorEventChance": 0.08,
+    "majorEventTensionBoost": 0.25,
+    "minorEventChance": 0.05,
     "tensionBands": [
       { "maxTension": 30, "disasterWeight": 0.5, "opportunityWeight": 1.5, "flavorWeight": 2.0 },
       { "maxTension": 60, "disasterWeight": 1.0, "opportunityWeight": 1.0, "flavorWeight": 1.0 },
