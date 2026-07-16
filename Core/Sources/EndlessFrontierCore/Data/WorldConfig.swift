@@ -58,6 +58,23 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     /// decides whether a mature colony's economy has any tension in it: too low
     /// and the stores just pin at the cap, too high and nothing can be built.
     public var upkeepRateOfCost: Double
+    /// Power drawn per colonist per tick, before the era multiplier.
+    public var energyPerPersonPerTick: Double
+    /// How electrically each era lives, indexed by `Era.index`. Zero in the
+    /// early eras, where there is no generation to be had — billing a colony
+    /// for power it cannot possibly make would only bankrupt it.
+    public var eraEnergyDemand: [Double]
+    /// Influence drawn per colonist per tick beyond `selfGoverningPopulation`.
+    public var influencePerPersonPerTick: Double
+    /// Influence drawn per tick for each settlement held.
+    public var influencePerSettlement: Double
+    /// A settlement below this size governs itself by talking, and costs no
+    /// political capital — which also keeps a young colony out of an influence
+    /// debt it has no trade post to pay off.
+    public var selfGoverningPopulation: Double
+    /// What each completion multiplies a repeatable tech's cost by, so endless
+    /// research keeps absorbing a growing colony's growing output.
+    public var repeatableTechCostGrowth: Double
 
     // Stability thresholds
     public var collapseThreshold: Double
@@ -107,6 +124,12 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         foodPerPersonPerTick: 0.1,
         defaultStorageCapacity: 500,
         upkeepRateOfCost: 0.03,
+        energyPerPersonPerTick: 0.05,
+        eraEnergyDemand: [0, 0, 0.3, 1.0, 2.0, 3.5],
+        influencePerPersonPerTick: 0.18,
+        influencePerSettlement: 3,
+        selfGoverningPopulation: 100,
+        repeatableTechCostGrowth: 1.35,
         collapseThreshold: 10,
         warningThreshold: 20,
         mercyEventThreshold: 10,
@@ -152,6 +175,12 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         foodPerPersonPerTick: Double,
         defaultStorageCapacity: Double,
         upkeepRateOfCost: Double = 0.03,
+        energyPerPersonPerTick: Double = 0.05,
+        eraEnergyDemand: [Double] = [0, 0, 0.3, 1.0, 2.0, 3.5],
+        influencePerPersonPerTick: Double = 0.18,
+        influencePerSettlement: Double = 3,
+        selfGoverningPopulation: Double = 100,
+        repeatableTechCostGrowth: Double = 1.35,
         collapseThreshold: Double,
         warningThreshold: Double,
         mercyEventThreshold: Double,
@@ -190,6 +219,12 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         self.foodPerPersonPerTick = foodPerPersonPerTick
         self.defaultStorageCapacity = defaultStorageCapacity
         self.upkeepRateOfCost = upkeepRateOfCost
+        self.energyPerPersonPerTick = energyPerPersonPerTick
+        self.eraEnergyDemand = eraEnergyDemand
+        self.influencePerPersonPerTick = influencePerPersonPerTick
+        self.influencePerSettlement = influencePerSettlement
+        self.selfGoverningPopulation = selfGoverningPopulation
+        self.repeatableTechCostGrowth = repeatableTechCostGrowth
         self.collapseThreshold = collapseThreshold
         self.warningThreshold = warningThreshold
         self.mercyEventThreshold = mercyEventThreshold
@@ -245,7 +280,9 @@ public struct WorldConfig: Codable, Sendable, Equatable {
              scalePressureBasePopulation, scalePressurePerDoubling, scalePressureCap
     }
     private enum ResourceKeys: String, CodingKey {
-        case foodPerPersonPerTick, defaultStorageCapacity, upkeepRateOfCost
+        case foodPerPersonPerTick, defaultStorageCapacity, upkeepRateOfCost,
+             energyPerPersonPerTick, eraEnergyDemand, influencePerPersonPerTick,
+             influencePerSettlement, selfGoverningPopulation, repeatableTechCostGrowth
     }
     private enum StabilityKeys: String, CodingKey {
         case collapseThreshold, warningThreshold, mercyEventThreshold
@@ -287,6 +324,12 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         foodPerPersonPerTick = (try? res?.decodeIfPresent(Double.self, forKey: .foodPerPersonPerTick)) ?? d.foodPerPersonPerTick
         defaultStorageCapacity = (try? res?.decodeIfPresent(Double.self, forKey: .defaultStorageCapacity)) ?? d.defaultStorageCapacity
         upkeepRateOfCost = (try? res?.decodeIfPresent(Double.self, forKey: .upkeepRateOfCost)) ?? d.upkeepRateOfCost
+        energyPerPersonPerTick = (try? res?.decodeIfPresent(Double.self, forKey: .energyPerPersonPerTick)) ?? d.energyPerPersonPerTick
+        eraEnergyDemand = (try? res?.decodeIfPresent([Double].self, forKey: .eraEnergyDemand)) ?? d.eraEnergyDemand
+        influencePerPersonPerTick = (try? res?.decodeIfPresent(Double.self, forKey: .influencePerPersonPerTick)) ?? d.influencePerPersonPerTick
+        influencePerSettlement = (try? res?.decodeIfPresent(Double.self, forKey: .influencePerSettlement)) ?? d.influencePerSettlement
+        selfGoverningPopulation = (try? res?.decodeIfPresent(Double.self, forKey: .selfGoverningPopulation)) ?? d.selfGoverningPopulation
+        repeatableTechCostGrowth = (try? res?.decodeIfPresent(Double.self, forKey: .repeatableTechCostGrowth)) ?? d.repeatableTechCostGrowth
 
         let stab = try? c.nestedContainer(keyedBy: StabilityKeys.self, forKey: .stability)
         collapseThreshold = (try? stab?.decodeIfPresent(Double.self, forKey: .collapseThreshold)) ?? d.collapseThreshold
@@ -342,6 +385,12 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         try res.encode(foodPerPersonPerTick, forKey: .foodPerPersonPerTick)
         try res.encode(defaultStorageCapacity, forKey: .defaultStorageCapacity)
         try res.encode(upkeepRateOfCost, forKey: .upkeepRateOfCost)
+        try res.encode(energyPerPersonPerTick, forKey: .energyPerPersonPerTick)
+        try res.encode(eraEnergyDemand, forKey: .eraEnergyDemand)
+        try res.encode(influencePerPersonPerTick, forKey: .influencePerPersonPerTick)
+        try res.encode(influencePerSettlement, forKey: .influencePerSettlement)
+        try res.encode(selfGoverningPopulation, forKey: .selfGoverningPopulation)
+        try res.encode(repeatableTechCostGrowth, forKey: .repeatableTechCostGrowth)
 
         var stab = c.nestedContainer(keyedBy: StabilityKeys.self, forKey: .stability)
         try stab.encode(collapseThreshold, forKey: .collapseThreshold)

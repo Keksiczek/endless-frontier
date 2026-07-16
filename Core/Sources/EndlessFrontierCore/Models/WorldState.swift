@@ -111,6 +111,19 @@ public struct WorldState: Codable, Sendable, Equatable {
     public var era: Era
 
     public var researchedTechs: Set<String>
+    /// How many times each `repeatable` tech has been completed. Drives the
+    /// escalating cost of an endless study, and how far its stacking effects
+    /// have been pushed.
+    public var techCompletions: [String: Int]
+    /// Standing additive bonuses a tech's `modifier` effect has granted, keyed
+    /// by global stat name.
+    ///
+    /// Research bonuses used to be written straight onto `globalStats` — where
+    /// `recomputeGlobalStats` overwrote `knowledgeOutput` and `influenceOutput`
+    /// from the buildings on the very next tick, silently erasing them. Every
+    /// such effect in `techs.json` was dead on arrival. Held here, they survive
+    /// the recompute and are re-applied on top of it.
+    public var statModifiers: [String: Double]
     public var activeResearch: String?
     public var researchProgress: Double      // knowledge accumulated toward activeResearch
 
@@ -147,6 +160,8 @@ public struct WorldState: Codable, Sendable, Equatable {
         mapSeed: UInt64 = 0x5EED_F00D,
         era: Era = .earlySettlement,
         researchedTechs: Set<String> = [],
+        techCompletions: [String: Int] = [:],
+        statModifiers: [String: Double] = [:],
         activeResearch: String? = nil,
         researchProgress: Double = 0,
         globalStats: GlobalStats = GlobalStats(),
@@ -174,6 +189,8 @@ public struct WorldState: Codable, Sendable, Equatable {
         self.mapSeed = mapSeed
         self.era = era
         self.researchedTechs = researchedTechs
+        self.techCompletions = techCompletions
+        self.statModifiers = statModifiers
         self.activeResearch = activeResearch
         self.researchProgress = researchProgress
         self.globalStats = globalStats
@@ -210,7 +227,8 @@ public struct WorldState: Codable, Sendable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case schemaVersion, tick, lastRealTimestamp, rngSeed, mapSeed, era,
-             researchedTechs, activeResearch, researchProgress, globalStats,
+             researchedTechs, techCompletions, statModifiers, activeResearch,
+             researchProgress, globalStats,
              unlockedBuildings, worldFlags, settlements, regions, tradeRoutes,
              caravans, activeExpedition, eventHistory, eventCooldowns,
              scheduledEffects, activeQuests, completedQuests, pendingLawProposal, records, tribes, pendingEvents
@@ -230,6 +248,8 @@ public struct WorldState: Codable, Sendable, Equatable {
         mapSeed = value(.mapSeed, 0x5EED_F00D)
         era = value(.era, .earlySettlement)
         researchedTechs = value(.researchedTechs, [])
+        techCompletions = value(.techCompletions, [:])
+        statModifiers = value(.statModifiers, [:])
         activeResearch = (try? c.decodeIfPresent(String.self, forKey: .activeResearch)) ?? nil
         researchProgress = value(.researchProgress, 0)
         globalStats = value(.globalStats, GlobalStats())
@@ -260,6 +280,8 @@ public struct WorldState: Codable, Sendable, Equatable {
         try c.encode(mapSeed, forKey: .mapSeed)
         try c.encode(era, forKey: .era)
         try c.encode(researchedTechs, forKey: .researchedTechs)
+        try c.encode(techCompletions, forKey: .techCompletions)
+        try c.encode(statModifiers, forKey: .statModifiers)
         try c.encodeIfPresent(activeResearch, forKey: .activeResearch)
         try c.encode(researchProgress, forKey: .researchProgress)
         try c.encode(globalStats, forKey: .globalStats)

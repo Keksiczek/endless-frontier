@@ -254,10 +254,26 @@ final class GameViewModel {
     enum TechStatus { case researched, active, available, locked }
 
     func techStatus(_ tech: TechDefinition) -> TechStatus {
-        if world.researchedTechs.contains(tech.id) { return .researched }
         if world.activeResearch == tech.id { return .active }
+        // An endless study is never "done" — it goes back on the board.
+        if world.researchedTechs.contains(tech.id) {
+            return tech.repeatable ? .available : .researched
+        }
         if tech.requires.allSatisfy(world.researchedTechs.contains) { return .available }
         return .locked
+    }
+
+    /// What this tech costs right now — a repeatable study grows dearer with
+    /// every completion, so the tree must show the *next* price, not the base.
+    func knowledgeCost(_ tech: TechDefinition) -> Double {
+        TechEngine.cost(of: tech, in: world, config: registry.config)
+    }
+
+    /// How many times an endless study has been carried out, if it has.
+    func completions(_ tech: TechDefinition) -> Int? {
+        guard tech.repeatable else { return nil }
+        let n = world.techCompletions[tech.id] ?? 0
+        return n > 0 ? n : nil
     }
 
     /// All techs grouped by era (era order) for the tech-tree screen.
@@ -268,8 +284,9 @@ final class GameViewModel {
     }
 
     func researchProgressFraction(_ tech: TechDefinition) -> Double? {
-        guard world.activeResearch == tech.id, tech.knowledgeCost > 0 else { return nil }
-        return min(1, world.researchProgress / tech.knowledgeCost)
+        let cost = knowledgeCost(tech)
+        guard world.activeResearch == tech.id, cost > 0 else { return nil }
+        return min(1, world.researchProgress / cost)
     }
 
     func housingCapacity(_ settlement: Settlement) -> Int {

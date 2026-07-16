@@ -340,5 +340,29 @@
       { "type": "unlock_building", "buildingId": "arcology" }
     ],
     "description": "Single buildings the size of cities house millions in comfort."
+  },
+  {
+    "id": "continued_inquiry",
+    "name": "Continued Inquiry",
+    "era": "medieval",
+    "requires": ["scholarship"],
+    "cost": { "knowledge": 2500 },
+    "repeatable": true,
+    "effects": [
+      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 3, "mode": "additive" }
+    ],
+    "description": "There is always another question. Each answer costs more than the last."
+  },
+  {
+    "id": "statecraft",
+    "name": "Statecraft",
+    "era": "medieval",
+    "requires": ["currency"],
+    "cost": { "knowledge": 2200 },
+    "repeatable": true,
+    "effects": [
+      { "type": "modifier", "stat": "global.influenceOutput", "delta": 3, "mode": "additive" }
+    ],
+    "description": "The study of holding a realm together — never finished, and never cheap."
   }
 ]

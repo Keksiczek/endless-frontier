@@ -55,6 +55,11 @@ public struct TechDefinition: Codable, Sendable, Identifiable, Equatable {
     public let requires: [String]
     public let cost: Resources
     public let effects: [TechEffect]
+    /// A study that is never finished: it stays on the board after completion,
+    /// its effects stack, and each completion makes the next dearer. This is
+    /// what gives knowledge a sink that outlives the 29-tech tree, in a game
+    /// whose whole premise is one endless world with no "you finished it" wall.
+    public let repeatable: Bool
     public let description: String?
 
     public init(
@@ -64,6 +69,7 @@ public struct TechDefinition: Codable, Sendable, Identifiable, Equatable {
         requires: [String] = [],
         cost: Resources,
         effects: [TechEffect] = [],
+        repeatable: Bool = false,
         description: String? = nil
     ) {
         self.id = id
@@ -72,11 +78,12 @@ public struct TechDefinition: Codable, Sendable, Identifiable, Equatable {
         self.requires = requires
         self.cost = cost
         self.effects = effects
+        self.repeatable = repeatable
         self.description = description
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, era, requires, cost, effects, description
+        case id, name, era, requires, cost, effects, repeatable, description
     }
 
     public init(from decoder: Decoder) throws {
@@ -87,6 +94,7 @@ public struct TechDefinition: Codable, Sendable, Identifiable, Equatable {
         requires = try c.decodeIfPresent([String].self, forKey: .requires) ?? []
         cost = try c.decode(Resources.self, forKey: .cost)
         effects = try c.decodeIfPresent([TechEffect].self, forKey: .effects) ?? []
+        repeatable = try c.decodeIfPresent(Bool.self, forKey: .repeatable) ?? false
         description = try c.decodeIfPresent(String.self, forKey: .description)
     }
 

@@ -7,6 +7,19 @@ public enum ResourceLoop {
     public static let baseHousing: Double = 30
     /// Pollution above this level begins to drag morale down.
     public static let pollutionMoraleThreshold: Double = 40
+    /// Morale lost each tick a colony's grid can't meet its demand.
+    public static let brownoutMoralePenalty: Double = 0.8
+    /// Stability lost each tick a realm has no political capital left to
+    /// govern with. Deliberately sharper than a brownout: the colony carries on
+    /// in the dark, but an ungoverned realm comes apart.
+    public static let ungovernedStabilityPenalty: Double = 1.2
+    /// The stability a joyless colony tends toward, and how much its
+    /// colonists' contentment lifts that. Morale 80 → a target near 70.
+    public static let stabilityFloor: Double = 30
+    public static let stabilityFromMorale: Double = 0.5
+    /// How fast stability closes on its target. A fifth of morale's pace: a
+    /// realm is shaken in a moment and settles over years.
+    public static let stabilityRecoveryRate: Double = 0.02
     /// Baseline the threat level decays toward in the founding era.
     public static let baseThreat: Double = 10
     /// Extra threat baseline per era advanced — later eras are more dangerous,
@@ -29,6 +42,45 @@ public enum ResourceLoop {
         registry.config.defaultStorageCapacity + settlement.buildings.reduce(0.0) { acc, instance in
             acc + (registry.building(instance.definitionID)?.storage ?? 0) * Double(instance.count)
         }
+    }
+
+    /// The power the colonists themselves draw each tick — light, heat, and
+    /// everything an age plugs in.
+    ///
+    /// Energy pinned at the storage cap because the only thing drawing it was
+    /// other buildings, and generation outran them several times over. A sink
+    /// only bites when it scales with something *other* than buildings, which
+    /// is exactly why food — eaten by people — was the one that always worked.
+    /// Demand is zero in the early eras: no generation exists before the
+    /// windmill, so charging for power would bankrupt a colony that has no way
+    /// to answer.
+    public static func domesticEnergyDemand(
+        population: Double, era: Era, config: WorldConfig
+    ) -> Double {
+        guard era.index < config.eraEnergyDemand.count else { return 0 }
+        return population * config.energyPerPersonPerTick * config.eraEnergyDemand[era.index]
+    }
+
+    /// What it costs in political capital to hold this many people, in this
+    /// many places, together.
+    ///
+    /// Nothing consumed influence at all. As the Leader's standing it should be
+    /// spent governing: a village settles its own business by talking, but a
+    /// civilisation needs administration, and when that runs dry the realm
+    /// frays — which is already how tribes break away (`DiplomacyEngine`).
+    /// The per-settlement fee applies from the *second* town onward: the seat
+    /// of power governs itself, but every other place needs someone sent to
+    /// hold it. Charging it from the first town would bill a lone village that
+    /// the population threshold is meant to exempt — and exempting it entirely
+    /// would let a realm dodge administration forever by staying a scatter of
+    /// hamlets, each just under the threshold.
+    public static func administrationCost(
+        population: Double, settlements: Int, config: WorldConfig
+    ) -> Double {
+        let governed = max(0, population - config.selfGoverningPopulation)
+        let outposts = Double(max(0, settlements - 1))
+        return governed * config.influencePerPersonPerTick
+            + outposts * config.influencePerSettlement
     }
 
     /// What one instance of a building costs per tick to keep standing.
@@ -59,9 +111,11 @@ public enum ResourceLoop {
     public static func advanceOneTick(_ state: WorldState, registry: GameDataRegistry) -> WorldState {
         var s = state
         let config = registry.config
+        let settlementCount = s.settlements.count
         s.settlements = s.settlements.map {
             advanceSettlement($0, registry: registry, config: config,
-                              tick: state.tick, mapSeed: state.mapSeed, era: state.era)
+                              tick: state.tick, mapSeed: state.mapSeed, era: state.era,
+                              settlementCount: settlementCount)
         }
         s.globalStats = recomputeGlobalStats(s, registry: registry)
         return s
@@ -73,7 +127,8 @@ public enum ResourceLoop {
         config: WorldConfig,
         tick: Int = 0,
         mapSeed: UInt64 = 0,
-        era: Era = .earlySettlement
+        era: Era = .earlySettlement,
+        settlementCount: Int = 1
     ) -> Settlement {
         var s = settlement
         let profile = s.specialization.profile
@@ -118,6 +173,18 @@ public enum ResourceLoop {
         // 1d. Standing laws: a trade road or a tithe brings in influence.
         net[.influence] = net[.influence] + laws.influencePerTick
 
+        // 1e. What the colonists themselves draw, as distinct from what their
+        //     buildings burn: power to live by, and the political capital it
+        //     takes to govern them. These scale with *population*, not with the
+        //     building count — which is the whole reason they bite where a
+        //     building-scaled cost never could.
+        let energyDemand = domesticEnergyDemand(
+            population: s.population, era: era, config: config)
+        let administration = administrationCost(
+            population: s.population, settlements: settlementCount, config: config)
+        net[.energy] = net[.energy] - energyDemand
+        net[.influence] = net[.influence] - administration
+
         // 2. Apply building net production to storage. Food upkeep happens in
         //    `PawnEngine` — every inhabitant is a pawn and eats real meals.
         //    Capacity is re-derived from the standing buildings first, so a
@@ -139,6 +206,16 @@ public enum ResourceLoop {
         if capacity > 0, s.population > capacity {
             s.stats.morale -= 0.5                              // overcrowding
         }
+        // A grid that can't answer its demand means a colony living in the
+        // dark; a treasury that can't pay its administration means a realm
+        // nobody is holding together — which is what `SocietyEngine` and
+        // `DiplomacyEngine` read when deciding on revolt and secession.
+        if energyDemand > 0, s.storage[.energy] <= 0 {
+            s.stats.morale -= brownoutMoralePenalty
+        }
+        if administration > 0, s.storage[.influence] <= 0 {
+            s.stats.stability -= ungovernedStabilityPenalty
+        }
 
         // 5. Morale drifts gently toward a building-driven target.
         let buildingMorale = s.buildings.reduce(0.0) { acc, instance in
@@ -150,6 +227,17 @@ public enum ResourceLoop {
                                         + laws.moraleFlat
                                         + FaithEngine.moraleBonus(s, registry: registry)))
         s.stats.morale += (moraleTarget - s.stats.morale) * 0.1
+
+        // 5b. Stability drifts toward what the colonists' contentment can
+        //     sustain. Every other write to stability in the engine is a
+        //     subtraction — an uprising, isolation, a specialisation switch —
+        //     and nothing ever put it back, so a realm could only ratchet down
+        //     to zero and stay there forever. Recovery is deliberately far
+        //     slower than the shocks: a wound heals over years, and a realm
+        //     that has run out of anyone to govern it still loses ground faster
+        //     than contentment can win it back.
+        let stabilityTarget = min(100, max(0, stabilityFloor + s.stats.morale * stabilityFromMorale))
+        s.stats.stability += (stabilityTarget - s.stats.stability) * stabilityRecoveryRate
 
         // 6. Defense drifts toward fortifications (buildings + artifacts).
         let buildingDefense = s.buildings.reduce(0.0) { acc, instance in
@@ -304,8 +392,11 @@ public enum ResourceLoop {
                 influence += def.production[.influence] * profile.productionMultiplier(.influence) * count
             }
         }
-        g.knowledgeOutput = knowledge
-        g.influenceOutput = influence
+        // Standing research bonuses ride on top of the building total. They
+        // have to be re-added here: this assignment is what used to silently
+        // erase every `modifier` effect in techs.json the tick after it landed.
+        g.knowledgeOutput = knowledge + (state.statModifiers["knowledgeOutput"] ?? 0)
+        g.influenceOutput = influence + (state.statModifiers["influenceOutput"] ?? 0)
 
         // Prosperity drifts toward average morale.
         g.prosperity += (avgMorale - g.prosperity) * 0.05

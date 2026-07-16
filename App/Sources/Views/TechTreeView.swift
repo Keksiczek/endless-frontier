@@ -32,8 +32,19 @@ struct TechTreeView: View {
             HStack(spacing: 10) {
                 Image(systemName: icon(status)).foregroundStyle(color(status)).frame(width: 22)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(tech.name).font(.subheadline.weight(.semibold))
-                    Text("\(Int(tech.knowledgeCost)) knowledge").font(.caption).foregroundStyle(Theme.textDim)
+                    HStack(spacing: 6) {
+                        Text(tech.name).font(.subheadline.weight(.semibold))
+                        // An endless study wears its tally: what it's cost so far.
+                        if let done = game.completions(tech) {
+                            Text("×\(done)")
+                                .font(.caption2.weight(.bold).monospacedDigit())
+                                .padding(.horizontal, 5).padding(.vertical, 2)
+                                .background(Theme.good.opacity(0.16), in: Capsule())
+                                .foregroundStyle(Theme.good)
+                        }
+                    }
+                    Text("\(Int(game.knowledgeCost(tech))) knowledge")
+                        .font(.caption).foregroundStyle(Theme.textDim)
                 }
                 Spacer()
                 trailing(tech, status)
@@ -57,7 +68,9 @@ struct TechTreeView: View {
         case .researched: badge("Done", Theme.good)
         case .active: badge("Researching", Theme.accent)
         case .available:
-            Button("Research") { game.setResearch(tech.id) }
+            Button(tech.repeatable && game.completions(tech) != nil ? "Again" : "Research") {
+                game.setResearch(tech.id)
+            }
                 .font(.caption.weight(.semibold))
                 .padding(.horizontal, 12).padding(.vertical, 6)
                 .background(Theme.accent.opacity(0.18), in: Capsule())

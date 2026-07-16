@@ -70,7 +70,9 @@ public struct GameDataRegistry: Sendable {
     /// Techs whose prerequisites are all met and that aren't yet researched.
     public func availableTechs(researched: Set<String>) -> [TechDefinition] {
         techs.values
-            .filter { !researched.contains($0.id) }
+            // A repeatable study is never finished, so it stays on the board
+            // however many times it's been run.
+            .filter { !researched.contains($0.id) || $0.repeatable }
             .filter { $0.requires.allSatisfy(researched.contains) }
             .sorted { $0.id < $1.id }
     }

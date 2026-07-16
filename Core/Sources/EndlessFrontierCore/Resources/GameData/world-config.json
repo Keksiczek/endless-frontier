@@ -26,7 +26,13 @@
   "resources": {
     "foodPerPersonPerTick": 0.1,
     "defaultStorageCapacity": 500,
-    "upkeepRateOfCost": 0.03
+    "upkeepRateOfCost": 0.03,
+    "energyPerPersonPerTick": 0.05,
+    "eraEnergyDemand": [0, 0, 0.3, 1.0, 2.0, 3.5],
+    "influencePerPersonPerTick": 0.18,
+    "influencePerSettlement": 3,
+    "selfGoverningPopulation": 100,
+    "repeatableTechCostGrowth": 1.35
   },
   "stability": {
     "collapseThreshold": 10,
