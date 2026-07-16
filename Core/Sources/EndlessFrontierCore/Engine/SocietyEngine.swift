@@ -266,7 +266,8 @@ public enum SocietyEngine {
     /// effects); vetoing shelves it. Going against the assembly's vote costs
     /// the leader standing with the people.
     public static func resolveProposal(
-        _ state: WorldState, approve: Bool, registry: GameDataRegistry
+        _ state: WorldState, approve: Bool, spendInfluence: Bool = false,
+        registry: GameDataRegistry
     ) -> WorldState {
         guard let proposal = state.pendingLawProposal,
               let law = registry.law(proposal.definitionID),
@@ -277,10 +278,15 @@ public enum SocietyEngine {
         s.pendingLawProposal = nil
 
         // Overruling the assembly — ratifying what it rejected, or vetoing what
-        // it wanted — is what leadership costs.
+        // it wanted — is what leadership costs. A Leader with standing to burn
+        // can spend it instead and have the colony swallow the decision quietly.
         if approve != proposal.councilApproves {
-            s.settlements[index].stats.morale = max(
-                0, s.settlements[index].stats.morale - defianceMoralePenalty)
+            if spendInfluence, let paid = GameEngine.spendInfluence(s, amount: registry.config.overruleInfluenceCost) {
+                s = paid
+            } else {
+                s.settlements[index].stats.morale = max(
+                    0, s.settlements[index].stats.morale - defianceMoralePenalty)
+            }
         }
 
         guard approve else { return s }

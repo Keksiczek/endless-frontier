@@ -174,8 +174,31 @@ struct CouncilScreen: View {
 private struct MotionCard: View {
     @Bindable var game: GameViewModel
     let proposal: LawProposal
+    @State private var spendStanding = false
 
     private var cs: Bool { AppStrings.language == .cs }
+
+    /// Spending standing only means anything when you're going against the
+    /// council — agreeing with them costs nothing either way.
+    @ViewBuilder
+    private var standingToggle: some View {
+        let affordable = game.canAfford(influence: game.overruleCost)
+        Toggle(isOn: $spendStanding) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text("\(AppStrings.spendStanding) · \(Int(game.overruleCost))")
+                    .font(.caption.weight(.semibold))
+                Text(AppStrings.spendStandingBlurb)
+                    .font(.caption2).foregroundStyle(Theme.textDim)
+            }
+        }
+        .toggleStyle(.switch)
+        .tint(Theme.accent)
+        .disabled(!affordable)
+        .opacity(affordable ? 1 : 0.5)
+        .onChange(of: affordable) { _, canPay in
+            if !canPay { spendStanding = false }
+        }
+    }
 
     var body: some View {
         let def = game.registry.law(proposal.definitionID)
@@ -196,7 +219,7 @@ private struct MotionCard: View {
             voteTally
             HStack(spacing: 10) {
                 Button {
-                    game.resolveProposal(approve: false)
+                    game.resolveProposal(approve: false, spendInfluence: spendStanding)
                 } label: {
                     Label(cs ? "Vetovat" : "Veto", systemImage: "xmark")
                         .frame(maxWidth: .infinity)
@@ -205,7 +228,7 @@ private struct MotionCard: View {
                 .tint(Theme.danger)
 
                 Button {
-                    game.resolveProposal(approve: true)
+                    game.resolveProposal(approve: true, spendInfluence: spendStanding)
                 } label: {
                     Label(cs ? "Schválit" : "Ratify", systemImage: "checkmark")
                         .frame(maxWidth: .infinity)
@@ -213,6 +236,7 @@ private struct MotionCard: View {
                 .buttonStyle(.borderedProminent)
                 .tint(Theme.accent)
             }
+            standingToggle
             Text(warning)
                 .font(.caption2).foregroundStyle(Theme.textDim)
         }

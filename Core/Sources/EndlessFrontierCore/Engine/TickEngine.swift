@@ -37,6 +37,9 @@ public enum TickEngine {
                 s = SocietyEngine.advanceYear(s, registry: registry)
             }
             if s.tick % interval == 0 {
+                // Decisions the Leader let slide time out before new ones are
+                // offered, so a full queue is always a live one.
+                s = StoryPlanner.expireDecisions(s, registry: registry).state
                 let result = StoryPlanner.run(s, registry: registry)
                 s = result.state
                 fired.append(contentsOf: result.fired)

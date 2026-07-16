@@ -26,7 +26,23 @@ enum AppStrings {
     static var tension: String { s("Tension", "Napětí") }
     static var colonists: String { s("Colonists", "Obyvatelé") }
     static var details: String { s("Details", "Detaily") }
+    static var layout: String { s("Layout", "Plán osady") }
     static var newColony: String { s("New world", "Nový svět") }
+
+    // Diplomacy — what the Leader's standing buys
+    static var sendGift: String { s("Send a gift", "Poslat dar") }
+    static var demandTribute: String { s("Demand tribute", "Žádat tribut") }
+    static var proposePact: String { s("Propose a pact", "Nabídnout spojenectví") }
+    static var pactNeedsTrust: String {
+        s("They must trust you first", "Musí ti nejdřív věřit")
+    }
+    static var spendStanding: String { s("Spend standing", "Utratit vliv") }
+    static var spendStandingBlurb: String {
+        s("Overrule the assembly quietly, at the price of political capital rather than morale.",
+          "Přehlasuj sněm potichu — zaplatíš politickým kapitálem místo morálky.")
+    }
+    static var decisionDeadline: String { s("The moment passes in", "Okamžik pomine za") }
+    static var years: String { s("yrs", "let") }
 
     // Settings
     static var settings: String { s("Settings", "Nastavení") }

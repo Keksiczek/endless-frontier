@@ -18,6 +18,7 @@
     "boomDampenerTicks": 20,
     "boomDampenerPerEvent": 3,
     "deficitSpikePerResource": 8,
+    "shortageFraction": 0.1,
     "eraRampPerEra": 5,
     "scalePressureBasePopulation": 30,
     "scalePressurePerDoubling": 4,
@@ -45,12 +46,24 @@
     "majorEventChance": 0.08,
     "majorEventTensionBoost": 0.25,
     "minorEventChance": 0.05,
+    "decisionDeadlineTicks": 180,
+    "indecisionMoralePenalty": 2.5,
     "tensionBands": [
       { "maxTension": 30, "disasterWeight": 0.5, "opportunityWeight": 1.5, "flavorWeight": 2.0 },
       { "maxTension": 60, "disasterWeight": 1.0, "opportunityWeight": 1.0, "flavorWeight": 1.0 },
       { "maxTension": 80, "disasterWeight": 1.8, "opportunityWeight": 0.6, "flavorWeight": 0.5 },
       { "maxTension": 100, "disasterWeight": 3.0, "opportunityWeight": 0.3, "flavorWeight": 0.1 }
     ]
+  },
+  "diplomacy": {
+    "giftInfluenceCost": 60,
+    "giftStandingGain": 12,
+    "demandInfluenceCost": 40,
+    "demandStoresShare": 0.35,
+    "demandStandingLoss": 22,
+    "pactInfluenceCost": 250,
+    "pactMinStanding": 45,
+    "overruleInfluenceCost": 120
   },
   "exploration": {
     "baseExpeditionTicks": 50,

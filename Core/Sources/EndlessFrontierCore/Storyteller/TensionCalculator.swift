@@ -12,7 +12,7 @@ public enum TensionCalculator {
         let comfort = comfort(prosperity: stats.prosperity, config: config)
         let disasterSpike = disasterSpike(state, config: config)
         let boomDampener = boomDampener(state, config: config)
-        let deficitSpike = Double(depletedResourceCount(state)) * config.deficitSpikePerResource
+        let deficitSpike = Double(shortageCount(state, config: config)) * config.deficitSpikePerResource
         let eraRamp = Double(state.era.index) * config.eraRampPerEra
         let scale = scalePressure(population: state.totalPopulation, config: config)
 
@@ -76,11 +76,21 @@ public enum TensionCalculator {
         return Double(count) * config.boomDampenerPerEvent
     }
 
-    /// Number of core resources fully depleted (zero total) across settlements.
-    static func depletedResourceCount(_ state: WorldState) -> Int {
+    /// How many core resources the civilisation is running short of — measured
+    /// against what it can hold, not against zero.
+    ///
+    /// This used to count only stores at *exactly* zero, which was moot while
+    /// every resource pinned at the storage cap and never moved. Now that each
+    /// one has a sink that draws it down, a granary scraped to its last sacks
+    /// should worry the storyteller *before* it is finally, actually empty —
+    /// which is when it's already too late to be a story about anything.
+    public static func shortageCount(_ state: WorldState, config: WorldConfig) -> Int {
         guard !state.settlements.isEmpty else { return 0 }
+        let capacity = state.settlements.reduce(0) { $0 + $1.storageCapacity }
+        guard capacity > 0 else { return 0 }
         return ResourceType.allCases.filter { resource in
-            state.settlements.reduce(0) { $0 + $1.storage[resource] } <= 0
+            let held = state.settlements.reduce(0) { $0 + $1.storage[resource] }
+            return held / capacity <= config.shortageFraction
         }.count
     }
 }

@@ -195,10 +195,61 @@ final class GameViewModel {
     /// The motion the council has put before you, if any.
     var pendingProposal: LawProposal? { world.pendingLawProposal }
 
-    /// Ratify or veto the assembly's motion. Overruling them costs morale.
-    func resolveProposal(approve: Bool) {
-        world = GameEngine.resolveLawProposal(world, approve: approve, registry: registry)
+    /// Ratify or veto the assembly's motion. Overruling them costs morale —
+    /// or influence, if the Leader would rather spend standing than goodwill.
+    func resolveProposal(approve: Bool, spendInfluence: Bool = false) {
+        world = GameEngine.resolveLawProposal(world, approve: approve,
+                                              spendInfluence: spendInfluence, registry: registry)
         persist()
+    }
+
+    /// True when ratifying/vetoing would go against the council's vote — the
+    /// only case where anything is paid at all.
+    func wouldOverrule(approve: Bool) -> Bool {
+        guard let proposal = world.pendingLawProposal else { return false }
+        return approve != proposal.councilApproves
+    }
+
+    // MARK: - Diplomacy
+
+    var tribes: [Tribe] { world.tribes }
+
+    func canAfford(influence amount: Double) -> Bool {
+        GameEngine.canAfford(influence: amount, in: world)
+    }
+
+    var giftCost: Double { registry.config.giftInfluenceCost }
+    var demandCost: Double { registry.config.demandInfluenceCost }
+    var pactCost: Double { registry.config.pactInfluenceCost }
+    var overruleCost: Double { registry.config.overruleInfluenceCost }
+
+    /// A people has to already hold you in some regard before a pact is worth
+    /// offering — standing can't buy an alliance from strangers.
+    func canProposePact(to tribe: Tribe) -> Bool {
+        tribe.standing >= registry.config.pactMinStanding && canAfford(influence: pactCost)
+    }
+
+    func sendGift(to tribeID: UUID) {
+        world = GameEngine.sendGift(world, tribeID: tribeID, registry: registry)
+        persist()
+    }
+
+    func demandTribute(from tribeID: UUID) {
+        world = GameEngine.demandTribute(world, tribeID: tribeID, registry: registry)
+        persist()
+    }
+
+    func proposePact(with tribeID: UUID) {
+        world = GameEngine.proposePact(world, tribeID: tribeID, registry: registry)
+        persist()
+    }
+
+    /// How long the Leader has left to answer the decision on the desk, in
+    /// ticks. Negative would mean it's already gone.
+    func ticksLeft(for pending: PendingEvent) -> Int {
+        let deadline = registry.events.first { $0.id == pending.templateID }?.decisionTicks
+            ?? registry.config.decisionDeadlineTicks
+        return max(0, deadline - (world.tick - pending.tick))
     }
 
     /// Observations the chronicle reads out of the world's history.

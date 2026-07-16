@@ -125,6 +125,43 @@ public enum StoryPlanner {
         return next
     }
 
+    /// The result of letting decisions go unanswered.
+    public struct ExpiryResult: Sendable, Equatable {
+        public var state: WorldState
+        /// Template ids whose moment passed this cycle.
+        public var expired: [String]
+    }
+
+    /// Retires decisions the Leader never answered.
+    ///
+    /// `PendingEvent.tick` was written down and then read by nothing at all: a
+    /// decision waited in the queue forever, and the only way one ever left
+    /// unanswered was a seventh silently shoving it off the six-cap. A choice
+    /// with no deadline isn't a decision — it's a suggestion. Now the moment
+    /// passes on its own, and a colony that looked to you and heard nothing
+    /// feels it.
+    ///
+    /// The choice's effects are deliberately *not* applied: the point isn't to
+    /// pick for the player, it's that the chance was there and is now gone.
+    public static func expireDecisions(_ state: WorldState, registry: GameDataRegistry) -> ExpiryResult {
+        var s = state
+        var expired: [String] = []
+        for pending in s.pendingEvents {
+            let deadline = registry.events.first { $0.id == pending.templateID }?.decisionTicks
+                ?? registry.config.decisionDeadlineTicks
+            guard s.tick - pending.tick > deadline else { continue }
+            expired.append(pending.templateID)
+        }
+        guard !expired.isEmpty else { return ExpiryResult(state: s, expired: []) }
+
+        s.pendingEvents.removeAll { expired.contains($0.templateID) }
+        let penalty = registry.config.indecisionMoralePenalty * Double(expired.count)
+        for index in s.settlements.indices {
+            s.settlements[index].stats.morale = max(0, s.settlements[index].stats.morale - penalty)
+        }
+        return ExpiryResult(state: s, expired: expired)
+    }
+
     /// How many decisions may stack up waiting for the player. Catching up on a
     /// month offline can fire the same event dozens of times; the Leader should
     /// come back to a handful of decisions, not a hundred.

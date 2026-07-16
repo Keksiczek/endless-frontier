@@ -8,6 +8,7 @@ struct SettlementScreen: View {
     @Bindable var game: GameViewModel
     @State private var selection: CanvasSelection = .none
     @State private var showDetails = false
+    @State private var showLayout = false
 
     var body: some View {
         ZStack {
@@ -18,6 +19,19 @@ struct SettlementScreen: View {
             }
         }
         .foregroundStyle(Theme.text)
+        .sheet(isPresented: $showLayout) {
+            NavigationStack {
+                ColonyMapScreen(game: game)
+                    .navigationTitle(AppStrings.layout)
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button(AppStrings.done) { showLayout = false }
+                        }
+                    }
+            }
+            .presentationBackground(Theme.surface)
+        }
         .sheet(isPresented: $showDetails) {
             SettlementDetailSheet(game: game)
                 .presentationDetents([.medium, .large])
@@ -84,6 +98,18 @@ struct SettlementScreen: View {
                     .foregroundStyle(Theme.text)
             }
             Spacer()
+            // The build grid was written, tested and then never reachable —
+            // nothing anywhere constructed ColonyMapScreen, so the layout, its
+            // zones and every adjacency synergy the loop computes each tick
+            // were invisible.
+            Button {
+                showLayout = true
+            } label: {
+                Label(AppStrings.layout, systemImage: "square.grid.3x3.fill")
+                    .font(.subheadline.weight(.semibold))
+            }
+            .buttonStyle(.bordered)
+            .tint(Theme.text)
             Button {
                 showDetails = true
             } label: {

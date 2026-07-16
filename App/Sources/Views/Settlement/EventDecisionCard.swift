@@ -56,6 +56,7 @@ struct EventDecisionCard: View {
                     .foregroundStyle(Theme.text)
             }
             Spacer()
+            deadlinePill
             if queued > 0 {
                 Text("+\(queued)")
                     .font(.caption.monospacedDigit().weight(.bold))
@@ -65,6 +66,23 @@ struct EventDecisionCard: View {
                     .accessibilityLabel(cs ? "\(queued) dalších rozhodnutí čeká"
                                            : "\(queued) more decisions waiting")
             }
+        }
+    }
+
+    /// How long the Leader has left. A decision used to wait indefinitely — and
+    /// a choice with no deadline is a suggestion, not a decision.
+    @ViewBuilder
+    private var deadlinePill: some View {
+        if let pending = game.pendingEvents.first(where: { $0.templateID == template.id }) {
+            let left = game.ticksLeft(for: pending)
+            let years = Double(left) / Double(max(1, game.ticksPerYear))
+            let urgent = years < 1
+            Label(String(format: "%.1f %@", years, AppStrings.years), systemImage: "hourglass")
+                .font(.caption2.weight(.semibold).monospacedDigit())
+                .foregroundStyle(urgent ? Theme.danger : Theme.textDim)
+                .padding(.vertical, 3).padding(.horizontal, 7)
+                .background((urgent ? Theme.danger : Theme.textDim).opacity(0.14), in: Capsule())
+                .accessibilityLabel("\(AppStrings.decisionDeadline) \(String(format: "%.1f", years)) \(AppStrings.years)")
         }
     }
 

@@ -43,10 +43,60 @@ struct TribesPanel: View {
                 Text(history)
                     .font(.caption2).foregroundStyle(Theme.textDim)
             }
+
+            actions(tribe)
         }
         .padding(.vertical, 10).padding(.horizontal, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    /// What the Leader can actually *do* about a neighbour.
+    ///
+    /// The peoples traded, married, raided and took in defectors entirely on
+    /// their own, and you could only read about it afterwards. These are the
+    /// acts that spend the standing administration charges you for.
+    private func actions(_ tribe: Tribe) -> some View {
+        HStack(spacing: 8) {
+            action(AppStrings.sendGift, icon: "gift.fill", cost: game.giftCost,
+                   enabled: game.canAfford(influence: game.giftCost)) {
+                game.sendGift(to: tribe.id)
+            }
+            action(AppStrings.demandTribute, icon: "hand.raised.fill", cost: game.demandCost,
+                   enabled: game.canAfford(influence: game.demandCost), tint: Theme.danger) {
+                game.demandTribute(from: tribe.id)
+            }
+            if tribe.status != .allied {
+                action(AppStrings.proposePact, icon: "hands.clap.fill", cost: game.pactCost,
+                       enabled: game.canProposePact(to: tribe), tint: Theme.good) {
+                    game.proposePact(with: tribe.id)
+                }
+                .help(tribe.standing < 45 ? AppStrings.pactNeedsTrust : "")
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 2)
+    }
+
+    private func action(
+        _ label: String, icon: String, cost: Double, enabled: Bool,
+        tint: Color = Theme.accent, action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            VStack(spacing: 2) {
+                Image(systemName: icon).font(.caption)
+                Text("\(Int(cost))")
+                    .font(.caption2.monospacedDigit().weight(.semibold))
+            }
+            .frame(minWidth: 40)
+            .padding(.vertical, 6).padding(.horizontal, 8)
+            .background((enabled ? tint : Theme.textDim).opacity(0.14),
+                        in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .foregroundStyle(enabled ? tint : Theme.textDim)
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .accessibilityLabel("\(label), \(Int(cost)) \(cs ? "vlivu" : "influence")")
     }
 
     /// Relations run −100…100; the bar fills from the middle so hostility reads

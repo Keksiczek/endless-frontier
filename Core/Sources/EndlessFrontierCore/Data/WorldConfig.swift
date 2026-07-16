@@ -42,6 +42,10 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     public var boomDampenerTicks: Int
     public var boomDampenerPerEvent: Double
     public var deficitSpikePerResource: Double
+    /// Share of storage capacity at or below which a resource counts as scarce.
+    /// Zero would mean only a bone-empty store worries anyone, which is a story
+    /// that starts after it already ended.
+    public var shortageFraction: Double
     public var eraRampPerEra: Double
     /// Population at which scale pressure starts (a hamlet attracts nobody).
     public var scalePressureBasePopulation: Double
@@ -91,7 +95,29 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     public var majorEventTensionBoost: Double
     /// Chance per cycle that a flavour event fires.
     public var minorEventChance: Double
+    /// How long a queued decision waits for the Leader before the moment passes.
+    public var decisionDeadlineTicks: Int
+    /// Morale lost per decision the Leader let slip by saying nothing.
+    public var indecisionMoralePenalty: Double
     public var tensionBands: [TensionBand]
+
+    // Diplomacy — what the Leader's standing buys
+    /// Influence spent on a gift to a neighbouring people.
+    public var giftInfluenceCost: Double
+    /// Standing a gift wins.
+    public var giftStandingGain: Double
+    /// Influence spent to press a people for tribute.
+    public var demandInfluenceCost: Double
+    /// Share of a people's stores a demand carries off.
+    public var demandStoresShare: Double
+    /// Standing lost by shaking a neighbour down.
+    public var demandStandingLoss: Double
+    /// Influence spent to seal a pact.
+    public var pactInfluenceCost: Double
+    /// Standing a people must already hold you in before they'll take a pact.
+    public var pactMinStanding: Double
+    /// Influence spent to overrule the assembly without the morale cost.
+    public var overruleInfluenceCost: Double
 
     // Exploration & expansion
     public var baseExpeditionTicks: Int
@@ -117,6 +143,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         boomDampenerTicks: 20,
         boomDampenerPerEvent: 3,
         deficitSpikePerResource: 8,
+        shortageFraction: 0.1,
         eraRampPerEra: 5,
         scalePressureBasePopulation: 30,
         scalePressurePerDoubling: 4,
@@ -138,6 +165,16 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         majorEventChance: 0.08,
         majorEventTensionBoost: 0.25,
         minorEventChance: 0.05,
+        decisionDeadlineTicks: 180,
+        indecisionMoralePenalty: 2.5,
+        giftInfluenceCost: 60,
+        giftStandingGain: 12,
+        demandInfluenceCost: 40,
+        demandStoresShare: 0.35,
+        demandStandingLoss: 22,
+        pactInfluenceCost: 250,
+        pactMinStanding: 45,
+        overruleInfluenceCost: 120,
         tensionBands: [
             TensionBand(maxTension: 30, disasterWeight: 0.5, opportunityWeight: 1.5, flavorWeight: 2.0),
             TensionBand(maxTension: 60, disasterWeight: 1.0, opportunityWeight: 1.0, flavorWeight: 1.0),
@@ -168,6 +205,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         boomDampenerTicks: Int,
         boomDampenerPerEvent: Double,
         deficitSpikePerResource: Double,
+        shortageFraction: Double = 0.1,
         eraRampPerEra: Double,
         scalePressureBasePopulation: Double = 30,
         scalePressurePerDoubling: Double = 4,
@@ -189,6 +227,16 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         majorEventChance: Double = 0.08,
         majorEventTensionBoost: Double = 0.25,
         minorEventChance: Double = 0.05,
+        decisionDeadlineTicks: Int = 180,
+        indecisionMoralePenalty: Double = 2.5,
+        giftInfluenceCost: Double = 60,
+        giftStandingGain: Double = 12,
+        demandInfluenceCost: Double = 40,
+        demandStoresShare: Double = 0.35,
+        demandStandingLoss: Double = 22,
+        pactInfluenceCost: Double = 250,
+        pactMinStanding: Double = 45,
+        overruleInfluenceCost: Double = 120,
         tensionBands: [TensionBand],
         baseExpeditionTicks: Int,
         ticksPerHazard: Int,
@@ -212,6 +260,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         self.boomDampenerTicks = boomDampenerTicks
         self.boomDampenerPerEvent = boomDampenerPerEvent
         self.deficitSpikePerResource = deficitSpikePerResource
+        self.shortageFraction = shortageFraction
         self.eraRampPerEra = eraRampPerEra
         self.scalePressureBasePopulation = scalePressureBasePopulation
         self.scalePressurePerDoubling = scalePressurePerDoubling
@@ -233,6 +282,16 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         self.majorEventChance = majorEventChance
         self.majorEventTensionBoost = majorEventTensionBoost
         self.minorEventChance = minorEventChance
+        self.decisionDeadlineTicks = decisionDeadlineTicks
+        self.indecisionMoralePenalty = indecisionMoralePenalty
+        self.giftInfluenceCost = giftInfluenceCost
+        self.giftStandingGain = giftStandingGain
+        self.demandInfluenceCost = demandInfluenceCost
+        self.demandStoresShare = demandStoresShare
+        self.demandStandingLoss = demandStandingLoss
+        self.pactInfluenceCost = pactInfluenceCost
+        self.pactMinStanding = pactMinStanding
+        self.overruleInfluenceCost = overruleInfluenceCost
         self.tensionBands = tensionBands
         self.baseExpeditionTicks = baseExpeditionTicks
         self.ticksPerHazard = ticksPerHazard
@@ -260,7 +319,12 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     // Custom decoding: every field falls back to the default when absent,
     // so the JSON file can be partial during balance iteration.
     private enum CodingKeys: String, CodingKey {
-        case tick, tension, resources, stability, events, exploration, calendar
+        case tick, tension, resources, stability, events, exploration, calendar, diplomacy
+    }
+    private enum DiplomacyKeys: String, CodingKey {
+        case giftInfluenceCost, giftStandingGain, demandInfluenceCost,
+             demandStoresShare, demandStandingLoss, pactInfluenceCost,
+             pactMinStanding, overruleInfluenceCost
     }
     private enum ExplorationKeys: String, CodingKey {
         case baseExpeditionTicks, ticksPerHazard, expeditionFoodCost,
@@ -276,8 +340,9 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     private enum TensionKeys: String, CodingKey {
         case threatMultiplier, prosperityDampener, prosperityNeutral,
              disasterSpikeDecayTicks, disasterSpikePerEvent, boomDampenerTicks,
-             boomDampenerPerEvent, deficitSpikePerResource, eraRampPerEra,
-             scalePressureBasePopulation, scalePressurePerDoubling, scalePressureCap
+             boomDampenerPerEvent, deficitSpikePerResource, shortageFraction,
+             eraRampPerEra, scalePressureBasePopulation, scalePressurePerDoubling,
+             scalePressureCap
     }
     private enum ResourceKeys: String, CodingKey {
         case foodPerPersonPerTick, defaultStorageCapacity, upkeepRateOfCost,
@@ -289,7 +354,8 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     }
     private enum EventKeys: String, CodingKey {
         case maxMajorEventsPerCycle, maxMinorEventsPerCycle, majorEventChance,
-             majorEventTensionBoost, minorEventChance, tensionBands
+             majorEventTensionBoost, minorEventChance, decisionDeadlineTicks,
+             indecisionMoralePenalty, tensionBands
     }
 
     public init(from decoder: Decoder) throws {
@@ -315,6 +381,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         boomDampenerTicks = (try? tension?.decodeIfPresent(Int.self, forKey: .boomDampenerTicks)) ?? d.boomDampenerTicks
         boomDampenerPerEvent = (try? tension?.decodeIfPresent(Double.self, forKey: .boomDampenerPerEvent)) ?? d.boomDampenerPerEvent
         deficitSpikePerResource = (try? tension?.decodeIfPresent(Double.self, forKey: .deficitSpikePerResource)) ?? d.deficitSpikePerResource
+        shortageFraction = (try? tension?.decodeIfPresent(Double.self, forKey: .shortageFraction)) ?? d.shortageFraction
         eraRampPerEra = (try? tension?.decodeIfPresent(Double.self, forKey: .eraRampPerEra)) ?? d.eraRampPerEra
         scalePressureBasePopulation = (try? tension?.decodeIfPresent(Double.self, forKey: .scalePressureBasePopulation)) ?? d.scalePressureBasePopulation
         scalePressurePerDoubling = (try? tension?.decodeIfPresent(Double.self, forKey: .scalePressurePerDoubling)) ?? d.scalePressurePerDoubling
@@ -342,7 +409,19 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         majorEventChance = (try? ev?.decodeIfPresent(Double.self, forKey: .majorEventChance)) ?? d.majorEventChance
         majorEventTensionBoost = (try? ev?.decodeIfPresent(Double.self, forKey: .majorEventTensionBoost)) ?? d.majorEventTensionBoost
         minorEventChance = (try? ev?.decodeIfPresent(Double.self, forKey: .minorEventChance)) ?? d.minorEventChance
+        decisionDeadlineTicks = (try? ev?.decodeIfPresent(Int.self, forKey: .decisionDeadlineTicks)) ?? d.decisionDeadlineTicks
+        indecisionMoralePenalty = (try? ev?.decodeIfPresent(Double.self, forKey: .indecisionMoralePenalty)) ?? d.indecisionMoralePenalty
         tensionBands = (try? ev?.decodeIfPresent([TensionBand].self, forKey: .tensionBands)) ?? d.tensionBands
+
+        let dip = try? c.nestedContainer(keyedBy: DiplomacyKeys.self, forKey: .diplomacy)
+        giftInfluenceCost = (try? dip?.decodeIfPresent(Double.self, forKey: .giftInfluenceCost)) ?? d.giftInfluenceCost
+        giftStandingGain = (try? dip?.decodeIfPresent(Double.self, forKey: .giftStandingGain)) ?? d.giftStandingGain
+        demandInfluenceCost = (try? dip?.decodeIfPresent(Double.self, forKey: .demandInfluenceCost)) ?? d.demandInfluenceCost
+        demandStoresShare = (try? dip?.decodeIfPresent(Double.self, forKey: .demandStoresShare)) ?? d.demandStoresShare
+        demandStandingLoss = (try? dip?.decodeIfPresent(Double.self, forKey: .demandStandingLoss)) ?? d.demandStandingLoss
+        pactInfluenceCost = (try? dip?.decodeIfPresent(Double.self, forKey: .pactInfluenceCost)) ?? d.pactInfluenceCost
+        pactMinStanding = (try? dip?.decodeIfPresent(Double.self, forKey: .pactMinStanding)) ?? d.pactMinStanding
+        overruleInfluenceCost = (try? dip?.decodeIfPresent(Double.self, forKey: .overruleInfluenceCost)) ?? d.overruleInfluenceCost
 
         let exp = try? c.nestedContainer(keyedBy: ExplorationKeys.self, forKey: .exploration)
         baseExpeditionTicks = (try? exp?.decodeIfPresent(Int.self, forKey: .baseExpeditionTicks)) ?? d.baseExpeditionTicks
@@ -376,6 +455,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         try tension.encode(boomDampenerTicks, forKey: .boomDampenerTicks)
         try tension.encode(boomDampenerPerEvent, forKey: .boomDampenerPerEvent)
         try tension.encode(deficitSpikePerResource, forKey: .deficitSpikePerResource)
+        try tension.encode(shortageFraction, forKey: .shortageFraction)
         try tension.encode(eraRampPerEra, forKey: .eraRampPerEra)
         try tension.encode(scalePressureBasePopulation, forKey: .scalePressureBasePopulation)
         try tension.encode(scalePressurePerDoubling, forKey: .scalePressurePerDoubling)
@@ -403,7 +483,19 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         try ev.encode(majorEventChance, forKey: .majorEventChance)
         try ev.encode(majorEventTensionBoost, forKey: .majorEventTensionBoost)
         try ev.encode(minorEventChance, forKey: .minorEventChance)
+        try ev.encode(decisionDeadlineTicks, forKey: .decisionDeadlineTicks)
+        try ev.encode(indecisionMoralePenalty, forKey: .indecisionMoralePenalty)
         try ev.encode(tensionBands, forKey: .tensionBands)
+
+        var dip = c.nestedContainer(keyedBy: DiplomacyKeys.self, forKey: .diplomacy)
+        try dip.encode(giftInfluenceCost, forKey: .giftInfluenceCost)
+        try dip.encode(giftStandingGain, forKey: .giftStandingGain)
+        try dip.encode(demandInfluenceCost, forKey: .demandInfluenceCost)
+        try dip.encode(demandStoresShare, forKey: .demandStoresShare)
+        try dip.encode(demandStandingLoss, forKey: .demandStandingLoss)
+        try dip.encode(pactInfluenceCost, forKey: .pactInfluenceCost)
+        try dip.encode(pactMinStanding, forKey: .pactMinStanding)
+        try dip.encode(overruleInfluenceCost, forKey: .overruleInfluenceCost)
 
         var exp = c.nestedContainer(keyedBy: ExplorationKeys.self, forKey: .exploration)
         try exp.encode(baseExpeditionTicks, forKey: .baseExpeditionTicks)

@@ -90,13 +90,83 @@ public enum GameEngine {
     }
 
     /// The leader's answer to the assembly's motion. Ratifying enacts the law;
-    /// vetoing shelves it. Overruling the council's vote costs morale.
+    /// vetoing shelves it. Overruling the council's vote costs morale — unless
+    /// the Leader spends their standing to smooth it over instead, which is
+    /// what political capital is *for*.
     public static func resolveLawProposal(
         _ state: WorldState,
         approve: Bool,
+        spendInfluence: Bool = false,
         registry: GameDataRegistry
     ) -> WorldState {
-        SocietyEngine.resolveProposal(state, approve: approve, registry: registry)
+        SocietyEngine.resolveProposal(state, approve: approve,
+                                      spendInfluence: spendInfluence, registry: registry)
+    }
+
+    // MARK: - Diplomacy
+    //
+    // Neighbouring peoples traded, married, raided and defected entirely on
+    // their own, and the Leader could only watch it happen. These are the acts
+    // that make influence a currency rather than a tax: standing you *spend*.
+
+    /// Sends a neighbouring people a gift, buying goodwill with standing.
+    public static func sendGift(
+        _ state: WorldState, tribeID: UUID, registry: GameDataRegistry
+    ) -> WorldState {
+        let config = registry.config
+        guard let index = state.tribes.firstIndex(where: { $0.id == tribeID }),
+              var s = spendInfluence(state, amount: config.giftInfluenceCost) else { return state }
+        s.tribes[index].standing = min(100, s.tribes[index].standing + config.giftStandingGain)
+        // A gift softens an old wound as well as buying today's goodwill.
+        s.tribes[index].grudge = max(0, s.tribes[index].grudge - config.giftStandingGain / 2)
+        return s
+    }
+
+    /// Presses a people for tribute: their stores, at the price of their trust.
+    public static func demandTribute(
+        _ state: WorldState, tribeID: UUID, registry: GameDataRegistry
+    ) -> WorldState {
+        let config = registry.config
+        guard let index = state.tribes.firstIndex(where: { $0.id == tribeID }),
+              let seatIndex = state.settlements.indices.first,
+              var s = spendInfluence(state, amount: config.demandInfluenceCost) else { return state }
+        let taken = s.tribes[index].stores * config.demandStoresShare
+        s.tribes[index].stores = max(0, s.tribes[index].stores - taken)
+        s.tribes[index].standing = max(-100, s.tribes[index].standing - config.demandStandingLoss)
+        s.tribes[index].grudge = min(100, s.tribes[index].grudge + config.demandStandingLoss / 2)
+        s.settlements[seatIndex].storage[.food] = min(
+            s.settlements[seatIndex].storageCapacity,
+            s.settlements[seatIndex].storage[.food] + taken)
+        return s
+    }
+
+    /// Seals a pact with a people who already trust you. Standing alone can't
+    /// buy an alliance from strangers — they have to want it first.
+    public static func proposePact(
+        _ state: WorldState, tribeID: UUID, registry: GameDataRegistry
+    ) -> WorldState {
+        let config = registry.config
+        guard let index = state.tribes.firstIndex(where: { $0.id == tribeID }),
+              state.tribes[index].standing >= config.pactMinStanding,
+              var s = spendInfluence(state, amount: config.pactInfluenceCost) else { return state }
+        s.tribes[index].standing = max(s.tribes[index].standing, 60)   // `.allied`
+        s.tribes[index].grudge = 0
+        return s
+    }
+
+    /// Whether the seat can currently afford an act of this price.
+    public static func canAfford(influence amount: Double, in state: WorldState) -> Bool {
+        (state.settlements.first?.storage[.influence] ?? 0) >= amount
+    }
+
+    /// Draws influence from the seat of power, or `nil` if it can't be paid —
+    /// so a half-affordable act is inert rather than partially applied.
+    static func spendInfluence(_ state: WorldState, amount: Double) -> WorldState? {
+        guard let index = state.settlements.indices.first,
+              state.settlements[index].storage[.influence] >= amount else { return nil }
+        var s = state
+        s.settlements[index].storage[.influence] -= amount
+        return s
     }
 
     /// Reassigns a colonist to a different kind of work.

@@ -59,6 +59,10 @@ public struct EventTemplate: Codable, Sendable, Equatable, Identifiable {
     public let conditions: [EventCondition]
     public let effects: [EventEffect]
     public let choices: [EventChoice]
+    /// How long the Leader has to answer this event's choice before the moment
+    /// passes. `nil` falls back to `WorldConfig.decisionDeadlineTicks` — set it
+    /// for a moment that keeps or slips faster than most.
+    public let decisionTicks: Int?
     public let narrativeHint: String
 
     public init(
@@ -71,6 +75,7 @@ public struct EventTemplate: Codable, Sendable, Equatable, Identifiable {
         conditions: [EventCondition] = [],
         effects: [EventEffect] = [],
         choices: [EventChoice] = [],
+        decisionTicks: Int? = nil,
         narrativeHint: String
     ) {
         self.id = id
@@ -82,6 +87,7 @@ public struct EventTemplate: Codable, Sendable, Equatable, Identifiable {
         self.conditions = conditions
         self.effects = effects
         self.choices = choices
+        self.decisionTicks = decisionTicks
         self.narrativeHint = narrativeHint
     }
 
@@ -89,6 +95,7 @@ public struct EventTemplate: Codable, Sendable, Equatable, Identifiable {
         case id, type, name, era, weight
         case cooldownTicks = "cooldown_ticks"
         case conditions, effects, choices
+        case decisionTicks = "decision_ticks"
         case narrativeHint = "narrative_hint"
     }
 
@@ -103,6 +110,7 @@ public struct EventTemplate: Codable, Sendable, Equatable, Identifiable {
         conditions = try c.decodeIfPresent([EventCondition].self, forKey: .conditions) ?? []
         effects = try c.decodeIfPresent([EventEffect].self, forKey: .effects) ?? []
         choices = try c.decodeIfPresent([EventChoice].self, forKey: .choices) ?? []
+        decisionTicks = try c.decodeIfPresent(Int.self, forKey: .decisionTicks)
         narrativeHint = try c.decode(String.self, forKey: .narrativeHint)
     }
 
