@@ -144,6 +144,60 @@ struct EventDensityTests {
     }
 }
 
+/// Nothing in the game consumed materials or influence at all — they were only
+/// ever spent as a one-off at build time — so every stockpile except food ran
+/// to the cap and sat there. A colony you have built should cost something to
+/// keep standing.
+@Suite("Drama — the colony costs something to run")
+struct UpkeepTests {
+    static let quarry = BuildingDefinition(
+        id: "quarry", era: .earlySettlement, name: "Quarry",
+        cost: [.materials: 100], production: [.materials: 5]
+    )
+
+    @Test("Upkeep is derived from what the building cost to raise")
+    func upkeepScalesWithCost() {
+        let cheap = BuildingDefinition(id: "hut", era: .earlySettlement, name: "Hut",
+                                       cost: [.materials: 10])
+        let dear = BuildingDefinition(id: "arcology", era: .nearFuture, name: "Arcology",
+                                      cost: [.materials: 480])
+        let config = WorldConfig.default
+        #expect(ResourceLoop.upkeep(for: dear, config: config)[.materials]
+                > ResourceLoop.upkeep(for: cheap, config: config)[.materials],
+                "a costlier building should cost more to maintain, so upkeep scales with era for free")
+    }
+
+    @Test("An explicit upkeep in the data overrides the derived one")
+    func explicitUpkeepWins() {
+        let monument = BuildingDefinition(
+            id: "monument", era: .ancient, name: "Monument",
+            cost: [.materials: 200], upkeep: [.materials: 0]
+        )
+        #expect(ResourceLoop.upkeep(for: monument, config: .default)[.materials] == 0,
+                "data must be able to say 'this one needs no upkeep'")
+    }
+
+    @Test("Standing buildings draw upkeep every tick")
+    func upkeepIsCharged() {
+        let registry = Fixtures.registry(buildings: [Self.quarry], config: .default)
+        var world = WorldState(tick: 0, settlements: [
+            Settlement(
+                id: UUID(uuidString: "00000000-0000-0000-0000-0000000000BB")!,
+                name: "Works", pawns: Fixtures.pawns(2, work: .mining),
+                buildings: [BuildingInstance(definitionID: "quarry", count: 10)],
+                storage: [.materials: 300, .food: 500]
+            )
+        ])
+        let before = world.settlements[0].storage[.materials]
+        world = TickEngine.advance(world, ticks: 1, registry: registry).state
+        let after = world.settlements[0].storage[.materials]
+        // 10 quarries produce 50/tick gross but cost 10 × (100 × rate) to keep.
+        let expectedUpkeep = 10 * ResourceLoop.upkeep(for: Self.quarry, config: .default)[.materials]
+        #expect(after < before + 50, "upkeep must be drawn from the same stockpile production feeds")
+        #expect(expectedUpkeep > 0)
+    }
+}
+
 @Suite("Drama — storage is a real sink")
 struct StorageCapacityTests {
     static let granary = BuildingDefinition(

@@ -28,7 +28,27 @@ struct WorldMapView: View {
                     .gesture(panGesture.simultaneously(with: zoomGesture))
             }
             .clipped()
+            .overlay(alignment: .topLeading) { homeButton }
         }
+    }
+
+    /// An endless map grows outward without bound, so it's easy to drag off
+    /// into unexplored dark and lose the homeland entirely. This walks back.
+    private var homeButton: some View {
+        Button {
+            withAnimation(.snappy) {
+                pan = .zero; committedPan = .zero
+                zoom = 1; committedZoom = 1
+            }
+        } label: {
+            Image(systemName: "house.fill")
+                .font(.caption)
+                .padding(8)
+                .background(.ultraThinMaterial, in: Circle())
+        }
+        .tint(Theme.text)
+        .padding(12)
+        .accessibilityLabel(AppStrings.language == .cs ? "Zpět k domovině" : "Back to the homeland")
     }
 
     private var tiles: some View {
@@ -66,7 +86,9 @@ struct WorldMapView: View {
                     .foregroundStyle(isFrontier ? Theme.accent : Theme.textDim.opacity(0.45))
             } else {
                 HexTerrainView(region: region)
+                hazardWash(region)
                 marker(region)
+                hazardPips(region)
             }
 
             HexTileShape()
@@ -78,6 +100,41 @@ struct WorldMapView: View {
         .contentShape(HexTileShape())
         .onTapGesture { selectedRegionID = region.id }
     }
+
+    /// Hazard rises with every ring you push out from the homeland (see
+    /// `MapGenerator`), which is the spine of the whole "endless frontier"
+    /// idea — going further is worth more and costs more. It was only ever a
+    /// number buried in the detail panel, so the map itself couldn't tell you
+    /// where the danger was. Deep tiles now darken toward red.
+    @ViewBuilder
+    private func hazardWash(_ region: Region) -> some View {
+        let intensity = min(1, Double(region.hazardLevel) / hazardCeiling)
+        if intensity > 0.01 {
+            HexTileShape().fill(Theme.danger.opacity(intensity * 0.32))
+        }
+    }
+
+    /// A quick read of how bad it is, without having to select the tile.
+    @ViewBuilder
+    private func hazardPips(_ region: Region) -> some View {
+        let pips = min(4, region.hazardLevel / 2)
+        if pips > 0 {
+            HStack(spacing: 2) {
+                ForEach(0..<pips, id: \.self) { _ in
+                    Circle().fill(Theme.danger).frame(width: 3.5, height: 3.5)
+                }
+            }
+            .padding(.horizontal, 4)
+            .padding(.vertical, 2)
+            .background(Color.black.opacity(0.35), in: Capsule())
+            .offset(y: 15)
+            .accessibilityLabel("\(AppStrings.language == .cs ? "Nebezpečí" : "Hazard") \(region.hazardLevel)")
+        }
+    }
+
+    /// The hazard at which a tile reads as fully dangerous. Beyond this the
+    /// wash simply saturates rather than going opaque and hiding the terrain.
+    private let hazardCeiling: Double = 12
 
     @ViewBuilder
     private func marker(_ region: Region) -> some View {
@@ -114,8 +171,8 @@ struct WorldMapView: View {
     }
 
     private var zoomGesture: some Gesture {
-        MagnificationGesture()
-            .onChanged { zoom = min(max(committedZoom * $0, 0.5), 3) }
+        MagnifyGesture()
+            .onChanged { zoom = min(max(committedZoom * $0.magnification, 0.5), 3) }
             .onEnded { _ in committedZoom = zoom }
     }
 }

@@ -53,6 +53,11 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     // Resources
     public var foodPerPersonPerTick: Double
     public var defaultStorageCapacity: Double
+    /// Share of a building's materials cost charged per tick as maintenance,
+    /// when it doesn't declare an explicit `upkeep`. This is the dial that
+    /// decides whether a mature colony's economy has any tension in it: too low
+    /// and the stores just pin at the cap, too high and nothing can be built.
+    public var upkeepRateOfCost: Double
 
     // Stability thresholds
     public var collapseThreshold: Double
@@ -101,6 +106,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         scalePressureCap: 25,
         foodPerPersonPerTick: 0.1,
         defaultStorageCapacity: 500,
+        upkeepRateOfCost: 0.03,
         collapseThreshold: 10,
         warningThreshold: 20,
         mercyEventThreshold: 10,
@@ -145,6 +151,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         scalePressureCap: Double = 25,
         foodPerPersonPerTick: Double,
         defaultStorageCapacity: Double,
+        upkeepRateOfCost: Double = 0.03,
         collapseThreshold: Double,
         warningThreshold: Double,
         mercyEventThreshold: Double,
@@ -182,6 +189,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         self.scalePressureCap = scalePressureCap
         self.foodPerPersonPerTick = foodPerPersonPerTick
         self.defaultStorageCapacity = defaultStorageCapacity
+        self.upkeepRateOfCost = upkeepRateOfCost
         self.collapseThreshold = collapseThreshold
         self.warningThreshold = warningThreshold
         self.mercyEventThreshold = mercyEventThreshold
@@ -237,7 +245,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
              scalePressureBasePopulation, scalePressurePerDoubling, scalePressureCap
     }
     private enum ResourceKeys: String, CodingKey {
-        case foodPerPersonPerTick, defaultStorageCapacity
+        case foodPerPersonPerTick, defaultStorageCapacity, upkeepRateOfCost
     }
     private enum StabilityKeys: String, CodingKey {
         case collapseThreshold, warningThreshold, mercyEventThreshold
@@ -278,6 +286,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         let res = try? c.nestedContainer(keyedBy: ResourceKeys.self, forKey: .resources)
         foodPerPersonPerTick = (try? res?.decodeIfPresent(Double.self, forKey: .foodPerPersonPerTick)) ?? d.foodPerPersonPerTick
         defaultStorageCapacity = (try? res?.decodeIfPresent(Double.self, forKey: .defaultStorageCapacity)) ?? d.defaultStorageCapacity
+        upkeepRateOfCost = (try? res?.decodeIfPresent(Double.self, forKey: .upkeepRateOfCost)) ?? d.upkeepRateOfCost
 
         let stab = try? c.nestedContainer(keyedBy: StabilityKeys.self, forKey: .stability)
         collapseThreshold = (try? stab?.decodeIfPresent(Double.self, forKey: .collapseThreshold)) ?? d.collapseThreshold
@@ -332,6 +341,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         var res = c.nestedContainer(keyedBy: ResourceKeys.self, forKey: .resources)
         try res.encode(foodPerPersonPerTick, forKey: .foodPerPersonPerTick)
         try res.encode(defaultStorageCapacity, forKey: .defaultStorageCapacity)
+        try res.encode(upkeepRateOfCost, forKey: .upkeepRateOfCost)
 
         var stab = c.nestedContainer(keyedBy: StabilityKeys.self, forKey: .stability)
         try stab.encode(collapseThreshold, forKey: .collapseThreshold)

@@ -31,6 +31,31 @@ public enum ResourceLoop {
         }
     }
 
+    /// What one instance of a building costs per tick to keep standing.
+    ///
+    /// Nothing consumed materials or influence at all — they were spent once at
+    /// build time and never again — so every stockpile bar food ran to the cap
+    /// and stayed pinned there, which is what made a mature colony's economy
+    /// meaningless.
+    ///
+    /// Upkeep is a standing fraction of *what the building cost to raise*, in
+    /// the same resources it cost. That keeps it honest with no hand-authoring
+    /// across 46 entries: an arcology is a burden a hut is not, and a research
+    /// campus that cost knowledge keeps drawing knowledge, which gives the
+    /// knowledge stockpile a sink that outlives the tech tree. `upkeep` in the
+    /// JSON overrides this outright (for a monument that needs nothing).
+    ///
+    /// The hand-authored `consumption` field stays separate: that's the
+    /// building's *operating* draw (a factory's energy), not its maintenance.
+    public static func upkeep(for def: BuildingDefinition, config: WorldConfig) -> Resources {
+        if let explicit = def.upkeep { return explicit }
+        var derived = Resources()
+        for resource in ResourceType.allCases {
+            derived[resource] = def.cost[resource] * config.upkeepRateOfCost
+        }
+        return derived
+    }
+
     public static func advanceOneTick(_ state: WorldState, registry: GameDataRegistry) -> WorldState {
         var s = state
         let config = registry.config
@@ -60,15 +85,19 @@ public enum ResourceLoop {
         //    specialisation multiplies its gross production (not consumption),
         //    so e.g. an agricultural town grows far more food than it would
         //    balanced, at the cost of whatever it down-weights.
+        //    Upkeep is charged alongside operating consumption: a standing
+        //    colony costs materials to keep standing, which is what stops the
+        //    stores from simply filling and pinning at the cap forever.
         var net = Resources()
         for instance in s.buildings {
             guard let def = registry.building(instance.definitionID) else { continue }
             let count = Double(instance.count)
+            let maintenance = upkeep(for: def, config: config)
             for resource in ResourceType.allCases {
                 let produced = def.production[resource]
                     * profile.productionMultiplier(resource)
                     * config.seasonYieldMultiplier(for: resource, tick: tick)
-                let consumed = def.consumption[resource]
+                let consumed = def.consumption[resource] + maintenance[resource]
                 net[resource] = net[resource] + (produced - consumed) * count
             }
         }

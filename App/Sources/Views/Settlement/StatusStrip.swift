@@ -7,6 +7,7 @@ import EndlessFrontierCore
 struct StatusStrip: View {
     @Bindable var game: GameViewModel
     @State private var showDiagnostics = false
+    @State private var showSettings = false
 
     var body: some View {
         VStack(spacing: 10) {
@@ -28,12 +29,24 @@ struct StatusStrip: View {
                         .foregroundStyle(Theme.textDim)
                 }
                 .accessibilityLabel(AppStrings.language == .cs ? "Diagnostika" : "Diagnostics")
+                Button {
+                    showSettings = true
+                } label: {
+                    Image(systemName: "gearshape")
+                        .font(.callout)
+                        .foregroundStyle(Theme.textDim)
+                }
+                .accessibilityLabel(AppStrings.settings)
                 tensionPip
             }
             resourcePills
         }
         .sheet(isPresented: $showDiagnostics) {
             DiagnosticsView(game: game)
+                .presentationBackground(Theme.surface)
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView(game: game)
                 .presentationBackground(Theme.surface)
         }
         .padding(.horizontal, 16)

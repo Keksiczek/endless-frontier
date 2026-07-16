@@ -28,6 +28,18 @@ enum AppStrings {
     static var details: String { s("Details", "Detaily") }
     static var newColony: String { s("New world", "Nový svět") }
 
+    // Settings
+    static var settings: String { s("Settings", "Nastavení") }
+    static var done: String { s("Done", "Hotovo") }
+    static var cancel: String { s("Cancel", "Zrušit") }
+    static var startNewGame: String { s("Start a new world", "Založit nový svět") }
+    static var startNewGameBlurb: String {
+        s("Abandons this world and founds another under a fresh sky. What has happened here cannot be recovered.",
+          "Opustíš tento svět a založíš jiný pod novou oblohou. Co se tu stalo, už nepůjde vrátit.")
+    }
+    static var startNewGameConfirm: String { s("Abandon this world", "Opustit tento svět") }
+    static var about: String { s("About", "O hře") }
+
     static func seasonName(_ season: Season) -> String {
         switch season {
         case .spring: return s("Spring", "Jaro")

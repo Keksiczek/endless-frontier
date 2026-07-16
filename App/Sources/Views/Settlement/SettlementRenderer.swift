@@ -14,6 +14,32 @@ enum SettlementRenderer {
     /// Cap on drawn structures, so a large town stays legible.
     static let maxVisibleBuildings = 30
 
+    /// Where the viewer is standing: how far in, and how far they've dragged.
+    ///
+    /// Zoom is applied by *scaling the rect the world is mapped into*, not by
+    /// a `scaleEffect` on the view — a layer transform would resample the
+    /// finished bitmap and turn crisp hairlines into mush. Mapping into a
+    /// larger rect re-strokes everything at the new size, so the line art stays
+    /// sharp however far you push in.
+    struct Camera: Equatable {
+        var scale: CGFloat = 1
+        var offset: CGSize = .zero
+
+        static let minScale: CGFloat = 1
+        static let maxScale: CGFloat = 4
+    }
+
+    /// The rect the world is mapped into for a given camera — the view's rect
+    /// scaled about its centre and dragged by the camera's offset.
+    static func worldRect(viewRect: CGRect, camera: Camera) -> CGRect {
+        let w = viewRect.width * camera.scale
+        let h = viewRect.height * camera.scale
+        return CGRect(
+            x: viewRect.midX - w / 2 + camera.offset.width,
+            y: viewRect.midY - h / 2 + camera.offset.height,
+            width: w, height: h)
+    }
+
     static func draw(
         _ context: inout GraphicsContext,
         size: CGSize,
@@ -22,19 +48,25 @@ enum SettlementRenderer {
         registry: GameDataRegistry,
         time: Double,
         season: Season,
-        selectedPawnID: UUID?
+        camera: Camera,
+        selectedPawnID: UUID?,
+        selectedBuildingID: Int?
     ) {
-        let rect = CGRect(origin: .zero, size: size)
+        let viewRect = CGRect(origin: .zero, size: size)
+        let rect = worldRect(viewRect: viewRect, camera: camera)
         ground(&context, rect: rect, map: map)
         heartGlow(&context, rect: rect)
         river(&context, rect: rect, river: map.river)
         scenery(&context, rect: rect, map: map)
         deposits(&context, rect: rect, map: map)
-        buildings(&context, rect: rect, settlement: settlement, registry: registry)
+        buildings(&context, rect: rect, settlement: settlement, registry: registry,
+                  selectedBuildingID: selectedBuildingID)
         agents(&context, rect: rect, settlement: settlement, map: map,
                time: time, selectedPawnID: selectedPawnID)
         fog(&context, rect: rect, map: map)
-        seasonWash(&context, rect: rect, size: size, season: season, time: time)
+        // The seasonal wash is atmosphere over the lens, not part of the world,
+        // so it stays in view space and doesn't slide when you pan.
+        seasonWash(&context, rect: viewRect, size: size, season: season, time: time)
     }
 
     /// Maps a normalised model point to a pixel point in `rect`.
@@ -314,36 +346,71 @@ enum SettlementRenderer {
         }
     }
 
-    private static func buildings(
-        _ context: inout GraphicsContext, rect: CGRect,
-        settlement: Settlement, registry: GameDataRegistry
-    ) {
-        // Expand instance counts into individual structures, then lay them in
-        // calm rings around the heart. Housing goes to the outer rings so the
-        // civic buildings hold the centre.
-        var glyphs: [BuildingGlyph] = []
+    /// One structure standing in the settlement, at the spot it is drawn.
+    ///
+    /// The ring layout used to live inside the draw call, which meant a
+    /// building on screen had no identity — there was nothing for a tap to
+    /// land on. Layout is now computed once, here, and both the renderer and
+    /// the canvas's hit-testing read from it, so what you tap is exactly what
+    /// you see.
+    struct PlacedBuilding: Identifiable {
+        let id: Int              // stable within a layout pass
+        let definitionID: String
+        let glyph: BuildingGlyph
+        let center: CGPoint
+        let size: CGFloat
+    }
+
+    /// Lays the settlement's structures out in calm rings around the heart.
+    /// Civic buildings hold the centre; housing drifts to the outer rings.
+    /// Pure and deterministic — the same settlement always lays out the same.
+    static func layout(
+        settlement: Settlement, registry: GameDataRegistry, rect: CGRect
+    ) -> [PlacedBuilding] {
+        var expanded: [(id: String, glyph: BuildingGlyph)] = []
         for instance in settlement.buildings {
             let g = registry.building(instance.definitionID).map(glyph(for:)) ?? .house
-            for _ in 0..<instance.count where glyphs.count < maxVisibleBuildings {
-                glyphs.append(g)
+            for _ in 0..<instance.count where expanded.count < maxVisibleBuildings {
+                expanded.append((instance.definitionID, g))
             }
         }
-        guard !glyphs.isEmpty else { return }
-        glyphs.sort { rank($0) < rank($1) }
+        guard !expanded.isEmpty else { return [] }
+        expanded.sort { rank($0.glyph) < rank($1.glyph) }
 
         let heart = point(LocalPoint(x: 0.5, y: 0.52), in: rect)
         let unit = min(rect.width, rect.height)
+        var placed: [PlacedBuilding] = []
         var drawn = 0, ringIndex = 0
-        while drawn < glyphs.count {
+        while drawn < expanded.count {
             let perRing = ringIndex == 0 ? 1 : ringIndex * 6
             let radius = Double(ringIndex) * unit * 0.058
-            for slot in 0..<perRing where drawn < glyphs.count {
+            for slot in 0..<perRing where drawn < expanded.count {
                 let angle = Double(slot) / Double(perRing) * 2 * .pi + Double(ringIndex) * 0.6
                 let c = CGPoint(x: heart.x + cos(angle) * radius, y: heart.y + sin(angle) * radius)
-                drawBuilding(glyphs[drawn], at: c, s: unit * 0.021, context: &context)
+                placed.append(PlacedBuilding(id: drawn, definitionID: expanded[drawn].id,
+                                             glyph: expanded[drawn].glyph, center: c,
+                                             size: unit * 0.021))
                 drawn += 1
             }
             ringIndex += 1
+        }
+        return placed
+    }
+
+    private static func buildings(
+        _ context: inout GraphicsContext, rect: CGRect,
+        settlement: Settlement, registry: GameDataRegistry,
+        selectedBuildingID: Int?
+    ) {
+        for building in layout(settlement: settlement, registry: registry, rect: rect) {
+            drawBuilding(building.glyph, at: building.center, s: building.size, context: &context)
+            if building.id == selectedBuildingID {
+                let r = building.size * 2.6
+                context.stroke(
+                    Path(ellipseIn: CGRect(x: building.center.x - r, y: building.center.y - r,
+                                           width: r * 2, height: r * 2)),
+                    with: .color(Theme.accent), lineWidth: 1.5)
+            }
         }
     }
 

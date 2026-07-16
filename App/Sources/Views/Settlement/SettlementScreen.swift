@@ -6,7 +6,7 @@ import EndlessFrontierCore
 /// a swipe-up detail drawer, so the scene stays calm and legible.
 struct SettlementScreen: View {
     @Bindable var game: GameViewModel
-    @State private var selectedPawnID: UUID?
+    @State private var selection: CanvasSelection = .none
     @State private var showDetails = false
 
     var body: some View {
@@ -36,7 +36,7 @@ struct SettlementScreen: View {
             if let map = game.viewedLocalMap, let settlement = game.selectedSettlement {
                 SettlementCanvasView(
                     settlement: settlement, map: map, registry: game.registry,
-                    season: game.season, selectedPawnID: $selectedPawnID)
+                    season: game.season, selection: $selection)
                 .overlay(alignment: .topTrailing) {
                     MinimapView(map: map).padding(12)
                 }
@@ -50,14 +50,22 @@ struct SettlementScreen: View {
     @ViewBuilder
     private var bottomLayer: some View {
         VStack(spacing: 10) {
-            // A decision outranks idle curiosity about a colonist.
+            // A decision outranks idle curiosity about the scene.
             if let decision = game.currentDecision {
                 EventDecisionCard(game: game, template: decision,
                                   queued: max(0, game.pendingEvents.count - 1))
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if let pawn = selectedPawn {
                 PawnInspectorCard(pawn: pawn, ticksPerYear: game.ticksPerYear) {
-                    withAnimation(.easeOut(duration: 0.15)) { selectedPawnID = nil }
+                    withAnimation(.easeOut(duration: 0.15)) { selection = .none }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if let building = selectedBuilding {
+                BuildingInspectorCard(
+                    definition: building.definition, standing: building.standing,
+                    upkeep: building.upkeep
+                ) {
+                    withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
@@ -104,8 +112,17 @@ struct SettlementScreen: View {
     }
 
     private var selectedPawn: Pawn? {
-        guard let id = selectedPawnID else { return nil }
+        guard case let .pawn(id) = selection else { return nil }
         return game.selectedSettlement?.pawns.first { $0.id == id }
+    }
+
+    /// The tapped structure, resolved to what the inspector needs to show.
+    private var selectedBuilding: (definition: BuildingDefinition, standing: Int, upkeep: Resources)? {
+        guard case let .building(_, definitionID) = selection,
+              let definition = game.buildingDefinition(definitionID) else { return nil }
+        let standing = game.selectedSettlement?.buildings
+            .first { $0.definitionID == definitionID }?.count ?? 0
+        return (definition, standing, game.upkeep(for: definition))
     }
 
     private var summaryBinding: Binding<Bool> {

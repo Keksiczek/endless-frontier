@@ -67,6 +67,12 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
     /// Capacity is derived from buildings the same way `housing` is, so a
     /// colony that wants deeper stores has to build for them.
     public let storage: Double
+    /// What this building costs per tick to keep standing. When `nil` the
+    /// resource loop derives it from `cost` — see `ResourceLoop.upkeep(for:)`,
+    /// which is what makes upkeep scale with era without hand-authoring 46
+    /// entries. Set it explicitly to opt a building out, or to give it an
+    /// upkeep its build cost wouldn't imply.
+    public let upkeep: Resources?
     public let pollution: Double
     public let footprint: TileSize
     public let adjacency: [AdjacencyRule]
@@ -84,6 +90,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         defense: Double = 0,
         housing: Double = 0,
         storage: Double = 0,
+        upkeep: Resources? = nil,
         pollution: Double = 0,
         footprint: TileSize = TileSize(),
         adjacency: [AdjacencyRule] = [],
@@ -100,6 +107,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         self.defense = defense
         self.housing = housing
         self.storage = storage
+        self.upkeep = upkeep
         self.pollution = pollution
         self.footprint = footprint
         self.adjacency = adjacency
@@ -109,7 +117,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case id, era, name, cost, workers, production, consumption
         case moraleEffect = "morale_effect"
-        case defense, housing, storage, pollution, footprint, adjacency
+        case defense, housing, storage, upkeep, pollution, footprint, adjacency
         case description
     }
 
@@ -126,6 +134,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         defense = try c.decodeIfPresent(Double.self, forKey: .defense) ?? 0
         housing = try c.decodeIfPresent(Double.self, forKey: .housing) ?? 0
         storage = try c.decodeIfPresent(Double.self, forKey: .storage) ?? 0
+        upkeep = try c.decodeIfPresent(Resources.self, forKey: .upkeep)
         pollution = try c.decodeIfPresent(Double.self, forKey: .pollution) ?? 0
         footprint = try c.decodeIfPresent(TileSize.self, forKey: .footprint) ?? TileSize()
         adjacency = try c.decodeIfPresent([AdjacencyRule].self, forKey: .adjacency) ?? []

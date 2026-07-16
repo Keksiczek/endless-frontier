@@ -25,7 +25,8 @@
   },
   "resources": {
     "foodPerPersonPerTick": 0.1,
-    "defaultStorageCapacity": 500
+    "defaultStorageCapacity": 500,
+    "upkeepRateOfCost": 0.03
   },
   "stability": {
     "collapseThreshold": 10,

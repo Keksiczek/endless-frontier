@@ -407,6 +407,11 @@ final class GameViewModel {
 
     func buildingDefinition(_ id: String) -> BuildingDefinition? { registry.building(id) }
 
+    /// What one instance of a building costs per tick to keep standing.
+    func upkeep(for definition: BuildingDefinition) -> Resources {
+        ResourceLoop.upkeep(for: definition, config: registry.config)
+    }
+
     func buildingName(_ id: String) -> String { registry.building(id)?.name ?? id }
 
     func canAfford(_ cost: Resources) -> Bool {
