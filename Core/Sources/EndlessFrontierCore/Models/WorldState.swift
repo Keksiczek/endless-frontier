@@ -68,6 +68,24 @@ public struct HistoricalEvent: Codable, Sendable, Equatable, Identifiable {
     }
 }
 
+/// An event that fired with choices attached and is waiting for the player —
+/// the Leader — to decide. Without this the choices' effects (welcoming
+/// migrants, buying a caravan's goods) could never run at all.
+///
+/// Identified by `templateID`, so the same event queuing again while one is
+/// already pending replaces it rather than burying the player in duplicates.
+public struct PendingEvent: Codable, Sendable, Equatable, Identifiable {
+    public let templateID: String
+    public let tick: Int
+
+    public var id: String { templateID }
+
+    public init(templateID: String, tick: Int) {
+        self.templateID = templateID
+        self.tick = tick
+    }
+}
+
 /// The single source of truth for the simulation. Codable for JSON
 /// persistence. Mutated only inside engine functions.
 public struct WorldState: Codable, Sendable, Equatable {
@@ -118,6 +136,8 @@ public struct WorldState: Codable, Sendable, Equatable {
     public var records: [WorldRecord]
     /// Neighbouring peoples who grew out of your own settlement.
     public var tribes: [Tribe]
+    /// Events awaiting the Leader's decision (see `PendingEvent`).
+    public var pendingEvents: [PendingEvent]
 
     public init(
         schemaVersion: Int = WorldState.currentSchemaVersion,
@@ -144,7 +164,8 @@ public struct WorldState: Codable, Sendable, Equatable {
         completedQuests: Set<String> = [],
         pendingLawProposal: LawProposal? = nil,
         records: [WorldRecord] = [],
-        tribes: [Tribe] = []
+        tribes: [Tribe] = [],
+        pendingEvents: [PendingEvent] = []
     ) {
         self.schemaVersion = schemaVersion
         self.tick = tick
@@ -171,6 +192,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         self.pendingLawProposal = pendingLawProposal
         self.records = records
         self.tribes = tribes
+        self.pendingEvents = pendingEvents
     }
 
     /// Total population across all settlements.
@@ -191,7 +213,7 @@ public struct WorldState: Codable, Sendable, Equatable {
              researchedTechs, activeResearch, researchProgress, globalStats,
              unlockedBuildings, worldFlags, settlements, regions, tradeRoutes,
              caravans, activeExpedition, eventHistory, eventCooldowns,
-             scheduledEffects, activeQuests, completedQuests, pendingLawProposal, records, tribes
+             scheduledEffects, activeQuests, completedQuests, pendingLawProposal, records, tribes, pendingEvents
     }
 
     public init(from decoder: Decoder) throws {
@@ -226,6 +248,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         pendingLawProposal = (try? c.decodeIfPresent(LawProposal.self, forKey: .pendingLawProposal)) ?? nil
         records = value(.records, [])
         tribes = value(.tribes, [])
+        pendingEvents = value(.pendingEvents, [])
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -255,5 +278,6 @@ public struct WorldState: Codable, Sendable, Equatable {
         try c.encodeIfPresent(pendingLawProposal, forKey: .pendingLawProposal)
         try c.encode(records, forKey: .records)
         try c.encode(tribes, forKey: .tribes)
+        try c.encode(pendingEvents, forKey: .pendingEvents)
     }
 }

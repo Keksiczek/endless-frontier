@@ -98,21 +98,21 @@ final class Diagnostics {
             add(.tribe, "A people split off: \(tribe.name) (\(Int(tribe.population)) souls).", year: year)
         }
 
-        // Fired events — and the crucial flag on choice-gated ones.
+        // Fired events. Choice events now queue for the player rather than
+        // evaporating, so note that a decision is waiting.
         for event in fired {
             let template = registry.events.first { $0.id == event.templateID }
             let name = template?.name ?? event.templateID
             if let template, !template.choices.isEmpty {
-                let addsColonists = template.choices.contains { choice in
-                    choice.effects.contains { if case .addPawn = $0 { return true }; return false }
-                }
-                let note = addsColonists
-                    ? " ⚠️ has \(template.choices.count) choice(s) INCLUDING 'welcome colonists' — but the app never presents them, so NO ONE is added."
-                    : " (has \(template.choices.count) choice(s), not presented in-app)"
-                add(.warning, "Event fired: \(name).\(note)", year: year)
+                add(.event, "Event fired: \(name) — queued for your decision "
+                    + "(\(template.choices.count) choices).", year: year)
             } else {
                 add(.event, "Event fired: \(name).", year: year)
             }
+        }
+        if !after.pendingEvents.isEmpty {
+            add(.warning, "\(after.pendingEvents.count) decision(s) awaiting you on the Settlement screen.",
+                year: year)
         }
     }
 

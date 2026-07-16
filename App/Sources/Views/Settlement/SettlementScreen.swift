@@ -50,7 +50,12 @@ struct SettlementScreen: View {
     @ViewBuilder
     private var bottomLayer: some View {
         VStack(spacing: 10) {
-            if let pawn = selectedPawn {
+            // A decision outranks idle curiosity about a colonist.
+            if let decision = game.currentDecision {
+                EventDecisionCard(game: game, template: decision,
+                                  queued: max(0, game.pendingEvents.count - 1))
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if let pawn = selectedPawn {
                 PawnInspectorCard(pawn: pawn, ticksPerYear: game.ticksPerYear) {
                     withAnimation(.easeOut(duration: 0.15)) { selectedPawnID = nil }
                 }
@@ -59,6 +64,7 @@ struct SettlementScreen: View {
             controlBar
         }
         .padding(12)
+        .animation(.easeOut(duration: 0.2), value: game.pendingEvents.count)
     }
 
     private var controlBar: some View {

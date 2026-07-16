@@ -105,8 +105,14 @@ public enum StoryPlanner {
         return next
     }
 
+    /// How many decisions may stack up waiting for the player. Catching up on a
+    /// month offline can fire the same event dozens of times; the Leader should
+    /// come back to a handful of decisions, not a hundred.
+    public static let maxPendingEvents = 6
+
     /// Fires a single template: applies its base effects, records it in
-    /// history, and sets its cooldown. Shared by the planner and the
+    /// history, sets its cooldown, and — when the event offers the player a
+    /// choice — queues it for a decision. Shared by the planner and the
     /// scheduled-effect engine (delayed `trigger_event`).
     public static func fireTemplate(
         _ template: EventTemplate,
@@ -117,6 +123,22 @@ public enum StoryPlanner {
         let record = HistoricalEvent(templateID: template.id, type: template.type, tick: s.tick)
         s.eventHistory.append(record)
         s.eventCooldowns[template.id] = s.tick
+        if !template.choices.isEmpty {
+            s = queue(template.id, in: s)
+        }
         return (s, record)
+    }
+
+    /// Queues an event for the player's decision. The same event re-firing
+    /// refreshes the existing entry instead of duplicating it, and the queue is
+    /// capped — the oldest decision falls off if the player lets them pile up.
+    static func queue(_ templateID: String, in state: WorldState) -> WorldState {
+        var s = state
+        s.pendingEvents.removeAll { $0.templateID == templateID }
+        s.pendingEvents.append(PendingEvent(templateID: templateID, tick: s.tick))
+        if s.pendingEvents.count > maxPendingEvents {
+            s.pendingEvents.removeFirst(s.pendingEvents.count - maxPendingEvents)
+        }
+        return s
     }
 }

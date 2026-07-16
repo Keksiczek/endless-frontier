@@ -9,7 +9,12 @@ public enum TechEngine {
         guard let activeID = s.activeResearch, let tech = registry.tech(activeID) else {
             return s
         }
-        s.researchProgress += max(0, s.globalStats.knowledgeOutput)
+        // Research is paid for with knowledge the settlements actually banked —
+        // scholars at their desks, not an abstract output figure. (Before V2
+        // this read `globalStats.knowledgeOutput`, which only counts *buildings*;
+        // once colonists became the source of knowledge that number was zero in
+        // a library-less colony, and research silently never moved.)
+        s.researchProgress += drawKnowledge(&s)
         guard s.researchProgress >= tech.knowledgeCost else { return s }
 
         // Complete the research.
@@ -17,6 +22,20 @@ public enum TechEngine {
         s.researchProgress = 0
         s.activeResearch = nil
         return applyEffects(of: tech, to: s)
+    }
+
+    /// Spends every settlement's banked knowledge on the active study, and
+    /// returns how much was drawn. With nothing being researched, knowledge
+    /// simply accumulates — so a colony can stockpile before committing.
+    static func drawKnowledge(_ s: inout WorldState) -> Double {
+        var drawn = 0.0
+        for index in s.settlements.indices {
+            let banked = s.settlements[index].storage[.knowledge]
+            guard banked > 0 else { continue }
+            s.settlements[index].storage[.knowledge] = 0
+            drawn += banked
+        }
+        return drawn
     }
 
     /// Selects the next tech to research, if its prerequisites are met and it

@@ -241,7 +241,32 @@ public enum GameEngine {
         guard let paid = EffectApplier.payCost(choice.cost, from: state) else {
             return state
         }
-        return EffectApplier.apply(choice.effects, to: paid, registry: registry)
+        var s = EffectApplier.apply(choice.effects, to: paid, registry: registry)
+        // The decision is made; take it off the Leader's desk.
+        s.pendingEvents.removeAll { $0.templateID == eventID }
+        return s
+    }
+
+    /// Whether the player could actually afford a choice — the UI greys out the
+    /// rest rather than letting them tap into a dead end.
+    public static func canAffordChoice(
+        _ state: WorldState,
+        eventID: String,
+        choiceID: String,
+        registry: GameDataRegistry
+    ) -> Bool {
+        guard let template = registry.events.first(where: { $0.id == eventID }),
+              let choice = template.choices.first(where: { $0.id == choiceID }) else {
+            return false
+        }
+        return EffectApplier.payCost(choice.cost, from: state) != nil
+    }
+
+    /// Sets a decision aside without acting on it — the moment passes.
+    public static func dismissEvent(_ state: WorldState, eventID: String) -> WorldState {
+        var s = state
+        s.pendingEvents.removeAll { $0.templateID == eventID }
+        return s
     }
 
     // MARK: - Colony layout (in-settlement base building)

@@ -206,6 +206,31 @@ final class GameViewModel {
         ChronicleEngine.insights(world, registry: registry)
     }
 
+    // MARK: - Event decisions
+
+    /// Events queued for the Leader's word, oldest first.
+    var pendingEvents: [PendingEvent] { world.pendingEvents }
+
+    /// The decision currently on the desk, with its template.
+    var currentDecision: EventTemplate? {
+        guard let pending = world.pendingEvents.first else { return nil }
+        return registry.events.first { $0.id == pending.templateID }
+    }
+
+    func canAfford(choice choiceID: String, event eventID: String) -> Bool {
+        GameEngine.canAffordChoice(world, eventID: eventID, choiceID: choiceID, registry: registry)
+    }
+
+    func resolveEventChoice(event eventID: String, choice choiceID: String) {
+        world = GameEngine.resolveChoice(world, eventID: eventID, choiceID: choiceID, registry: registry)
+        persist()
+    }
+
+    func dismissEvent(_ eventID: String) {
+        world = GameEngine.dismissEvent(world, eventID: eventID)
+        persist()
+    }
+
     var objectives: [Objective] {
         ObjectivesEngine.current(world, registry: registry)
     }
