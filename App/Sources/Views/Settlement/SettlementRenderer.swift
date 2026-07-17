@@ -361,10 +361,62 @@ enum SettlementRenderer {
         let size: CGFloat
     }
 
-    /// Lays the settlement's structures out in calm rings around the heart.
+    /// Where the settlement's structures stand.
+    ///
+    /// The colony had two truths: the build grid the player lays out on
+    /// `ColonyMapScreen`, and a decorative ring of glyphs here — two unrelated
+    /// pictures of the same town. Now the grid is the truth wherever one
+    /// exists, so a building you place is the building you see, and the rings
+    /// are only the fallback for a colony that hasn't been laid out yet.
+    static func layout(
+        settlement: Settlement, registry: GameDataRegistry, rect: CGRect
+    ) -> [PlacedBuilding] {
+        if let colony = settlement.colony, !colony.placements.isEmpty {
+            return gridLayout(colony: colony, registry: registry, rect: rect)
+        }
+        return ringLayout(settlement: settlement, registry: registry, rect: rect)
+    }
+
+    /// How much of the canvas the build grid occupies, leaving the surrounding
+    /// scenery and deposits room to breathe.
+    static let colonyInset: Double = 0.16
+
+    /// Maps a grid tile to the point on the canvas it sits at.
+    static func canvasPoint(for coord: TileCoord, in colony: ColonyMap) -> LocalPoint {
+        let span = 1 - colonyInset * 2
+        let x = colonyInset + (Double(coord.x) + 0.5) / Double(max(1, colony.width)) * span
+        let y = colonyInset + (Double(coord.y) + 0.5) / Double(max(1, colony.height)) * span
+        return LocalPoint(x: x, y: y)
+    }
+
+    /// The structures as actually placed on the build grid.
+    private static func gridLayout(
+        colony: ColonyMap, registry: GameDataRegistry, rect: CGRect
+    ) -> [PlacedBuilding] {
+        let unit = min(rect.width, rect.height)
+        return colony.placements.prefix(maxVisibleBuildings).enumerated().map { index, placement in
+            // `coord` is the footprint's top-left origin, so a multi-tile
+            // building is nudged to the middle of what it covers — and drawn
+            // larger for covering it.
+            let origin = canvasPoint(for: placement.coord, in: colony)
+            let span = 1 - colonyInset * 2
+            let p = LocalPoint(
+                x: origin.x + Double(placement.width - 1) * 0.5 / Double(max(1, colony.width)) * span,
+                y: origin.y + Double(placement.height - 1) * 0.5 / Double(max(1, colony.height)) * span)
+            let glyph = registry.building(placement.definitionID).map(glyph(for:)) ?? .house
+            return PlacedBuilding(
+                id: index,
+                definitionID: placement.definitionID,
+                glyph: glyph,
+                center: point(p, in: rect),
+                size: unit * 0.021 * Double(max(placement.width, placement.height)))
+        }
+    }
+
+    /// Calm rings around the heart, for a colony with no layout of its own yet.
     /// Civic buildings hold the centre; housing drifts to the outer rings.
     /// Pure and deterministic — the same settlement always lays out the same.
-    static func layout(
+    private static func ringLayout(
         settlement: Settlement, registry: GameDataRegistry, rect: CGRect
     ) -> [PlacedBuilding] {
         var expanded: [(id: String, glyph: BuildingGlyph)] = []

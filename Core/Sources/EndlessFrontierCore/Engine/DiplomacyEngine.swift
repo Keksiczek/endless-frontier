@@ -13,6 +13,11 @@ public enum DiplomacyEngine {
     /// Below this morale, colonists start talking about leaving.
     static let secessionMoraleThreshold = 42.0
     static let secessionChance = 0.18
+    /// Inequality past which the colony's poorest start looking at the horizon.
+    /// Set just under `SocietyEngine.revoltGiniThreshold` (0.5): people leave
+    /// before they riot.
+    static let secessionGiniThreshold = 0.45
+    static let secessionGrievanceChance = 0.14
     static let secessionMinAdults = 12
     static let settlersPerSecession = 6
     /// A crowded settlement sheds colonists even when content.
@@ -77,17 +82,35 @@ public enum DiplomacyEngine {
         let capacity = ResourceLoop.housingCapacity(capital, registry: registry)
         let crowded = capacity > 0 && capital.population > capacity * overcrowdingFactor
         let miserable = capital.stats.morale < secessionMoraleThreshold
+        // The trigger that actually happens. Measured over 250 years: neither
+        // of the two above ever fired — a working colony's morale sits at
+        // 70–86, and `PopulationEngine.headroomFactor` damps births to nothing
+        // as the huts fill, so population can't reach 105% of capacity at all.
+        // Inequality, meanwhile, is everywhere: Gini reached 0.588 and sat over
+        // the revolt threshold in 197 of 300 samples, with 1,328 of 3,322
+        // colonists poor. A colony can be prosperous, content and well-housed
+        // and still be one its poorest have no reason to stay in.
+        let poor = adults.filter { capital.society.wealthClass(of: $0.wealth) == .poor }
+        let aggrieved = capital.society.gini > secessionGiniThreshold
+            && poor.count >= secessionMinAdults / 2
 
         let roll = rng.nextUnit()
-        let leaves = (miserable && roll < secessionChance)
+        let leaves = (aggrieved && roll < secessionGrievanceChance)
+            || (miserable && roll < secessionChance)
             || (crowded && roll < overcrowdingChance)
         guard leaves else { return s }
 
-        // The settlers: a band of adults, the unhappiest first when they're
-        // leaving in anger.
-        let ordered = miserable
-            ? adults.sorted { $0.mood < $1.mood }
-            : adults.sorted { $0.id.uuidString < $1.id.uuidString }
+        // The settlers: those with least to lose go first. The rich have no
+        // reason to walk into the wilderness.
+        let ordered: [Pawn]
+        if aggrieved {
+            ordered = poor.sorted { $0.wealth != $1.wealth ? $0.wealth < $1.wealth
+                                                           : $0.id.uuidString < $1.id.uuidString }
+        } else if miserable {
+            ordered = adults.sorted { $0.mood < $1.mood }
+        } else {
+            ordered = adults.sorted { $0.id.uuidString < $1.id.uuidString }
+        }
         let settlers = Array(ordered.prefix(settlersPerSecession))
         guard settlers.count >= 4 else { return s }
 
@@ -104,16 +127,31 @@ public enum DiplomacyEngine {
             courage: settlers.reduce(0) { $0 + $1.genes.courage } / n)
 
         let founder = settlers[0].name
-        let story: LocalizedText = miserable
-            ? LocalizedText(values: [
+        let story: LocalizedText
+        if aggrieved {
+            story = LocalizedText(values: [
+                .en: "Those who owned nothing followed \(founder) out, to build somewhere their work was their own.",
+                .cs: "Ti, kdo neměli nic, odešli s \(founder) — postavit si místo, kde jim jejich práce bude patřit."])
+        } else if miserable {
+            story = LocalizedText(values: [
                 .en: "Malcontents walked out under \(founder) and founded a hearth of their own.",
                 .cs: "Nespokojenci odešli v čele s \(founder) a založili vlastní osadu."])
-            : LocalizedText(values: [
+        } else {
+            story = LocalizedText(values: [
                 .en: "Colonists set out past the horizon under \(founder), seeking room to breathe.",
                 .cs: "Kolonisté vyrazili za obzor v čele s \(founder) — hledali místo k životu."])
+        }
 
-        // Leaving in anger poisons the well from the first day.
-        let opening = miserable ? -30 + rng.nextUnit() * 20 : -5 + rng.nextUnit() * 25
+        // Leaving in anger poisons the well from the first day. A people who
+        // left over injustice remember who kept the wealth.
+        let opening: Double
+        if aggrieved {
+            opening = -35 + rng.nextUnit() * 20
+        } else if miserable {
+            opening = -30 + rng.nextUnit() * 20
+        } else {
+            opening = -5 + rng.nextUnit() * 25
+        }
 
         s.tribes.append(Tribe(
             id: rng.nextUUID(),
@@ -127,8 +165,11 @@ public enum DiplomacyEngine {
             defense: 8 + rng.nextUnit() * 8,
             stores: 40,
             standing: opening))
+        // Losing your poorest to the wilderness is a judgement on the colony,
+        // and the ones left behind know it.
+        let moraleCost = aggrieved ? 6.0 : (miserable ? 4.0 : 0)
         s.settlements[capitalIndex].stats.morale = max(
-            0, s.settlements[capitalIndex].stats.morale - (miserable ? 4 : 0))
+            0, s.settlements[capitalIndex].stats.morale - moraleCost)
         return s
     }
 

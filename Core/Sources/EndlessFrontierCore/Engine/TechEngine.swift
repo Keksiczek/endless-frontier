@@ -14,8 +14,14 @@ public enum TechEngine {
         // this read `globalStats.knowledgeOutput`, which only counts *buildings*;
         // once colonists became the source of knowledge that number was zero in
         // a library-less colony, and research silently never moved.)
-        s.researchProgress += drawKnowledge(&s)
-        guard s.researchProgress >= cost(of: tech, in: s, config: registry.config) else { return s }
+        let price = cost(of: tech, in: s, config: registry.config)
+        // Draw only what this study still lacks. Taking every settlement's bank
+        // outright and then resetting progress to zero destroyed the surplus: a
+        // colony holding 5,000 that finished a 100-cost tech burned 4,900 of it,
+        // which made stockpiling knowledge actively harmful and left the stores
+        // reading empty forever.
+        s.researchProgress += drawKnowledge(&s, upTo: price - s.researchProgress)
+        guard s.researchProgress >= price else { return s }
 
         // Complete the research. A repeatable study is never struck off the
         // board — it banks a completion, which makes the next run dearer and
@@ -24,7 +30,7 @@ public enum TechEngine {
         if tech.repeatable {
             s.techCompletions[tech.id, default: 0] += 1
         }
-        s.researchProgress = 0
+        s.researchProgress -= price   // carry the overshoot into the next study
         s.activeResearch = nil
         return applyEffects(of: tech, to: s)
     }
@@ -41,16 +47,22 @@ public enum TechEngine {
         return tech.knowledgeCost * pow(config.repeatableTechCostGrowth, Double(completions))
     }
 
-    /// Spends every settlement's banked knowledge on the active study, and
-    /// returns how much was drawn. With nothing being researched, knowledge
-    /// simply accumulates — so a colony can stockpile before committing.
-    static func drawKnowledge(_ s: inout WorldState) -> Double {
+    /// Spends up to `limit` of the settlements' banked knowledge on the active
+    /// study and returns how much was drawn, taking from each in turn until the
+    /// study is paid for. With nothing being researched, knowledge simply
+    /// accumulates — so a colony can stockpile before committing, and what it
+    /// banks beyond the price stays banked.
+    static func drawKnowledge(_ s: inout WorldState, upTo limit: Double) -> Double {
+        guard limit > 0 else { return 0 }
         var drawn = 0.0
         for index in s.settlements.indices {
+            let remaining = limit - drawn
+            guard remaining > 0 else { break }
             let banked = s.settlements[index].storage[.knowledge]
             guard banked > 0 else { continue }
-            s.settlements[index].storage[.knowledge] = 0
-            drawn += banked
+            let take = min(banked, remaining)
+            s.settlements[index].storage[.knowledge] = banked - take
+            drawn += take
         }
         return drawn
     }
