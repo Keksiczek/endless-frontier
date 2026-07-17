@@ -179,7 +179,10 @@ public enum SocialEngine {
                 // Married couples quarrel too; the marriage holds.
                 break
             }
-        } else {
+        } else if s.relationships(of: first.id).count < maxRelationsPerPawn,
+                  s.relationships(of: second.id).count < maxRelationsPerPawn {
+            // A new grudge is still a bond — it competes for the same few
+            // slots a colonist's head has room for.
             s.relationships.append(Relationship(
                 between: first.id, and: second.id, kind: .rival, strength: strengthPerQuarrel))
         }
