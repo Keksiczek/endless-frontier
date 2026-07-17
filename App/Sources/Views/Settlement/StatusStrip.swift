@@ -6,8 +6,14 @@ import EndlessFrontierCore
 /// stores at a glance.
 struct StatusStrip: View {
     @Bindable var game: GameViewModel
-    @State private var showDiagnostics = false
-    @State private var showSettings = false
+
+    /// One sheet, chosen — not two stacked on the same view, which SwiftUI
+    /// resolves by honouring one and quietly dropping the other.
+    private enum Sheet: String, Identifiable {
+        case diagnostics, settings
+        var id: String { rawValue }
+    }
+    @State private var sheet: Sheet?
 
     var body: some View {
         VStack(spacing: 10) {
@@ -22,7 +28,7 @@ struct StatusStrip: View {
                 }
                 Spacer()
                 Button {
-                    showDiagnostics = true
+                    sheet = .diagnostics
                 } label: {
                     Image(systemName: "stethoscope")
                         .font(.callout)
@@ -30,7 +36,7 @@ struct StatusStrip: View {
                 }
                 .accessibilityLabel(AppStrings.language == .cs ? "Diagnostika" : "Diagnostics")
                 Button {
-                    showSettings = true
+                    sheet = .settings
                 } label: {
                     Image(systemName: "gearshape")
                         .font(.callout)
@@ -41,13 +47,15 @@ struct StatusStrip: View {
             }
             resourcePills
         }
-        .sheet(isPresented: $showDiagnostics) {
-            DiagnosticsView(game: game)
-                .presentationBackground(Theme.surface)
-        }
-        .sheet(isPresented: $showSettings) {
-            SettingsView(game: game)
-                .presentationBackground(Theme.surface)
+        .sheet(item: $sheet) { which in
+            switch which {
+            case .diagnostics:
+                DiagnosticsView(game: game)
+                    .presentationBackground(Theme.surface)
+            case .settings:
+                SettingsView(game: game)
+                    .presentationBackground(Theme.surface)
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)

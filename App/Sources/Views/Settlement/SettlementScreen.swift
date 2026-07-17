@@ -7,8 +7,19 @@ import EndlessFrontierCore
 struct SettlementScreen: View {
     @Bindable var game: GameViewModel
     @State private var selection: CanvasSelection = .none
-    @State private var showDetails = false
-    @State private var showLayout = false
+
+    /// Which drawer is open, if any.
+    ///
+    /// These used to be three separate `.sheet` modifiers stacked on one view.
+    /// SwiftUI honours exactly one — the rest are dropped, logging "only
+    /// presenting a single sheet is supported" and, from the player's side,
+    /// simply not opening when tapped. A screen where buttons sometimes do
+    /// nothing is worse than one that's missing them.
+    private enum Drawer: String, Identifiable {
+        case layout, details
+        var id: String { rawValue }
+    }
+    @State private var drawer: Drawer?
 
     var body: some View {
         ZStack {
@@ -19,26 +30,31 @@ struct SettlementScreen: View {
             }
         }
         .foregroundStyle(Theme.text)
-        .sheet(isPresented: $showLayout) {
-            NavigationStack {
-                ColonyMapScreen(game: game)
-                    .navigationTitle(AppStrings.layout)
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button(AppStrings.done) { showLayout = false }
+        .sheet(item: $drawer) { which in
+            switch which {
+            case .layout:
+                NavigationStack {
+                    ColonyMapScreen(game: game)
+                        .navigationTitle(AppStrings.layout)
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button(AppStrings.done) { drawer = nil }
+                            }
                         }
-                    }
-            }
-            .presentationBackground(Theme.surface)
-        }
-        .sheet(isPresented: $showDetails) {
-            SettlementDetailSheet(game: game)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+                }
                 .presentationBackground(Theme.surface)
+            case .details:
+                SettlementDetailSheet(game: game)
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
+                    .presentationBackground(Theme.surface)
+            }
         }
-        .sheet(isPresented: summaryBinding) {
+        // The "while you were away" summary is a full-screen cover rather than
+        // a second sheet: it belongs to arriving, not to browsing, and stacking
+        // it as a sheet is what made the other two unreliable.
+        .fullScreenCover(isPresented: summaryBinding) {
             WhileAwayView(events: game.lastSessionEvents, registry: game.registry) {
                 game.dismissSessionSummary()
             }
@@ -103,7 +119,7 @@ struct SettlementScreen: View {
             // zones and every adjacency synergy the loop computes each tick
             // were invisible.
             Button {
-                showLayout = true
+                drawer = .layout
             } label: {
                 Label(AppStrings.layout, systemImage: "square.grid.3x3.fill")
                     .font(.subheadline.weight(.semibold))
@@ -111,7 +127,7 @@ struct SettlementScreen: View {
             .buttonStyle(.bordered)
             .tint(Theme.text)
             Button {
-                showDetails = true
+                drawer = .details
             } label: {
                 Label(AppStrings.details, systemImage: "slider.horizontal.3")
                     .font(.subheadline.weight(.semibold))
