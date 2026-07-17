@@ -32,6 +32,18 @@ public enum ExplorationEngine {
         ])
     }
 
+    /// Whether the colony can currently pay for an expedition to `region`.
+    ///
+    /// `startExpedition` refuses an unaffordable expedition by returning the
+    /// state unchanged, which is correct — but left the UI lighting a button
+    /// that did nothing at all when the woodpile ran low, so the player tapped
+    /// into silence and concluded exploring was broken. Ask this first.
+    public static func canAfford(
+        expeditionTo region: Region, in state: WorldState, registry: GameDataRegistry
+    ) -> Bool {
+        EffectApplier.payCost(expeditionCost(to: region, config: registry.config), from: state) != nil
+    }
+
     /// Launches an expedition to an unknown region if affordable and none is
     /// already in progress. Returns unchanged state otherwise.
     public static func startExpedition(

@@ -114,9 +114,41 @@ struct RegionDetailCard: View {
     @ViewBuilder
     private var actions: some View {
         if game.canExplore(region) {
-            actionButton("Send Expedition", systemImage: "figure.walk") { game.explore(region.id) }
+            // The cost is shown, and an expedition the colony can't pay for is
+            // visibly out of reach. It used to be a lit button that silently
+            // did nothing when the woodpile ran low — which reads as the game
+            // being broken, not the colony being broke.
+            let affordable = game.canAffordExpedition(to: region)
+            let cost = game.expeditionCost(for: region)
+            VStack(alignment: .leading, spacing: 6) {
+                actionButton("Send Expedition", systemImage: "figure.walk") {
+                    game.explore(region.id)
+                }
+                .disabled(!affordable)
+                .opacity(affordable ? 1 : 0.45)
+                HStack(spacing: 10) {
+                    ForEach(ResourceType.allCases.filter { cost[$0] > 0 }, id: \.self) { resource in
+                        let short = game.selectedSettlementStorage(resource) < cost[resource]
+                        HStack(spacing: 3) {
+                            Image(systemName: resource.symbolName).font(.caption2)
+                            Text("\(Int(cost[resource].rounded()))")
+                                .font(.caption2.monospacedDigit())
+                        }
+                        .foregroundStyle(short ? Theme.danger : Theme.textDim)
+                    }
+                    if !affordable {
+                        Text(AppStrings.cannotAffordExpedition)
+                            .font(.caption2).foregroundStyle(Theme.danger)
+                    }
+                }
+            }
         } else if game.activeExpedition?.targetRegionID == region.id {
             Text("Expedition under way — \(game.activeExpedition?.ticksRemaining ?? 0) ticks left")
+                .font(.caption).foregroundStyle(Theme.textDim)
+        } else if game.activeExpedition != nil, region.explorationState == .unknown {
+            // Only one expedition can be out at a time — say so, rather than
+            // showing an unexplained dead end.
+            Text(AppStrings.expeditionAlreadyOut)
                 .font(.caption).foregroundStyle(Theme.textDim)
         } else {
             if let siteLabel = game.siteActionLabel(for: region) {

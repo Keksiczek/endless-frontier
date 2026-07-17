@@ -71,7 +71,15 @@ enum AppStrings {
     static var decisionDeadline: String { s("The moment passes in", "Okamžik pomine za") }
     static var years: String { s("yrs", "let") }
     static var child: String { s("Child", "Dítě") }
+    static var needsYou: String { s("Needs you", "Potřebují tě") }
     static var objectiveHint: String { s("Opens where you can act on this", "Otevře místo, kde s tím jde něco udělat") }
+    static var cannotAffordExpedition: String {
+        s("— the stores can't cover it", "— na to zásoby nestačí")
+    }
+    static var expeditionAlreadyOut: String {
+        s("An expedition is already out. Only one may travel at a time.",
+          "Jedna výprava je už na cestě. Víc jich naráz nevyrazí.")
+    }
 
     // Language
     static var languageTitle: String { s("Language", "Jazyk") }

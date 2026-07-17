@@ -175,6 +175,45 @@ final class GameViewModel {
 
     var viewedPawns: [Pawn] { selectedSettlement?.pawns ?? [] }
 
+    /// The colonists of the viewed settlement, gathered by the trade they work.
+    struct TradeGroup: Identifiable {
+        let work: WorkKind
+        let pawns: [Pawn]
+        var id: WorkKind { work }
+    }
+
+    /// The colony as a workforce rather than a cast list: one flat roll of every
+    /// soul is readable at eighteen and hopeless at a hundred and twenty.
+    /// Children are their own group — they're not idle, they're seven — and the
+    /// busiest trades lead.
+    var workforce: [TradeGroup] {
+        let ticksPerYear = self.ticksPerYear
+        let grouped = Dictionary(grouping: viewedPawns) { pawn in
+            pawn.isAdult(ticksPerYear: ticksPerYear) ? pawn.assignedWork : WorkKind.idle
+        }
+        return grouped
+            .map { TradeGroup(work: $0.key, pawns: $0.value.sorted { $0.mood < $1.mood }) }
+            .sorted {
+                $0.pawns.count != $1.pawns.count
+                    ? $0.pawns.count > $1.pawns.count
+                    : "\($0.work)" < "\($1.work)"
+            }
+    }
+
+    /// The few people the colony needs a decision about, lifted out of the
+    /// crowd so you don't have to scroll past everyone who's fine to find them.
+    var colonistsNeedingAttention: [Pawn] {
+        viewedPawns.filter { pawn in
+            pawn.health < attentionHealth
+                || pawn.mood < attentionMood
+                || (pawn.isAdult(ticksPerYear: ticksPerYear) && pawn.assignedWork == .idle)
+        }
+        .sorted { $0.health != $1.health ? $0.health < $1.health : $0.mood < $1.mood }
+    }
+
+    private var attentionHealth: Double { 50 }
+    private var attentionMood: Double { 35 }
+
     var viewedInventory: [ItemInstance] { selectedSettlement?.inventory ?? [] }
 
     var eraProgress: Double {
@@ -379,8 +418,30 @@ final class GameViewModel {
 
     func biomeName(_ id: String) -> String { registry.biome(id)?.name ?? id }
 
+    /// Whether an expedition to this region can be *reached* — adjacent, and
+    /// nothing else under way. Says nothing about whether it can be paid for.
     func canExplore(_ region: Region) -> Bool {
         world.activeExpedition == nil && exploreableRegions.contains { $0.id == region.id }
+    }
+
+    /// What an expedition here would cost.
+    func expeditionCost(for region: Region) -> Resources {
+        ExplorationEngine.expeditionCost(to: region, config: registry.config)
+    }
+
+    /// What the viewed settlement is holding of a resource.
+    func selectedSettlementStorage(_ resource: ResourceType) -> Double {
+        selectedSettlement?.storage[resource] ?? 0
+    }
+
+    /// Whether the stores can actually cover it.
+    ///
+    /// `startExpedition` refuses an unaffordable one by doing nothing at all,
+    /// so a colony down to its last timber lit a Send Expedition button that
+    /// fell into silence — which reads as the game being broken rather than
+    /// the colony being broke.
+    func canAffordExpedition(to region: Region) -> Bool {
+        ExplorationEngine.canAfford(expeditionTo: region, in: world, registry: registry)
     }
 
     func canFound(_ region: Region) -> Bool {
