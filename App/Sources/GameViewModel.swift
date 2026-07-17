@@ -18,6 +18,16 @@ final class GameViewModel {
     /// A running record of what each session did — for playtesting feedback.
     let diagnostics = Diagnostics()
 
+    /// The full "why is the world like this" readout, for reporting a playtest.
+    var worldReport: String {
+        WorldReport.generate(world, registry: registry)
+    }
+
+    /// Systems that cannot fire right now, surfaced at the top of diagnostics.
+    var blockers: [WorldReport.Blocker] {
+        WorldReport.blockers(world, registry: registry)
+    }
+
     init(registry: GameDataRegistry, store: WorldStore = WorldStore(url: WorldStore.defaultURL())) {
         self.registry = registry
         self.store = store

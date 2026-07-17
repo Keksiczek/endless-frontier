@@ -10,6 +10,7 @@ struct DiagnosticsView: View {
     @Bindable var game: GameViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var copied = false
+    @State private var copiedReport = false
 
     private var cs: Bool { AppStrings.language == .cs }
     private var diag: Diagnostics { game.diagnostics }
@@ -18,8 +19,10 @@ struct DiagnosticsView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    blockersCard
                     summaryCard
                     simulateCard
+                    reportCard
                     logCard
                 }
                 .padding(16)
@@ -33,7 +36,11 @@ struct DiagnosticsView: View {
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        UIPasteboard.general.string = diag.transcript
+                        // One tap gets everything worth sending: the state and
+                        // its reasons first, then the history that led there.
+                        UIPasteboard.general.string = game.worldReport
+                            + "\n\n" + String(repeating: "─", count: 32) + "\n"
+                            + diag.transcript
                         copied = true
                     } label: {
                         Label(copied ? (cs ? "Zkopírováno" : "Copied")
@@ -44,6 +51,63 @@ struct DiagnosticsView: View {
             }
         }
         .foregroundStyle(Theme.text)
+    }
+
+    /// What can't happen right now, and the number that proves it. Top of the
+    /// screen because "why is nothing happening" is the question a playtest
+    /// actually has — a log of what *did* happen can never answer it.
+    @ViewBuilder
+    private var blockersCard: some View {
+        let blockers = game.blockers
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader(title: cs ? "Co teď nemůže nastat" : "Cannot happen right now")
+            if blockers.isEmpty {
+                Label(cs ? "Nic není zablokované — všechny systémy můžou naskočit."
+                         : "Nothing blocked — every system can fire.",
+                      systemImage: "checkmark.seal.fill")
+                    .font(.caption).foregroundStyle(Theme.good)
+            } else {
+                ForEach(blockers, id: \.system) { blocker in
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "xmark.octagon.fill")
+                            .font(.caption2).foregroundStyle(Theme.danger)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(blocker.system)
+                                .font(.caption.weight(.semibold)).foregroundStyle(Theme.text)
+                            Text(blocker.reason)
+                                .font(.caption2).foregroundStyle(Theme.textDim)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+        }
+        .frontierCard()
+    }
+
+    /// The full readout, and the thing worth sending.
+    private var reportCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                SectionHeader(title: cs ? "Plný report" : "Full report")
+                Spacer()
+                Button {
+                    UIPasteboard.general.string = game.worldReport
+                    copiedReport = true
+                } label: {
+                    Label(copiedReport ? (cs ? "Zkopírováno" : "Copied") : (cs ? "Kopírovat" : "Copy"),
+                          systemImage: copiedReport ? "checkmark" : "doc.on.doc")
+                        .font(.caption.weight(.semibold))
+                }
+                .tint(Theme.accent)
+            }
+            Text(game.worldReport)
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(Theme.textDim)
+                .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frontierCard()
     }
 
     private var summaryCard: some View {

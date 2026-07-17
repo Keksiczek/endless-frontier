@@ -279,6 +279,9 @@ public enum ResourceLoop {
         s = evolveDeposits(s, registry: registry, tick: tick, config: config,
                            regrowthMultiplier: laws.depositRegrowthMultiplier)
 
+        // 10b. Scouts chart the valley.
+        s = chartGround(s, tick: tick, mapSeed: mapSeed, config: config)
+
         // 11. Wildlife: the herd grows and is culled; predators may strike.
         s = WildlifeEngine.advanceOneTick(s, registry: registry, tick: tick, era: era, mapSeed: mapSeed)
 
@@ -318,6 +321,63 @@ public enum ResourceLoop {
         }
         factors[.hunting] = WildlifeEngine.huntingFactor(localMap.wildlife)
         return factors
+    }
+
+    /// How far a scout walks from the heart before turning back, and how often
+    /// one of them comes back with new ground.
+    static let scoutRangeStep: Double = 0.012
+    static let scoutTicksPerReveal = 12
+
+    /// Scouts push the fog back a little at a time.
+    ///
+    /// `LocalMap.reveal` was called exactly once in the whole life of a world —
+    /// by the generator, radius 0.28 around the heart — and never again, so the
+    /// valley a colony lived in for centuries was a circle baked at birth.
+    /// Meanwhile `WorkKind.scouting` is documented "reveals the fog of war" and
+    /// `LaborEngine` staffs it with 5% of every colony's adults: at 79 souls,
+    /// four people had a job whose only purpose no code performed.
+    ///
+    /// They now walk outward from the heart, so the known valley grows with how
+    /// many you send and how long you leave them at it. Deterministic like the
+    /// rest of the sim: where a scout looks comes from `(mapSeed, settlement,
+    /// tick)`, never from the frame clock — the canvas's wandering colonists
+    /// are presentation and must stay out of this.
+    static func chartGround(
+        _ settlement: Settlement, tick: Int, mapSeed: UInt64, config: WorldConfig
+    ) -> Settlement {
+        guard tick % scoutTicksPerReveal == 0, var map = settlement.localMap else { return settlement }
+        let ticksPerYear = max(1, config.ticksPerYear)
+        let scouts = settlement.pawns.filter {
+            $0.assignedWork == .scouting && $0.isAdult(ticksPerYear: ticksPerYear) && !$0.isBroken
+        }.count
+        guard scouts > 0 else { return settlement }
+
+        var s = settlement
+        var rng = SeededRNG(seed: societyLikeSeed(mapSeed: mapSeed, settlementID: s.id, tick: tick))
+        // The further they've already charted, the further out the next walk
+        // starts — the frontier moves outward rather than re-treading home.
+        let reach = min(0.62, 0.28 + Double(scouts) * scoutRangeStep * Double(tick / scoutTicksPerReveal + 1) * 0.02)
+        for _ in 0..<scouts {
+            let angle = rng.nextUnit() * 2 * .pi
+            let distance = reach * (0.55 + rng.nextUnit() * 0.45)
+            let point = LocalPoint(
+                x: min(1, max(0, 0.5 + cos(angle) * distance)),
+                y: min(1, max(0, 0.5 + sin(angle) * distance)))
+            map.reveal(around: point, radius: 0.07)
+        }
+        s.localMap = map
+        return s
+    }
+
+    /// A per-settlement, per-tick seed. Mirrors `SocietyEngine.societySeed`'s
+    /// shape so scouting stays reproducible for a given world.
+    static func societyLikeSeed(mapSeed: UInt64, settlementID: UUID, tick: Int) -> UInt64 {
+        var h: UInt64 = mapSeed &* 0x9E37_79B9_7F4A_7C15
+        let b = settlementID.uuid
+        h ^= UInt64(b.0) << 56 | UInt64(b.1) << 48 | UInt64(b.2) << 40 | UInt64(b.3) << 32
+            | UInt64(b.4) << 24 | UInt64(b.5) << 16 | UInt64(b.6) << 8 | UInt64(b.7)
+        h &+= UInt64(bitPattern: Int64(tick)) &* 0xD1B5_4A32_D192_ED03
+        return h ^ 0x5C0_07_5EED
     }
 
     /// Depletes deposits by what the settlement's gatherers pulled this tick,
