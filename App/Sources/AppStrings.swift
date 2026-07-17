@@ -8,7 +8,34 @@ import EndlessFrontierCore
 /// touching call sites. Content translation (events, buildings…) lands in a
 /// later phase; this covers the new living-world chrome.
 enum AppStrings {
-    static var language: GameLanguage { GameLanguage.matching(.current) }
+    /// The player's explicit choice of language, if they've made one.
+    ///
+    /// The game ships bilingual but picked purely by device locale, so a Czech
+    /// player on an English phone got an English world and no way to say
+    /// otherwise — the translated content was there and unreachable.
+    static let overrideKey = "settings.language"
+
+    static var language: GameLanguage {
+        if let raw = UserDefaults.standard.string(forKey: overrideKey),
+           let chosen = GameLanguage(rawValue: raw) {
+            return chosen
+        }
+        return GameLanguage.matching(.current)
+    }
+
+    /// `nil` means "follow the device".
+    static var languageOverride: GameLanguage? {
+        get {
+            UserDefaults.standard.string(forKey: overrideKey).flatMap(GameLanguage.init(rawValue:))
+        }
+        set {
+            if let newValue {
+                UserDefaults.standard.set(newValue.rawValue, forKey: overrideKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: overrideKey)
+            }
+        }
+    }
 
     private static func s(_ en: String, _ cs: String) -> String {
         language == .cs ? cs : en
@@ -43,6 +70,22 @@ enum AppStrings {
     }
     static var decisionDeadline: String { s("The moment passes in", "Okamžik pomine za") }
     static var years: String { s("yrs", "let") }
+    static var child: String { s("Child", "Dítě") }
+    static var objectiveHint: String { s("Opens where you can act on this", "Otevře místo, kde s tím jde něco udělat") }
+
+    // Language
+    static var languageTitle: String { s("Language", "Jazyk") }
+    static var languageSystem: String { s("Follow the device", "Podle zařízení") }
+    static var languageBlurb: String {
+        s("Content ships in Czech and English. Restart the screen to see it change everywhere.",
+          "Obsah je česky i anglicky. Změna se všude projeví po přepnutí obrazovky.")
+    }
+    static func languageName(_ language: GameLanguage) -> String {
+        switch language {
+        case .en: return s("English", "Angličtina")
+        case .cs: return s("Czech", "Čeština")
+        }
+    }
 
     // Settings
     static var settings: String { s("Settings", "Nastavení") }

@@ -286,6 +286,31 @@ final class GameViewModel {
         ObjectivesEngine.current(world, registry: registry)
     }
 
+    // MARK: - Where the game is pointing you
+
+    /// The five tabs, so an objective can actually take you to the thing it's
+    /// asking for. Telling the player to pick a research project and then
+    /// leaving them to find the Science tab themselves is a to-do list, not a
+    /// game.
+    enum Tab: Hashable { case settlement, world, council, chronicle, science }
+
+    var tab: Tab = .settlement
+
+    /// The screen an objective is really about.
+    func destination(for objective: Objective) -> Tab {
+        switch objective.category {
+        case .research: return .science
+        case .explore, .expand, .sites: return .world
+        case .colonists: return .settlement
+        case .era: return .science   // era gates are almost always a tech
+        }
+    }
+
+    /// True when following this objective means going somewhere else.
+    func isActionable(_ objective: Objective) -> Bool {
+        destination(for: objective) != .settlement || objective.category == .colonists
+    }
+
     var activeQuests: [(definition: QuestDefinition, progress: QuestProgress)] {
         world.activeQuests.compactMap { progress in
             registry.quest(progress.questID).map { (definition: $0, progress: progress) }

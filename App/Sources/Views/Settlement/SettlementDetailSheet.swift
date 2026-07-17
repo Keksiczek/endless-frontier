@@ -5,6 +5,7 @@ import EndlessFrontierCore
 /// composed from the existing panels so the living canvas stays uncluttered.
 struct SettlementDetailSheet: View {
     @Bindable var game: GameViewModel
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ScrollView {
@@ -15,7 +16,12 @@ struct SettlementDetailSheet: View {
                 if let settlement = game.selectedSettlement {
                     statsCard(settlement)
                 }
-                ObjectivesPanel(game: game)
+                // Following an objective means leaving this sheet behind — it's
+                // covering the tab the player is being sent to.
+                ObjectivesPanel(game: game) { destination in
+                    game.tab = destination
+                    dismiss()
+                }
                 QuestsPanel(game: game)
                 ColonistsPanel(game: game)
                 ItemsPanel(game: game)

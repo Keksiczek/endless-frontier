@@ -38,6 +38,8 @@ struct ColonistsPanel: View {
                         }
                     }
                     HStack(spacing: 8) {
+                        Text("\(age(pawn)) \(AppStrings.years)")
+                        Text("·").foregroundStyle(Theme.textDim.opacity(0.5))
                         Text("Mood \(Int(pawn.mood.rounded()))")
                         Text("·").foregroundStyle(Theme.textDim.opacity(0.5))
                         Label("\(Int(pawn.health.rounded()))", systemImage: "heart.fill")
@@ -46,7 +48,19 @@ struct ColonistsPanel: View {
                     .font(.caption).foregroundStyle(Theme.textDim)
                 }
                 Spacer()
-                workMenu(pawn)
+                // A child reads as "Idle" with a work menu beside it, exactly
+                // like an adult the labour engine has failed to employ — which
+                // is why a colony full of children looks like broken automation.
+                // They're not idle; they're seven.
+                if isChild(pawn) {
+                    Label(AppStrings.child, systemImage: "figure.child")
+                        .font(.caption.weight(.medium))
+                        .padding(.horizontal, 10).padding(.vertical, 6)
+                        .background(Theme.surface, in: Capsule())
+                        .foregroundStyle(Theme.textDim)
+                } else {
+                    workMenu(pawn)
+                }
             }
             moodBar(pawn.mood)
             ForEach(EquipmentSlot.allCases, id: \.self) { slot in
@@ -68,6 +82,15 @@ struct ColonistsPanel: View {
         }
         .padding(.vertical, 10).padding(.horizontal, 12)
         .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private func age(_ pawn: Pawn) -> Int {
+        pawn.ageYears(ticksPerYear: game.ticksPerYear)
+    }
+
+    /// Too young to be put to work — `LaborEngine` only ever employs adults.
+    private func isChild(_ pawn: Pawn) -> Bool {
+        !pawn.isAdult(ticksPerYear: game.ticksPerYear)
     }
 
     private func workMenu(_ pawn: Pawn) -> some View {

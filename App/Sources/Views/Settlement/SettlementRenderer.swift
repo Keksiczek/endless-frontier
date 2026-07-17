@@ -377,16 +377,26 @@ enum SettlementRenderer {
         return ringLayout(settlement: settlement, registry: registry, rect: rect)
     }
 
-    /// How much of the canvas the build grid occupies, leaving the surrounding
-    /// scenery and deposits room to breathe.
-    static let colonyInset: Double = 0.16
+    /// Where the settlement's heart sits on the canvas — the fog is cleared
+    /// around here, so this is the only part of the world anyone has actually
+    /// seen.
+    static let colonyHeart = LocalPoint(x: 0.5, y: 0.52)
+    /// How wide a slice of the canvas the whole build grid covers.
+    ///
+    /// The grid used to be stretched across most of the canvas, which put a
+    /// building on tile (0,0) up in the unexplored dark, nowhere near the
+    /// settlement it belongs to — structures standing out in the fog. The grid
+    /// is a compact cluster *at the heart*, not a sprawl over the whole map.
+    static let colonySpan: Double = 0.42
 
-    /// Maps a grid tile to the point on the canvas it sits at.
+    /// Maps a grid tile to the point on the canvas it sits at, centred on the
+    /// heart so the built colony always lands inside the cleared ground.
     static func canvasPoint(for coord: TileCoord, in colony: ColonyMap) -> LocalPoint {
-        let span = 1 - colonyInset * 2
-        let x = colonyInset + (Double(coord.x) + 0.5) / Double(max(1, colony.width)) * span
-        let y = colonyInset + (Double(coord.y) + 0.5) / Double(max(1, colony.height)) * span
-        return LocalPoint(x: x, y: y)
+        let fx = (Double(coord.x) + 0.5) / Double(max(1, colony.width)) - 0.5
+        let fy = (Double(coord.y) + 0.5) / Double(max(1, colony.height)) - 0.5
+        return LocalPoint(
+            x: colonyHeart.x + fx * colonySpan,
+            y: colonyHeart.y + fy * colonySpan)
     }
 
     /// The structures as actually placed on the build grid.
@@ -399,10 +409,9 @@ enum SettlementRenderer {
             // building is nudged to the middle of what it covers — and drawn
             // larger for covering it.
             let origin = canvasPoint(for: placement.coord, in: colony)
-            let span = 1 - colonyInset * 2
             let p = LocalPoint(
-                x: origin.x + Double(placement.width - 1) * 0.5 / Double(max(1, colony.width)) * span,
-                y: origin.y + Double(placement.height - 1) * 0.5 / Double(max(1, colony.height)) * span)
+                x: origin.x + Double(placement.width - 1) * 0.5 / Double(max(1, colony.width)) * colonySpan,
+                y: origin.y + Double(placement.height - 1) * 0.5 / Double(max(1, colony.height)) * colonySpan)
             let glyph = registry.building(placement.definitionID).map(glyph(for:)) ?? .house
             return PlacedBuilding(
                 id: index,

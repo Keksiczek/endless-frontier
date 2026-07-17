@@ -55,20 +55,43 @@ struct CanvasLayoutTests {
         #expect(topLeft.y < bottomRight.y)
     }
 
-    @Test("The grid stays inside the canvas, with room around it")
-    func layoutStaysInBounds() {
+    /// Reported from a real game: buildings stood out in the unexplored dark,
+    /// nowhere near the settlement. The grid was stretched across most of the
+    /// canvas while the fog only clears a blob around the heart, so tile (0,0)
+    /// landed well outside the only ground anyone had seen.
+    @Test("Every tile of the grid lands on the settlement, not out in the fog")
+    func gridSitsOnTheSettlement() {
         var placements: [BuildingPlacement] = []
         for x in 0..<12 {
             placements.append(BuildingPlacement(id: UUID(), definitionID: "hut",
-                                                coord: TileCoord(x, x)))
+                                                coord: TileCoord(x, 11 - x)))
         }
         let colony = ColonyMap(width: 12, height: 12, placements: placements)
         let placed = SettlementRenderer.layout(
             settlement: settlement(colony: colony), registry: registry(), rect: rect)
 
+        // The cleared ground is a blob about the heart; nothing may be drawn
+        // further from it than the colony's own half-span.
+        let heart = SettlementRenderer.point(SettlementRenderer.colonyHeart, in: rect)
+        let reach = SettlementRenderer.colonySpan / 2 * rect.width
         for building in placed {
             #expect(rect.contains(building.center), "a structure drawn off-canvas can never be tapped")
+            let dx = building.center.x - heart.x, dy = building.center.y - heart.y
+            #expect((dx * dx + dy * dy).squareRoot() <= reach * 1.5,
+                    "a building must stand in the colony, not out in the unexplored dark")
         }
+    }
+
+    @Test("Opposite corners of the grid still read as opposite")
+    func gridKeepsItsShape() {
+        let colony = ColonyMap(width: 12, height: 12, placements: [
+            BuildingPlacement(id: UUID(), definitionID: "hut", coord: TileCoord(0, 0)),
+            BuildingPlacement(id: UUID(), definitionID: "hut", coord: TileCoord(11, 11))
+        ])
+        let placed = SettlementRenderer.layout(
+            settlement: settlement(colony: colony), registry: registry(), rect: rect)
+        let separation = (placed[1].center.x - placed[0].center.x)
+        #expect(separation > 40, "the grid must stay legible, not collapse onto a single point")
     }
 
     @Test("A colony with no layout yet still shows its buildings")

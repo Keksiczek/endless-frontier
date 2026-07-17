@@ -8,13 +8,36 @@ struct SettingsView: View {
     @Bindable var game: GameViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var confirmingNewGame = false
+    @State private var language: GameLanguage? = AppStrings.languageOverride
 
     private var cs: Bool { AppStrings.language == .cs }
+
+    /// The game's content is bilingual but was chosen purely by device locale,
+    /// so a Czech player on an English phone had no way to reach the Czech —
+    /// it was written, shipped, and unreachable.
+    private var languageCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: AppStrings.languageTitle)
+            Picker(AppStrings.languageTitle, selection: $language) {
+                Text(AppStrings.languageSystem).tag(GameLanguage?.none)
+                ForEach(GameLanguage.allCases, id: \.self) { option in
+                    Text(AppStrings.languageName(option)).tag(GameLanguage?.some(option))
+                }
+            }
+            .pickerStyle(.segmented)
+            .onChange(of: language) { _, chosen in AppStrings.languageOverride = chosen }
+            Text(AppStrings.languageBlurb)
+                .font(.caption).foregroundStyle(Theme.textDim)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frontierCard()
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    languageCard
                     thisWorld
                     newGameCard
                 }
