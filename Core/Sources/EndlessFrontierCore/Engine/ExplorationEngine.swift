@@ -79,6 +79,7 @@ public enum ExplorationEngine {
 
         // Expedition complete — reveal the region.
         s.activeExpedition = nil
+        var fired: [HistoricalEvent] = []
         if let index = s.regions.firstIndex(where: { $0.id == expedition.targetRegionID }) {
             s.regions[index].explorationState = .fullyExplored
             if let flag = registry.biome(s.regions[index].biomeID)?.worldFlag {
@@ -92,9 +93,29 @@ public enum ExplorationEngine {
                 mapSeed: s.mapSeed,
                 registry: registry
             )
+            // First contact: a native people lived in this land all along.
+            // From this moment they exist diplomatically — trade, grudges,
+            // marriages and wars all start here.
+            let regionName = s.regions[index].name
+            for ti in s.tribes.indices
+            where s.tribes[ti].regionID == s.regions[index].id && !s.tribes[ti].discovered {
+                s.tribes[ti].discovered = true
+                let contact = HistoricalEvent(templateID: "first_contact", type: .flavor, tick: s.tick)
+                s.eventHistory.append(contact)
+                fired.append(contact)
+                if let capitalIndex = s.settlements.indices.first {
+                    let tribeName = s.tribes[ti].name
+                    s.settlements[capitalIndex].journal.append(
+                        tick: s.tick, kind: .discovery, text: LocalizedText(values: [
+                            .en: "The expedition met the \(tribeName) — a people of \(regionName), there long before us.",
+                            .cs: "Výprava potkala lid \(tribeName) — národ z kraje \(regionName), který tu byl dávno před námi."
+                        ]))
+                }
+            }
         }
         let record = HistoricalEvent(templateID: "region_discovered", type: .flavor, tick: s.tick)
         s.eventHistory.append(record)
-        return PlannerResult(state: s, fired: [record])
+        fired.append(record)
+        return PlannerResult(state: s, fired: fired)
     }
 }

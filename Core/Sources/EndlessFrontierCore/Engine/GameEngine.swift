@@ -115,6 +115,7 @@ public enum GameEngine {
     ) -> WorldState {
         let config = registry.config
         guard let index = state.tribes.firstIndex(where: { $0.id == tribeID }),
+              state.tribes[index].discovered,
               var s = spendInfluence(state, amount: config.giftInfluenceCost) else { return state }
         s.tribes[index].standing = min(100, s.tribes[index].standing + config.giftStandingGain)
         // A gift softens an old wound as well as buying today's goodwill.
@@ -128,6 +129,7 @@ public enum GameEngine {
     ) -> WorldState {
         let config = registry.config
         guard let index = state.tribes.firstIndex(where: { $0.id == tribeID }),
+              state.tribes[index].discovered,
               let seatIndex = state.settlements.indices.first,
               var s = spendInfluence(state, amount: config.demandInfluenceCost) else { return state }
         let taken = s.tribes[index].stores * config.demandStoresShare
@@ -147,6 +149,7 @@ public enum GameEngine {
     ) -> WorldState {
         let config = registry.config
         guard let index = state.tribes.firstIndex(where: { $0.id == tribeID }),
+              state.tribes[index].discovered,
               state.tribes[index].standing >= config.pactMinStanding,
               var s = spendInfluence(state, amount: config.pactInfluenceCost) else { return state }
         s.tribes[index].standing = max(s.tribes[index].standing, 60)   // `.allied`

@@ -50,6 +50,12 @@ public struct Tribe: Codable, Sendable, Identifiable, Equatable {
     public var married: Bool
     public var wars: Int
     public var defections: Int
+    /// A people who were in the valley long before you came — seeded at world
+    /// creation, unlike the tribes that secede out of your own settlement.
+    public var isNative: Bool
+    /// Whether you have actually met them. Native peoples start hidden and are
+    /// found by expeditions; everything diplomatic waits for first contact.
+    public var discovered: Bool
 
     public var status: DiplomaticStanding { DiplomaticStanding(score: standing) }
 
@@ -68,7 +74,9 @@ public struct Tribe: Codable, Sendable, Identifiable, Equatable {
         grudge: Double = 0,
         married: Bool = false,
         wars: Int = 0,
-        defections: Int = 0
+        defections: Int = 0,
+        isNative: Bool = false,
+        discovered: Bool = true
     ) {
         self.id = id
         self.name = name
@@ -85,5 +93,37 @@ public struct Tribe: Codable, Sendable, Identifiable, Equatable {
         self.married = married
         self.wars = wars
         self.defections = defections
+        self.isNative = isNative
+        self.discovered = discovered
+    }
+
+    // MARK: - Codable (resilient: native peoples arrived after the first V2 cut)
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, regionID, foundedTick, originStory, population, genes
+        case cultID, defense, stores, standing, grudge, married, wars, defections
+        case isNative, discovered
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        regionID = try c.decodeIfPresent(UUID.self, forKey: .regionID)
+        foundedTick = try c.decode(Int.self, forKey: .foundedTick)
+        originStory = try c.decode(LocalizedText.self, forKey: .originStory)
+        population = try c.decode(Double.self, forKey: .population)
+        genes = try c.decode(Genes.self, forKey: .genes)
+        cultID = try c.decodeIfPresent(String.self, forKey: .cultID)
+        defense = try c.decode(Double.self, forKey: .defense)
+        stores = try c.decode(Double.self, forKey: .stores)
+        standing = try c.decode(Double.self, forKey: .standing)
+        grudge = try c.decode(Double.self, forKey: .grudge)
+        married = try c.decode(Bool.self, forKey: .married)
+        wars = try c.decode(Int.self, forKey: .wars)
+        defections = try c.decode(Int.self, forKey: .defections)
+        // Tribes saved before natives existed are emergent — and already met.
+        isNative = try c.decodeIfPresent(Bool.self, forKey: .isNative) ?? false
+        discovered = try c.decodeIfPresent(Bool.self, forKey: .discovered) ?? true
     }
 }

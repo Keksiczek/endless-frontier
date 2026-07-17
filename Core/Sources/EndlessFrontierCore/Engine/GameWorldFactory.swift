@@ -63,8 +63,63 @@ public enum GameWorldFactory {
             unlockedBuildings: unlocked,
             worldFlags: flags,
             settlements: [settlement],
-            regions: regions
+            regions: regions,
+            tribes: nativeTribes(regions: regions, seed: seed)
         )
+    }
+
+    /// The valley was never empty: two or three native peoples live in the
+    /// distant regions from the very first tick. They stay hidden — and
+    /// diplomatically inert — until an expedition walks into their land, so
+    /// the world *fills in* as you explore it rather than being born hollow.
+    static let nativeTribeNames = ["Vorenn", "Askarel", "Thalen", "Muirn", "Sorne"]
+    static let nativeTribeCount = 3
+    static let nativeMinDistance = 2
+
+    static func nativeTribes(regions: [Region], seed: UInt64) -> [Tribe] {
+        var rng = SeededRNG(seed: seed ^ 0x0071_1BE5)
+        // Candidate homes: far enough out that first contact takes an
+        // expedition or two, in a stable order so the same seed settles the
+        // same peoples in the same hills.
+        let candidates = regions
+            .filter { $0.kind != .homeland && $0.coord.distance(to: .origin) >= nativeMinDistance }
+            .sorted { $0.coord.distance(to: .origin) != $1.coord.distance(to: .origin)
+                ? $0.coord.distance(to: .origin) < $1.coord.distance(to: .origin)
+                : $0.name < $1.name }
+        guard !candidates.isEmpty else { return [] }
+
+        var tribes: [Tribe] = []
+        var taken: Set<UUID> = []
+        for (index, name) in nativeTribeNames.prefix(nativeTribeCount).enumerated() {
+            // Spread them: skip through the candidate list so two peoples
+            // don't crowd the same corner of the map.
+            let pick = candidates.enumerated().first {
+                !taken.contains($0.element.id) && $0.offset >= index * 2
+            }?.element ?? candidates.first { !taken.contains($0.id) }
+            guard let home = pick else { break }
+            taken.insert(home.id)
+            tribes.append(Tribe(
+                id: rng.nextUUID(),
+                name: name,
+                regionID: home.id,
+                foundedTick: 0,
+                originStory: LocalizedText(values: [
+                    .en: "The \(name) were in the valley long before your first fire was lit.",
+                    .cs: "\(name) žili v údolí dávno předtím, než jste zapálili první oheň."
+                ]),
+                population: 18 + rng.nextUnit() * 30,
+                genes: Genes(
+                    industry: 0.35 + rng.nextUnit() * 0.4,
+                    fertility: 0.4 + rng.nextUnit() * 0.3,
+                    sociability: 0.3 + rng.nextUnit() * 0.5,
+                    courage: 0.3 + rng.nextUnit() * 0.5),
+                defense: 10 + rng.nextUnit() * 12,
+                stores: 60 + rng.nextUnit() * 60,
+                standing: 0,
+                isNative: true,
+                discovered: false))
+        }
+        return tribes
     }
 
     /// The founding colonists: four named specialists the narrator can lean

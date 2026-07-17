@@ -93,6 +93,9 @@ public enum DiplomacyEngine {
             s.tribes[index].stores += s.tribes[index].population * 0.4
             s.tribes[index].grudge *= 0.98
 
+            // A people you have never met has no relations to move: native
+            // tribes live on quietly beyond the fog until first contact.
+            guard s.tribes[index].discovered else { continue }
             s = drift(s, tribeIndex: index, registry: registry, rng: &rng)
             s = resolveRelations(s, tribeIndex: index, registry: registry, rng: &rng)
         }
@@ -104,7 +107,10 @@ public enum DiplomacyEngine {
     /// Malcontents (or the surplus of a crowded town) walk out and found a
     /// people of their own.
     static func secede(_ state: WorldState, registry: GameDataRegistry, year: Int) -> WorldState {
-        guard state.tribes.count < maxTribes,
+        // The cap is on *emergent* tribes — peoples born of your own
+        // malcontents. Natives seeded at world creation don't use up the
+        // discontent's room to leave.
+        guard state.tribes.filter({ !$0.isNative }).count < maxTribes,
               let capitalIndex = state.settlements.indices.first else { return state }
         var s = state
         let ticksPerYear = registry.config.ticksPerYear

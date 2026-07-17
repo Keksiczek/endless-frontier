@@ -46,8 +46,13 @@ public enum WorldReport {
                 reason: "needs standing > \(Int(DiplomacyEngine.marriageStanding)) but compatibility tops out at \(Int(ceiling))"))
         }
 
-        // Secession is the only source of neighbours; no tribes means the whole
-        // diplomacy layer is scenery.
+        // Native peoples wait beyond the fog; until one is met (or malcontents
+        // walk out), the diplomacy layer is scenery.
+        if !s.tribes.contains(where: \.discovered), !s.tribes.isEmpty {
+            found.append(Blocker(
+                system: "diplomacy",
+                reason: "\(s.tribes.count) native people(s) live beyond the fog — send expeditions to make first contact"))
+        }
         if s.tribes.isEmpty, let seat = s.settlements.first {
             let gini = seat.society.gini
             if gini <= DiplomacyEngine.secessionGiniThreshold
@@ -217,8 +222,12 @@ public enum WorldReport {
         if s.tribes.isEmpty {
             row("tribes", "none — the whole diplomacy layer is asleep")
         } else {
-            for tribe in s.tribes {
+            for tribe in s.tribes where tribe.discovered {
                 row(tribe.name, "standing \(Int(tribe.standing)) (\(tribe.status)) · pop \(Int(tribe.population)) · wars \(tribe.wars) · married \(tribe.married) · defectors \(tribe.defections)")
+            }
+            let hidden = s.tribes.filter { !$0.discovered }.count
+            if hidden > 0 {
+                row("beyond the fog", "\(hidden) native people(s) not yet met")
             }
         }
 
