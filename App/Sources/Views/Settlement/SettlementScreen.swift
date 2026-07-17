@@ -134,7 +134,8 @@ struct SettlementScreen: View {
             } else if let building = selectedBuilding {
                 BuildingInspectorCard(
                     definition: building.definition, standing: building.standing,
-                    upkeep: building.upkeep
+                    upkeep: building.upkeep,
+                    synergies: game.synergyText(for: building.definition)
                 ) {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }

@@ -774,12 +774,17 @@ final class GameViewModel {
 
     /// Human-readable synergy descriptions for a building, for the inspector.
     func synergyText(for def: BuildingDefinition) -> [String] {
-        def.adjacency.map { rule in
+        let cs = AppStrings.language == .cs
+        return def.adjacency.map { rule in
             let neighbour = buildingName(rule.neighbor)
             if let resource = rule.resource, rule.bonus != 0 {
-                return "+\(Int(rule.bonus)) \(resource.displayName.lowercased()) next to \(neighbour)"
+                return cs
+                    ? "+\(Int(rule.bonus)) \(resource.displayName.lowercased()) vedle: \(neighbour)"
+                    : "+\(Int(rule.bonus)) \(resource.displayName.lowercased()) next to \(neighbour)"
             }
-            return "+\(Int(rule.morale)) morale next to \(neighbour)"
+            return cs
+                ? "+\(Int(rule.morale)) morálka vedle: \(neighbour)"
+                : "+\(Int(rule.morale)) morale next to \(neighbour)"
         }
     }
 

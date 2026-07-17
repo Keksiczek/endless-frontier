@@ -16,6 +16,8 @@ struct SettlementDetailSheet: View {
                 if let settlement = game.selectedSettlement {
                     statsCard(settlement)
                 }
+                ConstructionPanel(game: game)
+                JournalPanel(game: game)
                 // Following an objective means leaving this sheet behind — it's
                 // covering the tab the player is being sent to.
                 ObjectivesPanel(game: game) { destination in

@@ -214,8 +214,9 @@ struct ColonyMapScreen: View {
         return VStack(alignment: .leading, spacing: 10) {
             SectionHeader(title: def?.name ?? placement.definitionID)
             if let def {
-                if !def.description.isEmpty {
-                    Text(def.description).font(.caption).foregroundStyle(Theme.textDim)
+                let flavour = def.description.resolve(AppStrings.language)
+                if !flavour.isEmpty {
+                    Text(flavour).font(.caption).foregroundStyle(Theme.textDim)
                 }
                 let work = ColonyBuilder.workKind(for: def)
                 HStack {

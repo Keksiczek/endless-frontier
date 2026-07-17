@@ -8,21 +8,27 @@ struct BuildingInspectorCard: View {
     let definition: BuildingDefinition
     let standing: Int
     let upkeep: Resources
+    var synergies: [String] = []
     var onClose: () -> Void
 
     private var cs: Bool { AppStrings.language == .cs }
 
+    private var descriptionText: String {
+        definition.description.resolve(AppStrings.language)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
-            if !definition.description.isEmpty {
-                Text(definition.description)
+            if !descriptionText.isEmpty {
+                Text(descriptionText)
                     .font(.caption)
                     .foregroundStyle(Theme.textDim)
                     .fixedSize(horizontal: false, vertical: true)
             }
             flows
             traits
+            if !synergies.isEmpty { synergyRows }
         }
         .padding(16)
         .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
@@ -123,5 +129,24 @@ struct BuildingInspectorCard: View {
             Text(text).font(.caption.monospacedDigit())
         }
         .foregroundStyle(Theme.textDim)
+    }
+
+    /// The layout bonuses this building earns next to the right neighbours.
+    private var synergyRows: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(cs ? "Sousedství" : "Adjacency")
+                .font(.caption2.weight(.bold)).tracking(1.2)
+                .foregroundStyle(Theme.textDim)
+            ForEach(synergies, id: \.self) { line in
+                HStack(spacing: 5) {
+                    Image(systemName: "square.grid.3x3.topleft.filled")
+                        .font(.system(size: 8))
+                        .foregroundStyle(Theme.accent.opacity(0.8))
+                    Text(line)
+                        .font(.caption2)
+                        .foregroundStyle(Theme.textDim)
+                }
+            }
+        }
     }
 }

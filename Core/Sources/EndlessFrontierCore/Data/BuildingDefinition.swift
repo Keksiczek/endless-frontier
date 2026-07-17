@@ -76,7 +76,9 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
     public let pollution: Double
     public let footprint: TileSize
     public let adjacency: [AdjacencyRule]
-    public let description: String
+    /// Player-facing flavour. `LocalizedText` decodes from a bare string too,
+    /// so half-translated content files always load.
+    public let description: LocalizedText
 
     public init(
         id: String,
@@ -94,7 +96,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         pollution: Double = 0,
         footprint: TileSize = TileSize(),
         adjacency: [AdjacencyRule] = [],
-        description: String = ""
+        description: LocalizedText = LocalizedText("")
     ) {
         self.id = id
         self.era = era
@@ -138,6 +140,6 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         pollution = try c.decodeIfPresent(Double.self, forKey: .pollution) ?? 0
         footprint = try c.decodeIfPresent(TileSize.self, forKey: .footprint) ?? TileSize()
         adjacency = try c.decodeIfPresent([AdjacencyRule].self, forKey: .adjacency) ?? []
-        description = try c.decodeIfPresent(String.self, forKey: .description) ?? ""
+        description = try c.decodeIfPresent(LocalizedText.self, forKey: .description) ?? LocalizedText("")
     }
 }
