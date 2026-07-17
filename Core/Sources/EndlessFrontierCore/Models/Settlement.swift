@@ -112,6 +112,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public var constructionSequence: Int
     /// The settlement's living diary of small moments (see `ColonyLog`).
     public var journal: ColonyLog
+    /// Bonds between colonists — friendships, rivalries, marriages.
+    public var relationships: [Relationship]
 
     public init(
         id: UUID = UUID(),
@@ -136,7 +138,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         faith: FaithState = FaithState(),
         constructions: [ConstructionProject] = [],
         constructionSequence: Int = 0,
-        journal: ColonyLog = ColonyLog()
+        journal: ColonyLog = ColonyLog(),
+        relationships: [Relationship] = []
     ) {
         self.id = id
         self.name = name
@@ -161,6 +164,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.constructions = constructions
         self.constructionSequence = constructionSequence
         self.journal = journal
+        self.relationships = relationships
     }
 
     // MARK: - Codable (resilient to pre-specialisation saves)
@@ -169,7 +173,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         case id, name, kind, regionID, foundedTick, pawns, deathTallies
         case buildings, storage, storageCapacity, stats, inventory, specialization, colony, localMap
         case laws, leaderID, society, strikeTicksRemaining, faith
-        case constructions, constructionSequence, journal
+        case constructions, constructionSequence, journal, relationships
     }
 
     public init(from decoder: Decoder) throws {
@@ -202,5 +206,6 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         constructions = try c.decodeIfPresent([ConstructionProject].self, forKey: .constructions) ?? []
         constructionSequence = try c.decodeIfPresent(Int.self, forKey: .constructionSequence) ?? 0
         journal = try c.decodeIfPresent(ColonyLog.self, forKey: .journal) ?? ColonyLog()
+        relationships = try c.decodeIfPresent([Relationship].self, forKey: .relationships) ?? []
     }
 }

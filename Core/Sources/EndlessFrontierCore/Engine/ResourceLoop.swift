@@ -289,6 +289,10 @@ public enum ResourceLoop {
         // 11. Wildlife: the herd grows and is culled; predators may strike.
         s = WildlifeEngine.advanceOneTick(s, registry: registry, tick: tick, era: era, mapSeed: mapSeed)
 
+        // 11b. Village life: chats, quarrels, weddings — bonds that feed the
+        //      recreation need and fill the journal.
+        s = SocialEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: mapSeed)
+
         // 12. The life cycle: aging, deaths, pregnancies and births — family
         //     support puts more children in the cradles.
         s = PopulationEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: mapSeed,

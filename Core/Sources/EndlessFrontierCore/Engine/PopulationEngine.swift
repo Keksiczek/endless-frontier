@@ -50,6 +50,8 @@ public enum PopulationEngine {
     static let inheritanceShare = 0.7
     /// Fraction of the parent's wealth a newborn receives as a dowry.
     static let dowryShare = 0.15
+    /// How much more readily a married colonist conceives (see `SocialEngine`).
+    static let partneredBirthFactor = 1.6
 
     /// Advances one settlement's population one tick.
     public static func advanceOneTick(
@@ -94,6 +96,8 @@ public enum PopulationEngine {
                     .en: "\(death.pawn.name) has died at \(years) — \(death.cause.label.resolve(.en)).",
                     .cs: "\(death.pawn.name) zemřel(a) v \(years) letech — \(death.cause.label.resolve(.cs))."
                 ]))
+                // Those who loved them grieve, and their bonds are laid to rest.
+                s = SocialEngine.mourn(s, dead: death.pawn, tick: tick)
             }
             s.stats.morale -= deathMoralePenalty * Double(deaths.count)
             s.stats = s.stats.clamped()
@@ -118,14 +122,19 @@ public enum PopulationEngine {
         //    gradually — families slow long before the last hut is full.
         let headroom = headroomFactor(population: s.population, capacity: capacity)
         if headroom > 0 {
+            // Marriage builds cradles: partnered colonists conceive more often.
+            let partnered = Set(s.relationships.lazy
+                .filter { $0.kind == .partner }
+                .flatMap { [$0.a, $0.b] })
             for index in s.pawns.indices {
                 let pawn = s.pawns[index]
                 guard pawn.pregnancyTicksRemaining == 0 else { continue }
                 let years = pawn.ageYears(ticksPerYear: ticksPerYear)
                 guard years >= fertileMinYears, years <= fertileMaxYears else { continue }
                 let moodFactor = min(1.5, max(0.3, pawn.mood / 70))
+                let familyFactor = partnered.contains(pawn.id) ? partneredBirthFactor : 1.0
                 let chance = baseBirthChancePerTick * (pawn.genes.fertility * 2)
-                    * moodFactor * birthRateMultiplier * headroom
+                    * moodFactor * birthRateMultiplier * headroom * familyFactor
                 if rng.nextUnit() < chance {
                     s.pawns[index].pregnancyTicksRemaining = pregnancyTicks
                 }
