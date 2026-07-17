@@ -11,13 +11,60 @@ import Foundation
 /// special sites), so there is always a reason — and a risk — to explore
 /// further.
 public enum MapGenerator {
-    static let regionNames = [
-        "The Reach", "Far Hollow", "Greywater", "Stormwatch", "The Verge",
-        "Ashfall", "Dimming Wood", "Saltmere", "Highmoor", "Blackvale",
-        "Sunder Flats", "Coldspring", "Ember Hills", "Mistfen", "Thornmarch",
-        "Duskwater", "Ironcrag", "Palewood", "Redhollow", "Windmere",
-        "Hagstone", "Brackenfell", "Lornwood", "Mirefax", "Caldgrave"
+    // Place names are *built*, not picked from a list.
+    //
+    // There used to be 25 of them, taken modulo the coordinate, on a map that
+    // is deliberately endless and grows every time you reveal a hex. So the
+    // same two dozen names repeated forever: a player charts the Duskwater in
+    // front of them, sees three more Duskwaters still offering an expedition,
+    // and concludes that exploring did nothing. The map was lying about which
+    // place was which. (The old scheme also ignored `mapSeed` entirely, so
+    // every world named its places identically.)
+    //
+    // 25 × 20 × 10 = 5,000 names, and the coordinate is folded into that space
+    // through a bijection — so within any map a player will ever walk, two
+    // places cannot share a name *by construction*, not by luck.
+    static let nameRoots = [
+        "Dusk", "Grey", "Storm", "Ash", "Salt", "High", "Black", "Cold",
+        "Ember", "Mist", "Thorn", "Iron", "Pale", "Red", "Wind", "Hag",
+        "Bracken", "Lorn", "Mire", "Cald", "Fen", "Bram", "Sunder", "Rook", "Hollow"
     ]
+    static let nameSuffixes = [
+        "water", "watch", "fall", "mere", "moor", "vale", "flats", "spring",
+        "hills", "fen", "march", "crag", "wood", "hollow", "stone", "fell",
+        "marsh", "reach", "grave", "barrow"
+    ]
+    static let nameEpithets = [
+        "", "Upper ", "Lower ", "Far ", "Old ", "New ", "Little ", "Great ",
+        "Outer ", "Deep "
+    ]
+
+    /// A unique number for every hex — a Cantor pairing of the axial
+    /// coordinates, mapped through ℤ→ℕ first. Being a bijection is the whole
+    /// point: distinct hexes cannot collide here, so they cannot collide in the
+    /// names built from it.
+    static func hexIndex(_ coord: HexCoord) -> Int {
+        let a = coord.q >= 0 ? 2 * coord.q : -2 * coord.q - 1
+        let b = coord.r >= 0 ? 2 * coord.r : -2 * coord.r - 1
+        return (a + b) * (a + b + 1) / 2 + b
+    }
+
+    /// The name of the place at a coordinate. Deterministic per `(mapSeed,
+    /// coord)`, and distinct from every other place a player will reach.
+    public static func name(for coord: HexCoord, mapSeed: UInt64) -> String {
+        let roots = nameRoots.count, suffixes = nameSuffixes.count, epithets = nameEpithets.count
+        let space = roots * suffixes * epithets
+        // Offsetting by the seed keeps the mapping a bijection while giving
+        // each world its own names — the old scheme gave every world the same
+        // ones in the same places.
+        let offset = Int(mapSeed % UInt64(space))
+        let index = (hexIndex(coord) + offset) % space
+
+        let root = nameRoots[index % roots]
+        let suffix = nameSuffixes[(index / roots) % suffixes]
+        let epithet = nameEpithets[(index / (roots * suffixes)) % epithets]
+        return epithet + root + suffix
+    }
 
     /// Deterministic per-hex seed.
     static func hexSeed(_ mapSeed: UInt64, _ coord: HexCoord) -> UInt64 {
@@ -53,8 +100,7 @@ public enum MapGenerator {
         let hazard = baseHazard
             + hazardBonus(for: kind, config: config)
             + Int(Double(ring) * config.hazardPerRing)
-        let name = regionNames.isEmpty ? "Region \(coord.q),\(coord.r)"
-            : regionNames[nameIndex(coord) % regionNames.count]
+        let name = name(for: coord, mapSeed: mapSeed)
 
         return Region(
             id: rng.nextUUID(),
@@ -118,8 +164,4 @@ public enum MapGenerator {
         }
     }
 
-    /// Stable name index for a coordinate (so a hex always keeps its name).
-    static func nameIndex(_ coord: HexCoord) -> Int {
-        abs(coord.q &* 73_856_093 ^ coord.r &* 19_349_663)
-    }
 }
