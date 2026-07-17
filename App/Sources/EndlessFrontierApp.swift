@@ -9,12 +9,20 @@ struct EndlessFrontierApp: App {
         WindowGroup {
             RootView(game: game)
                 .preferredColorScheme(.dark)
-                .task { await game.openSession() }
+                .task {
+                    await game.openSession()
+                    game.startLiveLoop()
+                }
                 .onChange(of: scenePhase) { _, phase in
                     // Re-tick when returning to the foreground. A long absence
                     // is simulated off the main actor so the UI never freezes.
-                    if phase == .active {
+                    // While the app is up, the live loop keeps ticks landing.
+                    switch phase {
+                    case .active:
                         Task { await game.openSession() }
+                        game.startLiveLoop()
+                    default:
+                        game.stopLiveLoop()
                     }
                 }
                 .overlay {

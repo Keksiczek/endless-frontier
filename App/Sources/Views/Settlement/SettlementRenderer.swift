@@ -1,12 +1,14 @@
 import SwiftUI
 import EndlessFrontierCore
 
-/// Draws a settlement's living world as monochrome line-art into a `Canvas`
+/// Draws a settlement's living world as line-art into a `Canvas`
 /// `GraphicsContext`. Pure and layered — each concern is its own function, so
 /// new scenery or building types slot in without disturbing the rest.
 ///
 /// Coordinates arrive normalised (0…1) from the model and are mapped to pixels
-/// here, so the same scene renders crisp at any size.
+/// here, so the same scene renders crisp at any size. The world is
+/// season-aware: ground, trees, fields and the river all change with the
+/// calendar instead of sitting in one eternal grey-green.
 enum SettlementRenderer {
     /// Cap on drawn colonists — keeps a boom-town calm and the frame cheap.
     /// Everyone still exists in the sim; this only thins the *visible* crowd.
@@ -54,15 +56,22 @@ enum SettlementRenderer {
     ) {
         let viewRect = CGRect(origin: .zero, size: size)
         let rect = worldRect(viewRect: viewRect, camera: camera)
-        ground(&context, rect: rect, map: map)
+        ground(&context, rect: rect, map: map, season: season)
         heartGlow(&context, rect: rect)
-        river(&context, rect: rect, river: map.river)
-        scenery(&context, rect: rect, map: map)
-        deposits(&context, rect: rect, map: map)
-        buildings(&context, rect: rect, settlement: settlement, registry: registry,
-                  selectedBuildingID: selectedBuildingID)
+        river(&context, rect: rect, river: map.river, season: season)
+        scenery(&context, rect: rect, map: map, season: season)
+        deposits(&context, rect: rect, map: map, season: season)
+
+        let placed = layout(settlement: settlement, registry: registry, rect: rect)
+        buildings(&context, placed: placed, time: time, selectedBuildingID: selectedBuildingID)
+        SettlementFigures.smoke(
+            &context,
+            houses: placed.filter { $0.glyph == .house && !$0.underConstruction },
+            time: time)
+
         agents(&context, rect: rect, settlement: settlement, map: map,
-               time: time, selectedPawnID: selectedPawnID)
+               registry: registry, time: time, selectedPawnID: selectedPawnID)
+        SettlementFigures.birds(&context, rect: rect, season: season, time: time)
         fog(&context, rect: rect, map: map)
         // The seasonal wash is atmosphere over the lens, not part of the world,
         // so it stays in view space and doesn't slide when you pan.
@@ -77,9 +86,11 @@ enum SettlementRenderer {
     // MARK: - Ground tiles
 
     /// The tiled earth: every revealed cell painted with its seeded ground
-    /// cover. Batched into one path per cover so a full map is a handful of
-    /// fills, not a thousand.
-    private static func ground(_ context: inout GraphicsContext, rect: CGRect, map: LocalMap) {
+    /// cover in the current season's colours. Batched into one path per cover
+    /// so a full map is a handful of fills, not a thousand.
+    private static func ground(
+        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, season: Season
+    ) {
         let cols = LocalMap.gridColumns, rows = LocalMap.gridRows
         let cw = rect.width / CGFloat(cols), ch = rect.height / CGFloat(rows)
         var batches: [GroundCover: Path] = [:]
@@ -92,21 +103,41 @@ enum SettlementRenderer {
                        width: cw + 0.6, height: ch + 0.6))
         }
         for (cover, path) in batches {
-            context.fill(path, with: .color(coverColor(cover)))
+            context.fill(path, with: .color(coverColor(cover, season: season)))
         }
     }
 
-    /// Muted earth tones — dark enough that line-art still reads on top.
-    static func coverColor(_ cover: GroundCover) -> Color {
+    /// The raw earth tones, before the season passes over them. Lifted from
+    /// the original near-black palette — the map read as permanently dusk.
+    private static func baseCover(_ cover: GroundCover) -> (r: Double, g: Double, b: Double) {
         switch cover {
-        case .grass:  return Color(red: 0.11, green: 0.15, blue: 0.12)
-        case .meadow: return Color(red: 0.14, green: 0.18, blue: 0.13)
-        case .dirt:   return Color(red: 0.16, green: 0.14, blue: 0.11)
-        case .sand:   return Color(red: 0.20, green: 0.18, blue: 0.13)
-        case .rock:   return Color(red: 0.13, green: 0.14, blue: 0.16)
-        case .snow:   return Color(red: 0.19, green: 0.21, blue: 0.25)
-        case .marsh:  return Color(red: 0.11, green: 0.16, blue: 0.15)
+        case .grass:  return (0.15, 0.22, 0.15)
+        case .meadow: return (0.19, 0.26, 0.16)
+        case .dirt:   return (0.23, 0.19, 0.14)
+        case .sand:   return (0.29, 0.26, 0.17)
+        case .rock:   return (0.19, 0.20, 0.23)
+        case .snow:   return (0.30, 0.33, 0.39)
+        case .marsh:  return (0.15, 0.23, 0.20)
         }
+    }
+
+    /// The ground as the season paints it: fresh in spring, warm in summer,
+    /// rusted in autumn, and pale under winter snow.
+    static func coverColor(_ cover: GroundCover, season: Season) -> Color {
+        var (r, g, b) = baseCover(cover)
+        switch season {
+        case .spring:
+            g *= 1.22; r *= 0.96
+        case .summer:
+            r *= 1.12; g *= 1.10; b *= 0.94
+        case .autumn:
+            r *= 1.38; g *= 1.02; b *= 0.82
+        case .winter:
+            // Everything cools and lightens toward snow, but keeps a trace of
+            // what lies underneath.
+            r = r * 0.45 + 0.26; g = g * 0.45 + 0.28; b = b * 0.45 + 0.34
+        }
+        return Color(red: min(1, r), green: min(1, g), blue: min(1, b))
     }
 
     private static func heartGlow(_ context: inout GraphicsContext, rect: CGRect) {
@@ -122,7 +153,9 @@ enum SettlementRenderer {
 
     // MARK: - River
 
-    private static func river(_ context: inout GraphicsContext, rect: CGRect, river: RiverShape) {
+    private static func river(
+        _ context: inout GraphicsContext, rect: CGRect, river: RiverShape, season: Season
+    ) {
         var path = Path()
         let steps = 48
         for i in 0...steps {
@@ -130,37 +163,80 @@ enum SettlementRenderer {
             let p = point(LocalPoint(x: nx, y: river.y(atX: nx)), in: rect)
             if i == 0 { path.move(to: p) } else { path.addLine(to: p) }
         }
-        context.stroke(path, with: .color(Color(red: 0.13, green: 0.17, blue: 0.22)),
-                       style: StrokeStyle(lineWidth: 14, lineCap: .round, lineJoin: .round))
-        context.stroke(path, with: .color(Color(red: 0.34, green: 0.44, blue: 0.54).opacity(0.7)),
-                       style: StrokeStyle(lineWidth: 2, lineCap: .round))
+        if season == .winter {
+            // Frozen over: a pale band with a hairline of open water.
+            context.stroke(path, with: .color(Color(red: 0.42, green: 0.50, blue: 0.60)),
+                           style: StrokeStyle(lineWidth: 14, lineCap: .round, lineJoin: .round))
+            context.stroke(path, with: .color(Color(red: 0.72, green: 0.80, blue: 0.90).opacity(0.8)),
+                           style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [6, 5]))
+        } else {
+            context.stroke(path, with: .color(Color(red: 0.15, green: 0.22, blue: 0.30)),
+                           style: StrokeStyle(lineWidth: 14, lineCap: .round, lineJoin: .round))
+            context.stroke(path, with: .color(Color(red: 0.38, green: 0.52, blue: 0.64).opacity(0.75)),
+                           style: StrokeStyle(lineWidth: 2, lineCap: .round))
+        }
     }
 
     // MARK: - Scenery
 
-    private static func scenery(_ context: inout GraphicsContext, rect: CGRect, map: LocalMap) {
+    private static func scenery(
+        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, season: Season
+    ) {
         for prop in map.scenery where map.isExplored(prop.position) {
             let c = point(prop.position, in: rect)
             let s = CGFloat(prop.scale) * min(rect.width, rect.height) * 0.012
-            drawProp(prop.kind, at: c, s: s, context: &context)
+            drawProp(prop.kind, at: c, s: s, season: season, context: &context)
+        }
+    }
+
+    /// The deciduous canopy through the year.
+    private static func canopyColor(_ season: Season) -> Color {
+        switch season {
+        case .spring: return Color(red: 0.44, green: 0.62, blue: 0.42)
+        case .summer: return Color(red: 0.38, green: 0.55, blue: 0.40)
+        case .autumn: return Color(red: 0.72, green: 0.50, blue: 0.28)
+        case .winter: return Color(red: 0.50, green: 0.52, blue: 0.56)
         }
     }
 
     private static func drawProp(
-        _ kind: SceneryKind, at c: CGPoint, s: CGFloat, context: inout GraphicsContext
+        _ kind: SceneryKind, at c: CGPoint, s: CGFloat, season: Season,
+        context: inout GraphicsContext
     ) {
         switch kind {
         case .tree:
-            let canopy = Color(red: 0.40, green: 0.52, blue: 0.42)
             context.stroke(Path { p in
                 p.move(to: CGPoint(x: c.x, y: c.y + s * 0.9))
                 p.addLine(to: CGPoint(x: c.x, y: c.y))
-            }, with: .color(Color(red: 0.36, green: 0.30, blue: 0.24)), lineWidth: 1)
-            context.stroke(Path(ellipseIn: CGRect(x: c.x - s * 0.8, y: c.y - s * 1.5,
-                                                  width: s * 1.6, height: s * 1.5)),
-                           with: .color(canopy), lineWidth: 1)
+            }, with: .color(Color(red: 0.40, green: 0.33, blue: 0.26)), lineWidth: 1)
+            if season == .winter {
+                // Bare branches instead of a canopy.
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: c.x, y: c.y))
+                    p.addLine(to: CGPoint(x: c.x - s * 0.7, y: c.y - s * 1.0))
+                    p.move(to: CGPoint(x: c.x, y: c.y - s * 0.3))
+                    p.addLine(to: CGPoint(x: c.x + s * 0.65, y: c.y - s * 1.15))
+                    p.move(to: CGPoint(x: c.x, y: c.y - s * 0.6))
+                    p.addLine(to: CGPoint(x: c.x - s * 0.3, y: c.y - s * 1.4))
+                }, with: .color(canopyColor(season)), lineWidth: 0.9)
+            } else {
+                context.stroke(Path(ellipseIn: CGRect(x: c.x - s * 0.8, y: c.y - s * 1.5,
+                                                      width: s * 1.6, height: s * 1.5)),
+                               with: .color(canopyColor(season)), lineWidth: 1)
+                if season == .autumn {
+                    // A few fallen leaves at the foot.
+                    for i in 0..<3 {
+                        let lx = c.x + CGFloat(i - 1) * s * 0.5
+                        context.fill(Path(ellipseIn: CGRect(x: lx, y: c.y + s * 0.85,
+                                                            width: 1.4, height: 1.0)),
+                                     with: .color(canopyColor(season).opacity(0.7)))
+                    }
+                }
+            }
         case .pine:
-            let pine = Color(red: 0.34, green: 0.48, blue: 0.38)
+            let pine = season == .winter
+                ? Color(red: 0.42, green: 0.52, blue: 0.50)
+                : Color(red: 0.32, green: 0.50, blue: 0.38)
             context.stroke(Path { p in
                 p.move(to: CGPoint(x: c.x, y: c.y + s))
                 p.addLine(to: CGPoint(x: c.x, y: c.y + s * 0.5))
@@ -178,7 +254,7 @@ enum SettlementRenderer {
         case .bush:
             context.stroke(Path(ellipseIn: CGRect(x: c.x - s * 0.6, y: c.y - s * 0.45,
                                                   width: s * 1.2, height: s * 0.9)),
-                           with: .color(Color(red: 0.42, green: 0.52, blue: 0.42)), lineWidth: 1)
+                           with: .color(canopyColor(season).opacity(0.9)), lineWidth: 1)
         case .rock:
             context.stroke(Path { p in
                 p.move(to: CGPoint(x: c.x - s * 0.5, y: c.y + s * 0.4))
@@ -186,7 +262,7 @@ enum SettlementRenderer {
                 p.addLine(to: CGPoint(x: c.x + s * 0.4, y: c.y - s * 0.25))
                 p.addLine(to: CGPoint(x: c.x + s * 0.55, y: c.y + s * 0.4))
                 p.closeSubpath()
-            }, with: .color(Color(red: 0.52, green: 0.54, blue: 0.58)), lineWidth: 1)
+            }, with: .color(Color(red: 0.55, green: 0.57, blue: 0.61)), lineWidth: 1)
         case .boulder:
             context.stroke(Path { p in
                 p.move(to: CGPoint(x: c.x - s * 0.9, y: c.y + s * 0.7))
@@ -195,9 +271,13 @@ enum SettlementRenderer {
                 p.addLine(to: CGPoint(x: c.x + s * 0.95, y: c.y + s * 0.2))
                 p.addLine(to: CGPoint(x: c.x + s * 0.6, y: c.y + s * 0.7))
                 p.closeSubpath()
-            }, with: .color(Color(red: 0.46, green: 0.48, blue: 0.53)), lineWidth: 1.2)
+            }, with: .color(Color(red: 0.50, green: 0.52, blue: 0.57)), lineWidth: 1.2)
         case .flowers:
-            let bloom = Color(red: 0.80, green: 0.72, blue: 0.52)
+            // Blooms in spring and summer; bare stems otherwise.
+            let blooming = season == .spring || season == .summer
+            let bloom = season == .spring
+                ? Color(red: 0.85, green: 0.70, blue: 0.75)
+                : Color(red: 0.84, green: 0.76, blue: 0.52)
             for i in 0..<4 {
                 let a = Double(i) * 1.9
                 let px = c.x + CGFloat(cos(a)) * s * 0.6
@@ -205,12 +285,14 @@ enum SettlementRenderer {
                 context.stroke(Path { p in
                     p.move(to: CGPoint(x: px, y: py + s * 0.4))
                     p.addLine(to: CGPoint(x: px, y: py))
-                }, with: .color(Color(red: 0.40, green: 0.50, blue: 0.40)), lineWidth: 0.8)
-                context.fill(Path(ellipseIn: CGRect(x: px - 1, y: py - 1.6, width: 2, height: 2)),
-                             with: .color(bloom))
+                }, with: .color(Color(red: 0.42, green: 0.54, blue: 0.42)), lineWidth: 0.8)
+                if blooming {
+                    context.fill(Path(ellipseIn: CGRect(x: px - 1, y: py - 1.6, width: 2, height: 2)),
+                                 with: .color(bloom))
+                }
             }
         case .reeds:
-            let reed = Color(red: 0.52, green: 0.60, blue: 0.48)
+            let reed = Color(red: 0.54, green: 0.62, blue: 0.48)
             for i in 0..<5 {
                 let px = c.x + CGFloat(i - 2) * s * 0.28
                 let lean = CGFloat(i - 2) * 0.6
@@ -222,9 +304,11 @@ enum SettlementRenderer {
         case .stump:
             context.stroke(Path(CGRect(x: c.x - s * 0.4, y: c.y - s * 0.2,
                                        width: s * 0.8, height: s * 0.5)),
-                           with: .color(Color(red: 0.40, green: 0.33, blue: 0.26)), lineWidth: 1)
+                           with: .color(Color(red: 0.44, green: 0.36, blue: 0.28)), lineWidth: 1)
         case .pond:
-            let water = Color(red: 0.30, green: 0.42, blue: 0.52)
+            let water = season == .winter
+                ? Color(red: 0.60, green: 0.70, blue: 0.80)
+                : Color(red: 0.32, green: 0.46, blue: 0.56)
             context.fill(Path(ellipseIn: CGRect(x: c.x - s * 1.3, y: c.y - s * 0.7,
                                                 width: s * 2.6, height: s * 1.4)),
                          with: .color(water.opacity(0.35)))
@@ -232,7 +316,7 @@ enum SettlementRenderer {
                                                   width: s * 2.6, height: s * 1.4)),
                            with: .color(water), lineWidth: 1)
         case .cactus:
-            let green = Color(red: 0.44, green: 0.58, blue: 0.44)
+            let green = Color(red: 0.46, green: 0.60, blue: 0.46)
             context.stroke(Path { p in
                 p.move(to: CGPoint(x: c.x, y: c.y + s * 0.9))
                 p.addLine(to: CGPoint(x: c.x, y: c.y - s * 1.1))
@@ -249,7 +333,7 @@ enum SettlementRenderer {
                 p.addQuadCurve(to: CGPoint(x: c.x + s, y: c.y + s * 0.35),
                                control: CGPoint(x: c.x, y: c.y - s * 0.6))
                 p.closeSubpath()
-            }, with: .color(Color(red: 0.72, green: 0.78, blue: 0.86).opacity(0.30)))
+            }, with: .color(Color(red: 0.74, green: 0.80, blue: 0.88).opacity(0.32)))
         case .ruinPillar:
             context.stroke(Path(CGRect(x: c.x - s * 0.25, y: c.y - s * 1.1,
                                        width: s * 0.5, height: s * 1.5)),
@@ -259,33 +343,47 @@ enum SettlementRenderer {
 
     // MARK: - Resource deposits
 
-    private static func deposits(_ context: inout GraphicsContext, rect: CGRect, map: LocalMap) {
+    private static func deposits(
+        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, season: Season
+    ) {
         for node in map.nodes where map.isExplored(node.position) {
             let center = point(node.position, in: rect)
             let fraction = node.capacity > 0 ? node.amount / node.capacity : 1
             drawDeposit(node.kind, at: center, fraction: fraction,
-                        shade: Theme.depositShade(node.kind), context: &context)
+                        shade: Theme.depositShade(node.kind), season: season, context: &context)
         }
     }
 
     private static func drawDeposit(
         _ kind: LocalResourceKind, at c: CGPoint, fraction: Double,
-        shade: Color, context: inout GraphicsContext
+        shade: Color, season: Season, context: inout GraphicsContext
     ) {
         let count = max(2, Int(3 + fraction * 5))
         switch kind {
         case .field:
-            // A tilled plot with rows of grain — reads as worked land.
+            // A tilled plot. The rows follow the calendar: green shoots in
+            // spring, gold in summer, stubble in autumn, snow-dusted in winter.
             let plot = CGRect(x: c.x - 12, y: c.y - 8, width: 24, height: 16)
-            context.stroke(Path(plot), with: .color(shade.opacity(0.45)), lineWidth: 1)
+            context.stroke(Path(plot), with: .color(shade.opacity(0.5)), lineWidth: 1)
+            let rowColor: Color
+            switch season {
+            case .spring: rowColor = Color(red: 0.55, green: 0.68, blue: 0.42)
+            case .summer: rowColor = Color(red: 0.80, green: 0.72, blue: 0.40)
+            case .autumn: rowColor = Color(red: 0.72, green: 0.58, blue: 0.34)
+            case .winter: rowColor = Color(red: 0.62, green: 0.66, blue: 0.74)
+            }
             for i in 0..<4 {
                 let y = plot.minY + CGFloat(i) * 4 + 2
                 context.stroke(Path { p in
                     p.move(to: CGPoint(x: plot.minX + 2, y: y))
                     p.addLine(to: CGPoint(x: plot.maxX - 2, y: y))
-                }, with: .color(shade.opacity(0.35 + fraction * 0.5)), lineWidth: 1)
+                }, with: .color(rowColor.opacity(season == .winter ? 0.35 : 0.35 + fraction * 0.5)),
+                style: StrokeStyle(lineWidth: 1, dash: season == .winter ? [2, 3] : []))
             }
         case .forest:
+            let leaf = season == .autumn
+                ? Color(red: 0.70, green: 0.50, blue: 0.30)
+                : (season == .winter ? Color(red: 0.48, green: 0.54, blue: 0.54) : shade)
             for i in 0..<count {
                 let a = Double(i) * 2.399
                 let d = Double(i % 3) * 5
@@ -295,10 +393,9 @@ enum SettlementRenderer {
                     path.addLine(to: CGPoint(x: p.x - 3.4, y: p.y + 2))
                     path.addLine(to: CGPoint(x: p.x + 3.4, y: p.y + 2))
                     path.closeSubpath()
-                }, with: .color(shade.opacity(0.85)), lineWidth: 1)
+                }, with: .color(leaf.opacity(0.85)), lineWidth: 1)
             }
         case .stone:
-            // A quarry face with cut blocks.
             for i in 0..<max(2, count / 2) {
                 let ox = c.x + CGFloat((i * 13) % 17) - 8
                 let oy = c.y + CGFloat((i * 7) % 11) - 5
@@ -311,6 +408,7 @@ enum SettlementRenderer {
                 }, with: .color(shade.opacity(0.85)), lineWidth: 1)
             }
         case .herbs:
+            let herb = season == .winter ? shade.opacity(0.4) : shade.opacity(0.85)
             for i in 0..<count {
                 let ox = c.x + CGFloat((i * 11) % 19) - 9
                 let oy = c.y + CGFloat((i * 5) % 13) - 6
@@ -320,7 +418,7 @@ enum SettlementRenderer {
                     p.move(to: CGPoint(x: ox - 1.6, y: oy))
                     p.addLine(to: CGPoint(x: ox, y: oy - 1.4))
                     p.addLine(to: CGPoint(x: ox + 1.6, y: oy))
-                }, with: .color(shade.opacity(0.85)), lineWidth: 1)
+                }, with: .color(herb), lineWidth: 1)
             }
         }
     }
@@ -346,35 +444,30 @@ enum SettlementRenderer {
         }
     }
 
-    /// One structure standing in the settlement, at the spot it is drawn.
-    ///
-    /// The ring layout used to live inside the draw call, which meant a
-    /// building on screen had no identity — there was nothing for a tap to
-    /// land on. Layout is now computed once, here, and both the renderer and
-    /// the canvas's hit-testing read from it, so what you tap is exactly what
-    /// you see.
-    struct PlacedBuilding: Identifiable {
+    /// One structure in the settlement, in normalised (0…1) space — the shared
+    /// truth for the renderer, the tap targets *and* the colonists' motion, so
+    /// a builder walks to the same scaffolding you see.
+    struct NormalizedBuilding: Identifiable {
         let id: Int              // stable within a layout pass
+        let definitionID: String
+        let glyph: BuildingGlyph
+        let center: LocalPoint
+        /// Footprint size as a fraction of the canvas's short side.
+        let size: Double
+        let underConstruction: Bool
+        /// Construction completion 0…1 (1 when built).
+        let progress: Double
+    }
+
+    /// The same structure mapped to pixels for one frame.
+    struct PlacedBuilding: Identifiable {
+        let id: Int
         let definitionID: String
         let glyph: BuildingGlyph
         let center: CGPoint
         let size: CGFloat
-    }
-
-    /// Where the settlement's structures stand.
-    ///
-    /// The colony had two truths: the build grid the player lays out on
-    /// `ColonyMapScreen`, and a decorative ring of glyphs here — two unrelated
-    /// pictures of the same town. Now the grid is the truth wherever one
-    /// exists, so a building you place is the building you see, and the rings
-    /// are only the fallback for a colony that hasn't been laid out yet.
-    static func layout(
-        settlement: Settlement, registry: GameDataRegistry, rect: CGRect
-    ) -> [PlacedBuilding] {
-        if let colony = settlement.colony, !colony.placements.isEmpty {
-            return gridLayout(colony: colony, registry: registry, rect: rect)
-        }
-        return ringLayout(settlement: settlement, registry: registry, rect: rect)
+        let underConstruction: Bool
+        let progress: Double
     }
 
     /// Where the settlement's heart sits on the canvas — the fog is cleared
@@ -382,11 +475,6 @@ enum SettlementRenderer {
     /// seen.
     static let colonyHeart = LocalPoint(x: 0.5, y: 0.52)
     /// How wide a slice of the canvas the whole build grid covers.
-    ///
-    /// The grid used to be stretched across most of the canvas, which put a
-    /// building on tile (0,0) up in the unexplored dark, nowhere near the
-    /// settlement it belongs to — structures standing out in the fog. The grid
-    /// is a compact cluster *at the heart*, not a sprawl over the whole map.
     static let colonySpan: Double = 0.42
 
     /// Maps a grid tile to the point on the canvas it sits at, centred on the
@@ -399,12 +487,35 @@ enum SettlementRenderer {
             y: colonyHeart.y + fy * colonySpan)
     }
 
-    /// The structures as actually placed on the build grid.
-    private static func gridLayout(
-        colony: ColonyMap, registry: GameDataRegistry, rect: CGRect
+    /// Where the settlement's structures stand, in normalised space. The grid
+    /// is the truth wherever one exists; the rings are only the fallback for a
+    /// colony that hasn't been laid out yet.
+    static func normalizedLayout(
+        settlement: Settlement, registry: GameDataRegistry
+    ) -> [NormalizedBuilding] {
+        if let colony = settlement.colony, !colony.placements.isEmpty {
+            return gridLayout(settlement: settlement, colony: colony, registry: registry)
+        }
+        return ringLayout(settlement: settlement, registry: registry)
+    }
+
+    /// The pixel-space layout for one frame — what drawing and hit-testing use.
+    static func layout(
+        settlement: Settlement, registry: GameDataRegistry, rect: CGRect
     ) -> [PlacedBuilding] {
         let unit = min(rect.width, rect.height)
-        return colony.placements.prefix(maxVisibleBuildings).enumerated().map { index, placement in
+        return normalizedLayout(settlement: settlement, registry: registry).map { b in
+            PlacedBuilding(id: b.id, definitionID: b.definitionID, glyph: b.glyph,
+                           center: point(b.center, in: rect), size: unit * b.size,
+                           underConstruction: b.underConstruction, progress: b.progress)
+        }
+    }
+
+    /// The structures as actually placed on the build grid.
+    private static func gridLayout(
+        settlement: Settlement, colony: ColonyMap, registry: GameDataRegistry
+    ) -> [NormalizedBuilding] {
+        colony.placements.prefix(maxVisibleBuildings).enumerated().map { index, placement in
             // `coord` is the footprint's top-left origin, so a multi-tile
             // building is nudged to the middle of what it covers — and drawn
             // larger for covering it.
@@ -413,12 +524,16 @@ enum SettlementRenderer {
                 x: origin.x + Double(placement.width - 1) * 0.5 / Double(max(1, colony.width)) * colonySpan,
                 y: origin.y + Double(placement.height - 1) * 0.5 / Double(max(1, colony.height)) * colonySpan)
             let glyph = registry.building(placement.definitionID).map(glyph(for:)) ?? .house
-            return PlacedBuilding(
+            let progress = settlement.constructions
+                .first { $0.placementID == placement.id }?.fraction
+            return NormalizedBuilding(
                 id: index,
                 definitionID: placement.definitionID,
                 glyph: glyph,
-                center: point(p, in: rect),
-                size: unit * 0.021 * Double(max(placement.width, placement.height)))
+                center: p,
+                size: 0.021 * Double(max(placement.width, placement.height)),
+                underConstruction: placement.underConstruction,
+                progress: placement.underConstruction ? (progress ?? 0) : 1)
         }
     }
 
@@ -426,8 +541,8 @@ enum SettlementRenderer {
     /// Civic buildings hold the centre; housing drifts to the outer rings.
     /// Pure and deterministic — the same settlement always lays out the same.
     private static func ringLayout(
-        settlement: Settlement, registry: GameDataRegistry, rect: CGRect
-    ) -> [PlacedBuilding] {
+        settlement: Settlement, registry: GameDataRegistry
+    ) -> [NormalizedBuilding] {
         var expanded: [(id: String, glyph: BuildingGlyph)] = []
         for instance in settlement.buildings {
             let g = registry.building(instance.definitionID).map(glyph(for:)) ?? .house
@@ -438,19 +553,21 @@ enum SettlementRenderer {
         guard !expanded.isEmpty else { return [] }
         expanded.sort { rank($0.glyph) < rank($1.glyph) }
 
-        let heart = point(LocalPoint(x: 0.5, y: 0.52), in: rect)
-        let unit = min(rect.width, rect.height)
-        var placed: [PlacedBuilding] = []
+        var placed: [NormalizedBuilding] = []
         var drawn = 0, ringIndex = 0
         while drawn < expanded.count {
             let perRing = ringIndex == 0 ? 1 : ringIndex * 6
-            let radius = Double(ringIndex) * unit * 0.058
+            let radius = Double(ringIndex) * 0.052
             for slot in 0..<perRing where drawn < expanded.count {
                 let angle = Double(slot) / Double(perRing) * 2 * .pi + Double(ringIndex) * 0.6
-                let c = CGPoint(x: heart.x + cos(angle) * radius, y: heart.y + sin(angle) * radius)
-                placed.append(PlacedBuilding(id: drawn, definitionID: expanded[drawn].id,
-                                             glyph: expanded[drawn].glyph, center: c,
-                                             size: unit * 0.021))
+                // The y-step is damped: normalised y maps to the (taller)
+                // screen height, and an uncorrected circle stretches into an
+                // egg on a portrait phone.
+                let c = LocalPoint(x: colonyHeart.x + cos(angle) * radius,
+                                   y: colonyHeart.y + sin(angle) * radius * 0.72)
+                placed.append(NormalizedBuilding(
+                    id: drawn, definitionID: expanded[drawn].id, glyph: expanded[drawn].glyph,
+                    center: c, size: 0.021, underConstruction: false, progress: 1))
                 drawn += 1
             }
             ringIndex += 1
@@ -459,12 +576,16 @@ enum SettlementRenderer {
     }
 
     private static func buildings(
-        _ context: inout GraphicsContext, rect: CGRect,
-        settlement: Settlement, registry: GameDataRegistry,
-        selectedBuildingID: Int?
+        _ context: inout GraphicsContext, placed: [PlacedBuilding],
+        time: Double, selectedBuildingID: Int?
     ) {
-        for building in layout(settlement: settlement, registry: registry, rect: rect) {
-            drawBuilding(building.glyph, at: building.center, s: building.size, context: &context)
+        for building in placed {
+            if building.underConstruction {
+                drawSite(at: building.center, s: building.size,
+                         progress: building.progress, time: time, context: &context)
+            } else {
+                drawBuilding(building.glyph, at: building.center, s: building.size, context: &context)
+            }
             if building.id == selectedBuildingID {
                 let r = building.size * 2.6
                 context.stroke(
@@ -473,6 +594,53 @@ enum SettlementRenderer {
                     with: .color(Theme.accent), lineWidth: 1.5)
             }
         }
+    }
+
+    /// A construction site: staked ground, rising scaffold, a timber pile and
+    /// a thin progress mark — the colony visibly *making* something.
+    private static func drawSite(
+        at c: CGPoint, s: CGFloat, progress: Double, time: Double,
+        context: inout GraphicsContext
+    ) {
+        let ink = Theme.bone.opacity(0.55)
+        let w = s * 1.8, h = s * 1.3
+        let base = CGRect(x: c.x - w / 2, y: c.y - h / 2, width: w, height: h)
+        // Staked-out ground.
+        context.stroke(Path(base), with: .color(ink),
+                       style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+        // The frame rises with progress.
+        let rise = CGFloat(0.3 + progress * 0.7)
+        context.stroke(Path { p in
+            p.move(to: CGPoint(x: base.minX, y: base.minY))
+            p.addLine(to: CGPoint(x: base.minX, y: base.minY - h * 0.8 * rise))
+            p.move(to: CGPoint(x: base.maxX, y: base.minY))
+            p.addLine(to: CGPoint(x: base.maxX, y: base.minY - h * 0.8 * rise))
+            if progress > 0.55 {
+                p.move(to: CGPoint(x: base.minX, y: base.minY - h * 0.8 * rise))
+                p.addLine(to: CGPoint(x: c.x, y: base.minY - h * (0.8 * rise + 0.35)))
+                p.addLine(to: CGPoint(x: base.maxX, y: base.minY - h * 0.8 * rise))
+            }
+        }, with: .color(Theme.bone.opacity(0.75)), lineWidth: 1)
+        // Cross-brace.
+        context.stroke(Path { p in
+            p.move(to: CGPoint(x: base.minX, y: base.minY - h * 0.8 * rise))
+            p.addLine(to: CGPoint(x: base.maxX, y: base.minY))
+            p.move(to: CGPoint(x: base.maxX, y: base.minY - h * 0.8 * rise))
+            p.addLine(to: CGPoint(x: base.minX, y: base.minY))
+        }, with: .color(ink.opacity(0.5)), lineWidth: 0.7)
+        // Timber pile by the corner.
+        for i in 0..<3 {
+            let y = base.maxY - CGFloat(i) * 1.6
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: base.maxX + 2, y: y))
+                p.addLine(to: CGPoint(x: base.maxX + 2 + s * 0.9, y: y))
+            }, with: .color(Color(red: 0.52, green: 0.42, blue: 0.30)), lineWidth: 1.2)
+        }
+        // Progress underline in lantern amber.
+        context.stroke(Path { p in
+            p.move(to: CGPoint(x: base.minX, y: base.maxY + 3))
+            p.addLine(to: CGPoint(x: base.minX + w * CGFloat(progress), y: base.maxY + 3))
+        }, with: .color(Theme.accent.opacity(0.9)), lineWidth: 1.6)
     }
 
     /// Civic buildings rank low (centre), housing high (outskirts).
@@ -504,8 +672,11 @@ enum SettlementRenderer {
                 p.addLine(to: CGPoint(x: c.x, y: body.minY - h * 0.7))
                 p.addLine(to: CGPoint(x: body.maxX, y: body.minY))
             }, with: .color(bright), lineWidth: 1)
+            // A warm window — someone lives here.
+            context.fill(Path(CGRect(x: c.x - s * 0.18, y: c.y - s * 0.1,
+                                     width: s * 0.36, height: s * 0.3)),
+                         with: .color(Theme.accent.opacity(0.35)))
         case .granary:
-            // Round silo with a conical cap.
             context.stroke(Path(ellipseIn: CGRect(x: c.x - s * 0.7, y: c.y - s * 0.5,
                                                   width: s * 1.4, height: s * 1.4)),
                            with: .color(ink), lineWidth: 1)
@@ -517,7 +688,6 @@ enum SettlementRenderer {
         case .workshop:
             let body = CGRect(x: c.x - s * 0.9, y: c.y - s * 0.5, width: s * 1.8, height: s)
             context.stroke(Path(body), with: .color(ink), lineWidth: 1)
-            // Saw-tooth roof.
             context.stroke(Path { p in
                 p.move(to: CGPoint(x: body.minX, y: body.minY))
                 p.addLine(to: CGPoint(x: body.minX + s * 0.45, y: body.minY - s * 0.5))
@@ -529,13 +699,11 @@ enum SettlementRenderer {
             context.stroke(Path(CGRect(x: c.x - s * 0.45, y: c.y - s * 1.2,
                                        width: s * 0.9, height: s * 1.9)),
                            with: .color(ink), lineWidth: 1)
-            // Crenellations.
             context.stroke(Path { p in
                 p.move(to: CGPoint(x: c.x - s * 0.6, y: c.y - s * 1.2))
                 p.addLine(to: CGPoint(x: c.x + s * 0.6, y: c.y - s * 1.2))
             }, with: .color(bright), lineWidth: 1.4)
         case .temple:
-            // Columned front with a pediment.
             let base = CGRect(x: c.x - s * 0.95, y: c.y - s * 0.35, width: s * 1.9, height: s * 0.9)
             context.stroke(Path(base), with: .color(ink), lineWidth: 1)
             context.stroke(Path { p in
@@ -551,7 +719,6 @@ enum SettlementRenderer {
                 }, with: .color(ink), lineWidth: 0.9)
             }
         case .mine:
-            // A pit-head: an A-frame over a dark mouth.
             context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.5, y: c.y + s * 0.1,
                                                 width: s, height: s * 0.5)),
                          with: .color(Theme.ink))
@@ -563,7 +730,6 @@ enum SettlementRenderer {
                 p.addLine(to: CGPoint(x: c.x + s * 0.45, y: c.y - s * 0.1))
             }, with: .color(bright), lineWidth: 1)
         case .mill:
-            // A lumber mill: shed plus a blade wheel.
             context.stroke(Path(CGRect(x: c.x - s * 0.9, y: c.y - s * 0.4,
                                        width: s * 1.5, height: s * 0.9)),
                            with: .color(ink), lineWidth: 1)
@@ -579,7 +745,6 @@ enum SettlementRenderer {
             context.stroke(Path(CGRect(x: c.x - s * 0.75, y: c.y - s * 0.4,
                                        width: s * 1.5, height: s * 1.0)),
                            with: .color(ink), lineWidth: 1)
-            // A bolt on the face.
             context.stroke(Path { p in
                 p.move(to: CGPoint(x: c.x + s * 0.15, y: c.y - s * 0.3))
                 p.addLine(to: CGPoint(x: c.x - s * 0.2, y: c.y + s * 0.1))
@@ -593,46 +758,18 @@ enum SettlementRenderer {
 
     private static func agents(
         _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement,
-        map: LocalMap, time: Double, selectedPawnID: UUID?
+        map: LocalMap, registry: GameDataRegistry, time: Double, selectedPawnID: UUID?
     ) {
+        let scene = AgentMotion.Scene(settlement: settlement, registry: registry)
+        let ticksPerYear = registry.config.ticksPerYear
         for pawn in settlement.pawns.prefix(maxVisibleAgents) {
-            let pos = AgentMotion.position(for: pawn, map: map, time: time)
-            guard map.isExplored(pos) else { continue }
-            figure(pawn, at: point(pos, in: rect), time: time,
-                   selected: pawn.id == selectedPawnID, context: &context)
-        }
-    }
-
-    private static func figure(
-        _ pawn: Pawn, at p: CGPoint, time: Double, selected: Bool, context: inout GraphicsContext
-    ) {
-        let child = pawn.age < 14 * 60
-        let scale: CGFloat = child ? 0.72 : 1.0
-        let shade = Theme.roleShade(pawn.assignedWork)
-        let alpha = max(0.4, pawn.health / 100)
-
-        let gait = AgentMotion.gaitPhase(for: pawn, time: time)
-        let swing = CGFloat(sin(gait)) * 1.4 * scale
-        let headY = p.y - 4 * scale
-
-        context.fill(
-            Path(ellipseIn: CGRect(x: p.x - 1.7 * scale, y: headY - 1.7 * scale,
-                                   width: 3.4 * scale, height: 3.4 * scale)),
-            with: .color(shade.opacity(alpha)))
-
-        var body = Path()
-        body.move(to: CGPoint(x: p.x, y: headY + 1.7 * scale))
-        body.addLine(to: CGPoint(x: p.x, y: p.y + 2.6 * scale))
-        body.move(to: CGPoint(x: p.x - 2 * scale + swing, y: p.y + 6 * scale))
-        body.addLine(to: CGPoint(x: p.x, y: p.y + 2.6 * scale))
-        body.addLine(to: CGPoint(x: p.x + 2 * scale - swing, y: p.y + 6 * scale))
-        context.stroke(body, with: .color(shade.opacity(alpha)),
-                       style: StrokeStyle(lineWidth: 1.2 * scale, lineCap: .round, lineJoin: .round))
-
-        if selected {
-            context.stroke(
-                Path(ellipseIn: CGRect(x: p.x - 8, y: p.y - 9, width: 16, height: 16)),
-                with: .color(Theme.bone), lineWidth: 1.2)
+            let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
+                                        time: time, ticksPerYear: ticksPerYear)
+            guard map.isExplored(pose.position) else { continue }
+            SettlementFigures.draw(
+                pawn: pawn, pose: pose, at: point(pose.position, in: rect),
+                time: time, ticksPerYear: ticksPerYear,
+                selected: pawn.id == selectedPawnID, context: &context)
         }
     }
 

@@ -1,0 +1,299 @@
+import SwiftUI
+import EndlessFrontierCore
+
+/// Draws the colonists themselves — and the small breath of life around them
+/// (chimney smoke, passing birds). Split from `SettlementRenderer` so the
+/// world and its people each stay a readable file.
+///
+/// A figure is still line-art, but a person now: a tunic in their trade's
+/// colour, a warm face, the tool of their work in hand, a blade at the hip if
+/// they carry one. Children are small, elders walk with a stick, the sick
+/// droop. What the sim knows about a colonist, the canvas shows.
+enum SettlementFigures {
+    /// Warm skin tone for faces — people, not markers.
+    static let skin = Color(red: 0.89, green: 0.83, blue: 0.72)
+
+    // MARK: - One colonist
+
+    static func draw(
+        pawn: Pawn, pose: AgentMotion.Pose, at p: CGPoint,
+        time: Double, ticksPerYear: Int, selected: Bool,
+        context: inout GraphicsContext
+    ) {
+        let years = pawn.ageYears(ticksPerYear: ticksPerYear)
+        let child = years < Pawn.adultAgeYears
+        let elder = years >= 56
+        let scale: CGFloat = child ? 0.7 : (elder ? 0.94 : 1.0)
+
+        let tunic = Theme.roleShade(pawn.assignedWork)
+        var alpha = max(0.45, pawn.health / 100)
+        if pose.activity == .sleeping { alpha *= 0.6 }
+        if pose.activity == .resting { alpha *= 0.8 }
+
+        // Walk cycle: legs swing only in proportion to how much they move.
+        let gait = AgentMotion.gaitPhase(for: pawn, time: time)
+        let swing = CGFloat(sin(gait) * pose.stride) * 1.7 * scale
+
+        // The sick and the broken slouch; everyone else stands tall.
+        let slouch: CGFloat = (pose.activity == .resting || pawn.isBroken) ? 1.1 : 0
+        let headY = p.y - 4.9 * scale + slouch
+        let shoulderY = p.y - 2.4 * scale + slouch * 0.6
+        let hipY = p.y + 1.7 * scale
+
+        // Tunic — a small filled coat in the trade's colour.
+        var torso = Path()
+        torso.move(to: CGPoint(x: p.x - 1.5 * scale, y: shoulderY))
+        torso.addLine(to: CGPoint(x: p.x + 1.5 * scale, y: shoulderY))
+        torso.addLine(to: CGPoint(x: p.x + 1.1 * scale, y: hipY))
+        torso.addLine(to: CGPoint(x: p.x - 1.1 * scale, y: hipY))
+        torso.closeSubpath()
+        context.fill(torso, with: .color(tunic.opacity(alpha * 0.9)))
+
+        // Legs.
+        var legs = Path()
+        legs.move(to: CGPoint(x: p.x - 0.7 * scale, y: hipY))
+        legs.addLine(to: CGPoint(x: p.x - 1.5 * scale + swing, y: p.y + 6 * scale))
+        legs.move(to: CGPoint(x: p.x + 0.7 * scale, y: hipY))
+        legs.addLine(to: CGPoint(x: p.x + 1.5 * scale - swing, y: p.y + 6 * scale))
+        context.stroke(legs, with: .color(tunic.opacity(alpha)),
+                       style: StrokeStyle(lineWidth: 1.1 * scale, lineCap: .round))
+
+        // Arms: the tool arm works, the other hangs (or both hang).
+        let working = pose.activity == .working
+        let toolSwing = working ? sin(time * 5 + Double(AgentMotion.hash(pawn.id) % 7)) * 0.35 : 0
+        var arms = Path()
+        arms.move(to: CGPoint(x: p.x - 1.3 * scale, y: shoulderY + 0.3))
+        arms.addLine(to: CGPoint(x: p.x - 2.0 * scale, y: p.y + 0.8 * scale))
+        let handX = p.x + (2.1 + CGFloat(toolSwing)) * scale
+        let handY = p.y + (working ? -0.6 : 0.8) * scale
+        arms.move(to: CGPoint(x: p.x + 1.3 * scale, y: shoulderY + 0.3))
+        arms.addLine(to: CGPoint(x: handX, y: handY))
+        context.stroke(arms, with: .color(tunic.opacity(alpha)),
+                       style: StrokeStyle(lineWidth: 1.0 * scale, lineCap: .round))
+
+        // Head — skin, not tunic: a face in the crowd.
+        context.fill(
+            Path(ellipseIn: CGRect(x: p.x - 1.7 * scale, y: headY - 1.7 * scale,
+                                   width: 3.4 * scale, height: 3.4 * scale)),
+            with: .color(skin.opacity(alpha)))
+
+        // A helmet if they wear armor into the day.
+        if pawn.equipment[.armor] != nil {
+            context.stroke(Path { path in
+                path.addArc(center: CGPoint(x: p.x, y: headY),
+                            radius: 1.9 * scale,
+                            startAngle: .degrees(180), endAngle: .degrees(360),
+                            clockwise: false)
+            }, with: .color(Color(red: 0.62, green: 0.66, blue: 0.72).opacity(alpha)),
+            lineWidth: 1.1 * scale)
+        }
+
+        // The tool of the trade, in the working hand.
+        if working {
+            tool(for: pawn.assignedWork, at: CGPoint(x: handX, y: handY),
+                 scale: scale, alpha: alpha, time: time, context: &context)
+        }
+
+        // A blade at the hip — equipment you can *see*.
+        if pawn.equipment[.weapon] != nil {
+            context.stroke(Path { path in
+                path.move(to: CGPoint(x: p.x - 1.2 * scale, y: hipY + 0.2))
+                path.addLine(to: CGPoint(x: p.x - 2.6 * scale, y: hipY + 2.2 * scale))
+            }, with: .color(Color(red: 0.78, green: 0.80, blue: 0.86).opacity(alpha)),
+            lineWidth: 0.9 * scale)
+        }
+
+        // An elder's walking stick.
+        if elder {
+            context.stroke(Path { path in
+                path.move(to: CGPoint(x: p.x + 2.4 * scale, y: shoulderY + 1))
+                path.addLine(to: CGPoint(x: p.x + 2.9 * scale, y: p.y + 6 * scale))
+            }, with: .color(Color(red: 0.55, green: 0.46, blue: 0.35).opacity(alpha)),
+            lineWidth: 0.8 * scale)
+        }
+
+        // Sleep reads as a dimmed figure and a drifting 'z'.
+        if pose.activity == .sleeping {
+            let rise = (time * 8).truncatingRemainder(dividingBy: 6)
+            let text = Text("z").font(.system(size: 5)).foregroundStyle(Theme.boneDim.opacity(0.7))
+            context.draw(context.resolve(text),
+                         at: CGPoint(x: p.x + 3 * scale, y: headY - 3 - rise * 0.4))
+        }
+
+        if selected {
+            context.stroke(
+                Path(ellipseIn: CGRect(x: p.x - 8, y: p.y - 9, width: 16, height: 16)),
+                with: .color(Theme.bone), lineWidth: 1.2)
+        }
+    }
+
+    /// A few strokes of the trade's tool at the hand position.
+    private static func tool(
+        for work: WorkKind, at hand: CGPoint, scale: CGFloat, alpha: Double,
+        time: Double, context: inout GraphicsContext
+    ) {
+        let wood = Color(red: 0.60, green: 0.48, blue: 0.34).opacity(alpha)
+        let iron = Color(red: 0.74, green: 0.77, blue: 0.83).opacity(alpha)
+        switch work {
+        case .farming:
+            // A hoe: shaft down-right, blade at the foot.
+            context.stroke(Path { p in
+                p.move(to: hand)
+                p.addLine(to: CGPoint(x: hand.x + 1.6 * scale, y: hand.y + 4.6 * scale))
+            }, with: .color(wood), lineWidth: 0.9 * scale)
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x + 1.6 * scale, y: hand.y + 4.6 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 3.0 * scale, y: hand.y + 4.9 * scale))
+            }, with: .color(iron), lineWidth: 1.1 * scale)
+        case .logging:
+            // An axe raised over the shoulder.
+            context.stroke(Path { p in
+                p.move(to: hand)
+                p.addLine(to: CGPoint(x: hand.x + 2.6 * scale, y: hand.y - 2.6 * scale))
+            }, with: .color(wood), lineWidth: 0.9 * scale)
+            context.fill(Path { p in
+                p.move(to: CGPoint(x: hand.x + 2.6 * scale, y: hand.y - 2.6 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 3.8 * scale, y: hand.y - 2.2 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 2.9 * scale, y: hand.y - 1.4 * scale))
+                p.closeSubpath()
+            }, with: .color(iron))
+        case .mining:
+            // A pick.
+            context.stroke(Path { p in
+                p.move(to: hand)
+                p.addLine(to: CGPoint(x: hand.x + 2.4 * scale, y: hand.y - 2.4 * scale))
+            }, with: .color(wood), lineWidth: 0.9 * scale)
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x + 1.4 * scale, y: hand.y - 3.4 * scale))
+                p.addQuadCurve(to: CGPoint(x: hand.x + 3.6 * scale, y: hand.y - 1.6 * scale),
+                               control: CGPoint(x: hand.x + 3.2 * scale, y: hand.y - 3.2 * scale))
+            }, with: .color(iron), lineWidth: 1.0 * scale)
+        case .foraging:
+            // A gathering basket.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x, y: hand.y + 0.6 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 2.4 * scale, y: hand.y + 0.6 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 1.9 * scale, y: hand.y + 2.2 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 0.5 * scale, y: hand.y + 2.2 * scale))
+                p.closeSubpath()
+            }, with: .color(wood), lineWidth: 0.8 * scale)
+        case .hunting:
+            // A strung bow.
+            context.stroke(Path { p in
+                p.addArc(center: hand, radius: 2.6 * scale,
+                         startAngle: .degrees(-55), endAngle: .degrees(55), clockwise: false)
+            }, with: .color(wood), lineWidth: 0.9 * scale)
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x + 2.6 * scale * cos(-55 * .pi / 180),
+                                   y: hand.y + 2.6 * scale * sin(-55 * .pi / 180)))
+                p.addLine(to: CGPoint(x: hand.x + 2.6 * scale * cos(55 * .pi / 180),
+                                      y: hand.y + 2.6 * scale * sin(55 * .pi / 180)))
+            }, with: .color(Theme.boneDim.opacity(alpha)), lineWidth: 0.5)
+        case .research:
+            // An open scroll.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x - 0.4 * scale, y: hand.y))
+                p.addLine(to: CGPoint(x: hand.x + 2.6 * scale, y: hand.y))
+            }, with: .color(Theme.bone.opacity(alpha)), lineWidth: 1.6 * scale)
+        case .building:
+            // A hammer, mid-swing.
+            let a = sin(time * 6) * 0.5
+            context.stroke(Path { p in
+                p.move(to: hand)
+                p.addLine(to: CGPoint(x: hand.x + 2.2 * scale, y: hand.y - (2.0 + a) * scale))
+            }, with: .color(wood), lineWidth: 0.9 * scale)
+            context.fill(Path(CGRect(x: hand.x + 1.7 * scale, y: hand.y - (2.8 + a) * scale,
+                                     width: 1.6 * scale, height: 1.1 * scale)),
+                         with: .color(iron))
+        case .healing:
+            // The healer's satchel.
+            context.fill(Path(CGRect(x: hand.x, y: hand.y, width: 2.2 * scale, height: 1.7 * scale)),
+                         with: .color(Color(red: 0.72, green: 0.5, blue: 0.5).opacity(alpha)))
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x + 0.5 * scale, y: hand.y + 0.85 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 1.7 * scale, y: hand.y + 0.85 * scale))
+                p.move(to: CGPoint(x: hand.x + 1.1 * scale, y: hand.y + 0.3 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 1.1 * scale, y: hand.y + 1.4 * scale))
+            }, with: .color(Theme.bone.opacity(alpha)), lineWidth: 0.5)
+        case .trade:
+            // A shouldered sack.
+            context.fill(Path(ellipseIn: CGRect(x: hand.x, y: hand.y - 1.4 * scale,
+                                                width: 2.4 * scale, height: 2.0 * scale)),
+                         with: .color(wood))
+        case .scouting:
+            // A spear taller than its bearer.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x + 0.6 * scale, y: hand.y + 4.4 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 0.6 * scale, y: hand.y - 6.4 * scale))
+            }, with: .color(wood), lineWidth: 0.8 * scale)
+            context.fill(Path { p in
+                p.move(to: CGPoint(x: hand.x + 0.6 * scale, y: hand.y - 7.6 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 0.1 * scale, y: hand.y - 6.2 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 1.1 * scale, y: hand.y - 6.2 * scale))
+                p.closeSubpath()
+            }, with: .color(iron))
+        case .priest:
+            // A raised staff with a small flame.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x, y: hand.y + 3 * scale))
+                p.addLine(to: CGPoint(x: hand.x, y: hand.y - 4.4 * scale))
+            }, with: .color(wood), lineWidth: 0.8 * scale)
+            context.fill(Path(ellipseIn: CGRect(x: hand.x - 0.8 * scale, y: hand.y - 5.6 * scale,
+                                                width: 1.6 * scale, height: 1.6 * scale)),
+                         with: .color(Theme.accent.opacity(0.8)))
+        case .idle:
+            break
+        }
+    }
+
+    // MARK: - Smoke
+
+    /// Hearth smoke drifting from the houses — the surest sign a town is
+    /// inhabited. Deterministic per chimney, animated by the frame clock.
+    static func smoke(
+        _ context: inout GraphicsContext,
+        houses: [SettlementRenderer.PlacedBuilding],
+        time: Double
+    ) {
+        for house in houses.prefix(10) {
+            let phase = Double(house.id % 7) * 0.9
+            let chimney = CGPoint(x: house.center.x + house.size * 0.55,
+                                  y: house.center.y - house.size * 1.35)
+            for k in 0..<3 {
+                let t = (time * 0.22 + phase + Double(k) * 0.33)
+                    .truncatingRemainder(dividingBy: 1)
+                let y = chimney.y - CGFloat(t) * 13
+                let x = chimney.x + CGFloat(sin(t * 6 + phase + Double(k))) * 2.2
+                let r = 0.8 + CGFloat(t) * 2.2
+                context.fill(
+                    Path(ellipseIn: CGRect(x: x - r / 2, y: y - r / 2, width: r, height: r)),
+                    with: .color(Theme.boneDim.opacity((1 - t) * 0.28)))
+            }
+        }
+    }
+
+    // MARK: - Birds
+
+    /// Now and then a small flock crosses the valley. Gone in winter.
+    static func birds(
+        _ context: inout GraphicsContext, rect: CGRect, season: Season, time: Double
+    ) {
+        guard season != .winter else { return }
+        let cycle = 43.0
+        let t = time.truncatingRemainder(dividingBy: cycle)
+        guard t < 14 else { return }
+        let progress = t / 14
+        let baseX = rect.minX + rect.width * CGFloat(progress)
+        let baseY = rect.minY + rect.height * CGFloat(0.16 + sin(progress * 2.6) * 0.03)
+        for i in 0..<3 {
+            let bx = baseX - CGFloat(i) * 7
+            let by = baseY + CGFloat(i % 2) * 4
+            let flap = CGFloat(abs(sin(time * 7 + Double(i)))) * 1.6
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: bx - 2.4, y: by - flap))
+                p.addLine(to: CGPoint(x: bx, y: by))
+                p.addLine(to: CGPoint(x: bx + 2.4, y: by - flap))
+            }, with: .color(Theme.boneDim.opacity(0.55)), lineWidth: 0.8)
+        }
+    }
+}

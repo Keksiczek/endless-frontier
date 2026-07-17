@@ -26,8 +26,10 @@ struct SettlementCanvasView: View {
     let season: Season
     @Binding var selection: CanvasSelection
 
-    /// A fixed epoch so the animation clock is stable across redraws.
-    @State private var start = Date()
+    /// A fixed, *absolute* epoch so the animation clock is stable across
+    /// redraws — and so anyone else (the pawn inspector's "right now" line)
+    /// can derive the same clock without holding a reference to this view.
+    private let start = Date(timeIntervalSinceReferenceDate: 0)
     @State private var camera = SettlementRenderer.Camera()
     /// The camera as it was when the current gesture began, so pinch and drag
     /// compose from a fixed base instead of accumulating drift.
@@ -142,13 +144,16 @@ struct SettlementCanvasView: View {
         let viewRect = CGRect(origin: .zero, size: size)
         let rect = SettlementRenderer.worldRect(viewRect: viewRect, camera: camera)
         let t = Date().timeIntervalSince(start)
+        let scene = AgentMotion.Scene(settlement: settlement, registry: registry)
+        let ticksPerYear = registry.config.ticksPerYear
 
         var best: CanvasSelection = .none
         var bestDistance = touchRadius * touchRadius
         for pawn in settlement.pawns.prefix(SettlementRenderer.maxVisibleAgents) {
-            let pos = AgentMotion.position(for: pawn, map: map, time: t)
-            guard map.isExplored(pos) else { continue }
-            let p = SettlementRenderer.point(pos, in: rect)
+            let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
+                                        time: t, ticksPerYear: ticksPerYear)
+            guard map.isExplored(pose.position) else { continue }
+            let p = SettlementRenderer.point(pose.position, in: rect)
             let d2 = distanceSquared(p, location)
             if d2 < bestDistance {
                 bestDistance = d2

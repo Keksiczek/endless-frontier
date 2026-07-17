@@ -1,11 +1,21 @@
 import SwiftUI
 import EndlessFrontierCore
 
-/// A tap-to-inspect card for a single colonist: who they are, how they fare,
-/// and their inherited disposition. Slides up over the living canvas.
+/// A tap-to-inspect card for a single colonist: who they are, what they're
+/// doing *right now*, who they love and quarrel with, how they fare, and
+/// their inherited disposition. Slides up over the living canvas.
 struct PawnInspectorCard: View {
+    /// One bond, resolved to a living name for display.
+    struct BondLine: Identifiable {
+        let id: UUID
+        let name: String
+        let kind: RelationKind
+    }
+
     let pawn: Pawn
     let ticksPerYear: Int
+    var activity: String?
+    var bonds: [BondLine] = []
     var onClose: () -> Void
 
     var body: some View {
@@ -21,6 +31,7 @@ struct PawnInspectorCard: View {
                           value: nil, text: "\(Int(pawn.wealth))", tint: Theme.textDim)
                 }
             }
+            if !bonds.isEmpty { bondRows }
             genes
         }
         .padding(16)
@@ -46,6 +57,15 @@ struct PawnInspectorCard: View {
                         .foregroundStyle(Theme.textDim)
                 }
                 .font(.caption)
+                // What they're visibly doing on the canvas this moment.
+                if let activity {
+                    HStack(spacing: 4) {
+                        Image(systemName: "location.fill").font(.system(size: 8))
+                        Text(activity)
+                    }
+                    .font(.caption)
+                    .foregroundStyle(Theme.accent.opacity(0.9))
+                }
             }
             Spacer()
             Button(action: onClose) {
@@ -54,6 +74,54 @@ struct PawnInspectorCard: View {
                     .foregroundStyle(Theme.textDim)
             }
             .accessibilityLabel("Close")
+        }
+    }
+
+    /// Who this colonist's life is entangled with.
+    private var bondRows: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(AppStrings.language == .cs ? "Vztahy" : "Bonds")
+                .font(.caption2.weight(.bold)).tracking(1.2)
+                .foregroundStyle(Theme.textDim)
+            ForEach(bonds) { bond in
+                HStack(spacing: 6) {
+                    Image(systemName: bondIcon(bond.kind))
+                        .font(.caption2)
+                        .foregroundStyle(bondTint(bond.kind))
+                        .frame(width: 14)
+                    Text(bond.name)
+                        .font(.caption)
+                        .foregroundStyle(Theme.text)
+                    Text(bondLabel(bond.kind))
+                        .font(.caption2)
+                        .foregroundStyle(Theme.textDim)
+                }
+            }
+        }
+    }
+
+    private func bondIcon(_ kind: RelationKind) -> String {
+        switch kind {
+        case .partner: return "heart.fill"
+        case .friend: return "person.2.fill"
+        case .rival: return "bolt.fill"
+        }
+    }
+
+    private func bondTint(_ kind: RelationKind) -> Color {
+        switch kind {
+        case .partner: return Theme.danger.opacity(0.85)
+        case .friend: return Theme.good
+        case .rival: return Theme.accent
+        }
+    }
+
+    private func bondLabel(_ kind: RelationKind) -> String {
+        let cs = AppStrings.language == .cs
+        switch kind {
+        case .partner: return cs ? "manžel(ka)" : "spouse"
+        case .friend: return cs ? "přítel" : "friend"
+        case .rival: return cs ? "sok" : "rival"
         }
     }
 

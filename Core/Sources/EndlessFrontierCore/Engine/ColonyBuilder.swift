@@ -100,6 +100,24 @@ public enum ColonyBuilder {
         return s
     }
 
+    /// Places a construction site on the first free tile that fits (row by
+    /// row) — how a quick-build from the construction panel lands on a colony
+    /// that has a layout. Returns the settlement unchanged (and a nil id)
+    /// when the grid is full.
+    public static func placeSiteAtFirstFit(
+        _ settlement: Settlement,
+        definitionID: String,
+        registry: GameDataRegistry
+    ) -> (settlement: Settlement, placementID: UUID?) {
+        guard let def = registry.building(definitionID),
+              let map = settlement.colony,
+              let coord = firstFit(def.footprint, in: map) else {
+            return (settlement, nil)
+        }
+        let sited = placeSite(settlement, definitionID: definitionID, at: coord, registry: registry)
+        return (sited, sited.colony?.placement(at: coord)?.id)
+    }
+
     /// Removes whatever building stands on `coord`, decrements the ledger, and
     /// frees any colonists that were assigned to it. Unchanged if the tile is
     /// empty.

@@ -99,6 +99,135 @@ final class GameViewModel {
         lastSessionEvents = []
     }
 
+    // MARK: - The live loop
+    //
+    // The world used to advance only when a session *opened* — with the app in
+    // the foreground, literally nothing ever happened. A minute of real time
+    // is a tick; this loop lets those ticks actually land while you watch,
+    // and surfaces what they did as passing toasts.
+
+    /// A transient on-screen note: something just happened in the colony.
+    struct LiveToast: Identifiable, Equatable {
+        let id: UUID
+        let icon: String
+        let text: String
+        let kind: ColonyLogEntry.Kind?
+    }
+
+    private(set) var toasts: [LiveToast] = []
+    private var liveLoop: Task<Void, Never>?
+    /// How often the loop checks whether a tick has come due.
+    private let livePollSeconds: Double = 5
+    /// Live advances stay small; anything bigger goes the catch-up path.
+    private let maxLiveTicks = 10
+    private let maxVisibleToasts = 4
+
+    /// Starts the once-a-tick heartbeat (idempotent).
+    func startLiveLoop() {
+        guard liveLoop == nil else { return }
+        liveLoop = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(self?.livePollSeconds ?? 5))
+                self?.advanceLive()
+            }
+        }
+    }
+
+    func stopLiveLoop() {
+        liveLoop?.cancel()
+        liveLoop = nil
+    }
+
+    /// Advances any ticks that have come due while the app sits open, and
+    /// turns what happened into toasts.
+    func advanceLive(now: Date = Date()) {
+        guard !isCatchingUp else { return }
+        let config = registry.config
+        let ticks = TickEngine.ticksElapsed(
+            since: world.lastRealTimestamp, until: now, config: config)
+        guard ticks > 0 else { return }
+        // A pile of ticks (device slept with the app up) is a catch-up, not a
+        // live moment — no toast storm, just the summary flow.
+        guard ticks <= maxLiveTicks else {
+            Task { await openSession(now: now) }
+            return
+        }
+
+        let journalMark = selectedSettlement?.journal.nextID ?? 0
+        let before = world
+        var result = TickEngine.advance(world, ticks: ticks, registry: registry)
+        // Advance the stamp by exactly the ticks simulated — stamping `now`
+        // would silently drop the remainder every pass and run the world slow.
+        result.state.lastRealTimestamp = before.lastRealTimestamp
+            .addingTimeInterval(Double(ticks) * config.realSecondsPerTick)
+        world = result.state
+        persist()
+
+        surfaceToasts(fired: result.fired, journalMark: journalMark)
+    }
+
+    /// What just happened, as passing notes: fresh journal lines of the viewed
+    /// settlement, plus any storyteller events that fired.
+    private func surfaceToasts(fired: [HistoricalEvent], journalMark: Int) {
+        var fresh: [LiveToast] = []
+        if let journal = selectedSettlement?.journal {
+            for entry in journal.entries(after: journalMark - 1) where entry.id >= journalMark {
+                fresh.append(LiveToast(
+                    id: UUID(), icon: Self.icon(for: entry.kind),
+                    text: entry.text.resolve(AppStrings.language),
+                    kind: entry.kind))
+            }
+        }
+        for event in fired {
+            guard let template = registry.events.first(where: { $0.id == event.templateID })
+            else { continue }
+            fresh.append(LiveToast(
+                id: UUID(), icon: Self.icon(for: template.type),
+                text: template.name.resolve(AppStrings.language),
+                kind: nil))
+        }
+        guard !fresh.isEmpty else { return }
+        for toast in fresh.suffix(maxVisibleToasts) {
+            show(toast)
+        }
+    }
+
+    /// Puts a toast up and takes it down again a few breaths later.
+    private func show(_ toast: LiveToast) {
+        toasts.append(toast)
+        if toasts.count > maxVisibleToasts {
+            toasts.removeFirst(toasts.count - maxVisibleToasts)
+        }
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(7))
+            self?.toasts.removeAll { $0.id == toast.id }
+        }
+    }
+
+    static func icon(for kind: ColonyLogEntry.Kind) -> String {
+        switch kind {
+        case .social: return "bubble.left.and.bubble.right.fill"
+        case .work: return "hammer.fill"
+        case .construction: return "hammer.fill"
+        case .birth: return "heart.fill"
+        case .death: return "leaf.fill"
+        case .arrival: return "figure.walk.arrival"
+        case .departure: return "figure.walk.departure"
+        case .discovery: return "binoculars.fill"
+        case .danger: return "exclamationmark.triangle.fill"
+        case .faith: return "flame.fill"
+        }
+    }
+
+    static func icon(for type: EventType) -> String {
+        switch type {
+        case .disaster, .threat: return "exclamationmark.triangle.fill"
+        case .opportunity: return "sparkles"
+        case .quest: return "flag.fill"
+        case .flavor: return "text.book.closed.fill"
+        }
+    }
+
     /// Diagnostics helper: fast-forward the world by `ticks` and record what
     /// happened, so events (migrations, disasters…) can be reproduced without
     /// waiting real time. Runs inline — intended for small jumps.
@@ -261,7 +390,13 @@ final class GameViewModel {
 
     // MARK: - Diplomacy
 
-    var tribes: [Tribe] { world.tribes }
+    /// The peoples you have actually met. Natives beyond the fog stay off the
+    /// panels until an expedition makes first contact.
+    var tribes: [Tribe] { world.tribes.filter(\.discovered) }
+
+    /// How many native peoples are still out there, unmet — the world tab can
+    /// hint that the map is not empty.
+    var unmetTribeCount: Int { world.tribes.filter { !$0.discovered }.count }
 
     func canAfford(influence amount: Double) -> Bool {
         GameEngine.canAfford(influence: amount, in: world)

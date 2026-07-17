@@ -48,8 +48,20 @@ public enum GameEngine {
             return state
         }
         var s = paid
+        var target = s.settlements[settlementIndex]
+        // A quick-build still stands *somewhere*: on a laid-out colony the
+        // site takes the first tile that fits, so the scaffolding (and later
+        // the building) is visible on the canvas instead of only in a ledger.
+        var placementID: UUID?
+        if target.colony != nil {
+            let sited = ColonyBuilder.placeSiteAtFirstFit(target, definitionID: buildingID, registry: registry)
+            if sited.placementID != nil {
+                target = sited.settlement
+                placementID = sited.placementID
+            }
+        }
         s.settlements[settlementIndex] = ConstructionEngine.enqueue(
-            s.settlements[settlementIndex], definitionID: buildingID, placementID: nil,
+            target, definitionID: buildingID, placementID: placementID,
             registry: registry, tick: s.tick)
         return s
     }

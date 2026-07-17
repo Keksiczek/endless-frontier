@@ -70,10 +70,49 @@ struct SettlementScreen: View {
                 .overlay(alignment: .topTrailing) {
                     MinimapView(map: map).padding(12)
                 }
+                .overlay(alignment: .top) { toastStack }
                 .overlay(alignment: .bottom) { bottomLayer }
             } else {
                 emptyState
             }
+        }
+    }
+
+    /// Passing notes from the living world — a birth, a quarrel, a roof going
+    /// on. They drift in at the top and take themselves away.
+    private var toastStack: some View {
+        VStack(spacing: 6) {
+            ForEach(game.toasts) { toast in
+                HStack(spacing: 8) {
+                    Image(systemName: toast.icon)
+                        .font(.caption)
+                        .foregroundStyle(toastTint(toast))
+                    Text(toast.text)
+                        .font(.caption)
+                        .foregroundStyle(Theme.text)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
+                .background(.ultraThinMaterial, in: Capsule())
+                .overlay(Capsule().strokeBorder(Theme.boneFaint.opacity(0.35), lineWidth: 1))
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .padding(.top, 10)
+        .padding(.horizontal, 60)   // clear of the minimap
+        .frame(maxWidth: .infinity)
+        .animation(.spring(duration: 0.35), value: game.toasts)
+        .allowsHitTesting(false)
+    }
+
+    private func toastTint(_ toast: GameViewModel.LiveToast) -> Color {
+        switch toast.kind {
+        case .danger, .death: return Theme.danger
+        case .birth, .social: return Theme.good
+        case .discovery: return Theme.accent
+        default: return Theme.textDim
         }
     }
 
@@ -86,7 +125,9 @@ struct SettlementScreen: View {
                                   queued: max(0, game.pendingEvents.count - 1))
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if let pawn = selectedPawn {
-                PawnInspectorCard(pawn: pawn, ticksPerYear: game.ticksPerYear) {
+                PawnInspectorCard(pawn: pawn, ticksPerYear: game.ticksPerYear,
+                                  activity: activityLine(for: pawn),
+                                  bonds: bondLines(for: pawn)) {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -156,6 +197,35 @@ struct SettlementScreen: View {
     private var selectedPawn: Pawn? {
         guard case let .pawn(id) = selection else { return nil }
         return game.selectedSettlement?.pawns.first { $0.id == id }
+    }
+
+    /// The "right now" line: the same clock and scene the canvas draws from,
+    /// so the card says what the figure is visibly doing.
+    private func activityLine(for pawn: Pawn) -> String? {
+        guard let map = game.viewedLocalMap, let settlement = game.selectedSettlement else { return nil }
+        let scene = AgentMotion.Scene(settlement: settlement, registry: game.registry)
+        let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
+                                    time: Date().timeIntervalSinceReferenceDate,
+                                    ticksPerYear: game.ticksPerYear)
+        return AgentMotion.activityLabel(pose.activity, work: pawn.assignedWork,
+                                         cs: AppStrings.language == .cs)
+    }
+
+    /// The colonist's bonds, resolved to living names — spouse first, then the
+    /// strongest of the rest.
+    private func bondLines(for pawn: Pawn) -> [PawnInspectorCard.BondLine] {
+        guard let settlement = game.selectedSettlement else { return [] }
+        return settlement.relationships(of: pawn.id)
+            .sorted {
+                if ($0.kind == .partner) != ($1.kind == .partner) { return $0.kind == .partner }
+                return $0.strength > $1.strength
+            }
+            .prefix(4)
+            .compactMap { bond in
+                guard let otherID = bond.other(than: pawn.id),
+                      let other = settlement.pawns.first(where: { $0.id == otherID }) else { return nil }
+                return PawnInspectorCard.BondLine(id: otherID, name: other.name, kind: bond.kind)
+            }
     }
 
     /// The tapped structure, resolved to what the inspector needs to show.
