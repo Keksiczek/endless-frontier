@@ -262,6 +262,10 @@ public enum ResourceLoop {
         // 8. Put any idle adults (new arrivals, those who came of age) to work.
         s = LaborEngine.assignIdleAdults(s, registry: registry)
 
+        // 8b. Raise what's being built: sites draft hands, progress accrues,
+        //     and a finished roof joins the economy ledger above.
+        s = ConstructionEngine.advanceOneTick(s, registry: registry, tick: tick)
+
         // 9. Individual colonists: needs, mood, skilled work, morale pull.
         //    Gathering work is scaled by how full the local deposits & herd are;
         //    a strike stops the gatherers altogether.

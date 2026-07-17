@@ -106,6 +106,12 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public var strikeTicksRemaining: Int
     /// The settlement's faith: its cult, its devotion, its prophets.
     public var faith: FaithState
+    /// Buildings currently being raised, oldest first (see `ConstructionEngine`).
+    public var constructions: [ConstructionProject]
+    /// Monotonic id source for construction projects — deterministic identity.
+    public var constructionSequence: Int
+    /// The settlement's living diary of small moments (see `ColonyLog`).
+    public var journal: ColonyLog
 
     public init(
         id: UUID = UUID(),
@@ -127,7 +133,10 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         leaderID: UUID? = nil,
         society: SocietyStats = SocietyStats(),
         strikeTicksRemaining: Int = 0,
-        faith: FaithState = FaithState()
+        faith: FaithState = FaithState(),
+        constructions: [ConstructionProject] = [],
+        constructionSequence: Int = 0,
+        journal: ColonyLog = ColonyLog()
     ) {
         self.id = id
         self.name = name
@@ -149,6 +158,9 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.society = society
         self.strikeTicksRemaining = strikeTicksRemaining
         self.faith = faith
+        self.constructions = constructions
+        self.constructionSequence = constructionSequence
+        self.journal = journal
     }
 
     // MARK: - Codable (resilient to pre-specialisation saves)
@@ -157,6 +169,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         case id, name, kind, regionID, foundedTick, pawns, deathTallies
         case buildings, storage, storageCapacity, stats, inventory, specialization, colony, localMap
         case laws, leaderID, society, strikeTicksRemaining, faith
+        case constructions, constructionSequence, journal
     }
 
     public init(from decoder: Decoder) throws {
@@ -185,5 +198,9 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         society = try c.decodeIfPresent(SocietyStats.self, forKey: .society) ?? SocietyStats()
         strikeTicksRemaining = try c.decodeIfPresent(Int.self, forKey: .strikeTicksRemaining) ?? 0
         faith = try c.decodeIfPresent(FaithState.self, forKey: .faith) ?? FaithState()
+        // Construction-over-time and the journal arrived after the first V2 cut.
+        constructions = try c.decodeIfPresent([ConstructionProject].self, forKey: .constructions) ?? []
+        constructionSequence = try c.decodeIfPresent(Int.self, forKey: .constructionSequence) ?? 0
+        journal = try c.decodeIfPresent(ColonyLog.self, forKey: .journal) ?? ColonyLog()
     }
 }

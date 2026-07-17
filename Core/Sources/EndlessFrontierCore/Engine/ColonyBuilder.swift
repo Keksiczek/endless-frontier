@@ -74,6 +74,32 @@ public enum ColonyBuilder {
         return s
     }
 
+    /// Places a building as a construction *site*: its tiles are reserved and
+    /// the scaffolding is drawn, but the economy ledger is untouched until
+    /// `ConstructionEngine` finishes the roof. Unchanged if it doesn't fit.
+    public static func placeSite(
+        _ settlement: Settlement,
+        definitionID: String,
+        at coord: TileCoord,
+        registry: GameDataRegistry
+    ) -> Settlement {
+        guard let def = registry.building(definitionID) else { return settlement }
+        var s = ensureMap(settlement)
+        guard var map = s.colony, fits(def.footprint, at: coord, in: map) else {
+            return settlement
+        }
+        map.placements.append(BuildingPlacement(
+            id: placementID(definitionID, coord),
+            definitionID: definitionID,
+            coord: coord,
+            width: def.footprint.width,
+            height: def.footprint.height,
+            underConstruction: true
+        ))
+        s.colony = map
+        return s
+    }
+
     /// Removes whatever building stands on `coord`, decrements the ledger, and
     /// frees any colonists that were assigned to it. Unchanged if the tile is
     /// empty.
@@ -94,8 +120,11 @@ public enum ColonyBuilder {
             }
         }
 
-        // Decrement the ledger, dropping the entry when it hits zero.
-        if let bi = s.buildings.firstIndex(where: { $0.definitionID == removed.definitionID }) {
+        // Decrement the ledger, dropping the entry when it hits zero. A site
+        // still under scaffolding was never counted, so there is nothing to
+        // take back out.
+        if !removed.underConstruction,
+           let bi = s.buildings.firstIndex(where: { $0.definitionID == removed.definitionID }) {
             s.buildings[bi].count -= 1
             if s.buildings[bi].count <= 0 {
                 s.buildings.remove(at: bi)
@@ -117,6 +146,7 @@ public enum ColonyBuilder {
         var s = settlement
         guard var map = s.colony,
               let pIdx = map.placements.firstIndex(where: { $0.id == placementID }),
+              !map.placements[pIdx].underConstruction,   // a site can't be staffed
               s.pawns.contains(where: { $0.id == pawnID }),
               let def = registry.building(map.placements[pIdx].definitionID) else {
             return settlement

@@ -30,8 +30,10 @@ public enum GameEngine {
         TechEngine.setResearch(state, techID: techID, registry: registry)
     }
 
-    /// Constructs one building in a settlement if it is unlocked and that
-    /// settlement can pay the cost from its own storage. Returns unchanged
+    /// Opens a construction site for one building in a settlement if it is
+    /// unlocked and that settlement can pay the cost from its own storage.
+    /// The building joins the economy only when `ConstructionEngine` finishes
+    /// it — paying is breaking ground, not conjuring a roof. Returns unchanged
     /// state on failure.
     public static func build(
         _ state: WorldState,
@@ -46,11 +48,9 @@ public enum GameEngine {
             return state
         }
         var s = paid
-        if let existing = s.settlements[settlementIndex].buildings.firstIndex(where: { $0.definitionID == buildingID }) {
-            s.settlements[settlementIndex].buildings[existing].count += 1
-        } else {
-            s.settlements[settlementIndex].buildings.append(BuildingInstance(definitionID: buildingID, count: 1))
-        }
+        s.settlements[settlementIndex] = ConstructionEngine.enqueue(
+            s.settlements[settlementIndex], definitionID: buildingID, placementID: nil,
+            registry: registry, tick: s.tick)
         return s
     }
 
@@ -341,8 +341,9 @@ public enum GameEngine {
 
     // MARK: - Colony layout (in-settlement base building)
 
-    /// Places a building on a settlement's colony grid, paying its cost from the
-    /// capital. Validates that the building is unlocked and the tile is free.
+    /// Opens a construction site on a settlement's colony grid, paying its cost
+    /// from the capital. The tiles are reserved and the scaffolding goes up at
+    /// once; the building itself joins the economy when the builders finish.
     /// Returns unchanged state on failure.
     public static func placeBuilding(
         _ state: WorldState,
@@ -360,13 +361,18 @@ public enum GameEngine {
         }
         var s = paid
         guard let place = s.settlements.firstIndex(where: { $0.id == settlementID }) else { return state }
-        s.settlements[place] = ColonyBuilder.place(
+        let sited = ColonyBuilder.placeSite(
             s.settlements[place], definitionID: buildingID, at: coord, registry: registry
         )
+        guard let placementID = sited.colony?.placement(at: coord)?.id else { return state }
+        s.settlements[place] = ConstructionEngine.enqueue(
+            sited, definitionID: buildingID, placementID: placementID,
+            registry: registry, tick: s.tick)
         return s
     }
 
-    /// Demolishes whatever stands on a colony tile (no refund).
+    /// Demolishes whatever stands on a colony tile (no refund). Tearing down a
+    /// half-raised site also cancels its construction project.
     public static func demolish(
         _ state: WorldState,
         settlementID: UUID,
@@ -374,7 +380,11 @@ public enum GameEngine {
     ) -> WorldState {
         guard let si = state.settlements.firstIndex(where: { $0.id == settlementID }) else { return state }
         var s = state
+        let removed = s.settlements[si].colony?.placement(at: coord)
         s.settlements[si] = ColonyBuilder.remove(s.settlements[si], at: coord)
+        if let removed, removed.underConstruction {
+            s.settlements[si].constructions.removeAll { $0.placementID == removed.id }
+        }
         return s
     }
 

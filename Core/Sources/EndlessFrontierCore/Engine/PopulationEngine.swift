@@ -8,6 +8,17 @@ public enum PawnDeathCause: String, Codable, Sendable, CaseIterable {
     case oldAge = "old_age"
     case beast
     case battle
+
+    /// Player-facing label, for the journal and the chronicle.
+    public var label: LocalizedText {
+        switch self {
+        case .starvation: return LocalizedText(values: [.en: "starvation", .cs: "hlad"])
+        case .sickness: return LocalizedText(values: [.en: "sickness", .cs: "nemoc"])
+        case .oldAge: return LocalizedText(values: [.en: "old age", .cs: "stáří"])
+        case .beast: return LocalizedText(values: [.en: "a beast", .cs: "šelma"])
+        case .battle: return LocalizedText(values: [.en: "battle", .cs: "boj"])
+        }
+    }
 }
 
 /// The deterministic life cycle of a settlement's inhabitants: aging, death
@@ -78,6 +89,11 @@ public enum PopulationEngine {
                     let heir = Int(rng.next() % UInt64(s.pawns.count))
                     s.pawns[heir].wealth += death.pawn.wealth * inheritanceShare
                 }
+                let years = death.pawn.ageYears(ticksPerYear: ticksPerYear)
+                s.journal.append(tick: tick, kind: .death, text: LocalizedText(values: [
+                    .en: "\(death.pawn.name) has died at \(years) — \(death.cause.label.resolve(.en)).",
+                    .cs: "\(death.pawn.name) zemřel(a) v \(years) letech — \(death.cause.label.resolve(.cs))."
+                ]))
             }
             s.stats.morale -= deathMoralePenalty * Double(deaths.count)
             s.stats = s.stats.clamped()
@@ -90,6 +106,10 @@ public enum PopulationEngine {
             s.pawns[index].pregnancyTicksRemaining -= 1
             if s.pawns[index].pregnancyTicksRemaining == 0 {
                 let child = newborn(parent: &s.pawns[index], rng: &rng)
+                s.journal.append(tick: tick, kind: .birth, text: LocalizedText(values: [
+                    .en: "\(s.pawns[index].name) welcomed a child — \(child.name).",
+                    .cs: "\(s.pawns[index].name) přivedla na svět dítě — \(child.name)."
+                ]))
                 s.pawns.append(child)
             }
         }

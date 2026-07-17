@@ -52,10 +52,13 @@ public enum LaborEngine {
 
         // A temple in the settlement opens the priesthood as a trade.
         let hasTemple = settlement.faith.hasTemple
+        // Builders are only a trade while something is actually being raised.
+        let hasConstruction = !settlement.constructions.isEmpty
 
         for index in idleIndices {
             let best = neediestRole(counts: counts, adultCount: adultCountD,
-                                    population: adultCount, hasTemple: hasTemple)
+                                    population: adultCount, hasTemple: hasTemple,
+                                    hasConstruction: hasConstruction)
             s.pawns[index].assignedWork = best
             counts[best, default: 0] += 1
         }
@@ -64,7 +67,8 @@ public enum LaborEngine {
 
     /// The role furthest below its quota right now.
     static func neediestRole(
-        counts: [WorkKind: Int], adultCount: Double, population: Int, hasTemple: Bool = false
+        counts: [WorkKind: Int], adultCount: Double, population: Int,
+        hasTemple: Bool = false, hasConstruction: Bool = true
     ) -> WorkKind {
         var table = quotas
         if hasTemple { table.append((.priest, priestShare)) }
@@ -73,6 +77,7 @@ public enum LaborEngine {
         var bestDeficit = -Double.infinity
         for (work, share) in table {
             if work == .healing, population < healingMinPopulation { continue }
+            if work == .building, !hasConstruction { continue }
             let current = Double(counts[work, default: 0]) / adultCount
             let deficit = share - current
             if deficit > bestDeficit {

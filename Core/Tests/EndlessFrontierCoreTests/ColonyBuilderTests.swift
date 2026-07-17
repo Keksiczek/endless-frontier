@@ -161,7 +161,7 @@ struct ColonyBuilderTests {
         #expect(s.colony?.placements.isEmpty == true)
     }
 
-    @Test("GameEngine.placeBuilding pays the cost and lays the tile")
+    @Test("GameEngine.placeBuilding pays the cost and opens a site on the tile")
     func enginePlacePays() throws {
         let reg = try GameDataRegistry.bundled()
         let cap = Settlement(name: "C", kind: .capital, storage: [.materials: 100], storageCapacity: 9999)
@@ -170,7 +170,12 @@ struct ColonyBuilderTests {
                                              buildingID: "farm_basic", at: TileCoord(0, 0), registry: reg)
         #expect(after.settlements[0].storage[.materials] == 80)   // farm_basic costs 20 materials
         #expect(after.settlements[0].colony?.placements.count == 1)
-        #expect(after.settlements[0].buildings.first { $0.definitionID == "farm_basic" }?.count == 1)
+        // The tiles are reserved as a scaffolded site; the economy ledger only
+        // counts the farm once the builders finish it.
+        #expect(after.settlements[0].colony?.placements.first?.underConstruction == true)
+        #expect(after.settlements[0].buildings.isEmpty)
+        #expect(after.settlements[0].constructions.first?.placementID
+                == after.settlements[0].colony?.placements.first?.id)
     }
 
     @Test("GameEngine.placeBuilding is rejected when the cost can't be paid")

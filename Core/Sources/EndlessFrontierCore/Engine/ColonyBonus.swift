@@ -45,15 +45,16 @@ public enum ColonyBonus {
     ) {
         guard let map = settlement.colony else { return }
 
-        // Map every covered tile to the placement that owns it.
+        // Map every covered tile to the placement that owns it. A site still
+        // under scaffolding neither grants nor triggers a synergy.
         var owner: [TileCoord: UUID] = [:]
         var definitionByID: [UUID: String] = [:]
-        for placement in map.placements {
+        for placement in map.placements where !placement.underConstruction {
             definitionByID[placement.id] = placement.definitionID
             for tile in placement.footprint { owner[tile] = placement.id }
         }
 
-        for placement in map.placements {
+        for placement in map.placements where !placement.underConstruction {
             guard let def = registry.building(placement.definitionID), !def.adjacency.isEmpty else { continue }
 
             // The distinct neighbouring buildings bordering this footprint.

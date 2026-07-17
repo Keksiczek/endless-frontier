@@ -28,15 +28,21 @@ public struct BuildingPlacement: Codable, Sendable, Identifiable, Equatable {
     public var width: Int
     public var height: Int
     public var assignedPawnIDs: [UUID]
+    /// `true` while the building is a construction site: the tiles are
+    /// reserved and the scaffolding is drawn, but the economy doesn't count it
+    /// until `ConstructionEngine` finishes the roof.
+    public var underConstruction: Bool
 
     public init(id: UUID, definitionID: String, coord: TileCoord,
-                width: Int = 1, height: Int = 1, assignedPawnIDs: [UUID] = []) {
+                width: Int = 1, height: Int = 1, assignedPawnIDs: [UUID] = [],
+                underConstruction: Bool = false) {
         self.id = id
         self.definitionID = definitionID
         self.coord = coord
         self.width = max(1, width)
         self.height = max(1, height)
         self.assignedPawnIDs = assignedPawnIDs
+        self.underConstruction = underConstruction
     }
 
     /// Every tile this building covers.
@@ -59,7 +65,7 @@ public struct BuildingPlacement: Codable, Sendable, Identifiable, Equatable {
     // Resilient decoding: older saves predate `width`/`height`, so default them
     // to a 1×1 footprint rather than failing the whole settlement load.
     private enum CodingKeys: String, CodingKey {
-        case id, definitionID, coord, width, height, assignedPawnIDs
+        case id, definitionID, coord, width, height, assignedPawnIDs, underConstruction
     }
 
     public init(from decoder: Decoder) throws {
@@ -70,6 +76,8 @@ public struct BuildingPlacement: Codable, Sendable, Identifiable, Equatable {
         width = max(1, try c.decodeIfPresent(Int.self, forKey: .width) ?? 1)
         height = max(1, try c.decodeIfPresent(Int.self, forKey: .height) ?? 1)
         assignedPawnIDs = try c.decodeIfPresent([UUID].self, forKey: .assignedPawnIDs) ?? []
+        // Older saves predate construction-over-time: what stands is built.
+        underConstruction = try c.decodeIfPresent(Bool.self, forKey: .underConstruction) ?? false
     }
 }
 
