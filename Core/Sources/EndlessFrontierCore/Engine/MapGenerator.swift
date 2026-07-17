@@ -68,10 +68,32 @@ public enum MapGenerator {
 
     /// Deterministic per-hex seed.
     static func hexSeed(_ mapSeed: UInt64, _ coord: HexCoord) -> UInt64 {
-        var h = mapSeed &* 0x9E37_79B9_7F4A_7C15
-        h = (h ^ UInt64(bitPattern: Int64(coord.q))) &* 0xD1B5_4A32_D192_ED03
-        h = (h ^ UInt64(bitPattern: Int64(coord.r))) &* 0xCBF2_9CE4_8422_2325
-        return h ^ (h >> 29)
+        // Injective in the coordinate, by construction rather than by luck.
+        //
+        // This used to fold q and r in with `(h ^ q) &* K ^ r`, which collides
+        // *systematically* — multiplication isn't linear over XOR, so different
+        // (q, r) pairs land on the same seed in a regular pattern: (−2, 8) and
+        // (0, −10), (−4, 8) and (2, −10), and hundreds more. A region's `id` is
+        // drawn from this seed, so those hexes became two places sharing one
+        // id, and every lookup that keys on id — which is all of them — crossed
+        // the wires between them. On screen: a card describing a charted
+        // mountain region while offering the Send Expedition button belonging
+        // to the *uncharted* hex that shared its id, and tapping it did nothing
+        // because `startExpedition` re-checks the real target and correctly
+        // refuses.
+        //
+        // `hexIndex` is a bijection ℤ² → ℕ and splitmix64 is a bijection over
+        // UInt64, so within a world two hexes cannot land on the same seed.
+        splitmix64(UInt64(bitPattern: Int64(hexIndex(coord))) &+ mapSeed)
+    }
+
+    /// A bijection over `UInt64` — every step (xor-shift, odd multiply) is
+    /// invertible, so distinct inputs are guaranteed distinct outputs.
+    static func splitmix64(_ x: UInt64) -> UInt64 {
+        var z = x &+ 0x9E37_79B9_7F4A_7C15
+        z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+        z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+        return z ^ (z >> 31)
     }
 
     /// The region at a coordinate. Pure: same `(mapSeed, coord)` → same region.
