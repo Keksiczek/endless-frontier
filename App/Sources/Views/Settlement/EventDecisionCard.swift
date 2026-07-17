@@ -15,7 +15,7 @@ struct EventDecisionCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
-            Text(template.narrativeHint ?? template.name)
+            Text(template.narrativeHint.resolve(AppStrings.language))
                 .font(.callout)
                 .foregroundStyle(Theme.textDim)
                 .fixedSize(horizontal: false, vertical: true)
@@ -51,7 +51,7 @@ struct EventDecisionCard: View {
                 Text(typeLabel.uppercased())
                     .font(.caption2.weight(.bold)).tracking(1.2)
                     .foregroundStyle(tint)
-                Text(template.name)
+                Text(template.name.resolve(AppStrings.language))
                     .font(.system(.title3, design: .serif).weight(.semibold))
                     .foregroundStyle(Theme.text)
             }
@@ -92,10 +92,10 @@ struct EventDecisionCard: View {
             game.resolveEventChoice(event: template.id, choice: choice.id)
         } label: {
             VStack(alignment: .leading, spacing: 2) {
-                Text(choice.label)
+                Text(choice.label.resolve(AppStrings.language))
                     .font(.subheadline.weight(.semibold))
                 if let description = choice.description {
-                    Text(description)
+                    Text(description.resolve(AppStrings.language))
                         .font(.caption2)
                         .foregroundStyle(Theme.textDim)
                         .fixedSize(horizontal: false, vertical: true)

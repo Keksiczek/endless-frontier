@@ -68,9 +68,9 @@ struct WhileAwayView: View {
                 .foregroundStyle(color(entry.type))
                 .frame(width: 24)
             VStack(alignment: .leading, spacing: 3) {
-                Text(entry.template?.name ?? systemCopy(entry.templateID).name)
+                Text(entry.template?.name.resolve(AppStrings.language) ?? systemCopy(entry.templateID).name)
                     .font(.subheadline.weight(.semibold))
-                Text(entry.template?.narrativeHint ?? systemCopy(entry.templateID).hint)
+                Text(entry.template?.narrativeHint.resolve(AppStrings.language) ?? systemCopy(entry.templateID).hint)
                     .font(.footnote)
                     .foregroundStyle(Theme.textDim)
                 Text("Tick \(entry.tick)")

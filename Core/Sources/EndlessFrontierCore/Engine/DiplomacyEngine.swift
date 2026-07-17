@@ -39,6 +39,42 @@ public enum DiplomacyEngine {
     static let peaceChance = 0.18
     static let defectionChance = 0.30
 
+    // How well two peoples can *possibly* get on, and the thresholds that live
+    // under that ceiling. These have to be read together: relations only ever
+    // drift toward `compatibility`, so any gate set above what compatibility
+    // can reach is not a rare event — it's an impossible one. Measured before
+    // this: 0 marriages, 0 wars and 0 defections across 250 years, with the
+    // three standing tribes parked at 45/50/56 — exactly the old ceiling.
+    /// The most two peoples can like each other before faith is counted.
+    static let baseCompatibility = 62.0
+    /// What a shared (or rival) faith is worth on top.
+    static let faithAffinity = 16.0
+    /// …so relations top out near `baseCompatibility + faithAffinity` = 78.
+
+    /// Scholars start sharing once they're on good terms.
+    static let exchangeStanding = 40.0
+    /// Two houses join only when the peoples genuinely trust each other. It has
+    /// to clear `baseCompatibility` *without* counting faith: a shared cult is
+    /// worth 16 but is entirely optional — a colony may never raise a temple,
+    /// and two faithless peoples must still be able to marry. Setting this
+    /// against the with-faith ceiling is how the old value (70, against a
+    /// ceiling of 57) came to be unreachable in the first place.
+    static let marriageStanding = 55.0
+    /// Quarrels start here.
+    static let disputeStanding = -15.0
+    /// And spill into raids here. An angry secession opens around −35, so this
+    /// has to sit above that for a grudge to ever turn into a war.
+    static let warStanding = -30.0
+    /// Colonists only look over the fence at a people they don't fear.
+    static let defectionStanding = 20.0
+    /// Morale below which a colonist might leave regardless of wealth.
+    static let defectionMorale = 55.0
+    /// …or, whatever the average morale says, inequality at which those with
+    /// nothing start leaving for a neighbour who might share. Mirrors
+    /// `secessionGiniThreshold`: the poor leave, whether to found a people or
+    /// to join one.
+    static let defectionGiniThreshold = 0.45
+
     /// A whole year of neighbours: who leaves, who grows, and what passes
     /// between you. Called from `SocietyEngine`'s year.
     public static func advanceYear(_ state: WorldState, registry: GameDataRegistry) -> WorldState {
@@ -186,14 +222,17 @@ public enum DiplomacyEngine {
 
         let ours = meanGenes(capital.pawns)
         let theirs = s.tribes[tribeIndex].genes
-        var compatibility = 45
+        var compatibility = baseCompatibility
             - abs(ours.courage - theirs.courage) * 50
             - abs(ours.sociability - theirs.sociability) * 30
 
         // A shared faith binds; a rival one divides.
         if let ourCult = capital.faith.cultID, let theirCult = s.tribes[tribeIndex].cultID {
-            compatibility += (ourCult == theirCult) ? 12 : -12
+            compatibility += (ourCult == theirCult) ? faithAffinity : -faithAffinity
         }
+        // A marriage is a standing bond, not a one-off bump: the two houses
+        // stay tied whatever else passes between them.
+        if s.tribes[tribeIndex].married { compatibility += 10 }
         compatibility -= s.tribes[tribeIndex].grudge
 
         let standing = s.tribes[tribeIndex].standing
@@ -221,13 +260,13 @@ public enum DiplomacyEngine {
         }
 
         // Scholars trade what they know.
-        if standing > 55, rng.nextUnit() < exchangeChance {
+        if standing > exchangeStanding, rng.nextUnit() < exchangeChance {
             deposit(&s, capitalIndex, .knowledge, 12)
             s.tribes[tribeIndex].standing = clamp(s.tribes[tribeIndex].standing + 2)
         }
 
         // A marriage of the two leading houses seals the peace.
-        if standing > 70, !s.tribes[tribeIndex].married,
+        if standing > marriageStanding, !s.tribes[tribeIndex].married,
            s.settlements[capitalIndex].leaderID != nil, rng.nextUnit() < marriageChance {
             s.tribes[tribeIndex].married = true
             s.tribes[tribeIndex].standing = clamp(standing + 15)
@@ -238,7 +277,7 @@ public enum DiplomacyEngine {
         }
 
         // Quarrels over hunting grounds.
-        if standing < -15, rng.nextUnit() < disputeChance {
+        if standing < disputeStanding, rng.nextUnit() < disputeChance {
             s.tribes[tribeIndex].standing = clamp(standing - 4)
             s.tribes[tribeIndex].grudge += 3
             s.settlements[capitalIndex].stats.morale = max(
@@ -246,27 +285,39 @@ public enum DiplomacyEngine {
         }
 
         // War: they fall on the granaries. Walls and militia blunt the blow.
-        if standing < -45, rng.nextUnit() < warChance,
+        if standing < warStanding, rng.nextUnit() < warChance,
            s.tribes[tribeIndex].population > 6, s.settlements[capitalIndex].pawns.count > 6 {
             s = raid(s, tribeIndex: tribeIndex, capitalIndex: capitalIndex, rng: &rng)
         }
 
         // Or the leaders find a fragile peace.
-        if s.tribes[tribeIndex].standing < -45, rng.nextUnit() < peaceChance {
+        if s.tribes[tribeIndex].standing < warStanding, rng.nextUnit() < peaceChance {
             s.tribes[tribeIndex].standing = -5
             s.tribes[tribeIndex].grudge *= 0.5
         }
 
-        // Defection: when the neighbours look happier, someone slips away.
-        if s.tribes[tribeIndex].standing > 20,
-           s.settlements[capitalIndex].stats.morale < 45,
+        // Defection: someone slips away to a people who might treat them better.
+        //
+        // This used to need average morale under 45 — the very condition that
+        // made secession unreachable, since a working colony sits at 70–86. But
+        // an average is exactly the wrong instrument: a colony can be content
+        // *on the whole* and still be one its poorest have no reason to stay
+        // in. So inequality drives it too, and the one who leaves is the one
+        // with least, not merely the saddest.
+        let capital = s.settlements[capitalIndex]
+        let unequal = capital.society.gini > defectionGiniThreshold
+        if s.tribes[tribeIndex].standing > defectionStanding,
+           capital.stats.morale < defectionMorale || unequal,
            rng.nextUnit() < defectionChance,
-           s.settlements[capitalIndex].pawns.count > 8 {
+           capital.pawns.count > 8 {
             let ticksPerYear = registry.config.ticksPerYear
-            if let leaver = s.settlements[capitalIndex].pawns.indices
-                .filter({ s.settlements[capitalIndex].pawns[$0].isAdult(ticksPerYear: ticksPerYear) })
-                .min(by: { s.settlements[capitalIndex].pawns[$0].mood
-                         < s.settlements[capitalIndex].pawns[$1].mood }) {
+            let candidates = capital.pawns.indices.filter {
+                capital.pawns[$0].isAdult(ticksPerYear: ticksPerYear)
+            }
+            let leaver = unequal
+                ? candidates.min(by: { capital.pawns[$0].wealth < capital.pawns[$1].wealth })
+                : candidates.min(by: { capital.pawns[$0].mood < capital.pawns[$1].mood })
+            if let leaver {
                 s.settlements[capitalIndex].pawns.remove(at: leaver)
                 s.tribes[tribeIndex].population += 1
                 s.tribes[tribeIndex].defections += 1

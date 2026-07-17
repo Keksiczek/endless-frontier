@@ -137,7 +137,7 @@ public enum PopulationEngine {
         let traits = PawnTrait.allCases
         return Pawn(
             id: rng.nextUUID(),
-            name: PawnFactory.names[Int(rng.next() % UInt64(PawnFactory.names.count))],
+            name: PawnFactory.name(using: &rng),
             trait: traits[Int(rng.next() % UInt64(traits.count))],
             age: 0,
             genes: parent.genes.mutated(using: &rng),

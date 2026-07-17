@@ -102,7 +102,7 @@ final class Diagnostics {
         // evaporating, so note that a decision is waiting.
         for event in fired {
             let template = registry.events.first { $0.id == event.templateID }
-            let name = template?.name ?? event.templateID
+            let name = template?.name.resolve(AppStrings.language) ?? event.templateID
             if let template, !template.choices.isEmpty {
                 add(.event, "Event fired: \(name) — queued for your decision "
                     + "(\(template.choices.count) choices).", year: year)

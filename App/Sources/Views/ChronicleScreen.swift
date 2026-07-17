@@ -264,7 +264,7 @@ struct ChronicleScreen: View {
     }
 
     private func eventName(_ id: String) -> String {
-        game.registry.events.first { $0.id == id }?.name
+        game.registry.events.first { $0.id == id }?.name.resolve(AppStrings.language)
             ?? id.replacingOccurrences(of: "_", with: " ").capitalized
     }
 
