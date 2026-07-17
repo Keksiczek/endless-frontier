@@ -133,6 +133,17 @@ enum AppStrings {
         }
     }
 
+    /// How relations with a neighbouring people read on a pill or map card.
+    static func standingName(_ status: DiplomaticStanding) -> String {
+        switch status {
+        case .allied:   return s("Allied", "Spojenci")
+        case .friendly: return s("Friendly", "Přátelské")
+        case .neutral:  return s("Neutral", "Neutrální")
+        case .tense:    return s("Tense", "Napjaté")
+        case .war:      return s("War", "Válka")
+        }
+    }
+
     /// Wealth-class label for a colonist's standing.
     static func wealthClassName(_ cls: WealthClass) -> String {
         switch cls {

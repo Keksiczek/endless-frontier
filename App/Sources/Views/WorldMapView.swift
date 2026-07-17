@@ -26,6 +26,11 @@ struct WorldMapView: View {
                     .frame(width: geo.size.width, height: geo.size.height)
                     .contentShape(Rectangle())
                     .gesture(panGesture.simultaneously(with: zoomGesture))
+                // The same seasonal air as the settlement canvas, so the world
+                // and the valley read as one place in one time of year.
+                Rectangle()
+                    .fill(Theme.seasonTint(game.season))
+                    .allowsHitTesting(false)
             }
             .clipped()
             .overlay(alignment: .topLeading) { homeButton }
@@ -139,20 +144,66 @@ struct WorldMapView: View {
     @ViewBuilder
     private func marker(_ region: Region) -> some View {
         let isExpeditionTarget = game.activeExpedition?.targetRegionID == region.id
-        if let symbol = markerSymbol(region, isExpeditionTarget: isExpeditionTarget) {
+        if isExpeditionTarget {
+            expeditionMarker(region)
+        } else if let symbol = markerSymbol(region) {
             Image(systemName: symbol)
                 .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(markerTint(region))
                 .padding(6)
                 .background(Color.black.opacity(0.35), in: Circle())
                 .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
         }
     }
 
-    private func markerSymbol(_ region: Region, isExpeditionTarget: Bool) -> String? {
+    /// The expedition under way: a walker with a filling ring, pulsing gently
+    /// so the map's one moving thing reads as moving.
+    private func expeditionMarker(_ region: Region) -> some View {
+        let duration = max(1, game.expeditionDuration(for: region))
+        let remaining = game.activeExpedition?.ticksRemaining ?? 0
+        let progress = 1 - Double(remaining) / Double(duration)
+        return TimelineView(.animation(minimumInterval: 0.25)) { timeline in
+            let t = timeline.date.timeIntervalSinceReferenceDate
+            Image(systemName: "figure.walk")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(.white)
+                .padding(6)
+                .background(Color.black.opacity(0.35), in: Circle())
+                .overlay(
+                    Circle()
+                        .trim(from: 0, to: max(0.02, progress))
+                        .stroke(Theme.accent, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                )
+                .scaleEffect(1 + 0.06 * sin(t * 2.4))
+                .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
+        }
+        .accessibilityLabel(AppStrings.language == .cs
+                            ? "Výprava na cestě, zbývá \(remaining) tiků"
+                            : "Expedition under way, \(remaining) ticks left")
+    }
+
+    private func markerSymbol(_ region: Region) -> String? {
         if game.settlement(in: region) != nil { return "house.fill" }
-        if isExpeditionTarget { return "figure.walk" }
+        // A met people's home hex carries their tent.
+        if tribe(in: region) != nil { return "tent.fill" }
         return region.kind.mapSymbol
+    }
+
+    /// A neighbouring people's marker takes the colour of your standing with
+    /// them — the map tells you at a glance who is a friend.
+    private func markerTint(_ region: Region) -> Color {
+        guard let tribe = tribe(in: region), game.settlement(in: region) == nil else { return .white }
+        switch tribe.status {
+        case .allied, .friendly: return Theme.good
+        case .neutral: return .white
+        case .tense: return Theme.accent
+        case .war: return Theme.danger
+        }
+    }
+
+    private func tribe(in region: Region) -> Tribe? {
+        game.tribes.first { $0.regionID == region.id }
     }
 
     private func strokeColor(isSelected: Bool, isFrontier: Bool) -> Color {

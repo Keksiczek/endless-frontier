@@ -34,6 +34,25 @@ struct WorldMapScreen: View {
                     }
             }
         }
+        // The valley was never empty: as long as unmet peoples wait beyond the
+        // fog, the map itself says so — a reason to keep sending expeditions.
+        .overlay(alignment: .top) {
+            if game.unmetTribeCount > 0, selectedRegion == nil {
+                HStack(spacing: 6) {
+                    Image(systemName: "tent.2.fill").font(.caption2)
+                    Text(AppStrings.language == .cs
+                         ? "\(game.unmetTribeCount) národy dosud nepoznány — vyšli výpravy"
+                         : "\(game.unmetTribeCount) peoples not yet met — send expeditions")
+                        .font(.caption)
+                }
+                .foregroundStyle(Theme.textDim)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
+                .background(.ultraThinMaterial, in: Capsule())
+                .padding(.top, 8)
+                .allowsHitTesting(false)
+            }
+        }
         .foregroundStyle(Theme.text)
         .animation(.snappy, value: selectedRegionID)
         .alert("Site Explored", isPresented: siteOutcomeBinding, presenting: game.lastSiteOutcome) { _ in
@@ -106,6 +125,10 @@ struct RegionDetailCard: View {
                 label("Settlement", "\(settlement.name) (\(settlement.kind.rawValue))")
             }
 
+            if let tribe = game.tribes.first(where: { $0.regionID == region.id }) {
+                tribeRow(tribe)
+            }
+
             actions
         }
         .frontierCard()
@@ -162,6 +185,36 @@ struct RegionDetailCard: View {
                     .font(.caption).foregroundStyle(Theme.textDim)
             }
         }
+    }
+
+    /// The people who live in this hex — who they are, how they stand with
+    /// you, and where they came from.
+    private func tribeRow(_ tribe: Tribe) -> some View {
+        let cs = AppStrings.language == .cs
+        return VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: "tent.fill")
+                    .font(.caption)
+                    .foregroundStyle(Theme.accent)
+                Text(tribe.name)
+                    .font(.subheadline.weight(.semibold))
+                Text("· \(Int(tribe.population)) \(cs ? "duší" : "souls")")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textDim)
+                Spacer()
+                Text(AppStrings.standingName(tribe.status))
+                    .font(.caption2.weight(.semibold))
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Theme.surfaceInset, in: Capsule())
+            }
+            Text(tribe.originStory.resolve(AppStrings.language))
+                .font(.caption)
+                .foregroundStyle(Theme.textDim)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(10)
+        .background(Theme.surfaceInset.opacity(0.6), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     private var subtitle: String {
