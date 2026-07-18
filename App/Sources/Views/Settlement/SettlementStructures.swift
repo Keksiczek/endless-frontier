@@ -52,6 +52,96 @@ enum SettlementStructures {
         }, with: .color(Theme.accent.opacity(0.9)), lineWidth: 1.6)
     }
 
+    /// A discovered point of interest, drawn as a small landmark. Undiscovered
+    /// ones stay invisible — finding them is the scouts' job.
+    static func poi(
+        _ kind: LocalPOIKind, at c: CGPoint, s: CGFloat, time: Double,
+        context: inout GraphicsContext
+    ) {
+        let stone = Theme.boneDim
+        switch kind {
+        case .ruins:
+            // Two leaning pillars and a fallen lintel.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.7, y: c.y + s * 0.6))
+                p.addLine(to: CGPoint(x: c.x - s * 0.55, y: c.y - s * 0.9))
+                p.move(to: CGPoint(x: c.x + s * 0.55, y: c.y + s * 0.6))
+                p.addLine(to: CGPoint(x: c.x + s * 0.62, y: c.y - s * 0.5))
+                p.move(to: CGPoint(x: c.x - s * 0.9, y: c.y + s * 0.75))
+                p.addLine(to: CGPoint(x: c.x + s * 0.4, y: c.y + s * 0.9))
+            }, with: .color(stone), lineWidth: 1.1)
+        case .cave:
+            // A dark mouth in the hillside.
+            context.fill(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.8, y: c.y + s * 0.5))
+                p.addQuadCurve(to: CGPoint(x: c.x + s * 0.8, y: c.y + s * 0.5),
+                               control: CGPoint(x: c.x, y: c.y - s * 1.1))
+                p.closeSubpath()
+            }, with: .color(Theme.ink))
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.8, y: c.y + s * 0.5))
+                p.addQuadCurve(to: CGPoint(x: c.x + s * 0.8, y: c.y + s * 0.5),
+                               control: CGPoint(x: c.x, y: c.y - s * 1.1))
+            }, with: .color(stone), lineWidth: 1)
+        case .spring:
+            // A pool with a glint that breathes.
+            let water = Color(red: 0.45, green: 0.65, blue: 0.75)
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.8, y: c.y - s * 0.4,
+                                                width: s * 1.6, height: s * 0.8)),
+                         with: .color(water.opacity(0.4)))
+            context.stroke(Path(ellipseIn: CGRect(x: c.x - s * 0.8, y: c.y - s * 0.4,
+                                                  width: s * 1.6, height: s * 0.8)),
+                           with: .color(water), lineWidth: 1)
+            let glint = 0.4 + 0.4 * abs(sin(time * 1.4))
+            context.fill(Path(ellipseIn: CGRect(x: c.x - 1, y: c.y - s * 0.9, width: 2, height: 2)),
+                         with: .color(Color.white.opacity(glint)))
+        case .treasure:
+            // An opened chest with a faint glint.
+            let wood = Color(red: 0.55, green: 0.42, blue: 0.28)
+            context.stroke(Path(CGRect(x: c.x - s * 0.6, y: c.y - s * 0.25,
+                                       width: s * 1.2, height: s * 0.7)),
+                           with: .color(wood), lineWidth: 1)
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.6, y: c.y - s * 0.25))
+                p.addLine(to: CGPoint(x: c.x - s * 0.35, y: c.y - s * 0.75))
+                p.addLine(to: CGPoint(x: c.x + s * 0.85, y: c.y - s * 0.75))
+                p.addLine(to: CGPoint(x: c.x + s * 0.6, y: c.y - s * 0.25))
+            }, with: .color(wood), lineWidth: 1)
+            context.fill(Path(ellipseIn: CGRect(x: c.x - 1, y: c.y - 1, width: 2, height: 2)),
+                         with: .color(Theme.accent.opacity(0.9)))
+        case .shrine:
+            // Two posts, a roof line, and a small living flame.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.5, y: c.y + s * 0.6))
+                p.addLine(to: CGPoint(x: c.x - s * 0.5, y: c.y - s * 0.5))
+                p.move(to: CGPoint(x: c.x + s * 0.5, y: c.y + s * 0.6))
+                p.addLine(to: CGPoint(x: c.x + s * 0.5, y: c.y - s * 0.5))
+                p.move(to: CGPoint(x: c.x - s * 0.75, y: c.y - s * 0.5))
+                p.addLine(to: CGPoint(x: c.x + s * 0.75, y: c.y - s * 0.5))
+            }, with: .color(stone), lineWidth: 1.1)
+            let flicker = 0.6 + 0.3 * sin(time * 5)
+            context.fill(Path(ellipseIn: CGRect(x: c.x - 1.2, y: c.y + s * 0.05,
+                                                width: 2.4, height: 2.4)),
+                         with: .color(Theme.accent.opacity(flicker)))
+        case .wreck:
+            // A cart on its last wheel, bed tipped into the grass.
+            let wood = Color(red: 0.5, green: 0.4, blue: 0.3)
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.9, y: c.y + s * 0.3))
+                p.addLine(to: CGPoint(x: c.x + s * 0.7, y: c.y - s * 0.35))
+                p.addLine(to: CGPoint(x: c.x + s * 0.9, y: c.y - s * 0.1))
+            }, with: .color(wood), lineWidth: 1.1)
+            context.stroke(Path(ellipseIn: CGRect(x: c.x - s * 0.55, y: c.y + s * 0.1,
+                                                  width: s * 0.75, height: s * 0.75)),
+                           with: .color(wood), lineWidth: 1)
+            context.stroke(Path { p in
+                p.addArc(center: CGPoint(x: c.x + s * 0.75, y: c.y + s * 0.45),
+                         radius: s * 0.35, startAngle: .degrees(200),
+                         endAngle: .degrees(30), clockwise: false)
+            }, with: .color(wood.opacity(0.7)), lineWidth: 0.9)
+        }
+    }
+
     static func building(
         _ glyph: SettlementRenderer.BuildingGlyph, at c: CGPoint, s: CGFloat,
         context: inout GraphicsContext

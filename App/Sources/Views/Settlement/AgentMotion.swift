@@ -47,6 +47,10 @@ enum AgentMotion {
         let granary: LocalPoint?
         let sites: [LocalPoint]     // active scaffolding
         let heart: LocalPoint
+        /// A paved plaza the player laid out, if any — the midday crowd
+        /// gathers there instead of the bare heart, so the layout you paint
+        /// is the square you see people fill.
+        let plaza: LocalPoint?
 
         init(settlement: Settlement, registry: GameDataRegistry) {
             let layout = SettlementRenderer.normalizedLayout(settlement: settlement, registry: registry)
@@ -75,7 +79,16 @@ enum AgentMotion {
             self.granary = granary
             self.sites = sites
             self.heart = SettlementRenderer.colonyHeart
+            if let colony = settlement.colony,
+               let plazaTile = colony.zones.first(where: { $0.kind == .plaza }) {
+                self.plaza = SettlementRenderer.canvasPoint(for: plazaTile.coord, in: colony)
+            } else {
+                self.plaza = nil
+            }
         }
+
+        /// Where the village gathers at midday.
+        var green: LocalPoint { plaza ?? heart }
     }
 
     // MARK: - The day
@@ -101,7 +114,8 @@ enum AgentMotion {
         let t = day < 0 ? day + 1 : day
 
         let schedule = schedule(for: pawn, map: map, scene: scene,
-                                home: home, seed: seed, ticksPerYear: ticksPerYear)
+                                home: home, seed: seed, ticksPerYear: ticksPerYear,
+                                time: time)
 
         // Find the current leg of the day.
         var from = schedule[schedule.count - 1]
@@ -142,7 +156,7 @@ enum AgentMotion {
     /// The colonist's daily round.
     private static func schedule(
         for pawn: Pawn, map: LocalMap, scene: Scene,
-        home: LocalPoint, seed: UInt64, ticksPerYear: Int
+        home: LocalPoint, seed: UInt64, ticksPerYear: Int, time: Double
     ) -> [Waypoint] {
         // The unwell keep to their bed.
         if pawn.isBroken || pawn.health < 35 {
@@ -150,18 +164,18 @@ enum AgentMotion {
         }
         // Children play on the green while the adults work.
         if pawn.age < Pawn.adultAgeYears * ticksPerYear {
-            let green = jitter(scene.heart, seed: seed, radius: 0.05)
+            let green = jitter(scene.green, seed: seed, radius: 0.05)
             return [
                 Waypoint(at: 0.0, place: home, doing: .sleeping),
                 Waypoint(at: 0.12, place: green, doing: .playing),
-                Waypoint(at: 0.5, place: jitter(scene.heart, seed: seed &>> 5, radius: 0.06), doing: .playing),
+                Waypoint(at: 0.5, place: jitter(scene.green, seed: seed &>> 5, radius: 0.06), doing: .playing),
                 Waypoint(at: 0.88, place: home, doing: .atHome),
                 Waypoint(at: 0.94, place: home, doing: .sleeping),
             ]
         }
 
-        let work = workplace(for: pawn, map: map, scene: scene, seed: seed)
-        let social = jitter(scene.heart, seed: seed &>> 9, radius: 0.045)
+        let work = workplace(for: pawn, map: map, scene: scene, seed: seed, time: time)
+        let social = jitter(scene.green, seed: seed &>> 9, radius: 0.045)
         return [
             Waypoint(at: 0.0, place: home, doing: .sleeping),
             Waypoint(at: 0.07, place: home, doing: .atHome),
@@ -174,7 +188,8 @@ enum AgentMotion {
     }
 
     /// The spot a colonist's trade is actually plied at.
-    static func workplace(for pawn: Pawn, map: LocalMap, scene: Scene, seed: UInt64) -> LocalPoint {
+    static func workplace(for pawn: Pawn, map: LocalMap, scene: Scene,
+                          seed: UInt64, time: Double = 0) -> LocalPoint {
         if let deposit = pawn.assignedWork.harvestedDeposit {
             let matching = map.nodes.filter { $0.kind == deposit && map.isExplored($0.position) }
             if !matching.isEmpty {
@@ -185,9 +200,9 @@ enum AgentMotion {
         }
         switch pawn.assignedWork {
         case .hunting:
-            let angle = unit(seed) * 2 * .pi
-            return clampPoint(LocalPoint(x: 0.5 + cos(angle) * 0.34,
-                                         y: 0.5 + sin(angle) * 0.30))
+            // Hunters trail the same herd the canvas draws grazing.
+            let herd = SettlementWildlife.herdCenter(map: map, time: time)
+            return jitter(herd, seed: seed, radius: 0.035)
         case .building:
             if !scene.sites.isEmpty {
                 return scene.sites[Int(seed % UInt64(scene.sites.count))]

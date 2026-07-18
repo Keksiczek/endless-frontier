@@ -57,10 +57,13 @@ enum SettlementRenderer {
         let viewRect = CGRect(origin: .zero, size: size)
         let rect = worldRect(viewRect: viewRect, camera: camera)
         ground(&context, rect: rect, map: map, season: season)
+        zones(&context, rect: rect, settlement: settlement, season: season)
         heartGlow(&context, rect: rect)
         river(&context, rect: rect, river: map.river, season: season)
         scenery(&context, rect: rect, map: map, season: season)
         deposits(&context, rect: rect, map: map, season: season)
+        pois(&context, rect: rect, map: map, time: time)
+        SettlementWildlife.draw(&context, rect: rect, map: map, time: time)
 
         let placed = layout(settlement: settlement, registry: registry, rect: rect)
         buildings(&context, placed: placed, time: time, selectedBuildingID: selectedBuildingID)
@@ -138,6 +141,71 @@ enum SettlementRenderer {
             r = r * 0.45 + 0.26; g = g * 0.45 + 0.28; b = b * 0.45 + 0.34
         }
         return Color(red: min(1, r), green: min(1, g), blue: min(1, b))
+    }
+
+    // MARK: - Zones
+
+    /// The amenity zones the player painted on the build grid, visible on the
+    /// living canvas at last: a park's green, a plaza's paving, a garden's
+    /// blooms. The plaza is also where the midday crowd gathers (see
+    /// `AgentMotion.Scene`).
+    private static func zones(
+        _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement, season: Season
+    ) {
+        guard let colony = settlement.colony, !colony.zones.isEmpty else { return }
+        let unit = min(rect.width, rect.height)
+        let tile = unit * 0.038
+        for zone in colony.zones {
+            let center = point(canvasPoint(for: zone.coord, in: colony), in: rect)
+            let patch = CGRect(x: center.x - tile / 2, y: center.y - tile / 2,
+                               width: tile, height: tile)
+            switch zone.kind {
+            case .park:
+                context.fill(Path(roundedRect: patch, cornerRadius: tile * 0.3),
+                             with: .color(canopyColor(season).opacity(0.16)))
+                for i in 0..<2 {
+                    let x = patch.minX + tile * (0.3 + Double(i) * 0.4)
+                    context.stroke(Path { p in
+                        p.move(to: CGPoint(x: x, y: patch.maxY - 2))
+                        p.addLine(to: CGPoint(x: x, y: patch.midY))
+                    }, with: .color(canopyColor(season).opacity(0.7)), lineWidth: 0.8)
+                    context.stroke(
+                        Path(ellipseIn: CGRect(x: x - 2.4, y: patch.midY - 4.5, width: 4.8, height: 4.5)),
+                        with: .color(canopyColor(season).opacity(0.7)), lineWidth: 0.8)
+                }
+            case .plaza:
+                context.fill(Path(roundedRect: patch, cornerRadius: tile * 0.15),
+                             with: .color(Theme.bone.opacity(0.08)))
+                for i in 0..<4 {
+                    let x = patch.minX + tile * (0.2 + Double(i % 2) * 0.5)
+                    let y = patch.minY + tile * (0.25 + Double(i / 2) * 0.45)
+                    context.stroke(Path(CGRect(x: x, y: y, width: 2.6, height: 1.8)),
+                                   with: .color(Theme.boneFaint), lineWidth: 0.5)
+                }
+            case .garden:
+                context.fill(Path(roundedRect: patch, cornerRadius: tile * 0.3),
+                             with: .color(Color(red: 0.35, green: 0.5, blue: 0.32).opacity(0.18)))
+                for i in 0..<3 {
+                    let x = patch.minX + tile * (0.25 + Double(i) * 0.25)
+                    let y = patch.midY + (i % 2 == 0 ? -2.0 : 2.0)
+                    context.fill(Path(ellipseIn: CGRect(x: x, y: y, width: 1.8, height: 1.8)),
+                                 with: .color(Color(red: 0.85, green: 0.72, blue: 0.6).opacity(0.8)))
+                }
+            }
+        }
+    }
+
+    // MARK: - Points of interest
+
+    /// Discovered landmarks — what the scouts' walking actually found.
+    private static func pois(
+        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double
+    ) {
+        let unit = min(rect.width, rect.height)
+        for poi in map.pois where poi.discovered && map.isExplored(poi.position) {
+            SettlementStructures.poi(poi.kind, at: point(poi.position, in: rect),
+                                     s: unit * 0.014, time: time, context: &context)
+        }
     }
 
     private static func heartGlow(_ context: inout GraphicsContext, rect: CGRect) {
