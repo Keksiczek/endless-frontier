@@ -24,20 +24,9 @@ public enum MapGenerator {
     // 25 × 20 × 10 = 5,000 names, and the coordinate is folded into that space
     // through a bijection — so within any map a player will ever walk, two
     // places cannot share a name *by construction*, not by luck.
-    static let nameRoots = [
-        "Dusk", "Grey", "Storm", "Ash", "Salt", "High", "Black", "Cold",
-        "Ember", "Mist", "Thorn", "Iron", "Pale", "Red", "Wind", "Hag",
-        "Bracken", "Lorn", "Mire", "Cald", "Fen", "Bram", "Sunder", "Rook", "Hollow"
-    ]
-    static let nameSuffixes = [
-        "water", "watch", "fall", "mere", "moor", "vale", "flats", "spring",
-        "hills", "fen", "march", "crag", "wood", "hollow", "stone", "fell",
-        "marsh", "reach", "grave", "barrow"
-    ]
-    static let nameEpithets = [
-        "", "Upper ", "Lower ", "Far ", "Old ", "New ", "Little ", "Great ",
-        "Outer ", "Deep "
-    ]
+    // The morpheme pools live in `NameForge` (Czech and English, same pool
+    // sizes) so a world charts "Mlhoviště" or "Duskwater" by its language
+    // while the no-collision bijection below holds identically for either.
 
     /// A unique number for every hex — a Cantor pairing of the axial
     /// coordinates, mapped through ℤ→ℕ first. Being a bijection is the whole
@@ -51,19 +40,15 @@ public enum MapGenerator {
 
     /// The name of the place at a coordinate. Deterministic per `(mapSeed,
     /// coord)`, and distinct from every other place a player will reach.
-    public static func name(for coord: HexCoord, mapSeed: UInt64) -> String {
-        let roots = nameRoots.count, suffixes = nameSuffixes.count, epithets = nameEpithets.count
-        let space = roots * suffixes * epithets
+    public static func name(for coord: HexCoord, mapSeed: UInt64,
+                            language: GameLanguage = .en) -> String {
+        let space = NameForge.regionNameSpace
         // Offsetting by the seed keeps the mapping a bijection while giving
         // each world its own names — the old scheme gave every world the same
         // ones in the same places.
         let offset = Int(mapSeed % UInt64(space))
         let index = (hexIndex(coord) + offset) % space
-
-        let root = nameRoots[index % roots]
-        let suffix = nameSuffixes[(index / roots) % suffixes]
-        let epithet = nameEpithets[(index / (roots * suffixes)) % epithets]
-        return epithet + root + suffix
+        return NameForge.regionName(index: index, language: language)
     }
 
     /// Deterministic per-hex seed.
@@ -97,7 +82,8 @@ public enum MapGenerator {
     }
 
     /// The region at a coordinate. Pure: same `(mapSeed, coord)` → same region.
-    public static func region(at coord: HexCoord, mapSeed: UInt64, registry: GameDataRegistry) -> Region {
+    public static func region(at coord: HexCoord, mapSeed: UInt64, registry: GameDataRegistry,
+                              language: GameLanguage = .en) -> Region {
         let biomeIDs = registry.biomes.keys.sorted()
         let homelandBiome = biomeIDs.contains("plains") ? "plains" : (biomeIDs.first ?? "plains")
         var rng = SeededRNG(seed: hexSeed(mapSeed, coord))
@@ -105,7 +91,7 @@ public enum MapGenerator {
         if coord == .origin {
             return Region(
                 id: rng.nextUUID(),
-                name: "Homeland",
+                name: NameForge.homelandName(language: language),
                 coord: .origin,
                 kind: .homeland,
                 biomeID: homelandBiome,
@@ -122,7 +108,7 @@ public enum MapGenerator {
         let hazard = baseHazard
             + hazardBonus(for: kind, config: config)
             + Int(Double(ring) * config.hazardPerRing)
-        let name = name(for: coord, mapSeed: mapSeed)
+        let name = name(for: coord, mapSeed: mapSeed, language: language)
 
         return Region(
             id: rng.nextUUID(),
@@ -137,9 +123,10 @@ public enum MapGenerator {
 
     /// The initial world: a disc of regions of radius `mapRadius`. Only a
     /// starting frontier — the world grows beyond it as the player explores.
-    public static func generate(seed: UInt64, registry: GameDataRegistry) -> [Region] {
+    public static func generate(seed: UInt64, registry: GameDataRegistry,
+                                language: GameLanguage = .en) -> [Region] {
         HexCoord.disc(radius: max(1, registry.mapGen.mapRadius))
-            .map { region(at: $0, mapSeed: seed, registry: registry) }
+            .map { region(at: $0, mapSeed: seed, registry: registry, language: language) }
     }
 
     /// Ensures every neighbour of `coord` exists in `regions`, generating the
@@ -149,11 +136,13 @@ public enum MapGenerator {
         around coord: HexCoord,
         regions: inout [Region],
         mapSeed: UInt64,
-        registry: GameDataRegistry
+        registry: GameDataRegistry,
+        language: GameLanguage = .en
     ) {
         let existing = Set(regions.map(\.coord))
         for neighbour in coord.neighbors() where !existing.contains(neighbour) {
-            regions.append(region(at: neighbour, mapSeed: mapSeed, registry: registry))
+            regions.append(region(at: neighbour, mapSeed: mapSeed, registry: registry,
+                                  language: language))
         }
     }
 

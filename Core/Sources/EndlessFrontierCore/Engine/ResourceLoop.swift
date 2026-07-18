@@ -115,7 +115,7 @@ public enum ResourceLoop {
         s.settlements = s.settlements.map {
             advanceSettlement($0, registry: registry, config: config,
                               tick: state.tick, mapSeed: state.mapSeed, era: state.era,
-                              settlementCount: settlementCount)
+                              settlementCount: settlementCount, language: state.language)
         }
         s.globalStats = recomputeGlobalStats(s, registry: registry)
         return s
@@ -128,7 +128,8 @@ public enum ResourceLoop {
         tick: Int = 0,
         mapSeed: UInt64 = 0,
         era: Era = .earlySettlement,
-        settlementCount: Int = 1
+        settlementCount: Int = 1,
+        language: GameLanguage = .cs
     ) -> Settlement {
         var s = settlement
         let profile = s.specialization.profile
@@ -296,7 +297,8 @@ public enum ResourceLoop {
         // 12. The life cycle: aging, deaths, pregnancies and births — family
         //     support puts more children in the cradles.
         s = PopulationEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: mapSeed,
-                                            birthRateMultiplier: laws.birthRateMultiplier)
+                                            birthRateMultiplier: laws.birthRateMultiplier,
+                                            language: language)
 
         return s
     }

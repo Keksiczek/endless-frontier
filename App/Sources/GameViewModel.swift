@@ -31,11 +31,13 @@ final class GameViewModel {
     init(registry: GameDataRegistry, store: WorldStore = WorldStore(url: WorldStore.defaultURL())) {
         self.registry = registry
         self.store = store
-        // Load an existing save, otherwise start a fresh world.
+        // Load an existing save, otherwise start a fresh world in the
+        // player's language.
         if let saved = try? store.load() {
             self.world = saved
         } else {
-            self.world = GameWorldFactory.newGame(registry: registry)
+            self.world = GameWorldFactory.newGame(registry: registry,
+                                                  language: AppStrings.language)
         }
     }
 
@@ -254,9 +256,12 @@ final class GameViewModel {
 
     func startNewGame() {
         // A fresh random seed per playthrough → a different procedural world,
-        // while remaining fully deterministic once started.
+        // while remaining fully deterministic once started. The world is
+        // founded in the player's language: newborns, outposts and freshly
+        // charted places will speak it from then on.
         let seed = UInt64.random(in: UInt64.min...UInt64.max)
-        world = GameWorldFactory.newGame(registry: registry, seed: seed)
+        world = GameWorldFactory.newGame(registry: registry, seed: seed,
+                                         language: AppStrings.language)
         lastSessionEvents = []
         persist()
     }
@@ -267,8 +272,8 @@ final class GameViewModel {
     }
 
     func foundOutpost(in regionID: UUID) {
-        let existing = world.settlements.count
-        world = GameEngine.foundOutpost(world, regionID: regionID, name: "Outpost \(existing)", registry: registry)
+        // An empty name asks the engine to forge one in the world's language.
+        world = GameEngine.foundOutpost(world, regionID: regionID, name: "", registry: registry)
         persist()
     }
 

@@ -245,7 +245,7 @@ public enum EffectApplier {
     private static func addPawn(_ s: inout WorldState) {
         guard let capital = s.settlements.indices.first else { return }
         let seed = UInt64(bitPattern: Int64(s.tick)) &+ UInt64(s.settlements[capital].pawns.count) &+ 1
-        s.settlements[capital].pawns.append(PawnFactory.generate(seed: seed))
+        s.settlements[capital].pawns.append(PawnFactory.generate(seed: seed, language: s.language))
     }
 
     /// Resolves which region a dynamic event targets. Deterministic.

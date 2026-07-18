@@ -197,7 +197,7 @@ public enum DiplomacyEngine {
 
         s.tribes.append(Tribe(
             id: rng.nextUUID(),
-            name: "\(founder)ov lid",
+            name: NameForge.tribeName(founder: founder, language: s.language),
             regionID: s.settlements[capitalIndex].regionID,
             foundedTick: s.tick,
             originStory: story,

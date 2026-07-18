@@ -6,10 +6,11 @@ public enum GameWorldFactory {
     public static func newGame(
         registry: GameDataRegistry,
         seed: UInt64 = 0x5EED_F00D,
-        now: Date = Date()
+        now: Date = Date(),
+        language: GameLanguage = .cs
     ) -> WorldState {
         // Procedurally generate the world map (homeland at the origin).
-        var regions = MapGenerator.generate(seed: seed, registry: registry)
+        var regions = MapGenerator.generate(seed: seed, registry: registry, language: language)
         let homelandIndex = regions.firstIndex { $0.kind == .homeland } ?? 0
         let homeland = regions[homelandIndex]
 
@@ -25,7 +26,7 @@ public enum GameWorldFactory {
         var idRNG = SeededRNG(seed: seed ^ 0x5E77_1E1D)
         var settlement = Settlement(
             id: idRNG.nextUUID(),
-            name: "First Light",
+            name: NameForge.capitalName(language: language),
             kind: .capital,
             regionID: homeland.id,
             foundedTick: 0,
@@ -60,6 +61,7 @@ public enum GameWorldFactory {
             rngSeed: seed,
             mapSeed: seed,
             era: .earlySettlement,
+            language: language,
             unlockedBuildings: unlocked,
             worldFlags: flags,
             settlements: [settlement],

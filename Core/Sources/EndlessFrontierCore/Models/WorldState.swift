@@ -109,6 +109,11 @@ public struct WorldState: Codable, Sendable, Equatable {
     public var rngSeed: UInt64
     public var mapSeed: UInt64      // stable seed for per-hex map generation (never mutated)
     public var era: Era
+    /// The language this world was founded in. Everything *generated* — a
+    /// newborn's name, an outpost, a seceded people, a freshly charted region
+    /// — speaks it (see `NameForge`). Fixed at creation; UI chrome follows
+    /// the app language independently.
+    public var language: GameLanguage
 
     public var researchedTechs: Set<String>
     /// How many times each `repeatable` tech has been completed. Drives the
@@ -159,6 +164,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         rngSeed: UInt64 = 0x5EED_F00D,
         mapSeed: UInt64 = 0x5EED_F00D,
         era: Era = .earlySettlement,
+        language: GameLanguage = .cs,
         researchedTechs: Set<String> = [],
         techCompletions: [String: Int] = [:],
         statModifiers: [String: Double] = [:],
@@ -188,6 +194,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         self.rngSeed = rngSeed
         self.mapSeed = mapSeed
         self.era = era
+        self.language = language
         self.researchedTechs = researchedTechs
         self.techCompletions = techCompletions
         self.statModifiers = statModifiers
@@ -226,7 +233,7 @@ public struct WorldState: Codable, Sendable, Equatable {
     // `schemaVersion` is reserved for migrations where field *meaning* changes.
 
     private enum CodingKeys: String, CodingKey {
-        case schemaVersion, tick, lastRealTimestamp, rngSeed, mapSeed, era,
+        case schemaVersion, tick, lastRealTimestamp, rngSeed, mapSeed, era, language,
              researchedTechs, techCompletions, statModifiers, activeResearch,
              researchProgress, globalStats,
              unlockedBuildings, worldFlags, settlements, regions, tradeRoutes,
@@ -247,6 +254,8 @@ public struct WorldState: Codable, Sendable, Equatable {
         rngSeed = value(.rngSeed, 0x5EED_F00D)
         mapSeed = value(.mapSeed, 0x5EED_F00D)
         era = value(.era, .earlySettlement)
+        // Worlds saved before languages existed were Czech-voiced ones.
+        language = value(.language, .cs)
         researchedTechs = value(.researchedTechs, [])
         techCompletions = value(.techCompletions, [:])
         statModifiers = value(.statModifiers, [:])
@@ -279,6 +288,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         try c.encode(rngSeed, forKey: .rngSeed)
         try c.encode(mapSeed, forKey: .mapSeed)
         try c.encode(era, forKey: .era)
+        try c.encode(language, forKey: .language)
         try c.encode(researchedTechs, forKey: .researchedTechs)
         try c.encode(techCompletions, forKey: .techCompletions)
         try c.encode(statModifiers, forKey: .statModifiers)

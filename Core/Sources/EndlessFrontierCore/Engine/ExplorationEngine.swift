@@ -91,7 +91,8 @@ public enum ExplorationEngine {
                 around: s.regions[index].coord,
                 regions: &s.regions,
                 mapSeed: s.mapSeed,
-                registry: registry
+                registry: registry,
+                language: s.language
             )
             // First contact: a native people lived in this land all along.
             // From this moment they exist diplomatically — trade, grudges,

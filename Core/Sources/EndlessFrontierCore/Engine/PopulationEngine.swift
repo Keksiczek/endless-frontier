@@ -59,7 +59,8 @@ public enum PopulationEngine {
         registry: GameDataRegistry,
         tick: Int,
         mapSeed: UInt64,
-        birthRateMultiplier: Double = 1
+        birthRateMultiplier: Double = 1,
+        language: GameLanguage = .cs
     ) -> Settlement {
         guard !settlement.pawns.isEmpty else { return settlement }
         var s = settlement
@@ -109,7 +110,7 @@ public enum PopulationEngine {
             guard s.pawns[index].pregnancyTicksRemaining > 0 else { continue }
             s.pawns[index].pregnancyTicksRemaining -= 1
             if s.pawns[index].pregnancyTicksRemaining == 0 {
-                let child = newborn(parent: &s.pawns[index], rng: &rng)
+                let child = newborn(parent: &s.pawns[index], rng: &rng, language: language)
                 s.journal.append(tick: tick, kind: .birth, text: LocalizedText(values: [
                     .en: "\(s.pawns[index].name) welcomed a child — \(child.name).",
                     .cs: "\(s.pawns[index].name) přivedla na svět dítě — \(child.name)."
@@ -160,13 +161,13 @@ public enum PopulationEngine {
     }
 
     /// A newborn child: mutated genes, a dowry from the parent, no skills yet.
-    static func newborn(parent: inout Pawn, rng: inout SeededRNG) -> Pawn {
+    static func newborn(parent: inout Pawn, rng: inout SeededRNG, language: GameLanguage = .cs) -> Pawn {
         let dowry = parent.wealth * dowryShare
         parent.wealth -= dowry
         let traits = PawnTrait.allCases
         return Pawn(
             id: rng.nextUUID(),
-            name: PawnFactory.name(using: &rng),
+            name: PawnFactory.name(using: &rng, language: language),
             trait: traits[Int(rng.next() % UInt64(traits.count))],
             age: 0,
             genes: parent.genes.mutated(using: &rng),
