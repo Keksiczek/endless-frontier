@@ -50,13 +50,40 @@ public struct ResourceNode: Codable, Sendable, Equatable, Identifiable {
 }
 
 /// A point of interest discovered by exploring the fog of war — ruins, a cave,
-/// a spring or buried treasure. Discovery grants a one-off reward (handled by
-/// the exploration engine).
+/// a spring, buried treasure, a forgotten shrine or a wrecked caravan.
+/// Discovery grants a one-off reward and a journal line (see
+/// `ResourceLoop.chartGround`) — finding something *feels* like finding it.
 public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
     case ruins      // ancient knowledge
     case cave       // rich stone
-    case spring     // healing herbs
+    case spring     // healing waters
     case treasure   // a cache of goods
+    case shrine     // the old gods still listen
+    case wreck      // a caravan that never arrived
+
+    /// The journal's line for the moment of discovery.
+    public var discoveryText: LocalizedText {
+        switch self {
+        case .ruins: return LocalizedText(values: [
+            .en: "Scouts found ancient ruins — old knowledge lay among the stones.",
+            .cs: "Zvědové našli prastaré zříceniny — mezi kameny leželo staré vědění."])
+        case .cave: return LocalizedText(values: [
+            .en: "Scouts found a deep cave rich in stone.",
+            .cs: "Zvědové objevili hlubokou jeskyni plnou kamene."])
+        case .spring: return LocalizedText(values: [
+            .en: "Scouts found a healing spring — the whole colony drinks well.",
+            .cs: "Zvědové našli léčivý pramen — celé osadě se ulevilo."])
+        case .treasure: return LocalizedText(values: [
+            .en: "Scouts unearthed a buried cache of goods.",
+            .cs: "Zvědové vykopali zakopanou skrýš plnou zásob."])
+        case .shrine: return LocalizedText(values: [
+            .en: "Scouts found a forgotten shrine — the old gods still listen.",
+            .cs: "Zvědové našli zapomenutou svatyni — staří bohové stále naslouchají."])
+        case .wreck: return LocalizedText(values: [
+            .en: "Scouts found a wrecked caravan, its timber still good.",
+            .cs: "Zvědové našli vrak karavany — dřevo je pořád dobré."])
+        }
+    }
 }
 
 public struct LocalPOI: Codable, Sendable, Equatable, Identifiable {

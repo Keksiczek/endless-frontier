@@ -142,8 +142,10 @@ struct DiplomacyTests {
                               tribes: [raiders], config: reg.config)
         var r1 = SeededRNG(seed: 4)
         var r2 = SeededRNG(seed: 4)
-        undefended = DiplomacyEngine.raid(undefended, tribeIndex: 0, capitalIndex: 0, rng: &r1)
-        fortified = DiplomacyEngine.raid(fortified, tribeIndex: 0, capitalIndex: 0, rng: &r2)
+        undefended = DiplomacyEngine.raid(undefended, tribeIndex: 0, capitalIndex: 0,
+                                          registry: reg, rng: &r1)
+        fortified = DiplomacyEngine.raid(fortified, tribeIndex: 0, capitalIndex: 0,
+                                         registry: reg, rng: &r2)
 
         #expect(undefended.settlements[0].storage[.food] < 400)          // grain carried off
         #expect(fortified.settlements[0].storage[.food]

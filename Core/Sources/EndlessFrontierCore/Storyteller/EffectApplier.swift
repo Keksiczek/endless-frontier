@@ -74,7 +74,7 @@ public enum EffectApplier {
                 s.regions[index].kind = kind
             }
         case let .raid(strength):
-            resolveRaid(&s, strength: strength)
+            resolveRaid(&s, strength: strength, registry: registry)
         }
         return s
     }
@@ -83,21 +83,23 @@ public enum EffectApplier {
     /// repelled with a morale lift; otherwise the shortfall in defense
     /// determines the damage to resources, stability, morale and a colonist.
     /// Deterministic — no RNG.
-    static func resolveRaid(_ s: inout WorldState, strength: Double) {
+    static func resolveRaid(_ s: inout WorldState, strength: Double, registry: GameDataRegistry) {
         guard let capital = s.settlements.indices.first else { return }
 
-        // Defense = fortifications (walls/artifacts) + the colonists who muster
-        // to fight. Armed colonists are far more effective.
-        let militia = militiaDefense(s.settlements[capital].pawns)
-        let effectiveDefense = s.settlements[capital].stats.defense + militia
+        // Defense = fortifications (walls/artifacts) + the colonists who
+        // muster to fight — real arms weighed by class (see `CombatEngine`),
+        // with the ranged half loosing a volley before the clash.
+        let militia = CombatEngine.militia(s.settlements[capital].pawns, registry: registry)
+        let softened = max(0, strength - militia.ranged * 0.8)
+        let effectiveDefense = s.settlements[capital].stats.defense + militia.melee + militia.ranged * 0.2
 
-        if effectiveDefense >= strength {
+        if effectiveDefense >= softened {
             s.settlements[capital].stats = s.settlements[capital].stats.applying(delta: 6, to: "morale")
             s.globalStats = s.globalStats.applying(delta: -8, to: "threatLevel")
             return
         }
 
-        let deficit = strength - effectiveDefense
+        let deficit = softened - effectiveDefense
         applyResourceDelta(&s, resource: .materials, delta: -deficit * 4, scope: .global)
         applyResourceDelta(&s, resource: .food, delta: -deficit * 2, scope: .global)
         s.settlements[capital].stats = s.settlements[capital].stats
@@ -114,8 +116,8 @@ public enum EffectApplier {
                 .filter({ s.settlements[capital].pawns[$0].health > 0 })
                 .min(by: { s.settlements[capital].pawns[$0].health < s.settlements[capital].pawns[$1].health }) else { break }
             var pawn = s.settlements[capital].pawns[pawnIndex]
-            let armored = pawn.equipment[.weapon] != nil ? 0.5 : 1.0
-            pawn.health = max(0, pawn.health - deficit * 1.5 * armored)
+            // Armor, not a weapon, is what blunts the blow you receive.
+            pawn.health = max(0, pawn.health - deficit * 1.5 * CombatEngine.woundMultiplier(pawn))
             s.settlements[capital].pawns[pawnIndex] = pawn
             if pawn.health <= 0 { deaths += 1 }
         }
@@ -126,14 +128,11 @@ public enum EffectApplier {
         }
     }
 
-    /// The defensive value the colonists themselves provide: everyone fights a
-    /// little, the armed fight much more, scaled by health; the broken don't.
-    static func militiaDefense(_ pawns: [Pawn]) -> Double {
-        pawns.reduce(0) { acc, pawn in
-            guard !pawn.isBroken, pawn.health > 0 else { return acc }
-            let armed = pawn.equipment[.weapon] != nil ? 6.0 : 0.0
-            return acc + (2.0 + armed) * (pawn.health / 100)
-        }
+    /// The defensive value the colonists themselves provide. Delegates to
+    /// `CombatEngine`, which weighs real arms by class instead of the old
+    /// flat +6 for anything in the weapon slot.
+    static func militiaDefense(_ pawns: [Pawn], registry: GameDataRegistry) -> Double {
+        CombatEngine.defensePower(pawns, registry: registry)
     }
 
     /// Deducts a cost from a settlement's storage if affordable. When

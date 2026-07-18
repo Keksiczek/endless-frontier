@@ -75,10 +75,11 @@ struct TribeGateTests {
         var raided = false
         for seed in 0..<60 {
             var s = world(standing: -60)
-            let before = s.settlements[0].storage[.food]
             var rng = SeededRNG(seed: UInt64(seed) &* 2_654_435_761)
             s = DiplomacyEngine.resolveRelations(s, tribeIndex: 0, registry: registry, rng: &rng)
-            if s.settlements[0].storage[.food] < before { raided = true; break }
+            // A raid *turned back at the walls* now loots nothing, so the food
+            // level no longer proves the war fired — the war tally does.
+            if s.tribes[0].wars > 0 { raided = true; break }
         }
         #expect(raided, "war must be reachable, or the neighbours are scenery")
     }

@@ -293,7 +293,8 @@ public enum DiplomacyEngine {
         // War: they fall on the granaries. Walls and militia blunt the blow.
         if standing < warStanding, rng.nextUnit() < warChance,
            s.tribes[tribeIndex].population > 6, s.settlements[capitalIndex].pawns.count > 6 {
-            s = raid(s, tribeIndex: tribeIndex, capitalIndex: capitalIndex, rng: &rng)
+            s = raid(s, tribeIndex: tribeIndex, capitalIndex: capitalIndex,
+                     registry: registry, rng: &rng)
         }
 
         // Or the leaders find a fragile peace.
@@ -332,36 +333,50 @@ public enum DiplomacyEngine {
         return s
     }
 
-    /// A raid resolved against the settlement's defenses. Loot leaves the
-    /// granary; if the walls are overrun, colonists fall.
+    /// A raid resolved against the settlement's defenses, in two beats: the
+    /// **volley** — ranged militia thins the raiders before they reach the
+    /// walls — then the **clash**, melee against what remains. Loot leaves the
+    /// granary; if the walls are overrun, colonists fall (armor blunts the
+    /// blow); the raiders bleed for every fighter on the wall. The journal
+    /// remembers the day either way.
     static func raid(
-        _ state: WorldState, tribeIndex: Int, capitalIndex: Int, rng: inout SeededRNG
+        _ state: WorldState, tribeIndex: Int, capitalIndex: Int,
+        registry: GameDataRegistry, rng: inout SeededRNG
     ) -> WorldState {
         var s = state
-        let strength = s.tribes[tribeIndex].population * 0.5
+        let raiderName = s.tribes[tribeIndex].name
+        var strength = s.tribes[tribeIndex].population * 0.5
             + s.tribes[tribeIndex].genes.courage * 20
-        let defense = s.settlements[capitalIndex].stats.defense
-            + EffectApplier.militiaDefense(s.settlements[capitalIndex].pawns)
+        let militia = CombatEngine.militia(s.settlements[capitalIndex].pawns, registry: registry)
 
-        // Loot: a well-defended granary keeps most of its grain.
+        // The volley: archers on the wall soften the charge.
+        let volley = militia.ranged * 0.8
+        strength = max(0, strength - volley)
+
+        // The clash at the palisade. A raid *turned back* carries nothing
+        // home — the old minimum 8% loot leaked grain through walls the
+        // raiders never crossed, which made defense pointless at the margin.
+        let defense = s.settlements[capitalIndex].stats.defense
+            + militia.melee + militia.ranged * 0.2
+        let repelled = strength <= defense
         let breach = max(0, strength - defense)
-        let lootFraction = min(0.35, 0.08 + breach / 200)
+        let lootFraction = repelled ? 0 : min(0.35, 0.08 + breach / 200)
         let loot = s.settlements[capitalIndex].storage[.food] * lootFraction
         s.settlements[capitalIndex].storage[.food] -= loot
         s.tribes[tribeIndex].stores += loot
 
         // Casualties only when the defense is genuinely overrun.
+        var deaths = 0
         if breach > 10 {
             let woundCount = min(3, Int(breach / 15))
-            var deaths = 0
             for _ in 0..<woundCount {
                 guard let victim = s.settlements[capitalIndex].pawns.indices
                     .filter({ s.settlements[capitalIndex].pawns[$0].health > 0 })
                     .min(by: { s.settlements[capitalIndex].pawns[$0].health
                              < s.settlements[capitalIndex].pawns[$1].health }) else { break }
-                let armored = s.settlements[capitalIndex].pawns[victim].equipment[.weapon] != nil ? 0.5 : 1.0
+                let mult = CombatEngine.woundMultiplier(s.settlements[capitalIndex].pawns[victim])
                 s.settlements[capitalIndex].pawns[victim].health = max(
-                    0, s.settlements[capitalIndex].pawns[victim].health - breach * armored)
+                    0, s.settlements[capitalIndex].pawns[victim].health - breach * mult)
                 if s.settlements[capitalIndex].pawns[victim].health <= 0 { deaths += 1 }
             }
             if deaths > 0 {
@@ -369,10 +384,30 @@ public enum DiplomacyEngine {
                 s.settlements[capitalIndex].deathTallies[
                     PawnDeathCause.battle.rawValue, default: 0] += deaths
             }
-            // The raiders take losses of their own.
-            s.tribes[tribeIndex].population = max(
-                4, s.tribes[tribeIndex].population - Double(rng.next() % 3))
         }
+
+        // The raiders pay for the attempt: the volley and the wall both bite.
+        let raiderLosses = Double(rng.next() % 3)
+            + volley * 0.06 + militia.melee * 0.03
+        s.tribes[tribeIndex].population = max(
+            4, s.tribes[tribeIndex].population - raiderLosses)
+
+        // The day, on the record.
+        let entry: LocalizedText
+        if repelled {
+            entry = LocalizedText(values: [
+                .en: "\(raiderName) raided — turned back at the walls before they reached a single door.",
+                .cs: "Nájezd: \(raiderName) — obránci je odrazili dřív, než došli k první chalupě."])
+        } else if deaths > 0 {
+            entry = LocalizedText(values: [
+                .en: "\(raiderName) broke through — \(deaths) of ours fell, and the granary is lighter.",
+                .cs: "\(raiderName) prolomili obranu — \(deaths) našich padlo a sýpka je lehčí."])
+        } else {
+            entry = LocalizedText(values: [
+                .en: "\(raiderName) raided the granary and slipped away with part of the stores.",
+                .cs: "\(raiderName) vyloupili sýpku a zmizeli s částí zásob."])
+        }
+        s.settlements[capitalIndex].journal.append(tick: s.tick, kind: .danger, text: entry)
 
         s.settlements[capitalIndex].stats.morale = max(
             0, s.settlements[capitalIndex].stats.morale - 6)

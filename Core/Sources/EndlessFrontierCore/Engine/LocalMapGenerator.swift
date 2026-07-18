@@ -50,7 +50,7 @@ public enum LocalMapGenerator {
         nodes += makeNodes(.herbs, count: mix.herbs)
 
         // Points of interest: a fixed cast, scattered across the map.
-        let poiKinds: [LocalPOIKind] = [.ruins, .cave, .spring, .treasure]
+        let poiKinds: [LocalPOIKind] = [.ruins, .cave, .spring, .treasure, .shrine, .wreck]
         let pois = poiKinds.enumerated().map { index, kind in
             LocalPOI(id: index, kind: kind, position: landPoint(river: river, rng: &rng))
         }

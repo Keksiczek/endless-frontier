@@ -7,7 +7,7 @@ public enum ObjectivesEngine {
     public static func current(_ state: WorldState, registry: GameDataRegistry, limit: Int = 6) -> [Objective] {
         var objectives: [Objective] = []
         objectives += colonistObjectives(state)
-        objectives += defenseObjectives(state)
+        objectives += defenseObjectives(state, registry: registry)
         objectives += housingObjectives(state, registry: registry)
         objectives += eraObjectives(state, registry: registry)
         objectives += researchObjectives(state, registry: registry)
@@ -38,9 +38,9 @@ public enum ObjectivesEngine {
 
     // MARK: - Sources
 
-    private static func defenseObjectives(_ state: WorldState) -> [Objective] {
+    private static func defenseObjectives(_ state: WorldState, registry: GameDataRegistry) -> [Objective] {
         guard state.globalStats.threatLevel >= 50, let capital = state.settlements.first else { return [] }
-        let effectiveDefense = capital.stats.defense + EffectApplier.militiaDefense(capital.pawns)
+        let effectiveDefense = capital.stats.defense + EffectApplier.militiaDefense(capital.pawns, registry: registry)
         guard effectiveDefense < 25 else { return [] }
         return [Objective(
             id: "prepare_defense",

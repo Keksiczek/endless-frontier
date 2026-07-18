@@ -91,7 +91,8 @@ public enum CaravanEngine {
             caravan.ticksRemaining -= 1
             let originMercantile = s.settlements.first { $0.id == caravan.originID }?.specialization == .mercantile
             resolveTravelTick(&caravan, threat: s.globalStats.threatLevel,
-                              originMercantile: originMercantile, mapSeed: s.mapSeed, tick: s.tick)
+                              originMercantile: originMercantile, mapSeed: s.mapSeed, tick: s.tick,
+                              registry: registry)
 
             // An escort wiped out on the road means the caravan is taken: cargo
             // and any survivors are lost.
@@ -133,7 +134,8 @@ public enum CaravanEngine {
         threat: Double,
         originMercantile: Bool,
         mapSeed: UInt64,
-        tick: Int
+        tick: Int,
+        registry: GameDataRegistry = GameDataRegistry()
     ) {
         var rng = SeededRNG(seed: travelSeed(caravanID: caravan.id, mapSeed: mapSeed, tick: tick))
         let chance = ambushChance(threat: threat, guards: caravan.guards, originMercantile: originMercantile)
@@ -141,7 +143,7 @@ public enum CaravanEngine {
             caravan.status = .traveling
             return
         }
-        applyAmbush(&caravan, threat: threat)
+        applyAmbush(&caravan, threat: threat, registry: registry)
     }
 
     /// Per-tick ambush probability. Rises with threat, but a skilled trading
@@ -159,9 +161,13 @@ public enum CaravanEngine {
     /// Resolves an ambush that *has* occurred against the escort's militia
     /// strength. Split out from the roll so the combat maths is deterministic
     /// and directly testable.
-    static func applyAmbush(_ caravan: inout Caravan, threat: Double) {
+    static func applyAmbush(_ caravan: inout Caravan, threat: Double,
+                            registry: GameDataRegistry = GameDataRegistry()) {
         let strength = baseAmbushStrength + threat * ambushThreatScale
-        let defense = EffectApplier.militiaDefense(caravan.guards)
+        // The escort's arms count for real now: bows soften the ambush before
+        // it closes, blades hold the wagons.
+        let militia = CombatEngine.militia(caravan.guards, registry: registry)
+        let defense = militia.melee + militia.ranged * 0.9
         if defense >= strength {
             caravan.status = .skirmished   // escort beat them off
             return
@@ -172,8 +178,8 @@ public enum CaravanEngine {
         caravan.cargo = max(0, caravan.cargo * (1 - lossFraction))
 
         if let weakest = caravan.guards.indices.min(by: { caravan.guards[$0].health < caravan.guards[$1].health }) {
-            let armored = caravan.guards[weakest].equipment[.weapon] != nil ? 0.5 : 1.0
-            caravan.guards[weakest].health = max(0, caravan.guards[weakest].health - deficit * woundSeverity * armored)
+            let mult = CombatEngine.woundMultiplier(caravan.guards[weakest])
+            caravan.guards[weakest].health = max(0, caravan.guards[weakest].health - deficit * woundSeverity * mult)
         }
         caravan.guards.removeAll { $0.health <= 0 }
         caravan.status = .raided

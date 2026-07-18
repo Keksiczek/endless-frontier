@@ -367,6 +367,7 @@ public enum ResourceLoop {
         // The further they've already charted, the further out the next walk
         // starts — the frontier moves outward rather than re-treading home.
         let reach = min(0.62, 0.28 + Double(scouts) * scoutRangeStep * Double(tick / scoutTicksPerReveal + 1) * 0.02)
+        let knownBefore = Set(map.pois.filter(\.discovered).map(\.id))
         for _ in 0..<scouts {
             let angle = rng.nextUnit() * 2 * .pi
             let distance = reach * (0.55 + rng.nextUnit() * 0.45)
@@ -376,6 +377,44 @@ public enum ResourceLoop {
             map.reveal(around: point, radius: 0.07)
         }
         s.localMap = map
+        // Walking into a point of interest is a *find*: the discovery pays out
+        // and the journal remembers the day. Before this, `reveal` flipped the
+        // flag silently and the promised one-off reward never existed at all.
+        for poi in map.pois where poi.discovered && !knownBefore.contains(poi.id) {
+            s = grantPOIDiscovery(s, poi: poi, tick: tick)
+        }
+        return s
+    }
+
+    /// The one-off reward a freshly discovered point of interest grants.
+    static func grantPOIDiscovery(_ settlement: Settlement, poi: LocalPOI, tick: Int) -> Settlement {
+        var s = settlement
+        func deposit(_ resource: ResourceType, _ amount: Double) {
+            s.storage[resource] = min(s.storageCapacity, s.storage[resource] + amount)
+        }
+        switch poi.kind {
+        case .ruins:
+            deposit(.knowledge, 18)
+        case .cave:
+            deposit(.materials, 25)
+        case .spring:
+            for i in s.pawns.indices {
+                s.pawns[i].health = min(100, s.pawns[i].health + 8)
+            }
+        case .treasure:
+            deposit(.materials, 15)
+            deposit(.influence, 12)
+        case .shrine:
+            for i in s.pawns.indices {
+                s.pawns[i].needs.recreation = min(100, s.pawns[i].needs.recreation + 5)
+            }
+            if s.faith.cultID != nil {
+                s.faith.faith = min(100, s.faith.faith + 5)
+            }
+        case .wreck:
+            deposit(.materials, 30)
+        }
+        s.journal.append(tick: tick, kind: .discovery, text: poi.kind.discoveryText)
         return s
     }
 

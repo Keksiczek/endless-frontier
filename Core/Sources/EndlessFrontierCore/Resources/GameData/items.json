@@ -5,8 +5,18 @@
     "rarity": "common",
     "slot": "equipment",
     "equipSlot": "weapon",
-    "effects": [ { "type": "skill_bonus", "work": "farming", "amount": 2 } ],
-    "description": "Chipped but serviceable. A farmer works a little faster."
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 2
+      }
+    ],
+    "description": "Chipped but serviceable. A farmer works a little faster.",
+    "combat": {
+      "class": "melee",
+      "damage": 2
+    }
   },
   {
     "id": "sturdy_axe",
@@ -14,8 +24,18 @@
     "rarity": "common",
     "slot": "equipment",
     "equipSlot": "weapon",
-    "effects": [ { "type": "skill_bonus", "work": "logging", "amount": 2 } ],
-    "description": "A good axe makes short work of tall trees."
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "logging",
+        "amount": 2
+      }
+    ],
+    "description": "A good axe makes short work of tall trees.",
+    "combat": {
+      "class": "melee",
+      "damage": 4
+    }
   },
   {
     "id": "miners_pick",
@@ -23,8 +43,18 @@
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "weapon",
-    "effects": [ { "type": "skill_bonus", "work": "mining", "amount": 3 } ],
-    "description": "Balanced and sharp — stone yields more readily."
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "mining",
+        "amount": 3
+      }
+    ],
+    "description": "Balanced and sharp — stone yields more readily.",
+    "combat": {
+      "class": "melee",
+      "damage": 4
+    }
   },
   {
     "id": "iron_scythe",
@@ -32,8 +62,18 @@
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "weapon",
-    "effects": [ { "type": "skill_bonus", "work": "farming", "amount": 4 } ],
-    "description": "A keen blade that brings in the harvest in half the time."
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 4
+      }
+    ],
+    "description": "A keen blade that brings in the harvest in half the time.",
+    "combat": {
+      "class": "melee",
+      "damage": 4
+    }
   },
   {
     "id": "masterwork_pick",
@@ -41,8 +81,18 @@
     "rarity": "epic",
     "slot": "equipment",
     "equipSlot": "weapon",
-    "effects": [ { "type": "skill_bonus", "work": "mining", "amount": 6 } ],
-    "description": "Forged by a true master — it bites stone like timber."
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "mining",
+        "amount": 6
+      }
+    ],
+    "description": "Forged by a true master — it bites stone like timber.",
+    "combat": {
+      "class": "melee",
+      "damage": 5
+    }
   },
   {
     "id": "leather_garb",
@@ -50,7 +100,12 @@
     "rarity": "common",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [ { "type": "health_regen", "amount": 0.5 } ],
+    "effects": [
+      {
+        "type": "health_regen",
+        "amount": 0.5
+      }
+    ],
     "description": "Tough hides that turn the worst of the weather and the work."
   },
   {
@@ -59,7 +114,12 @@
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [ { "type": "health_regen", "amount": 1.0 } ],
+    "effects": [
+      {
+        "type": "health_regen",
+        "amount": 1.0
+      }
+    ],
     "description": "Interlocking rings that keep a colonist whole through danger."
   },
   {
@@ -68,7 +128,12 @@
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [ { "type": "health_regen", "amount": 2.0 } ],
+    "effects": [
+      {
+        "type": "health_regen",
+        "amount": 2.0
+      }
+    ],
     "description": "Heavy and protective — little gets through tempered steel."
   },
   {
@@ -78,8 +143,14 @@
     "slot": "equipment",
     "equipSlot": "armor",
     "effects": [
-      { "type": "health_regen", "amount": 3.0 },
-      { "type": "mood_bonus", "amount": 5 }
+      {
+        "type": "health_regen",
+        "amount": 3.0
+      },
+      {
+        "type": "mood_bonus",
+        "amount": 5
+      }
     ],
     "description": "Armor of the old wardens — its bearer feels invincible."
   },
@@ -89,7 +160,13 @@
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "trinket",
-    "effects": [ { "type": "skill_bonus", "work": "research", "amount": 3 } ],
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "research",
+        "amount": 3
+      }
+    ],
     "description": "Ideas flow faster from a fine pen."
   },
   {
@@ -98,7 +175,13 @@
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "trinket",
-    "effects": [ { "type": "skill_bonus", "work": "trade", "amount": 3 } ],
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "trade",
+        "amount": 3
+      }
+    ],
     "description": "Every deal recorded, every advantage pressed."
   },
   {
@@ -107,7 +190,12 @@
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "trinket",
-    "effects": [ { "type": "mood_bonus", "amount": 10 } ],
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 10
+      }
+    ],
     "description": "Its bearer always seems to keep their spirits up."
   },
   {
@@ -117,8 +205,14 @@
     "slot": "equipment",
     "equipSlot": "trinket",
     "effects": [
-      { "type": "mood_bonus", "amount": 8 },
-      { "type": "health_regen", "amount": 1.5 }
+      {
+        "type": "mood_bonus",
+        "amount": 8
+      },
+      {
+        "type": "health_regen",
+        "amount": 1.5
+      }
     ],
     "description": "A relic that wards both body and mind."
   },
@@ -129,8 +223,15 @@
     "slot": "equipment",
     "equipSlot": "trinket",
     "effects": [
-      { "type": "mood_bonus", "amount": 20 },
-      { "type": "skill_bonus", "work": "trade", "amount": 5 }
+      {
+        "type": "mood_bonus",
+        "amount": 20
+      },
+      {
+        "type": "skill_bonus",
+        "work": "trade",
+        "amount": 5
+      }
     ],
     "description": "Worn by leaders of forgotten empires. None who carry it despair."
   },
@@ -167,7 +268,13 @@
     "name": "Harvest Idol",
     "rarity": "uncommon",
     "slot": "artifact",
-    "effects": [ { "type": "colony_production", "resource": "food", "perTick": 3 } ],
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "food",
+        "perTick": 3
+      }
+    ],
     "description": "A carved figure that seems to bless the fields."
   },
   {
@@ -175,7 +282,13 @@
     "name": "Forge Totem",
     "rarity": "rare",
     "slot": "artifact",
-    "effects": [ { "type": "colony_production", "resource": "materials", "perTick": 4 } ],
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "materials",
+        "perTick": 4
+      }
+    ],
     "description": "Set by the kilns, it lends strength to every smith."
   },
   {
@@ -183,7 +296,12 @@
     "name": "Beacon Stone",
     "rarity": "rare",
     "slot": "artifact",
-    "effects": [ { "type": "colony_defense", "amount": 18 } ],
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 18
+      }
+    ],
     "description": "A watch-stone that warns of danger long before it arrives."
   },
   {
@@ -191,7 +309,12 @@
     "name": "Relic of Prosperity",
     "rarity": "epic",
     "slot": "artifact",
-    "effects": [ { "type": "colony_morale", "amount": 8 } ],
+    "effects": [
+      {
+        "type": "colony_morale",
+        "amount": 8
+      }
+    ],
     "description": "Its presence lifts the whole colony's heart."
   },
   {
@@ -199,7 +322,13 @@
     "name": "Eternal Engine",
     "rarity": "legendary",
     "slot": "artifact",
-    "effects": [ { "type": "colony_production", "resource": "energy", "perTick": 10 } ],
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "energy",
+        "perTick": 10
+      }
+    ],
     "description": "An impossible machine that never stops turning."
   },
   {
@@ -207,7 +336,13 @@
     "name": "World Seed",
     "rarity": "legendary",
     "slot": "artifact",
-    "effects": [ { "type": "colony_production", "resource": "knowledge", "perTick": 8 } ],
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "knowledge",
+        "perTick": 8
+      }
+    ],
     "description": "A shard of first creation that whispers endless secrets."
   },
   {
@@ -237,8 +372,18 @@
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "weapon",
-    "effects": [ { "type": "skill_bonus", "work": "logging", "amount": 4 } ],
-    "description": "A snarling blade that fells in seconds what once took an hour."
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "logging",
+        "amount": 4
+      }
+    ],
+    "description": "A snarling blade that fells in seconds what once took an hour.",
+    "combat": {
+      "class": "melee",
+      "damage": 6
+    }
   },
   {
     "id": "power_drill",
@@ -246,8 +391,18 @@
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "weapon",
-    "effects": [ { "type": "skill_bonus", "work": "mining", "amount": 5 } ],
-    "description": "Diamond-tipped and motor-driven — stone gives way like sand."
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "mining",
+        "amount": 5
+      }
+    ],
+    "description": "Diamond-tipped and motor-driven — stone gives way like sand.",
+    "combat": {
+      "class": "melee",
+      "damage": 4
+    }
   },
   {
     "id": "auto_harvester",
@@ -255,8 +410,18 @@
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "weapon",
-    "effects": [ { "type": "skill_bonus", "work": "farming", "amount": 5 } ],
-    "description": "One operator reaps what a whole crew once did."
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 5
+      }
+    ],
+    "description": "One operator reaps what a whole crew once did.",
+    "combat": {
+      "class": "melee",
+      "damage": 2
+    }
   },
   {
     "id": "kevlar_vest",
@@ -264,7 +429,12 @@
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [ { "type": "health_regen", "amount": 2.5 } ],
+    "effects": [
+      {
+        "type": "health_regen",
+        "amount": 2.5
+      }
+    ],
     "description": "Woven fibre that stops what steel never could."
   },
   {
@@ -274,8 +444,14 @@
     "slot": "equipment",
     "equipSlot": "armor",
     "effects": [
-      { "type": "health_regen", "amount": 3.5 },
-      { "type": "mood_bonus", "amount": 4 }
+      {
+        "type": "health_regen",
+        "amount": 3.5
+      },
+      {
+        "type": "mood_bonus",
+        "amount": 4
+      }
     ],
     "description": "Hydraulic muscle and armour plate — its wearer shrugs off the impossible."
   },
@@ -286,8 +462,14 @@
     "slot": "equipment",
     "equipSlot": "armor",
     "effects": [
-      { "type": "health_regen", "amount": 5.0 },
-      { "type": "mood_bonus", "amount": 8 }
+      {
+        "type": "health_regen",
+        "amount": 5.0
+      },
+      {
+        "type": "mood_bonus",
+        "amount": 8
+      }
     ],
     "description": "A walking fortress. Few threats in any era can touch its bearer."
   },
@@ -297,7 +479,13 @@
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "trinket",
-    "effects": [ { "type": "skill_bonus", "work": "research", "amount": 5 } ],
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "research",
+        "amount": 5
+      }
+    ],
     "description": "A personal console that turns any thinker into a one-person institute."
   },
   {
@@ -306,7 +494,12 @@
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "trinket",
-    "effects": [ { "type": "mood_bonus", "amount": 12 } ],
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 12
+      }
+    ],
     "description": "A pocket device that pipes in music, news and good cheer all day."
   },
   {
@@ -316,8 +509,15 @@
     "slot": "equipment",
     "equipSlot": "trinket",
     "effects": [
-      { "type": "skill_bonus", "work": "research", "amount": 6 },
-      { "type": "mood_bonus", "amount": 5 }
+      {
+        "type": "skill_bonus",
+        "work": "research",
+        "amount": 6
+      },
+      {
+        "type": "mood_bonus",
+        "amount": 5
+      }
     ],
     "description": "A mind laced with circuitry — thought itself runs faster and calmer."
   },
@@ -326,7 +526,13 @@
     "name": "Automation Hub",
     "rarity": "epic",
     "slot": "artifact",
-    "effects": [ { "type": "colony_production", "resource": "materials", "perTick": 8 } ],
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "materials",
+        "perTick": 8
+      }
+    ],
     "description": "A control node that drives idle machines across the whole colony."
   },
   {
@@ -334,7 +540,12 @@
     "name": "Automated Med-Bay",
     "rarity": "epic",
     "slot": "artifact",
-    "effects": [ { "type": "colony_morale", "amount": 10 } ],
+    "effects": [
+      {
+        "type": "colony_morale",
+        "amount": 10
+      }
+    ],
     "description": "Tireless surgeons of steel keep every colonist on their feet."
   },
   {
@@ -342,7 +553,13 @@
     "name": "Stabilised Fusion Core",
     "rarity": "legendary",
     "slot": "artifact",
-    "effects": [ { "type": "colony_production", "resource": "energy", "perTick": 14 } ],
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "energy",
+        "perTick": 14
+      }
+    ],
     "description": "A perfected reactor heart that pours out power for a whole settlement."
   },
   {
@@ -350,7 +567,13 @@
     "name": "Orbital Uplink",
     "rarity": "legendary",
     "slot": "artifact",
-    "effects": [ { "type": "colony_production", "resource": "knowledge", "perTick": 12 } ],
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "knowledge",
+        "perTick": 12
+      }
+    ],
     "description": "A direct line to the satellites — the sum of human knowledge, on tap."
   },
   {
@@ -358,7 +581,110 @@
     "name": "Planetary Shield Generator",
     "rarity": "legendary",
     "slot": "artifact",
-    "effects": [ { "type": "colony_defense", "amount": 40 } ],
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 40
+      }
+    ],
     "description": "A dome of force no raider, beast or storm has ever broken."
+  },
+  {
+    "id": "bronze_spear",
+    "name": "Bronze Spear",
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "combat": {
+      "class": "melee",
+      "damage": 6
+    },
+    "description": "A plain spear — the first argument a raider understands."
+  },
+  {
+    "id": "hunting_bow",
+    "name": "Hunting Bow",
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "combat": {
+      "class": "ranged",
+      "damage": 5
+    },
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 2
+      }
+    ],
+    "description": "Feeds the pot in peace, thins a raiding party in war."
+  },
+  {
+    "id": "iron_sword",
+    "name": "Iron Sword",
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "combat": {
+      "class": "melee",
+      "damage": 10
+    },
+    "description": "Honest iron with an edge — a militia line stiffens around it."
+  },
+  {
+    "id": "longbow",
+    "name": "Longbow",
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "combat": {
+      "class": "ranged",
+      "damage": 9
+    },
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 2
+      }
+    ],
+    "description": "A man-high stave that reaches the far bank of the river."
+  },
+  {
+    "id": "steel_halberd",
+    "name": "Steel Halberd",
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "combat": {
+      "class": "melee",
+      "damage": 14
+    },
+    "description": "Axe, hook and spike on one long haft — a wall in a single pair of hands."
+  },
+  {
+    "id": "crossbow",
+    "name": "Crossbow",
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "combat": {
+      "class": "ranged",
+      "damage": 12
+    },
+    "description": "Slow to span, terrible to receive."
+  },
+  {
+    "id": "marksman_rifle",
+    "name": "Marksman Rifle",
+    "rarity": "epic",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "combat": {
+      "class": "ranged",
+      "damage": 18
+    },
+    "description": "One shot from the tower ends most arguments before they start."
   }
 ]

@@ -59,34 +59,59 @@ public enum WildlifeEngine {
         herd = max(0, herd - culled)
         map.wildlife.deerHerd = herd
 
-        // Predator pressure drifts toward an era-scaled baseline.
+        // Predator pressure drifts toward an era-scaled baseline — and hunters
+        // with ranged arms actively push it back down. A bow changes what a
+        // hunter *is* to the wild: not just a mouth the herd feeds, but a
+        // reason wolves keep their distance.
         let ceiling = basePredatorPressure + Double(era.index) * predatorPressurePerEra
         map.wildlife.predatorPressure += (ceiling - map.wildlife.predatorPressure) * predatorPressureDrift
+        let armedHunters = CombatEngine.rangedCount(
+            s.pawns.filter { $0.assignedWork == .hunting }, registry: registry)
+        if armedHunters > 0 {
+            map.wildlife.predatorPressure = max(
+                0, map.wildlife.predatorPressure - Double(armedHunters) * rangedHunterSuppression)
+        }
 
         // Attack roll: a wounded (possibly killed) colonist unless defense holds.
         let attackChance = map.wildlife.predatorPressure * attackChancePerPressure
         if rng.nextUnit() < attackChance {
-            let defense = s.stats.defense + EffectApplier.militiaDefense(s.pawns) * 0.5
+            let defense = s.stats.defense
+                + CombatEngine.defensePower(s.pawns, registry: registry) * 0.5
             if defense < defenseToRepel,
                let victim = s.pawns.indices
                 .filter({ s.pawns[$0].health > 0 })
                 .min(by: { s.pawns[$0].health < s.pawns[$1].health }) {
-                let armored = s.pawns[victim].equipment[.weapon] != nil ? 0.5 : 1.0
-                s.pawns[victim].health = max(0, s.pawns[victim].health - attackWound * armored)
+                // Armor blunts the mauling; a weapon doesn't stop teeth.
+                let name = s.pawns[victim].name
+                let mult = CombatEngine.woundMultiplier(s.pawns[victim])
+                s.pawns[victim].health = max(0, s.pawns[victim].health - attackWound * mult)
                 if s.pawns[victim].health <= 0 {
                     s.pawns.remove(at: victim)
                     s.deathTallies[PawnDeathCause.beast.rawValue, default: 0] += 1
                     s.stats.morale = max(0, s.stats.morale - 6)
+                    s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
+                        .en: "A beast took \(name) at the edge of the woods.",
+                        .cs: "Šelma na kraji lesa strhla \(name)."]))
+                } else {
+                    s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
+                        .en: "A beast mauled \(name) — dragged back bleeding, but alive.",
+                        .cs: "Šelma potrhala \(name) — dovlekli ho zpět zkrvaveného, ale žije."]))
                 }
             } else {
                 // Repelled: the hunt thins the predators a little.
                 map.wildlife.predatorPressure = max(0, map.wildlife.predatorPressure - 3)
+                s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
+                    .en: "Wolves tried the herds by night; the watch drove them off.",
+                    .cs: "Vlci v noci zkusili stáda; hlídka je zahnala."]))
             }
         }
 
         s.localMap = map
         return s
     }
+
+    /// How much predator pressure each ranged-armed hunter bleeds off per tick.
+    static let rangedHunterSuppression = 0.03
 
     static func wildlifeSeed(mapSeed: UInt64, settlementID: UUID, tick: Int) -> UInt64 {
         var h: UInt64 = mapSeed &* 0xCBF2_9CE4_8422_2325
