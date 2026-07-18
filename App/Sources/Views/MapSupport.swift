@@ -59,6 +59,8 @@ extension RegionKind {
         case .ruins: return "building.columns.fill"
         case .dungeon: return "shippingbox.fill"
         case .anomaly: return "sparkles"
+        case .sanctuary: return "sun.max.fill"
+        case .lostCity: return "building.2.fill"
         case .wilderness: return nil
         }
     }

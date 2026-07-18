@@ -291,10 +291,13 @@ final class GameViewModel {
     /// Player-facing label for the site action available in a region, if any.
     func siteActionLabel(for region: Region) -> String? {
         guard region.hasActiveSite else { return nil }
+        let cs = AppStrings.language == .cs
         switch region.kind {
-        case .ruins: return "Excavate Ruins"
-        case .dungeon: return "Delve Dungeon"
-        case .anomaly: return "Probe Anomaly"
+        case .ruins: return cs ? "Prozkoumat zříceniny" : "Excavate Ruins"
+        case .dungeon: return cs ? "Sestoupit do podzemí" : "Delve Dungeon"
+        case .anomaly: return cs ? "Zkoumat anomálii" : "Probe Anomaly"
+        case .sanctuary: return cs ? "Vykonat pouť" : "Make Pilgrimage"
+        case .lostCity: return cs ? "Prohledat mrtvé město" : "Salvage the Lost City"
         default: return nil
         }
     }

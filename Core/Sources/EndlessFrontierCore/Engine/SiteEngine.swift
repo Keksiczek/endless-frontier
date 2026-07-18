@@ -54,6 +54,10 @@ public enum SiteEngine {
             outcome = delveDungeon(&s, region: region, hazard: hazard, registry: registry, rng: &rng)
         case .anomaly:
             outcome = probeAnomaly(&s, region: region, hazard: hazard)
+        case .sanctuary:
+            outcome = makePilgrimage(&s, region: region, hazard: hazard)
+        case .lostCity:
+            outcome = salvageLostCity(&s, region: region, hazard: hazard, registry: registry, rng: &rng)
         default:
             return nil
         }
@@ -62,7 +66,44 @@ public enum SiteEngine {
         s.worldFlags["cleared:\(region.kind.rawValue)"] = true   // enables quest goals
         let record = HistoricalEvent(templateID: "site_\(region.kind.rawValue)", type: siteEventType(region.kind), tick: s.tick)
         s.eventHistory.append(record)
+        // The day belongs in the colony's own diary too — and from there, the
+        // toasts.
+        if let capital = s.settlements.indices.first {
+            s.settlements[capital].journal.append(
+                tick: s.tick, kind: .discovery,
+                text: journalLine(for: region.kind, regionName: region.name))
+        }
         return (s, outcome)
+    }
+
+    /// The diary's line for a cleared site, in both languages.
+    static func journalLine(for kind: RegionKind, regionName: String) -> LocalizedText {
+        switch kind {
+        case .ruins:
+            return LocalizedText(values: [
+                .en: "Scholars sifted the ruins of \(regionName) and carried home what the ages left.",
+                .cs: "Učenci prohledali zříceniny v kraji \(regionName) a odnesli, co po věcích zbylo."])
+        case .dungeon:
+            return LocalizedText(values: [
+                .en: "A delving party returned from the dark beneath \(regionName).",
+                .cs: "Výprava se vrátila z podzemí kraje \(regionName)."])
+        case .anomaly:
+            return LocalizedText(values: [
+                .en: "The anomaly at \(regionName) yielded strange insight — and stirred.",
+                .cs: "Anomálie v kraji \(regionName) vydala zvláštní poznání — a pohnula se."])
+        case .sanctuary:
+            return LocalizedText(values: [
+                .en: "Pilgrims returned from the sanctuary of \(regionName), lighter of heart.",
+                .cs: "Poutníci se vrátili ze svatyně v kraji \(regionName) s lehčím srdcem."])
+        case .lostCity:
+            return LocalizedText(values: [
+                .en: "The dead city of \(regionName) gave up its hoards to the salvage crews.",
+                .cs: "Mrtvé město v kraji \(regionName) vydalo své poklady."])
+        default:
+            return LocalizedText(values: [
+                .en: "An expedition returned from \(regionName).",
+                .cs: "Výprava se vrátila z kraje \(regionName)."])
+        }
     }
 
     // MARK: - Site behaviours
@@ -135,6 +176,63 @@ public enum SiteEngine {
             kind: .anomaly, regionName: region.name, rewards: rewards,
             casualtyName: nil, died: false, threatGain: threatGain,
             narrative: "Studying the anomaly at \(region.name) yields strange insight — but stirs something best left sleeping."
+        )
+    }
+
+    /// A pilgrimage to a sacred valley: no loot to speak of, but the whole
+    /// colony comes home lighter — rest, health, devotion, and standing for
+    /// the Leader who ordered the walk.
+    private static func makePilgrimage(_ s: inout WorldState, region: Region, hazard: Double) -> SiteOutcome {
+        let rewards = Resources([.influence: 25 + hazard * 5])
+        grant(&s, rewards)
+        if let capital = s.settlements.indices.first {
+            for i in s.settlements[capital].pawns.indices {
+                s.settlements[capital].pawns[i].needs.recreation =
+                    min(100, s.settlements[capital].pawns[i].needs.recreation + 10)
+                s.settlements[capital].pawns[i].health =
+                    min(100, s.settlements[capital].pawns[i].health + 5)
+            }
+            if s.settlements[capital].faith.cultID != nil {
+                s.settlements[capital].faith.faith = min(100, s.settlements[capital].faith.faith + 8)
+            }
+            s.settlements[capital].stats.morale = min(100, s.settlements[capital].stats.morale + 6)
+        }
+        return SiteOutcome(
+            kind: .sanctuary, regionName: region.name, rewards: rewards,
+            narrative: "Pilgrims walk to the sanctuary of \(region.name) and return rested, healed, and surer of their Leader."
+        )
+    }
+
+    /// Salvaging a dead city: the richest haul on the map, a real chance of a
+    /// find — and a real chance the rubble takes someone's blood for it.
+    private static func salvageLostCity(_ s: inout WorldState, region: Region, hazard: Double, registry: GameDataRegistry, rng: inout SeededRNG) -> SiteOutcome {
+        let rewards = Resources([
+            .materials: 50 + hazard * 10,
+            .knowledge: 30 + hazard * 6
+        ])
+        grant(&s, rewards)
+        // The bones of a city hide better things than a plain ruin does.
+        let item = dropItem(&s, registry: registry, hazard: hazard + 3, rng: &rng)
+
+        var casualtyName: String?
+        if let capital = s.settlements.indices.first, !s.settlements[capital].pawns.isEmpty,
+           rng.nextUnit() < min(0.5, 0.15 + hazard * 0.03) {
+            let pawnIndex = s.settlements[capital].pawns.indices
+                .max { s.settlements[capital].pawns[$0].health < s.settlements[capital].pawns[$1].health }!
+            let wound = (15 + hazard * 4)
+                * CombatEngine.woundMultiplier(s.settlements[capital].pawns[pawnIndex])
+            s.settlements[capital].pawns[pawnIndex].health = max(
+                1, s.settlements[capital].pawns[pawnIndex].health - wound)   // hurt, never killed
+            casualtyName = s.settlements[capital].pawns[pawnIndex].name
+        }
+
+        let fate = casualtyName.map { " A wall came down on \($0)." } ?? ""
+        let loot = item.map { " Among the bones of the city: \($0)." } ?? ""
+        return SiteOutcome(
+            kind: .lostCity, regionName: region.name, rewards: rewards,
+            casualtyName: casualtyName, died: false,
+            itemFound: item,
+            narrative: "Salvage crews strip the dead city of \(region.name) of what its builders left behind.\(fate)\(loot)"
         )
     }
 

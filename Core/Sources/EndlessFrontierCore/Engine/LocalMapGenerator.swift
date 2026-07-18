@@ -11,7 +11,8 @@ public enum LocalMapGenerator {
     public static func generate(
         mapSeed: UInt64,
         regionID: UUID,
-        biome: BiomeDefinition?
+        biome: BiomeDefinition?,
+        flavor: RegionKind = .wilderness
     ) -> LocalMap {
         var rng = SeededRNG(seed: seed(mapSeed: mapSeed, regionID: regionID))
         let biomeID = biome?.id ?? "plains"
@@ -49,15 +50,16 @@ public enum LocalMapGenerator {
         nodes += makeNodes(.stone, count: mix.stone)
         nodes += makeNodes(.herbs, count: mix.herbs)
 
-        // Points of interest: a fixed cast, scattered across the map.
+        // Points of interest: a fixed cast, scattered across the map — plus
+        // whatever the region's character adds (see below).
         let poiKinds: [LocalPOIKind] = [.ruins, .cave, .spring, .treasure, .shrine, .wreck]
-        let pois = poiKinds.enumerated().map { index, kind in
+        var pois = poiKinds.enumerated().map { index, kind in
             LocalPOI(id: index, kind: kind, position: landPoint(river: river, rng: &rng))
         }
 
         // Scenery: the landscape's furniture, biome-appropriate and seeded.
         let (kinds, count) = LocalTerrain.sceneryMix(for: biomeID)
-        let scenery = (0..<count).map { index -> SceneryProp in
+        var scenery = (0..<count).map { index -> SceneryProp in
             let kind = LocalTerrain.weighted(kinds, rng.nextUnit())
             // Reeds and ponds belong by the water; everything else keeps its feet dry.
             let wetLoving = (kind == .reeds || kind == .pond)
@@ -66,6 +68,46 @@ public enum LocalMapGenerator {
                 : landPoint(river: river, rng: &rng)
             return SceneryProp(id: index, kind: kind, position: position,
                                scale: 0.7 + rng.nextUnit() * 0.6)
+        }
+
+        // The region's character marks its ground. A lost city is *streets* of
+        // fallen pillars; a sanctuary blooms; plain ruins scatter a few stones.
+        // The same seed shapes the same chunk whether you merely survey it or
+        // later settle it — what the scouts saw is what the settlers get.
+        var propID = scenery.count
+        var poiID = pois.count
+        func addProps(_ kind: SceneryKind, _ n: Int, around center: LocalPoint, spread: Double) {
+            for _ in 0..<n {
+                let a = rng.nextUnit() * 2 * .pi
+                let r = rng.nextUnit() * spread
+                let p = LocalPoint(x: min(0.95, max(0.05, center.x + cos(a) * r)),
+                                   y: min(0.95, max(0.05, center.y + sin(a) * r)))
+                scenery.append(SceneryProp(id: propID, kind: kind, position: p,
+                                           scale: 0.8 + rng.nextUnit() * 0.5))
+                propID += 1
+            }
+        }
+        switch flavor {
+        case .lostCity:
+            let heart = landPoint(river: river, rng: &rng)
+            addProps(.ruinPillar, 9, around: heart, spread: 0.16)
+            pois.append(LocalPOI(id: poiID, kind: .treasure, position: heart)); poiID += 1
+            pois.append(LocalPOI(id: poiID, kind: .ruins,
+                                 position: landPoint(river: river, rng: &rng))); poiID += 1
+            nodes.append(ResourceNode(id: nodeID, kind: .stone,
+                                      position: landPoint(river: river, rng: &rng),
+                                      amount: 260, capacity: 260)); nodeID += 1
+        case .sanctuary:
+            let hallow = landPoint(river: river, rng: &rng)
+            addProps(.flowers, 6, around: hallow, spread: 0.10)
+            pois.append(LocalPOI(id: poiID, kind: .shrine, position: hallow)); poiID += 1
+        case .ruins:
+            addProps(.ruinPillar, 4, around: landPoint(river: river, rng: &rng), spread: 0.2)
+        case .dungeon:
+            pois.append(LocalPOI(id: poiID, kind: .cave,
+                                 position: landPoint(river: river, rng: &rng))); poiID += 1
+        default:
+            break
         }
 
         // A herd sized by how much the land can feed.

@@ -7,6 +7,8 @@ import EndlessFrontierCore
 struct WorldMapScreen: View {
     @Bindable var game: GameViewModel
     @State private var selectedRegionID: UUID?
+    /// The region whose chunk is open for survey, if any.
+    @State private var surveyRegion: Region?
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     private var selectedRegion: Region? {
@@ -27,7 +29,8 @@ struct WorldMapScreen: View {
                 WorldMapView(game: game, selectedRegionID: $selectedRegionID)
                     .overlay(alignment: .bottom) {
                         if let region = selectedRegion {
-                            RegionDetailCard(game: game, region: region) { selectedRegionID = nil }
+                            RegionDetailCard(game: game, region: region,
+                                             onSurvey: { surveyRegion = region }) { selectedRegionID = nil }
                                 .padding(12)
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
                         }
@@ -60,6 +63,10 @@ struct WorldMapScreen: View {
         } message: { outcome in
             Text(outcome.narrative)
         }
+        // Opening a chunk: any explored region unfolds into a living survey.
+        .sheet(item: $surveyRegion) { region in
+            RegionCanvasView(region: region, game: game)
+        }
     }
 
     private var siteOutcomeBinding: Binding<Bool> {
@@ -74,7 +81,8 @@ struct WorldMapScreen: View {
         ScrollView {
             VStack(spacing: 16) {
                 if let region = selectedRegion {
-                    RegionDetailCard(game: game, region: region) { selectedRegionID = nil }
+                    RegionDetailCard(game: game, region: region,
+                                     onSurvey: { surveyRegion = region }) { selectedRegionID = nil }
                 } else if game.world.tribes.isEmpty {
                     VStack(spacing: 10) {
                         Image(systemName: "hand.tap.fill").font(.title)
@@ -97,6 +105,8 @@ struct WorldMapScreen: View {
 struct RegionDetailCard: View {
     @Bindable var game: GameViewModel
     let region: Region
+    /// Opens the region's living chunk (survey view), when offered.
+    var onSurvey: (() -> Void)? = nil
     let onClose: () -> Void
 
     var body: some View {
@@ -127,6 +137,14 @@ struct RegionDetailCard: View {
 
             if let tribe = game.tribes.first(where: { $0.regionID == region.id }) {
                 tribeRow(tribe)
+            }
+
+            // An explored region is a place, not a row of stats — open it.
+            if region.explorationState == .fullyExplored,
+               game.settlement(in: region) == nil,
+               let onSurvey {
+                actionButton(AppStrings.language == .cs ? "Prohlédnout krajinu" : "Survey the land",
+                             systemImage: "binoculars.fill", action: onSurvey)
             }
 
             actions
@@ -221,7 +239,10 @@ struct RegionDetailCard: View {
         switch region.explorationState {
         case .unknown: return "Uncharted"
         case .partiallyExplored: return "Partially charted"
-        case .fullyExplored: return region.kind == .homeland ? "Homeland" : region.kind.rawValue.capitalized
+        case .fullyExplored:
+            return region.kind == .homeland
+                ? "Homeland"
+                : region.kind.rawValue.replacingOccurrences(of: "_", with: " ").capitalized
         }
     }
 

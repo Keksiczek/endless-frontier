@@ -16,6 +16,8 @@ public enum RegionKind: String, Codable, Sendable, CaseIterable {
     case ruins          // ancient site — bonus loot / lore events
     case dungeon        // dangerous site — high risk, high reward (future depth)
     case anomaly        // strange, shifting region (dynamic events)
+    case sanctuary      // a sacred valley — a pilgrimage blesses the colony
+    case lostCity = "lost_city"   // a dead city — rich salvage among the bones
 }
 
 /// Selects which region a dynamic region-changing event applies to.
@@ -72,6 +74,6 @@ public struct Region: Codable, Sendable, Identifiable, Equatable {
     public var hasActiveSite: Bool {
         explorationState == .fullyExplored
             && !siteCleared
-            && [.ruins, .dungeon, .anomaly].contains(kind)
+            && [.ruins, .dungeon, .anomaly, .sanctuary, .lostCity].contains(kind)
     }
 }

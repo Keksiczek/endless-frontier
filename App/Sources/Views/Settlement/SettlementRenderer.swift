@@ -86,6 +86,74 @@ enum SettlementRenderer {
         CGPoint(x: rect.minX + p.x * rect.width, y: rect.minY + p.y * rect.height)
     }
 
+    // MARK: - Wilderness (surveying a region without a settlement)
+
+    /// Draws an explored region's *chunk* — the same terrain, deposits,
+    /// landmarks and wildlife a settlement map gets, minus the town. This is
+    /// what opens when you survey a region from the world map: the land as
+    /// your expedition recorded it, alive. A native people's camp (and its
+    /// people, walking) is drawn when one lives here.
+    static func drawWilderness(
+        _ context: inout GraphicsContext,
+        size: CGSize,
+        map: LocalMap,
+        season: Season,
+        time: Double,
+        camera: Camera,
+        regionKind: RegionKind,
+        tribe: Tribe?
+    ) {
+        let viewRect = CGRect(origin: .zero, size: size)
+        let rect = worldRect(viewRect: viewRect, camera: camera)
+        ground(&context, rect: rect, map: map, season: season)
+        river(&context, rect: rect, river: map.river, season: season)
+        scenery(&context, rect: rect, map: map, season: season)
+        deposits(&context, rect: rect, map: map, season: season)
+        pois(&context, rect: rect, map: map, time: time)
+        SettlementWildlife.draw(&context, rect: rect, map: map, time: time)
+        if regionKind == .anomaly {
+            anomalyGlow(&context, rect: rect, time: time)
+        }
+        if let tribe {
+            SettlementStructures.camp(
+                &context, rect: rect, population: tribe.population,
+                tint: campTint(tribe.status), time: time,
+                seed: map.terrainSeed)
+        }
+        seasonWash(&context, rect: viewRect, size: size, season: season, time: time)
+    }
+
+    private static func campTint(_ status: DiplomaticStanding) -> Color {
+        switch status {
+        case .allied, .friendly: return Theme.good
+        case .neutral: return Theme.bone
+        case .tense: return Theme.accent
+        case .war: return Theme.danger
+        }
+    }
+
+    /// The anomaly's unquiet light: a breathing glow and slow-orbiting motes.
+    private static func anomalyGlow(
+        _ context: inout GraphicsContext, rect: CGRect, time: Double
+    ) {
+        let c = CGPoint(x: rect.midX, y: rect.midY)
+        let breath = 0.5 + 0.5 * sin(time * 0.8)
+        let radius = rect.width * (0.16 + 0.03 * breath)
+        context.fill(
+            Path(ellipseIn: CGRect(x: c.x - radius, y: c.y - radius,
+                                   width: radius * 2, height: radius * 2)),
+            with: .radialGradient(
+                Gradient(colors: [Color(red: 0.55, green: 0.45, blue: 0.85).opacity(0.20 + 0.10 * breath), .clear]),
+                center: c, startRadius: 0, endRadius: radius))
+        for i in 0..<5 {
+            let angle = time * 0.3 + Double(i) * 1.26
+            let r = radius * (0.5 + 0.35 * sin(time * 0.5 + Double(i)))
+            let p = CGPoint(x: c.x + cos(angle) * r, y: c.y + sin(angle) * r * 0.7)
+            context.fill(Path(ellipseIn: CGRect(x: p.x - 1.2, y: p.y - 1.2, width: 2.4, height: 2.4)),
+                         with: .color(Color(red: 0.7, green: 0.6, blue: 0.95).opacity(0.7)))
+        }
+    }
+
     // MARK: - Ground tiles
 
     /// The tiled earth: every revealed cell painted with its seeded ground
@@ -667,7 +735,7 @@ enum SettlementRenderer {
                                           progress: building.progress, time: time, context: &context)
             } else {
                 SettlementStructures.building(building.glyph, at: building.center,
-                                              s: building.size, context: &context)
+                                              s: building.size, time: time, context: &context)
             }
             if building.id == selectedBuildingID {
                 let r = building.size * 2.6

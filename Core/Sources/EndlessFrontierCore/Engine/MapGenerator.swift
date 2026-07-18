@@ -153,10 +153,16 @@ public enum MapGenerator {
         let ruins = config.ruinsChance + bonus
         let dungeon = config.dungeonChance + bonus
         let anomaly = config.anomalyChance + bonus
+        // The wonders are rarer, and grow only half as fast with distance —
+        // they should stay finds, not fixtures.
+        let sanctuary = config.sanctuaryChance + bonus * 0.5
+        let lostCity = config.lostCityChance + bonus * 0.5
         let roll = rng.nextUnit()
         if roll < ruins { return .ruins }
         if roll < ruins + dungeon { return .dungeon }
         if roll < ruins + dungeon + anomaly { return .anomaly }
+        if roll < ruins + dungeon + anomaly + sanctuary { return .sanctuary }
+        if roll < ruins + dungeon + anomaly + sanctuary + lostCity { return .lostCity }
         return .wilderness
     }
 
