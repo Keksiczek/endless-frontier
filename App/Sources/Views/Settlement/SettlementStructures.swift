@@ -60,7 +60,7 @@ enum SettlementStructures {
     static func camp(
         _ context: inout GraphicsContext, rect: CGRect,
         population: Double, tint: Color, time: Double, seed: UInt64,
-        night: Double = 0
+        night: Double = 0, zoom: CGFloat = 1
     ) {
         let unit = min(rect.width, rect.height)
         let heart = CGPoint(x: rect.midX, y: rect.midY)
@@ -77,15 +77,15 @@ enum SettlementStructures {
                     Gradient(colors: [Theme.accent.opacity(0.22 * night), .clear]),
                     center: heart, startRadius: 0, endRadius: glow))
         }
-        context.fill(Path(ellipseIn: CGRect(x: heart.x - 2.2, y: heart.y - 2.2,
-                                            width: 4.4, height: 4.4)),
+        context.fill(Path(ellipseIn: CGRect(x: heart.x - 2.2 * zoom, y: heart.y - 2.2 * zoom,
+                                            width: 4.4 * zoom, height: 4.4 * zoom)),
                      with: .color(Theme.accent.opacity(flicker)))
         // Its smoke.
         for k in 0..<3 {
             let t = (time * 0.25 + Double(k) * 0.33 + phase).truncatingRemainder(dividingBy: 1)
-            let y = heart.y - 4 - CGFloat(t) * 16
-            let x = heart.x + CGFloat(sin(t * 5 + Double(k))) * 3
-            let r = 1 + CGFloat(t) * 2.6
+            let y = heart.y - (4 + CGFloat(t) * 16) * zoom
+            let x = heart.x + CGFloat(sin(t * 5 + Double(k))) * 3 * zoom
+            let r = (1 + CGFloat(t) * 2.6) * zoom
             context.fill(Path(ellipseIn: CGRect(x: x - r / 2, y: y - r / 2, width: r, height: r)),
                          with: .color(Theme.boneDim.opacity((1 - t) * 0.3)))
         }
@@ -116,17 +116,17 @@ enum SettlementStructures {
             let angle = time * (0.05 + Double(i % 3) * 0.02) + fp
             let p = CGPoint(x: heart.x + cos(angle) * unit * wander,
                             y: heart.y + sin(angle * 1.3) * unit * wander * 0.75)
-            let gait = CGFloat(sin(time * 5 + fp)) * 1.2
-            let head = CGPoint(x: p.x, y: p.y - 3.6)
-            context.fill(Path(ellipseIn: CGRect(x: head.x - 1.3, y: head.y - 1.3,
-                                                width: 2.6, height: 2.6)),
+            let gait = CGFloat(sin(time * 5 + fp)) * 1.2 * zoom
+            let head = CGPoint(x: p.x, y: p.y - 3.6 * zoom)
+            context.fill(Path(ellipseIn: CGRect(x: head.x - 1.3 * zoom, y: head.y - 1.3 * zoom,
+                                                width: 2.6 * zoom, height: 2.6 * zoom)),
                          with: .color(tint.opacity(0.8)))
             var body = Path()
-            body.move(to: CGPoint(x: p.x, y: head.y + 1.3))
-            body.addLine(to: CGPoint(x: p.x, y: p.y + 2))
-            body.move(to: CGPoint(x: p.x - 1.4 + gait, y: p.y + 4.6))
-            body.addLine(to: CGPoint(x: p.x, y: p.y + 2))
-            body.addLine(to: CGPoint(x: p.x + 1.4 - gait, y: p.y + 4.6))
+            body.move(to: CGPoint(x: p.x, y: head.y + 1.3 * zoom))
+            body.addLine(to: CGPoint(x: p.x, y: p.y + 2 * zoom))
+            body.move(to: CGPoint(x: p.x - 1.4 * zoom + gait, y: p.y + 4.6 * zoom))
+            body.addLine(to: CGPoint(x: p.x, y: p.y + 2 * zoom))
+            body.addLine(to: CGPoint(x: p.x + 1.4 * zoom - gait, y: p.y + 4.6 * zoom))
             context.stroke(body, with: .color(tint.opacity(0.8)),
                            style: StrokeStyle(lineWidth: 1, lineCap: .round))
         }

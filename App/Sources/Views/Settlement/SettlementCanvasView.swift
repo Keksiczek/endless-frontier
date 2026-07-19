@@ -13,6 +13,9 @@ enum CanvasSelection: Equatable {
     case none
     case pawn(UUID)
     case building(index: Int, definitionID: String)
+    /// A tapped piece of the land itself — a deposit or a landmark, resolved
+    /// to the line the info capsule shows. The map stops being anonymous.
+    case landmark(String)
 }
 
 /// The living settlement: a `TimelineView`-driven `Canvas` where colonists walk
@@ -167,6 +170,25 @@ struct SettlementCanvasView: View {
             if d2 < bestDistance {
                 bestDistance = d2
                 best = .building(index: building.id, definitionID: building.definitionID)
+            }
+        }
+        if case .building = best { return best }
+
+        // The land answers last: deposits with their fullness, landmarks with
+        // their name.
+        for node in settlement.localMap?.nodes ?? [] where map.isExplored(node.position) {
+            let d2 = distanceSquared(SettlementRenderer.point(node.position, in: rect), location)
+            if d2 < bestDistance {
+                bestDistance = d2
+                let fullness = node.capacity > 0 ? Int(node.amount / node.capacity * 100) : 100
+                best = .landmark("\(node.kind.displayLabel) · \(fullness) %")
+            }
+        }
+        for poi in map.pois where poi.discovered && map.isExplored(poi.position) {
+            let d2 = distanceSquared(SettlementRenderer.point(poi.position, in: rect), location)
+            if d2 < bestDistance {
+                bestDistance = d2
+                best = .landmark(poi.kind.displayLabel)
             }
         }
         return best

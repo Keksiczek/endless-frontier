@@ -131,6 +131,26 @@ struct SettlementScreen: View {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if case let .landmark(text) = selection {
+                HStack(spacing: 8) {
+                    Image(systemName: "mappin.circle.fill")
+                        .font(.caption)
+                        .foregroundStyle(Theme.accent)
+                    Text(text)
+                        .font(.caption)
+                        .foregroundStyle(Theme.text)
+                    Button {
+                        withAnimation(.easeOut(duration: 0.15)) { selection = .none }
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(Theme.textDim)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(.ultraThinMaterial, in: Capsule())
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if let building = selectedBuilding {
                 BuildingInspectorCard(
                     definition: building.definition, standing: building.standing,

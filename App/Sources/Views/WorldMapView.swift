@@ -62,9 +62,58 @@ struct WorldMapView: View {
                 tile(region)
                     .position(tilePosition(region.coord))
             }
+            tradeLayer
         }
         // Centre the origin in a large virtual canvas.
         .frame(width: 1200, height: 1200)
+    }
+
+    /// Commerce made visible: standing trade routes as faint threads between
+    /// the settlements they join, and every traveling caravan as an amber dot
+    /// actually *on the road* — its place along the line is its real progress.
+    private var tradeLayer: some View {
+        TimelineView(.animation(minimumInterval: 0.25)) { timeline in
+            Canvas { ctx, _ in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                for route in game.tradeRoutes {
+                    guard let a = position(ofSettlement: route.fromID),
+                          let b = position(ofSettlement: route.toID) else { continue }
+                    var thread = Path()
+                    thread.move(to: a)
+                    thread.addLine(to: b)
+                    ctx.stroke(thread, with: .color(Theme.boneFaint.opacity(0.6)),
+                               style: StrokeStyle(lineWidth: 1, dash: [4, 5]))
+                }
+                for caravan in game.caravans where caravan.status == .traveling {
+                    guard let a = position(ofSettlement: caravan.originID),
+                          let b = position(ofSettlement: caravan.destinationID) else { continue }
+                    let progress = 1 - Double(caravan.ticksRemaining) / Double(max(1, caravan.totalTicks))
+                    let bob = sin(t * 3) * 1.5
+                    let p = CGPoint(x: a.x + (b.x - a.x) * progress,
+                                    y: a.y + (b.y - a.y) * progress + bob)
+                    var road = Path()
+                    road.move(to: a)
+                    road.addLine(to: b)
+                    ctx.stroke(road, with: .color(Theme.accent.opacity(0.25)),
+                               style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
+                    ctx.fill(Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)),
+                             with: .color(Color.black.opacity(0.4)))
+                    ctx.fill(Path(ellipseIn: CGRect(x: p.x - 2.6, y: p.y - 2.6,
+                                                    width: 5.2, height: 5.2)),
+                             with: .color(Theme.accent))
+                }
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    /// Where a settlement's hex sits on the virtual canvas.
+    private func position(ofSettlement id: UUID) -> CGPoint? {
+        guard let settlement = game.world.settlements.first(where: { $0.id == id }),
+              let region = game.regions.first(where: { $0.id == settlement.regionID }) else {
+            return nil
+        }
+        return tilePosition(region.coord)
     }
 
     private func tilePosition(_ coord: HexCoord) -> CGPoint {

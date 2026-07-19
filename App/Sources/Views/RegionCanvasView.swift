@@ -147,14 +147,14 @@ struct RegionCanvasView: View {
         for poi in map.pois where poi.discovered {
             let d = near(poi.position)
             if d < reach * reach, d < (best?.distance ?? .infinity) {
-                best = (d, poiLabel(poi.kind))
+                best = (d, poi.kind.displayLabel)
             }
         }
         for node in map.nodes {
             let d = near(node.position)
             if d < reach * reach, d < (best?.distance ?? .infinity) {
                 let fullness = node.capacity > 0 ? Int(node.amount / node.capacity * 100) : 100
-                best = (d, "\(depositLabel(node.kind)) · \(fullness) %")
+                best = (d, "\(node.kind.displayLabel) · \(fullness) %")
             }
         }
         if let tribe = residentTribe {
@@ -168,25 +168,7 @@ struct RegionCanvasView: View {
         return best?.text ?? (info == nil ? nil : nil)   // tap on nothing clears
     }
 
-    private func poiLabel(_ kind: LocalPOIKind) -> String {
-        switch kind {
-        case .ruins: return cs ? "Prastaré zříceniny" : "Ancient ruins"
-        case .cave: return cs ? "Hluboká jeskyně" : "A deep cave"
-        case .spring: return cs ? "Léčivý pramen" : "A healing spring"
-        case .treasure: return cs ? "Zakopaná skrýš" : "A buried cache"
-        case .shrine: return cs ? "Zapomenutá svatyně" : "A forgotten shrine"
-        case .wreck: return cs ? "Vrak karavany" : "A wrecked caravan"
-        }
-    }
 
-    private func depositLabel(_ kind: LocalResourceKind) -> String {
-        switch kind {
-        case .field: return cs ? "Úrodná půda" : "Fertile ground"
-        case .forest: return cs ? "Les" : "Forest"
-        case .stone: return cs ? "Ložisko kamene" : "Stone deposit"
-        case .herbs: return cs ? "Byliny" : "Herbs"
-        }
-    }
 
     private var header: some View {
         HStack(spacing: 10) {

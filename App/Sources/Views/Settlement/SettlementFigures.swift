@@ -17,13 +17,16 @@ enum SettlementFigures {
 
     static func draw(
         pawn: Pawn, pose: AgentMotion.Pose, at p: CGPoint,
-        time: Double, ticksPerYear: Int, selected: Bool,
+        time: Double, ticksPerYear: Int, selected: Bool, zoom: CGFloat = 1,
         context: inout GraphicsContext
     ) {
         let years = pawn.ageYears(ticksPerYear: ticksPerYear)
         let child = years < Pawn.adultAgeYears
         let elder = years >= 56
-        let scale: CGFloat = child ? 0.7 : (elder ? 0.94 : 1.0)
+        // Every stroke of the figure is `scale`-relative, so folding the
+        // camera in here scales the whole person — zooming in no longer grows
+        // the town around doll-sized colonists.
+        let scale: CGFloat = (child ? 0.7 : (elder ? 0.94 : 1.0)) * zoom
 
         let tunic = Theme.roleShade(pawn.assignedWork)
         var alpha = max(0.45, pawn.health / 100)
@@ -259,7 +262,7 @@ enum SettlementFigures {
     static func smoke(
         _ context: inout GraphicsContext,
         houses: [SettlementRenderer.PlacedBuilding],
-        time: Double
+        time: Double, zoom: CGFloat = 1
     ) {
         for house in houses.prefix(10) {
             let phase = Double(house.id % 7) * 0.9
@@ -268,9 +271,9 @@ enum SettlementFigures {
             for k in 0..<3 {
                 let t = (time * 0.22 + phase + Double(k) * 0.33)
                     .truncatingRemainder(dividingBy: 1)
-                let y = chimney.y - CGFloat(t) * 13
-                let x = chimney.x + CGFloat(sin(t * 6 + phase + Double(k))) * 2.2
-                let r = 0.8 + CGFloat(t) * 2.2
+                let y = chimney.y - CGFloat(t) * 13 * zoom
+                let x = chimney.x + CGFloat(sin(t * 6 + phase + Double(k))) * 2.2 * zoom
+                let r = (0.8 + CGFloat(t) * 2.2) * zoom
                 context.fill(
                     Path(ellipseIn: CGRect(x: x - r / 2, y: y - r / 2, width: r, height: r)),
                     with: .color(Theme.boneDim.opacity((1 - t) * 0.28)))
@@ -282,7 +285,8 @@ enum SettlementFigures {
 
     /// Now and then a small flock crosses the valley. Gone in winter.
     static func birds(
-        _ context: inout GraphicsContext, rect: CGRect, season: Season, time: Double
+        _ context: inout GraphicsContext, rect: CGRect, season: Season,
+        time: Double, zoom: CGFloat = 1
     ) {
         guard season != .winter else { return }
         let cycle = 43.0
@@ -292,13 +296,13 @@ enum SettlementFigures {
         let baseX = rect.minX + rect.width * CGFloat(progress)
         let baseY = rect.minY + rect.height * CGFloat(0.16 + sin(progress * 2.6) * 0.03)
         for i in 0..<3 {
-            let bx = baseX - CGFloat(i) * 7
-            let by = baseY + CGFloat(i % 2) * 4
-            let flap = CGFloat(abs(sin(time * 7 + Double(i)))) * 1.6
+            let bx = baseX - CGFloat(i) * 7 * zoom
+            let by = baseY + CGFloat(i % 2) * 4 * zoom
+            let flap = CGFloat(abs(sin(time * 7 + Double(i)))) * 1.6 * zoom
             context.stroke(Path { p in
-                p.move(to: CGPoint(x: bx - 2.4, y: by - flap))
+                p.move(to: CGPoint(x: bx - 2.4 * zoom, y: by - flap))
                 p.addLine(to: CGPoint(x: bx, y: by))
-                p.addLine(to: CGPoint(x: bx + 2.4, y: by - flap))
+                p.addLine(to: CGPoint(x: bx + 2.4 * zoom, y: by - flap))
             }, with: .color(Theme.boneDim.opacity(0.55)), lineWidth: 0.8)
         }
     }

@@ -4,9 +4,14 @@
     "name": "Basic Tools",
     "era": "early_settlement",
     "requires": [],
-    "cost": { "knowledge": 30 },
+    "cost": {
+      "knowledge": 90
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "quarry" }
+      {
+        "type": "unlock_building",
+        "buildingId": "quarry"
+      }
     ],
     "description": "Stone and bone tools make every task a little easier."
   },
@@ -14,10 +19,17 @@
     "id": "agriculture",
     "name": "Agriculture",
     "era": "early_settlement",
-    "requires": ["basic_tools"],
-    "cost": { "knowledge": 50 },
+    "requires": [
+      "basic_tools"
+    ],
+    "cost": {
+      "knowledge": 150
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "farm_advanced" }
+      {
+        "type": "unlock_building",
+        "buildingId": "farm_advanced"
+      }
     ],
     "description": "Deliberate cultivation frees hands for other work."
   },
@@ -25,11 +37,23 @@
     "id": "writing",
     "name": "Writing",
     "era": "early_settlement",
-    "requires": ["basic_tools"],
-    "cost": { "knowledge": 60 },
+    "requires": [
+      "basic_tools"
+    ],
+    "cost": {
+      "knowledge": 180
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "library" },
-      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 1, "mode": "additive" }
+      {
+        "type": "unlock_building",
+        "buildingId": "library"
+      },
+      {
+        "type": "modifier",
+        "stat": "global.knowledgeOutput",
+        "delta": 1,
+        "mode": "additive"
+      }
     ],
     "description": "Recording knowledge unlocks civilization's memory."
   },
@@ -37,11 +61,21 @@
     "id": "bronze_tools",
     "name": "Bronze Working",
     "era": "ancient",
-    "requires": ["basic_tools"],
-    "cost": { "knowledge": 90 },
+    "requires": [
+      "basic_tools"
+    ],
+    "cost": {
+      "knowledge": 360
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "windmill" },
-      { "type": "unlock_building", "buildingId": "watchtower" }
+      {
+        "type": "unlock_building",
+        "buildingId": "windmill"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "watchtower"
+      }
     ],
     "description": "Bronze tools and weapons mark a new age of capability."
   },
@@ -49,11 +83,21 @@
     "id": "currency",
     "name": "Currency",
     "era": "ancient",
-    "requires": ["writing"],
-    "cost": { "knowledge": 110 },
+    "requires": [
+      "writing"
+    ],
+    "cost": {
+      "knowledge": 440
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "trade_post" },
-      { "type": "unlock_event_category", "eventCategory": "trade" }
+      {
+        "type": "unlock_building",
+        "buildingId": "trade_post"
+      },
+      {
+        "type": "unlock_event_category",
+        "eventCategory": "trade"
+      }
     ],
     "description": "Coinage lubricates trade across the whole region."
   },
@@ -61,12 +105,26 @@
     "id": "scholarship",
     "name": "Scholarship",
     "era": "medieval",
-    "requires": ["writing", "currency"],
-    "cost": { "knowledge": 200 },
+    "requires": [
+      "writing",
+      "currency"
+    ],
+    "cost": {
+      "knowledge": 800
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "school" },
-      { "type": "unlock_building", "buildingId": "barracks" },
-      { "type": "unlock_building", "buildingId": "university" }
+      {
+        "type": "unlock_building",
+        "buildingId": "school"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "barracks"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "university"
+      }
     ],
     "description": "Formal education compounds knowledge across generations."
   },
@@ -74,10 +132,17 @@
     "id": "pottery",
     "name": "Pottery",
     "era": "early_settlement",
-    "requires": ["basic_tools"],
-    "cost": { "knowledge": 35 },
+    "requires": [
+      "basic_tools"
+    ],
+    "cost": {
+      "knowledge": 105
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "granary" }
+      {
+        "type": "unlock_building",
+        "buildingId": "granary"
+      }
     ],
     "description": "Fired clay stores grain and water against hard times."
   },
@@ -85,11 +150,21 @@
     "id": "masonry",
     "name": "Masonry",
     "era": "ancient",
-    "requires": ["bronze_tools"],
-    "cost": { "knowledge": 120 },
+    "requires": [
+      "bronze_tools"
+    ],
+    "cost": {
+      "knowledge": 480
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "stone_walls" },
-      { "type": "unlock_building", "buildingId": "aqueduct" }
+      {
+        "type": "unlock_building",
+        "buildingId": "stone_walls"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "aqueduct"
+      }
     ],
     "description": "Cut stone raises walls and carries water across the land."
   },
@@ -97,11 +172,23 @@
     "id": "mathematics",
     "name": "Mathematics",
     "era": "ancient",
-    "requires": ["writing"],
-    "cost": { "knowledge": 130 },
+    "requires": [
+      "writing"
+    ],
+    "cost": {
+      "knowledge": 520
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "observatory" },
-      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 1, "mode": "additive" }
+      {
+        "type": "unlock_building",
+        "buildingId": "observatory"
+      },
+      {
+        "type": "modifier",
+        "stat": "global.knowledgeOutput",
+        "delta": 1,
+        "mode": "additive"
+      }
     ],
     "description": "Number and proof unlock the deeper patterns of the world."
   },
@@ -109,10 +196,18 @@
     "id": "engineering",
     "name": "Engineering",
     "era": "medieval",
-    "requires": ["masonry", "currency"],
-    "cost": { "knowledge": 220 },
+    "requires": [
+      "masonry",
+      "currency"
+    ],
+    "cost": {
+      "knowledge": 880
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "workshop" }
+      {
+        "type": "unlock_building",
+        "buildingId": "workshop"
+      }
     ],
     "description": "Gears, levers and mills turn ingenuity into output."
   },
@@ -120,10 +215,17 @@
     "id": "banking",
     "name": "Banking",
     "era": "medieval",
-    "requires": ["currency"],
-    "cost": { "knowledge": 200 },
+    "requires": [
+      "currency"
+    ],
+    "cost": {
+      "knowledge": 800
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "bank" }
+      {
+        "type": "unlock_building",
+        "buildingId": "bank"
+      }
     ],
     "description": "Credit lets influence flow faster than coin alone."
   },
@@ -131,11 +233,21 @@
     "id": "guilds",
     "name": "Guilds",
     "era": "medieval",
-    "requires": ["currency"],
-    "cost": { "knowledge": 190 },
+    "requires": [
+      "currency"
+    ],
+    "cost": {
+      "knowledge": 760
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "market" },
-      { "type": "unlock_event_category", "eventCategory": "commerce" }
+      {
+        "type": "unlock_building",
+        "buildingId": "market"
+      },
+      {
+        "type": "unlock_event_category",
+        "eventCategory": "commerce"
+      }
     ],
     "description": "Organised trades raise standards and bind the region in commerce."
   },
@@ -143,11 +255,21 @@
     "id": "steam_power",
     "name": "Steam Power",
     "era": "early_industrial",
-    "requires": ["engineering"],
-    "cost": { "knowledge": 360 },
+    "requires": [
+      "engineering"
+    ],
+    "cost": {
+      "knowledge": 1440
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "factory" },
-      { "type": "unlock_building", "buildingId": "power_plant" }
+      {
+        "type": "unlock_building",
+        "buildingId": "factory"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "power_plant"
+      }
     ],
     "description": "Harnessed steam drives the engines of an industrial age."
   },
@@ -155,10 +277,17 @@
     "id": "machining",
     "name": "Machining",
     "era": "early_industrial",
-    "requires": ["steam_power"],
-    "cost": { "knowledge": 420 },
+    "requires": [
+      "steam_power"
+    ],
+    "cost": {
+      "knowledge": 1680
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "foundry" }
+      {
+        "type": "unlock_building",
+        "buildingId": "foundry"
+      }
     ],
     "description": "Precise tools make precise tools — industry compounds itself."
   },
@@ -166,11 +295,23 @@
     "id": "railways",
     "name": "Railways",
     "era": "early_industrial",
-    "requires": ["machining"],
-    "cost": { "knowledge": 480 },
+    "requires": [
+      "machining"
+    ],
+    "cost": {
+      "knowledge": 1920
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "railyard" },
-      { "type": "modifier", "stat": "global.influenceOutput", "delta": 1, "mode": "additive" }
+      {
+        "type": "unlock_building",
+        "buildingId": "railyard"
+      },
+      {
+        "type": "modifier",
+        "stat": "global.influenceOutput",
+        "delta": 1,
+        "mode": "additive"
+      }
     ],
     "description": "Iron roads bind distant settlements into one swift economy."
   },
@@ -178,11 +319,23 @@
     "id": "chemistry",
     "name": "Chemistry",
     "era": "early_industrial",
-    "requires": ["machining"],
-    "cost": { "knowledge": 500 },
+    "requires": [
+      "machining"
+    ],
+    "cost": {
+      "knowledge": 2000
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "chemical_plant" },
-      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 1, "mode": "additive" }
+      {
+        "type": "unlock_building",
+        "buildingId": "chemical_plant"
+      },
+      {
+        "type": "modifier",
+        "stat": "global.knowledgeOutput",
+        "delta": 1,
+        "mode": "additive"
+      }
     ],
     "description": "Understanding matter itself unlocks fertilisers, fuels and medicines."
   },
@@ -190,10 +343,17 @@
     "id": "sanitation",
     "name": "Sanitation",
     "era": "early_industrial",
-    "requires": ["engineering"],
-    "cost": { "knowledge": 460 },
+    "requires": [
+      "engineering"
+    ],
+    "cost": {
+      "knowledge": 1840
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "hospital" }
+      {
+        "type": "unlock_building",
+        "buildingId": "hospital"
+      }
     ],
     "description": "Clean water and sewers end the plagues that once thinned every city."
   },
@@ -201,11 +361,23 @@
     "id": "electricity",
     "name": "Electricity",
     "era": "modern",
-    "requires": ["steam_power"],
-    "cost": { "knowledge": 620 },
+    "requires": [
+      "steam_power"
+    ],
+    "cost": {
+      "knowledge": 2480
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "hydro_dam" },
-      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 1, "mode": "additive" }
+      {
+        "type": "unlock_building",
+        "buildingId": "hydro_dam"
+      },
+      {
+        "type": "modifier",
+        "stat": "global.knowledgeOutput",
+        "delta": 1,
+        "mode": "additive"
+      }
     ],
     "description": "Tamed lightning lights the night and powers a new age of machines."
   },
@@ -213,11 +385,21 @@
     "id": "combustion",
     "name": "Combustion Engine",
     "era": "modern",
-    "requires": ["chemistry"],
-    "cost": { "knowledge": 640 },
+    "requires": [
+      "chemistry"
+    ],
+    "cost": {
+      "knowledge": 2560
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "oil_refinery" },
-      { "type": "unlock_building", "buildingId": "vehicle_works" }
+      {
+        "type": "unlock_building",
+        "buildingId": "oil_refinery"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "vehicle_works"
+      }
     ],
     "description": "Burning fuel in a cylinder gives industry legs and wheels of its own."
   },
@@ -225,11 +407,22 @@
     "id": "mass_production",
     "name": "Mass Production",
     "era": "modern",
-    "requires": ["railways", "combustion"],
-    "cost": { "knowledge": 760 },
+    "requires": [
+      "railways",
+      "combustion"
+    ],
+    "cost": {
+      "knowledge": 3040
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "assembly_plant" },
-      { "type": "unlock_building", "buildingId": "apartment_block" }
+      {
+        "type": "unlock_building",
+        "buildingId": "assembly_plant"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "apartment_block"
+      }
     ],
     "description": "The assembly line turns scarce goods into everyday abundance."
   },
@@ -237,11 +430,22 @@
     "id": "medicine",
     "name": "Modern Medicine",
     "era": "modern",
-    "requires": ["sanitation", "chemistry"],
-    "cost": { "knowledge": 700 },
+    "requires": [
+      "sanitation",
+      "chemistry"
+    ],
+    "cost": {
+      "knowledge": 2800
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "clinic" },
-      { "type": "unlock_event_category", "eventCategory": "medicine" }
+      {
+        "type": "unlock_building",
+        "buildingId": "clinic"
+      },
+      {
+        "type": "unlock_event_category",
+        "eventCategory": "medicine"
+      }
     ],
     "description": "Antiseptics and vaccines turn once-fatal ailments into minor setbacks."
   },
@@ -249,11 +453,23 @@
     "id": "electronics",
     "name": "Electronics",
     "era": "modern",
-    "requires": ["electricity"],
-    "cost": { "knowledge": 820 },
+    "requires": [
+      "electricity"
+    ],
+    "cost": {
+      "knowledge": 3280
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "electronics_lab" },
-      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 2, "mode": "additive" }
+      {
+        "type": "unlock_building",
+        "buildingId": "electronics_lab"
+      },
+      {
+        "type": "modifier",
+        "stat": "global.knowledgeOutput",
+        "delta": 2,
+        "mode": "additive"
+      }
     ],
     "description": "Vacuum tubes and transistors begin to think faster than any clerk."
   },
@@ -261,12 +477,28 @@
     "id": "computing",
     "name": "Computing",
     "era": "modern",
-    "requires": ["electronics", "mathematics"],
-    "cost": { "knowledge": 980 },
+    "requires": [
+      "electronics",
+      "mathematics"
+    ],
+    "cost": {
+      "knowledge": 3920
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "data_center" },
-      { "type": "unlock_building", "buildingId": "research_campus" },
-      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 2, "mode": "additive" }
+      {
+        "type": "unlock_building",
+        "buildingId": "data_center"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "research_campus"
+      },
+      {
+        "type": "modifier",
+        "stat": "global.knowledgeOutput",
+        "delta": 2,
+        "mode": "additive"
+      }
     ],
     "description": "Machines that compute let knowledge compound at the speed of thought."
   },
@@ -274,11 +506,21 @@
     "id": "renewables",
     "name": "Renewable Power",
     "era": "near_future",
-    "requires": ["electricity"],
-    "cost": { "knowledge": 1100 },
+    "requires": [
+      "electricity"
+    ],
+    "cost": {
+      "knowledge": 3300
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "solar_array" },
-      { "type": "unlock_building", "buildingId": "wind_farm" }
+      {
+        "type": "unlock_building",
+        "buildingId": "solar_array"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "wind_farm"
+      }
     ],
     "description": "Sun and wind give limitless power without the soot of the old plants."
   },
@@ -286,10 +528,18 @@
     "id": "robotics",
     "name": "Robotics",
     "era": "near_future",
-    "requires": ["mass_production", "computing"],
-    "cost": { "knowledge": 1300 },
+    "requires": [
+      "mass_production",
+      "computing"
+    ],
+    "cost": {
+      "knowledge": 3900
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "automated_factory" }
+      {
+        "type": "unlock_building",
+        "buildingId": "automated_factory"
+      }
     ],
     "description": "Tireless machines take over the line, freeing every hand for greater work."
   },
@@ -297,10 +547,18 @@
     "id": "fusion_power",
     "name": "Fusion Power",
     "era": "near_future",
-    "requires": ["renewables", "computing"],
-    "cost": { "knowledge": 1600 },
+    "requires": [
+      "renewables",
+      "computing"
+    ],
+    "cost": {
+      "knowledge": 3200
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "fusion_reactor" }
+      {
+        "type": "unlock_building",
+        "buildingId": "fusion_reactor"
+      }
     ],
     "description": "A captive star in a bottle — energy beyond anything the world has known."
   },
@@ -308,12 +566,28 @@
     "id": "artificial_intelligence",
     "name": "Artificial Intelligence",
     "era": "near_future",
-    "requires": ["computing", "robotics"],
-    "cost": { "knowledge": 1800 },
+    "requires": [
+      "computing",
+      "robotics"
+    ],
+    "cost": {
+      "knowledge": 3600
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "ai_core" },
-      { "type": "unlock_event_category", "eventCategory": "ai" },
-      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 4, "mode": "additive" }
+      {
+        "type": "unlock_building",
+        "buildingId": "ai_core"
+      },
+      {
+        "type": "unlock_event_category",
+        "eventCategory": "ai"
+      },
+      {
+        "type": "modifier",
+        "stat": "global.knowledgeOutput",
+        "delta": 4,
+        "mode": "additive"
+      }
     ],
     "description": "Minds of our own making advise, design and dream alongside us."
   },
@@ -321,12 +595,26 @@
     "id": "space_program",
     "name": "Space Program",
     "era": "near_future",
-    "requires": ["fusion_power", "robotics"],
-    "cost": { "knowledge": 2000 },
+    "requires": [
+      "fusion_power",
+      "robotics"
+    ],
+    "cost": {
+      "knowledge": 4000
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "spaceport" },
-      { "type": "unlock_building", "buildingId": "orbital_array" },
-      { "type": "unlock_event_category", "eventCategory": "orbital" }
+      {
+        "type": "unlock_building",
+        "buildingId": "spaceport"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "orbital_array"
+      },
+      {
+        "type": "unlock_event_category",
+        "eventCategory": "orbital"
+      }
     ],
     "description": "The frontier turns upward: orbit, the moons, and everything beyond."
   },
@@ -334,10 +622,17 @@
     "id": "megastructures",
     "name": "Megastructures",
     "era": "near_future",
-    "requires": ["fusion_power"],
-    "cost": { "knowledge": 2200 },
+    "requires": [
+      "fusion_power"
+    ],
+    "cost": {
+      "knowledge": 4400
+    },
     "effects": [
-      { "type": "unlock_building", "buildingId": "arcology" }
+      {
+        "type": "unlock_building",
+        "buildingId": "arcology"
+      }
     ],
     "description": "Single buildings the size of cities house millions in comfort."
   },
@@ -345,11 +640,20 @@
     "id": "continued_inquiry",
     "name": "Continued Inquiry",
     "era": "medieval",
-    "requires": ["scholarship"],
-    "cost": { "knowledge": 2500 },
+    "requires": [
+      "scholarship"
+    ],
+    "cost": {
+      "knowledge": 5000
+    },
     "repeatable": true,
     "effects": [
-      { "type": "modifier", "stat": "global.knowledgeOutput", "delta": 3, "mode": "additive" }
+      {
+        "type": "modifier",
+        "stat": "global.knowledgeOutput",
+        "delta": 3,
+        "mode": "additive"
+      }
     ],
     "description": "There is always another question. Each answer costs more than the last."
   },
@@ -357,11 +661,20 @@
     "id": "statecraft",
     "name": "Statecraft",
     "era": "medieval",
-    "requires": ["currency"],
-    "cost": { "knowledge": 2200 },
+    "requires": [
+      "currency"
+    ],
+    "cost": {
+      "knowledge": 4400
+    },
     "repeatable": true,
     "effects": [
-      { "type": "modifier", "stat": "global.influenceOutput", "delta": 3, "mode": "additive" }
+      {
+        "type": "modifier",
+        "stat": "global.influenceOutput",
+        "delta": 3,
+        "mode": "additive"
+      }
     ],
     "description": "The study of holding a realm together — never finished, and never cheap."
   }
