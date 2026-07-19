@@ -46,6 +46,7 @@ public enum SiteEngine {
         let hazard = Double(region.hazardLevel)
         var rng = SeededRNG(seed: siteSeed(mapSeed: s.mapSeed, coord: region.coord, tick: s.tick))
 
+        let visitsSoFar = region.siteVisits ?? 0
         let outcome: SiteOutcome
         switch region.kind {
         case .ruins:
@@ -57,13 +58,22 @@ public enum SiteEngine {
         case .sanctuary:
             outcome = makePilgrimage(&s, region: region, hazard: hazard)
         case .lostCity:
-            outcome = salvageLostCity(&s, region: region, hazard: hazard, registry: registry, rng: &rng)
+            outcome = salvageLostCity(&s, region: region, hazard: hazard,
+                                      visits: visitsSoFar, registry: registry, rng: &rng)
         default:
             return nil
         }
 
-        s.regions[index].siteCleared = true
-        s.worldFlags["cleared:\(region.kind.rawValue)"] = true   // enables quest goals
+        // A dead city is too big to strip in one run: it stays workable for
+        // several salvages, each poorer than the last, before it's picked
+        // clean. Everything else is a one-time interaction.
+        s.regions[index].siteVisits = visitsSoFar + 1
+        if region.kind == .lostCity, visitsSoFar + 1 < lostCityVisits {
+            s.regions[index].siteCleared = false
+        } else {
+            s.regions[index].siteCleared = true
+            s.worldFlags["cleared:\(region.kind.rawValue)"] = true   // enables quest goals
+        }
         let record = HistoricalEvent(templateID: "site_\(region.kind.rawValue)", type: siteEventType(region.kind), tick: s.tick)
         s.eventHistory.append(record)
         // The day belongs in the colony's own diary too — and from there, the
@@ -203,12 +213,17 @@ public enum SiteEngine {
         )
     }
 
+    /// How many salvage runs a dead city holds before it's picked clean.
+    public static let lostCityVisits = 3
+
     /// Salvaging a dead city: the richest haul on the map, a real chance of a
-    /// find — and a real chance the rubble takes someone's blood for it.
-    private static func salvageLostCity(_ s: inout WorldState, region: Region, hazard: Double, registry: GameDataRegistry, rng: inout SeededRNG) -> SiteOutcome {
+    /// find — and a real chance the rubble takes someone's blood for it. Each
+    /// return trip digs deeper for less.
+    private static func salvageLostCity(_ s: inout WorldState, region: Region, hazard: Double, visits: Int, registry: GameDataRegistry, rng: inout SeededRNG) -> SiteOutcome {
+        let depletion = max(0.4, 1 - Double(visits) * 0.3)   // 1.0 → 0.7 → 0.4
         let rewards = Resources([
-            .materials: 50 + hazard * 10,
-            .knowledge: 30 + hazard * 6
+            .materials: (50 + hazard * 10) * depletion,
+            .knowledge: (30 + hazard * 6) * depletion
         ])
         grant(&s, rewards)
         // The bones of a city hide better things than a plain ruin does.
@@ -228,11 +243,15 @@ public enum SiteEngine {
 
         let fate = casualtyName.map { " A wall came down on \($0)." } ?? ""
         let loot = item.map { " Among the bones of the city: \($0)." } ?? ""
+        let remaining = lostCityVisits - visits - 1
+        let more = remaining > 0
+            ? " The ruins clearly hold more — worth \(remaining) more run\(remaining == 1 ? "" : "s")."
+            : " The city is picked clean."
         return SiteOutcome(
             kind: .lostCity, regionName: region.name, rewards: rewards,
             casualtyName: casualtyName, died: false,
             itemFound: item,
-            narrative: "Salvage crews strip the dead city of \(region.name) of what its builders left behind.\(fate)\(loot)"
+            narrative: "Salvage crews strip the dead city of \(region.name) of what its builders left behind.\(fate)\(loot)\(more)"
         )
     }
 

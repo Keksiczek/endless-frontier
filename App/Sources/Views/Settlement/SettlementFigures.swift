@@ -124,6 +124,12 @@ enum SettlementFigures {
             context.stroke(
                 Path(ellipseIn: CGRect(x: p.x - 8, y: p.y - 9, width: 16, height: 16)),
                 with: .color(Theme.bone), lineWidth: 1.2)
+            // Their name over their head — you're following a person, and the
+            // canvas says which one.
+            let name = Text(pawn.name)
+                .font(.system(size: 6, weight: .semibold))
+                .foregroundStyle(Theme.bone)
+            context.draw(context.resolve(name), at: CGPoint(x: p.x, y: headY - 8))
         }
     }
 

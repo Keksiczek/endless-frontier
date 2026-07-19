@@ -18,6 +18,8 @@ struct RegionCanvasView: View {
     private let start = Date(timeIntervalSinceReferenceDate: 0)
     @State private var camera = SettlementRenderer.Camera()
     @State private var gestureBase = SettlementRenderer.Camera()
+    /// What the last tap landed on — a deposit, a landmark, the camp.
+    @State private var info: String?
 
     private var cs: Bool { AppStrings.language == .cs }
 
@@ -53,11 +55,137 @@ struct RegionCanvasView: View {
                 }
                 .contentShape(Rectangle())
                 .gesture(pan(in: geo.size).simultaneously(with: zoom))
+                .gesture(SpatialTapGesture().onEnded { value in
+                    withAnimation(.easeOut(duration: 0.15)) {
+                        info = inspect(value.location, size: geo.size)
+                    }
+                })
             }
             .overlay(alignment: .top) { header }
+            .overlay(alignment: .bottom) { bottomBar }
         }
         .foregroundStyle(Theme.text)
         .presentationBackground(Theme.ink)
+    }
+
+    /// The tap-to-ask layer and, when the land is open, the reason you came:
+    /// settle it — straight from the survey, the way you'd want to in RimWorld.
+    private var bottomBar: some View {
+        VStack(spacing: 8) {
+            if let info {
+                Text(info)
+                    .font(.caption)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            if game.canFound(region) {
+                settleButton
+            }
+        }
+        .padding(.bottom, 16)
+        .padding(.horizontal, 16)
+    }
+
+    private var settleButton: some View {
+        let cost = ExpansionEngine.outpostFoundingCost
+        let affordable = game.canAfford(cost)
+        return VStack(spacing: 4) {
+            Button {
+                game.foundOutpost(in: region.id)
+                // Walk straight into the new home.
+                if let founded = game.settlement(in: region) {
+                    game.selectSettlement(founded.id)
+                    game.tab = .settlement
+                }
+                dismiss()
+            } label: {
+                Label(cs ? "Založit osadu zde" : "Settle here",
+                      systemImage: "house.lodge.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 11)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Theme.accent)
+            .disabled(!affordable)
+            .opacity(affordable ? 1 : 0.5)
+            HStack(spacing: 10) {
+                ForEach(ResourceType.allCases.filter { cost[$0] > 0 }, id: \.self) { resource in
+                    HStack(spacing: 3) {
+                        Image(systemName: resource.symbolName).font(.caption2)
+                        Text("\(Int(cost[resource]))").font(.caption2.monospacedDigit())
+                    }
+                    .foregroundStyle(game.selectedSettlementStorage(resource) < cost[resource]
+                                     ? Theme.danger : Theme.textDim)
+                }
+                if !affordable {
+                    Text(cs ? "Nedostatek zásob" : "Can't afford it yet")
+                        .font(.caption2).foregroundStyle(Theme.danger)
+                }
+            }
+        }
+    }
+
+    // MARK: - Tap-to-ask
+
+    /// What stands at a tapped spot — the "co je co" of the survey.
+    private func inspect(_ location: CGPoint, size: CGSize) -> String? {
+        let viewRect = CGRect(origin: .zero, size: size)
+        let rect = SettlementRenderer.worldRect(viewRect: viewRect, camera: camera)
+        let n = LocalPoint(x: (location.x - rect.minX) / rect.width,
+                           y: (location.y - rect.minY) / rect.height)
+        let reach = 0.05 / Double(camera.scale)
+
+        func near(_ p: LocalPoint) -> Double {
+            let dx = p.x - n.x, dy = p.y - n.y
+            return dx * dx + dy * dy
+        }
+
+        var best: (distance: Double, text: String)?
+        for poi in map.pois where poi.discovered {
+            let d = near(poi.position)
+            if d < reach * reach, d < (best?.distance ?? .infinity) {
+                best = (d, poiLabel(poi.kind))
+            }
+        }
+        for node in map.nodes {
+            let d = near(node.position)
+            if d < reach * reach, d < (best?.distance ?? .infinity) {
+                let fullness = node.capacity > 0 ? Int(node.amount / node.capacity * 100) : 100
+                best = (d, "\(depositLabel(node.kind)) · \(fullness) %")
+            }
+        }
+        if let tribe = residentTribe {
+            let d = near(LocalPoint(x: 0.5, y: 0.5))
+            if d < reach * reach * 4, d < (best?.distance ?? .infinity) {
+                best = (d, cs
+                    ? "\(tribe.name) — \(Int(tribe.population)) duší, \(AppStrings.standingName(tribe.status).lowercased())"
+                    : "\(tribe.name) — \(Int(tribe.population)) souls, \(AppStrings.standingName(tribe.status).lowercased())")
+            }
+        }
+        return best?.text ?? (info == nil ? nil : nil)   // tap on nothing clears
+    }
+
+    private func poiLabel(_ kind: LocalPOIKind) -> String {
+        switch kind {
+        case .ruins: return cs ? "Prastaré zříceniny" : "Ancient ruins"
+        case .cave: return cs ? "Hluboká jeskyně" : "A deep cave"
+        case .spring: return cs ? "Léčivý pramen" : "A healing spring"
+        case .treasure: return cs ? "Zakopaná skrýš" : "A buried cache"
+        case .shrine: return cs ? "Zapomenutá svatyně" : "A forgotten shrine"
+        case .wreck: return cs ? "Vrak karavany" : "A wrecked caravan"
+        }
+    }
+
+    private func depositLabel(_ kind: LocalResourceKind) -> String {
+        switch kind {
+        case .field: return cs ? "Úrodná půda" : "Fertile ground"
+        case .forest: return cs ? "Les" : "Forest"
+        case .stone: return cs ? "Ložisko kamene" : "Stone deposit"
+        case .herbs: return cs ? "Byliny" : "Herbs"
+        }
     }
 
     private var header: some View {

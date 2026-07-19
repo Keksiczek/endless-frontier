@@ -59,14 +59,24 @@ enum SettlementStructures {
     /// the terrain seed and the frame clock.
     static func camp(
         _ context: inout GraphicsContext, rect: CGRect,
-        population: Double, tint: Color, time: Double, seed: UInt64
+        population: Double, tint: Color, time: Double, seed: UInt64,
+        night: Double = 0
     ) {
         let unit = min(rect.width, rect.height)
         let heart = CGPoint(x: rect.midX, y: rect.midY)
         let phase = Double(seed % 613) / 613 * 2 * .pi
 
-        // The fire, breathing.
+        // The fire, breathing — and at night, owning the dark.
         let flicker = 0.55 + 0.3 * sin(time * 6 + phase)
+        if night > 0.05 {
+            let glow = unit * 0.05 * (0.8 + 0.2 * sin(time * 4 + phase))
+            context.fill(
+                Path(ellipseIn: CGRect(x: heart.x - glow, y: heart.y - glow,
+                                       width: glow * 2, height: glow * 2)),
+                with: .radialGradient(
+                    Gradient(colors: [Theme.accent.opacity(0.22 * night), .clear]),
+                    center: heart, startRadius: 0, endRadius: glow))
+        }
         context.fill(Path(ellipseIn: CGRect(x: heart.x - 2.2, y: heart.y - 2.2,
                                             width: 4.4, height: 4.4)),
                      with: .color(Theme.accent.opacity(flicker)))
@@ -214,7 +224,7 @@ enum SettlementStructures {
 
     static func building(
         _ glyph: SettlementRenderer.BuildingGlyph, at c: CGPoint, s: CGFloat,
-        time: Double = 0, context: inout GraphicsContext
+        time: Double = 0, night: Double = 0, context: inout GraphicsContext
     ) {
         let ink = Theme.bone.opacity(0.62)
         let bright = Theme.bone.opacity(0.8)
@@ -229,9 +239,10 @@ enum SettlementStructures {
                 p.addLine(to: CGPoint(x: body.maxX, y: body.minY))
             }, with: .color(bright), lineWidth: 1)
             // A warm window — someone lives here — and a door to come home to.
+            // After dark the lamp is lit, and the town becomes points of light.
             context.fill(Path(CGRect(x: c.x - s * 0.48, y: c.y - s * 0.1,
                                      width: s * 0.36, height: s * 0.3)),
-                         with: .color(Theme.accent.opacity(0.35)))
+                         with: .color(Theme.accent.opacity(0.3 + night * 0.55)))
             context.stroke(Path { p in
                 p.move(to: CGPoint(x: c.x + s * 0.3, y: body.maxY))
                 p.addLine(to: CGPoint(x: c.x + s * 0.3, y: c.y - s * 0.05))

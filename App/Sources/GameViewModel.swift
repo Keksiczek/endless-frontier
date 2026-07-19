@@ -297,7 +297,12 @@ final class GameViewModel {
         case .dungeon: return cs ? "Sestoupit do podzemí" : "Delve Dungeon"
         case .anomaly: return cs ? "Zkoumat anomálii" : "Probe Anomaly"
         case .sanctuary: return cs ? "Vykonat pouť" : "Make Pilgrimage"
-        case .lostCity: return cs ? "Prohledat mrtvé město" : "Salvage the Lost City"
+        case .lostCity:
+            // A dead city takes several runs to strip — say which this is.
+            let run = (region.siteVisits ?? 0) + 1
+            return cs
+                ? "Prohledat mrtvé město (\(run)/\(SiteEngine.lostCityVisits))"
+                : "Salvage the Lost City (\(run)/\(SiteEngine.lostCityVisits))"
         default: return nil
         }
     }

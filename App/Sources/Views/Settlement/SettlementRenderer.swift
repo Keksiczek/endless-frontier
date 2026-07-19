@@ -56,6 +56,7 @@ enum SettlementRenderer {
     ) {
         let viewRect = CGRect(origin: .zero, size: size)
         let rect = worldRect(viewRect: viewRect, camera: camera)
+        let night = nightness(time: time)
         ground(&context, rect: rect, map: map, season: season)
         zones(&context, rect: rect, settlement: settlement, season: season)
         heartGlow(&context, rect: rect)
@@ -66,7 +67,10 @@ enum SettlementRenderer {
         SettlementWildlife.draw(&context, rect: rect, map: map, time: time)
 
         let placed = layout(settlement: settlement, registry: registry, rect: rect)
-        buildings(&context, placed: placed, time: time, selectedBuildingID: selectedBuildingID)
+        // Pushed in close, every structure says what it is — the answer to
+        // "which roof is the library?" without a single tap.
+        buildings(&context, placed: placed, time: time, night: night,
+                  showLabels: camera.scale >= 1.6, selectedBuildingID: selectedBuildingID)
         SettlementFigures.smoke(
             &context,
             houses: placed.filter { $0.glyph == .house && !$0.underConstruction },
@@ -79,6 +83,30 @@ enum SettlementRenderer {
         // The seasonal wash is atmosphere over the lens, not part of the world,
         // so it stays in view space and doesn't slide when you pan.
         seasonWash(&context, rect: viewRect, size: size, season: season, time: time)
+        nightWash(&context, rect: viewRect, night: night)
+    }
+
+    // MARK: - Day & night
+
+    /// How deep into night the settlement's shared day is (0 = broad day,
+    /// 1 = the dead of night). Synced to `AgentMotion.dayLength`, so the world
+    /// darkens exactly while the figures are in their beds — the day cycle the
+    /// motion always had, finally *visible*.
+    static func nightness(time: Double) -> Double {
+        let t = (time / AgentMotion.dayLength).truncatingRemainder(dividingBy: 1)
+        let phase = t < 0.5 ? t : t - 1          // −0.5…0.5, midnight at 0
+        let fromMidnight = abs(phase)
+        return max(0, min(1, (0.16 - fromMidnight) / 0.10))
+    }
+
+    /// A cool veil over the lens at night. The fog stays darker still, and
+    /// warm windows and fires read brighter against it.
+    private static func nightWash(
+        _ context: inout GraphicsContext, rect: CGRect, night: Double
+    ) {
+        guard night > 0.01 else { return }
+        context.fill(Path(rect),
+                     with: .color(Color(red: 0.03, green: 0.05, blue: 0.12).opacity(night * 0.30)))
     }
 
     /// Maps a normalised model point to a pixel point in `rect`.
@@ -105,6 +133,7 @@ enum SettlementRenderer {
     ) {
         let viewRect = CGRect(origin: .zero, size: size)
         let rect = worldRect(viewRect: viewRect, camera: camera)
+        let night = nightness(time: time)
         ground(&context, rect: rect, map: map, season: season)
         river(&context, rect: rect, river: map.river, season: season)
         scenery(&context, rect: rect, map: map, season: season)
@@ -118,9 +147,10 @@ enum SettlementRenderer {
             SettlementStructures.camp(
                 &context, rect: rect, population: tribe.population,
                 tint: campTint(tribe.status), time: time,
-                seed: map.terrainSeed)
+                seed: map.terrainSeed, night: night)
         }
         seasonWash(&context, rect: viewRect, size: size, season: season, time: time)
+        nightWash(&context, rect: viewRect, night: night)
     }
 
     private static func campTint(_ status: DiplomaticStanding) -> Color {
@@ -271,7 +301,16 @@ enum SettlementRenderer {
     ) {
         let unit = min(rect.width, rect.height)
         for poi in map.pois where poi.discovered && map.isExplored(poi.position) {
-            SettlementStructures.poi(poi.kind, at: point(poi.position, in: rect),
+            let c = point(poi.position, in: rect)
+            // A faint halo separates a landmark from mere scenery.
+            let halo = unit * 0.024
+            context.fill(Path(ellipseIn: CGRect(x: c.x - halo, y: c.y - halo,
+                                                width: halo * 2, height: halo * 2)),
+                         with: .color(Theme.accent.opacity(0.06)))
+            context.stroke(Path(ellipseIn: CGRect(x: c.x - halo, y: c.y - halo,
+                                                  width: halo * 2, height: halo * 2)),
+                           with: .color(Theme.accent.opacity(0.22)), lineWidth: 0.7)
+            SettlementStructures.poi(poi.kind, at: c,
                                      s: unit * 0.014, time: time, context: &context)
         }
     }
@@ -586,6 +625,7 @@ enum SettlementRenderer {
     struct NormalizedBuilding: Identifiable {
         let id: Int              // stable within a layout pass
         let definitionID: String
+        let name: String
         let glyph: BuildingGlyph
         let center: LocalPoint
         /// Footprint size as a fraction of the canvas's short side.
@@ -599,6 +639,7 @@ enum SettlementRenderer {
     struct PlacedBuilding: Identifiable {
         let id: Int
         let definitionID: String
+        let name: String
         let glyph: BuildingGlyph
         let center: CGPoint
         let size: CGFloat
@@ -641,7 +682,7 @@ enum SettlementRenderer {
     ) -> [PlacedBuilding] {
         let unit = min(rect.width, rect.height)
         return normalizedLayout(settlement: settlement, registry: registry).map { b in
-            PlacedBuilding(id: b.id, definitionID: b.definitionID, glyph: b.glyph,
+            PlacedBuilding(id: b.id, definitionID: b.definitionID, name: b.name, glyph: b.glyph,
                            center: point(b.center, in: rect), size: unit * b.size,
                            underConstruction: b.underConstruction, progress: b.progress)
         }
@@ -659,12 +700,14 @@ enum SettlementRenderer {
             let p = LocalPoint(
                 x: origin.x + Double(placement.width - 1) * 0.5 / Double(max(1, colony.width)) * colonySpan,
                 y: origin.y + Double(placement.height - 1) * 0.5 / Double(max(1, colony.height)) * colonySpan)
-            let glyph = registry.building(placement.definitionID).map(glyph(for:)) ?? .house
+            let def = registry.building(placement.definitionID)
+            let glyph = def.map(glyph(for:)) ?? .house
             let progress = settlement.constructions
                 .first { $0.placementID == placement.id }?.fraction
             return NormalizedBuilding(
                 id: index,
                 definitionID: placement.definitionID,
+                name: def?.name ?? placement.definitionID,
                 glyph: glyph,
                 center: p,
                 size: 0.021 * Double(max(placement.width, placement.height)),
@@ -679,11 +722,12 @@ enum SettlementRenderer {
     private static func ringLayout(
         settlement: Settlement, registry: GameDataRegistry
     ) -> [NormalizedBuilding] {
-        var expanded: [(id: String, glyph: BuildingGlyph)] = []
+        var expanded: [(id: String, name: String, glyph: BuildingGlyph)] = []
         for instance in settlement.buildings {
-            let g = registry.building(instance.definitionID).map(glyph(for:)) ?? .house
+            let def = registry.building(instance.definitionID)
+            let g = def.map(glyph(for:)) ?? .house
             for _ in 0..<instance.count where expanded.count < maxVisibleBuildings {
-                expanded.append((instance.definitionID, g))
+                expanded.append((instance.definitionID, def?.name ?? instance.definitionID, g))
             }
         }
         guard !expanded.isEmpty else { return [] }
@@ -702,7 +746,8 @@ enum SettlementRenderer {
                 let c = LocalPoint(x: colonyHeart.x + cos(angle) * radius,
                                    y: colonyHeart.y + sin(angle) * radius * 0.72)
                 placed.append(NormalizedBuilding(
-                    id: drawn, definitionID: expanded[drawn].id, glyph: expanded[drawn].glyph,
+                    id: drawn, definitionID: expanded[drawn].id,
+                    name: expanded[drawn].name, glyph: expanded[drawn].glyph,
                     center: c, size: 0.021, underConstruction: false, progress: 1))
                 drawn += 1
             }
@@ -727,7 +772,8 @@ enum SettlementRenderer {
 
     private static func buildings(
         _ context: inout GraphicsContext, placed: [PlacedBuilding],
-        time: Double, selectedBuildingID: Int?
+        time: Double, night: Double = 0, showLabels: Bool = false,
+        selectedBuildingID: Int?
     ) {
         for building in placed {
             if building.underConstruction {
@@ -735,7 +781,8 @@ enum SettlementRenderer {
                                           progress: building.progress, time: time, context: &context)
             } else {
                 SettlementStructures.building(building.glyph, at: building.center,
-                                              s: building.size, time: time, context: &context)
+                                              s: building.size, time: time, night: night,
+                                              context: &context)
             }
             if building.id == selectedBuildingID {
                 let r = building.size * 2.6
@@ -743,6 +790,17 @@ enum SettlementRenderer {
                     Path(ellipseIn: CGRect(x: building.center.x - r, y: building.center.y - r,
                                            width: r * 2, height: r * 2)),
                     with: .color(Theme.accent), lineWidth: 1.5)
+            }
+            if showLabels {
+                let caption = building.underConstruction
+                    ? "\(Int(building.progress * 100)) %"
+                    : building.name
+                let label = Text(caption)
+                    .font(.system(size: 5.5, weight: .medium))
+                    .foregroundStyle(Theme.bone.opacity(0.75))
+                context.draw(context.resolve(label),
+                             at: CGPoint(x: building.center.x,
+                                         y: building.center.y + building.size * 2.5))
             }
         }
     }

@@ -85,6 +85,33 @@ struct RegionWondersTests {
         #expect(again == city)
     }
 
+    @Test("A lost city takes three runs to strip, each poorer than the last")
+    func lostCityDepletes() throws {
+        let reg = try registry()
+        var world = GameWorldFactory.newGame(registry: reg, seed: 23)
+        world.regions.append(Region(
+            id: UUID(uuidString: "FFFFFFFF-0000-0000-0000-000000000004")!,
+            name: "Popelné město", coord: HexCoord(6, 1), kind: .lostCity,
+            biomeID: "plains", hazardLevel: 2, explorationState: .fullyExplored))
+        let cityID = world.regions.last!.id
+
+        var hauls: [Double] = []
+        for run in 0..<SiteEngine.lostCityVisits {
+            let before = world.settlements[0].storage[.materials]
+            guard let (after, _) = SiteEngine.interact(world, regionID: cityID, registry: reg) else {
+                Issue.record("run \(run + 1) refused — city closed too early")
+                return
+            }
+            hauls.append(after.settlements[0].storage[.materials] - before)
+            world = after
+            let cleared = world.regions.first { $0.id == cityID }?.siteCleared
+            #expect(cleared == (run == SiteEngine.lostCityVisits - 1))
+        }
+        // Diminishing returns, and afterwards the site refuses a fourth run.
+        #expect(hauls[0] > hauls[1] && hauls[1] > hauls[2])
+        #expect(SiteEngine.interact(world, regionID: cityID, registry: reg) == nil)
+    }
+
     @Test("Old map-gen JSON without wonder chances still decodes")
     func configDecodes() throws {
         let json = #"{"mapRadius": 2, "ruinsChance": 0.1}"#.data(using: .utf8)!
