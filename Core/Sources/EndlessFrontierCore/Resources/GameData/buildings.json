@@ -35,6 +35,10 @@
     "description": {
       "en": "Communal housing that shelters many families under one roof.",
       "cs": "Společné bydlení — mnoho rodin pod jednou střechou."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 1
     }
   },
   {
@@ -293,6 +297,10 @@
     "description": {
       "en": "Trained soldiers stand ready to defend the settlement.",
       "cs": "Vycvičení vojáci stojí připraveni bránit osadu."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 1
     }
   },
   {
@@ -357,6 +365,10 @@
     "description": {
       "en": "Mortared ramparts that turn back all but the largest hosts.",
       "cs": "Zděné hradby odrazí všechny krom největších vojsk."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 1
     }
   },
   {
@@ -443,6 +455,10 @@
     "description": {
       "en": "Bustling stalls knit the region together in trade.",
       "cs": "Rušné stánky svazují kraj obchodem."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 1
     }
   },
   {
@@ -568,7 +584,7 @@
     ],
     "footprint": {
       "w": 2,
-      "h": 2
+      "h": 1
     },
     "description": {
       "en": "Roaring furnaces smelt metal for the industrial age.",
@@ -618,6 +634,10 @@
     "description": {
       "en": "Freight rolls in and out day and night, knitting the realm together.",
       "cs": "Náklad se valí dnem i nocí a svazuje říši dohromady."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -658,6 +678,10 @@
     "description": {
       "en": "Wards and surgeons keep the colony hale through plague and injury.",
       "cs": "Sály a ranhojiči drží osadu při síle skrz mor i zranění."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -676,6 +700,10 @@
     "description": {
       "en": "A wall of concrete turns a river's weight into clean, steady power.",
       "cs": "Betonová stěna mění váhu řeky v čistou, stálou energii."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 1
     }
   },
   {
@@ -757,6 +785,10 @@
     "description": {
       "en": "Stacked dwellings house a whole district on a single plot.",
       "cs": "Patra bytů ubytují celou čtvrť na jediné parcele."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 1
     }
   },
   {
@@ -827,7 +859,7 @@
     ],
     "footprint": {
       "w": 2,
-      "h": 2
+      "h": 1
     },
     "description": {
       "en": "Halls of humming machines remember and reason for the whole civilisation.",
@@ -919,6 +951,10 @@
     "description": {
       "en": "Robots run the floor end to end; a handful of overseers is all it takes.",
       "cs": "Roboti vedou celý provoz; stačí hrstka dohlížitelů."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -1026,8 +1062,8 @@
     "morale_effect": 5,
     "housing": 600,
     "footprint": {
-      "w": 3,
-      "h": 3
+      "w": 2,
+      "h": 2
     },
     "description": {
       "en": "A self-contained city in a single structure — a million live, work and thrive within.",

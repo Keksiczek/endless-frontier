@@ -111,7 +111,7 @@ public enum ColonyBuilder {
     ) -> (settlement: Settlement, placementID: UUID?) {
         guard let def = registry.building(definitionID),
               let map = settlement.colony,
-              let coord = firstFit(def.footprint, in: map) else {
+              let coord = centerFit(def.footprint, in: map) else {
             return (settlement, nil)
         }
         let sited = placeSite(settlement, definitionID: definitionID, at: coord, registry: registry)
@@ -232,7 +232,7 @@ public enum ColonyBuilder {
         for instance in buildings {
             let size = registry.building(instance.definitionID)?.footprint ?? TileSize()
             for _ in 0..<max(1, instance.count) {
-                guard let coord = firstFit(size, in: map) else { return map }
+                guard let coord = centerFit(size, in: map) else { return map }
                 map.placements.append(
                     BuildingPlacement(
                         id: placementID(instance.definitionID, coord),
@@ -297,6 +297,30 @@ public enum ColonyBuilder {
             }
         }
         return nil
+    }
+
+    /// The fit closest to the **middle** of the grid. Row-major scanning
+    /// stacked every seeded and quick-built structure into the top-left
+    /// corner — which the canvas maps to the fog's edge, leaving the cleared
+    /// ground around the settlement heart conspicuously empty. Growth now
+    /// spirals outward from the centre, the way a town actually grows.
+    static func centerFit(_ size: TileSize, in map: ColonyMap) -> TileCoord? {
+        // The footprint's *centre* should land near the grid's centre.
+        let cx = Double(map.width - size.width) / 2
+        let cy = Double(map.height - size.height) / 2
+        var best: (coord: TileCoord, d2: Double)?
+        for y in 0...(map.height - size.height) {
+            for x in 0...(map.width - size.width) {
+                let coord = TileCoord(x, y)
+                guard fits(size, at: coord, in: map) else { continue }
+                let dx = Double(x) - cx, dy = Double(y) - cy
+                let d2 = dx * dx + dy * dy
+                if d2 < (best?.d2 ?? .infinity) {
+                    best = (coord, d2)
+                }
+            }
+        }
+        return best?.coord
     }
 
     /// Best-effort: assigns a colonist to the first placed building that employs
