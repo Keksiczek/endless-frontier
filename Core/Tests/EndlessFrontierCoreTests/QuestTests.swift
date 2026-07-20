@@ -29,7 +29,7 @@ struct QuestTests {
         var world = GameWorldFactory.newGame(registry: r, seed: 1)
         world = QuestEngine.advance(world, registry: r)              // activate
         let before = materials(world)
-        world.settlements[0].population = 70                         // satisfy stage 1
+        world.settlements[0].pawns = Fixtures.pawns(70)                         // satisfy stage 1
         world = QuestEngine.advance(world, registry: r)
         let progress = world.activeQuests.first { $0.questID == "founding_a_home" }
         #expect(progress?.stage == 1)
@@ -41,7 +41,7 @@ struct QuestTests {
         let r = try reg()
         var world = GameWorldFactory.newGame(registry: r, seed: 1)
         world = QuestEngine.advance(world, registry: r)
-        world.settlements[0].population = 70
+        world.settlements[0].pawns = Fixtures.pawns(70)
         world.researchedTechs.insert("writing")                     // satisfy both stages
         world = QuestEngine.advance(world, registry: r)
         #expect(world.completedQuests.contains("founding_a_home"))
@@ -64,7 +64,7 @@ struct QuestTests {
     func deterministic() throws {
         let r = try reg()
         var world = GameWorldFactory.newGame(registry: r, seed: 1)
-        world.settlements[0].population = 80
+        world.settlements[0].pawns = Fixtures.pawns(80)
         let a = QuestEngine.advance(world, registry: r)
         let b = QuestEngine.advance(world, registry: r)
         #expect(a == b)

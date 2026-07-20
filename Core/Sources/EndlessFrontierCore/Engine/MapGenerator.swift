@@ -11,24 +11,79 @@ import Foundation
 /// special sites), so there is always a reason — and a risk — to explore
 /// further.
 public enum MapGenerator {
-    static let regionNames = [
-        "The Reach", "Far Hollow", "Greywater", "Stormwatch", "The Verge",
-        "Ashfall", "Dimming Wood", "Saltmere", "Highmoor", "Blackvale",
-        "Sunder Flats", "Coldspring", "Ember Hills", "Mistfen", "Thornmarch",
-        "Duskwater", "Ironcrag", "Palewood", "Redhollow", "Windmere",
-        "Hagstone", "Brackenfell", "Lornwood", "Mirefax", "Caldgrave"
-    ]
+    // Place names are *built*, not picked from a list.
+    //
+    // There used to be 25 of them, taken modulo the coordinate, on a map that
+    // is deliberately endless and grows every time you reveal a hex. So the
+    // same two dozen names repeated forever: a player charts the Duskwater in
+    // front of them, sees three more Duskwaters still offering an expedition,
+    // and concludes that exploring did nothing. The map was lying about which
+    // place was which. (The old scheme also ignored `mapSeed` entirely, so
+    // every world named its places identically.)
+    //
+    // 25 × 20 × 10 = 5,000 names, and the coordinate is folded into that space
+    // through a bijection — so within any map a player will ever walk, two
+    // places cannot share a name *by construction*, not by luck.
+    // The morpheme pools live in `NameForge` (Czech and English, same pool
+    // sizes) so a world charts "Mlhoviště" or "Duskwater" by its language
+    // while the no-collision bijection below holds identically for either.
+
+    /// A unique number for every hex — a Cantor pairing of the axial
+    /// coordinates, mapped through ℤ→ℕ first. Being a bijection is the whole
+    /// point: distinct hexes cannot collide here, so they cannot collide in the
+    /// names built from it.
+    static func hexIndex(_ coord: HexCoord) -> Int {
+        let a = coord.q >= 0 ? 2 * coord.q : -2 * coord.q - 1
+        let b = coord.r >= 0 ? 2 * coord.r : -2 * coord.r - 1
+        return (a + b) * (a + b + 1) / 2 + b
+    }
+
+    /// The name of the place at a coordinate. Deterministic per `(mapSeed,
+    /// coord)`, and distinct from every other place a player will reach.
+    public static func name(for coord: HexCoord, mapSeed: UInt64,
+                            language: GameLanguage = .en) -> String {
+        let space = NameForge.regionNameSpace
+        // Offsetting by the seed keeps the mapping a bijection while giving
+        // each world its own names — the old scheme gave every world the same
+        // ones in the same places.
+        let offset = Int(mapSeed % UInt64(space))
+        let index = (hexIndex(coord) + offset) % space
+        return NameForge.regionName(index: index, language: language)
+    }
 
     /// Deterministic per-hex seed.
     static func hexSeed(_ mapSeed: UInt64, _ coord: HexCoord) -> UInt64 {
-        var h = mapSeed &* 0x9E37_79B9_7F4A_7C15
-        h = (h ^ UInt64(bitPattern: Int64(coord.q))) &* 0xD1B5_4A32_D192_ED03
-        h = (h ^ UInt64(bitPattern: Int64(coord.r))) &* 0xCBF2_9CE4_8422_2325
-        return h ^ (h >> 29)
+        // Injective in the coordinate, by construction rather than by luck.
+        //
+        // This used to fold q and r in with `(h ^ q) &* K ^ r`, which collides
+        // *systematically* — multiplication isn't linear over XOR, so different
+        // (q, r) pairs land on the same seed in a regular pattern: (−2, 8) and
+        // (0, −10), (−4, 8) and (2, −10), and hundreds more. A region's `id` is
+        // drawn from this seed, so those hexes became two places sharing one
+        // id, and every lookup that keys on id — which is all of them — crossed
+        // the wires between them. On screen: a card describing a charted
+        // mountain region while offering the Send Expedition button belonging
+        // to the *uncharted* hex that shared its id, and tapping it did nothing
+        // because `startExpedition` re-checks the real target and correctly
+        // refuses.
+        //
+        // `hexIndex` is a bijection ℤ² → ℕ and splitmix64 is a bijection over
+        // UInt64, so within a world two hexes cannot land on the same seed.
+        splitmix64(UInt64(bitPattern: Int64(hexIndex(coord))) &+ mapSeed)
+    }
+
+    /// A bijection over `UInt64` — every step (xor-shift, odd multiply) is
+    /// invertible, so distinct inputs are guaranteed distinct outputs.
+    static func splitmix64(_ x: UInt64) -> UInt64 {
+        var z = x &+ 0x9E37_79B9_7F4A_7C15
+        z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+        z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+        return z ^ (z >> 31)
     }
 
     /// The region at a coordinate. Pure: same `(mapSeed, coord)` → same region.
-    public static func region(at coord: HexCoord, mapSeed: UInt64, registry: GameDataRegistry) -> Region {
+    public static func region(at coord: HexCoord, mapSeed: UInt64, registry: GameDataRegistry,
+                              language: GameLanguage = .en) -> Region {
         let biomeIDs = registry.biomes.keys.sorted()
         let homelandBiome = biomeIDs.contains("plains") ? "plains" : (biomeIDs.first ?? "plains")
         var rng = SeededRNG(seed: hexSeed(mapSeed, coord))
@@ -36,7 +91,7 @@ public enum MapGenerator {
         if coord == .origin {
             return Region(
                 id: rng.nextUUID(),
-                name: "Homeland",
+                name: NameForge.homelandName(language: language),
                 coord: .origin,
                 kind: .homeland,
                 biomeID: homelandBiome,
@@ -53,8 +108,7 @@ public enum MapGenerator {
         let hazard = baseHazard
             + hazardBonus(for: kind, config: config)
             + Int(Double(ring) * config.hazardPerRing)
-        let name = regionNames.isEmpty ? "Region \(coord.q),\(coord.r)"
-            : regionNames[nameIndex(coord) % regionNames.count]
+        let name = name(for: coord, mapSeed: mapSeed, language: language)
 
         return Region(
             id: rng.nextUUID(),
@@ -69,9 +123,10 @@ public enum MapGenerator {
 
     /// The initial world: a disc of regions of radius `mapRadius`. Only a
     /// starting frontier — the world grows beyond it as the player explores.
-    public static func generate(seed: UInt64, registry: GameDataRegistry) -> [Region] {
+    public static func generate(seed: UInt64, registry: GameDataRegistry,
+                                language: GameLanguage = .en) -> [Region] {
         HexCoord.disc(radius: max(1, registry.mapGen.mapRadius))
-            .map { region(at: $0, mapSeed: seed, registry: registry) }
+            .map { region(at: $0, mapSeed: seed, registry: registry, language: language) }
     }
 
     /// Ensures every neighbour of `coord` exists in `regions`, generating the
@@ -81,11 +136,13 @@ public enum MapGenerator {
         around coord: HexCoord,
         regions: inout [Region],
         mapSeed: UInt64,
-        registry: GameDataRegistry
+        registry: GameDataRegistry,
+        language: GameLanguage = .en
     ) {
         let existing = Set(regions.map(\.coord))
         for neighbour in coord.neighbors() where !existing.contains(neighbour) {
-            regions.append(region(at: neighbour, mapSeed: mapSeed, registry: registry))
+            regions.append(region(at: neighbour, mapSeed: mapSeed, registry: registry,
+                                  language: language))
         }
     }
 
@@ -96,10 +153,16 @@ public enum MapGenerator {
         let ruins = config.ruinsChance + bonus
         let dungeon = config.dungeonChance + bonus
         let anomaly = config.anomalyChance + bonus
+        // The wonders are rarer, and grow only half as fast with distance —
+        // they should stay finds, not fixtures.
+        let sanctuary = config.sanctuaryChance + bonus * 0.5
+        let lostCity = config.lostCityChance + bonus * 0.5
         let roll = rng.nextUnit()
         if roll < ruins { return .ruins }
         if roll < ruins + dungeon { return .dungeon }
         if roll < ruins + dungeon + anomaly { return .anomaly }
+        if roll < ruins + dungeon + anomaly + sanctuary { return .sanctuary }
+        if roll < ruins + dungeon + anomaly + sanctuary + lostCity { return .lostCity }
         return .wilderness
     }
 
@@ -118,8 +181,4 @@ public enum MapGenerator {
         }
     }
 
-    /// Stable name index for a coordinate (so a hex always keeps its name).
-    static func nameIndex(_ coord: HexCoord) -> Int {
-        abs(coord.q &* 73_856_093 ^ coord.r &* 19_349_663)
-    }
 }

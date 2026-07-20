@@ -31,7 +31,15 @@ public enum TickEngine {
             s = TechEngine.advanceResearch(s, registry: registry)
             s = EraEngine.checkAdvancement(s, registry: registry)
             s = QuestEngine.advance(s, registry: registry)
+            // A year has turned: wages, classes, unrest, elections, the assembly.
+            let ticksPerYear = max(1, registry.config.ticksPerYear)
+            if s.tick % ticksPerYear == 0 {
+                s = SocietyEngine.advanceYear(s, registry: registry)
+            }
             if s.tick % interval == 0 {
+                // Decisions the Leader let slide time out before new ones are
+                // offered, so a full queue is always a live one.
+                s = StoryPlanner.expireDecisions(s, registry: registry).state
                 let result = StoryPlanner.run(s, registry: registry)
                 s = result.state
                 fired.append(contentsOf: result.fired)

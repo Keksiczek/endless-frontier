@@ -8,16 +8,33 @@ public enum WorkKind: String, Codable, Sendable, CaseIterable, Equatable {
     case mining
     case research
     case trade
+    case foraging   // herbs → knowledge/medicine
+    case hunting    // game → food
+    case healing    // tends the sick (no resource)
+    case building   // raises structures (no resource)
+    case scouting   // reveals the fog of war (no resource)
+    case priest     // tends faith (no resource)
     case idle
 
     /// The resource this work contributes to, if any.
     public var resource: ResourceType? {
         switch self {
-        case .farming: return .food
+        case .farming, .hunting: return .food
         case .logging, .mining: return .materials
-        case .research: return .knowledge
+        case .research, .foraging: return .knowledge
         case .trade: return .influence
-        case .idle: return nil
+        case .healing, .building, .scouting, .priest, .idle: return nil
+        }
+    }
+
+    /// The local-map deposit this work harvests, if any.
+    public var harvestedDeposit: LocalResourceKind? {
+        switch self {
+        case .farming: return .field
+        case .logging: return .forest
+        case .mining: return .stone
+        case .foraging: return .herbs
+        default: return nil
         }
     }
 }
@@ -72,10 +89,17 @@ public enum PawnTrait: String, Codable, Sendable, CaseIterable, Equatable {
     }
 }
 
-/// A named colonist — the individual unit of a RimWorld-style colony. Pawns
-/// are simulated on top of the macro `Settlement.population` headcount: they
-/// are the characters the player manages and the narrator can talk about.
+/// A named colonist — the individual unit of the colony. Every inhabitant of
+/// a settlement is a pawn: the macro `Settlement.population` is derived from
+/// the pawn count, and lives (birth, growth, old age, inheritance) play out
+/// through the `PopulationEngine`.
 public struct Pawn: Codable, Sendable, Identifiable, Equatable {
+    /// The age (in years) at which a colonist starts working and voting.
+    public static let adultAgeYears = 14
+    /// The default age for pawns created without an explicit one (founders,
+    /// recruits, test fixtures): a working adult in their prime.
+    public static let defaultAdultAgeTicks = 1500   // 25 years at 60 ticks/year
+
     public let id: UUID
     public var name: String
     public var trait: PawnTrait
@@ -87,6 +111,10 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     public var health: Double            // 0…100
     public var isBroken: Bool            // mental break — stops working until mood recovers
     public var equipment: [EquipmentSlot: ItemInstance]  // one item per slot
+    public var age: Int                  // in ticks; interpret via config.ticksPerYear
+    public var genes: Genes
+    public var wealth: Double            // personal savings — class standing, inheritance
+    public var pregnancyTicksRemaining: Int   // 0 = not expecting
 
     public init(
         id: UUID = UUID(),
@@ -99,7 +127,11 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         assignedWork: WorkKind = .idle,
         health: Double = 100,
         isBroken: Bool = false,
-        equipment: [EquipmentSlot: ItemInstance] = [:]
+        equipment: [EquipmentSlot: ItemInstance] = [:],
+        age: Int = Pawn.defaultAdultAgeTicks,
+        genes: Genes = Genes(),
+        wealth: Double = 0,
+        pregnancyTicksRemaining: Int = 0
     ) {
         self.id = id
         self.name = name
@@ -112,7 +144,49 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         self.health = health
         self.isBroken = isBroken
         self.equipment = equipment
+        self.age = age
+        self.genes = genes
+        self.wealth = wealth
+        self.pregnancyTicksRemaining = pregnancyTicksRemaining
     }
 
     public func skill(_ kind: WorkKind) -> Int { skills[kind] ?? 0 }
+
+    /// Whole in-game years lived.
+    public func ageYears(ticksPerYear: Int) -> Int {
+        guard ticksPerYear > 0 else { return 0 }
+        return age / ticksPerYear
+    }
+
+    /// Adults work, vote and can bear children.
+    public func isAdult(ticksPerYear: Int) -> Bool {
+        ageYears(ticksPerYear: ticksPerYear) >= Pawn.adultAgeYears
+    }
+
+    // MARK: - Codable (resilient to pre-V2 saves without life-cycle fields)
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, trait, skills, skillXP, needs, mood, assignedWork
+        case health, isBroken, equipment
+        case age, genes, wealth, pregnancyTicksRemaining
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        trait = try c.decode(PawnTrait.self, forKey: .trait)
+        skills = try c.decode([WorkKind: Int].self, forKey: .skills)
+        skillXP = try c.decode([WorkKind: Double].self, forKey: .skillXP)
+        needs = try c.decode(PawnNeeds.self, forKey: .needs)
+        mood = try c.decode(Double.self, forKey: .mood)
+        assignedWork = try c.decode(WorkKind.self, forKey: .assignedWork)
+        health = try c.decode(Double.self, forKey: .health)
+        isBroken = try c.decode(Bool.self, forKey: .isBroken)
+        equipment = try c.decodeIfPresent([EquipmentSlot: ItemInstance].self, forKey: .equipment) ?? [:]
+        age = try c.decodeIfPresent(Int.self, forKey: .age) ?? Pawn.defaultAdultAgeTicks
+        genes = try c.decodeIfPresent(Genes.self, forKey: .genes) ?? Genes()
+        wealth = try c.decodeIfPresent(Double.self, forKey: .wealth) ?? 0
+        pregnancyTicksRemaining = try c.decodeIfPresent(Int.self, forKey: .pregnancyTicksRemaining) ?? 0
+    }
 }

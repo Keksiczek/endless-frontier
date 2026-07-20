@@ -17,11 +17,14 @@ public struct WorldStore: Sendable {
     }
 
     /// Returns the saved world (migrated up to the current schema), or `nil` if
-    /// no save exists yet.
+    /// no save exists yet — or if the save is too old to load, in which case the
+    /// caller starts a fresh world.
     public func load() throws -> WorldState? {
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
         let data = try Data(contentsOf: url)
         let decoded = try Self.decoder.decode(WorldState.self, from: data)
+        // Pre-V2 saves have incompatible population semantics; discard them.
+        guard decoded.schemaVersion >= WorldState.minimumSupportedSchemaVersion else { return nil }
         return SaveMigrator.migrate(decoded)
     }
 

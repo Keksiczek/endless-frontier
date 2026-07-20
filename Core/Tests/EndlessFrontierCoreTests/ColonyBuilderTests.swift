@@ -7,7 +7,7 @@ struct ColonyBuilderTests {
     private func town(pawnCount: Int = 0) -> Settlement {
         let pawns = (0..<pawnCount).map { Pawn(name: "P\($0)") }
         return Settlement(name: "Town", kind: .capital,
-                          population: Double(max(pawnCount, 1)), pawns: pawns)
+                          pawns: pawns)
     }
 
     @Test("Placing a building adds it to the grid and the ledger")
@@ -161,7 +161,7 @@ struct ColonyBuilderTests {
         #expect(s.colony?.placements.isEmpty == true)
     }
 
-    @Test("GameEngine.placeBuilding pays the cost and lays the tile")
+    @Test("GameEngine.placeBuilding pays the cost and opens a site on the tile")
     func enginePlacePays() throws {
         let reg = try GameDataRegistry.bundled()
         let cap = Settlement(name: "C", kind: .capital, storage: [.materials: 100], storageCapacity: 9999)
@@ -170,7 +170,12 @@ struct ColonyBuilderTests {
                                              buildingID: "farm_basic", at: TileCoord(0, 0), registry: reg)
         #expect(after.settlements[0].storage[.materials] == 80)   // farm_basic costs 20 materials
         #expect(after.settlements[0].colony?.placements.count == 1)
-        #expect(after.settlements[0].buildings.first { $0.definitionID == "farm_basic" }?.count == 1)
+        // The tiles are reserved as a scaffolded site; the economy ledger only
+        // counts the farm once the builders finish it.
+        #expect(after.settlements[0].colony?.placements.first?.underConstruction == true)
+        #expect(after.settlements[0].buildings.isEmpty)
+        #expect(after.settlements[0].constructions.first?.placementID
+                == after.settlements[0].colony?.placements.first?.id)
     }
 
     @Test("GameEngine.placeBuilding is rejected when the cost can't be paid")
@@ -181,5 +186,51 @@ struct ColonyBuilderTests {
         let after = GameEngine.placeBuilding(world, settlementID: cap.id,
                                              buildingID: "farm_basic", at: TileCoord(0, 0), registry: reg)
         #expect(after == world)
+    }
+}
+
+/// Placement grows from the middle of the grid — the settlement heart on the
+/// canvas — instead of stacking into the top-left corner at the fog's edge.
+@Suite("Centered placement & footprints")
+struct CenteredPlacementTests {
+    @Test("The first seeded building lands in the middle, not the corner")
+    func seededLayoutCenters() throws {
+        let reg = try GameDataRegistry.bundled()
+        let map = ColonyBuilder.seededLayout(
+            for: [BuildingInstance(definitionID: "hut", count: 3)], registry: reg)
+        #expect(!map.placements.isEmpty)
+        for placement in map.placements {
+            let dx = abs(Double(placement.coord.x) - 5.5)
+            let dy = abs(Double(placement.coord.y) - 5.5)
+            #expect(dx <= 2 && dy <= 2, "hut at \(placement.coord) is far from the heart")
+        }
+    }
+
+    @Test("A quick-build site opens near the heart too")
+    func quickBuildCenters() throws {
+        let reg = try GameDataRegistry.bundled()
+        var settlement = Settlement(name: "C", kind: .capital,
+                                    storage: [.materials: 200], storageCapacity: 999)
+        settlement = ColonyBuilder.ensureMap(settlement)
+        let (sited, id) = ColonyBuilder.placeSiteAtFirstFit(
+            settlement, definitionID: "hut", registry: reg)
+        #expect(id != nil)
+        let coord = sited.colony?.placements.first?.coord
+        #expect(coord.map { abs($0.x - 5) <= 1 && abs($0.y - 5) <= 1 } == true)
+    }
+
+    @Test("Big buildings really take ground: university is 2×2 and blocks overlap")
+    func footprintsBite() throws {
+        let reg = try GameDataRegistry.bundled()
+        let uni = try #require(reg.building("university"))
+        #expect(uni.footprint.width == 2 && uni.footprint.height == 2)
+        #expect(reg.building("longhouse")?.footprint.width == 2)
+
+        var s = Settlement(name: "C", kind: .capital)
+        s = ColonyBuilder.placeSite(s, definitionID: "university",
+                                    at: TileCoord(4, 4), registry: reg)
+        #expect(s.colony?.placement(at: TileCoord(5, 5)) != nil)   // covers 4 tiles
+        #expect(!ColonyBuilder.canPlace(s, definitionID: "hut",
+                                        at: TileCoord(5, 4), registry: reg))
     }
 }

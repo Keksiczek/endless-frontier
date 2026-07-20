@@ -26,9 +26,34 @@ struct WorldMapView: View {
                     .frame(width: geo.size.width, height: geo.size.height)
                     .contentShape(Rectangle())
                     .gesture(panGesture.simultaneously(with: zoomGesture))
+                // The same seasonal air as the settlement canvas, so the world
+                // and the valley read as one place in one time of year.
+                Rectangle()
+                    .fill(Theme.seasonTint(game.season))
+                    .allowsHitTesting(false)
             }
             .clipped()
+            .overlay(alignment: .topLeading) { homeButton }
         }
+    }
+
+    /// An endless map grows outward without bound, so it's easy to drag off
+    /// into unexplored dark and lose the homeland entirely. This walks back.
+    private var homeButton: some View {
+        Button {
+            withAnimation(.snappy) {
+                pan = .zero; committedPan = .zero
+                zoom = 1; committedZoom = 1
+            }
+        } label: {
+            Image(systemName: "house.fill")
+                .font(.caption)
+                .padding(8)
+                .background(.ultraThinMaterial, in: Circle())
+        }
+        .tint(Theme.text)
+        .padding(12)
+        .accessibilityLabel(AppStrings.language == .cs ? "Zpět k domovině" : "Back to the homeland")
     }
 
     private var tiles: some View {
@@ -37,9 +62,58 @@ struct WorldMapView: View {
                 tile(region)
                     .position(tilePosition(region.coord))
             }
+            tradeLayer
         }
         // Centre the origin in a large virtual canvas.
         .frame(width: 1200, height: 1200)
+    }
+
+    /// Commerce made visible: standing trade routes as faint threads between
+    /// the settlements they join, and every traveling caravan as an amber dot
+    /// actually *on the road* — its place along the line is its real progress.
+    private var tradeLayer: some View {
+        TimelineView(.animation(minimumInterval: 0.25)) { timeline in
+            Canvas { ctx, _ in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                for route in game.tradeRoutes {
+                    guard let a = position(ofSettlement: route.fromID),
+                          let b = position(ofSettlement: route.toID) else { continue }
+                    var thread = Path()
+                    thread.move(to: a)
+                    thread.addLine(to: b)
+                    ctx.stroke(thread, with: .color(Theme.boneFaint.opacity(0.6)),
+                               style: StrokeStyle(lineWidth: 1, dash: [4, 5]))
+                }
+                for caravan in game.caravans where caravan.status == .traveling {
+                    guard let a = position(ofSettlement: caravan.originID),
+                          let b = position(ofSettlement: caravan.destinationID) else { continue }
+                    let progress = 1 - Double(caravan.ticksRemaining) / Double(max(1, caravan.totalTicks))
+                    let bob = sin(t * 3) * 1.5
+                    let p = CGPoint(x: a.x + (b.x - a.x) * progress,
+                                    y: a.y + (b.y - a.y) * progress + bob)
+                    var road = Path()
+                    road.move(to: a)
+                    road.addLine(to: b)
+                    ctx.stroke(road, with: .color(Theme.accent.opacity(0.25)),
+                               style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
+                    ctx.fill(Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)),
+                             with: .color(Color.black.opacity(0.4)))
+                    ctx.fill(Path(ellipseIn: CGRect(x: p.x - 2.6, y: p.y - 2.6,
+                                                    width: 5.2, height: 5.2)),
+                             with: .color(Theme.accent))
+                }
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    /// Where a settlement's hex sits on the virtual canvas.
+    private func position(ofSettlement id: UUID) -> CGPoint? {
+        guard let settlement = game.world.settlements.first(where: { $0.id == id }),
+              let region = game.regions.first(where: { $0.id == settlement.regionID }) else {
+            return nil
+        }
+        return tilePosition(region.coord)
     }
 
     private func tilePosition(_ coord: HexCoord) -> CGPoint {
@@ -66,7 +140,9 @@ struct WorldMapView: View {
                     .foregroundStyle(isFrontier ? Theme.accent : Theme.textDim.opacity(0.45))
             } else {
                 HexTerrainView(region: region)
+                hazardWash(region)
                 marker(region)
+                hazardPips(region)
             }
 
             HexTileShape()
@@ -79,23 +155,104 @@ struct WorldMapView: View {
         .onTapGesture { selectedRegionID = region.id }
     }
 
+    /// Hazard rises with every ring you push out from the homeland (see
+    /// `MapGenerator`), which is the spine of the whole "endless frontier"
+    /// idea — going further is worth more and costs more. It was only ever a
+    /// number buried in the detail panel, so the map itself couldn't tell you
+    /// where the danger was. Deep tiles now darken toward red.
+    @ViewBuilder
+    private func hazardWash(_ region: Region) -> some View {
+        let intensity = min(1, Double(region.hazardLevel) / hazardCeiling)
+        if intensity > 0.01 {
+            HexTileShape().fill(Theme.danger.opacity(intensity * 0.32))
+        }
+    }
+
+    /// A quick read of how bad it is, without having to select the tile.
+    @ViewBuilder
+    private func hazardPips(_ region: Region) -> some View {
+        let pips = min(4, region.hazardLevel / 2)
+        if pips > 0 {
+            HStack(spacing: 2) {
+                ForEach(0..<pips, id: \.self) { _ in
+                    Circle().fill(Theme.danger).frame(width: 3.5, height: 3.5)
+                }
+            }
+            .padding(.horizontal, 4)
+            .padding(.vertical, 2)
+            .background(Color.black.opacity(0.35), in: Capsule())
+            .offset(y: 15)
+            .accessibilityLabel("\(AppStrings.language == .cs ? "Nebezpečí" : "Hazard") \(region.hazardLevel)")
+        }
+    }
+
+    /// The hazard at which a tile reads as fully dangerous. Beyond this the
+    /// wash simply saturates rather than going opaque and hiding the terrain.
+    private let hazardCeiling: Double = 12
+
     @ViewBuilder
     private func marker(_ region: Region) -> some View {
         let isExpeditionTarget = game.activeExpedition?.targetRegionID == region.id
-        if let symbol = markerSymbol(region, isExpeditionTarget: isExpeditionTarget) {
+        if isExpeditionTarget {
+            expeditionMarker(region)
+        } else if let symbol = markerSymbol(region) {
             Image(systemName: symbol)
                 .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(markerTint(region))
                 .padding(6)
                 .background(Color.black.opacity(0.35), in: Circle())
                 .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
         }
     }
 
-    private func markerSymbol(_ region: Region, isExpeditionTarget: Bool) -> String? {
+    /// The expedition under way: a walker with a filling ring, pulsing gently
+    /// so the map's one moving thing reads as moving.
+    private func expeditionMarker(_ region: Region) -> some View {
+        let duration = max(1, game.expeditionDuration(for: region))
+        let remaining = game.activeExpedition?.ticksRemaining ?? 0
+        let progress = 1 - Double(remaining) / Double(duration)
+        return TimelineView(.animation(minimumInterval: 0.25)) { timeline in
+            let t = timeline.date.timeIntervalSinceReferenceDate
+            Image(systemName: "figure.walk")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(.white)
+                .padding(6)
+                .background(Color.black.opacity(0.35), in: Circle())
+                .overlay(
+                    Circle()
+                        .trim(from: 0, to: max(0.02, progress))
+                        .stroke(Theme.accent, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                )
+                .scaleEffect(1 + 0.06 * sin(t * 2.4))
+                .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
+        }
+        .accessibilityLabel(AppStrings.language == .cs
+                            ? "Výprava na cestě, zbývá \(remaining) tiků"
+                            : "Expedition under way, \(remaining) ticks left")
+    }
+
+    private func markerSymbol(_ region: Region) -> String? {
         if game.settlement(in: region) != nil { return "house.fill" }
-        if isExpeditionTarget { return "figure.walk" }
+        // A met people's home hex carries their tent.
+        if tribe(in: region) != nil { return "tent.fill" }
         return region.kind.mapSymbol
+    }
+
+    /// A neighbouring people's marker takes the colour of your standing with
+    /// them — the map tells you at a glance who is a friend.
+    private func markerTint(_ region: Region) -> Color {
+        guard let tribe = tribe(in: region), game.settlement(in: region) == nil else { return .white }
+        switch tribe.status {
+        case .allied, .friendly: return Theme.good
+        case .neutral: return .white
+        case .tense: return Theme.accent
+        case .war: return Theme.danger
+        }
+    }
+
+    private func tribe(in region: Region) -> Tribe? {
+        game.tribes.first { $0.regionID == region.id }
     }
 
     private func strokeColor(isSelected: Bool, isFrontier: Bool) -> Color {
@@ -114,8 +271,8 @@ struct WorldMapView: View {
     }
 
     private var zoomGesture: some Gesture {
-        MagnificationGesture()
-            .onChanged { zoom = min(max(committedZoom * $0, 0.5), 3) }
+        MagnifyGesture()
+            .onChanged { zoom = min(max(committedZoom * $0.magnification, 0.5), 3) }
             .onEnded { _ in committedZoom = zoom }
     }
 }

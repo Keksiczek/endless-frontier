@@ -74,6 +74,50 @@ public enum ColonyBuilder {
         return s
     }
 
+    /// Places a building as a construction *site*: its tiles are reserved and
+    /// the scaffolding is drawn, but the economy ledger is untouched until
+    /// `ConstructionEngine` finishes the roof. Unchanged if it doesn't fit.
+    public static func placeSite(
+        _ settlement: Settlement,
+        definitionID: String,
+        at coord: TileCoord,
+        registry: GameDataRegistry
+    ) -> Settlement {
+        guard let def = registry.building(definitionID) else { return settlement }
+        var s = ensureMap(settlement)
+        guard var map = s.colony, fits(def.footprint, at: coord, in: map) else {
+            return settlement
+        }
+        map.placements.append(BuildingPlacement(
+            id: placementID(definitionID, coord),
+            definitionID: definitionID,
+            coord: coord,
+            width: def.footprint.width,
+            height: def.footprint.height,
+            underConstruction: true
+        ))
+        s.colony = map
+        return s
+    }
+
+    /// Places a construction site on the first free tile that fits (row by
+    /// row) — how a quick-build from the construction panel lands on a colony
+    /// that has a layout. Returns the settlement unchanged (and a nil id)
+    /// when the grid is full.
+    public static func placeSiteAtFirstFit(
+        _ settlement: Settlement,
+        definitionID: String,
+        registry: GameDataRegistry
+    ) -> (settlement: Settlement, placementID: UUID?) {
+        guard let def = registry.building(definitionID),
+              let map = settlement.colony,
+              let coord = centerFit(def.footprint, in: map) else {
+            return (settlement, nil)
+        }
+        let sited = placeSite(settlement, definitionID: definitionID, at: coord, registry: registry)
+        return (sited, sited.colony?.placement(at: coord)?.id)
+    }
+
     /// Removes whatever building stands on `coord`, decrements the ledger, and
     /// frees any colonists that were assigned to it. Unchanged if the tile is
     /// empty.
@@ -94,8 +138,11 @@ public enum ColonyBuilder {
             }
         }
 
-        // Decrement the ledger, dropping the entry when it hits zero.
-        if let bi = s.buildings.firstIndex(where: { $0.definitionID == removed.definitionID }) {
+        // Decrement the ledger, dropping the entry when it hits zero. A site
+        // still under scaffolding was never counted, so there is nothing to
+        // take back out.
+        if !removed.underConstruction,
+           let bi = s.buildings.firstIndex(where: { $0.definitionID == removed.definitionID }) {
             s.buildings[bi].count -= 1
             if s.buildings[bi].count <= 0 {
                 s.buildings.remove(at: bi)
@@ -117,6 +164,7 @@ public enum ColonyBuilder {
         var s = settlement
         guard var map = s.colony,
               let pIdx = map.placements.firstIndex(where: { $0.id == placementID }),
+              !map.placements[pIdx].underConstruction,   // a site can't be staffed
               s.pawns.contains(where: { $0.id == pawnID }),
               let def = registry.building(map.placements[pIdx].definitionID) else {
             return settlement
@@ -184,7 +232,7 @@ public enum ColonyBuilder {
         for instance in buildings {
             let size = registry.building(instance.definitionID)?.footprint ?? TileSize()
             for _ in 0..<max(1, instance.count) {
-                guard let coord = firstFit(size, in: map) else { return map }
+                guard let coord = centerFit(size, in: map) else { return map }
                 map.placements.append(
                     BuildingPlacement(
                         id: placementID(instance.definitionID, coord),
@@ -249,6 +297,30 @@ public enum ColonyBuilder {
             }
         }
         return nil
+    }
+
+    /// The fit closest to the **middle** of the grid. Row-major scanning
+    /// stacked every seeded and quick-built structure into the top-left
+    /// corner — which the canvas maps to the fog's edge, leaving the cleared
+    /// ground around the settlement heart conspicuously empty. Growth now
+    /// spirals outward from the centre, the way a town actually grows.
+    static func centerFit(_ size: TileSize, in map: ColonyMap) -> TileCoord? {
+        // The footprint's *centre* should land near the grid's centre.
+        let cx = Double(map.width - size.width) / 2
+        let cy = Double(map.height - size.height) / 2
+        var best: (coord: TileCoord, d2: Double)?
+        for y in 0...(map.height - size.height) {
+            for x in 0...(map.width - size.width) {
+                let coord = TileCoord(x, y)
+                guard fits(size, at: coord, in: map) else { continue }
+                let dx = Double(x) - cx, dy = Double(y) - cy
+                let d2 = dx * dx + dy * dy
+                if d2 < (best?.d2 ?? .infinity) {
+                    best = (coord, d2)
+                }
+            }
+        }
+        return best?.coord
     }
 
     /// Best-effort: assigns a colonist to the first placed building that employs

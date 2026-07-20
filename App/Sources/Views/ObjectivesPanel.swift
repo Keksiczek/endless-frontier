@@ -5,6 +5,9 @@ import EndlessFrontierCore
 /// feeling directed.
 struct ObjectivesPanel: View {
     @Bindable var game: GameViewModel
+    /// Called when an objective wants to take the player somewhere, so whoever
+    /// is presenting this can get out of the way first.
+    var onNavigate: (GameViewModel.Tab) -> Void = { _ in }
 
     var body: some View {
         let objectives = game.objectives
@@ -21,26 +24,41 @@ struct ObjectivesPanel: View {
         }
     }
 
+    /// Objectives told you what to do and then left you to find it — the one
+    /// screen that says "pick a research project" couldn't take you to the
+    /// research. Every row is now the way there.
     private func row(_ objective: Objective) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: icon(objective.category))
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(color(objective.category))
-                .frame(width: 24)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(objective.title).font(.subheadline.weight(.semibold))
-                Text(objective.detail).font(.caption).foregroundStyle(Theme.textDim)
-                if let progress = objective.progress {
-                    ProgressView(value: min(max(progress, 0), 1))
-                        .tint(color(objective.category))
-                        .padding(.top, 2)
+        Button {
+            onNavigate(game.destination(for: objective))
+        } label: {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: icon(objective.category))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(color(objective.category))
+                    .frame(width: 24)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(objective.title).font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.text)
+                    Text(objective.detail).font(.caption).foregroundStyle(Theme.textDim)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .multilineTextAlignment(.leading)
+                    if let progress = objective.progress {
+                        ProgressView(value: min(max(progress, 0), 1))
+                            .tint(color(objective.category))
+                            .padding(.top, 2)
+                    }
                 }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(Theme.textDim)
             }
-            Spacer(minLength: 0)
+            .padding(.vertical, 8)
+            .padding(.horizontal, 10)
+            .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 10)
-        .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .buttonStyle(.plain)
+        .accessibilityHint(AppStrings.objectiveHint)
     }
 
     private func icon(_ category: Objective.Category) -> String {

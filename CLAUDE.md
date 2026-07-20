@@ -24,19 +24,25 @@ endless-frontier/
 ├── Core/                     Swift Package — EndlessFrontierCore
 │   ├── Package.swift
 │   ├── Sources/EndlessFrontierCore/
-│   │   ├── Models/           WorldState, Settlement, Region, Resources, Era
-│   │   ├── Engine/           SeededRNG, ResourceLoop, TickEngine, TechEngine,
-│   │   │                     EraEngine, GameEngine, GameWorldFactory
-│   │   ├── Storyteller/      StatPath, EventEffect/Condition/Template,
-│   │   │                     WorldQuery, EffectApplier, TensionCalculator,
-│   │   │                     StoryPlanner
-│   │   ├── Data/             *Definition types + GameDataRegistry, WorldConfig
-│   │   ├── Persistence/      WorldStore (JSON on disk)
-│   │   └── Resources/GameData/  buildings/techs/eras/biomes/events/world-config
+│   │   ├── Models/           WorldState, Settlement, Pawn (+Genes), Season,
+│   │   │                     LocalMap/LocalTerrain, Society, Diplomacy, Region, Era
+│   │   ├── Engine/           SeededRNG, TickEngine, ResourceLoop, PawnEngine,
+│   │   │                     PopulationEngine, LaborEngine, WildlifeEngine,
+│   │   │                     SocietyEngine, FaithEngine, DiplomacyEngine,
+│   │   │                     ChronicleEngine, LocalMapGenerator, MapGenerator,
+│   │   │                     TechEngine, EraEngine, GameEngine, BalanceHarness
+│   │   ├── Storyteller/      EventTemplate/Effect/Condition, WorldQuery,
+│   │   │                     EffectApplier, TensionCalculator, StoryPlanner
+│   │   ├── Data/             *Definition types, LocalizedText, GameDataRegistry,
+│   │   │                     WorldConfig
+│   │   ├── Persistence/      WorldStore (JSON on disk), SaveMigrator
+│   │   └── Resources/GameData/  buildings/techs/eras/biomes/events/laws/cults/…
 │   └── Tests/EndlessFrontierCoreTests/
 └── App/                      iOS app (XcodeGen-generated project)
-    ├── project.yml           Run `xcodegen generate` to (re)create the project
-    └── Sources/              SwiftUI: EndlessFrontierApp, GameViewModel, Views/
+    ├── project.yml           Run `xcodegen generate` after adding a file
+    └── Sources/              SwiftUI: EndlessFrontierApp, GameViewModel, Theme,
+                              AppStrings (CZ/EN), Views/ (+ Views/Settlement/:
+                              the living canvas, renderer, agent motion)
 ```
 
 > **Layer 3 (LLM narrator)** is not built yet (Phase 3). It will be a separate
@@ -48,19 +54,44 @@ endless-frontier/
 
 2. **All game content is data-driven.** Buildings, techs, eras, biomes and events live in `GameData/*.json`. Adding content = adding JSON, not Swift code.
 
-3. **Deterministic simulation.** The seeded RNG state is stored in `WorldState`. Given the same seed and inputs, the world evolves identically. This makes testing straightforward.
+3. **Deterministic simulation.** Given the same seed and inputs, the world evolves identically — this is a hard invariant, and the tests lean on it heavily. Never call `Date()` or an unseeded RNG in the engine path. Per-entity randomness comes from a seed derived from `(mapSeed, entity.id, tick-or-year)`, so **entities need stable ids**: a settlement created with a random `UUID()` will draw different society/wildlife rolls on every run and silently break determinism (this has bitten us — see the fixed ids in the tests).
 
-4. **Offline-first.** No URLSession in the simulation path. LLM narrator is an optional enhancement, never a requirement.
+4. **Offline-first.** No URLSession in the simulation path. LLM narrator is an optional enhancement, never a requirement. Catch-up after a long absence (up to 30 days of ticks) runs **off the main actor** — see `GameViewModel.openSession`.
+
+5. **Presentation never writes the simulation.** The living settlement canvas derives colonist positions from `(pawn.id, frame clock)`. Nothing the renderer does may feed back into `WorldState`.
 
 5. **Codable persistence.** `WorldState` is encoded to JSON and saved to the app's Documents directory on every meaningful state change.
 
-## Current phase
+## Current state — V2
 
-**Phase 0 ✅ and Phase 1 ✅ complete.** The deterministic core, data-driven
-content (buildings/techs/eras/biomes/events), tech & era progression, and the
-full storyteller engine (tension + planner) are implemented and tested (29
-tests). A SwiftUI dashboard app reads the live world. Next: Phase 2
-(exploration, multi-city, scheduled/duration effects) — see `docs/ROADMAP.md`.
+Endless Frontier **V2** merges the original deterministic colony sim with the
+living-world and social systems of a Czech HTML civilisation sim. All V2 phases
+(A–F) are complete: **297 tests green**, iOS build green.
+
+What the game is now:
+
+- **Every inhabitant is a pawn** with genes (industry/fertility/sociability/
+  courage), age, wealth and a life cycle — births mutate genes, so natural
+  selection is visible in the chronicle. `Settlement.population` is *derived*
+  from `pawns.count`; there is no macro headcount.
+- **A living settlement view** (`App/Sources/Views/Settlement/`): a
+  `TimelineView`+`Canvas` line-art world with seeded ground tiles, biome-driven
+  scenery and deposits, fog of war, seasons, and colonists who walk their day.
+  Movement is *presentation-only* (`AgentMotion`) and never touches the sim.
+- **Society**: yearly wages → wealth classes (40th/85th percentiles) → Gini →
+  uprisings and strikes; elections every 12 years; an assembly every 6 that
+  votes on a data-driven law and puts it before **the player** to ratify or
+  veto (overruling it costs morale).
+- **Faith**: a temple raised by law seeds a cult; priests sustain devotion,
+  prophets convert or sow doubt; belief lifts morale and softens disaster.
+- **Neighbours**: tribes are *emergent* — colonists who walked out. Trade,
+  scholars' exchange, marriage alliances, border disputes, war and defectors.
+- **Chronicle**: one `WorldRecord` per in-game year, charted in-app, with
+  generated insights (gene drift, inequality, the commonest death).
+
+Remaining content work: the older English content (events, buildings, techs)
+is not yet translated — `LocalizedText` is in place and all *new* content
+(laws, cults, insights, UI) ships bilingual (CZ+EN).
 
 ## Running tests
 
@@ -99,7 +130,11 @@ startup by `GameDataRegistry.bundled()`:
 | `eras.json` | Era milestones |
 | `biomes.json` | Biome definitions |
 | `events.json` | Event templates (storyteller) |
-| `world-config.json` | Tuning constants (tick rate, tension formula, etc.) |
+| `laws.json` | Laws the assembly votes on (V2) |
+| `cults.json` | Faiths a temple can seed (V2) |
+| `items.json`, `recipes.json`, `quests.json` | RPG layer |
+| `map-gen.json` | Hex world generation tuning |
+| `world-config.json` | Tuning constants (tick rate, calendar, tension formula, etc.) |
 
 The JSON schemas live in `docs/data-schemas/`. Validate new data files against the schema before committing.
 

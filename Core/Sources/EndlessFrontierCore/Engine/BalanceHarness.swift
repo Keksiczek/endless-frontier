@@ -49,7 +49,14 @@ public enum BalanceHarness {
 
         if s.activeResearch == nil {
             let techs = registry.availableTechs(researched: s.researchedTechs)
-            if let cheapest = techs.min(by: { $0.knowledgeCost < $1.knowledgeCost }) {
+            // Price by what the study *actually* costs now: a repeatable tech's
+            // price escalates with every completion, so reading the definition's
+            // base cost makes an endless study look permanently cheapest and
+            // the auto-player grinds it forever, never touching anything else.
+            if let cheapest = techs.min(by: {
+                TechEngine.cost(of: $0, in: s, config: registry.config)
+                    < TechEngine.cost(of: $1, in: s, config: registry.config)
+            }) {
                 s = GameEngine.setResearch(s, techID: cheapest.id, registry: registry)
             }
         }

@@ -19,7 +19,7 @@ struct ObjectivesTests {
     func hurtColonistFirst() {
         let reg = Fixtures.registry()
         let hurt = Pawn(name: "Wren", health: 15)
-        let capital = Settlement(name: "C", kind: .capital, population: 1, pawns: [hurt])
+        let capital = Settlement(name: "C", kind: .capital, pawns: [hurt])
         let world = WorldState(settlements: [capital])
         let objectives = ObjectivesEngine.current(world, registry: reg)
         #expect(objectives.first?.category == .colonists)

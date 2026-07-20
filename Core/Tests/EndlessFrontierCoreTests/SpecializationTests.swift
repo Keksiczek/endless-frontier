@@ -13,7 +13,7 @@ struct SpecializationTests {
     /// stocked with the given buildings and specialisation.
     private func world(spec: SettlementSpecialization, buildings: [String]) -> WorldState {
         let bld = buildings.map { BuildingInstance(definitionID: $0, count: 1) }
-        let s = Settlement(name: "S", kind: .capital, population: 0, pawns: [],
+        let s = Settlement(name: "S", kind: .capital, pawns: [],
                            buildings: bld, storage: Resources(), storageCapacity: 99999,
                            specialization: spec)
         return WorldState(settlements: [s])
@@ -70,10 +70,8 @@ struct SpecializationTests {
     @Test("A mercantile source ships more down a trade route")
     func mercantileBoostsTradeThroughput() throws {
         func delivered(sourceSpec: SettlementSpecialization) -> Double {
-            let source = Settlement(name: "Src", kind: .capital, population: 0,
-                                    storage: [.food: 1000], storageCapacity: 99999, specialization: sourceSpec)
-            let dest = Settlement(name: "Dst", kind: .city, population: 0,
-                                  storage: Resources(), storageCapacity: 99999)
+            let source = Settlement(name: "Src", kind: .capital,                                     storage: [.food: 1000], storageCapacity: 99999, specialization: sourceSpec)
+            let dest = Settlement(name: "Dst", kind: .city,                                   storage: Resources(), storageCapacity: 99999)
             var w = WorldState(settlements: [source, dest])
             w.tradeRoutes = [TradeRoute(fromID: source.id, toID: dest.id, resource: .food, amountPerTick: 10)]
             let after = MultiCityEngine.applyTradeRoutes(w)
@@ -87,8 +85,7 @@ struct SpecializationTests {
         let r = try reg()
         // A settlement constructed without naming a specialisation defaults to
         // balanced and must tick identically to an explicitly-balanced one.
-        let implicit = Settlement(name: "S", kind: .capital, population: 0,
-                                  buildings: [BuildingInstance(definitionID: "farm_basic")],
+        let implicit = Settlement(name: "S", kind: .capital,                                   buildings: [BuildingInstance(definitionID: "farm_basic")],
                                   storageCapacity: 99999)
         let explicitBalanced = world(spec: .balanced, buildings: ["farm_basic"])
         var a = WorldState(settlements: [implicit])

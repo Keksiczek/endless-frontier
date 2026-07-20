@@ -16,6 +16,8 @@ public enum RegionKind: String, Codable, Sendable, CaseIterable {
     case ruins          // ancient site — bonus loot / lore events
     case dungeon        // dangerous site — high risk, high reward (future depth)
     case anomaly        // strange, shifting region (dynamic events)
+    case sanctuary      // a sacred valley — a pilgrimage blesses the colony
+    case lostCity = "lost_city"   // a dead city — rich salvage among the bones
 }
 
 /// Selects which region a dynamic region-changing event applies to.
@@ -42,6 +44,10 @@ public struct Region: Codable, Sendable, Identifiable, Equatable {
     public var settlementIDs: [UUID]
     /// Whether a special site (ruins/dungeon/anomaly) here has been exploited.
     public var siteCleared: Bool
+    /// How many times the site has been worked. Optional so saves from before
+    /// multi-visit sites decode (missing key → nil → zero visits). A lost city
+    /// takes several salvage runs to strip bare.
+    public var siteVisits: Int?
 
     public init(
         id: UUID = UUID(),
@@ -53,7 +59,8 @@ public struct Region: Codable, Sendable, Identifiable, Equatable {
         explorationState: ExplorationState = .unknown,
         resourceDeposits: Resources = Resources(),
         settlementIDs: [UUID] = [],
-        siteCleared: Bool = false
+        siteCleared: Bool = false,
+        siteVisits: Int? = nil
     ) {
         self.id = id
         self.name = name
@@ -65,6 +72,7 @@ public struct Region: Codable, Sendable, Identifiable, Equatable {
         self.resourceDeposits = resourceDeposits
         self.settlementIDs = settlementIDs
         self.siteCleared = siteCleared
+        self.siteVisits = siteVisits
     }
 
     /// `true` if this region has an interactable special site that's explored
@@ -72,6 +80,6 @@ public struct Region: Codable, Sendable, Identifiable, Equatable {
     public var hasActiveSite: Bool {
         explorationState == .fullyExplored
             && !siteCleared
-            && [.ruins, .dungeon, .anomaly].contains(kind)
+            && [.ruins, .dungeon, .anomaly, .sanctuary, .lostCity].contains(kind)
     }
 }

@@ -11,26 +11,29 @@ struct CombatTests {
     }
 
     @Test("Armed colonists provide more militia defense than unarmed")
-    func armedStronger() {
-        let unarmed = EffectApplier.militiaDefense([Pawn(name: "A")])
-        let armed = EffectApplier.militiaDefense([armedPawn("B")])
+    func armedStronger() throws {
+        // The bundled registry resolves the axe to its combat profile.
+        let reg = try GameDataRegistry.bundled()
+        let unarmed = EffectApplier.militiaDefense([Pawn(name: "A")], registry: reg)
+        let armed = EffectApplier.militiaDefense([armedPawn("B")], registry: reg)
         #expect(armed > unarmed)
         #expect(unarmed > 0)
     }
 
     @Test("Broken or dead colonists do not fight")
-    func nonCombatants() {
+    func nonCombatants() throws {
+        let reg = try GameDataRegistry.bundled()
         var broken = Pawn(name: "X"); broken.isBroken = true
         let dead = Pawn(name: "Y", health: 0)
-        #expect(EffectApplier.militiaDefense([broken, dead]) == 0)
+        #expect(EffectApplier.militiaDefense([broken, dead], registry: reg) == 0)
     }
 
     @Test("An armed garrison repels a raid that overruns an unarmed one")
-    func armedRepels() {
-        let reg = Fixtures.registry()
+    func armedRepels() throws {
+        let reg = try GameDataRegistry.bundled()
         func world(armed: Bool) -> WorldState {
             let pawns = (0..<4).map { armed ? armedPawn("P\($0)") : Pawn(name: "P\($0)") }
-            var capital = Settlement(name: "C", kind: .capital, population: 4, pawns: pawns,
+            var capital = Settlement(name: "C", kind: .capital, pawns: pawns,
                                      storage: [.materials: 100, .food: 100], storageCapacity: 999)
             capital.stats.defense = 0
             return WorldState(settlements: [capital])

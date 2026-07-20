@@ -13,15 +13,15 @@ public enum EventType: String, Codable, Sendable, Equatable, CaseIterable {
 /// A player-facing branch inside an event card.
 public struct EventChoice: Codable, Sendable, Equatable, Identifiable {
     public let id: String
-    public let label: String
-    public let description: String?
+    public let label: LocalizedText
+    public let description: LocalizedText?
     public let cost: Resources
     public let effects: [EventEffect]
 
     public init(
         id: String,
-        label: String,
-        description: String? = nil,
+        label: LocalizedText,
+        description: LocalizedText? = nil,
         cost: Resources = Resources(),
         effects: [EventEffect] = []
     ) {
@@ -39,8 +39,8 @@ public struct EventChoice: Codable, Sendable, Equatable, Identifiable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
-        label = try c.decode(String.self, forKey: .label)
-        description = try c.decodeIfPresent(String.self, forKey: .description)
+        label = try c.decode(LocalizedText.self, forKey: .label)
+        description = try c.decodeIfPresent(LocalizedText.self, forKey: .description)
         cost = try c.decodeIfPresent(Resources.self, forKey: .cost) ?? Resources()
         effects = try c.decodeIfPresent([EventEffect].self, forKey: .effects) ?? []
     }
@@ -49,29 +49,40 @@ public struct EventChoice: Codable, Sendable, Equatable, Identifiable {
 /// A data-defined event. Loaded from `events.json`. The storyteller filters
 /// templates by era + conditions + cooldown, weights them by tension, and
 /// applies the effects of the selected ones.
+/// Player-facing event text is `LocalizedText`, not `String`. It was plain
+/// `String` — which meant the whole storyteller was structurally incapable of
+/// speaking anything but English, and none of the Czech content this game grew
+/// out of could be carried across. `LocalizedText` decodes from a bare string
+/// as well as a `{ en, cs }` object, so the 48 untranslated templates keep
+/// working untouched while new ones ship bilingual.
 public struct EventTemplate: Codable, Sendable, Equatable, Identifiable {
     public let id: String
     public let type: EventType
-    public let name: String
+    public let name: LocalizedText
     public let era: [Era]
     public let weight: Double
     public let cooldownTicks: Int
     public let conditions: [EventCondition]
     public let effects: [EventEffect]
     public let choices: [EventChoice]
-    public let narrativeHint: String
+    /// How long the Leader has to answer this event's choice before the moment
+    /// passes. `nil` falls back to `WorldConfig.decisionDeadlineTicks` — set it
+    /// for a moment that keeps or slips faster than most.
+    public let decisionTicks: Int?
+    public let narrativeHint: LocalizedText
 
     public init(
         id: String,
         type: EventType,
-        name: String,
+        name: LocalizedText,
         era: [Era] = [],
         weight: Double,
         cooldownTicks: Int = 50,
         conditions: [EventCondition] = [],
         effects: [EventEffect] = [],
         choices: [EventChoice] = [],
-        narrativeHint: String
+        decisionTicks: Int? = nil,
+        narrativeHint: LocalizedText
     ) {
         self.id = id
         self.type = type
@@ -82,6 +93,7 @@ public struct EventTemplate: Codable, Sendable, Equatable, Identifiable {
         self.conditions = conditions
         self.effects = effects
         self.choices = choices
+        self.decisionTicks = decisionTicks
         self.narrativeHint = narrativeHint
     }
 
@@ -89,6 +101,7 @@ public struct EventTemplate: Codable, Sendable, Equatable, Identifiable {
         case id, type, name, era, weight
         case cooldownTicks = "cooldown_ticks"
         case conditions, effects, choices
+        case decisionTicks = "decision_ticks"
         case narrativeHint = "narrative_hint"
     }
 
@@ -96,14 +109,15 @@ public struct EventTemplate: Codable, Sendable, Equatable, Identifiable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
         type = try c.decode(EventType.self, forKey: .type)
-        name = try c.decode(String.self, forKey: .name)
+        name = try c.decode(LocalizedText.self, forKey: .name)
         era = try c.decodeIfPresent([Era].self, forKey: .era) ?? []
         weight = try c.decode(Double.self, forKey: .weight)
         cooldownTicks = try c.decodeIfPresent(Int.self, forKey: .cooldownTicks) ?? 50
         conditions = try c.decodeIfPresent([EventCondition].self, forKey: .conditions) ?? []
         effects = try c.decodeIfPresent([EventEffect].self, forKey: .effects) ?? []
         choices = try c.decodeIfPresent([EventChoice].self, forKey: .choices) ?? []
-        narrativeHint = try c.decode(String.self, forKey: .narrativeHint)
+        decisionTicks = try c.decodeIfPresent(Int.self, forKey: .decisionTicks)
+        narrativeHint = try c.decode(LocalizedText.self, forKey: .narrativeHint)
     }
 
     /// `true` if this template may fire in `era` (empty `era` = all eras).

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "river",
+    "name": { "en": "Cult of the River", "cs": "Kult Řeky" },
+    "creed": {
+      "en": "The water came before us and will remain after. To give is to flow.",
+      "cs": "Voda tu byla před námi a zůstane po nás. Dávat znamená plynout."
+    },
+    "morale_at_full_faith": 8,
+    "solace": 0.30
+  },
+  {
+    "id": "sun",
+    "name": { "en": "Cult of the Sun", "cs": "Kult Slunce" },
+    "creed": {
+      "en": "Every morning is a promise kept. Work while the light lasts.",
+      "cs": "Každé ráno je dodržený slib. Pracuj, dokud svítí."
+    },
+    "morale_at_full_faith": 9,
+    "solace": 0.25
+  },
+  {
+    "id": "moon",
+    "name": { "en": "Cult of the Moon", "cs": "Kult Měsíce" },
+    "creed": {
+      "en": "What waxes must wane. Grief passes as surely as joy.",
+      "cs": "Co roste, musí ubývat. Žal pomine stejně jistě jako radost."
+    },
+    "morale_at_full_faith": 7,
+    "solace": 0.40
+  },
+  {
+    "id": "ancestors",
+    "name": { "en": "Cult of the Ancestors", "cs": "Kult Předků" },
+    "creed": {
+      "en": "The dead are not gone; they are the ground we stand on.",
+      "cs": "Mrtví neodešli; jsou půdou, na níž stojíme."
+    },
+    "morale_at_full_faith": 8,
+    "solace": 0.38
+  },
+  {
+    "id": "wolf",
+    "name": { "en": "Cult of the Wolf", "cs": "Kult Vlka" },
+    "creed": {
+      "en": "The pack eats or the pack dies. Be neither prey nor alone.",
+      "cs": "Smečka se nasytí, nebo zhyne. Nebuď kořistí ani sám."
+    },
+    "morale_at_full_faith": 6,
+    "solace": 0.20
+  },
+  {
+    "id": "stars",
+    "name": { "en": "Cult of the Stars", "cs": "Kult Hvězd" },
+    "creed": {
+      "en": "Our fires are small. Look up, and know how far we may yet go.",
+      "cs": "Naše ohně jsou malé. Pohlédni vzhůru a věz, kam až můžeme dojít."
+    },
+    "morale_at_full_faith": 7,
+    "solace": 0.28
+  }
+]

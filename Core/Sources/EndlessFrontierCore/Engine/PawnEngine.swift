@@ -13,9 +13,13 @@ public enum PawnEngine {
     // Passive recovery per tick for rest/recreation (sleep & downtime, abstracted).
     static let restRecovery: Double = 0.5
     static let recreationRecovery: Double = 0.35
-    // Eating: food consumed per pawn per tick to restore hunger.
-    static let foodPerMeal: Double = 0.2
-    static let hungerPerMeal: Double = 3.0
+    // Eating: colonists eat once hunger dips below the threshold. At steady
+    // state this costs decay/hungerPerMeal × foodPerMeal ≈ 0.1 food per
+    // person per tick — the whole settlement's food upkeep, now that every
+    // inhabitant is a pawn.
+    static let foodPerMeal: Double = 1.0
+    static let hungerPerMeal: Double = 6.0
+    static let mealHungerThreshold: Double = 70
     // Work output per skill point per tick for the assigned resource.
     static let outputPerSkill: Double = 0.15
     // How strongly colony morale tracks average pawn mood.
@@ -23,8 +27,6 @@ public enum PawnEngine {
     // Health: starvation damage when hunger is empty, passive recovery otherwise.
     static let starvationHealthDamage: Double = 2.0
     static let healthRecovery: Double = 0.3
-    // Colony morale hit when a colonist dies.
-    static let deathMoralePenalty: Double = 10.0
     // Skill growth: XP gained per tick of assigned work, XP per level, and cap.
     static let xpPerTickWorking: Double = 0.5
     static let xpPerLevel: Double = 100
@@ -39,65 +41,84 @@ public enum PawnEngine {
     /// `registry` resolves equipment buffs; an empty registry = no items.
     public static func advanceOneTick(
         _ settlement: Settlement,
-        registry: GameDataRegistry = GameDataRegistry()
+        registry: GameDataRegistry = GameDataRegistry(),
+        tick: Int = 0,
+        gatheringFactors: [WorkKind: Double] = [:],
+        laws: LawModifiers = LawModifiers()
     ) -> Settlement {
         guard !settlement.pawns.isEmpty else { return settlement }
         var s = settlement
         var food = s.storage[.food]
         var output = Resources()
+        let ticksPerYear = registry.config.ticksPerYear
+        let adultAgeTicks = Pawn.adultAgeYears * ticksPerYear
+        // Season factors are constant across the settlement's pawns this tick.
+        var seasonByResource: [ResourceType: Double] = [:]
+        for resource in ResourceType.allCases {
+            seasonByResource[resource] = registry.config.seasonYieldMultiplier(for: resource, tick: tick)
+        }
 
-        s.pawns = s.pawns.map { pawn in
-            var p = pawn
+        // Mutate pawns in place (index loop) to avoid rebuilding the array and
+        // copying every pawn's dictionaries each tick — this runs up to 43,200
+        // times on offline catch-up, so allocation churn matters.
+        for i in s.pawns.indices {
             // Needs decay.
-            p.needs.hunger -= hungerDecay
-            p.needs.rest = p.needs.rest - restDecay + restRecovery
-            p.needs.recreation = p.needs.recreation - recreationDecay + recreationRecovery
+            s.pawns[i].needs.hunger -= hungerDecay
+            s.pawns[i].needs.rest = s.pawns[i].needs.rest - restDecay + restRecovery
+            s.pawns[i].needs.recreation = s.pawns[i].needs.recreation - recreationDecay + recreationRecovery
 
-            // Eat if food is available.
-            if food >= foodPerMeal, p.needs.hunger < 100 {
-                food -= foodPerMeal
-                p.needs.hunger += hungerPerMeal
+            // Eat if hungry and food is available. Rationing stretches a meal.
+            let meal = foodPerMeal * laws.foodUpkeepMultiplier
+            if food >= meal, s.pawns[i].needs.hunger < mealHungerThreshold {
+                food -= meal
+                s.pawns[i].needs.hunger += hungerPerMeal
             }
-            p.needs = p.needs.clamped()
+            s.pawns[i].needs = s.pawns[i].needs.clamped()
 
-            // Health: starvation hurts, otherwise the body slowly recovers
-            // (equipment can speed recovery).
-            if p.needs.hunger <= 0 {
-                p.health -= starvationHealthDamage
+            // Health: starvation hurts, otherwise the body slowly recovers.
+            let hasEquipment = !s.pawns[i].equipment.isEmpty
+            if s.pawns[i].needs.hunger <= 0 {
+                s.pawns[i].health -= starvationHealthDamage
             } else {
-                p.health = min(100, p.health + healthRecovery + ItemEngine.healthRegenBonus(p, registry: registry))
+                let regen = hasEquipment ? ItemEngine.healthRegenBonus(s.pawns[i], registry: registry) : 0
+                s.pawns[i].health = min(100, s.pawns[i].health + healthRecovery + regen)
             }
-            p.health = max(0, p.health)
+            s.pawns[i].health = max(0, s.pawns[i].health)
 
             // Mood from needs + trait + equipment, clamped.
-            p.mood = min(max(p.needs.average + p.trait.moodModifier
-                             + ItemEngine.moodBonus(p, registry: registry), 0), 100)
+            let moodBonus = hasEquipment ? ItemEngine.moodBonus(s.pawns[i], registry: registry) : 0
+            s.pawns[i].mood = min(max(s.pawns[i].needs.average + s.pawns[i].trait.moodModifier + moodBonus, 0), 100)
 
-            // Mental break with hysteresis: break at very low mood, recover
-            // only once mood climbs back above the higher threshold.
-            if p.mood < breakEnterMood {
-                p.isBroken = true
-            } else if p.mood >= breakExitMood {
-                p.isBroken = false
+            // Mental break with hysteresis.
+            if s.pawns[i].mood < breakEnterMood {
+                s.pawns[i].isBroken = true
+            } else if s.pawns[i].mood >= breakExitMood {
+                s.pawns[i].isBroken = false
             }
 
-            // Work output + learning-by-doing, only when working (not broken).
-            if !p.isBroken, let resource = p.assignedWork.resource {
-                let moodFactor = 0.5 + 0.5 * (p.mood / 100)   // 0.5…1.0
-                let effectiveSkill = p.skill(p.assignedWork)
-                    + ItemEngine.skillBonus(p, work: p.assignedWork, registry: registry)
+            // Work output + learning-by-doing — adults only, and not broken.
+            if !s.pawns[i].isBroken, s.pawns[i].age >= adultAgeTicks,
+               let resource = s.pawns[i].assignedWork.resource {
+                let work = s.pawns[i].assignedWork
+                let moodFactor = 0.5 + 0.5 * (s.pawns[i].mood / 100)   // 0.5…1.0
+                let skillBonus = hasEquipment ? ItemEngine.skillBonus(s.pawns[i], work: work, registry: registry) : 0
+                let effectiveSkill = s.pawns[i].skill(work) + skillBonus
+                let seasonFactor = seasonByResource[resource] ?? 1
+                let gatherFactor = gatheringFactors[work] ?? 1.0
+                // A school makes every scholar's year count for more.
+                let lawFactor = resource == .knowledge ? laws.knowledgeMultiplier : 1
                 output[resource] = output[resource]
                     + Double(effectiveSkill) * outputPerSkill * moodFactor
+                    * seasonFactor * gatherFactor * lawFactor
 
-                var xp = (p.skillXP[p.assignedWork] ?? 0) + xpPerTickWorking
-                let level = p.skill(p.assignedWork)
+                var xp = (s.pawns[i].skillXP[work] ?? 0) + xpPerTickWorking
+                let level = s.pawns[i].skill(work)
                 if xp >= xpPerLevel, level < maxSkill {
-                    p.skills[p.assignedWork] = level + 1
+                    s.pawns[i].skills[work] = level + 1
                     xp -= xpPerLevel
                 }
-                p.skillXP[p.assignedWork] = xp
+                s.pawns[i].skillXP[work] = xp
             }
-            return p
         }
 
         // Commit eaten food and work output to storage.
@@ -106,14 +127,8 @@ public enum PawnEngine {
             s.storage[resource] = min(s.storage[resource] + output[resource], s.storageCapacity)
         }
 
-        // Remove colonists who have died; each death wounds colony morale and
-        // the macro headcount.
-        let deaths = s.pawns.filter { $0.health <= 0 }.count
-        if deaths > 0 {
-            s.pawns.removeAll { $0.health <= 0 }
-            s.population = max(0, s.population - Double(deaths))
-            s.stats.morale -= deathMoralePenalty * Double(deaths)
-        }
+        // Death (removal, cause tallies, inheritance, morale) is handled by
+        // `PopulationEngine`, which runs right after this engine each tick.
 
         // Colony morale drifts toward the colonists' average mood.
         if !s.pawns.isEmpty {

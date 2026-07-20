@@ -11,6 +11,9 @@ public struct MapGenConfig: Codable, Sendable, Equatable {
     public var ruinsChance: Double
     public var dungeonChance: Double
     public var anomalyChance: Double
+    /// The rarer wonders: a sacred valley and a dead city.
+    public var sanctuaryChance: Double
+    public var lostCityChance: Double
     /// Optional biome weighting by biome id. Empty = uniform over all biomes.
     public var biomeWeights: [String: Double]
     /// Extra hazard added on top of a biome's base hazard, by region kind.
@@ -27,6 +30,8 @@ public struct MapGenConfig: Codable, Sendable, Equatable {
         ruinsChance: 0.10,
         dungeonChance: 0.05,
         anomalyChance: 0.04,
+        sanctuaryChance: 0.03,
+        lostCityChance: 0.04,
         biomeWeights: [:],
         dungeonHazardBonus: 3,
         anomalyHazardBonus: 2,
@@ -39,6 +44,8 @@ public struct MapGenConfig: Codable, Sendable, Equatable {
         ruinsChance: Double,
         dungeonChance: Double,
         anomalyChance: Double,
+        sanctuaryChance: Double = 0.03,
+        lostCityChance: Double = 0.04,
         biomeWeights: [String: Double],
         dungeonHazardBonus: Int,
         anomalyHazardBonus: Int,
@@ -49,6 +56,8 @@ public struct MapGenConfig: Codable, Sendable, Equatable {
         self.ruinsChance = ruinsChance
         self.dungeonChance = dungeonChance
         self.anomalyChance = anomalyChance
+        self.sanctuaryChance = sanctuaryChance
+        self.lostCityChance = lostCityChance
         self.biomeWeights = biomeWeights
         self.dungeonHazardBonus = dungeonHazardBonus
         self.anomalyHazardBonus = anomalyHazardBonus
@@ -59,6 +68,7 @@ public struct MapGenConfig: Codable, Sendable, Equatable {
     // Resilient decoding: any missing field falls back to the default.
     private enum CodingKeys: String, CodingKey {
         case mapRadius, ruinsChance, dungeonChance, anomalyChance,
+             sanctuaryChance, lostCityChance,
              biomeWeights, dungeonHazardBonus, anomalyHazardBonus,
              hazardPerRing, specialChancePerRing
     }
@@ -70,6 +80,8 @@ public struct MapGenConfig: Codable, Sendable, Equatable {
         ruinsChance = (try? c.decodeIfPresent(Double.self, forKey: .ruinsChance)) ?? d.ruinsChance
         dungeonChance = (try? c.decodeIfPresent(Double.self, forKey: .dungeonChance)) ?? d.dungeonChance
         anomalyChance = (try? c.decodeIfPresent(Double.self, forKey: .anomalyChance)) ?? d.anomalyChance
+        sanctuaryChance = (try? c.decodeIfPresent(Double.self, forKey: .sanctuaryChance)) ?? d.sanctuaryChance
+        lostCityChance = (try? c.decodeIfPresent(Double.self, forKey: .lostCityChance)) ?? d.lostCityChance
         biomeWeights = (try? c.decodeIfPresent([String: Double].self, forKey: .biomeWeights)) ?? d.biomeWeights
         dungeonHazardBonus = (try? c.decodeIfPresent(Int.self, forKey: .dungeonHazardBonus)) ?? d.dungeonHazardBonus
         anomalyHazardBonus = (try? c.decodeIfPresent(Int.self, forKey: .anomalyHazardBonus)) ?? d.anomalyHazardBonus

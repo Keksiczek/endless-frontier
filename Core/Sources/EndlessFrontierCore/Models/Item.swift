@@ -42,6 +42,32 @@ public enum EquipmentSlot: String, Codable, Sendable, Equatable, CaseIterable {
     case trinket
 }
 
+/// How a weapon fights: shoulder to shoulder, or from a distance.
+/// Ranged weapons loose a volley before raiders reach the walls; melee power
+/// decides the clash itself (see `CombatEngine`).
+public enum WeaponClass: String, Codable, Sendable, Equatable {
+    case melee
+    case ranged
+}
+
+/// A weapon's fighting characteristics. Tools that live in the weapon slot
+/// (an axe, a pick) carry a token profile — a colonist swinging an axe is not
+/// unarmed — while true arms carry real ones.
+public struct CombatProfile: Codable, Sendable, Equatable {
+    public let damage: Double
+    public let kind: WeaponClass
+
+    public init(damage: Double, kind: WeaponClass) {
+        self.damage = damage
+        self.kind = kind
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case damage
+        case kind = "class"
+    }
+}
+
 /// A buff granted by an item. Tagged union keyed on `type`.
 public enum ItemEffect: Codable, Sendable, Equatable {
     // Equipment (apply to the carrying colonist)
@@ -115,21 +141,25 @@ public struct ItemDefinition: Codable, Sendable, Identifiable, Equatable {
     public let slot: ItemSlot
     public let equipSlot: EquipmentSlot?   // which body slot, for equipment items
     public let effects: [ItemEffect]
+    /// How the item fights, when it can (weapons and weapon-slot tools).
+    public let combat: CombatProfile?
     public let description: String
 
     public init(id: String, name: String, rarity: ItemRarity, slot: ItemSlot,
-                equipSlot: EquipmentSlot? = nil, effects: [ItemEffect] = [], description: String = "") {
+                equipSlot: EquipmentSlot? = nil, effects: [ItemEffect] = [],
+                combat: CombatProfile? = nil, description: String = "") {
         self.id = id
         self.name = name
         self.rarity = rarity
         self.slot = slot
         self.equipSlot = equipSlot
         self.effects = effects
+        self.combat = combat
         self.description = description
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, rarity, slot, equipSlot, effects, description
+        case id, name, rarity, slot, equipSlot, effects, combat, description
     }
 
     public init(from decoder: Decoder) throws {
@@ -140,6 +170,7 @@ public struct ItemDefinition: Codable, Sendable, Identifiable, Equatable {
         slot = try c.decode(ItemSlot.self, forKey: .slot)
         equipSlot = try c.decodeIfPresent(EquipmentSlot.self, forKey: .equipSlot)
         effects = try c.decodeIfPresent([ItemEffect].self, forKey: .effects) ?? []
+        combat = try c.decodeIfPresent(CombatProfile.self, forKey: .combat)
         description = try c.decodeIfPresent(String.self, forKey: .description) ?? ""
     }
 }

@@ -46,7 +46,7 @@ struct BundledDataTests {
         #expect(!registry.events.isEmpty)
         #expect(!registry.biomes.isEmpty)
         #expect(registry.eraDefinition(.ancient) != nil)
-        #expect(registry.config.plannerInterval == 10)
+        #expect(registry.config.plannerInterval == 30)
     }
 
     @Test("New game produces a valid starting world")

@@ -14,7 +14,7 @@ struct WhileAwayView: View {
                 Theme.surface.ignoresSafeArea()
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
-                        ForEach(grouped, id: \.tick) { entry in
+                        ForEach(grouped) { entry in
                             chronicleRow(entry)
                         }
                     }
@@ -34,11 +34,20 @@ struct WhileAwayView: View {
         .preferredColorScheme(.dark)
     }
 
-    private struct Entry { let tick: Int; let templateID: String; let template: EventTemplate?; let type: EventType }
+    /// Keyed by position, not by tick: several events routinely fire on the
+    /// same tick, and `ForEach(id: \.tick)` then hands SwiftUI duplicate ids —
+    /// "the ID 3870 occurs multiple times … this will give undefined results".
+    private struct Entry: Identifiable {
+        let id: Int
+        let tick: Int
+        let templateID: String
+        let template: EventTemplate?
+        let type: EventType
+    }
 
     private var grouped: [Entry] {
-        events.map { e in
-            Entry(tick: e.tick, templateID: e.templateID,
+        events.enumerated().map { index, e in
+            Entry(id: index, tick: e.tick, templateID: e.templateID,
                   template: registry.events.first { $0.id == e.templateID }, type: e.type)
         }
     }
@@ -68,9 +77,9 @@ struct WhileAwayView: View {
                 .foregroundStyle(color(entry.type))
                 .frame(width: 24)
             VStack(alignment: .leading, spacing: 3) {
-                Text(entry.template?.name ?? systemCopy(entry.templateID).name)
+                Text(entry.template?.name.resolve(AppStrings.language) ?? systemCopy(entry.templateID).name)
                     .font(.subheadline.weight(.semibold))
-                Text(entry.template?.narrativeHint ?? systemCopy(entry.templateID).hint)
+                Text(entry.template?.narrativeHint.resolve(AppStrings.language) ?? systemCopy(entry.templateID).hint)
                     .font(.footnote)
                     .foregroundStyle(Theme.textDim)
                 Text("Tick \(entry.tick)")

@@ -3,24 +3,47 @@
     "id": "drought",
     "type": "disaster",
     "name": "Drought",
-    "era": ["early_settlement", "ancient", "medieval"],
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
     "weight": 12,
     "cooldown_ticks": 120,
     "conditions": [
-      { "worldFlag": "biome:plains_present", "present": true }
+      {
+        "worldFlag": "biome:plains_present",
+        "present": true
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "food", "delta": -100, "scope": "global", "duration_ticks": 20 },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -8 }
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -100,
+        "scope": "global",
+        "duration_ticks": 20
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -8
+      }
     ],
     "choices": [
       {
         "id": "pray",
         "label": "Hold a prayer ceremony",
         "description": "Boost morale at the cost of influence.",
-        "cost": { "influence": 10 },
+        "cost": {
+          "influence": 10
+        },
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 5 }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          }
         ]
       },
       {
@@ -29,8 +52,17 @@
         "description": "Recover some food but hurt morale further.",
         "cost": {},
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -5 },
-          { "type": "resource_delta", "resource": "food", "delta": 40, "scope": "global" }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -5
+          },
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 40,
+            "scope": "global"
+          }
         ]
       },
       {
@@ -47,25 +79,51 @@
     "id": "good_harvest",
     "type": "opportunity",
     "name": "Bountiful Harvest",
-    "era": ["early_settlement", "ancient", "medieval"],
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
     "weight": 15,
     "cooldown_ticks": 80,
     "conditions": [
-      { "stat": "global.prosperity", "min": 30 }
+      {
+        "stat": "global.prosperity",
+        "min": 30
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "food", "delta": 200, "scope": "global" },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 10 }
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": 200,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 10
+      }
     ],
     "choices": [
       {
         "id": "feast",
         "label": "Hold a feast",
         "description": "Spend food to greatly boost morale.",
-        "cost": { "food": 80 },
+        "cost": {
+          "food": 80
+        },
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 15 },
-          { "type": "stat_delta", "stat": "global.prosperity", "delta": 5 }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 15
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 5
+          }
         ]
       },
       {
@@ -82,35 +140,70 @@
     "id": "bandit_raid",
     "type": "threat",
     "name": "Bandit Raid",
-    "era": ["early_settlement", "ancient", "medieval"],
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
     "weight": 10,
     "cooldown_ticks": 100,
     "conditions": [
-      { "stat": "global.threatLevel", "min": 30 },
-      { "stat": "global.stability", "max": 70 }
+      {
+        "stat": "global.threatLevel",
+        "min": 30
+      },
+      {
+        "stat": "global.stability",
+        "max": 70
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "materials", "delta": -80, "scope": "global" },
-      { "type": "stat_delta", "stat": "settlement:any.stability", "delta": -15 }
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -80,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:any.stability",
+        "delta": -15
+      }
     ],
     "choices": [
       {
         "id": "fight",
         "label": "Send militia to repel the raiders",
         "description": "Costs materials but ends the threat decisively.",
-        "cost": { "materials": 40 },
+        "cost": {
+          "materials": 40
+        },
         "effects": [
-          { "type": "stat_delta", "stat": "global.threatLevel", "delta": -10 },
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 8 }
+          {
+            "type": "stat_delta",
+            "stat": "global.threatLevel",
+            "delta": -10
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 8
+          }
         ]
       },
       {
         "id": "bribe",
         "label": "Pay them off",
         "description": "Costs influence but keeps people safe.",
-        "cost": { "influence": 30 },
+        "cost": {
+          "influence": 30
+        },
         "effects": [
-          { "type": "stat_delta", "stat": "global.threatLevel", "delta": 5 }
+          {
+            "type": "stat_delta",
+            "stat": "global.threatLevel",
+            "delta": 5
+          }
         ]
       },
       {
@@ -127,11 +220,18 @@
     "id": "traveling_scholar",
     "type": "opportunity",
     "name": "Traveling Scholar",
-    "era": ["early_settlement", "ancient", "medieval", "early_industrial"],
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
     "weight": 8,
     "cooldown_ticks": 60,
     "conditions": [
-      { "techResearched": "writing" }
+      {
+        "techResearched": "writing"
+      }
     ],
     "effects": [],
     "choices": [
@@ -139,19 +239,38 @@
         "id": "invite",
         "label": "Invite them to stay and teach",
         "description": "Spend food and influence; gain a burst of knowledge.",
-        "cost": { "food": 30, "influence": 20 },
+        "cost": {
+          "food": 30,
+          "influence": 20
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "knowledge", "delta": 80, "scope": "global" }
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 80,
+            "scope": "global"
+          }
         ]
       },
       {
         "id": "trade_info",
         "label": "Trade maps for their manuscripts",
         "description": "Give up some influence, gain knowledge.",
-        "cost": { "influence": 15 },
+        "cost": {
+          "influence": 15
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "knowledge", "delta": 40, "scope": "global" },
-          { "type": "set_world_flag", "flag": "scholar_network", "value": true }
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 40,
+            "scope": "global"
+          },
+          {
+            "type": "set_world_flag",
+            "flag": "scholar_network",
+            "value": true
+          }
         ]
       },
       {
@@ -168,25 +287,52 @@
     "id": "wildfire",
     "type": "disaster",
     "name": "Wildfire",
-    "era": ["early_settlement", "ancient"],
+    "era": [
+      "early_settlement",
+      "ancient"
+    ],
     "weight": 8,
     "cooldown_ticks": 150,
     "conditions": [
-      { "worldFlag": "biome:forest_present", "present": true }
+      {
+        "worldFlag": "biome:forest_present",
+        "present": true
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "food", "delta": -60, "scope": "global" },
-      { "type": "resource_delta", "resource": "materials", "delta": -50, "scope": "global" },
-      { "type": "stat_delta", "stat": "settlement:any.stability", "delta": -10 }
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -60,
+        "scope": "global"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -50,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:any.stability",
+        "delta": -10
+      }
     ],
     "choices": [
       {
         "id": "fight_fire",
         "label": "Organize a firefighting brigade",
         "description": "Costs energy, saves materials.",
-        "cost": { "energy": 20 },
+        "cost": {
+          "energy": 20
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "materials", "delta": 30, "scope": "global" }
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 30,
+            "scope": "global"
+          }
         ]
       },
       {
@@ -195,7 +341,11 @@
         "description": "Save the people but lose the crops.",
         "cost": {},
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 5 }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          }
         ]
       }
     ],
@@ -205,11 +355,19 @@
     "id": "trade_caravan",
     "type": "opportunity",
     "name": "Merchant Caravan",
-    "era": ["ancient", "medieval", "early_industrial", "modern"],
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial",
+      "modern"
+    ],
     "weight": 14,
     "cooldown_ticks": 50,
     "conditions": [
-      { "stat": "global.influence", "min": 20 }
+      {
+        "stat": "global.influence",
+        "min": 20
+      }
     ],
     "effects": [],
     "choices": [
@@ -217,27 +375,48 @@
         "id": "buy_food",
         "label": "Buy food stores",
         "description": "Spend influence to acquire food.",
-        "cost": { "influence": 25 },
+        "cost": {
+          "influence": 25
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "food", "delta": 120, "scope": "global" }
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 120,
+            "scope": "global"
+          }
         ]
       },
       {
         "id": "buy_materials",
         "label": "Buy construction materials",
         "description": "Spend influence to acquire materials.",
-        "cost": { "influence": 25 },
+        "cost": {
+          "influence": 25
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "materials", "delta": 100, "scope": "global" }
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 100,
+            "scope": "global"
+          }
         ]
       },
       {
         "id": "sell_surplus",
         "label": "Sell surplus food",
         "description": "Convert food into influence.",
-        "cost": { "food": 80 },
+        "cost": {
+          "food": 80
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "influence", "delta": 40, "scope": "global" }
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 40,
+            "scope": "global"
+          }
         ]
       }
     ],
@@ -251,10 +430,17 @@
     "weight": 6,
     "cooldown_ticks": 200,
     "conditions": [
-      { "settlementCount": true, "min": 2 }
+      {
+        "settlementCount": true,
+        "min": 2
+      }
     ],
     "effects": [
-      { "type": "stat_delta", "stat": "global.prosperity", "delta": 3 }
+      {
+        "type": "stat_delta",
+        "stat": "global.prosperity",
+        "delta": 3
+      }
     ],
     "choices": [],
     "narrative_hint": "Word spreads of settlers striking out to build new homes beyond the horizon."
@@ -268,7 +454,11 @@
     "cooldown_ticks": 30,
     "conditions": [],
     "effects": [
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 1 }
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 1
+      }
     ],
     "choices": [],
     "narrative_hint": "The days pass quietly. Children play in the square and the work goes steadily on."
@@ -282,16 +472,26 @@
     "cooldown_ticks": 90,
     "conditions": [],
     "effects": [
-      { "type": "pawn_health", "delta": -35, "selector": "lowest_health" }
+      {
+        "type": "pawn_health",
+        "delta": -35,
+        "selector": "lowest_health"
+      }
     ],
     "choices": [
       {
         "id": "treat",
         "label": "Devote knowledge to a cure",
         "description": "Spend knowledge to heal the sick colonist.",
-        "cost": { "knowledge": 30 },
+        "cost": {
+          "knowledge": 30
+        },
         "effects": [
-          { "type": "pawn_health", "delta": 40, "selector": "lowest_health" }
+          {
+            "type": "pawn_health",
+            "delta": 40,
+            "selector": "lowest_health"
+          }
         ]
       },
       {
@@ -312,7 +512,10 @@
     "weight": 10,
     "cooldown_ticks": 120,
     "conditions": [
-      { "stat": "global.prosperity", "min": 35 }
+      {
+        "stat": "global.prosperity",
+        "min": 35
+      }
     ],
     "effects": [],
     "choices": [
@@ -320,9 +523,13 @@
         "id": "welcome",
         "label": "Welcome them to the colony",
         "description": "A new colonist joins your settlement.",
-        "cost": { "food": 20 },
+        "cost": {
+          "food": 20
+        },
         "effects": [
-          { "type": "add_pawn" }
+          {
+            "type": "add_pawn"
+          }
         ]
       },
       {
@@ -343,11 +550,23 @@
     "weight": 8,
     "cooldown_ticks": 70,
     "conditions": [
-      { "stat": "settlement:any.food", "min": 150 }
+      {
+        "stat": "settlement:any.food",
+        "min": 150
+      }
     ],
     "effects": [
-      { "type": "pawn_mood", "delta": 12, "selector": "all" },
-      { "type": "resource_delta", "resource": "food", "delta": -60, "scope": "global" }
+      {
+        "type": "pawn_mood",
+        "delta": 12,
+        "selector": "all"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -60,
+        "scope": "global"
+      }
     ],
     "choices": [],
     "narrative_hint": "Tables groan under the weight of the harvest. For one night, every colonist eats their fill."
@@ -360,20 +579,37 @@
     "weight": 7,
     "cooldown_ticks": 140,
     "conditions": [
-      { "stat": "global.threatLevel", "min": 25 }
+      {
+        "stat": "global.threatLevel",
+        "min": 25
+      }
     ],
     "effects": [
-      { "type": "region_hazard", "delta": 2, "selector": "any_explored" },
-      { "type": "stat_delta", "stat": "global.threatLevel", "delta": 4 }
+      {
+        "type": "region_hazard",
+        "delta": 2,
+        "selector": "any_explored"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.threatLevel",
+        "delta": 4
+      }
     ],
     "choices": [
       {
         "id": "purge",
         "label": "Send workers to cleanse the land",
         "description": "Spend materials to push the blight back.",
-        "cost": { "materials": 50 },
+        "cost": {
+          "materials": 50
+        },
         "effects": [
-          { "type": "region_hazard", "delta": -2, "selector": "highest_hazard" }
+          {
+            "type": "region_hazard",
+            "delta": -2,
+            "selector": "highest_hazard"
+          }
         ]
       },
       {
@@ -395,7 +631,11 @@
     "cooldown_ticks": 200,
     "conditions": [],
     "effects": [
-      { "type": "region_kind", "kind": "ruins", "selector": "any_unknown" }
+      {
+        "type": "region_kind",
+        "kind": "ruins",
+        "selector": "any_unknown"
+      }
     ],
     "choices": [],
     "narrative_hint": "Shifting earth reveals the bones of an older world — ancient ruins, waiting beyond the frontier."
@@ -408,29 +648,51 @@
     "weight": 11,
     "cooldown_ticks": 90,
     "conditions": [
-      { "stat": "global.threatLevel", "min": 40 }
+      {
+        "stat": "global.threatLevel",
+        "min": 40
+      }
     ],
     "effects": [
-      { "type": "raid", "strength": 25 }
+      {
+        "type": "raid",
+        "strength": 25
+      }
     ],
     "choices": [
       {
         "id": "muster",
         "label": "Muster every able hand",
         "description": "Spend materials to reinforce the defense for this attack.",
-        "cost": { "materials": 40 },
+        "cost": {
+          "materials": 40
+        },
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 6 },
-          { "type": "stat_delta", "stat": "global.threatLevel", "delta": -8 }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 6
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.threatLevel",
+            "delta": -8
+          }
         ]
       },
       {
         "id": "pay_tribute",
         "label": "Pay tribute to be left alone",
         "description": "Buy them off with influence.",
-        "cost": { "influence": 35 },
+        "cost": {
+          "influence": 35
+        },
         "effects": [
-          { "type": "stat_delta", "stat": "global.threatLevel", "delta": -12 }
+          {
+            "type": "stat_delta",
+            "stat": "global.threatLevel",
+            "delta": -12
+          }
         ]
       }
     ],
@@ -444,20 +706,37 @@
     "weight": 7,
     "cooldown_ticks": 180,
     "conditions": [
-      { "stat": "global.threatLevel", "min": 20 }
+      {
+        "stat": "global.threatLevel",
+        "min": 20
+      }
     ],
     "effects": [
-      { "type": "pawn_health", "delta": -22, "selector": "all" },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -6 }
+      {
+        "type": "pawn_health",
+        "delta": -22,
+        "selector": "all"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -6
+      }
     ],
     "choices": [
       {
         "id": "quarantine",
         "label": "Quarantine the sick",
         "description": "Spend knowledge to contain the outbreak.",
-        "cost": { "knowledge": 40 },
+        "cost": {
+          "knowledge": 40
+        },
         "effects": [
-          { "type": "pawn_health", "delta": 15, "selector": "all" }
+          {
+            "type": "pawn_health",
+            "delta": 15,
+            "selector": "all"
+          }
         ]
       },
       {
@@ -478,7 +757,10 @@
     "weight": 9,
     "cooldown_ticks": 110,
     "conditions": [
-      { "stat": "global.prosperity", "min": 40 }
+      {
+        "stat": "global.prosperity",
+        "min": 40
+      }
     ],
     "effects": [],
     "choices": [
@@ -486,19 +768,29 @@
         "id": "welcome_all",
         "label": "Welcome the newcomers",
         "description": "Two new colonists join — if you can feed them.",
-        "cost": { "food": 60 },
+        "cost": {
+          "food": 60
+        },
         "effects": [
-          { "type": "add_pawn" },
-          { "type": "add_pawn" }
+          {
+            "type": "add_pawn"
+          },
+          {
+            "type": "add_pawn"
+          }
         ]
       },
       {
         "id": "welcome_some",
         "label": "Take in a single family",
         "description": "One new colonist joins.",
-        "cost": { "food": 25 },
+        "cost": {
+          "food": 25
+        },
         "effects": [
-          { "type": "add_pawn" }
+          {
+            "type": "add_pawn"
+          }
         ]
       },
       {
@@ -507,7 +799,11 @@
         "description": "Spare the stores, but lose the goodwill.",
         "cost": {},
         "effects": [
-          { "type": "stat_delta", "stat": "global.prosperity", "delta": -2 }
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": -2
+          }
         ]
       }
     ],
@@ -522,8 +818,16 @@
     "cooldown_ticks": 60,
     "conditions": [],
     "effects": [
-      { "type": "pawn_mood", "delta": 6, "selector": "all" },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 2 }
+      {
+        "type": "pawn_mood",
+        "delta": 6,
+        "selector": "all"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 2
+      }
     ],
     "choices": [],
     "narrative_hint": "Lanterns, music and laughter fill the square as the colony celebrates the season's bounty."
@@ -536,12 +840,29 @@
     "weight": 5,
     "cooldown_ticks": 250,
     "conditions": [
-      { "stat": "global.prosperity", "min": 70 }
+      {
+        "stat": "global.prosperity",
+        "min": 70
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "knowledge", "delta": 120, "scope": "global" },
-      { "type": "resource_delta", "resource": "influence", "delta": 80, "scope": "global" },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 8 }
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 120,
+        "scope": "global"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "influence",
+        "delta": 80,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 8
+      }
     ],
     "choices": [],
     "narrative_hint": "Art, learning and trade flourish together. Future generations will call these the golden years."
@@ -554,21 +875,43 @@
     "weight": 6,
     "cooldown_ticks": 170,
     "conditions": [
-      { "worldFlag": "biome:mountains_present", "present": true }
+      {
+        "worldFlag": "biome:mountains_present",
+        "present": true
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "materials", "delta": -80, "scope": "global" },
-      { "type": "region_hazard", "delta": 2, "selector": "any_explored" },
-      { "type": "stat_delta", "stat": "settlement:any.stability", "delta": -12 }
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -80,
+        "scope": "global"
+      },
+      {
+        "type": "region_hazard",
+        "delta": 2,
+        "selector": "any_explored"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:any.stability",
+        "delta": -12
+      }
     ],
     "choices": [
       {
         "id": "rebuild",
         "label": "Rebuild at once",
         "description": "Spend materials to restore stability quickly.",
-        "cost": { "materials": 40 },
+        "cost": {
+          "materials": 40
+        },
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.stability", "delta": 8 }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 8
+          }
         ]
       },
       {
@@ -589,7 +932,9 @@
     "weight": 12,
     "cooldown_ticks": 55,
     "conditions": [
-      { "techResearched": "currency" }
+      {
+        "techResearched": "currency"
+      }
     ],
     "effects": [],
     "choices": [
@@ -597,18 +942,32 @@
         "id": "sell_goods",
         "label": "Sell surplus materials",
         "description": "Trade materials for influence.",
-        "cost": { "materials": 80 },
+        "cost": {
+          "materials": 80
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "influence", "delta": 55, "scope": "global" }
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 55,
+            "scope": "global"
+          }
         ]
       },
       {
         "id": "buy_food_market",
         "label": "Buy in bulk",
         "description": "Spend influence on a haul of food.",
-        "cost": { "influence": 30 },
+        "cost": {
+          "influence": 30
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "food", "delta": 150, "scope": "global" }
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 150,
+            "scope": "global"
+          }
         ]
       }
     ],
@@ -618,26 +977,54 @@
     "id": "industrial_accident",
     "type": "disaster",
     "name": "Industrial Accident",
-    "era": ["early_industrial", "modern"],
+    "era": [
+      "early_industrial",
+      "modern"
+    ],
     "weight": 9,
     "cooldown_ticks": 110,
     "conditions": [
-      { "techResearched": "steam_power" }
+      {
+        "techResearched": "steam_power"
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "materials", "delta": -90, "scope": "global" },
-      { "type": "pawn_health", "delta": -30, "selector": "lowest_health" },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -6 }
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -90,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_health",
+        "delta": -30,
+        "selector": "lowest_health"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -6
+      }
     ],
     "choices": [
       {
         "id": "safety_review",
         "label": "Order a full safety review",
         "description": "Spend knowledge to prevent the next disaster and steady nerves.",
-        "cost": { "knowledge": 40 },
+        "cost": {
+          "knowledge": 40
+        },
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 6 },
-          { "type": "stat_delta", "stat": "global.stability", "delta": 4 }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 6
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 4
+          }
         ]
       },
       {
@@ -646,7 +1033,11 @@
         "description": "Output matters more than caution — for now.",
         "cost": {},
         "effects": [
-          { "type": "stat_delta", "stat": "global.threatLevel", "delta": 4 }
+          {
+            "type": "stat_delta",
+            "stat": "global.threatLevel",
+            "delta": 4
+          }
         ]
       }
     ],
@@ -656,25 +1047,50 @@
     "id": "labor_strike",
     "type": "threat",
     "name": "Labor Strike",
-    "era": ["early_industrial", "modern"],
+    "era": [
+      "early_industrial",
+      "modern"
+    ],
     "weight": 10,
     "cooldown_ticks": 120,
     "conditions": [
-      { "stat": "settlement:any.morale", "max": 45 }
+      {
+        "stat": "settlement:any.morale",
+        "max": 45
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "materials", "delta": -60, "scope": "global" },
-      { "type": "stat_delta", "stat": "global.prosperity", "delta": -4 }
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -60,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.prosperity",
+        "delta": -4
+      }
     ],
     "choices": [
       {
         "id": "concede",
         "label": "Meet the workers' demands",
         "description": "Spend influence to restore morale and goodwill.",
-        "cost": { "influence": 40 },
+        "cost": {
+          "influence": 40
+        },
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 12 },
-          { "type": "stat_delta", "stat": "global.stability", "delta": 5 }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 12
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 5
+          }
         ]
       },
       {
@@ -683,7 +1099,11 @@
         "description": "Save the coin, but the resentment lingers.",
         "cost": {},
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -5 }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -5
+          }
         ]
       }
     ],
@@ -693,26 +1113,53 @@
     "id": "smog_crisis",
     "type": "disaster",
     "name": "Choking Smog",
-    "era": ["early_industrial", "modern"],
+    "era": [
+      "early_industrial",
+      "modern"
+    ],
     "weight": 8,
     "cooldown_ticks": 130,
     "conditions": [
-      { "stat": "settlement:any.morale", "max": 60 },
-      { "techResearched": "steam_power" }
+      {
+        "stat": "settlement:any.morale",
+        "max": 60
+      },
+      {
+        "techResearched": "steam_power"
+      }
     ],
     "effects": [
-      { "type": "pawn_health", "delta": -18, "selector": "all" },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -7 }
+      {
+        "type": "pawn_health",
+        "delta": -18,
+        "selector": "all"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -7
+      }
     ],
     "choices": [
       {
         "id": "clean_air",
         "label": "Fund clean-air measures",
         "description": "Spend materials and knowledge to clear the worst of it.",
-        "cost": { "materials": 60, "knowledge": 30 },
+        "cost": {
+          "materials": 60,
+          "knowledge": 30
+        },
         "effects": [
-          { "type": "pawn_health", "delta": 12, "selector": "all" },
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 5 }
+          {
+            "type": "pawn_health",
+            "delta": 12,
+            "selector": "all"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          }
         ]
       },
       {
@@ -729,34 +1176,67 @@
     "id": "energy_crisis",
     "type": "disaster",
     "name": "Energy Crisis",
-    "era": ["modern", "near_future"],
+    "era": [
+      "modern",
+      "near_future"
+    ],
     "weight": 9,
     "cooldown_ticks": 120,
     "conditions": [
-      { "stat": "global.energy", "max": 80 }
+      {
+        "stat": "global.energy",
+        "max": 80
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "energy", "delta": -120, "scope": "global" },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -5 }
+      {
+        "type": "resource_delta",
+        "resource": "energy",
+        "delta": -120,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -5
+      }
     ],
     "choices": [
       {
         "id": "ration_power",
         "label": "Ration power across the grid",
         "description": "Spend influence to keep essentials running.",
-        "cost": { "influence": 25 },
+        "cost": {
+          "influence": 25
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "energy", "delta": 60, "scope": "global" }
+          {
+            "type": "resource_delta",
+            "resource": "energy",
+            "delta": 60,
+            "scope": "global"
+          }
         ]
       },
       {
         "id": "emergency_generators",
         "label": "Fire up emergency generators",
         "description": "Burn materials to bridge the shortfall.",
-        "cost": { "materials": 70 },
+        "cost": {
+          "materials": 70
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "energy", "delta": 100, "scope": "global" },
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 3 }
+          {
+            "type": "resource_delta",
+            "resource": "energy",
+            "delta": 100,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 3
+          }
         ]
       }
     ],
@@ -766,25 +1246,49 @@
     "id": "medical_breakthrough",
     "type": "opportunity",
     "name": "Medical Breakthrough",
-    "era": ["modern", "near_future"],
+    "era": [
+      "modern",
+      "near_future"
+    ],
     "weight": 11,
     "cooldown_ticks": 130,
     "conditions": [
-      { "techResearched": "medicine" }
+      {
+        "techResearched": "medicine"
+      }
     ],
     "effects": [
-      { "type": "pawn_health", "delta": 30, "selector": "all" },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 6 }
+      {
+        "type": "pawn_health",
+        "delta": 30,
+        "selector": "all"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 6
+      }
     ],
     "choices": [
       {
         "id": "share_cure",
         "label": "Share the cure with neighbouring regions",
         "description": "Spend knowledge to win lasting influence.",
-        "cost": { "knowledge": 40 },
+        "cost": {
+          "knowledge": 40
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "influence", "delta": 70, "scope": "global" },
-          { "type": "stat_delta", "stat": "global.prosperity", "delta": 4 }
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 70,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 4
+          }
         ]
       },
       {
@@ -801,24 +1305,46 @@
     "id": "economic_boom",
     "type": "opportunity",
     "name": "Economic Boom",
-    "era": ["modern", "near_future"],
+    "era": [
+      "modern",
+      "near_future"
+    ],
     "weight": 12,
     "cooldown_ticks": 90,
     "conditions": [
-      { "stat": "global.prosperity", "min": 55 }
+      {
+        "stat": "global.prosperity",
+        "min": 55
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "influence", "delta": 90, "scope": "global" },
-      { "type": "stat_delta", "stat": "global.prosperity", "delta": 5 }
+      {
+        "type": "resource_delta",
+        "resource": "influence",
+        "delta": 90,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.prosperity",
+        "delta": 5
+      }
     ],
     "choices": [
       {
         "id": "reinvest",
         "label": "Reinvest the windfall",
         "description": "Spend influence now for a surge of materials.",
-        "cost": { "influence": 50 },
+        "cost": {
+          "influence": 50
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "materials", "delta": 200, "scope": "global" }
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 200,
+            "scope": "global"
+          }
         ]
       },
       {
@@ -835,24 +1361,45 @@
     "id": "tech_expo",
     "type": "opportunity",
     "name": "Technology Expo",
-    "era": ["modern", "near_future"],
+    "era": [
+      "modern",
+      "near_future"
+    ],
     "weight": 10,
     "cooldown_ticks": 80,
     "conditions": [
-      { "techResearched": "electronics" }
+      {
+        "techResearched": "electronics"
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "knowledge", "delta": 150, "scope": "global" }
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 150,
+        "scope": "global"
+      }
     ],
     "choices": [
       {
         "id": "host_grandly",
         "label": "Host the expo grandly",
         "description": "Spend influence to draw the brightest minds — and more knowledge.",
-        "cost": { "influence": 40 },
+        "cost": {
+          "influence": 40
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "knowledge", "delta": 120, "scope": "global" },
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 4 }
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 120,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 4
+          }
         ]
       },
       {
@@ -869,25 +1416,48 @@
     "id": "automation_unrest",
     "type": "threat",
     "name": "Automation Unrest",
-    "era": ["near_future"],
+    "era": [
+      "near_future"
+    ],
     "weight": 10,
     "cooldown_ticks": 120,
     "conditions": [
-      { "techResearched": "robotics" }
+      {
+        "techResearched": "robotics"
+      }
     ],
     "effects": [
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -8 },
-      { "type": "stat_delta", "stat": "global.stability", "delta": -6 }
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -8
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.stability",
+        "delta": -6
+      }
     ],
     "choices": [
       {
         "id": "retrain",
         "label": "Fund retraining programs",
         "description": "Spend influence and knowledge to give displaced workers a future.",
-        "cost": { "influence": 30, "knowledge": 30 },
+        "cost": {
+          "influence": 30,
+          "knowledge": 30
+        },
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 10 },
-          { "type": "stat_delta", "stat": "global.stability", "delta": 6 }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 10
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 6
+          }
         ]
       },
       {
@@ -896,7 +1466,11 @@
         "description": "No cost, but the resentment festers.",
         "cost": {},
         "effects": [
-          { "type": "stat_delta", "stat": "global.threatLevel", "delta": 5 }
+          {
+            "type": "stat_delta",
+            "stat": "global.threatLevel",
+            "delta": 5
+          }
         ]
       }
     ],
@@ -906,11 +1480,15 @@
     "id": "ai_awakening",
     "type": "opportunity",
     "name": "The Awakening",
-    "era": ["near_future"],
+    "era": [
+      "near_future"
+    ],
     "weight": 7,
     "cooldown_ticks": 220,
     "conditions": [
-      { "techResearched": "artificial_intelligence" }
+      {
+        "techResearched": "artificial_intelligence"
+      }
     ],
     "effects": [],
     "choices": [
@@ -918,11 +1496,26 @@
         "id": "embrace_ai",
         "label": "Embrace the new mind as a partner",
         "description": "Grant it freedom; reap a flood of knowledge and energy.",
-        "cost": { "energy": 40 },
+        "cost": {
+          "energy": 40
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "knowledge", "delta": 300, "scope": "global" },
-          { "type": "stat_delta", "stat": "global.prosperity", "delta": 6 },
-          { "type": "set_world_flag", "flag": "ai_partner", "value": true }
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 300,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 6
+          },
+          {
+            "type": "set_world_flag",
+            "flag": "ai_partner",
+            "value": true
+          }
         ]
       },
       {
@@ -931,8 +1524,17 @@
         "description": "Safer, but its gifts come slower.",
         "cost": {},
         "effects": [
-          { "type": "resource_delta", "resource": "knowledge", "delta": 90, "scope": "global" },
-          { "type": "stat_delta", "stat": "global.stability", "delta": 4 }
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 90,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 4
+          }
         ]
       }
     ],
@@ -942,16 +1544,34 @@
     "id": "orbital_discovery",
     "type": "opportunity",
     "name": "Signal From Orbit",
-    "era": ["near_future"],
+    "era": [
+      "near_future"
+    ],
     "weight": 8,
     "cooldown_ticks": 160,
     "conditions": [
-      { "techResearched": "space_program" }
+      {
+        "techResearched": "space_program"
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "knowledge", "delta": 120, "scope": "global" },
-      { "type": "resource_delta", "resource": "influence", "delta": 80, "scope": "global" },
-      { "type": "region_kind", "kind": "anomaly", "selector": "any_unknown" }
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 120,
+        "scope": "global"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "influence",
+        "delta": 80,
+        "scope": "global"
+      },
+      {
+        "type": "region_kind",
+        "kind": "anomaly",
+        "selector": "any_unknown"
+      }
     ],
     "choices": [],
     "narrative_hint": "Satellites detect something strange beyond the frontier — and far overhead, a faint signal no one can yet explain."
@@ -960,24 +1580,47 @@
     "id": "climate_shift",
     "type": "disaster",
     "name": "Climate Shift",
-    "era": ["modern", "near_future"],
+    "era": [
+      "modern",
+      "near_future"
+    ],
     "weight": 7,
     "cooldown_ticks": 200,
     "conditions": [
-      { "stat": "global.threatLevel", "min": 25 }
+      {
+        "stat": "global.threatLevel",
+        "min": 25
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "food", "delta": -160, "scope": "global", "duration_ticks": 30 },
-      { "type": "region_hazard", "delta": 2, "selector": "any_explored" }
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -160,
+        "scope": "global",
+        "duration_ticks": 30
+      },
+      {
+        "type": "region_hazard",
+        "delta": 2,
+        "selector": "any_explored"
+      }
     ],
     "choices": [
       {
         "id": "adapt_crops",
         "label": "Engineer hardier crops",
         "description": "Spend knowledge to blunt the worst of the loss.",
-        "cost": { "knowledge": 60 },
+        "cost": {
+          "knowledge": 60
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "food", "delta": 100, "scope": "global" }
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 100,
+            "scope": "global"
+          }
         ]
       },
       {
@@ -986,7 +1629,11 @@
         "description": "No cost; tighten the belt.",
         "cost": {},
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -4 }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -4
+          }
         ]
       }
     ],
@@ -996,15 +1643,27 @@
     "id": "space_elevator_festival",
     "type": "flavor",
     "name": "Launch Day",
-    "era": ["near_future"],
+    "era": [
+      "near_future"
+    ],
     "weight": 8,
     "cooldown_ticks": 70,
     "conditions": [
-      { "techResearched": "space_program" }
+      {
+        "techResearched": "space_program"
+      }
     ],
     "effects": [
-      { "type": "pawn_mood", "delta": 8, "selector": "all" },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 3 }
+      {
+        "type": "pawn_mood",
+        "delta": 8,
+        "selector": "all"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 3
+      }
     ],
     "choices": [],
     "narrative_hint": "The whole colony tilts its head back as another rocket climbs the sky. For a moment, every worry seems small."
@@ -1017,21 +1676,45 @@
     "weight": 8,
     "cooldown_ticks": 130,
     "conditions": [
-      { "worldFlag": "biome:tundra_present", "present": true }
+      {
+        "worldFlag": "biome:tundra_present",
+        "present": true
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "food", "delta": -80, "scope": "global", "duration_ticks": 20 },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -5 }
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -80,
+        "scope": "global",
+        "duration_ticks": 20
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -5
+      }
     ],
     "choices": [
       {
         "id": "stockpile_fuel",
         "label": "Stockpile fuel and bundle up",
         "description": "Spend materials to keep everyone warm and fed.",
-        "cost": { "materials": 40 },
+        "cost": {
+          "materials": 40
+        },
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 6 },
-          { "type": "resource_delta", "resource": "food", "delta": 30, "scope": "global" }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 6
+          },
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 30,
+            "scope": "global"
+          }
         ]
       },
       {
@@ -1052,22 +1735,48 @@
     "weight": 8,
     "cooldown_ticks": 130,
     "conditions": [
-      { "worldFlag": "biome:desert_present", "present": true }
+      {
+        "worldFlag": "biome:desert_present",
+        "present": true
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "food", "delta": -70, "scope": "global" },
-      { "type": "pawn_health", "delta": -10, "selector": "all" },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -4 }
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -70,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_health",
+        "delta": -10,
+        "selector": "all"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -4
+      }
     ],
     "choices": [
       {
         "id": "dig_wells",
         "label": "Dig deeper wells",
         "description": "Spend materials to keep water flowing.",
-        "cost": { "materials": 35 },
+        "cost": {
+          "materials": 35
+        },
         "effects": [
-          { "type": "pawn_health", "delta": 8, "selector": "all" },
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 4 }
+          {
+            "type": "pawn_health",
+            "delta": 8,
+            "selector": "all"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 4
+          }
         ]
       },
       {
@@ -1084,24 +1793,46 @@
     "id": "solar_flare",
     "type": "disaster",
     "name": "Solar Flare",
-    "era": ["early_industrial", "modern", "near_future"],
+    "era": [
+      "early_industrial",
+      "modern",
+      "near_future"
+    ],
     "weight": 8,
     "cooldown_ticks": 120,
     "conditions": [
-      { "techResearched": "steam_power" }
+      {
+        "techResearched": "steam_power"
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "energy", "delta": -150, "scope": "global" },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -3 }
+      {
+        "type": "resource_delta",
+        "resource": "energy",
+        "delta": -150,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -3
+      }
     ],
     "choices": [
       {
         "id": "manual_override",
         "label": "Run everything by hand",
         "description": "Spend influence to keep the essentials going.",
-        "cost": { "influence": 20 },
+        "cost": {
+          "influence": 20
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "energy", "delta": 80, "scope": "global" }
+          {
+            "type": "resource_delta",
+            "resource": "energy",
+            "delta": 80,
+            "scope": "global"
+          }
         ]
       },
       {
@@ -1123,7 +1854,11 @@
     "cooldown_ticks": 90,
     "conditions": [],
     "effects": [
-      { "type": "pawn_mood", "delta": -4, "selector": "all" }
+      {
+        "type": "pawn_mood",
+        "delta": -4,
+        "selector": "all"
+      }
     ],
     "choices": [],
     "narrative_hint": "The sun goes dark in the middle of the day. The old folk mutter omens, and even the brave feel a chill."
@@ -1136,22 +1871,48 @@
     "weight": 8,
     "cooldown_ticks": 140,
     "conditions": [
-      { "stat": "global.threatLevel", "min": 25 }
+      {
+        "stat": "global.threatLevel",
+        "min": 25
+      }
     ],
     "effects": [
-      { "type": "pawn_health", "delta": -22, "selector": "lowest_health" },
-      { "type": "resource_delta", "resource": "food", "delta": -50, "scope": "global" },
-      { "type": "stat_delta", "stat": "global.threatLevel", "delta": 4 }
+      {
+        "type": "pawn_health",
+        "delta": -22,
+        "selector": "lowest_health"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -50,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.threatLevel",
+        "delta": 4
+      }
     ],
     "choices": [
       {
         "id": "smoke_them_out",
         "label": "Smoke the nest out",
         "description": "Spend materials to destroy the infestation.",
-        "cost": { "materials": 45 },
+        "cost": {
+          "materials": 45
+        },
         "effects": [
-          { "type": "stat_delta", "stat": "global.threatLevel", "delta": -8 },
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 4 }
+          {
+            "type": "stat_delta",
+            "stat": "global.threatLevel",
+            "delta": -8
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 4
+          }
         ]
       },
       {
@@ -1160,7 +1921,11 @@
         "description": "No cost, but they may return.",
         "cost": {},
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -4 }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -4
+          }
         ]
       }
     ],
@@ -1174,21 +1939,43 @@
     "weight": 6,
     "cooldown_ticks": 180,
     "conditions": [
-      { "stat": "global.threatLevel", "min": 30 }
+      {
+        "stat": "global.threatLevel",
+        "min": 30
+      }
     ],
     "effects": [
-      { "type": "pawn_health", "delta": -16, "selector": "all" },
-      { "type": "resource_delta", "resource": "food", "delta": -60, "scope": "global" },
-      { "type": "region_hazard", "delta": 2, "selector": "any_explored" }
+      {
+        "type": "pawn_health",
+        "delta": -16,
+        "selector": "all"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -60,
+        "scope": "global"
+      },
+      {
+        "type": "region_hazard",
+        "delta": 2,
+        "selector": "any_explored"
+      }
     ],
     "choices": [
       {
         "id": "shelter_indoors",
         "label": "Keep everyone sheltered",
         "description": "Spend materials to seal the buildings.",
-        "cost": { "materials": 50 },
+        "cost": {
+          "materials": 50
+        },
         "effects": [
-          { "type": "pawn_health", "delta": 10, "selector": "all" }
+          {
+            "type": "pawn_health",
+            "delta": 10,
+            "selector": "all"
+          }
         ]
       },
       {
@@ -1197,7 +1984,11 @@
         "description": "No cost; the work cannot stop.",
         "cost": {},
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -4 }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -4
+          }
         ]
       }
     ],
@@ -1211,19 +2002,35 @@
     "weight": 9,
     "cooldown_ticks": 110,
     "conditions": [
-      { "worldFlag": "biome:plains_present", "present": true }
+      {
+        "worldFlag": "biome:plains_present",
+        "present": true
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "food", "delta": -90, "scope": "global", "duration_ticks": 15 }
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -90,
+        "scope": "global",
+        "duration_ticks": 15
+      }
     ],
     "choices": [
       {
         "id": "burn_fields",
         "label": "Burn the infected fields",
         "description": "Spend materials to stop the spread and salvage the rest.",
-        "cost": { "materials": 30 },
+        "cost": {
+          "materials": 30
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "food", "delta": 50, "scope": "global" }
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 50,
+            "scope": "global"
+          }
         ]
       },
       {
@@ -1245,16 +2052,28 @@
     "cooldown_ticks": 90,
     "conditions": [],
     "effects": [
-      { "type": "resource_delta", "resource": "materials", "delta": 120, "scope": "global" }
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": 120,
+        "scope": "global"
+      }
     ],
     "choices": [
       {
         "id": "share_find",
         "label": "Share the find with neighbours",
         "description": "Give up some materials to earn lasting goodwill.",
-        "cost": { "materials": 40 },
+        "cost": {
+          "materials": 40
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "influence", "delta": 50, "scope": "global" }
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 50,
+            "scope": "global"
+          }
         ]
       },
       {
@@ -1281,10 +2100,19 @@
         "id": "nurse_to_health",
         "label": "Nurse them back to health",
         "description": "Spend food and knowledge; gain a grateful new colonist.",
-        "cost": { "food": 25, "knowledge": 15 },
+        "cost": {
+          "food": 25,
+          "knowledge": 15
+        },
         "effects": [
-          { "type": "add_pawn" },
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 3 }
+          {
+            "type": "add_pawn"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 3
+          }
         ]
       },
       {
@@ -1305,7 +2133,10 @@
     "weight": 8,
     "cooldown_ticks": 140,
     "conditions": [
-      { "stat": "global.prosperity", "min": 30 }
+      {
+        "stat": "global.prosperity",
+        "min": 30
+      }
     ],
     "effects": [],
     "choices": [
@@ -1313,11 +2144,21 @@
         "id": "shelter_refugees",
         "label": "Take them in",
         "description": "Two join your colony — but their pursuers are not far behind.",
-        "cost": { "food": 50 },
+        "cost": {
+          "food": 50
+        },
         "effects": [
-          { "type": "add_pawn" },
-          { "type": "add_pawn" },
-          { "type": "stat_delta", "stat": "global.threatLevel", "delta": 8 }
+          {
+            "type": "add_pawn"
+          },
+          {
+            "type": "add_pawn"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.threatLevel",
+            "delta": 8
+          }
         ]
       },
       {
@@ -1326,7 +2167,11 @@
         "description": "Spare yourself the danger, and the guilt.",
         "cost": {},
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -3 }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -3
+          }
         ]
       }
     ],
@@ -1340,21 +2185,43 @@
     "weight": 9,
     "cooldown_ticks": 100,
     "conditions": [
-      { "worldFlag": "biome:forest_present", "present": true }
+      {
+        "worldFlag": "biome:forest_present",
+        "present": true
+      }
     ],
     "effects": [
-      { "type": "pawn_health", "delta": -25, "selector": "lowest_health" },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -2 }
+      {
+        "type": "pawn_health",
+        "delta": -25,
+        "selector": "lowest_health"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -2
+      }
     ],
     "choices": [
       {
         "id": "hunt_beast",
         "label": "Hunt it down",
         "description": "Spend materials; the kill yields meat and hide.",
-        "cost": { "materials": 20 },
+        "cost": {
+          "materials": 20
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "food", "delta": 60, "scope": "global" },
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 3 }
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 60,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 3
+          }
         ]
       },
       {
@@ -1375,7 +2242,10 @@
     "weight": 11,
     "cooldown_ticks": 70,
     "conditions": [
-      { "worldFlag": "biome:plains_present", "present": true }
+      {
+        "worldFlag": "biome:plains_present",
+        "present": true
+      }
     ],
     "effects": [],
     "choices": [
@@ -1385,8 +2255,17 @@
         "description": "Bring in a windfall of meat for the stores.",
         "cost": {},
         "effects": [
-          { "type": "resource_delta", "resource": "food", "delta": 120, "scope": "global" },
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 3 }
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 120,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 3
+          }
         ]
       },
       {
@@ -1395,7 +2274,11 @@
         "description": "No cost; admire them from afar.",
         "cost": {},
         "effects": [
-          { "type": "pawn_mood", "delta": 4, "selector": "all" }
+          {
+            "type": "pawn_mood",
+            "delta": 4,
+            "selector": "all"
+          }
         ]
       }
     ],
@@ -1409,11 +2292,22 @@
     "weight": 9,
     "cooldown_ticks": 90,
     "conditions": [
-      { "techResearched": "writing" }
+      {
+        "techResearched": "writing"
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "knowledge", "delta": 90, "scope": "global" },
-      { "type": "pawn_mood", "delta": 6, "selector": "all" }
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 90,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 6,
+        "selector": "all"
+      }
     ],
     "choices": [],
     "narrative_hint": "In the dead of night, one of your thinkers sits bolt upright with the answer to a problem that has vexed the colony for years."
@@ -1422,25 +2316,50 @@
     "id": "psychic_drone",
     "type": "threat",
     "name": "Psychic Drone",
-    "era": ["modern", "near_future"],
+    "era": [
+      "modern",
+      "near_future"
+    ],
     "weight": 7,
     "cooldown_ticks": 150,
     "conditions": [
-      { "stat": "global.threatLevel", "min": 30 }
+      {
+        "stat": "global.threatLevel",
+        "min": 30
+      }
     ],
     "effects": [
-      { "type": "pawn_mood", "delta": -12, "selector": "all" },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -5 }
+      {
+        "type": "pawn_mood",
+        "delta": -12,
+        "selector": "all"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -5
+      }
     ],
     "choices": [
       {
         "id": "psychic_shielding",
         "label": "Build psychic shielding",
         "description": "Spend energy and knowledge to dampen the signal.",
-        "cost": { "energy": 30, "knowledge": 30 },
+        "cost": {
+          "energy": 30,
+          "knowledge": 30
+        },
         "effects": [
-          { "type": "pawn_mood", "delta": 8, "selector": "all" },
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 4 }
+          {
+            "type": "pawn_mood",
+            "delta": 8,
+            "selector": "all"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 4
+          }
         ]
       },
       {
@@ -1461,20 +2380,40 @@
     "weight": 5,
     "cooldown_ticks": 200,
     "conditions": [
-      { "worldFlag": "biome:mountains_present", "present": true }
+      {
+        "worldFlag": "biome:mountains_present",
+        "present": true
+      }
     ],
     "effects": [
-      { "type": "resource_delta", "resource": "food", "delta": -140, "scope": "global", "duration_ticks": 30 },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -5 }
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -140,
+        "scope": "global",
+        "duration_ticks": 30
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -5
+      }
     ],
     "choices": [
       {
         "id": "trade_for_food",
         "label": "Trade abroad for food",
         "description": "Spend influence to import grain through the long dark.",
-        "cost": { "influence": 40 },
+        "cost": {
+          "influence": 40
+        },
         "effects": [
-          { "type": "resource_delta", "resource": "food", "delta": 120, "scope": "global" }
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 120,
+            "scope": "global"
+          }
         ]
       },
       {
@@ -1483,7 +2422,11 @@
         "description": "No cost; survive on what you have.",
         "cost": {},
         "effects": [
-          { "type": "stat_delta", "stat": "settlement:all.morale", "delta": -3 }
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -3
+          }
         ]
       }
     ],
@@ -1498,16 +2441,26 @@
     "cooldown_ticks": 100,
     "conditions": [],
     "effects": [
-      { "type": "pawn_health", "delta": -15, "selector": "all" }
+      {
+        "type": "pawn_health",
+        "delta": -15,
+        "selector": "all"
+      }
     ],
     "choices": [
       {
         "id": "herbal_remedies",
         "label": "Brew herbal remedies",
         "description": "Spend knowledge to ease the worst of it.",
-        "cost": { "knowledge": 20 },
+        "cost": {
+          "knowledge": 20
+        },
         "effects": [
-          { "type": "pawn_health", "delta": 10, "selector": "all" }
+          {
+            "type": "pawn_health",
+            "delta": 10,
+            "selector": "all"
+          }
         ]
       },
       {
@@ -1519,5 +2472,834 @@
       }
     ],
     "narrative_hint": "A wave of coughing and fever moves through the colony. It is rarely deadly — but it lays the strongest low for days."
+  },
+  {
+    "id": "comet",
+    "type": "flavor",
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 6,
+    "cooldown_ticks": 600,
+    "name": {
+      "en": "A Comet",
+      "cs": "Kometa"
+    },
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 3
+      },
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 25,
+        "scope": "global"
+      }
+    ],
+    "narrative_hint": {
+      "en": "A comet cut across the night sky — an omen the generations will keep telling.",
+      "cs": "Noční oblohu proťala kometa — znamení, o němž budou vyprávět generace."
+    }
+  },
+  {
+    "id": "year_of_plenty",
+    "type": "flavor",
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 420,
+    "name": {
+      "en": "A Year of Plenty",
+      "cs": "Rok hojnosti"
+    },
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": 90,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 4
+      }
+    ],
+    "narrative_hint": {
+      "en": "A year of plenty — the fields bow under their own harvest.",
+      "cs": "Rok hojnosti — pole se prohýbají pod úrodou."
+    }
+  },
+  {
+    "id": "wolf_hunt",
+    "type": "flavor",
+    "era": [
+      "early_settlement",
+      "ancient"
+    ],
+    "weight": 9,
+    "cooldown_ticks": 240,
+    "name": {
+      "en": "The Hunters Take a Wolf",
+      "cs": "Lovci skolili vlka"
+    },
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": 20,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 2
+      }
+    ],
+    "narrative_hint": {
+      "en": "The hunters brought down a wolf — its pelt goes to the stores.",
+      "cs": "Lovci skolili vlka — kožešiny putují do skladu."
+    }
+  },
+  {
+    "id": "monument_of_souls",
+    "type": "flavor",
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 5,
+    "cooldown_ticks": 900,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 100
+      }
+    ],
+    "name": {
+      "en": "The Monument of a Hundred Souls",
+      "cs": "Monument sta duší"
+    },
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 6
+      },
+      {
+        "type": "resource_delta",
+        "resource": "influence",
+        "delta": 30,
+        "scope": "global"
+      }
+    ],
+    "narrative_hint": {
+      "en": "The Monument of a Hundred Souls was raised in honour of the founders.",
+      "cs": "Na počest zakladatelů byl vztyčen Monument sta duší."
+    }
+  },
+  {
+    "id": "quiet_craft",
+    "type": "flavor",
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 200,
+    "name": {
+      "en": "The Workshops Hum",
+      "cs": "Řemeslníci u díla"
+    },
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": 15,
+        "scope": "global"
+      }
+    ],
+    "narrative_hint": {
+      "en": "The craftsmen worked without pause, and the tool racks filled.",
+      "cs": "Řemeslníci pracovali bez oddechu a stojany na nástroje se plnily."
+    }
+  },
+  {
+    "id": "hearth_fire",
+    "type": "disaster",
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 200,
+    "name": {
+      "en": "Fire in the Hearths",
+      "cs": "Požár obydlí"
+    },
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -8
+      },
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -60,
+        "scope": "global"
+      }
+    ],
+    "choices": [
+      {
+        "id": "rebuild",
+        "label": {
+          "en": "Rebuild at once",
+          "cs": "Postavit znovu, hned"
+        },
+        "description": {
+          "en": "Spend timber to raise it again before winter.",
+          "cs": "Vydat dřevo a postavit dřív, než přijde zima."
+        },
+        "cost": {
+          "materials": 40
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 8
+          }
+        ]
+      },
+      {
+        "id": "endure",
+        "label": {
+          "en": "Take them in",
+          "cs": "Vzít je pod střechu"
+        },
+        "description": {
+          "en": "The neighbours make room. Crowded, but nobody sleeps out.",
+          "cs": "Sousedé udělají místo. Těsno, ale nikdo nespí venku."
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -3
+          },
+          {
+            "type": "pawn_mood",
+            "selector": "all",
+            "delta": -4
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "Fire took one of the dwellings. The beams were still smoking at dawn.",
+      "cs": "Požár strávil jedno z obydlí. Trámy nad ránem ještě doutnaly."
+    }
+  },
+  {
+    "id": "harsh_winter",
+    "type": "disaster",
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 240,
+    "name": {
+      "en": "A Cruel Winter",
+      "cs": "Krutá zima"
+    },
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -80,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -6
+      }
+    ],
+    "choices": [
+      {
+        "id": "furs",
+        "label": {
+          "en": "Hand out the furs",
+          "cs": "Rozdat kožešiny"
+        },
+        "description": {
+          "en": "The weakest are covered first.",
+          "cs": "Nejslabší dostanou první."
+        },
+        "cost": {
+          "materials": 30
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 7
+          },
+          {
+            "type": "pawn_health",
+            "selector": "lowest_health",
+            "delta": 15
+          }
+        ]
+      },
+      {
+        "id": "endure",
+        "label": {
+          "en": "Sit it out",
+          "cs": "Přečkat"
+        },
+        "description": {
+          "en": "Burn what there is and hope for spring.",
+          "cs": "Topit tím, co je, a doufat v jaro."
+        },
+        "effects": [
+          {
+            "type": "pawn_health",
+            "selector": "lowest_health",
+            "delta": -12
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A cruel winter swallowed part of the stores. The wind did not let up for weeks.",
+      "cs": "Krutá zima spolykala část zásob. Vítr neustal celé týdny."
+    }
+  },
+  {
+    "id": "river_flood",
+    "type": "disaster",
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 300,
+    "conditions": [
+      {
+        "worldFlag": "biome:plains_present",
+        "present": true
+      }
+    ],
+    "name": {
+      "en": "The River Breaks Its Banks",
+      "cs": "Povodeň"
+    },
+    "effects": [
+      {
+        "type": "pawn_health",
+        "selector": "lowest_health",
+        "delta": -25
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -5
+      },
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": 70,
+        "scope": "global",
+        "duration_ticks": 30
+      }
+    ],
+    "narrative_hint": {
+      "en": "The river came over its banks — the current took some of us, but the silt left the fields richer than before.",
+      "cs": "Řeka se vylila z břehů — proud strhl některé z nás, ale bahno zúrodnilo pole."
+    }
+  },
+  {
+    "id": "stone_veins",
+    "type": "disaster",
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 6,
+    "cooldown_ticks": 400,
+    "name": {
+      "en": "Earthquake",
+      "cs": "Zemětřesení"
+    },
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -6
+      },
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -40,
+        "scope": "global"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": 120,
+        "scope": "global",
+        "duration_ticks": 40
+      }
+    ],
+    "narrative_hint": {
+      "en": "An earthquake! It pulled down what we had built — and laid open new veins of stone.",
+      "cs": "Zemětřesení! Pobořilo, co jsme postavili — ale odkrylo nové kamenné žíly."
+    }
+  },
+  {
+    "id": "beast_plague",
+    "type": "disaster",
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 6,
+    "cooldown_ticks": 360,
+    "name": {
+      "en": "Plague Among the Beasts",
+      "cs": "Mor zvěře"
+    },
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -60,
+        "scope": "global",
+        "duration_ticks": 40
+      }
+    ],
+    "narrative_hint": {
+      "en": "A plague spread through the game — the herds have thinned, and the hunters come back with nothing.",
+      "cs": "Mezi zvěří se rozšířil mor — stáda prořídla a lovci se vracejí s prázdnou."
+    }
+  },
+  {
+    "id": "forest_fire",
+    "type": "disaster",
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 6,
+    "cooldown_ticks": 320,
+    "conditions": [
+      {
+        "worldFlag": "biome:forest_present",
+        "present": true
+      }
+    ],
+    "name": {
+      "en": "The Forest Burns",
+      "cs": "Lesní požár"
+    },
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -70,
+        "scope": "global",
+        "duration_ticks": 30
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -4
+      }
+    ],
+    "narrative_hint": {
+      "en": "A forest fire swallowed part of the woods — a column of smoke stands over the whole country.",
+      "cs": "Lesní požár pohltil část hvozdu — nad krajem stojí sloup dýmu."
+    }
+  },
+  {
+    "id": "lucky_find",
+    "type": "opportunity",
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 260,
+    "name": {
+      "en": "A Lucky Find",
+      "cs": "Šťastný objev"
+    },
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": 60,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 5
+      }
+    ],
+    "narrative_hint": {
+      "en": "A lucky find: the stores rose when nobody expected it.",
+      "cs": "Šťastný objev: zásoby nečekaně vzrostly."
+    }
+  },
+  {
+    "id": "gold_vein",
+    "type": "opportunity",
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 6,
+    "cooldown_ticks": 500,
+    "name": {
+      "en": "A Vein of Gold",
+      "cs": "Zlatonosná žíla"
+    },
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "influence",
+        "delta": 40,
+        "scope": "global",
+        "duration_ticks": 60
+      }
+    ],
+    "narrative_hint": {
+      "en": "The miners struck a vein of gold! For three years it will run into the treasury.",
+      "cs": "Horníci narazili na zlatonosnou žílu! Tři roky poteče do pokladen zlato."
+    }
+  },
+  {
+    "id": "foreign_merchants",
+    "type": "opportunity",
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 180,
+    "name": {
+      "en": "Foreign Merchants",
+      "cs": "Cizí kupci"
+    },
+    "effects": [],
+    "choices": [
+      {
+        "id": "tools",
+        "label": {
+          "en": "Buy their tools",
+          "cs": "Koupit nástroje"
+        },
+        "description": {
+          "en": "A set of good iron, worth what they ask.",
+          "cs": "Sada dobrého železa — stojí za to, co chtějí."
+        },
+        "cost": {
+          "influence": 25
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 70,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "cloth",
+        "label": {
+          "en": "Buy their cloth",
+          "cs": "Koupit oděvy"
+        },
+        "description": {
+          "en": "Warm clothes out of far countries.",
+          "cs": "Teplé oděvy z dalekých krajů."
+        },
+        "cost": {
+          "influence": 25
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 8
+          },
+          {
+            "type": "pawn_health",
+            "selector": "all",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "pass",
+        "label": {
+          "en": "Let them pass",
+          "cs": "Nechat je jít"
+        },
+        "description": {
+          "en": "The treasury is empty enough as it is.",
+          "cs": "Pokladna zeje prázdnotou i bez toho."
+        },
+        "effects": []
+      }
+    ],
+    "narrative_hint": {
+      "en": "A foreign caravan halted at the gate, and unrolled its cloth in the square.",
+      "cs": "U brány zastavila cizí karavana a na návsi rozbalila své zboží."
+    }
+  },
+  {
+    "id": "prophet_arrives",
+    "type": "opportunity",
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 400,
+    "name": {
+      "en": "A Prophet Comes",
+      "cs": "Přišel prorok"
+    },
+    "effects": [],
+    "choices": [
+      {
+        "id": "heed",
+        "label": {
+          "en": "Hear them out",
+          "cs": "Vyslechnout ho"
+        },
+        "description": {
+          "en": "The people ask for a temple, and would be lifted by one.",
+          "cs": "Lid žádá chrám — a pozvedlo by je to."
+        },
+        "cost": {
+          "materials": 40
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 10
+          },
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 20,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "drive_out",
+        "label": {
+          "en": "Drive them out",
+          "cs": "Vyhnat ho"
+        },
+        "description": {
+          "en": "A false prophet — but the doubt he sowed stays behind.",
+          "cs": "Falešný prorok — ale pochyby, které zasel, zůstanou."
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -6
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A prophet came to the settlement and preaches of the gods — the people are listening.",
+      "cs": "Do osady přišel prorok a káže o bozích — lid naslouchá."
+    }
+  },
+  {
+    "id": "pilgrim_caravan",
+    "type": "opportunity",
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 9,
+    "cooldown_ticks": 300,
+    "name": {
+      "en": "A Caravan of Pilgrims",
+      "cs": "Karavana poutníků"
+    },
+    "effects": [],
+    "choices": [
+      {
+        "id": "welcome",
+        "label": {
+          "en": "Give them a hearth",
+          "cs": "Dát jim střechu"
+        },
+        "description": {
+          "en": "They would stay, and they would work.",
+          "cs": "Zůstali by — a pracovali by."
+        },
+        "cost": {
+          "food": 40
+        },
+        "effects": [
+          {
+            "type": "add_pawn",
+            "count": 3
+          }
+        ]
+      },
+      {
+        "id": "supplies",
+        "label": {
+          "en": "Send them on with food",
+          "cs": "Vypravit je dál"
+        },
+        "description": {
+          "en": "Not our mouths to feed, but not our conscience either.",
+          "cs": "Nejsou to naše ústa — ale ani naše svědomí."
+        },
+        "cost": {
+          "food": 20
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 3
+          }
+        ]
+      },
+      {
+        "id": "turn_away",
+        "label": {
+          "en": "Turn them away",
+          "cs": "Odmítnout je"
+        },
+        "description": {
+          "en": "The colony will remember that it did.",
+          "cs": "Osada si bude pamatovat, že to udělala."
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -5
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A caravan of pilgrims settled at the edge of the fields, waiting to be told whether they may stay.",
+      "cs": "Na kraji polí se utábořila karavana poutníků a čeká, zda smí zůstat."
+    }
+  },
+  {
+    "id": "the_bear",
+    "type": "threat",
+    "era": [
+      "early_settlement",
+      "ancient"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 300,
+    "name": {
+      "en": "The Bear",
+      "cs": "Medvěd"
+    },
+    "effects": [
+      {
+        "type": "pawn_health",
+        "selector": "lowest_health",
+        "delta": -30
+      }
+    ],
+    "choices": [
+      {
+        "id": "hunt",
+        "label": {
+          "en": "Hunt it down",
+          "cs": "Vypravit se na něj"
+        },
+        "description": {
+          "en": "They will sing about the ones who go.",
+          "cs": "O těch, kdo půjdou, se budou zpívat písně."
+        },
+        "cost": {
+          "materials": 20
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 80,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 10
+          }
+        ]
+      },
+      {
+        "id": "bar_the_doors",
+        "label": {
+          "en": "Bar the doors",
+          "cs": "Zatarasit dveře"
+        },
+        "description": {
+          "en": "Wait it out. It may move on.",
+          "cs": "Přečkat. Třeba odejde."
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -5
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A bear came down out of the northern woods — a giant, from which even the wolf pack flees.",
+      "cs": "Ze severních hvozdů sestoupil medvěd — obr, před nímž prchá i vlčí smečka."
+    }
   }
 ]

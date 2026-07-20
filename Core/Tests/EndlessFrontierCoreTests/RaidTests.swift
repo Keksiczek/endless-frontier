@@ -4,8 +4,7 @@ import Testing
 @Suite("Raids & defense")
 struct RaidTests {
     private func capitalWorld(defense: Double, materials: Double = 100, pawns: [Pawn] = []) -> WorldState {
-        var capital = Settlement(name: "C", kind: .capital, population: Double(max(pawns.count, 1)),
-                                 pawns: pawns, storage: [.materials: materials, .food: 100],
+        var capital = Settlement(name: "C", kind: .capital,                                  pawns: pawns, storage: [.materials: materials, .food: 100],
                                  storageCapacity: 999)
         capital.stats.defense = defense
         return WorldState(settlements: [capital])
@@ -33,7 +32,7 @@ struct RaidTests {
     @Test("Defensive buildings raise a settlement's defense over time")
     func buildingsGrantDefense() throws {
         let reg = try GameDataRegistry.bundled()
-        var settlement = Settlement(name: "Fort", kind: .capital, population: 10,
+        var settlement = Settlement(name: "Fort", kind: .capital, pawns: Fixtures.pawns(10),
                                     buildings: [BuildingInstance(definitionID: "palisade", count: 2)],
                                     storage: [.food: 200], storageCapacity: 999)
         settlement.stats.defense = 0

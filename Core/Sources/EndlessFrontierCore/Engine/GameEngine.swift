@@ -30,8 +30,10 @@ public enum GameEngine {
         TechEngine.setResearch(state, techID: techID, registry: registry)
     }
 
-    /// Constructs one building in a settlement if it is unlocked and that
-    /// settlement can pay the cost from its own storage. Returns unchanged
+    /// Opens a construction site for one building in a settlement if it is
+    /// unlocked and that settlement can pay the cost from its own storage.
+    /// The building joins the economy only when `ConstructionEngine` finishes
+    /// it — paying is breaking ground, not conjuring a roof. Returns unchanged
     /// state on failure.
     public static func build(
         _ state: WorldState,
@@ -46,11 +48,21 @@ public enum GameEngine {
             return state
         }
         var s = paid
-        if let existing = s.settlements[settlementIndex].buildings.firstIndex(where: { $0.definitionID == buildingID }) {
-            s.settlements[settlementIndex].buildings[existing].count += 1
-        } else {
-            s.settlements[settlementIndex].buildings.append(BuildingInstance(definitionID: buildingID, count: 1))
+        var target = s.settlements[settlementIndex]
+        // A quick-build still stands *somewhere*: on a laid-out colony the
+        // site takes the first tile that fits, so the scaffolding (and later
+        // the building) is visible on the canvas instead of only in a ledger.
+        var placementID: UUID?
+        if target.colony != nil {
+            let sited = ColonyBuilder.placeSiteAtFirstFit(target, definitionID: buildingID, registry: registry)
+            if sited.placementID != nil {
+                target = sited.settlement
+                placementID = sited.placementID
+            }
         }
+        s.settlements[settlementIndex] = ConstructionEngine.enqueue(
+            target, definitionID: buildingID, placementID: placementID,
+            registry: registry, tick: s.tick)
         return s
     }
 
@@ -87,6 +99,89 @@ public enum GameEngine {
     ) -> WorldState {
         CaravanEngine.dispatch(state, originID: originID, destinationID: destinationID,
                                resource: resource, amount: amount, guardIDs: guardIDs)
+    }
+
+    /// The leader's answer to the assembly's motion. Ratifying enacts the law;
+    /// vetoing shelves it. Overruling the council's vote costs morale — unless
+    /// the Leader spends their standing to smooth it over instead, which is
+    /// what political capital is *for*.
+    public static func resolveLawProposal(
+        _ state: WorldState,
+        approve: Bool,
+        spendInfluence: Bool = false,
+        registry: GameDataRegistry
+    ) -> WorldState {
+        SocietyEngine.resolveProposal(state, approve: approve,
+                                      spendInfluence: spendInfluence, registry: registry)
+    }
+
+    // MARK: - Diplomacy
+    //
+    // Neighbouring peoples traded, married, raided and defected entirely on
+    // their own, and the Leader could only watch it happen. These are the acts
+    // that make influence a currency rather than a tax: standing you *spend*.
+
+    /// Sends a neighbouring people a gift, buying goodwill with standing.
+    public static func sendGift(
+        _ state: WorldState, tribeID: UUID, registry: GameDataRegistry
+    ) -> WorldState {
+        let config = registry.config
+        guard let index = state.tribes.firstIndex(where: { $0.id == tribeID }),
+              state.tribes[index].discovered,
+              var s = spendInfluence(state, amount: config.giftInfluenceCost) else { return state }
+        s.tribes[index].standing = min(100, s.tribes[index].standing + config.giftStandingGain)
+        // A gift softens an old wound as well as buying today's goodwill.
+        s.tribes[index].grudge = max(0, s.tribes[index].grudge - config.giftStandingGain / 2)
+        return s
+    }
+
+    /// Presses a people for tribute: their stores, at the price of their trust.
+    public static func demandTribute(
+        _ state: WorldState, tribeID: UUID, registry: GameDataRegistry
+    ) -> WorldState {
+        let config = registry.config
+        guard let index = state.tribes.firstIndex(where: { $0.id == tribeID }),
+              state.tribes[index].discovered,
+              let seatIndex = state.settlements.indices.first,
+              var s = spendInfluence(state, amount: config.demandInfluenceCost) else { return state }
+        let taken = s.tribes[index].stores * config.demandStoresShare
+        s.tribes[index].stores = max(0, s.tribes[index].stores - taken)
+        s.tribes[index].standing = max(-100, s.tribes[index].standing - config.demandStandingLoss)
+        s.tribes[index].grudge = min(100, s.tribes[index].grudge + config.demandStandingLoss / 2)
+        s.settlements[seatIndex].storage[.food] = min(
+            s.settlements[seatIndex].storageCapacity,
+            s.settlements[seatIndex].storage[.food] + taken)
+        return s
+    }
+
+    /// Seals a pact with a people who already trust you. Standing alone can't
+    /// buy an alliance from strangers — they have to want it first.
+    public static func proposePact(
+        _ state: WorldState, tribeID: UUID, registry: GameDataRegistry
+    ) -> WorldState {
+        let config = registry.config
+        guard let index = state.tribes.firstIndex(where: { $0.id == tribeID }),
+              state.tribes[index].discovered,
+              state.tribes[index].standing >= config.pactMinStanding,
+              var s = spendInfluence(state, amount: config.pactInfluenceCost) else { return state }
+        s.tribes[index].standing = max(s.tribes[index].standing, 60)   // `.allied`
+        s.tribes[index].grudge = 0
+        return s
+    }
+
+    /// Whether the seat can currently afford an act of this price.
+    public static func canAfford(influence amount: Double, in state: WorldState) -> Bool {
+        (state.settlements.first?.storage[.influence] ?? 0) >= amount
+    }
+
+    /// Draws influence from the seat of power, or `nil` if it can't be paid —
+    /// so a half-affordable act is inert rather than partially applied.
+    static func spendInfluence(_ state: WorldState, amount: Double) -> WorldState? {
+        guard let index = state.settlements.indices.first,
+              state.settlements[index].storage[.influence] >= amount else { return nil }
+        var s = state
+        s.settlements[index].storage[.influence] -= amount
+        return s
     }
 
     /// Reassigns a colonist to a different kind of work.
@@ -231,13 +326,39 @@ public enum GameEngine {
         guard let paid = EffectApplier.payCost(choice.cost, from: state) else {
             return state
         }
-        return EffectApplier.apply(choice.effects, to: paid, registry: registry)
+        var s = EffectApplier.apply(choice.effects, to: paid, registry: registry)
+        // The decision is made; take it off the Leader's desk.
+        s.pendingEvents.removeAll { $0.templateID == eventID }
+        return s
+    }
+
+    /// Whether the player could actually afford a choice — the UI greys out the
+    /// rest rather than letting them tap into a dead end.
+    public static func canAffordChoice(
+        _ state: WorldState,
+        eventID: String,
+        choiceID: String,
+        registry: GameDataRegistry
+    ) -> Bool {
+        guard let template = registry.events.first(where: { $0.id == eventID }),
+              let choice = template.choices.first(where: { $0.id == choiceID }) else {
+            return false
+        }
+        return EffectApplier.payCost(choice.cost, from: state) != nil
+    }
+
+    /// Sets a decision aside without acting on it — the moment passes.
+    public static func dismissEvent(_ state: WorldState, eventID: String) -> WorldState {
+        var s = state
+        s.pendingEvents.removeAll { $0.templateID == eventID }
+        return s
     }
 
     // MARK: - Colony layout (in-settlement base building)
 
-    /// Places a building on a settlement's colony grid, paying its cost from the
-    /// capital. Validates that the building is unlocked and the tile is free.
+    /// Opens a construction site on a settlement's colony grid, paying its cost
+    /// from the capital. The tiles are reserved and the scaffolding goes up at
+    /// once; the building itself joins the economy when the builders finish.
     /// Returns unchanged state on failure.
     public static func placeBuilding(
         _ state: WorldState,
@@ -255,13 +376,18 @@ public enum GameEngine {
         }
         var s = paid
         guard let place = s.settlements.firstIndex(where: { $0.id == settlementID }) else { return state }
-        s.settlements[place] = ColonyBuilder.place(
+        let sited = ColonyBuilder.placeSite(
             s.settlements[place], definitionID: buildingID, at: coord, registry: registry
         )
+        guard let placementID = sited.colony?.placement(at: coord)?.id else { return state }
+        s.settlements[place] = ConstructionEngine.enqueue(
+            sited, definitionID: buildingID, placementID: placementID,
+            registry: registry, tick: s.tick)
         return s
     }
 
-    /// Demolishes whatever stands on a colony tile (no refund).
+    /// Demolishes whatever stands on a colony tile (no refund). Tearing down a
+    /// half-raised site also cancels its construction project.
     public static func demolish(
         _ state: WorldState,
         settlementID: UUID,
@@ -269,7 +395,11 @@ public enum GameEngine {
     ) -> WorldState {
         guard let si = state.settlements.firstIndex(where: { $0.id == settlementID }) else { return state }
         var s = state
+        let removed = s.settlements[si].colony?.placement(at: coord)
         s.settlements[si] = ColonyBuilder.remove(s.settlements[si], at: coord)
+        if let removed, removed.underConstruction {
+            s.settlements[si].constructions.removeAll { $0.placementID == removed.id }
+        }
         return s
     }
 

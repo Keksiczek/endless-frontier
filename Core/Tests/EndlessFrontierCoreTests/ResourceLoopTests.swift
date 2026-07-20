@@ -3,24 +3,34 @@ import Testing
 
 @Suite("Resource loop")
 struct ResourceLoopTests {
-    @Test("Farm net food production accounts for population upkeep")
+    @Test("Farm production lands in storage and hungry colonists eat it")
     func farmNetProduction() {
-        // Farm makes +10 food; population 50 eats 50 * 0.1 = 5 → net +5.
+        // Farm makes +10 food/tick. Colonists start sated (hunger 80) and
+        // only reach the meal threshold (< 70) after ~17 ticks — from then
+        // on the settlement's food upkeep is their meals.
         let registry = Fixtures.registry()
         let state = Fixtures.world(food: 100, population: 50)
-        let next = ResourceLoop.advanceOneTick(state, registry: registry)
-        #expect(abs(next.settlements[0].storage[.food] - 105) < 1e-9)
+
+        let first = ResourceLoop.advanceOneTick(state, registry: registry)
+        #expect(abs(first.settlements[0].storage[.food] - 110) < 1e-9)   // nobody hungry yet
+
+        var world = state
+        for _ in 0..<30 { world = ResourceLoop.advanceOneTick(world, registry: registry) }
+        let ate = 100 + 30 * 10 - world.settlements[0].storage[.food]
+        #expect(ate > 0)   // meals consumed once hunger crossed the threshold
     }
 
     @Test("Starvation shrinks population and lowers morale")
     func starvation() {
         let registry = Fixtures.registry()
-        // No buildings → no food production; storage starts at 0.
-        let state = Fixtures.world(food: 0, population: 50, buildings: [])
-        let next = ResourceLoop.advanceOneTick(state, registry: registry)
-        #expect(next.settlements[0].storage[.food] == 0)            // clamped
-        #expect(next.settlements[0].population < 50)                 // people lost
-        #expect(next.settlements[0].stats.morale < 60)              // morale hit
+        // No buildings → no food production; storage starts at 0. Hunger
+        // drains (~133 ticks), then health (~50 ticks), then people die.
+        var world = Fixtures.world(food: 0, population: 50, buildings: [])
+        for _ in 0..<220 { world = ResourceLoop.advanceOneTick(world, registry: registry) }
+        #expect(world.settlements[0].storage[.food] == 0)            // clamped
+        #expect(world.settlements[0].population < 50)                // people lost
+        #expect(world.settlements[0].deathTallies[PawnDeathCause.starvation.rawValue, default: 0] > 0)
+        #expect(world.settlements[0].stats.morale < 60)              // morale hit
     }
 
     @Test("Storage never exceeds capacity")

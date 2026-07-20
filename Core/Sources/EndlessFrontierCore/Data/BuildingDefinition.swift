@@ -63,10 +63,22 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
     public let moraleEffect: Double
     public let defense: Double
     public let housing: Double
+    /// Storage capacity this building adds to its settlement, per instance.
+    /// Capacity is derived from buildings the same way `housing` is, so a
+    /// colony that wants deeper stores has to build for them.
+    public let storage: Double
+    /// What this building costs per tick to keep standing. When `nil` the
+    /// resource loop derives it from `cost` — see `ResourceLoop.upkeep(for:)`,
+    /// which is what makes upkeep scale with era without hand-authoring 46
+    /// entries. Set it explicitly to opt a building out, or to give it an
+    /// upkeep its build cost wouldn't imply.
+    public let upkeep: Resources?
     public let pollution: Double
     public let footprint: TileSize
     public let adjacency: [AdjacencyRule]
-    public let description: String
+    /// Player-facing flavour. `LocalizedText` decodes from a bare string too,
+    /// so half-translated content files always load.
+    public let description: LocalizedText
 
     public init(
         id: String,
@@ -79,10 +91,12 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         moraleEffect: Double = 0,
         defense: Double = 0,
         housing: Double = 0,
+        storage: Double = 0,
+        upkeep: Resources? = nil,
         pollution: Double = 0,
         footprint: TileSize = TileSize(),
         adjacency: [AdjacencyRule] = [],
-        description: String = ""
+        description: LocalizedText = LocalizedText("")
     ) {
         self.id = id
         self.era = era
@@ -94,6 +108,8 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         self.moraleEffect = moraleEffect
         self.defense = defense
         self.housing = housing
+        self.storage = storage
+        self.upkeep = upkeep
         self.pollution = pollution
         self.footprint = footprint
         self.adjacency = adjacency
@@ -103,7 +119,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case id, era, name, cost, workers, production, consumption
         case moraleEffect = "morale_effect"
-        case defense, housing, pollution, footprint, adjacency
+        case defense, housing, storage, upkeep, pollution, footprint, adjacency
         case description
     }
 
@@ -119,9 +135,11 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         moraleEffect = try c.decodeIfPresent(Double.self, forKey: .moraleEffect) ?? 0
         defense = try c.decodeIfPresent(Double.self, forKey: .defense) ?? 0
         housing = try c.decodeIfPresent(Double.self, forKey: .housing) ?? 0
+        storage = try c.decodeIfPresent(Double.self, forKey: .storage) ?? 0
+        upkeep = try c.decodeIfPresent(Resources.self, forKey: .upkeep)
         pollution = try c.decodeIfPresent(Double.self, forKey: .pollution) ?? 0
         footprint = try c.decodeIfPresent(TileSize.self, forKey: .footprint) ?? TileSize()
         adjacency = try c.decodeIfPresent([AdjacencyRule].self, forKey: .adjacency) ?? []
-        description = try c.decodeIfPresent(String.self, forKey: .description) ?? ""
+        description = try c.decodeIfPresent(LocalizedText.self, forKey: .description) ?? LocalizedText("")
     }
 }

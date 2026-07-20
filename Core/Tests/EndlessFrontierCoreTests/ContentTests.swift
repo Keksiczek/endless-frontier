@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import EndlessFrontierCore
 
@@ -69,8 +70,11 @@ struct ContentIntegrityTests {
 
 @Suite("Pollution")
 struct PollutionTests {
+    /// A fixed id so the two towns draw the same society rolls (wages, unrest);
+    /// pollution is then the only thing telling them apart.
     private func settlement(factories: Int) -> Settlement {
-        Settlement(name: "Town", kind: .capital, population: 20,
+        Settlement(id: UUID(uuidString: "00000000-0000-0000-0F0C-000000000001")!,
+                   name: "Town", kind: .capital, pawns: Fixtures.pawns(20),
                    buildings: factories > 0 ? [BuildingInstance(definitionID: "factory", count: factories)] : [],
                    storage: [.food: 500, .energy: 500], storageCapacity: 9999,
                    stats: SettlementStats(morale: 80))

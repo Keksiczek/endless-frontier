@@ -24,19 +24,61 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     public var maxOfflineTicks: Int
     public var plannerInterval: Int
 
+    // Calendar: year length and per-season yield multipliers, indexed by
+    // `Season.rawValue` (spring, summer, autumn, winter).
+    public var ticksPerYear: Int
+    public var seasonFoodYield: [Double]
+    public var seasonMaterialsYield: [Double]
+
     // Tension coefficients
     public var threatMultiplier: Double
     public var prosperityDampener: Double
+    /// The prosperity a colony is "meant" to sit at. Prosperity is measured as
+    /// a departure from here, so wealth soothes and misery bites — rather than
+    /// a healthy colony's standing prosperity zeroing tension outright.
+    public var prosperityNeutral: Double
     public var disasterSpikeDecayTicks: Int
     public var disasterSpikePerEvent: Double
     public var boomDampenerTicks: Int
     public var boomDampenerPerEvent: Double
     public var deficitSpikePerResource: Double
+    /// Share of storage capacity at or below which a resource counts as scarce.
+    /// Zero would mean only a bone-empty store worries anyone, which is a story
+    /// that starts after it already ended.
+    public var shortageFraction: Double
     public var eraRampPerEra: Double
+    /// Population at which scale pressure starts (a hamlet attracts nobody).
+    public var scalePressureBasePopulation: Double
+    /// Tension added per doubling of population beyond the base.
+    public var scalePressurePerDoubling: Double
+    /// Ceiling on scale pressure, so a megacity is dangerous, not doomed.
+    public var scalePressureCap: Double
 
     // Resources
     public var foodPerPersonPerTick: Double
     public var defaultStorageCapacity: Double
+    /// Share of a building's materials cost charged per tick as maintenance,
+    /// when it doesn't declare an explicit `upkeep`. This is the dial that
+    /// decides whether a mature colony's economy has any tension in it: too low
+    /// and the stores just pin at the cap, too high and nothing can be built.
+    public var upkeepRateOfCost: Double
+    /// Power drawn per colonist per tick, before the era multiplier.
+    public var energyPerPersonPerTick: Double
+    /// How electrically each era lives, indexed by `Era.index`. Zero in the
+    /// early eras, where there is no generation to be had — billing a colony
+    /// for power it cannot possibly make would only bankrupt it.
+    public var eraEnergyDemand: [Double]
+    /// Influence drawn per colonist per tick beyond `selfGoverningPopulation`.
+    public var influencePerPersonPerTick: Double
+    /// Influence drawn per tick for each settlement held.
+    public var influencePerSettlement: Double
+    /// A settlement below this size governs itself by talking, and costs no
+    /// political capital — which also keeps a young colony out of an influence
+    /// debt it has no trade post to pay off.
+    public var selfGoverningPopulation: Double
+    /// What each completion multiplies a repeatable tech's cost by, so endless
+    /// research keeps absorbing a growing colony's growing output.
+    public var repeatableTechCostGrowth: Double
 
     // Stability thresholds
     public var collapseThreshold: Double
@@ -46,7 +88,36 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     // Events
     public var maxMajorEventsPerCycle: Int
     public var maxMinorEventsPerCycle: Int
+    /// Chance per cycle that a major event fires at zero tension.
+    public var majorEventChance: Double
+    /// Added to `majorEventChance` at maximum tension — drama clusters when
+    /// things are already going wrong.
+    public var majorEventTensionBoost: Double
+    /// Chance per cycle that a flavour event fires.
+    public var minorEventChance: Double
+    /// How long a queued decision waits for the Leader before the moment passes.
+    public var decisionDeadlineTicks: Int
+    /// Morale lost per decision the Leader let slip by saying nothing.
+    public var indecisionMoralePenalty: Double
     public var tensionBands: [TensionBand]
+
+    // Diplomacy — what the Leader's standing buys
+    /// Influence spent on a gift to a neighbouring people.
+    public var giftInfluenceCost: Double
+    /// Standing a gift wins.
+    public var giftStandingGain: Double
+    /// Influence spent to press a people for tribute.
+    public var demandInfluenceCost: Double
+    /// Share of a people's stores a demand carries off.
+    public var demandStoresShare: Double
+    /// Standing lost by shaking a neighbour down.
+    public var demandStandingLoss: Double
+    /// Influence spent to seal a pact.
+    public var pactInfluenceCost: Double
+    /// Standing a people must already hold you in before they'll take a pact.
+    public var pactMinStanding: Double
+    /// Influence spent to overrule the assembly without the morale cost.
+    public var overruleInfluenceCost: Double
 
     // Exploration & expansion
     public var baseExpeditionTicks: Int
@@ -60,22 +131,50 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     public static let `default` = WorldConfig(
         realSecondsPerTick: 60,
         maxOfflineTicks: 43_200,
-        plannerInterval: 10,
+        plannerInterval: 30,
+        ticksPerYear: 60,
+        seasonFoodYield: [1.0, 1.5, 0.8, 0.3],
+        seasonMaterialsYield: [1.0, 1.2, 0.9, 0.7],
         threatMultiplier: 0.4,
         prosperityDampener: 0.2,
+        prosperityNeutral: 50,
         disasterSpikeDecayTicks: 30,
         disasterSpikePerEvent: 8,
         boomDampenerTicks: 20,
         boomDampenerPerEvent: 3,
         deficitSpikePerResource: 8,
+        shortageFraction: 0.1,
         eraRampPerEra: 5,
+        scalePressureBasePopulation: 30,
+        scalePressurePerDoubling: 4,
+        scalePressureCap: 25,
         foodPerPersonPerTick: 0.1,
         defaultStorageCapacity: 500,
+        upkeepRateOfCost: 0.03,
+        energyPerPersonPerTick: 0.05,
+        eraEnergyDemand: [0, 0, 0.3, 1.0, 2.0, 3.5],
+        influencePerPersonPerTick: 0.18,
+        influencePerSettlement: 3,
+        selfGoverningPopulation: 100,
+        repeatableTechCostGrowth: 1.35,
         collapseThreshold: 10,
         warningThreshold: 20,
         mercyEventThreshold: 10,
         maxMajorEventsPerCycle: 1,
-        maxMinorEventsPerCycle: 3,
+        maxMinorEventsPerCycle: 1,
+        majorEventChance: 0.08,
+        majorEventTensionBoost: 0.25,
+        minorEventChance: 0.05,
+        decisionDeadlineTicks: 180,
+        indecisionMoralePenalty: 2.5,
+        giftInfluenceCost: 60,
+        giftStandingGain: 12,
+        demandInfluenceCost: 40,
+        demandStoresShare: 0.35,
+        demandStandingLoss: 22,
+        pactInfluenceCost: 250,
+        pactMinStanding: 45,
+        overruleInfluenceCost: 120,
         tensionBands: [
             TensionBand(maxTension: 30, disasterWeight: 0.5, opportunityWeight: 1.5, flavorWeight: 2.0),
             TensionBand(maxTension: 60, disasterWeight: 1.0, opportunityWeight: 1.0, flavorWeight: 1.0),
@@ -95,21 +194,49 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         realSecondsPerTick: Double,
         maxOfflineTicks: Int,
         plannerInterval: Int,
+        ticksPerYear: Int,
+        seasonFoodYield: [Double],
+        seasonMaterialsYield: [Double],
         threatMultiplier: Double,
         prosperityDampener: Double,
+        prosperityNeutral: Double = 50,
         disasterSpikeDecayTicks: Int,
         disasterSpikePerEvent: Double,
         boomDampenerTicks: Int,
         boomDampenerPerEvent: Double,
         deficitSpikePerResource: Double,
+        shortageFraction: Double = 0.1,
         eraRampPerEra: Double,
+        scalePressureBasePopulation: Double = 30,
+        scalePressurePerDoubling: Double = 4,
+        scalePressureCap: Double = 25,
         foodPerPersonPerTick: Double,
         defaultStorageCapacity: Double,
+        upkeepRateOfCost: Double = 0.03,
+        energyPerPersonPerTick: Double = 0.05,
+        eraEnergyDemand: [Double] = [0, 0, 0.3, 1.0, 2.0, 3.5],
+        influencePerPersonPerTick: Double = 0.18,
+        influencePerSettlement: Double = 3,
+        selfGoverningPopulation: Double = 100,
+        repeatableTechCostGrowth: Double = 1.35,
         collapseThreshold: Double,
         warningThreshold: Double,
         mercyEventThreshold: Double,
         maxMajorEventsPerCycle: Int,
         maxMinorEventsPerCycle: Int,
+        majorEventChance: Double = 0.08,
+        majorEventTensionBoost: Double = 0.25,
+        minorEventChance: Double = 0.05,
+        decisionDeadlineTicks: Int = 180,
+        indecisionMoralePenalty: Double = 2.5,
+        giftInfluenceCost: Double = 60,
+        giftStandingGain: Double = 12,
+        demandInfluenceCost: Double = 40,
+        demandStoresShare: Double = 0.35,
+        demandStandingLoss: Double = 22,
+        pactInfluenceCost: Double = 250,
+        pactMinStanding: Double = 45,
+        overruleInfluenceCost: Double = 120,
         tensionBands: [TensionBand],
         baseExpeditionTicks: Int,
         ticksPerHazard: Int,
@@ -122,21 +249,49 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         self.realSecondsPerTick = realSecondsPerTick
         self.maxOfflineTicks = maxOfflineTicks
         self.plannerInterval = plannerInterval
+        self.ticksPerYear = ticksPerYear
+        self.seasonFoodYield = seasonFoodYield
+        self.seasonMaterialsYield = seasonMaterialsYield
         self.threatMultiplier = threatMultiplier
         self.prosperityDampener = prosperityDampener
+        self.prosperityNeutral = prosperityNeutral
         self.disasterSpikeDecayTicks = disasterSpikeDecayTicks
         self.disasterSpikePerEvent = disasterSpikePerEvent
         self.boomDampenerTicks = boomDampenerTicks
         self.boomDampenerPerEvent = boomDampenerPerEvent
         self.deficitSpikePerResource = deficitSpikePerResource
+        self.shortageFraction = shortageFraction
         self.eraRampPerEra = eraRampPerEra
+        self.scalePressureBasePopulation = scalePressureBasePopulation
+        self.scalePressurePerDoubling = scalePressurePerDoubling
+        self.scalePressureCap = scalePressureCap
         self.foodPerPersonPerTick = foodPerPersonPerTick
         self.defaultStorageCapacity = defaultStorageCapacity
+        self.upkeepRateOfCost = upkeepRateOfCost
+        self.energyPerPersonPerTick = energyPerPersonPerTick
+        self.eraEnergyDemand = eraEnergyDemand
+        self.influencePerPersonPerTick = influencePerPersonPerTick
+        self.influencePerSettlement = influencePerSettlement
+        self.selfGoverningPopulation = selfGoverningPopulation
+        self.repeatableTechCostGrowth = repeatableTechCostGrowth
         self.collapseThreshold = collapseThreshold
         self.warningThreshold = warningThreshold
         self.mercyEventThreshold = mercyEventThreshold
         self.maxMajorEventsPerCycle = maxMajorEventsPerCycle
         self.maxMinorEventsPerCycle = maxMinorEventsPerCycle
+        self.majorEventChance = majorEventChance
+        self.majorEventTensionBoost = majorEventTensionBoost
+        self.minorEventChance = minorEventChance
+        self.decisionDeadlineTicks = decisionDeadlineTicks
+        self.indecisionMoralePenalty = indecisionMoralePenalty
+        self.giftInfluenceCost = giftInfluenceCost
+        self.giftStandingGain = giftStandingGain
+        self.demandInfluenceCost = demandInfluenceCost
+        self.demandStoresShare = demandStoresShare
+        self.demandStandingLoss = demandStandingLoss
+        self.pactInfluenceCost = pactInfluenceCost
+        self.pactMinStanding = pactMinStanding
+        self.overruleInfluenceCost = overruleInfluenceCost
         self.tensionBands = tensionBands
         self.baseExpeditionTicks = baseExpeditionTicks
         self.ticksPerHazard = ticksPerHazard
@@ -147,10 +302,29 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         self.isolationStabilityPenalty = isolationStabilityPenalty
     }
 
+    /// The seasonal multiplier applied to gross production of `resource` at
+    /// `tick`. Food and materials follow the calendar; everything else is
+    /// season-agnostic. Malformed tables (≠ 4 entries) are treated as neutral.
+    public func seasonYieldMultiplier(for resource: ResourceType, tick: Int) -> Double {
+        let table: [Double]
+        switch resource {
+        case .food: table = seasonFoodYield
+        case .materials: table = seasonMaterialsYield
+        default: return 1
+        }
+        guard table.count == 4 else { return 1 }
+        return table[Season(tick: tick, ticksPerYear: ticksPerYear).rawValue]
+    }
+
     // Custom decoding: every field falls back to the default when absent,
     // so the JSON file can be partial during balance iteration.
     private enum CodingKeys: String, CodingKey {
-        case tick, tension, resources, stability, events, exploration
+        case tick, tension, resources, stability, events, exploration, calendar, diplomacy
+    }
+    private enum DiplomacyKeys: String, CodingKey {
+        case giftInfluenceCost, giftStandingGain, demandInfluenceCost,
+             demandStoresShare, demandStandingLoss, pactInfluenceCost,
+             pactMinStanding, overruleInfluenceCost
     }
     private enum ExplorationKeys: String, CodingKey {
         case baseExpeditionTicks, ticksPerHazard, expeditionFoodCost,
@@ -160,19 +334,28 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     private enum TickKeys: String, CodingKey {
         case realSecondsPerTick, maxOfflineTicks, plannerInterval
     }
+    private enum CalendarKeys: String, CodingKey {
+        case ticksPerYear, seasonFoodYield, seasonMaterialsYield
+    }
     private enum TensionKeys: String, CodingKey {
-        case threatMultiplier, prosperityDampener, disasterSpikeDecayTicks,
-             disasterSpikePerEvent, boomDampenerTicks, boomDampenerPerEvent,
-             deficitSpikePerResource, eraRampPerEra
+        case threatMultiplier, prosperityDampener, prosperityNeutral,
+             disasterSpikeDecayTicks, disasterSpikePerEvent, boomDampenerTicks,
+             boomDampenerPerEvent, deficitSpikePerResource, shortageFraction,
+             eraRampPerEra, scalePressureBasePopulation, scalePressurePerDoubling,
+             scalePressureCap
     }
     private enum ResourceKeys: String, CodingKey {
-        case foodPerPersonPerTick, defaultStorageCapacity
+        case foodPerPersonPerTick, defaultStorageCapacity, upkeepRateOfCost,
+             energyPerPersonPerTick, eraEnergyDemand, influencePerPersonPerTick,
+             influencePerSettlement, selfGoverningPopulation, repeatableTechCostGrowth
     }
     private enum StabilityKeys: String, CodingKey {
         case collapseThreshold, warningThreshold, mercyEventThreshold
     }
     private enum EventKeys: String, CodingKey {
-        case maxMajorEventsPerCycle, maxMinorEventsPerCycle, tensionBands
+        case maxMajorEventsPerCycle, maxMinorEventsPerCycle, majorEventChance,
+             majorEventTensionBoost, minorEventChance, decisionDeadlineTicks,
+             indecisionMoralePenalty, tensionBands
     }
 
     public init(from decoder: Decoder) throws {
@@ -184,19 +367,36 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         maxOfflineTicks = (try? tick?.decodeIfPresent(Int.self, forKey: .maxOfflineTicks)) ?? d.maxOfflineTicks
         plannerInterval = (try? tick?.decodeIfPresent(Int.self, forKey: .plannerInterval)) ?? d.plannerInterval
 
+        let calendar = try? c.nestedContainer(keyedBy: CalendarKeys.self, forKey: .calendar)
+        ticksPerYear = (try? calendar?.decodeIfPresent(Int.self, forKey: .ticksPerYear)) ?? d.ticksPerYear
+        seasonFoodYield = (try? calendar?.decodeIfPresent([Double].self, forKey: .seasonFoodYield)) ?? d.seasonFoodYield
+        seasonMaterialsYield = (try? calendar?.decodeIfPresent([Double].self, forKey: .seasonMaterialsYield)) ?? d.seasonMaterialsYield
+
         let tension = try? c.nestedContainer(keyedBy: TensionKeys.self, forKey: .tension)
         threatMultiplier = (try? tension?.decodeIfPresent(Double.self, forKey: .threatMultiplier)) ?? d.threatMultiplier
         prosperityDampener = (try? tension?.decodeIfPresent(Double.self, forKey: .prosperityDampener)) ?? d.prosperityDampener
+        prosperityNeutral = (try? tension?.decodeIfPresent(Double.self, forKey: .prosperityNeutral)) ?? d.prosperityNeutral
         disasterSpikeDecayTicks = (try? tension?.decodeIfPresent(Int.self, forKey: .disasterSpikeDecayTicks)) ?? d.disasterSpikeDecayTicks
         disasterSpikePerEvent = (try? tension?.decodeIfPresent(Double.self, forKey: .disasterSpikePerEvent)) ?? d.disasterSpikePerEvent
         boomDampenerTicks = (try? tension?.decodeIfPresent(Int.self, forKey: .boomDampenerTicks)) ?? d.boomDampenerTicks
         boomDampenerPerEvent = (try? tension?.decodeIfPresent(Double.self, forKey: .boomDampenerPerEvent)) ?? d.boomDampenerPerEvent
         deficitSpikePerResource = (try? tension?.decodeIfPresent(Double.self, forKey: .deficitSpikePerResource)) ?? d.deficitSpikePerResource
+        shortageFraction = (try? tension?.decodeIfPresent(Double.self, forKey: .shortageFraction)) ?? d.shortageFraction
         eraRampPerEra = (try? tension?.decodeIfPresent(Double.self, forKey: .eraRampPerEra)) ?? d.eraRampPerEra
+        scalePressureBasePopulation = (try? tension?.decodeIfPresent(Double.self, forKey: .scalePressureBasePopulation)) ?? d.scalePressureBasePopulation
+        scalePressurePerDoubling = (try? tension?.decodeIfPresent(Double.self, forKey: .scalePressurePerDoubling)) ?? d.scalePressurePerDoubling
+        scalePressureCap = (try? tension?.decodeIfPresent(Double.self, forKey: .scalePressureCap)) ?? d.scalePressureCap
 
         let res = try? c.nestedContainer(keyedBy: ResourceKeys.self, forKey: .resources)
         foodPerPersonPerTick = (try? res?.decodeIfPresent(Double.self, forKey: .foodPerPersonPerTick)) ?? d.foodPerPersonPerTick
         defaultStorageCapacity = (try? res?.decodeIfPresent(Double.self, forKey: .defaultStorageCapacity)) ?? d.defaultStorageCapacity
+        upkeepRateOfCost = (try? res?.decodeIfPresent(Double.self, forKey: .upkeepRateOfCost)) ?? d.upkeepRateOfCost
+        energyPerPersonPerTick = (try? res?.decodeIfPresent(Double.self, forKey: .energyPerPersonPerTick)) ?? d.energyPerPersonPerTick
+        eraEnergyDemand = (try? res?.decodeIfPresent([Double].self, forKey: .eraEnergyDemand)) ?? d.eraEnergyDemand
+        influencePerPersonPerTick = (try? res?.decodeIfPresent(Double.self, forKey: .influencePerPersonPerTick)) ?? d.influencePerPersonPerTick
+        influencePerSettlement = (try? res?.decodeIfPresent(Double.self, forKey: .influencePerSettlement)) ?? d.influencePerSettlement
+        selfGoverningPopulation = (try? res?.decodeIfPresent(Double.self, forKey: .selfGoverningPopulation)) ?? d.selfGoverningPopulation
+        repeatableTechCostGrowth = (try? res?.decodeIfPresent(Double.self, forKey: .repeatableTechCostGrowth)) ?? d.repeatableTechCostGrowth
 
         let stab = try? c.nestedContainer(keyedBy: StabilityKeys.self, forKey: .stability)
         collapseThreshold = (try? stab?.decodeIfPresent(Double.self, forKey: .collapseThreshold)) ?? d.collapseThreshold
@@ -206,7 +406,22 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         let ev = try? c.nestedContainer(keyedBy: EventKeys.self, forKey: .events)
         maxMajorEventsPerCycle = (try? ev?.decodeIfPresent(Int.self, forKey: .maxMajorEventsPerCycle)) ?? d.maxMajorEventsPerCycle
         maxMinorEventsPerCycle = (try? ev?.decodeIfPresent(Int.self, forKey: .maxMinorEventsPerCycle)) ?? d.maxMinorEventsPerCycle
+        majorEventChance = (try? ev?.decodeIfPresent(Double.self, forKey: .majorEventChance)) ?? d.majorEventChance
+        majorEventTensionBoost = (try? ev?.decodeIfPresent(Double.self, forKey: .majorEventTensionBoost)) ?? d.majorEventTensionBoost
+        minorEventChance = (try? ev?.decodeIfPresent(Double.self, forKey: .minorEventChance)) ?? d.minorEventChance
+        decisionDeadlineTicks = (try? ev?.decodeIfPresent(Int.self, forKey: .decisionDeadlineTicks)) ?? d.decisionDeadlineTicks
+        indecisionMoralePenalty = (try? ev?.decodeIfPresent(Double.self, forKey: .indecisionMoralePenalty)) ?? d.indecisionMoralePenalty
         tensionBands = (try? ev?.decodeIfPresent([TensionBand].self, forKey: .tensionBands)) ?? d.tensionBands
+
+        let dip = try? c.nestedContainer(keyedBy: DiplomacyKeys.self, forKey: .diplomacy)
+        giftInfluenceCost = (try? dip?.decodeIfPresent(Double.self, forKey: .giftInfluenceCost)) ?? d.giftInfluenceCost
+        giftStandingGain = (try? dip?.decodeIfPresent(Double.self, forKey: .giftStandingGain)) ?? d.giftStandingGain
+        demandInfluenceCost = (try? dip?.decodeIfPresent(Double.self, forKey: .demandInfluenceCost)) ?? d.demandInfluenceCost
+        demandStoresShare = (try? dip?.decodeIfPresent(Double.self, forKey: .demandStoresShare)) ?? d.demandStoresShare
+        demandStandingLoss = (try? dip?.decodeIfPresent(Double.self, forKey: .demandStandingLoss)) ?? d.demandStandingLoss
+        pactInfluenceCost = (try? dip?.decodeIfPresent(Double.self, forKey: .pactInfluenceCost)) ?? d.pactInfluenceCost
+        pactMinStanding = (try? dip?.decodeIfPresent(Double.self, forKey: .pactMinStanding)) ?? d.pactMinStanding
+        overruleInfluenceCost = (try? dip?.decodeIfPresent(Double.self, forKey: .overruleInfluenceCost)) ?? d.overruleInfluenceCost
 
         let exp = try? c.nestedContainer(keyedBy: ExplorationKeys.self, forKey: .exploration)
         baseExpeditionTicks = (try? exp?.decodeIfPresent(Int.self, forKey: .baseExpeditionTicks)) ?? d.baseExpeditionTicks
@@ -226,19 +441,36 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         try tick.encode(maxOfflineTicks, forKey: .maxOfflineTicks)
         try tick.encode(plannerInterval, forKey: .plannerInterval)
 
+        var calendar = c.nestedContainer(keyedBy: CalendarKeys.self, forKey: .calendar)
+        try calendar.encode(ticksPerYear, forKey: .ticksPerYear)
+        try calendar.encode(seasonFoodYield, forKey: .seasonFoodYield)
+        try calendar.encode(seasonMaterialsYield, forKey: .seasonMaterialsYield)
+
         var tension = c.nestedContainer(keyedBy: TensionKeys.self, forKey: .tension)
         try tension.encode(threatMultiplier, forKey: .threatMultiplier)
         try tension.encode(prosperityDampener, forKey: .prosperityDampener)
+        try tension.encode(prosperityNeutral, forKey: .prosperityNeutral)
         try tension.encode(disasterSpikeDecayTicks, forKey: .disasterSpikeDecayTicks)
         try tension.encode(disasterSpikePerEvent, forKey: .disasterSpikePerEvent)
         try tension.encode(boomDampenerTicks, forKey: .boomDampenerTicks)
         try tension.encode(boomDampenerPerEvent, forKey: .boomDampenerPerEvent)
         try tension.encode(deficitSpikePerResource, forKey: .deficitSpikePerResource)
+        try tension.encode(shortageFraction, forKey: .shortageFraction)
         try tension.encode(eraRampPerEra, forKey: .eraRampPerEra)
+        try tension.encode(scalePressureBasePopulation, forKey: .scalePressureBasePopulation)
+        try tension.encode(scalePressurePerDoubling, forKey: .scalePressurePerDoubling)
+        try tension.encode(scalePressureCap, forKey: .scalePressureCap)
 
         var res = c.nestedContainer(keyedBy: ResourceKeys.self, forKey: .resources)
         try res.encode(foodPerPersonPerTick, forKey: .foodPerPersonPerTick)
         try res.encode(defaultStorageCapacity, forKey: .defaultStorageCapacity)
+        try res.encode(upkeepRateOfCost, forKey: .upkeepRateOfCost)
+        try res.encode(energyPerPersonPerTick, forKey: .energyPerPersonPerTick)
+        try res.encode(eraEnergyDemand, forKey: .eraEnergyDemand)
+        try res.encode(influencePerPersonPerTick, forKey: .influencePerPersonPerTick)
+        try res.encode(influencePerSettlement, forKey: .influencePerSettlement)
+        try res.encode(selfGoverningPopulation, forKey: .selfGoverningPopulation)
+        try res.encode(repeatableTechCostGrowth, forKey: .repeatableTechCostGrowth)
 
         var stab = c.nestedContainer(keyedBy: StabilityKeys.self, forKey: .stability)
         try stab.encode(collapseThreshold, forKey: .collapseThreshold)
@@ -248,7 +480,22 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         var ev = c.nestedContainer(keyedBy: EventKeys.self, forKey: .events)
         try ev.encode(maxMajorEventsPerCycle, forKey: .maxMajorEventsPerCycle)
         try ev.encode(maxMinorEventsPerCycle, forKey: .maxMinorEventsPerCycle)
+        try ev.encode(majorEventChance, forKey: .majorEventChance)
+        try ev.encode(majorEventTensionBoost, forKey: .majorEventTensionBoost)
+        try ev.encode(minorEventChance, forKey: .minorEventChance)
+        try ev.encode(decisionDeadlineTicks, forKey: .decisionDeadlineTicks)
+        try ev.encode(indecisionMoralePenalty, forKey: .indecisionMoralePenalty)
         try ev.encode(tensionBands, forKey: .tensionBands)
+
+        var dip = c.nestedContainer(keyedBy: DiplomacyKeys.self, forKey: .diplomacy)
+        try dip.encode(giftInfluenceCost, forKey: .giftInfluenceCost)
+        try dip.encode(giftStandingGain, forKey: .giftStandingGain)
+        try dip.encode(demandInfluenceCost, forKey: .demandInfluenceCost)
+        try dip.encode(demandStoresShare, forKey: .demandStoresShare)
+        try dip.encode(demandStandingLoss, forKey: .demandStandingLoss)
+        try dip.encode(pactInfluenceCost, forKey: .pactInfluenceCost)
+        try dip.encode(pactMinStanding, forKey: .pactMinStanding)
+        try dip.encode(overruleInfluenceCost, forKey: .overruleInfluenceCost)
 
         var exp = c.nestedContainer(keyedBy: ExplorationKeys.self, forKey: .exploration)
         try exp.encode(baseExpeditionTicks, forKey: .baseExpeditionTicks)

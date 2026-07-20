@@ -53,8 +53,20 @@ struct StoryPlannerTests {
         conditions: [.techResearched("writing")], narrativeHint: "A scholar visits."
     )
 
+    /// Firing is probabilistic — quiet is the storyteller's default. These
+    /// tests are about the *mechanism* (eligibility, cooldown, effects), so
+    /// they pin the dice at certainty; the odds themselves are covered by
+    /// `EventDensityTests`. Without this, "no event fired" assertions would
+    /// pass vacuously whenever the roll simply came up short.
+    static let alwaysFires: WorldConfig = {
+        var config = WorldConfig.default
+        config.majorEventChance = 1
+        config.minorEventChance = 1
+        return config
+    }()
+
     func registry(_ events: [EventTemplate]) -> GameDataRegistry {
-        Fixtures.registry(events: events)
+        Fixtures.registry(events: events, config: Self.alwaysFires)
     }
 
     @Test("Planner is deterministic for the same seed and state")

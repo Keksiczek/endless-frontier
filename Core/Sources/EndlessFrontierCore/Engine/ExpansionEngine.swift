@@ -33,18 +33,30 @@ public enum ExpansionEngine {
             .filter { registry.building($0) != nil }
             .map { BuildingInstance(definitionID: $0, count: 1) }
 
+        // Deterministic identity: per-settlement RNG streams key off the id.
+        let seedBase = settlerSeed(state: s, region: state.regions[regionIndex])
+        var idRNG = SeededRNG(seed: seedBase ^ 0x0072_1D0F)
+        // A founded hearth deserves a real name, not "Outpost 3" — callers
+        // that pass nothing get one forged in the world's language.
+        var nameRNG = SeededRNG(seed: seedBase ^ 0x00A9_E5A1)
+        let outpostName = name.isEmpty
+            ? NameForge.settlementName(language: s.language, using: &nameRNG)
+            : name
         var outpost = Settlement(
-            name: name,
+            id: idRNG.nextUUID(),
+            name: outpostName,
             kind: .outpost,
             regionID: regionID,
             foundedTick: s.tick,
-            population: 20,
-            pawns: settlers(seedBase: settlerSeed(state: s, region: state.regions[regionIndex])),
+            pawns: settlers(seedBase: seedBase, language: s.language),
             buildings: buildings,
             storage: [.food: 40, .materials: 20],
             storageCapacity: registry.config.defaultStorageCapacity,
             stats: SettlementStats(stability: 50, morale: 55),
-            colony: ColonyBuilder.seededLayout(for: buildings, registry: registry)
+            colony: ColonyBuilder.seededLayout(for: buildings, registry: registry),
+            localMap: LocalMapGenerator.generate(mapSeed: s.mapSeed, regionID: regionID,
+                                                 biome: registry.biome(state.regions[regionIndex].biomeID),
+                                                 flavor: state.regions[regionIndex].kind)
         )
         for pawn in outpost.pawns {
             outpost = ColonyBuilder.autoAssign(outpost, pawnID: pawn.id, registry: registry)
@@ -55,13 +67,11 @@ public enum ExpansionEngine {
         return s
     }
 
-    /// Two founding colonists for a new outpost — generated deterministically
+    /// The founding party of a new outpost — generated deterministically
     /// so each settlement is a real, living community from day one.
-    private static func settlers(seedBase: UInt64) -> [Pawn] {
-        [
-            PawnFactory.generate(seed: seedBase),
-            PawnFactory.generate(seed: seedBase &+ 0x9E37_79B9)
-        ]
+    private static func settlers(seedBase: UInt64, language: GameLanguage) -> [Pawn] {
+        (0..<6).map { PawnFactory.generate(seed: seedBase &+ UInt64($0) &* 0x9E37_79B9,
+                                           language: language) }
     }
 
     private static func settlerSeed(state: WorldState, region: Region) -> UInt64 {

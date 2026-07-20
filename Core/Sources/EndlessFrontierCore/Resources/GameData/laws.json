@@ -1,0 +1,136 @@
+[
+  {
+    "id": "rationing",
+    "name": { "en": "Rationing", "cs": "Přídělový systém" },
+    "summary": {
+      "en": "Stores are locked and portions measured. The colony eats far less — and likes it far less.",
+      "cs": "Sýpky se zamykají a porce se odměřují. Osada spotřebuje mnohem méně — a mnohem méně se jí to líbí."
+    },
+    "duration_years": 10,
+    "weight": 2.0,
+    "conditions": [{ "stat": "settlement:any.morale", "max": 100 }],
+    "modifiers": { "food_upkeep_multiplier": 0.62, "morale_flat": -6 },
+    "vote_bias": { "sociability": -0.2, "poor_favour": 0.15 }
+  },
+  {
+    "id": "feast",
+    "name": { "en": "Feast of Plenty", "cs": "Slavnost hojnosti" },
+    "summary": {
+      "en": "Open the granaries for a night. The colony remembers it for years.",
+      "cs": "Na jednu noc otevřít sýpky. Osada na to bude vzpomínat léta."
+    },
+    "duration_years": 2,
+    "weight": 1.0,
+    "modifiers": { "morale_flat": 6 },
+    "vote_bias": { "sociability": 0.35 },
+    "effects": [
+      { "type": "resource_delta", "resource": "food", "delta": -60, "scope": "global" },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 14 }
+    ]
+  },
+  {
+    "id": "family_support",
+    "name": { "en": "Support for Families", "cs": "Podpora rodin" },
+    "summary": {
+      "en": "Households with children get a larger share. The cradles fill.",
+      "cs": "Domácnosti s dětmi dostávají větší díl. Kolébky se plní."
+    },
+    "duration_years": 12,
+    "weight": 1.2,
+    "modifiers": { "birth_rate_multiplier": 1.8, "morale_flat": 2 },
+    "vote_bias": { "fertility": 0.4, "sociability": 0.1 }
+  },
+  {
+    "id": "school",
+    "name": { "en": "Found a School", "cs": "Zřízení školy" },
+    "summary": {
+      "en": "The children are taught letters. Knowledge accrues half again as fast.",
+      "cs": "Děti se učí písmenům. Znalosti přibývají o polovinu rychleji."
+    },
+    "duration_years": 20,
+    "weight": 1.3,
+    "modifiers": { "knowledge_multiplier": 1.5, "morale_flat": 2 },
+    "vote_bias": { "industry": 0.3, "sociability": 0.1 }
+  },
+  {
+    "id": "night_watch",
+    "name": { "en": "Night Watches", "cs": "Noční hlídky" },
+    "summary": {
+      "en": "Lanterns on the perimeter, spears by the door. Beasts and raiders think twice.",
+      "cs": "Lucerny na hranicích, oštěpy u dveří. Šelmy i nájezdníci si to rozmyslí."
+    },
+    "duration_years": 10,
+    "weight": 1.4,
+    "conditions": [{ "stat": "global.threatLevel", "min": 15 }],
+    "modifiers": { "defense_flat": 12, "morale_flat": -2 },
+    "vote_bias": { "courage": -0.25 }
+  },
+  {
+    "id": "trade_road",
+    "name": { "en": "The Trade Road", "cs": "Obchodní stezka" },
+    "summary": {
+      "en": "Clear a road to the outside world. Coin and rumour both flow in.",
+      "cs": "Prosekat cestu k okolnímu světu. Přitečou mince i zvěsti."
+    },
+    "duration_years": 15,
+    "weight": 1.0,
+    "modifiers": { "influence_per_tick": 0.4 },
+    "vote_bias": { "sociability": 0.25, "poor_favour": -0.1 }
+  },
+  {
+    "id": "forest_protection",
+    "name": { "en": "Protection of the Woods", "cs": "Ochrana lesů" },
+    "summary": {
+      "en": "Felling is limited so the forest can grow back. The land recovers twice as fast.",
+      "cs": "Kácení se omezuje, aby les stačil dorůst. Krajina se zotavuje dvakrát rychleji."
+    },
+    "duration_years": 12,
+    "weight": 1.1,
+    "modifiers": { "deposit_regrowth_multiplier": 2.0, "morale_flat": -1 },
+    "vote_bias": { "industry": -0.2, "sociability": 0.15 }
+  },
+  {
+    "id": "tithe",
+    "name": { "en": "The Tithe", "cs": "Desátek do pokladny" },
+    "summary": {
+      "en": "A quarter of every wage goes to the common purse. The poor gain, the wealthy grumble.",
+      "cs": "Čtvrtina každé mzdy putuje do obecní pokladny. Chudí získají, zámožní reptají."
+    },
+    "duration_years": 15,
+    "weight": 1.1,
+    "modifiers": { "wage_tax_fraction": 0.25, "influence_per_tick": 0.2, "morale_flat": -2 },
+    "vote_bias": { "poor_favour": 0.4 }
+  },
+  {
+    "id": "expedition",
+    "name": { "en": "Expedition for Fields", "cs": "Expedice za poli" },
+    "summary": {
+      "en": "Send a party beyond the known world to break new ground.",
+      "cs": "Vyslat výpravu za obzor známého světa a zorat novou půdu."
+    },
+    "duration_years": 6,
+    "weight": 1.2,
+    "modifiers": {},
+    "vote_bias": { "courage": 0.35, "industry": 0.15 },
+    "effects": [
+      { "type": "resource_delta", "resource": "food", "delta": 220, "scope": "global" },
+      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 4 }
+    ]
+  },
+  {
+    "id": "temple",
+    "name": { "en": "Raise a Temple", "cs": "Stavba chrámu" },
+    "summary": {
+      "en": "Cut stone for the gods. Comfort in disaster, and a cult is born.",
+      "cs": "Vytesat kámen bohům. Útěcha v pohromách — a zrodí se kult."
+    },
+    "duration_years": 40,
+    "weight": 0.9,
+    "conditions": [{ "stat": "global.prosperity", "min": 35 }],
+    "modifiers": { "morale_flat": 5, "influence_per_tick": 0.15 },
+    "vote_bias": { "sociability": 0.3, "courage": -0.1 },
+    "effects": [
+      { "type": "resource_delta", "resource": "materials", "delta": -90, "scope": "global" }
+    ]
+  }
+]

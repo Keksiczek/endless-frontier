@@ -7,6 +7,19 @@ public enum ResourceLoop {
     public static let baseHousing: Double = 30
     /// Pollution above this level begins to drag morale down.
     public static let pollutionMoraleThreshold: Double = 40
+    /// Morale lost each tick a colony's grid can't meet its demand.
+    public static let brownoutMoralePenalty: Double = 0.8
+    /// Stability lost each tick a realm has no political capital left to
+    /// govern with. Deliberately sharper than a brownout: the colony carries on
+    /// in the dark, but an ungoverned realm comes apart.
+    public static let ungovernedStabilityPenalty: Double = 1.2
+    /// The stability a joyless colony tends toward, and how much its
+    /// colonists' contentment lifts that. Morale 80 → a target near 70.
+    public static let stabilityFloor: Double = 30
+    public static let stabilityFromMorale: Double = 0.5
+    /// How fast stability closes on its target. A fifth of morale's pace: a
+    /// realm is shaken in a moment and settles over years.
+    public static let stabilityRecoveryRate: Double = 0.02
     /// Baseline the threat level decays toward in the founding era.
     public static let baseThreat: Double = 10
     /// Extra threat baseline per era advanced — later eras are more dangerous,
@@ -20,10 +33,90 @@ public enum ResourceLoop {
         }
     }
 
+    /// How much a settlement can stockpile (base + storage buildings), derived
+    /// the same way housing is. Capacity used to be a flat 500 for every
+    /// settlement in every era, so stores filled in the first years and stayed
+    /// pinned at the cap forever — nothing was ever scarce, and so no choice
+    /// ever cost anything. Deepening the stores is now something you build.
+    public static func storageCapacity(_ settlement: Settlement, registry: GameDataRegistry) -> Double {
+        registry.config.defaultStorageCapacity + settlement.buildings.reduce(0.0) { acc, instance in
+            acc + (registry.building(instance.definitionID)?.storage ?? 0) * Double(instance.count)
+        }
+    }
+
+    /// The power the colonists themselves draw each tick — light, heat, and
+    /// everything an age plugs in.
+    ///
+    /// Energy pinned at the storage cap because the only thing drawing it was
+    /// other buildings, and generation outran them several times over. A sink
+    /// only bites when it scales with something *other* than buildings, which
+    /// is exactly why food — eaten by people — was the one that always worked.
+    /// Demand is zero in the early eras: no generation exists before the
+    /// windmill, so charging for power would bankrupt a colony that has no way
+    /// to answer.
+    public static func domesticEnergyDemand(
+        population: Double, era: Era, config: WorldConfig
+    ) -> Double {
+        guard era.index < config.eraEnergyDemand.count else { return 0 }
+        return population * config.energyPerPersonPerTick * config.eraEnergyDemand[era.index]
+    }
+
+    /// What it costs in political capital to hold this many people, in this
+    /// many places, together.
+    ///
+    /// Nothing consumed influence at all. As the Leader's standing it should be
+    /// spent governing: a village settles its own business by talking, but a
+    /// civilisation needs administration, and when that runs dry the realm
+    /// frays — which is already how tribes break away (`DiplomacyEngine`).
+    /// The per-settlement fee applies from the *second* town onward: the seat
+    /// of power governs itself, but every other place needs someone sent to
+    /// hold it. Charging it from the first town would bill a lone village that
+    /// the population threshold is meant to exempt — and exempting it entirely
+    /// would let a realm dodge administration forever by staying a scatter of
+    /// hamlets, each just under the threshold.
+    public static func administrationCost(
+        population: Double, settlements: Int, config: WorldConfig
+    ) -> Double {
+        let governed = max(0, population - config.selfGoverningPopulation)
+        let outposts = Double(max(0, settlements - 1))
+        return governed * config.influencePerPersonPerTick
+            + outposts * config.influencePerSettlement
+    }
+
+    /// What one instance of a building costs per tick to keep standing.
+    ///
+    /// Nothing consumed materials or influence at all — they were spent once at
+    /// build time and never again — so every stockpile bar food ran to the cap
+    /// and stayed pinned there, which is what made a mature colony's economy
+    /// meaningless.
+    ///
+    /// Upkeep is a standing fraction of *what the building cost to raise*, in
+    /// the same resources it cost. That keeps it honest with no hand-authoring
+    /// across 46 entries: an arcology is a burden a hut is not, and a research
+    /// campus that cost knowledge keeps drawing knowledge, which gives the
+    /// knowledge stockpile a sink that outlives the tech tree. `upkeep` in the
+    /// JSON overrides this outright (for a monument that needs nothing).
+    ///
+    /// The hand-authored `consumption` field stays separate: that's the
+    /// building's *operating* draw (a factory's energy), not its maintenance.
+    public static func upkeep(for def: BuildingDefinition, config: WorldConfig) -> Resources {
+        if let explicit = def.upkeep { return explicit }
+        var derived = Resources()
+        for resource in ResourceType.allCases {
+            derived[resource] = def.cost[resource] * config.upkeepRateOfCost
+        }
+        return derived
+    }
+
     public static func advanceOneTick(_ state: WorldState, registry: GameDataRegistry) -> WorldState {
         var s = state
         let config = registry.config
-        s.settlements = s.settlements.map { advanceSettlement($0, registry: registry, config: config) }
+        let settlementCount = s.settlements.count
+        s.settlements = s.settlements.map {
+            advanceSettlement($0, registry: registry, config: config,
+                              tick: state.tick, mapSeed: state.mapSeed, era: state.era,
+                              settlementCount: settlementCount, language: state.language)
+        }
         s.globalStats = recomputeGlobalStats(s, registry: registry)
         return s
     }
@@ -31,22 +124,36 @@ public enum ResourceLoop {
     static func advanceSettlement(
         _ settlement: Settlement,
         registry: GameDataRegistry,
-        config: WorldConfig
+        config: WorldConfig,
+        tick: Int = 0,
+        mapSeed: UInt64 = 0,
+        era: Era = .earlySettlement,
+        settlementCount: Int = 1,
+        language: GameLanguage = .cs
     ) -> Settlement {
         var s = settlement
         let profile = s.specialization.profile
+        // Everything the settlement's laws currently do.
+        let laws = SocietyEngine.modifiers(s, registry: registry)
+        if s.strikeTicksRemaining > 0 { s.strikeTicksRemaining -= 1 }
 
         // 1. Net production/consumption from buildings. A settlement's
         //    specialisation multiplies its gross production (not consumption),
         //    so e.g. an agricultural town grows far more food than it would
         //    balanced, at the cost of whatever it down-weights.
+        //    Upkeep is charged alongside operating consumption: a standing
+        //    colony costs materials to keep standing, which is what stops the
+        //    stores from simply filling and pinning at the cap forever.
         var net = Resources()
         for instance in s.buildings {
             guard let def = registry.building(instance.definitionID) else { continue }
             let count = Double(instance.count)
+            let maintenance = upkeep(for: def, config: config)
             for resource in ResourceType.allCases {
-                let produced = def.production[resource] * profile.productionMultiplier(resource)
-                let consumed = def.consumption[resource]
+                let produced = def.production[resource]
+                    * profile.productionMultiplier(resource)
+                    * config.seasonYieldMultiplier(for: resource, tick: tick)
+                let consumed = def.consumption[resource] + maintenance[resource]
                 net[resource] = net[resource] + (produced - consumed) * count
             }
         }
@@ -64,30 +171,51 @@ public enum ResourceLoop {
             net[resource] = net[resource] + adjacencyProduction[resource]
         }
 
-        // 2. Population food upkeep.
-        net[.food] = net[.food] - s.population * config.foodPerPersonPerTick
+        // 1d. Standing laws: a trade road or a tithe brings in influence.
+        net[.influence] = net[.influence] + laws.influencePerTick
 
-        // 3. Apply to storage; remember if food went into deficit before clamp.
+        // 1e. What the colonists themselves draw, as distinct from what their
+        //     buildings burn: power to live by, and the political capital it
+        //     takes to govern them. These scale with *population*, not with the
+        //     building count — which is the whole reason they bite where a
+        //     building-scaled cost never could.
+        let energyDemand = domesticEnergyDemand(
+            population: s.population, era: era, config: config)
+        let administration = administrationCost(
+            population: s.population, settlements: settlementCount, config: config)
+        net[.energy] = net[.energy] - energyDemand
+        net[.influence] = net[.influence] - administration
+
+        // 2. Apply building net production to storage. Food upkeep happens in
+        //    `PawnEngine` — every inhabitant is a pawn and eats real meals.
+        //    Capacity is re-derived from the standing buildings first, so a
+        //    save written before granaries granted storage simply picks up its
+        //    real capacity here rather than needing a migration.
+        s.storageCapacity = storageCapacity(s, registry: registry)
         var storage = s.storage
         for resource in ResourceType.allCases {
             storage[resource] = storage[resource] + net[resource]
         }
-        let starving = storage[.food] < 0
         s.storage = storage.clamped(lower: 0, upper: s.storageCapacity)
 
-        // 4. Population dynamics — growth is capped by available housing.
+        // 3. Population pressure: an empty larder and overcrowding both wear
+        //    on morale. Growth itself is births (`PopulationEngine`).
         let capacity = housingCapacity(s, registry: registry)
-        if starving {
-            s.population = max(0, s.population * 0.99)
+        if s.storage[.food] <= 0 {
             s.stats.morale -= 1
-        } else {
-            let headroom = capacity > 0 ? max(0, 1 - s.population / capacity) : 0
-            var growthFactor = (s.stats.morale - 50) / 5000   // ±1%/tick at morale extremes
-            if growthFactor > 0 { growthFactor *= headroom }  // positive growth needs room
-            s.population = max(0, s.population + s.population * growthFactor)
-            if capacity > 0, s.population > capacity {
-                s.stats.morale -= 0.5                          // overcrowding
-            }
+        }
+        if capacity > 0, s.population > capacity {
+            s.stats.morale -= 0.5                              // overcrowding
+        }
+        // A grid that can't answer its demand means a colony living in the
+        // dark; a treasury that can't pay its administration means a realm
+        // nobody is holding together — which is what `SocietyEngine` and
+        // `DiplomacyEngine` read when deciding on revolt and secession.
+        if energyDemand > 0, s.storage[.energy] <= 0 {
+            s.stats.morale -= brownoutMoralePenalty
+        }
+        if administration > 0, s.storage[.influence] <= 0 {
+            s.stats.stability -= ungovernedStabilityPenalty
         }
 
         // 5. Morale drifts gently toward a building-driven target.
@@ -96,14 +224,28 @@ public enum ResourceLoop {
         }
         let moraleTarget = min(100, max(0, 50 + buildingMorale
                                         + ItemEngine.colonyMoraleBonus(s, registry: registry)
-                                        + ColonyBonus.adjacencyMorale(s, registry: registry)))
+                                        + ColonyBonus.adjacencyMorale(s, registry: registry)
+                                        + laws.moraleFlat
+                                        + FaithEngine.moraleBonus(s, registry: registry)))
         s.stats.morale += (moraleTarget - s.stats.morale) * 0.1
+
+        // 5b. Stability drifts toward what the colonists' contentment can
+        //     sustain. Every other write to stability in the engine is a
+        //     subtraction — an uprising, isolation, a specialisation switch —
+        //     and nothing ever put it back, so a realm could only ratchet down
+        //     to zero and stay there forever. Recovery is deliberately far
+        //     slower than the shocks: a wound heals over years, and a realm
+        //     that has run out of anyone to govern it still loses ground faster
+        //     than contentment can win it back.
+        let stabilityTarget = min(100, max(0, stabilityFloor + s.stats.morale * stabilityFromMorale))
+        s.stats.stability += (stabilityTarget - s.stats.stability) * stabilityRecoveryRate
 
         // 6. Defense drifts toward fortifications (buildings + artifacts).
         let buildingDefense = s.buildings.reduce(0.0) { acc, instance in
             acc + (registry.building(instance.definitionID)?.defense ?? 0) * Double(instance.count)
         }
-        let defenseTarget = buildingDefense + ItemEngine.colonyDefenseBonus(s, registry: registry) + profile.defenseFlat
+        let defenseTarget = buildingDefense + ItemEngine.colonyDefenseBonus(s, registry: registry)
+            + profile.defenseFlat + laws.defenseFlat
         s.stats.defense += (defenseTarget - s.stats.defense) * 0.15
 
         // 7. Pollution drifts toward what industry emits; heavy pollution hurts
@@ -118,9 +260,221 @@ public enum ResourceLoop {
         }
         s.stats = s.stats.clamped()
 
-        // 8. Individual colonists: needs, mood, skilled work, morale pull.
-        s = PawnEngine.advanceOneTick(s, registry: registry)
+        // 8. Put any idle adults (new arrivals, those who came of age) to work.
+        s = LaborEngine.assignIdleAdults(s, registry: registry)
 
+        // 8b. Raise what's being built: sites draft hands, progress accrues,
+        //     and a finished roof joins the economy ledger above.
+        s = ConstructionEngine.advanceOneTick(s, registry: registry, tick: tick)
+
+        // 9. Individual colonists: needs, mood, skilled work, morale pull.
+        //    Gathering work is scaled by how full the local deposits & herd are;
+        //    a strike stops the gatherers altogether.
+        var factors = gatheringFactors(s.localMap)
+        if s.strikeTicksRemaining > 0 {
+            for work in [WorkKind.farming, .logging, .mining, .foraging, .hunting] {
+                factors[work] = 0
+            }
+        }
+        s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick,
+                                      gatheringFactors: factors, laws: laws)
+
+        // 10. Deposits deplete under the harvest and regrow with the seasons —
+        //     faster where the woods are protected by law.
+        s = evolveDeposits(s, registry: registry, tick: tick, config: config,
+                           regrowthMultiplier: laws.depositRegrowthMultiplier)
+
+        // 10b. Scouts chart the valley.
+        s = chartGround(s, tick: tick, mapSeed: mapSeed, config: config)
+
+        // 11. Wildlife: the herd grows and is culled; predators may strike.
+        s = WildlifeEngine.advanceOneTick(s, registry: registry, tick: tick, era: era, mapSeed: mapSeed)
+
+        // 11b. Village life: chats, quarrels, weddings — bonds that feed the
+        //      recreation need and fill the journal.
+        s = SocialEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: mapSeed)
+
+        // 12. The life cycle: aging, deaths, pregnancies and births — family
+        //     support puts more children in the cradles.
+        s = PopulationEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: mapSeed,
+                                            birthRateMultiplier: laws.birthRateMultiplier,
+                                            language: language)
+
+        return s
+    }
+
+    /// How full each local deposit kind is, as a gathering-efficiency factor.
+    /// A brimming forest yields at full rate; a nearly-exhausted one still
+    /// yields something (colonists range farther), so it's a soft floor.
+    static let depositFloorFactor: Double = 0.35
+    /// Harvest a single assigned worker pulls from a deposit each tick.
+    static let harvestPerWorker: Double = 0.45
+    /// Fraction of a node's capacity it regrows each tick (before seasonality).
+    static let depositRegrowthFraction: Double = 0.0009
+
+    /// Per-work gathering-efficiency factors: each deposit-backed work scaled
+    /// by how full its pool is, plus hunting scaled by the herd. Fed to
+    /// `PawnEngine` so a depleted resource pulls its workers' output down.
+    static func gatheringFactors(_ localMap: LocalMap?) -> [WorkKind: Double] {
+        guard let localMap else { return [:] }
+        var poolByKind: [LocalResourceKind: (amount: Double, capacity: Double)] = [:]
+        for node in localMap.nodes {
+            var entry = poolByKind[node.kind] ?? (0, 0)
+            entry.amount += node.amount
+            entry.capacity += node.capacity
+            poolByKind[node.kind] = entry
+        }
+        var factors: [WorkKind: Double] = [:]
+        for (kind, entry) in poolByKind {
+            let fraction = entry.capacity > 0 ? entry.amount / entry.capacity : 1
+            factors[kind.work] = depositFloorFactor + (1 - depositFloorFactor) * fraction
+        }
+        factors[.hunting] = WildlifeEngine.huntingFactor(localMap.wildlife)
+        return factors
+    }
+
+    /// How far a scout walks from the heart before turning back, and how often
+    /// one of them comes back with new ground.
+    static let scoutRangeStep: Double = 0.012
+    static let scoutTicksPerReveal = 12
+
+    /// Scouts push the fog back a little at a time.
+    ///
+    /// `LocalMap.reveal` was called exactly once in the whole life of a world —
+    /// by the generator, radius 0.28 around the heart — and never again, so the
+    /// valley a colony lived in for centuries was a circle baked at birth.
+    /// Meanwhile `WorkKind.scouting` is documented "reveals the fog of war" and
+    /// `LaborEngine` staffs it with 5% of every colony's adults: at 79 souls,
+    /// four people had a job whose only purpose no code performed.
+    ///
+    /// They now walk outward from the heart, so the known valley grows with how
+    /// many you send and how long you leave them at it. Deterministic like the
+    /// rest of the sim: where a scout looks comes from `(mapSeed, settlement,
+    /// tick)`, never from the frame clock — the canvas's wandering colonists
+    /// are presentation and must stay out of this.
+    static func chartGround(
+        _ settlement: Settlement, tick: Int, mapSeed: UInt64, config: WorldConfig
+    ) -> Settlement {
+        guard tick % scoutTicksPerReveal == 0, var map = settlement.localMap else { return settlement }
+        let ticksPerYear = max(1, config.ticksPerYear)
+        let scouts = settlement.pawns.filter {
+            $0.assignedWork == .scouting && $0.isAdult(ticksPerYear: ticksPerYear) && !$0.isBroken
+        }.count
+        guard scouts > 0 else { return settlement }
+
+        var s = settlement
+        var rng = SeededRNG(seed: societyLikeSeed(mapSeed: mapSeed, settlementID: s.id, tick: tick))
+        // The further they've already charted, the further out the next walk
+        // starts — the frontier moves outward rather than re-treading home.
+        let reach = min(0.62, 0.28 + Double(scouts) * scoutRangeStep * Double(tick / scoutTicksPerReveal + 1) * 0.02)
+        let knownBefore = Set(map.pois.filter(\.discovered).map(\.id))
+        for _ in 0..<scouts {
+            let angle = rng.nextUnit() * 2 * .pi
+            let distance = reach * (0.55 + rng.nextUnit() * 0.45)
+            let point = LocalPoint(
+                x: min(1, max(0, 0.5 + cos(angle) * distance)),
+                y: min(1, max(0, 0.5 + sin(angle) * distance)))
+            map.reveal(around: point, radius: 0.07)
+        }
+        s.localMap = map
+        // Walking into a point of interest is a *find*: the discovery pays out
+        // and the journal remembers the day. Before this, `reveal` flipped the
+        // flag silently and the promised one-off reward never existed at all.
+        for poi in map.pois where poi.discovered && !knownBefore.contains(poi.id) {
+            s = grantPOIDiscovery(s, poi: poi, tick: tick)
+        }
+        return s
+    }
+
+    /// The one-off reward a freshly discovered point of interest grants.
+    static func grantPOIDiscovery(_ settlement: Settlement, poi: LocalPOI, tick: Int) -> Settlement {
+        var s = settlement
+        func deposit(_ resource: ResourceType, _ amount: Double) {
+            s.storage[resource] = min(s.storageCapacity, s.storage[resource] + amount)
+        }
+        switch poi.kind {
+        case .ruins:
+            deposit(.knowledge, 18)
+        case .cave:
+            deposit(.materials, 25)
+        case .spring:
+            for i in s.pawns.indices {
+                s.pawns[i].health = min(100, s.pawns[i].health + 8)
+            }
+        case .treasure:
+            deposit(.materials, 15)
+            deposit(.influence, 12)
+        case .shrine:
+            for i in s.pawns.indices {
+                s.pawns[i].needs.recreation = min(100, s.pawns[i].needs.recreation + 5)
+            }
+            if s.faith.cultID != nil {
+                s.faith.faith = min(100, s.faith.faith + 5)
+            }
+        case .wreck:
+            deposit(.materials, 30)
+        }
+        s.journal.append(tick: tick, kind: .discovery, text: poi.kind.discoveryText)
+        return s
+    }
+
+    /// A per-settlement, per-tick seed. Mirrors `SocietyEngine.societySeed`'s
+    /// shape so scouting stays reproducible for a given world.
+    static func societyLikeSeed(mapSeed: UInt64, settlementID: UUID, tick: Int) -> UInt64 {
+        var h: UInt64 = mapSeed &* 0x9E37_79B9_7F4A_7C15
+        let b = settlementID.uuid
+        h ^= UInt64(b.0) << 56 | UInt64(b.1) << 48 | UInt64(b.2) << 40 | UInt64(b.3) << 32
+            | UInt64(b.4) << 24 | UInt64(b.5) << 16 | UInt64(b.6) << 8 | UInt64(b.7)
+        h &+= UInt64(bitPattern: Int64(tick)) &* 0xD1B5_4A32_D192_ED03
+        return h ^ 0x5C0_07_5EED
+    }
+
+    /// Depletes deposits by what the settlement's gatherers pulled this tick,
+    /// then regrows every node toward its capacity at a season-scaled rate.
+    static func evolveDeposits(
+        _ settlement: Settlement,
+        registry: GameDataRegistry,
+        tick: Int,
+        config: WorldConfig,
+        regrowthMultiplier: Double = 1
+    ) -> Settlement {
+        guard var map = settlement.localMap, !map.nodes.isEmpty else { return settlement }
+        let ticksPerYear = config.ticksPerYear
+
+        // Demand per deposit kind from the workers assigned to harvest it.
+        var demand: [LocalResourceKind: Double] = [:]
+        for pawn in settlement.pawns where pawn.isAdult(ticksPerYear: ticksPerYear) && !pawn.isBroken {
+            if let deposit = pawn.assignedWork.harvestedDeposit {
+                let resource = pawn.assignedWork.resource ?? .food
+                let season = config.seasonYieldMultiplier(for: resource, tick: tick)
+                demand[deposit, default: 0] += harvestPerWorker * season
+            }
+        }
+
+        // Deplete proportionally across the nodes of each kind.
+        for kind in Set(map.nodes.map(\.kind)) {
+            let want = demand[kind, default: 0]
+            guard want > 0 else { continue }
+            let indices = map.nodes.indices.filter { map.nodes[$0].kind == kind }
+            let available = indices.reduce(0.0) { $0 + map.nodes[$1].amount }
+            guard available > 0 else { continue }
+            let taken = min(want, available)
+            for i in indices {
+                let share = map.nodes[i].amount / available
+                map.nodes[i].amount = max(0, map.nodes[i].amount - taken * share)
+            }
+        }
+
+        // Regrow toward capacity, faster in the growing seasons.
+        for i in map.nodes.indices {
+            let resource: ResourceType = map.nodes[i].kind == .field ? .food : .materials
+            let season = config.seasonYieldMultiplier(for: resource, tick: tick)
+            let regrow = map.nodes[i].capacity * depositRegrowthFraction * season * regrowthMultiplier
+            map.nodes[i].amount = min(map.nodes[i].capacity, map.nodes[i].amount + regrow)
+        }
+
+        var s = settlement
+        s.localMap = map
         return s
     }
 
@@ -147,8 +501,11 @@ public enum ResourceLoop {
                 influence += def.production[.influence] * profile.productionMultiplier(.influence) * count
             }
         }
-        g.knowledgeOutput = knowledge
-        g.influenceOutput = influence
+        // Standing research bonuses ride on top of the building total. They
+        // have to be re-added here: this assignment is what used to silently
+        // erase every `modifier` effect in techs.json the tick after it landed.
+        g.knowledgeOutput = knowledge + (state.statModifiers["knowledgeOutput"] ?? 0)
+        g.influenceOutput = influence + (state.statModifiers["influenceOutput"] ?? 0)
 
         // Prosperity drifts toward average morale.
         g.prosperity += (avgMorale - g.prosperity) * 0.05

@@ -16,12 +16,12 @@ struct SettlementScopeTests {
         outpostInventory: [String] = []
     ) -> WorldState {
         let capital = Settlement(
-            name: "Capital", kind: .capital, population: 8,
+            name: "Capital", kind: .capital, pawns: Fixtures.pawns(8),
             storage: [.materials: capitalMaterials], storageCapacity: 9999,
             inventory: capitalInventory.map { ItemInstance(definitionID: $0) }
         )
         let outpost = Settlement(
-            name: "Frontier Post", kind: .outpost, population: 4,
+            name: "Frontier Post", kind: .outpost, pawns: Fixtures.pawns(4),
             storage: [.materials: outpostMaterials], storageCapacity: 9999,
             inventory: outpostInventory.map { ItemInstance(definitionID: $0) }
         )
@@ -36,13 +36,14 @@ struct SettlementScopeTests {
         let world = twoSettlements(capitalMaterials: 0, outpostMaterials: 100)
         let outpostID = world.settlements[1].id
 
-        // hut is an early-settlement building costing 10 materials.
+        // hut is an early-settlement building costing 10 materials. Paying
+        // opens a construction site in the outpost; the roof comes later.
         let after = GameEngine.build(world, settlementID: outpostID, buildingID: "hut", registry: r)
 
-        #expect(after.settlements[1].buildings.contains { $0.definitionID == "hut" })
+        #expect(after.settlements[1].constructions.contains { $0.definitionID == "hut" })
         #expect(after.settlements[1].storage[.materials] == 90)   // 100 - 10
         #expect(after.settlements[0].storage[.materials] == 0)    // capital untouched
-        #expect(!after.settlements[0].buildings.contains { $0.definitionID == "hut" })
+        #expect(after.settlements[0].constructions.isEmpty)
     }
 
     @Test("Building fails when the target settlement can't afford it, even if the capital can")

@@ -79,14 +79,41 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public var kind: SettlementKind
     public var regionID: UUID?
     public var foundedTick: Int
-    public var population: Double
+    /// Every inhabitant is a pawn; the headcount is derived, never stored.
+    public var population: Double { Double(pawns.count) }
     public var pawns: [Pawn]
+    /// Lifetime deaths by `PawnDeathCause.rawValue` — chronicle material.
+    public var deathTallies: [String: Int]
     public var buildings: [BuildingInstance]
     public var storage: Resources
     public var storageCapacity: Double
     public var stats: SettlementStats
     public var inventory: [ItemInstance]   // unequipped items + active artifacts
     public var specialization: SettlementSpecialization
+    /// Optional in-settlement spatial layout (the RimWorld-style colony grid).
+    /// `nil` until the player opens build mode; the economy never depends on it.
+    public var colony: ColonyMap?
+    /// The living outdoor map — river, deposits, fog of war, points of interest.
+    /// `nil` for pre-V2 saves; generated on demand from the world seed.
+    public var localMap: LocalMap?
+    /// Laws currently in force (see `SocietyEngine`).
+    public var laws: [LawInstance]
+    /// The colonist the assembly elected to lead — the player's voice in-world.
+    public var leaderID: UUID?
+    /// Wealth distribution: Gini and the class boundaries.
+    public var society: SocietyStats
+    /// Ticks left of a strike — gatherers have downed tools.
+    public var strikeTicksRemaining: Int
+    /// The settlement's faith: its cult, its devotion, its prophets.
+    public var faith: FaithState
+    /// Buildings currently being raised, oldest first (see `ConstructionEngine`).
+    public var constructions: [ConstructionProject]
+    /// Monotonic id source for construction projects — deterministic identity.
+    public var constructionSequence: Int
+    /// The settlement's living diary of small moments (see `ColonyLog`).
+    public var journal: ColonyLog
+    /// Bonds between colonists — friendships, rivalries, marriages.
+    public var relationships: [Relationship]
 
     public init(
         id: UUID = UUID(),
@@ -94,35 +121,59 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         kind: SettlementKind = .city,
         regionID: UUID? = nil,
         foundedTick: Int = 0,
-        population: Double = 50,
         pawns: [Pawn] = [],
+        deathTallies: [String: Int] = [:],
         buildings: [BuildingInstance] = [],
         storage: Resources = Resources(),
         storageCapacity: Double = 500,
         stats: SettlementStats = SettlementStats(),
         inventory: [ItemInstance] = [],
-        specialization: SettlementSpecialization = .balanced
+        specialization: SettlementSpecialization = .balanced,
+        colony: ColonyMap? = nil,
+        localMap: LocalMap? = nil,
+        laws: [LawInstance] = [],
+        leaderID: UUID? = nil,
+        society: SocietyStats = SocietyStats(),
+        strikeTicksRemaining: Int = 0,
+        faith: FaithState = FaithState(),
+        constructions: [ConstructionProject] = [],
+        constructionSequence: Int = 0,
+        journal: ColonyLog = ColonyLog(),
+        relationships: [Relationship] = []
     ) {
         self.id = id
         self.name = name
         self.kind = kind
         self.regionID = regionID
         self.foundedTick = foundedTick
-        self.population = population
         self.pawns = pawns
+        self.deathTallies = deathTallies
         self.buildings = buildings
         self.storage = storage
         self.storageCapacity = storageCapacity
         self.stats = stats
         self.inventory = inventory
         self.specialization = specialization
+        self.colony = colony
+        self.localMap = localMap
+        self.laws = laws
+        self.leaderID = leaderID
+        self.society = society
+        self.strikeTicksRemaining = strikeTicksRemaining
+        self.faith = faith
+        self.constructions = constructions
+        self.constructionSequence = constructionSequence
+        self.journal = journal
+        self.relationships = relationships
     }
 
     // MARK: - Codable (resilient to pre-specialisation saves)
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, kind, regionID, foundedTick, population, pawns
-        case buildings, storage, storageCapacity, stats, inventory, specialization
+        case id, name, kind, regionID, foundedTick, pawns, deathTallies
+        case buildings, storage, storageCapacity, stats, inventory, specialization, colony, localMap
+        case laws, leaderID, society, strikeTicksRemaining, faith
+        case constructions, constructionSequence, journal, relationships
     }
 
     public init(from decoder: Decoder) throws {
@@ -132,8 +183,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         kind = try c.decode(SettlementKind.self, forKey: .kind)
         regionID = try c.decodeIfPresent(UUID.self, forKey: .regionID)
         foundedTick = try c.decode(Int.self, forKey: .foundedTick)
-        population = try c.decode(Double.self, forKey: .population)
         pawns = try c.decode([Pawn].self, forKey: .pawns)
+        deathTallies = try c.decodeIfPresent([String: Int].self, forKey: .deathTallies) ?? [:]
         buildings = try c.decode([BuildingInstance].self, forKey: .buildings)
         storage = try c.decode(Resources.self, forKey: .storage)
         storageCapacity = try c.decode(Double.self, forKey: .storageCapacity)
@@ -141,5 +192,20 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         inventory = try c.decode([ItemInstance].self, forKey: .inventory)
         // Saves written before specialisations default to neutral.
         specialization = try c.decodeIfPresent(SettlementSpecialization.self, forKey: .specialization) ?? .balanced
+        // Saves written before the colony grid have no layout yet.
+        colony = try c.decodeIfPresent(ColonyMap.self, forKey: .colony)
+        // Pre-V2 saves have no local map; it regenerates from the world seed.
+        localMap = try c.decodeIfPresent(LocalMap.self, forKey: .localMap)
+        // Society arrived after the first V2 cut.
+        laws = try c.decodeIfPresent([LawInstance].self, forKey: .laws) ?? []
+        leaderID = try c.decodeIfPresent(UUID.self, forKey: .leaderID)
+        society = try c.decodeIfPresent(SocietyStats.self, forKey: .society) ?? SocietyStats()
+        strikeTicksRemaining = try c.decodeIfPresent(Int.self, forKey: .strikeTicksRemaining) ?? 0
+        faith = try c.decodeIfPresent(FaithState.self, forKey: .faith) ?? FaithState()
+        // Construction-over-time and the journal arrived after the first V2 cut.
+        constructions = try c.decodeIfPresent([ConstructionProject].self, forKey: .constructions) ?? []
+        constructionSequence = try c.decodeIfPresent(Int.self, forKey: .constructionSequence) ?? 0
+        journal = try c.decodeIfPresent(ColonyLog.self, forKey: .journal) ?? ColonyLog()
+        relationships = try c.decodeIfPresent([Relationship].self, forKey: .relationships) ?? []
     }
 }

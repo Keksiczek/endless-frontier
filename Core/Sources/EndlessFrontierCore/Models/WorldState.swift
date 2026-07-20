@@ -68,13 +68,40 @@ public struct HistoricalEvent: Codable, Sendable, Equatable, Identifiable {
     }
 }
 
+/// An event that fired with choices attached and is waiting for the player —
+/// the Leader — to decide. Without this the choices' effects (welcoming
+/// migrants, buying a caravan's goods) could never run at all.
+///
+/// Identified by `templateID`, so the same event queuing again while one is
+/// already pending replaces it rather than burying the player in duplicates.
+public struct PendingEvent: Codable, Sendable, Equatable, Identifiable {
+    public let templateID: String
+    public let tick: Int
+
+    public var id: String { templateID }
+
+    public init(templateID: String, tick: Int) {
+        self.templateID = templateID
+        self.tick = tick
+    }
+}
+
 /// The single source of truth for the simulation. Codable for JSON
 /// persistence. Mutated only inside engine functions.
 public struct WorldState: Codable, Sendable, Equatable {
     /// Bump when the meaning of persisted fields changes in a way that needs a
     /// migration step (not merely adding a new field — those are handled
     /// gracefully by the resilient decoder below).
-    public static let currentSchemaVersion = 1
+    ///
+    /// v2 is the "Endless Frontier V2" world: population became derived from
+    /// pawns (every inhabitant is a colonist with genes/age/wealth) and each
+    /// settlement gained a living local map. v1 saves are not migratable —
+    /// their macro `population` no longer has meaning — so they are reset.
+    public static let currentSchemaVersion = 2
+
+    /// The oldest save the current build can load. Older saves are discarded
+    /// and the player starts a fresh V2 world.
+    public static let minimumSupportedSchemaVersion = 2
 
     public var schemaVersion: Int
     public var tick: Int
@@ -82,8 +109,26 @@ public struct WorldState: Codable, Sendable, Equatable {
     public var rngSeed: UInt64
     public var mapSeed: UInt64      // stable seed for per-hex map generation (never mutated)
     public var era: Era
+    /// The language this world was founded in. Everything *generated* — a
+    /// newborn's name, an outpost, a seceded people, a freshly charted region
+    /// — speaks it (see `NameForge`). Fixed at creation; UI chrome follows
+    /// the app language independently.
+    public var language: GameLanguage
 
     public var researchedTechs: Set<String>
+    /// How many times each `repeatable` tech has been completed. Drives the
+    /// escalating cost of an endless study, and how far its stacking effects
+    /// have been pushed.
+    public var techCompletions: [String: Int]
+    /// Standing additive bonuses a tech's `modifier` effect has granted, keyed
+    /// by global stat name.
+    ///
+    /// Research bonuses used to be written straight onto `globalStats` — where
+    /// `recomputeGlobalStats` overwrote `knowledgeOutput` and `influenceOutput`
+    /// from the buildings on the very next tick, silently erasing them. Every
+    /// such effect in `techs.json` was dead on arrival. Held here, they survive
+    /// the recompute and are re-applied on top of it.
+    public var statModifiers: [String: Double]
     public var activeResearch: String?
     public var researchProgress: Double      // knowledge accumulated toward activeResearch
 
@@ -102,6 +147,15 @@ public struct WorldState: Codable, Sendable, Equatable {
     public var scheduledEffects: [ScheduledEffect]
     public var activeQuests: [QuestProgress]
     public var completedQuests: Set<String>
+    /// A motion the assembly has voted on and put before the leader (the
+    /// player) to ratify or veto. Only one sits at a time.
+    public var pendingLawProposal: LawProposal?
+    /// One snapshot per in-game year — the chronicle's raw material.
+    public var records: [WorldRecord]
+    /// Neighbouring peoples who grew out of your own settlement.
+    public var tribes: [Tribe]
+    /// Events awaiting the Leader's decision (see `PendingEvent`).
+    public var pendingEvents: [PendingEvent]
 
     public init(
         schemaVersion: Int = WorldState.currentSchemaVersion,
@@ -110,7 +164,10 @@ public struct WorldState: Codable, Sendable, Equatable {
         rngSeed: UInt64 = 0x5EED_F00D,
         mapSeed: UInt64 = 0x5EED_F00D,
         era: Era = .earlySettlement,
+        language: GameLanguage = .cs,
         researchedTechs: Set<String> = [],
+        techCompletions: [String: Int] = [:],
+        statModifiers: [String: Double] = [:],
         activeResearch: String? = nil,
         researchProgress: Double = 0,
         globalStats: GlobalStats = GlobalStats(),
@@ -125,7 +182,11 @@ public struct WorldState: Codable, Sendable, Equatable {
         eventCooldowns: [String: Int] = [:],
         scheduledEffects: [ScheduledEffect] = [],
         activeQuests: [QuestProgress] = [],
-        completedQuests: Set<String> = []
+        completedQuests: Set<String> = [],
+        pendingLawProposal: LawProposal? = nil,
+        records: [WorldRecord] = [],
+        tribes: [Tribe] = [],
+        pendingEvents: [PendingEvent] = []
     ) {
         self.schemaVersion = schemaVersion
         self.tick = tick
@@ -133,7 +194,10 @@ public struct WorldState: Codable, Sendable, Equatable {
         self.rngSeed = rngSeed
         self.mapSeed = mapSeed
         self.era = era
+        self.language = language
         self.researchedTechs = researchedTechs
+        self.techCompletions = techCompletions
+        self.statModifiers = statModifiers
         self.activeResearch = activeResearch
         self.researchProgress = researchProgress
         self.globalStats = globalStats
@@ -149,6 +213,10 @@ public struct WorldState: Codable, Sendable, Equatable {
         self.scheduledEffects = scheduledEffects
         self.activeQuests = activeQuests
         self.completedQuests = completedQuests
+        self.pendingLawProposal = pendingLawProposal
+        self.records = records
+        self.tribes = tribes
+        self.pendingEvents = pendingEvents
     }
 
     /// Total population across all settlements.
@@ -165,11 +233,12 @@ public struct WorldState: Codable, Sendable, Equatable {
     // `schemaVersion` is reserved for migrations where field *meaning* changes.
 
     private enum CodingKeys: String, CodingKey {
-        case schemaVersion, tick, lastRealTimestamp, rngSeed, mapSeed, era,
-             researchedTechs, activeResearch, researchProgress, globalStats,
+        case schemaVersion, tick, lastRealTimestamp, rngSeed, mapSeed, era, language,
+             researchedTechs, techCompletions, statModifiers, activeResearch,
+             researchProgress, globalStats,
              unlockedBuildings, worldFlags, settlements, regions, tradeRoutes,
              caravans, activeExpedition, eventHistory, eventCooldowns,
-             scheduledEffects, activeQuests, completedQuests
+             scheduledEffects, activeQuests, completedQuests, pendingLawProposal, records, tribes, pendingEvents
     }
 
     public init(from decoder: Decoder) throws {
@@ -177,13 +246,19 @@ public struct WorldState: Codable, Sendable, Equatable {
         func value<T: Decodable>(_ key: CodingKeys, _ fallback: T) -> T {
             (try? c.decodeIfPresent(T.self, forKey: key)) ?? fallback
         }
-        schemaVersion = value(.schemaVersion, WorldState.currentSchemaVersion)
+        // A save missing the key predates versioning → treat as the oldest
+        // (legacy v1), so the loader can decide to reset it.
+        schemaVersion = value(.schemaVersion, 1)
         tick = value(.tick, 0)
         lastRealTimestamp = value(.lastRealTimestamp, Date(timeIntervalSince1970: 0))
         rngSeed = value(.rngSeed, 0x5EED_F00D)
         mapSeed = value(.mapSeed, 0x5EED_F00D)
         era = value(.era, .earlySettlement)
+        // Worlds saved before languages existed were Czech-voiced ones.
+        language = value(.language, .cs)
         researchedTechs = value(.researchedTechs, [])
+        techCompletions = value(.techCompletions, [:])
+        statModifiers = value(.statModifiers, [:])
         activeResearch = (try? c.decodeIfPresent(String.self, forKey: .activeResearch)) ?? nil
         researchProgress = value(.researchProgress, 0)
         globalStats = value(.globalStats, GlobalStats())
@@ -199,6 +274,10 @@ public struct WorldState: Codable, Sendable, Equatable {
         scheduledEffects = value(.scheduledEffects, [])
         activeQuests = value(.activeQuests, [])
         completedQuests = value(.completedQuests, [])
+        pendingLawProposal = (try? c.decodeIfPresent(LawProposal.self, forKey: .pendingLawProposal)) ?? nil
+        records = value(.records, [])
+        tribes = value(.tribes, [])
+        pendingEvents = value(.pendingEvents, [])
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -209,7 +288,10 @@ public struct WorldState: Codable, Sendable, Equatable {
         try c.encode(rngSeed, forKey: .rngSeed)
         try c.encode(mapSeed, forKey: .mapSeed)
         try c.encode(era, forKey: .era)
+        try c.encode(language, forKey: .language)
         try c.encode(researchedTechs, forKey: .researchedTechs)
+        try c.encode(techCompletions, forKey: .techCompletions)
+        try c.encode(statModifiers, forKey: .statModifiers)
         try c.encodeIfPresent(activeResearch, forKey: .activeResearch)
         try c.encode(researchProgress, forKey: .researchProgress)
         try c.encode(globalStats, forKey: .globalStats)
@@ -225,5 +307,9 @@ public struct WorldState: Codable, Sendable, Equatable {
         try c.encode(scheduledEffects, forKey: .scheduledEffects)
         try c.encode(activeQuests, forKey: .activeQuests)
         try c.encode(completedQuests, forKey: .completedQuests)
+        try c.encodeIfPresent(pendingLawProposal, forKey: .pendingLawProposal)
+        try c.encode(records, forKey: .records)
+        try c.encode(tribes, forKey: .tribes)
+        try c.encode(pendingEvents, forKey: .pendingEvents)
     }
 }

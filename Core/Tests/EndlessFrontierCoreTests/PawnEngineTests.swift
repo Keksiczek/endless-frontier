@@ -4,7 +4,7 @@ import Testing
 @Suite("Pawn engine")
 struct PawnEngineTests {
     private func settlement(pawns: [Pawn], food: Double = 100) -> Settlement {
-        Settlement(name: "Camp", population: Double(pawns.count), pawns: pawns,
+        Settlement(name: "Camp", pawns: pawns,
                    storage: [.food: food], storageCapacity: 500,
                    stats: SettlementStats(morale: 50))
     }
