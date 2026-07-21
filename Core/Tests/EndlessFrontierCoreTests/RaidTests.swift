@@ -51,6 +51,25 @@ struct RaidTests {
         #expect(a == b)
     }
 
+    @Test("An overrun raid leaves a battle log the canvas and report can read")
+    func overrunLeavesLog() {
+        let world = capitalWorld(defense: 0, materials: 100, pawns: [Pawn(name: "Guard", health: 100)])
+        let after = EffectApplier.apply([.raid(strength: 25)], to: world, registry: Fixtures.registry())
+        let log = after.settlements[0].lastBattle
+        #expect(log != nil)
+        #expect(log?.repelled == false)
+        #expect((log?.moments.contains { $0.kind == .charge }) == true)
+        #expect((log?.moments.contains { $0.kind == .clash }) == true)
+    }
+
+    @Test("A repelled raid is recorded as held")
+    func repelledLeavesLog() {
+        var world = capitalWorld(defense: 40)
+        world.globalStats.threatLevel = 60
+        let after = EffectApplier.apply([.raid(strength: 20)], to: world, registry: Fixtures.registry())
+        #expect(after.settlements[0].lastBattle?.repelled == true)
+    }
+
     @Test("Shipped data includes the raid event and defensive buildings")
     func bundledData() throws {
         let reg = try GameDataRegistry.bundled()
