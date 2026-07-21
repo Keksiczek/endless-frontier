@@ -510,73 +510,131 @@ enum SettlementRenderer {
     ) {
         switch kind {
         case .tree:
-            context.stroke(Path { p in
-                p.move(to: CGPoint(x: c.x, y: c.y + s * 0.9))
-                p.addLine(to: CGPoint(x: c.x, y: c.y))
-            }, with: .color(Color(red: 0.40, green: 0.33, blue: 0.26)), lineWidth: 1)
+            // A shadow, a filled trunk, and a lobed canopy with real mass —
+            // not an outline the terrain shows straight through.
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.85, y: c.y + s * 0.72,
+                                                width: s * 1.7, height: s * 0.5)),
+                         with: .color(Theme.ink.opacity(0.20)))
+            context.fill(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.15, y: c.y + s * 0.9))
+                p.addLine(to: CGPoint(x: c.x - s * 0.06, y: c.y - s * 0.1))
+                p.addLine(to: CGPoint(x: c.x + s * 0.06, y: c.y - s * 0.1))
+                p.addLine(to: CGPoint(x: c.x + s * 0.15, y: c.y + s * 0.9))
+                p.closeSubpath()
+            }, with: .color(Color(red: 0.34, green: 0.27, blue: 0.20)))
             if season == .winter {
                 // Bare branches instead of a canopy.
                 context.stroke(Path { p in
-                    p.move(to: CGPoint(x: c.x, y: c.y))
+                    p.move(to: CGPoint(x: c.x, y: c.y + s * 0.2))
                     p.addLine(to: CGPoint(x: c.x - s * 0.7, y: c.y - s * 1.0))
-                    p.move(to: CGPoint(x: c.x, y: c.y - s * 0.3))
+                    p.move(to: CGPoint(x: c.x, y: c.y - s * 0.1))
                     p.addLine(to: CGPoint(x: c.x + s * 0.65, y: c.y - s * 1.15))
-                    p.move(to: CGPoint(x: c.x, y: c.y - s * 0.6))
+                    p.move(to: CGPoint(x: c.x, y: c.y - s * 0.4))
                     p.addLine(to: CGPoint(x: c.x - s * 0.3, y: c.y - s * 1.4))
-                }, with: .color(canopyColor(season)), lineWidth: 0.9)
+                }, with: .color(Color(red: 0.34, green: 0.27, blue: 0.20)), lineWidth: 0.9)
             } else {
-                context.stroke(Path(ellipseIn: CGRect(x: c.x - s * 0.8, y: c.y - s * 1.5,
-                                                      width: s * 1.6, height: s * 1.5)),
-                               with: .color(canopyColor(season)), lineWidth: 1)
+                let canopy = canopyColor(season)
+                let lobes: [(CGFloat, CGFloat, CGFloat)] =
+                    [(-0.5, -0.75, 0.8), (0.5, -0.8, 0.78), (0, -1.25, 0.92)]
+                for (dx, dy, r) in lobes {
+                    context.fill(Path(ellipseIn: CGRect(x: c.x + dx * s - r * s, y: c.y + dy * s - r * s,
+                                                        width: r * s * 2, height: r * s * 2)),
+                                 with: .color(canopy))
+                }
+                // A sunlit highlight on the crown gives the foliage form.
+                context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.55, y: c.y - s * 1.55,
+                                                    width: s * 0.7, height: s * 0.7)),
+                             with: .color(.white.opacity(0.12)))
                 if season == .autumn {
-                    // A few fallen leaves at the foot.
                     for i in 0..<3 {
                         let lx = c.x + CGFloat(i - 1) * s * 0.5
-                        context.fill(Path(ellipseIn: CGRect(x: lx, y: c.y + s * 0.85,
-                                                            width: 1.4, height: 1.0)),
-                                     with: .color(canopyColor(season).opacity(0.7)))
+                        context.fill(Path(ellipseIn: CGRect(x: lx, y: c.y + s * 0.8,
+                                                            width: 1.6, height: 1.1)),
+                                     with: .color(canopy.opacity(0.8)))
                     }
                 }
             }
         case .pine:
             let pine = season == .winter
-                ? Color(red: 0.42, green: 0.52, blue: 0.50)
-                : Color(red: 0.32, green: 0.50, blue: 0.38)
-            context.stroke(Path { p in
-                p.move(to: CGPoint(x: c.x, y: c.y + s))
-                p.addLine(to: CGPoint(x: c.x, y: c.y + s * 0.5))
-            }, with: .color(Color(red: 0.34, green: 0.28, blue: 0.22)), lineWidth: 1)
+                ? Color(red: 0.36, green: 0.46, blue: 0.44)
+                : Color(red: 0.28, green: 0.44, blue: 0.33)
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.7, y: c.y + s * 0.78,
+                                                width: s * 1.4, height: s * 0.42)),
+                         with: .color(Theme.ink.opacity(0.20)))
+            context.fill(Path(CGRect(x: c.x - s * 0.09, y: c.y + s * 0.45,
+                                     width: s * 0.18, height: s * 0.65)),
+                         with: .color(Color(red: 0.32, green: 0.25, blue: 0.19)))
             for tier in 0..<3 {
                 let t = CGFloat(tier)
-                context.stroke(Path { p in
-                    let top = c.y - s * 1.4 + t * s * 0.55
-                    let w = s * (0.4 + t * 0.28)
-                    p.move(to: CGPoint(x: c.x - w, y: top + s * 0.5))
+                let top = c.y - s * 1.4 + t * s * 0.55
+                let w = s * (0.42 + t * 0.3)
+                context.fill(Path { p in
+                    p.move(to: CGPoint(x: c.x - w, y: top + s * 0.58))
                     p.addLine(to: CGPoint(x: c.x, y: top))
-                    p.addLine(to: CGPoint(x: c.x + w, y: top + s * 0.5))
-                }, with: .color(pine), lineWidth: 1)
+                    p.addLine(to: CGPoint(x: c.x + w, y: top + s * 0.58))
+                    p.closeSubpath()
+                }, with: .color(pine.opacity(1 - t * 0.08)))
+            }
+            if season == .winter {
+                // Snow settled on the crown.
+                context.fill(Path { p in
+                    p.move(to: CGPoint(x: c.x - s * 0.32, y: c.y - s * 0.95))
+                    p.addLine(to: CGPoint(x: c.x, y: c.y - s * 1.4))
+                    p.addLine(to: CGPoint(x: c.x + s * 0.32, y: c.y - s * 0.95))
+                    p.closeSubpath()
+                }, with: .color(.white.opacity(0.5)))
             }
         case .bush:
-            context.stroke(Path(ellipseIn: CGRect(x: c.x - s * 0.6, y: c.y - s * 0.45,
-                                                  width: s * 1.2, height: s * 0.9)),
-                           with: .color(canopyColor(season).opacity(0.9)), lineWidth: 1)
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.7, y: c.y + s * 0.32,
+                                                width: s * 1.4, height: s * 0.34)),
+                         with: .color(Theme.ink.opacity(0.16)))
+            let bushC = canopyColor(season)
+            let lobes: [(CGFloat, CGFloat, CGFloat)] = [(-0.4, 0, 0.55), (0.4, 0, 0.55), (0, -0.2, 0.66)]
+            for (dx, dy, r) in lobes {
+                context.fill(Path(ellipseIn: CGRect(x: c.x + dx * s - r * s, y: c.y + dy * s - r * s,
+                                                    width: r * s * 2, height: r * s * 2)),
+                             with: .color(bushC.opacity(0.92)))
+            }
         case .rock:
-            context.stroke(Path { p in
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.6, y: c.y + s * 0.3,
+                                                width: s * 1.2, height: s * 0.3)),
+                         with: .color(Theme.ink.opacity(0.18)))
+            let face = Path { p in
                 p.move(to: CGPoint(x: c.x - s * 0.5, y: c.y + s * 0.4))
                 p.addLine(to: CGPoint(x: c.x - s * 0.2, y: c.y - s * 0.4))
                 p.addLine(to: CGPoint(x: c.x + s * 0.4, y: c.y - s * 0.25))
                 p.addLine(to: CGPoint(x: c.x + s * 0.55, y: c.y + s * 0.4))
                 p.closeSubpath()
-            }, with: .color(Color(red: 0.55, green: 0.57, blue: 0.61)), lineWidth: 1)
+            }
+            context.fill(face, with: .color(Color(red: 0.55, green: 0.57, blue: 0.61)))
+            // A shaded facet turns the flat stone into a solid.
+            context.fill(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.2, y: c.y - s * 0.4))
+                p.addLine(to: CGPoint(x: c.x + s * 0.4, y: c.y - s * 0.25))
+                p.addLine(to: CGPoint(x: c.x + s * 0.55, y: c.y + s * 0.4))
+                p.closeSubpath()
+            }, with: .color(Color(red: 0.42, green: 0.44, blue: 0.48)))
+            context.stroke(face, with: .color(Color(red: 0.70, green: 0.72, blue: 0.76).opacity(0.5)), lineWidth: 0.6)
         case .boulder:
-            context.stroke(Path { p in
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.95, y: c.y + s * 0.5,
+                                                width: s * 1.9, height: s * 0.4)),
+                         with: .color(Theme.ink.opacity(0.2)))
+            let boulder = Path { p in
                 p.move(to: CGPoint(x: c.x - s * 0.9, y: c.y + s * 0.7))
                 p.addLine(to: CGPoint(x: c.x - s * 0.5, y: c.y - s * 0.6))
                 p.addLine(to: CGPoint(x: c.x + s * 0.3, y: c.y - s * 0.85))
                 p.addLine(to: CGPoint(x: c.x + s * 0.95, y: c.y + s * 0.2))
                 p.addLine(to: CGPoint(x: c.x + s * 0.6, y: c.y + s * 0.7))
                 p.closeSubpath()
-            }, with: .color(Color(red: 0.50, green: 0.52, blue: 0.57)), lineWidth: 1.2)
+            }
+            context.fill(boulder, with: .color(Color(red: 0.50, green: 0.52, blue: 0.57)))
+            context.fill(Path { p in
+                p.move(to: CGPoint(x: c.x + s * 0.3, y: c.y - s * 0.85))
+                p.addLine(to: CGPoint(x: c.x + s * 0.95, y: c.y + s * 0.2))
+                p.addLine(to: CGPoint(x: c.x + s * 0.6, y: c.y + s * 0.7))
+                p.closeSubpath()
+            }, with: .color(Color(red: 0.38, green: 0.40, blue: 0.45)))
+            context.stroke(boulder, with: .color(Color(red: 0.66, green: 0.68, blue: 0.72).opacity(0.45)), lineWidth: 0.7)
         case .flowers:
             // Blooms in spring and summer; bare stems otherwise.
             let blooming = season == .spring || season == .summer
