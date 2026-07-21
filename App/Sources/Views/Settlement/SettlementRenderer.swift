@@ -861,8 +861,13 @@ enum SettlementRenderer {
         let name: String
         let glyph: BuildingGlyph
         let center: LocalPoint
-        /// Footprint size as a fraction of the canvas's short side.
+        /// Glyph size as a fraction of the canvas's short side.
         let size: Double
+        /// The ground the building actually covers, as fractions of the short
+        /// side — width×height of its footprint, so a 2×2 stands on a 2×2 plot
+        /// instead of hovering as a single glyph.
+        let footprintW: Double
+        let footprintH: Double
         let underConstruction: Bool
         /// Construction completion 0…1 (1 when built).
         let progress: Double
@@ -876,6 +881,8 @@ enum SettlementRenderer {
         let glyph: BuildingGlyph
         let center: CGPoint
         let size: CGFloat
+        /// The building's footprint on the ground, in pixels.
+        let footprint: CGSize
         let underConstruction: Bool
         let progress: Double
     }
@@ -917,6 +924,7 @@ enum SettlementRenderer {
         return normalizedLayout(settlement: settlement, registry: registry).map { b in
             PlacedBuilding(id: b.id, definitionID: b.definitionID, name: b.name, glyph: b.glyph,
                            center: point(b.center, in: rect), size: unit * b.size,
+                           footprint: CGSize(width: b.footprintW * unit, height: b.footprintH * unit),
                            underConstruction: b.underConstruction, progress: b.progress)
         }
     }
@@ -938,6 +946,11 @@ enum SettlementRenderer {
             let progress = settlement.constructions
                 .first { $0.placementID == placement.id }?.fraction
             let label = def?.name.resolve(AppStrings.language) ?? placement.definitionID
+            // The footprint in canvas fractions: one tile is this slice of the
+            // built span, and the plot is as many tiles wide and tall as the
+            // building covers.
+            let tileW = colonySpan / Double(max(1, colony.width))
+            let tileH = colonySpan / Double(max(1, colony.height))
             return NormalizedBuilding(
                 id: index,
                 definitionID: placement.definitionID,
@@ -945,6 +958,8 @@ enum SettlementRenderer {
                 glyph: glyph,
                 center: p,
                 size: 0.021 * Double(max(placement.width, placement.height)),
+                footprintW: Double(max(1, placement.width)) * tileW,
+                footprintH: Double(max(1, placement.height)) * tileH,
                 underConstruction: placement.underConstruction,
                 progress: placement.underConstruction ? (progress ?? 0) : 1)
         }
@@ -983,7 +998,8 @@ enum SettlementRenderer {
                 placed.append(NormalizedBuilding(
                     id: drawn, definitionID: expanded[drawn].id,
                     name: expanded[drawn].name, glyph: expanded[drawn].glyph,
-                    center: c, size: 0.021, underConstruction: false, progress: 1))
+                    center: c, size: 0.021, footprintW: 0.05, footprintH: 0.05,
+                    underConstruction: false, progress: 1))
                 drawn += 1
             }
             ringIndex += 1
@@ -1010,6 +1026,13 @@ enum SettlementRenderer {
         time: Double, night: Double = 0, showLabels: Bool = false,
         selectedBuildingID: Int?
     ) {
+        // Foundations first — every building's plot, drawn before any structure,
+        // so a later lot never paints over an earlier roof and adjacent lots
+        // knit into one cleared, built-up ground the town sits on.
+        for building in placed {
+            floorPlot(&context, at: building.center, footprint: building.footprint,
+                      underConstruction: building.underConstruction)
+        }
         for building in placed {
             if building.underConstruction {
                 SettlementStructures.site(at: building.center, s: building.size,
@@ -1037,6 +1060,33 @@ enum SettlementRenderer {
                              at: CGPoint(x: building.center.x,
                                          y: building.center.y + building.size * 2.5))
             }
+        }
+    }
+
+    /// The plot a structure stands on — cleared, framed ground the size of the
+    /// building's footprint. This is the foundation of the multi-tile world:
+    /// a 2×2 building owns a 2×2 lot, adjacent lots merge into built-up land,
+    /// and a construction site reserves its ground with a dashed outline. Read
+    /// only from the layout; nothing here touches the simulation.
+    private static func floorPlot(
+        _ context: inout GraphicsContext, at c: CGPoint, footprint: CGSize,
+        underConstruction: Bool
+    ) {
+        guard footprint.width > 2, footprint.height > 2 else { return }
+        // A hair of margin so neighbouring lots still read as separate parcels.
+        let w = footprint.width * 0.92, h = footprint.height * 0.92
+        let rect = CGRect(x: c.x - w / 2, y: c.y - h / 2, width: w, height: h)
+        let radius = min(w, h) * 0.16
+        let shape = Path(roundedRect: rect, cornerRadius: radius)
+        if underConstruction {
+            context.fill(shape, with: .color(Theme.bone.opacity(0.05)))
+            context.stroke(shape, with: .color(Theme.boneFaint.opacity(0.65)),
+                           style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+        } else {
+            // Packed, cleared earth — warmer and darker than the wild grass, so
+            // the built ground reads as a place people made.
+            context.fill(shape, with: .color(Color(red: 0.20, green: 0.18, blue: 0.15).opacity(0.6)))
+            context.stroke(shape, with: .color(Theme.boneFaint.opacity(0.4)), lineWidth: 0.8)
         }
     }
 
