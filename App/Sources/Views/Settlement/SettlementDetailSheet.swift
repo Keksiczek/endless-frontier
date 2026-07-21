@@ -9,27 +9,49 @@ struct SettlementDetailSheet: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
+            VStack(alignment: .leading, spacing: 14) {
                 if game.settlements.count > 1 {
                     SettlementPicker(game: game)
                 }
+                // The overview stays open; everything the player *steers* folds
+                // into named sections, so the drawer reads as a tidy list you
+                // open a piece of — not one endless stack where trade hides at
+                // the very bottom.
                 if let settlement = game.selectedSettlement {
                     statsCard(settlement)
                 }
-                ConstructionPanel(game: game)
-                JournalPanel(game: game)
-                // Following an objective means leaving this sheet behind — it's
-                // covering the tab the player is being sent to.
-                ObjectivesPanel(game: game) { destination in
-                    game.tab = destination
-                    dismiss()
+                DrawerSection(label("Construction", "Stavba"), systemImage: "hammer.fill") {
+                    ConstructionPanel(game: game)
                 }
-                QuestsPanel(game: game)
-                ColonistsPanel(game: game)
-                ItemsPanel(game: game)
-                CraftingPanel(game: game)
-                TradePanel(game: game)
-                TechBuildPanel(game: game)
+                DrawerSection(label("Colonists", "Osadníci"), systemImage: "person.2.fill") {
+                    ColonistsPanel(game: game)
+                }
+                DrawerSection(label("Trade", "Obchod"), systemImage: "cart.fill") {
+                    TradePanel(game: game)
+                }
+                DrawerSection(label("Crafting", "Výroba"), systemImage: "hammer.fill") {
+                    CraftingPanel(game: game)
+                }
+                DrawerSection(label("Items", "Předměty"), systemImage: "bag.fill") {
+                    ItemsPanel(game: game)
+                }
+                DrawerSection(label("Quests", "Úkoly"), systemImage: "scroll.fill") {
+                    QuestsPanel(game: game)
+                }
+                DrawerSection(label("Objectives", "Cíle"), systemImage: "target") {
+                    // Following an objective leaves this sheet behind — it's
+                    // covering the tab the player is being sent to.
+                    ObjectivesPanel(game: game) { destination in
+                        game.tab = destination
+                        dismiss()
+                    }
+                }
+                DrawerSection(label("Journal", "Deník"), systemImage: "book.fill") {
+                    JournalPanel(game: game)
+                }
+                DrawerSection(label("Research & building", "Věda a stavby"), systemImage: "lightbulb.fill") {
+                    TechBuildPanel(game: game)
+                }
             }
             .padding(20)
         }
@@ -100,5 +122,56 @@ struct SettlementDetailSheet: View {
 
     private func label(_ en: String, _ cs: String) -> String {
         AppStrings.language == .cs ? cs : en
+    }
+}
+
+/// A titled, tappable section of the settlement drawer that folds its panel
+/// away until you want it. Collapsed by default, so a long-running colony's
+/// controls read as a short list of names — construction, colonists, trade —
+/// rather than one endless scroll with everything stacked under everything.
+private struct DrawerSection<Content: View>: View {
+    let title: String
+    let systemImage: String
+    @State private var open: Bool
+    @ViewBuilder let content: () -> Content
+
+    init(_ title: String, systemImage: String, open: Bool = false,
+         @ViewBuilder content: @escaping () -> Content) {
+        self.title = title
+        self.systemImage = systemImage
+        self._open = State(initialValue: open)
+        self.content = content
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Button {
+                withAnimation(.snappy(duration: 0.25)) { open.toggle() }
+            } label: {
+                HStack(spacing: 11) {
+                    Image(systemName: systemImage)
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.accent)
+                        .frame(width: 24)
+                    Text(title)
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(Theme.text)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Theme.textDim)
+                        .rotationEffect(.degrees(open ? 0 : -90))
+                }
+                .padding(.vertical, 13)
+                .padding(.horizontal, 15)
+                .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            if open {
+                content()
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
     }
 }
