@@ -124,6 +124,13 @@ struct SettlementScreen: View {
                 EventDecisionCard(game: game, template: decision,
                                   queued: max(0, game.pendingEvents.count - 1))
                     .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if let battle = game.battleReport {
+                // A fight just happened here — show what it cost before idle
+                // curiosity about the scene.
+                BattleReportCard(battle: battle) {
+                    withAnimation(.easeOut(duration: 0.15)) { game.dismissBattleReport() }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if let pawn = selectedPawn {
                 PawnInspectorCard(pawn: pawn, ticksPerYear: game.ticksPerYear,
                                   activity: activityLine(for: pawn),
@@ -185,6 +192,7 @@ struct SettlementScreen: View {
         }
         .padding(12)
         .animation(.easeOut(duration: 0.2), value: game.pendingEvents.count)
+        .animation(.easeOut(duration: 0.25), value: game.battleReport?.id)
     }
 
     private var controlBar: some View {

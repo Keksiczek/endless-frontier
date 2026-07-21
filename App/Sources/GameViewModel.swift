@@ -39,6 +39,9 @@ final class GameViewModel {
             self.world = GameWorldFactory.newGame(registry: registry,
                                                   language: AppStrings.language)
         }
+        // Battles already on the books at load are history, not news — mark them
+        // seen so the report only springs up for fights fought from here on.
+        self.acknowledgedBattleIDs = Set(world.settlements.compactMap { $0.lastBattle?.id })
     }
 
     /// Builds the view model with the bundled game data, falling back to an
@@ -117,6 +120,12 @@ final class GameViewModel {
     }
 
     private(set) var toasts: [LiveToast] = []
+
+    /// Battles the player has already been shown. A fight lands as a `BattleLog`
+    /// on the settlement; the report springs up once, and stays down after the
+    /// player closes it — see `battleReport`.
+    private var acknowledgedBattleIDs: Set<UUID> = []
+
     private var liveLoop: Task<Void, Never>?
     /// How often the loop checks whether a tick has come due.
     private let livePollSeconds: Double = 5
@@ -203,6 +212,25 @@ final class GameViewModel {
         Task { [weak self] in
             try? await Task.sleep(for: .seconds(7))
             self?.toasts.removeAll { $0.id == toast.id }
+        }
+    }
+
+    // MARK: - Battle report
+
+    /// The most recent battle at the viewed settlement that the player has not
+    /// yet dismissed — the canvas plays the fight, this makes it legible and
+    /// impossible to miss even if you looked away. Reactive: when a tick lands a
+    /// new `lastBattle`, the observed `world` change surfaces this card.
+    var battleReport: BattleLog? {
+        guard let battle = selectedSettlement?.lastBattle,
+              !acknowledgedBattleIDs.contains(battle.id) else { return nil }
+        return battle
+    }
+
+    /// Puts the battle report away for good.
+    func dismissBattleReport() {
+        if let id = selectedSettlement?.lastBattle?.id {
+            acknowledgedBattleIDs.insert(id)
         }
     }
 
