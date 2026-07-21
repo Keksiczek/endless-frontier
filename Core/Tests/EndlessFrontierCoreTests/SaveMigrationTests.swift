@@ -8,20 +8,20 @@ import Testing
 struct SaveMigrationTests {
     @Test("A current save is returned untouched")
     func currentSaveUnchanged() {
-        let now = WorldState(schemaVersion: WorldState.currentSchemaVersion, settlements: [Settlement(name: "A")])
+        let now = WorldState(schemaVersion: WorldState.currentSchemaVersion, settlements: [Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-3bc45b766e65")!, name: "A")])
         #expect(SaveMigrator.migrate(now) == now)
     }
 
     @Test("An older save is stamped up to the target version")
     func stampsVersion() {
-        let old = WorldState(schemaVersion: 0, settlements: [Settlement(name: "A")])
+        let old = WorldState(schemaVersion: 0, settlements: [Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-7dde251de360")!, name: "A")])
         let migrated = SaveMigrator.migrate(old, to: 2, steps: [:])
         #expect(migrated.schemaVersion == 2)
     }
 
     @Test("A single registered step runs and bumps the version")
     func runsOneStep() {
-        let old = WorldState(schemaVersion: 0, settlements: [Settlement(name: "A")])
+        let old = WorldState(schemaVersion: 0, settlements: [Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-1975e4dc932d")!, name: "A")])
         let steps: [Int: SaveMigrator.Step] = [
             0: { var s = $0; s.worldFlags["m0"] = true; return s }
         ]
@@ -32,7 +32,7 @@ struct SaveMigrationTests {
 
     @Test("Steps run in order across multiple versions")
     func runsChain() {
-        let old = WorldState(schemaVersion: 0, settlements: [Settlement(name: "A")])
+        let old = WorldState(schemaVersion: 0, settlements: [Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-87dd5e332aeb")!, name: "A")])
         let steps: [Int: SaveMigrator.Step] = [
             0: { var s = $0; s.worldFlags["a"] = true; return s },
             1: { var s = $0; s.worldFlags["b"] = (s.worldFlags["a"] == true); return s }   // sees step 0's result
@@ -45,7 +45,7 @@ struct SaveMigrationTests {
 
     @Test("A future save is left forward-compatibly intact")
     func futureSaveUntouched() {
-        let future = WorldState(schemaVersion: 99, settlements: [Settlement(name: "A")])
+        let future = WorldState(schemaVersion: 99, settlements: [Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-201f323261d7")!, name: "A")])
         #expect(SaveMigrator.migrate(future, to: 1, steps: [:]) == future)
     }
 
@@ -56,7 +56,7 @@ struct SaveMigrationTests {
         defer { try? FileManager.default.removeItem(at: tmp) }
         let store = WorldStore(url: tmp)
         // A save from before V2 (incompatible population semantics) is not loaded.
-        let legacy = WorldState(schemaVersion: 1, settlements: [Settlement(name: "Old")])
+        let legacy = WorldState(schemaVersion: 1, settlements: [Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-a972a09a01fe")!, name: "Old")])
         try store.save(legacy)
         #expect(try store.load() == nil)
     }
@@ -67,7 +67,7 @@ struct SaveMigrationTests {
             .appendingPathComponent("ef-current-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: tmp) }
         let store = WorldStore(url: tmp)
-        let world = WorldState(settlements: [Settlement(name: "New")])
+        let world = WorldState(settlements: [Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-41bf31c5ef49")!, name: "New")])
         try store.save(world)
         let loaded = try store.load()
         #expect(loaded?.schemaVersion == WorldState.currentSchemaVersion)

@@ -104,7 +104,19 @@ public struct WorldState: Codable, Sendable, Equatable {
     public static let minimumSupportedSchemaVersion = 2
 
     public var schemaVersion: Int
+    /// The world tick — the civilisation's clock. Harvests, births, seasons,
+    /// laws. `ticksPerYear` counts years in these.
     public var tick: Int
+    /// Which action step inside the current world tick the simulation has
+    /// reached, `0 ..< WorldClock.actionStepsPerTick`.
+    ///
+    /// The finer grain people act on: a round of a fight, a stage of a march.
+    /// Kept beside `tick` rather than replacing it so every number the game is
+    /// balanced on keeps its meaning — see `WorldClock`.
+    public var actionStep: Int
+
+    /// Where the simulation stands on both clocks at once.
+    public var clock: WorldClock { WorldClock(tick: tick, step: actionStep) }
     public var lastRealTimestamp: Date
     public var rngSeed: UInt64
     public var mapSeed: UInt64      // stable seed for per-hex map generation (never mutated)
@@ -160,6 +172,7 @@ public struct WorldState: Codable, Sendable, Equatable {
     public init(
         schemaVersion: Int = WorldState.currentSchemaVersion,
         tick: Int = 0,
+        actionStep: Int = 0,
         lastRealTimestamp: Date = Date(timeIntervalSince1970: 0),
         rngSeed: UInt64 = 0x5EED_F00D,
         mapSeed: UInt64 = 0x5EED_F00D,
@@ -190,6 +203,7 @@ public struct WorldState: Codable, Sendable, Equatable {
     ) {
         self.schemaVersion = schemaVersion
         self.tick = tick
+        self.actionStep = actionStep
         self.lastRealTimestamp = lastRealTimestamp
         self.rngSeed = rngSeed
         self.mapSeed = mapSeed
@@ -239,6 +253,7 @@ public struct WorldState: Codable, Sendable, Equatable {
              unlockedBuildings, worldFlags, settlements, regions, tradeRoutes,
              caravans, activeExpedition, eventHistory, eventCooldowns,
              scheduledEffects, activeQuests, completedQuests, pendingLawProposal, records, tribes, pendingEvents
+        case actionStep
     }
 
     public init(from decoder: Decoder) throws {
@@ -250,6 +265,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         // (legacy v1), so the loader can decide to reset it.
         schemaVersion = value(.schemaVersion, 1)
         tick = value(.tick, 0)
+        actionStep = value(.actionStep, 0)
         lastRealTimestamp = value(.lastRealTimestamp, Date(timeIntervalSince1970: 0))
         rngSeed = value(.rngSeed, 0x5EED_F00D)
         mapSeed = value(.mapSeed, 0x5EED_F00D)

@@ -93,7 +93,7 @@ public enum ObjectivesEngine {
         case let .techResearched(id):
             return Objective(
                 id: "era_tech_\(id)",
-                title: "Research \(registry.tech(id)?.name ?? id)",
+                title: "Research \(registry.tech(id)?.name.resolve(.en) ?? id)",
                 detail: "A key advance toward the \(eraName) era.",
                 category: .era, priority: 10
             )

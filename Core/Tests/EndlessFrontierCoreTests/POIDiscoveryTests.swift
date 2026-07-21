@@ -8,11 +8,19 @@ import Testing
 struct POIDiscoveryTests {
     private let registry = Fixtures.registry()
 
-    @Test("New maps seed all six kinds of point of interest")
-    func generatorSeedsAllKinds() {
-        let map = LocalMapGenerator.generate(mapSeed: 42, regionID: UUID(
-            uuidString: "CCCCCCCC-0000-0000-0000-000000000001")!, biome: nil)
-        #expect(Set(map.pois.map(\.kind)) == Set(LocalPOIKind.allCases))
+    /// Across enough worlds every kind should turn up somewhere — the cast
+    /// varies per map, but nothing is unreachable content.
+    @Test("Every kind of landmark exists somewhere in the world")
+    func everyKindOccursSomewhere() {
+        var seen: Set<LocalPOIKind> = []
+        for seed in 0..<60 {
+            let map = LocalMapGenerator.generate(
+                mapSeed: UInt64(seed),
+                regionID: UUID(uuidString: "CCCCCCCC-0000-0000-0000-000000000001")!,
+                biome: nil)
+            seen.formUnion(map.pois.map(\.kind))
+        }
+        #expect(seen == Set(LocalPOIKind.allCases))
     }
 
     @Test("Each kind grants its reward and writes the journal", arguments: LocalPOIKind.allCases)

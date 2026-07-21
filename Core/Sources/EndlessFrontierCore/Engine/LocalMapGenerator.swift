@@ -12,7 +12,8 @@ public enum LocalMapGenerator {
         mapSeed: UInt64,
         regionID: UUID,
         biome: BiomeDefinition?,
-        flavor: RegionKind = .wilderness
+        flavor: RegionKind = .wilderness,
+        hazard: Int = 0
     ) -> LocalMap {
         var rng = SeededRNG(seed: seed(mapSeed: mapSeed, regionID: regionID))
         let biomeID = biome?.id ?? "plains"
@@ -35,7 +36,12 @@ public enum LocalMapGenerator {
         func makeNodes(_ kind: LocalResourceKind, count: Int) -> [ResourceNode] {
             (0..<max(0, count)).map { _ in
                 let position = landPoint(river: river, rng: &rng)
-                let capacity = 160 + rng.nextUnit() * 120   // 160…280
+                // The land's own character decides how much is actually in the
+                // ground. `resource_affinity` sat in `biomes.json` being decoded
+                // and read by nothing at all, so a mountain's `materials: 1.5`
+                // and a desert's `food: 0.5` were decoration — the whole point
+                // of standing somewhere meant nothing mechanically.
+                let capacity = (160 + rng.nextUnit() * 120) * affinity(biome, for: kind)
                 defer { nodeID += 1 }
                 return ResourceNode(id: nodeID, kind: kind, position: position,
                                     amount: capacity, capacity: capacity)
@@ -49,13 +55,18 @@ public enum LocalMapGenerator {
         nodes += makeNodes(.forest, count: mix.forests)
         nodes += makeNodes(.stone, count: mix.stone)
         nodes += makeNodes(.herbs, count: mix.herbs)
+        nodes += makeNodes(.ironOre, count: mix.ironOre)
+        nodes += makeNodes(.clay, count: mix.clay)
 
-        // Points of interest: a fixed cast, scattered across the map — plus
-        // whatever the region's character adds (see below).
-        let poiKinds: [LocalPOIKind] = [.ruins, .cave, .spring, .treasure, .shrine, .wreck]
-        var pois = poiKinds.enumerated().map { index, kind in
-            LocalPOI(id: index, kind: kind, position: landPoint(river: river, rng: &rng))
-        }
+        // Points of interest, drawn from what this country plausibly holds —
+        // plus whatever the region's character adds (see below).
+        //
+        // Every map used to get the identical cast of all six kinds, which is
+        // the single biggest reason two valleys felt like the same valley: no
+        // map ever lacked anything and no map ever had anything the last one
+        // didn't. Now a desert rarely hides a spring, mountains are riddled
+        // with caves, and finding a shrine means something.
+        var pois = pickPOIs(for: biomeID, river: river, rng: &rng)
 
         // Scenery: the landscape's furniture, biome-appropriate and seeded.
         let (kinds, count) = LocalTerrain.sceneryMix(for: biomeID)
@@ -110,12 +121,16 @@ public enum LocalMapGenerator {
             break
         }
 
-        // A herd sized by how much the land can feed.
+        // A herd sized by how much the land can feed, and predators to match
+        // how wild the country is. The region's `hazardLevel` — which the world
+        // map computes from biome, region kind and distance from home — never
+        // reached the ground the colony actually stands on, so a frontier
+        // valley six rings out was exactly as safe as the homeland.
         let capacity = herdCapacity(for: biomeID, rng: &rng)
         let wildlife = WildlifeState(
             deerHerd: capacity * (0.4 + rng.nextUnit() * 0.3),
             deerCapacity: capacity,
-            predatorPressure: 8 + rng.nextUnit() * 8
+            predatorPressure: 8 + rng.nextUnit() * 8 + Double(max(0, hazard)) * 2.5
         )
 
         var map = LocalMap(
@@ -128,15 +143,86 @@ public enum LocalMapGenerator {
         return map
     }
 
-    /// How many deposits of each kind a biome yields.
-    static func depositMix(for biomeID: String) -> (fields: Int, forests: Int, stone: Int, herbs: Int) {
+    /// How much of a deposit's resource this ground actually holds, from the
+    /// biome's `resource_affinity`. Clamped so a hostile biome is poor, never
+    /// barren — a desert field is a hard field, not a hole in the map.
+    static func affinity(_ biome: BiomeDefinition?, for kind: LocalResourceKind) -> Double {
+        affinity(biome, for: kind.work.resource)
+    }
+
+    /// The same, for callers that already know which resource is at stake.
+    static func affinity(_ biome: BiomeDefinition?, for resource: ResourceType?) -> Double {
+        guard let biome, let resource else { return 1 }
+        let value = biome.resourceAffinity[resource]
+        guard value > 0 else { return 1 }   // unstated affinity means ordinary
+        return min(1.6, max(0.45, value))
+    }
+
+    /// The landmarks a given country plausibly holds, and how likely each is.
+    /// A weight of zero means the place simply doesn't occur there.
+    static func poiMix(for biomeID: String) -> [(LocalPOIKind, Double)] {
         switch biomeID {
-        case "forest":    return (2, 6, 2, 3)
-        case "desert":    return (1, 1, 4, 1)
-        case "tundra":    return (1, 2, 3, 2)
-        case "mountains": return (1, 2, 6, 1)
-        case "coast":     return (3, 2, 2, 3)
-        default:          return (4, 3, 2, 2)   // plains & homeland
+        case "forest":
+            return [(.ruins, 0.9), (.shrine, 1.0), (.cave, 0.5), (.spring, 0.9),
+                    (.treasure, 0.6), (.wreck, 0.5)]
+        case "desert":
+            // Water is the whole story here: a spring is rare and worth a lot.
+            return [(.ruins, 1.2), (.treasure, 1.0), (.wreck, 1.0), (.cave, 0.6),
+                    (.spring, 0.2), (.shrine, 0.5)]
+        case "tundra":
+            return [(.cave, 0.9), (.ruins, 1.0), (.wreck, 0.8), (.shrine, 0.5),
+                    (.treasure, 0.5), (.spring, 0.3)]
+        case "mountains":
+            return [(.cave, 1.6), (.ruins, 0.8), (.shrine, 0.7), (.treasure, 0.6),
+                    (.spring, 0.5), (.wreck, 0.2)]
+        case "coast":
+            return [(.wreck, 1.5), (.spring, 0.9), (.shrine, 0.8), (.treasure, 0.8),
+                    (.ruins, 0.6), (.cave, 0.4)]
+        default: // plains & homeland
+            return [(.spring, 1.0), (.shrine, 0.9), (.ruins, 0.9), (.treasure, 0.8),
+                    (.wreck, 0.7), (.cave, 0.5)]
+        }
+    }
+
+    /// How many landmarks a map gets — three to five, so the count itself is
+    /// part of what makes one valley unlike another.
+    static let poiCountRange = 3...5
+
+    /// Draws this map's landmarks: distinct kinds, weighted by the biome,
+    /// scattered on dry land.
+    static func pickPOIs(
+        for biomeID: String, river: RiverShape, rng: inout SeededRNG
+    ) -> [LocalPOI] {
+        var pool = poiMix(for: biomeID).filter { $0.1 > 0 }
+        let span = poiCountRange.upperBound - poiCountRange.lowerBound + 1
+        let wanted = min(pool.count,
+                         poiCountRange.lowerBound + Int(rng.nextUnit() * Double(span)))
+        var picked: [LocalPOI] = []
+        for id in 0..<wanted {
+            guard let index = rng.weightedIndex(pool.map(\.1)) else { break }
+            let kind = pool.remove(at: index).0
+            picked.append(LocalPOI(id: id, kind: kind,
+                                   position: landPoint(river: river, rng: &rng)))
+        }
+        return picked
+    }
+
+    /// How many deposits of each kind a biome yields.
+    ///
+    /// Iron and clay are deliberately *not* everywhere. A colony founded on the
+    /// plains has clay for its kilns and almost no ore, so a forge needs either
+    /// a trade route or a second settlement up in the hills — which is the
+    /// point of having a world map at all.
+    typealias DepositMix = (fields: Int, forests: Int, stone: Int, herbs: Int, ironOre: Int, clay: Int)
+
+    static func depositMix(for biomeID: String) -> DepositMix {
+        switch biomeID {
+        case "forest":    return (2, 6, 2, 3, 1, 1)
+        case "desert":    return (1, 1, 4, 1, 1, 0)
+        case "tundra":    return (1, 2, 3, 2, 2, 0)
+        case "mountains": return (1, 2, 6, 1, 4, 0)   // the ore country
+        case "coast":     return (3, 2, 2, 3, 0, 3)   // clay beds, no iron
+        default:          return (4, 3, 2, 2, 1, 2)   // plains & homeland
         }
     }
 

@@ -137,7 +137,7 @@ struct ColonistsPanel: View {
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: slotIcon(slot))
-                            Text(def.name).font(.caption2.weight(.medium))
+                            Text(def.name.resolve(AppStrings.language)).font(.caption2.weight(.medium))
                             Spacer()
                             Text("Unequip").font(.caption2)
                         }

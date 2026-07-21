@@ -8,6 +8,8 @@ public enum PawnDeathCause: String, Codable, Sendable, CaseIterable {
     case oldAge = "old_age"
     case beast
     case battle
+    /// Killed by the work itself — a cave roof, a wall of a dead city.
+    case accident
 
     /// Player-facing label, for the journal and the chronicle.
     public var label: LocalizedText {
@@ -17,6 +19,7 @@ public enum PawnDeathCause: String, Codable, Sendable, CaseIterable {
         case .oldAge: return LocalizedText(values: [.en: "old age", .cs: "stáří"])
         case .beast: return LocalizedText(values: [.en: "a beast", .cs: "šelma"])
         case .battle: return LocalizedText(values: [.en: "battle", .cs: "boj"])
+        case .accident: return LocalizedText(values: [.en: "an accident", .cs: "neštěstí"])
         }
     }
 }

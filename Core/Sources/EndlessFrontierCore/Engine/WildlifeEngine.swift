@@ -9,6 +9,9 @@ import Foundation
 /// `huntingFactor`; here the herd itself grows, is culled, and predators
 /// occasionally wound a colonist unless the settlement's defenses hold.
 public enum WildlifeEngine {
+    /// What the record calls the thing out of the trees.
+    static let beastName = LocalizedText(values: [.en: "A beast", .cs: "Šelma"])
+
     /// Per-tick logistic growth rate of the herd.
     static let herdGrowthRate: Double = 0.02
     /// Deer a single hunter takes per tick at a full herd.
@@ -83,9 +86,21 @@ public enum WildlifeEngine {
                 .min(by: { s.pawns[$0].health < s.pawns[$1].health }) {
                 // Armor blunts the mauling; a weapon doesn't stop teeth.
                 let name = s.pawns[victim].name
+                let pawnID = s.pawns[victim].id
                 let mult = CombatEngine.woundMultiplier(s.pawns[victim])
                 s.pawns[victim].health = max(0, s.pawns[victim].health - attackWound * mult)
-                if s.pawns[victim].health <= 0 {
+                // The attack, beat by beat, so the canvas can play it out
+                // instead of the journal being the only trace it happened.
+                var record = CombatEngine.BattleRecorder()
+                record.record(.charge, step: 0, amount: map.wildlife.predatorPressure)
+                record.record(.clash, step: 1, amount: defense)
+                let killed = s.pawns[victim].health <= 0
+                record.record(killed ? .death : .wound, step: 2, pawnID: pawnID,
+                              pawnName: name, amount: attackWound * mult)
+                s.lastBattle = record.finish(
+                    id: rng.nextUUID(), tick: tick,
+                    attackerName: beastName.resolve(.en), defenderName: s.name, repelled: false)
+                if killed {
                     s.pawns.remove(at: victim)
                     s.deathTallies[PawnDeathCause.beast.rawValue, default: 0] += 1
                     s.stats.morale = max(0, s.stats.morale - 6)

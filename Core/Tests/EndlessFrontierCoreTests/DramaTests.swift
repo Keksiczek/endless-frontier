@@ -212,8 +212,8 @@ struct StorageCapacityTests {
     @Test("A granary actually grants storage")
     func granaryGrantsCapacity() {
         let registry = Fixtures.registry(buildings: [Self.granary], config: .default)
-        let bare = Settlement(name: "Bare", pawns: Fixtures.pawns(5), buildings: [])
-        let stocked = Settlement(name: "Stocked", pawns: Fixtures.pawns(5),
+        let bare = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-4461e84c85e0")!, name: "Bare", pawns: Fixtures.pawns(5), buildings: [])
+        let stocked = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-fa3e745b4cbf")!, name: "Stocked", pawns: Fixtures.pawns(5),
                                  buildings: [BuildingInstance(definitionID: "granary", count: 2)])
 
         let bareCap = ResourceLoop.storageCapacity(bare, registry: registry)

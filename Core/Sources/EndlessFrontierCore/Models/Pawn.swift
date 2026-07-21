@@ -27,16 +27,25 @@ public enum WorkKind: String, Codable, Sendable, CaseIterable, Equatable {
         }
     }
 
-    /// The local-map deposit this work harvests, if any.
-    public var harvestedDeposit: LocalResourceKind? {
+    /// The local-map deposits this work is done at.
+    ///
+    /// Plural since the ground stopped being one undifferentiated "stone": a
+    /// miner works whatever is down there — plain rock, an iron seam, a clay
+    /// bed — and which of those a valley actually holds is now the biome's
+    /// business.
+    public var harvestedDeposits: [LocalResourceKind] {
         switch self {
-        case .farming: return .field
-        case .logging: return .forest
-        case .mining: return .stone
-        case .foraging: return .herbs
-        default: return nil
+        case .farming: return [.field]
+        case .logging: return [.forest]
+        case .mining: return [.stone, .ironOre, .clay]
+        case .foraging: return [.herbs]
+        default: return []
         }
     }
+
+    /// The deposit this work is most associated with — what the canvas walks a
+    /// colonist to when the map holds several it could work.
+    public var harvestedDeposit: LocalResourceKind? { harvestedDeposits.first }
 }
 
 /// A colonist's needs, each on a 0–100 scale where 100 is fully satisfied.
@@ -115,6 +124,13 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     public var genes: Genes
     public var wealth: Double            // personal savings — class standing, inheritance
     public var pregnancyTicksRemaining: Int   // 0 = not expecting
+    /// The expedition this colonist is away on, if any. Someone out at the
+    /// ruins is not also at the plough: `PawnEngine` skips their output and
+    /// `AgentMotion` walks them across the map instead of through their day.
+    public var expeditionID: UUID?
+
+    /// Whether this colonist is out of the settlement right now.
+    public var isAway: Bool { expeditionID != nil }
 
     public init(
         id: UUID = UUID(),
@@ -131,7 +147,8 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         age: Int = Pawn.defaultAdultAgeTicks,
         genes: Genes = Genes(),
         wealth: Double = 0,
-        pregnancyTicksRemaining: Int = 0
+        pregnancyTicksRemaining: Int = 0,
+        expeditionID: UUID? = nil
     ) {
         self.id = id
         self.name = name
@@ -148,6 +165,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         self.genes = genes
         self.wealth = wealth
         self.pregnancyTicksRemaining = pregnancyTicksRemaining
+        self.expeditionID = expeditionID
     }
 
     public func skill(_ kind: WorkKind) -> Int { skills[kind] ?? 0 }
@@ -168,7 +186,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case id, name, trait, skills, skillXP, needs, mood, assignedWork
         case health, isBroken, equipment
-        case age, genes, wealth, pregnancyTicksRemaining
+        case age, genes, wealth, pregnancyTicksRemaining, expeditionID
     }
 
     public init(from decoder: Decoder) throws {
@@ -188,5 +206,6 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         genes = try c.decodeIfPresent(Genes.self, forKey: .genes) ?? Genes()
         wealth = try c.decodeIfPresent(Double.self, forKey: .wealth) ?? 0
         pregnancyTicksRemaining = try c.decodeIfPresent(Int.self, forKey: .pregnancyTicksRemaining) ?? 0
+        expeditionID = try c.decodeIfPresent(UUID.self, forKey: .expeditionID)
     }
 }

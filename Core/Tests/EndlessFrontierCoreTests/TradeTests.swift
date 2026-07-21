@@ -6,8 +6,8 @@ import Testing
 struct TradeTests {
     @Test("A trade route can be added and removed")
     func addRemove() {
-        let a = Settlement(name: "A", kind: .capital, pawns: Fixtures.pawns(10))
-        let b = Settlement(name: "B", kind: .outpost, pawns: Fixtures.pawns(5))
+        let a = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-2a085efcdc76")!, name: "A", kind: .capital, pawns: Fixtures.pawns(10))
+        let b = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-a88e9058cc91")!, name: "B", kind: .outpost, pawns: Fixtures.pawns(5))
         var world = WorldState(settlements: [a, b])
 
         world = GameEngine.addTradeRoute(world, from: a.id, to: b.id, resource: .food, amountPerTick: 5)
@@ -21,8 +21,8 @@ struct TradeTests {
     @Test("A route connecting an outpost to the capital spares it the isolation penalty")
     func connectionEndsIsolation() {
         let reg = Fixtures.registry()
-        let capital = Settlement(name: "Cap", kind: .capital, pawns: Fixtures.pawns(20))
-        var outpost = Settlement(name: "Out", kind: .outpost, pawns: Fixtures.pawns(10), storage: [.food: 50])
+        let capital = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-4f158b80654a")!, name: "Cap", kind: .capital, pawns: Fixtures.pawns(20))
+        var outpost = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-8aa84048d240")!, name: "Out", kind: .outpost, pawns: Fixtures.pawns(10), storage: [.food: 50])
         outpost.stats.stability = 50
         var world = WorldState(settlements: [capital, outpost])
 

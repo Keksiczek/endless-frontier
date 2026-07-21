@@ -2,7 +2,10 @@
   {
     "id": "hut",
     "era": "early_settlement",
-    "name": "Dwelling Hut",
+    "name": {
+      "en": "Dwelling Hut",
+      "cs": "Chatrč"
+    },
     "cost": {
       "materials": 10
     },
@@ -25,9 +28,15 @@
   {
     "id": "longhouse",
     "era": "early_settlement",
-    "name": "Longhouse",
+    "name": {
+      "en": "Longhouse",
+      "cs": "Dlouhý dům"
+    },
     "cost": {
       "materials": 35
+    },
+    "material_cost": {
+      "timber_bundle": 2
     },
     "workers": 0,
     "morale_effect": 1,
@@ -44,7 +53,10 @@
   {
     "id": "farm_basic",
     "era": "early_settlement",
-    "name": "Subsistence Farm",
+    "name": {
+      "en": "Subsistence Farm",
+      "cs": "Políčko"
+    },
     "cost": {
       "materials": 20
     },
@@ -78,7 +90,10 @@
   {
     "id": "lumberyard",
     "era": "early_settlement",
-    "name": "Lumberyard",
+    "name": {
+      "en": "Lumberyard",
+      "cs": "Pilařství"
+    },
     "cost": {
       "materials": 15
     },
@@ -96,9 +111,15 @@
   {
     "id": "hunters_lodge",
     "era": "early_settlement",
-    "name": "Hunter's Lodge",
+    "name": {
+      "en": "Hunter's Lodge",
+      "cs": "Lovecká chata"
+    },
     "cost": {
       "materials": 18
+    },
+    "material_cost": {
+      "timber_bundle": 2
     },
     "workers": 2,
     "production": {
@@ -114,9 +135,15 @@
   {
     "id": "quarry",
     "era": "early_settlement",
-    "name": "Stone Quarry",
+    "name": {
+      "en": "Stone Quarry",
+      "cs": "Lom"
+    },
     "cost": {
       "materials": 25
+    },
+    "material_cost": {
+      "timber_bundle": 2
     },
     "workers": 3,
     "production": {
@@ -132,7 +159,10 @@
   {
     "id": "farm_advanced",
     "era": "ancient",
-    "name": "Irrigated Farm",
+    "name": {
+      "en": "Irrigated Farm",
+      "cs": "Statek"
+    },
     "cost": {
       "materials": 40,
       "knowledge": 10
@@ -151,9 +181,16 @@
   {
     "id": "library",
     "era": "early_settlement",
-    "name": "Library",
+    "name": {
+      "en": "Library",
+      "cs": "Knihovna"
+    },
     "cost": {
       "materials": 30
+    },
+    "material_cost": {
+      "timber_bundle": 5,
+      "brick": 4
     },
     "workers": 1,
     "production": {
@@ -186,9 +223,15 @@
   {
     "id": "windmill",
     "era": "ancient",
-    "name": "Windmill",
+    "name": {
+      "en": "Windmill",
+      "cs": "Větrný mlýn"
+    },
     "cost": {
       "materials": 35
+    },
+    "material_cost": {
+      "timber_bundle": 4
     },
     "workers": 1,
     "production": {
@@ -204,9 +247,15 @@
   {
     "id": "trade_post",
     "era": "ancient",
-    "name": "Trade Post",
+    "name": {
+      "en": "Trade Post",
+      "cs": "Obchodní stanice"
+    },
     "cost": {
       "materials": 30
+    },
+    "material_cost": {
+      "timber_bundle": 4
     },
     "workers": 2,
     "production": {
@@ -225,10 +274,17 @@
   {
     "id": "school",
     "era": "medieval",
-    "name": "School",
+    "name": {
+      "en": "School",
+      "cs": "Škola"
+    },
     "cost": {
       "materials": 50,
       "knowledge": 20
+    },
+    "material_cost": {
+      "timber_bundle": 4,
+      "brick": 3
     },
     "workers": 3,
     "production": {
@@ -253,9 +309,15 @@
   {
     "id": "palisade",
     "era": "early_settlement",
-    "name": "Wooden Palisade",
+    "name": {
+      "en": "Wooden Palisade",
+      "cs": "Palisáda"
+    },
     "cost": {
       "materials": 30
+    },
+    "material_cost": {
+      "timber_bundle": 6
     },
     "workers": 1,
     "defense": 12,
@@ -268,9 +330,16 @@
   {
     "id": "watchtower",
     "era": "ancient",
-    "name": "Watchtower",
+    "name": {
+      "en": "Watchtower",
+      "cs": "Strážní věž"
+    },
     "cost": {
       "materials": 45
+    },
+    "material_cost": {
+      "timber_bundle": 3,
+      "brick": 2
     },
     "workers": 2,
     "defense": 20,
@@ -283,10 +352,17 @@
   {
     "id": "barracks",
     "era": "medieval",
-    "name": "Barracks",
+    "name": {
+      "en": "Barracks",
+      "cs": "Kasárna"
+    },
     "cost": {
       "materials": 70,
       "knowledge": 10
+    },
+    "material_cost": {
+      "timber_bundle": 4,
+      "iron_ingot": 2
     },
     "workers": 4,
     "consumption": {
@@ -306,9 +382,15 @@
   {
     "id": "granary",
     "era": "early_settlement",
-    "name": "Granary",
+    "name": {
+      "en": "Granary",
+      "cs": "Sýpka"
+    },
     "cost": {
       "materials": 20
+    },
+    "material_cost": {
+      "timber_bundle": 3
     },
     "workers": 1,
     "production": {
@@ -324,7 +406,10 @@
   {
     "id": "well",
     "era": "early_settlement",
-    "name": "Well",
+    "name": {
+      "en": "Well",
+      "cs": "Studna"
+    },
     "cost": {
       "materials": 12
     },
@@ -337,7 +422,10 @@
   {
     "id": "observatory",
     "era": "ancient",
-    "name": "Observatory",
+    "name": {
+      "en": "Observatory",
+      "cs": "Hvězdárna"
+    },
     "cost": {
       "materials": 40,
       "knowledge": 15
@@ -355,9 +443,15 @@
   {
     "id": "stone_walls",
     "era": "ancient",
-    "name": "Stone Walls",
+    "name": {
+      "en": "Stone Walls",
+      "cs": "Kamenné hradby"
+    },
     "cost": {
       "materials": 80
+    },
+    "material_cost": {
+      "brick": 8
     },
     "workers": 2,
     "defense": 45,
@@ -374,10 +468,16 @@
   {
     "id": "aqueduct",
     "era": "ancient",
-    "name": "Aqueduct",
+    "name": {
+      "en": "Aqueduct",
+      "cs": "Akvadukt"
+    },
     "cost": {
       "materials": 60,
       "knowledge": 10
+    },
+    "material_cost": {
+      "brick": 8
     },
     "workers": 1,
     "morale_effect": 3,
@@ -390,7 +490,10 @@
   {
     "id": "university",
     "era": "medieval",
-    "name": "University",
+    "name": {
+      "en": "University",
+      "cs": "Univerzita"
+    },
     "cost": {
       "materials": 90,
       "knowledge": 40
@@ -427,9 +530,15 @@
   {
     "id": "market",
     "era": "medieval",
-    "name": "Market",
+    "name": {
+      "en": "Market",
+      "cs": "Tržiště"
+    },
     "cost": {
       "materials": 55
+    },
+    "material_cost": {
+      "timber_bundle": 3
     },
     "workers": 3,
     "production": {
@@ -464,7 +573,10 @@
   {
     "id": "bank",
     "era": "medieval",
-    "name": "Bank",
+    "name": {
+      "en": "Bank",
+      "cs": "Banka"
+    },
     "cost": {
       "materials": 70,
       "knowledge": 25
@@ -488,10 +600,17 @@
   {
     "id": "workshop",
     "era": "medieval",
-    "name": "Workshop",
+    "name": {
+      "en": "Workshop",
+      "cs": "Dílna"
+    },
     "cost": {
       "materials": 60,
       "knowledge": 15
+    },
+    "material_cost": {
+      "timber_bundle": 4,
+      "brick": 2
     },
     "workers": 4,
     "production": {
@@ -520,10 +639,17 @@
   {
     "id": "factory",
     "era": "early_industrial",
-    "name": "Factory",
+    "name": {
+      "en": "Factory",
+      "cs": "Továrna"
+    },
     "cost": {
       "materials": 120,
       "knowledge": 40
+    },
+    "material_cost": {
+      "brick": 12,
+      "steel_ingot": 4
     },
     "workers": 6,
     "production": {
@@ -557,10 +683,17 @@
   {
     "id": "foundry",
     "era": "early_industrial",
-    "name": "Foundry",
+    "name": {
+      "en": "Foundry",
+      "cs": "Huť"
+    },
     "cost": {
       "materials": 100,
       "knowledge": 30
+    },
+    "material_cost": {
+      "brick": 10,
+      "iron_ingot": 2
     },
     "workers": 5,
     "production": {
@@ -594,10 +727,17 @@
   {
     "id": "power_plant",
     "era": "early_industrial",
-    "name": "Power Plant",
+    "name": {
+      "en": "Power Plant",
+      "cs": "Elektrárna"
+    },
     "cost": {
       "materials": 110,
       "knowledge": 35
+    },
+    "material_cost": {
+      "brick": 10,
+      "steel_ingot": 4
     },
     "workers": 4,
     "production": {
@@ -616,7 +756,10 @@
   {
     "id": "railyard",
     "era": "early_industrial",
-    "name": "Railyard",
+    "name": {
+      "en": "Railyard",
+      "cs": "Seřaďovací nádraží"
+    },
     "cost": {
       "materials": 130,
       "knowledge": 40
@@ -643,7 +786,10 @@
   {
     "id": "chemical_plant",
     "era": "early_industrial",
-    "name": "Chemical Plant",
+    "name": {
+      "en": "Chemical Plant",
+      "cs": "Chemička"
+    },
     "cost": {
       "materials": 140,
       "knowledge": 50
@@ -664,7 +810,10 @@
   {
     "id": "hospital",
     "era": "early_industrial",
-    "name": "Hospital",
+    "name": {
+      "en": "Hospital",
+      "cs": "Špitál"
+    },
     "cost": {
       "materials": 120,
       "knowledge": 40
@@ -687,7 +836,10 @@
   {
     "id": "hydro_dam",
     "era": "modern",
-    "name": "Hydroelectric Dam",
+    "name": {
+      "en": "Hydroelectric Dam",
+      "cs": "Přehrada"
+    },
     "cost": {
       "materials": 200,
       "knowledge": 60
@@ -709,7 +861,10 @@
   {
     "id": "oil_refinery",
     "era": "modern",
-    "name": "Oil Refinery",
+    "name": {
+      "en": "Oil Refinery",
+      "cs": "Rafinerie"
+    },
     "cost": {
       "materials": 180,
       "knowledge": 60
@@ -728,7 +883,10 @@
   {
     "id": "vehicle_works",
     "era": "modern",
-    "name": "Vehicle Works",
+    "name": {
+      "en": "Vehicle Works",
+      "cs": "Vozovna"
+    },
     "cost": {
       "materials": 170,
       "knowledge": 50
@@ -750,7 +908,10 @@
   {
     "id": "assembly_plant",
     "era": "modern",
-    "name": "Assembly Plant",
+    "name": {
+      "en": "Assembly Plant",
+      "cs": "Montovna"
+    },
     "cost": {
       "materials": 220,
       "knowledge": 80
@@ -775,9 +936,16 @@
   {
     "id": "apartment_block",
     "era": "modern",
-    "name": "Apartment Block",
+    "name": {
+      "en": "Apartment Block",
+      "cs": "Činžovní dům"
+    },
     "cost": {
       "materials": 160
+    },
+    "material_cost": {
+      "timber_bundle": 4,
+      "brick": 6
     },
     "workers": 0,
     "morale_effect": 1,
@@ -794,10 +962,17 @@
   {
     "id": "clinic",
     "era": "modern",
-    "name": "Medical Clinic",
+    "name": {
+      "en": "Medical Clinic",
+      "cs": "Ošetřovna"
+    },
     "cost": {
       "materials": 130,
       "knowledge": 50
+    },
+    "material_cost": {
+      "timber_bundle": 3,
+      "leather": 2
     },
     "workers": 3,
     "consumption": {
@@ -812,7 +987,10 @@
   {
     "id": "electronics_lab",
     "era": "modern",
-    "name": "Electronics Lab",
+    "name": {
+      "en": "Electronics Lab",
+      "cs": "Elektrotechnická laboratoř"
+    },
     "cost": {
       "materials": 160,
       "knowledge": 90
@@ -832,7 +1010,10 @@
   {
     "id": "data_center",
     "era": "modern",
-    "name": "Data Center",
+    "name": {
+      "en": "Data Center",
+      "cs": "Datové centrum"
+    },
     "cost": {
       "materials": 240,
       "knowledge": 120
@@ -869,7 +1050,10 @@
   {
     "id": "research_campus",
     "era": "modern",
-    "name": "Research Campus",
+    "name": {
+      "en": "Research Campus",
+      "cs": "Výzkumný areál"
+    },
     "cost": {
       "materials": 220,
       "knowledge": 110
@@ -901,7 +1085,10 @@
   {
     "id": "solar_array",
     "era": "near_future",
-    "name": "Solar Array",
+    "name": {
+      "en": "Solar Array",
+      "cs": "Solární pole"
+    },
     "cost": {
       "materials": 220,
       "knowledge": 90
@@ -918,7 +1105,10 @@
   {
     "id": "wind_farm",
     "era": "near_future",
-    "name": "Wind Farm",
+    "name": {
+      "en": "Wind Farm",
+      "cs": "Větrný park"
+    },
     "cost": {
       "materials": 200,
       "knowledge": 80
@@ -935,7 +1125,10 @@
   {
     "id": "automated_factory",
     "era": "near_future",
-    "name": "Automated Factory",
+    "name": {
+      "en": "Automated Factory",
+      "cs": "Automatizovaná továrna"
+    },
     "cost": {
       "materials": 320,
       "knowledge": 160
@@ -960,7 +1153,10 @@
   {
     "id": "fusion_reactor",
     "era": "near_future",
-    "name": "Fusion Reactor",
+    "name": {
+      "en": "Fusion Reactor",
+      "cs": "Fúzní reaktor"
+    },
     "cost": {
       "materials": 400,
       "knowledge": 240
@@ -982,7 +1178,10 @@
   {
     "id": "ai_core",
     "era": "near_future",
-    "name": "AI Core",
+    "name": {
+      "en": "AI Core",
+      "cs": "Jádro UI"
+    },
     "cost": {
       "materials": 360,
       "knowledge": 300
@@ -1002,7 +1201,10 @@
   {
     "id": "spaceport",
     "era": "near_future",
-    "name": "Spaceport",
+    "name": {
+      "en": "Spaceport",
+      "cs": "Kosmodrom"
+    },
     "cost": {
       "materials": 500,
       "knowledge": 260
@@ -1029,7 +1231,10 @@
   {
     "id": "orbital_array",
     "era": "near_future",
-    "name": "Orbital Array",
+    "name": {
+      "en": "Orbital Array",
+      "cs": "Orbitální soustava"
+    },
     "cost": {
       "materials": 420,
       "knowledge": 280
@@ -1050,7 +1255,10 @@
   {
     "id": "arcology",
     "era": "near_future",
-    "name": "Arcology",
+    "name": {
+      "en": "Arcology",
+      "cs": "Arkologie"
+    },
     "cost": {
       "materials": 480,
       "knowledge": 200
@@ -1068,6 +1276,40 @@
     "description": {
       "en": "A self-contained city in a single structure — a million live, work and thrive within.",
       "cs": "Soběstačné město v jediné stavbě — milion lidí žije, pracuje a sní uvnitř."
+    }
+  },
+  {
+    "id": "bloomery",
+    "era": "early_settlement",
+    "name": {
+      "en": "Bloomery",
+      "cs": "Výheň"
+    },
+    "cost": {
+      "materials": 30
+    },
+    "material_cost": {
+      "brick": 4
+    },
+    "workers": 2,
+    "production": {
+      "materials": 4
+    },
+    "pollution": 4,
+    "adjacency": [
+      {
+        "neighbor": "quarry",
+        "resource": "materials",
+        "bonus": 1
+      }
+    ],
+    "footprint": {
+      "w": 1,
+      "h": 1
+    },
+    "description": {
+      "en": "A clay stack and a pair of bellows. Slow, hungry for charcoal, and the only way to win iron before the great furnaces.",
+      "cs": "Hliněná pec a měchy. Pomalá, hltá dřevěné uhlí — a do příchodu velkých pecí jediná cesta k železu."
     }
   }
 ]

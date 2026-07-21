@@ -270,7 +270,7 @@ public enum ResourceLoop {
         // 9. Individual colonists: needs, mood, skilled work, morale pull.
         //    Gathering work is scaled by how full the local deposits & herd are;
         //    a strike stops the gatherers altogether.
-        var factors = gatheringFactors(s.localMap)
+        var factors = gatheringFactors(s.localMap, registry: registry)
         if s.strikeTicksRemaining > 0 {
             for work in [WorkKind.farming, .logging, .mining, .foraging, .hunting] {
                 factors[work] = 0
@@ -286,6 +286,13 @@ public enum ResourceLoop {
 
         // 10b. Scouts chart the valley.
         s = chartGround(s, tick: tick, mapSeed: mapSeed, config: config)
+
+        // 10c. Parties out at the valley's landmarks are advanced by
+        //      `ActionLoop`, on the finer grid — not here.
+
+        // 10d. The day's work also comes home as *things*: timber, ore, clay,
+        //      hides — the raw end of the crafting tree.
+        s = extractRawMaterials(s, tick: tick, config: config, factors: factors)
 
         // 11. Wildlife: the herd grows and is culled; predators may strike.
         s = WildlifeEngine.advanceOneTick(s, registry: registry, tick: tick, era: era, mapSeed: mapSeed)
@@ -313,21 +320,38 @@ public enum ResourceLoop {
     static let depositRegrowthFraction: Double = 0.0009
 
     /// Per-work gathering-efficiency factors: each deposit-backed work scaled
-    /// by how full its pool is, plus hunting scaled by the herd. Fed to
-    /// `PawnEngine` so a depleted resource pulls its workers' output down.
-    static func gatheringFactors(_ localMap: LocalMap?) -> [WorkKind: Double] {
+    /// by how full its pool is *and* by what the country is good for, plus
+    /// hunting scaled by the herd. Fed to `PawnEngine` so a depleted resource
+    /// pulls its workers' output down.
+    ///
+    /// The fullness term is deliberately *relative* (amount ÷ capacity), which
+    /// means richer ground alone changes only how long a seam lasts, never what
+    /// a day's work is worth. So biome affinity has to land here too, or a
+    /// mountain's `materials: 1.5` still buys the colony nothing: the miner
+    /// swings the same pick for the same stone, just for longer. Standing
+    /// somewhere has to pay differently from standing somewhere else.
+    static func gatheringFactors(
+        _ localMap: LocalMap?, registry: GameDataRegistry = GameDataRegistry()
+    ) -> [WorkKind: Double] {
         guard let localMap else { return [:] }
-        var poolByKind: [LocalResourceKind: (amount: Double, capacity: Double)] = [:]
+        let biome = registry.biome(localMap.biomeID)
+        // Pool by *work*, not by deposit kind. Mining now covers plain rock,
+        // iron seams and clay beds, so keying by kind wrote `factors[.mining]`
+        // three times over and whichever entry happened to come last out of the
+        // dictionary won — a silently wrong number, and one that could differ
+        // between two runs of the same seed.
+        var poolByWork: [WorkKind: (amount: Double, capacity: Double)] = [:]
         for node in localMap.nodes {
-            var entry = poolByKind[node.kind] ?? (0, 0)
+            var entry = poolByWork[node.kind.work] ?? (0, 0)
             entry.amount += node.amount
             entry.capacity += node.capacity
-            poolByKind[node.kind] = entry
+            poolByWork[node.kind.work] = entry
         }
         var factors: [WorkKind: Double] = [:]
-        for (kind, entry) in poolByKind {
+        for (work, entry) in poolByWork {
             let fraction = entry.capacity > 0 ? entry.amount / entry.capacity : 1
-            factors[kind.work] = depositFloorFactor + (1 - depositFloorFactor) * fraction
+            let fullness = depositFloorFactor + (1 - depositFloorFactor) * fraction
+            factors[work] = fullness * LocalMapGenerator.affinity(biome, for: work.resource)
         }
         factors[.hunting] = WildlifeEngine.huntingFactor(localMap.wildlife)
         return factors
@@ -337,6 +361,15 @@ public enum ResourceLoop {
     /// one of them comes back with new ground.
     static let scoutRangeStep: Double = 0.012
     static let scoutTicksPerReveal = 12
+    /// The circle the generator reveals at founding — where the frontier starts.
+    static let scoutBaseReach: Double = 0.28
+    /// How wide a swathe one returning scout adds to the map.
+    static let scoutRevealRadius: Double = 0.07
+    /// The furthest a scout will range unbidden. A map corner is 0.707 from the
+    /// heart, so this must clear `0.707 - scoutRevealRadius` or the corners stay
+    /// black forever no matter how long you scout — which is exactly what the
+    /// old cap of 0.62 did.
+    static let scoutMaxReach: Double = 0.80
 
     /// Scouts push the fog back a little at a time.
     ///
@@ -352,29 +385,48 @@ public enum ResourceLoop {
     /// rest of the sim: where a scout looks comes from `(mapSeed, settlement,
     /// tick)`, never from the frame clock — the canvas's wandering colonists
     /// are presentation and must stay out of this.
+    ///
+    /// Two things used to keep the fog frozen in practice. Reach was derived
+    /// from the *absolute world tick*, so it measured how old the world was
+    /// rather than how far anyone had walked — a colony founded late started
+    /// with the run of its valley, and the founding one crawled. And the reach
+    /// cap of 0.62 could not carry a scout to a corner, so a map could never be
+    /// charted however long you worked at it. Reach now grows from accumulated
+    /// scout-steps held on the map itself, and the cap clears the corners.
     static func chartGround(
         _ settlement: Settlement, tick: Int, mapSeed: UInt64, config: WorldConfig
     ) -> Settlement {
         guard tick % scoutTicksPerReveal == 0, var map = settlement.localMap else { return settlement }
+        // A charted valley is charted. Most of a long game is spent here, and
+        // scanning the grid for dark cells that cannot exist is pure waste on
+        // every offline catch-up.
+        guard !map.isFullyCharted || map.scoutFocus != nil else { return settlement }
         let ticksPerYear = max(1, config.ticksPerYear)
         let scouts = settlement.pawns.filter {
-            $0.assignedWork == .scouting && $0.isAdult(ticksPerYear: ticksPerYear) && !$0.isBroken
+            $0.assignedWork == .scouting && $0.isAdult(ticksPerYear: ticksPerYear)
+                && !$0.isBroken && !$0.isAway
         }.count
         guard scouts > 0 else { return settlement }
 
         var s = settlement
         var rng = SeededRNG(seed: societyLikeSeed(mapSeed: mapSeed, settlementID: s.id, tick: tick))
-        // The further they've already charted, the further out the next walk
-        // starts — the frontier moves outward rather than re-treading home.
-        let reach = min(0.62, 0.28 + Double(scouts) * scoutRangeStep * Double(tick / scoutTicksPerReveal + 1) * 0.02)
+        // Every scout on the job this step is a step walked. The frontier moves
+        // outward with the work, rather than re-treading home.
+        map.scoutProgress += Double(scouts)
+        let reach = min(scoutMaxReach, scoutBaseReach + map.scoutProgress * scoutRangeStep)
         let knownBefore = Set(map.pois.filter(\.discovered).map(\.id))
         for _ in 0..<scouts {
-            let angle = rng.nextUnit() * 2 * .pi
-            let distance = reach * (0.55 + rng.nextUnit() * 0.45)
-            let point = LocalPoint(
-                x: min(1, max(0, 0.5 + cos(angle) * distance)),
-                y: min(1, max(0, 0.5 + sin(angle) * distance)))
-            map.reveal(around: point, radius: 0.07)
+            let point: LocalPoint
+            if let focus = map.scoutFocus {
+                // Told where to go, they go — even past the range they'd wander
+                // to on their own. Ordering the walk is the whole point.
+                point = jitter(focus, by: scoutRevealRadius * 0.5, rng: &rng)
+            } else if let frontier = map.unchartedCell(within: reach, rng: &rng) {
+                point = frontier
+            } else {
+                break   // nothing left within reach worth walking to
+            }
+            map.reveal(around: point, radius: scoutRevealRadius)
         }
         s.localMap = map
         // Walking into a point of interest is a *find*: the discovery pays out
@@ -384,6 +436,92 @@ public enum ResourceLoop {
             s = grantPOIDiscovery(s, poi: poi, tick: tick)
         }
         return s
+    }
+
+    // MARK: - Raw materials
+
+    /// How many worker-ticks of a trade it takes to bank one raw material.
+    /// A whole unit of timber is a day's felling, not a swing of the axe.
+    static let workerTicksPerRawUnit: Double = 14
+    /// The item a hunter's day yields, alongside the meat.
+    public static let hideItemID = "hide"
+
+    /// Banks the concrete goods the colony's labour actually produces.
+    ///
+    /// Gathering used to dissolve entirely into the abstract `materials` pool
+    /// while `recipes.json` asked for `iron_ingot` and `timber_bundle` that
+    /// nothing produced — so the crafting tree could only ever be fed by
+    /// random loot. Now a logger's week is a stack of wood, a miner's is ore
+    /// or clay depending on what this valley holds, and a hunter brings hides
+    /// home with the meat.
+    ///
+    /// Deliberately *additive*: the abstract economy is untouched, so nothing
+    /// that was balanced against it moves. This is the same work, also counted
+    /// in things you can put on a forge.
+    static func extractRawMaterials(
+        _ settlement: Settlement, tick: Int, config: WorldConfig, factors: [WorkKind: Double]
+    ) -> Settlement {
+        guard let map = settlement.localMap, !map.nodes.isEmpty else { return settlement }
+        let ticksPerYear = max(1, config.ticksPerYear)
+        // How much of each kind of ground this valley holds. A trade that works
+        // several kinds splits its week between them *in proportion* — four iron
+        // seams and one quarry is ore country, and should come home as ore.
+        // Splitting evenly by kind made a mountain yield exactly what a plain
+        // with a single seam did, which quietly undid the point of putting ore
+        // in the mountains at all.
+        var capacityByKind: [LocalResourceKind: Double] = [:]
+        for node in map.nodes {
+            capacityByKind[node.kind, default: 0] += node.capacity
+        }
+        let present = Set(capacityByKind.keys)
+
+        // Worker-ticks earned this tick, per raw material.
+        var earned: [String: Double] = [:]
+        for pawn in settlement.pawns
+        where pawn.isAdult(ticksPerYear: ticksPerYear) && !pawn.isBroken && !pawn.isAway {
+            let work = pawn.assignedWork
+            let effort = factors[work] ?? 1
+            guard effort > 0 else { continue }
+            if work == .hunting {
+                earned[hideItemID, default: 0] += effort
+                continue
+            }
+            // Split across the kinds of ground this trade works that this
+            // valley actually has — an ore-less map yields no ore — weighted by
+            // how much of each is down there.
+            let worked = work.harvestedDeposits.filter(present.contains)
+            guard !worked.isEmpty else { continue }
+            let total = worked.reduce(0.0) { $0 + (capacityByKind[$1] ?? 0) }
+            guard total > 0 else { continue }
+            for deposit in worked {
+                guard let id = deposit.rawMaterialID else { continue }
+                earned[id, default: 0] += effort * (capacityByKind[deposit] ?? 0) / total
+            }
+        }
+        guard !earned.isEmpty else { return settlement }
+
+        var s = settlement
+        for (id, effort) in earned {
+            let progress = s.rawProgress[id, default: 0] + effort
+            let units = Int(progress / workerTicksPerRawUnit)
+            if units > 0 {
+                s.stockpile[id, default: 0] += units
+            }
+            // Carry the remainder, so slow work still arrives eventually
+            // rather than being rounded away every tick.
+            s.rawProgress[id] = progress - Double(units) * workerTicksPerRawUnit
+        }
+        return s
+    }
+
+    /// A point near `point`, kept on the map. Scouts sent to a spot fan out
+    /// around it rather than all standing on the same stone.
+    static func jitter(_ point: LocalPoint, by spread: Double, rng: inout SeededRNG) -> LocalPoint {
+        let angle = rng.nextUnit() * 2 * .pi
+        let radius = rng.nextUnit() * spread
+        return LocalPoint(
+            x: min(1, max(0, point.x + cos(angle) * radius)),
+            y: min(1, max(0, point.y + sin(angle) * radius)))
     }
 
     /// The one-off reward a freshly discovered point of interest grants.
@@ -442,12 +580,21 @@ public enum ResourceLoop {
         let ticksPerYear = config.ticksPerYear
 
         // Demand per deposit kind from the workers assigned to harvest it.
+        // A trade that works several kinds of ground (a miner: plain rock, an
+        // iron seam, a clay bed) spreads its pull across whichever of them this
+        // valley actually holds, so an ore-less map simply digs more stone
+        // rather than quietly depleting a seam that isn't there.
+        let present = Set(map.nodes.map(\.kind))
         var demand: [LocalResourceKind: Double] = [:]
-        for pawn in settlement.pawns where pawn.isAdult(ticksPerYear: ticksPerYear) && !pawn.isBroken {
-            if let deposit = pawn.assignedWork.harvestedDeposit {
-                let resource = pawn.assignedWork.resource ?? .food
-                let season = config.seasonYieldMultiplier(for: resource, tick: tick)
-                demand[deposit, default: 0] += harvestPerWorker * season
+        for pawn in settlement.pawns
+        where pawn.isAdult(ticksPerYear: ticksPerYear) && !pawn.isBroken && !pawn.isAway {
+            let worked = pawn.assignedWork.harvestedDeposits.filter(present.contains)
+            guard !worked.isEmpty else { continue }
+            let resource = pawn.assignedWork.resource ?? .food
+            let season = config.seasonYieldMultiplier(for: resource, tick: tick)
+            let each = harvestPerWorker * season / Double(worked.count)
+            for deposit in worked {
+                demand[deposit, default: 0] += each
             }
         }
 

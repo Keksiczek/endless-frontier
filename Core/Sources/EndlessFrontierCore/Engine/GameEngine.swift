@@ -44,10 +44,11 @@ public enum GameEngine {
         guard let def = registry.building(buildingID),
               state.unlockedBuildings.contains(buildingID) || def.era == .earlySettlement,
               let settlementIndex = state.settlements.firstIndex(where: { $0.id == settlementID }),
+              hasMaterials(def.materialCost, in: state, settlementID: settlementID),
               let paid = EffectApplier.payCost(def.cost, from: state, settlementID: settlementID) else {
             return state
         }
-        var s = paid
+        var s = payMaterials(def.materialCost, from: paid, settlementIndex: settlementIndex)
         var target = s.settlements[settlementIndex]
         // A quick-build still stands *somewhere*: on a laid-out colony the
         // site takes the first tile that fits, so the scaffolding (and later
@@ -63,6 +64,42 @@ public enum GameEngine {
         s.settlements[settlementIndex] = ConstructionEngine.enqueue(
             target, definitionID: buildingID, placementID: placementID,
             registry: registry, tick: s.tick)
+        return s
+    }
+
+    /// Whether a settlement holds the goods a build calls for.
+    public static func hasMaterials(
+        _ cost: [String: Int], in state: WorldState, settlementID: UUID
+    ) -> Bool {
+        guard !cost.isEmpty else { return true }
+        guard let s = state.settlements.first(where: { $0.id == settlementID }) else { return false }
+        let held = CraftingEngine.materialCounts(s)
+        return cost.allSatisfy { (held[$0.key] ?? 0) >= $0.value }
+    }
+
+    /// Takes the goods off the pile — stockpile first, then any loose instances
+    /// left over from loot or an older save.
+    static func payMaterials(
+        _ cost: [String: Int], from state: WorldState, settlementIndex: Int
+    ) -> WorldState {
+        guard !cost.isEmpty else { return state }
+        var s = state
+        for (materialID, needed) in cost {
+            var remaining = needed
+            let stocked = s.settlements[settlementIndex].stockpile[materialID] ?? 0
+            let fromStock = min(stocked, remaining)
+            if fromStock > 0 {
+                s.settlements[settlementIndex].stockpile[materialID] = stocked - fromStock
+                remaining -= fromStock
+            }
+            guard remaining > 0 else { continue }
+            var removed = 0
+            s.settlements[settlementIndex].inventory.removeAll { instance in
+                guard removed < remaining, instance.definitionID == materialID else { return false }
+                removed += 1
+                return true
+            }
+        }
         return s
     }
 
@@ -268,6 +305,37 @@ public enum GameEngine {
         return (state, nil)
     }
 
+    /// Sends a party out to work a discovered point of interest. The haul
+    /// lands when they walk back in, not now. Returns the world unchanged when
+    /// the order cannot be given — the place is undiscovered, picked clean,
+    /// resting, already has a party out, or nobody can be spared.
+    public static func dispatchToPOI(
+        _ state: WorldState,
+        settlementID: UUID,
+        poiID: Int,
+        registry: GameDataRegistry
+    ) -> WorldState {
+        LocalPOIEngine.dispatch(state, settlementID: settlementID, poiID: poiID,
+                                registry: registry) ?? state
+    }
+
+    /// Points the settlement's scouts at a spot on the local map. They walk
+    /// there on their next outing instead of wandering, and the order clears
+    /// itself once that ground is charted.
+    public static func sendScouts(
+        _ state: WorldState,
+        settlementID: UUID,
+        to point: LocalPoint
+    ) -> WorldState {
+        guard let seat = state.settlements.firstIndex(where: { $0.id == settlementID }),
+              var map = state.settlements[seat].localMap,
+              !map.isExplored(point) else { return state }
+        var s = state
+        map.scoutFocus = point
+        s.settlements[seat].localMap = map
+        return s
+    }
+
     /// Founds an outpost in a fully-explored, unsettled region.
     public static func foundOutpost(
         _ state: WorldState,
@@ -291,6 +359,27 @@ public enum GameEngine {
               from != to else { return state }
         var s = state
         s.tradeRoutes.append(TradeRoute(fromID: from, toID: to, resource: resource, amountPerTick: amountPerTick))
+        return s
+    }
+
+    /// Establishes a standing route carrying a *material* — timber, ore, clay —
+    /// from one settlement's stockpile to another's. This is how a colony
+    /// founded on a coast with no iron ever gets any.
+    public static func addMaterialRoute(
+        _ state: WorldState,
+        from: UUID,
+        to: UUID,
+        materialID: String,
+        unitsPerTick: Double,
+        registry: GameDataRegistry
+    ) -> WorldState {
+        guard state.settlements.contains(where: { $0.id == from }),
+              state.settlements.contains(where: { $0.id == to }),
+              from != to, unitsPerTick > 0,
+              registry.item(materialID)?.slot == .material else { return state }
+        var s = state
+        s.tradeRoutes.append(TradeRoute(fromID: from, toID: to, resource: .materials,
+                                        amountPerTick: unitsPerTick, materialID: materialID))
         return s
     }
 
@@ -371,11 +460,13 @@ public enum GameEngine {
               state.unlockedBuildings.contains(buildingID) || def.era == .earlySettlement,
               let si = state.settlements.firstIndex(where: { $0.id == settlementID }),
               ColonyBuilder.canPlace(state.settlements[si], definitionID: buildingID, at: coord, registry: registry),
+              hasMaterials(def.materialCost, in: state, settlementID: settlementID),
               let paid = EffectApplier.payCost(def.cost, from: state) else {
             return state
         }
         var s = paid
         guard let place = s.settlements.firstIndex(where: { $0.id == settlementID }) else { return state }
+        s = payMaterials(def.materialCost, from: s, settlementIndex: place)
         let sited = ColonyBuilder.placeSite(
             s.settlements[place], definitionID: buildingID, at: coord, registry: registry
         )

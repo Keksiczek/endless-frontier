@@ -1,10 +1,11 @@
 import Testing
+import Foundation
 @testable import EndlessFrontierCore
 
 @Suite("Raids & defense")
 struct RaidTests {
     private func capitalWorld(defense: Double, materials: Double = 100, pawns: [Pawn] = []) -> WorldState {
-        var capital = Settlement(name: "C", kind: .capital,                                  pawns: pawns, storage: [.materials: materials, .food: 100],
+        var capital = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-d77439b698b1")!, name: "C", kind: .capital,                                  pawns: pawns, storage: [.materials: materials, .food: 100],
                                  storageCapacity: 999)
         capital.stats.defense = defense
         return WorldState(settlements: [capital])
@@ -32,7 +33,7 @@ struct RaidTests {
     @Test("Defensive buildings raise a settlement's defense over time")
     func buildingsGrantDefense() throws {
         let reg = try GameDataRegistry.bundled()
-        var settlement = Settlement(name: "Fort", kind: .capital, pawns: Fixtures.pawns(10),
+        var settlement = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-47f2bc92ebfc")!, name: "Fort", kind: .capital, pawns: Fixtures.pawns(10),
                                     buildings: [BuildingInstance(definitionID: "palisade", count: 2)],
                                     storage: [.food: 200], storageCapacity: 999)
         settlement.stats.defense = 0

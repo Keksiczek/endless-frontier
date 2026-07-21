@@ -112,7 +112,7 @@ struct ColonyMapScreen: View {
         let multiTile = def.footprint.width > 1 || def.footprint.height > 1
         return VStack(spacing: 4) {
             Image(systemName: buildingIcon(def)).font(.title3)
-            Text(def.name).font(.caption2.weight(.medium)).lineLimit(1)
+            Text(def.name.resolve(AppStrings.language)).font(.caption2.weight(.medium)).lineLimit(1)
             Text(costSummary(def.cost)).font(.caption2).foregroundStyle(Theme.textDim)
             if multiTile {
                 Text("\(def.footprint.width)×\(def.footprint.height)")
@@ -276,7 +276,7 @@ struct ColonyMapScreen: View {
         let project = project(for: placement)
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
-                SectionHeader(title: def?.name ?? placement.definitionID)
+                SectionHeader(title: def?.name.resolve(AppStrings.language) ?? placement.definitionID)
                 Spacer()
                 Button(role: .destructive) {
                     game.demolish(at: placement.coord)

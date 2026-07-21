@@ -8,7 +8,7 @@ struct OutpostColonistTests {
         let reg = Fixtures.registry()
         let region = Region(name: "Frontier", coord: HexCoord(1, 0), kind: .wilderness,
                             biomeID: "plains", explorationState: .fullyExplored)
-        let capital = Settlement(name: "Capital", kind: .capital, pawns: Fixtures.pawns(50),
+        let capital = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-cfee232ec2e5")!, name: "Capital", kind: .capital, pawns: Fixtures.pawns(50),
                                  storage: [.materials: 200, .influence: 200], storageCapacity: 500)
         let world = WorldState(mapSeed: 1, settlements: [capital], regions: [region])
         return (world, reg, region.id)

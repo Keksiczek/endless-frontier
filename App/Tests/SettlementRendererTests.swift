@@ -189,3 +189,154 @@ struct CameraTests {
                 "the stroke must be re-laid at the new scale rather than magnified after the fact")
     }
 }
+
+/// A tap on the fog names the ground the scouts walk to, so the screen→map
+/// conversion is the difference between "go north-west" and "go somewhere
+/// else entirely". An inverted or unscaled axis here fails silently: the
+/// order lands, the beacon draws, and the scouts chart the wrong corner.
+@Suite("A tap on the fog names real ground")
+struct CanvasCoordinateTests {
+    @Test("Screen and map coordinates round-trip", arguments: [
+        LocalPoint(x: 0, y: 0), LocalPoint(x: 1, y: 1), LocalPoint(x: 0.5, y: 0.5),
+        LocalPoint(x: 0.12, y: 0.87), LocalPoint(x: 0.93, y: 0.04)
+    ])
+    func roundTrips(p: LocalPoint) {
+        let back = SettlementRenderer.normalised(SettlementRenderer.point(p, in: rect), in: rect)
+        #expect(abs(back.x - p.x) < 1e-9)
+        #expect(abs(back.y - p.y) < 1e-9)
+    }
+
+    @Test("The conversion follows the camera, so a tap while zoomed still lands true")
+    func honoursCamera() {
+        var camera = SettlementRenderer.Camera()
+        camera.scale = 2.5
+        camera.offset = CGSize(width: 40, height: -25)
+        let world = SettlementRenderer.worldRect(viewRect: rect, camera: camera)
+
+        let target = LocalPoint(x: 0.3, y: 0.7)
+        let onScreen = SettlementRenderer.point(target, in: world)
+        let back = SettlementRenderer.normalised(onScreen, in: world)
+        #expect(abs(back.x - target.x) < 1e-9)
+        #expect(abs(back.y - target.y) < 1e-9)
+    }
+
+    @Test("A tap outside the world clamps onto it rather than off the map")
+    func clampsOutOfBounds() {
+        let far = SettlementRenderer.normalised(CGPoint(x: -500, y: 9000), in: rect)
+        #expect(far.x == 0)
+        #expect(far.y == 1)
+    }
+
+    @Test("A degenerate rect answers the centre instead of dividing by zero")
+    func survivesEmptyRect() {
+        let p = SettlementRenderer.normalised(CGPoint(x: 10, y: 10), in: .zero)
+        #expect(p == LocalPoint(x: 0.5, y: 0.5))
+    }
+}
+
+/// The whole point of an expedition is watching it. A colony past the drawing
+/// cap must not quietly leave the party out of the frame.
+@Suite("A party out is always drawn")
+struct VisibleAgentsTests {
+    private func crowd(_ count: Int, away: Int) -> Settlement {
+        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0000-00000000BBB1")!,
+                           name: "Boomtown")
+        let trip = UUID()
+        s.pawns = (0..<count).map { i in
+            var p = Pawn(name: "Soul \(i)")
+            // The away ones sit at the *end*, exactly where a plain prefix drops them.
+            if i >= count - away { p.expeditionID = trip }
+            return p
+        }
+        return s
+    }
+
+    @Test("A small colony is drawn entire")
+    func underTheCapDrawsEveryone() {
+        let s = crowd(10, away: 3)
+        #expect(SettlementRenderer.visibleAgents(s).count == 10)
+    }
+
+    @Test("Past the cap, the party out is drawn even from the far end of the roster")
+    func awayPawnsSurviveTheCap() {
+        let count = SettlementRenderer.maxVisibleAgents + 40
+        let s = crowd(count, away: 3)
+        let drawn = SettlementRenderer.visibleAgents(s)
+
+        #expect(drawn.count == SettlementRenderer.maxVisibleAgents)
+        for pawn in s.pawns where pawn.isAway {
+            #expect(drawn.contains { $0.id == pawn.id },
+                    "the party the player is watching must never be cropped out")
+        }
+    }
+
+    @Test("With nobody away the cap behaves exactly as before")
+    func noPartyKeepsThePlainPrefix() {
+        let count = SettlementRenderer.maxVisibleAgents + 10
+        let s = crowd(count, away: 0)
+        let drawn = SettlementRenderer.visibleAgents(s)
+        #expect(drawn.count == SettlementRenderer.maxVisibleAgents)
+        #expect(drawn.first?.id == s.pawns.first?.id)
+    }
+}
+
+/// A battle is drawn from the record, against the clock — so it has to appear
+/// on its tick, play through, and then leave the field. Getting the window
+/// wrong means a raid either never shows or replays over the colony forever.
+@Suite("A raid plays out and then clears")
+struct BattlePlaybackTests {
+    /// Beats carry the action step they happened on, the way the resolver
+    /// stamps them — a fight that runs long occupies more of its tick.
+    private func log(tick: Int, repelled: Bool = false) -> BattleLog {
+        var r = CombatEngine.BattleRecorder()
+        r.record(.volley, step: 0, amount: 3)
+        r.record(.charge, step: 0, amount: 20)
+        r.record(.clash, step: 4, amount: 12)
+        if repelled { r.record(.repelled, step: 6) }
+        return r.finish(id: UUID(uuidString: "BBBBBBBB-0000-0000-0000-000000000001")!,
+                        tick: tick, attackerName: "Vorenn", defenderName: "Home",
+                        repelled: repelled)
+    }
+
+    @Test("Nothing has happened at the very start of the battle's tick")
+    func nothingBeforeItBegins() {
+        let l = log(tick: 10)
+        #expect(l.moments(upTo: 0).isEmpty)
+    }
+
+    @Test("The battle reveals itself across its tick")
+    func revealsProgressively() {
+        let l = log(tick: 10)
+        let early = l.moments(upTo: 0.2).count
+        let late = l.moments(upTo: 0.9).count
+        #expect(early < late)
+        #expect(late == l.moments.count)
+    }
+
+    /// The playback window: on its tick and a little after, never before, and
+    /// never indefinitely — a finished raid must stop being drawn.
+    @Test("The window opens on the tick and closes after it")
+    func windowIsBounded() {
+        let l = log(tick: 10)
+        func showing(at continuousTick: Double) -> Bool {
+            let elapsed = continuousTick - Double(l.tick)
+            return elapsed >= 0 && elapsed <= 1 + SettlementBattle.lingerTicks
+        }
+        #expect(!showing(at: 9.99), "not before it happens")
+        #expect(showing(at: 10.0))
+        #expect(showing(at: 10.5))
+        #expect(showing(at: 11.0))
+        #expect(!showing(at: 12.0), "a battle from last minute is over")
+        #expect(!showing(at: 40.0), "and does not haunt the colony")
+    }
+
+    /// A repelled raid still has to say so — the beat that reads as "they
+    /// broke" is what the ring on the canvas is drawn from.
+    @Test("A repelled raid records the moment it broke")
+    func repelledIsRecorded() {
+        let l = log(tick: 10, repelled: true)
+        #expect(l.repelled)
+        #expect(l.moments.contains { $0.kind == .repelled })
+        #expect(l.moments.last?.kind == .repelled, "it breaks at the end, not the start")
+    }
+}

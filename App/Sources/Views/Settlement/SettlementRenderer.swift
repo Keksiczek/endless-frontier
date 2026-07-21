@@ -51,6 +51,7 @@ enum SettlementRenderer {
         time: Double,
         season: Season,
         camera: Camera,
+        continuousTick: Double = 0,
         selectedPawnID: UUID?,
         selectedBuildingID: Int?
     ) {
@@ -86,10 +87,14 @@ enum SettlementRenderer {
             houses: placed.filter { $0.glyph == .house && !$0.underConstruction },
             time: time, zoom: zoom)
 
-        agents(&context, rect: rect, settlement: settlement, map: map,
+        agents(&context, rect: rect, settlement: settlement, map: map, continuousTick: continuousTick,
                registry: registry, time: time, zoom: zoom, selectedPawnID: selectedPawnID)
         SettlementFigures.birds(&context, rect: rect, season: season, time: time, zoom: zoom)
-        fog(&context, rect: rect, map: map)
+        // A raid plays out over the scene it happens to — above the people,
+        // under the fog, so the dark still hides what the colony cannot see.
+        SettlementBattle.draw(&context, rect: rect, settlement: settlement,
+                              continuousTick: continuousTick, time: time, zoom: zoom)
+        fog(&context, rect: rect, map: map, time: time)
         // The seasonal wash is atmosphere over the lens, not part of the world,
         // so it stays in view space and doesn't slide when you pan.
         seasonWash(&context, rect: viewRect, size: size, season: season, time: time)
@@ -122,6 +127,15 @@ enum SettlementRenderer {
     /// Maps a normalised model point to a pixel point in `rect`.
     static func point(_ p: LocalPoint, in rect: CGRect) -> CGPoint {
         CGPoint(x: rect.minX + p.x * rect.width, y: rect.minY + p.y * rect.height)
+    }
+
+    /// The inverse of `point`: where on the map a tap landed, clamped to it.
+    /// Lets a tap on the fog name the ground the scouts should walk to.
+    static func normalised(_ p: CGPoint, in rect: CGRect) -> LocalPoint {
+        guard rect.width > 0, rect.height > 0 else { return LocalPoint(x: 0.5, y: 0.5) }
+        return LocalPoint(
+            x: min(1, max(0, (p.x - rect.minX) / rect.width)),
+            y: min(1, max(0, (p.y - rect.minY) / rect.height)))
     }
 
     // MARK: - Wilderness (surveying a region without a settlement)
@@ -316,14 +330,19 @@ enum SettlementRenderer {
         let unit = min(rect.width, rect.height)
         for poi in map.pois where poi.discovered && map.isExplored(poi.position) {
             let c = point(poi.position, in: rect)
-            // A faint halo separates a landmark from mere scenery.
+            // A faint halo separates a landmark from mere scenery — and says
+            // at a glance whether the place still has anything to give. A
+            // picked-clean ruin should not keep inviting you over.
+            let spent = poi.isExhausted
             let halo = unit * 0.024
             context.fill(Path(ellipseIn: CGRect(x: c.x - halo, y: c.y - halo,
                                                 width: halo * 2, height: halo * 2)),
-                         with: .color(Theme.accent.opacity(0.06)))
+                         with: .color(Theme.accent.opacity(spent ? 0.02 : 0.06)))
             context.stroke(Path(ellipseIn: CGRect(x: c.x - halo, y: c.y - halo,
                                                   width: halo * 2, height: halo * 2)),
-                           with: .color(Theme.accent.opacity(0.22)), lineWidth: 0.7)
+                           with: .color(spent ? Theme.textDim.opacity(0.18)
+                                              : Theme.accent.opacity(0.22)),
+                           lineWidth: 0.7)
             SettlementStructures.poi(poi.kind, at: c,
                                      s: unit * 0.014, time: time, context: &context)
             if showLabels {
@@ -716,6 +735,41 @@ enum SettlementRenderer {
                     p.addLine(to: CGPoint(x: ox + 1.6 * z, y: oy))
                 }, with: .color(herb), lineWidth: 1)
             }
+        case .ironOre:
+            // A cut face with the seam running through it — rock, but rock
+            // that's worth something to a forge.
+            let face = CGRect(x: c.x - 9 * z, y: c.y - 6 * z, width: 18 * z, height: 12 * z)
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: face.minX, y: face.maxY))
+                p.addLine(to: CGPoint(x: face.minX + 3 * z, y: face.minY))
+                p.addLine(to: CGPoint(x: face.maxX - 3 * z, y: face.minY))
+                p.addLine(to: CGPoint(x: face.maxX, y: face.maxY))
+                p.closeSubpath()
+            }, with: .color(shade.opacity(0.55)), lineWidth: 1)
+            for i in 0..<max(2, count / 2) {
+                let t = Double(i) / Double(max(1, count / 2))
+                let y = face.minY + CGFloat(t) * face.height
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: face.minX + 3 * z, y: y))
+                    p.addLine(to: CGPoint(x: face.maxX - 4 * z, y: y + 1.5 * z))
+                }, with: .color(shade.opacity(0.35 + fraction * 0.5)),
+                style: StrokeStyle(lineWidth: 1.4, dash: [3, 2]))
+            }
+        case .clay:
+            // A dug pit: an open bowl with spoil heaped beside it.
+            context.stroke(Path { p in
+                p.addArc(center: CGPoint(x: c.x, y: c.y - 1 * z), radius: 8 * z,
+                         startAngle: .degrees(0), endAngle: .degrees(180), clockwise: false)
+            }, with: .color(shade.opacity(0.7)), lineWidth: 1)
+            for i in 0..<max(2, count / 2) {
+                let ox = c.x + (CGFloat((i * 9) % 15) - 7) * z
+                let oy = c.y + 4 * z + CGFloat(i % 2) * 2 * z
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: ox - 3 * z, y: oy))
+                    p.addLine(to: CGPoint(x: ox, y: oy - 2.4 * z))
+                    p.addLine(to: CGPoint(x: ox + 3 * z, y: oy))
+                }, with: .color(shade.opacity(0.3 + fraction * 0.5)), lineWidth: 1)
+            }
         }
     }
 
@@ -825,10 +879,11 @@ enum SettlementRenderer {
             let glyph = def.map(glyph(for:)) ?? .house
             let progress = settlement.constructions
                 .first { $0.placementID == placement.id }?.fraction
+            let label = def?.name.resolve(AppStrings.language) ?? placement.definitionID
             return NormalizedBuilding(
                 id: index,
                 definitionID: placement.definitionID,
-                name: def?.name ?? placement.definitionID,
+                name: label,
                 glyph: glyph,
                 center: p,
                 size: 0.021 * Double(max(placement.width, placement.height)),
@@ -848,7 +903,8 @@ enum SettlementRenderer {
             let def = registry.building(instance.definitionID)
             let g = def.map(glyph(for:)) ?? .house
             for _ in 0..<instance.count where expanded.count < maxVisibleBuildings {
-                expanded.append((instance.definitionID, def?.name ?? instance.definitionID, g))
+                expanded.append((instance.definitionID,
+                                 def?.name.resolve(AppStrings.language) ?? instance.definitionID, g))
             }
         }
         guard !expanded.isEmpty else { return [] }
@@ -928,14 +984,30 @@ enum SettlementRenderer {
 
     // MARK: - Colonists
 
+    /// Who gets drawn when the crowd is capped.
+    ///
+    /// The cap keeps a boom-town cheap, but taking a plain `prefix` means that
+    /// in a colony past ninety souls the party out at the ruins — the one thing
+    /// the player is deliberately watching — could fall off the end of the array
+    /// and simply not be drawn. Anyone away goes in first; the rest fill the
+    /// remaining seats.
+    static func visibleAgents(_ settlement: Settlement) -> [Pawn] {
+        guard settlement.pawns.count > maxVisibleAgents else { return settlement.pawns }
+        let away = settlement.pawns.filter(\.isAway)
+        guard !away.isEmpty else { return Array(settlement.pawns.prefix(maxVisibleAgents)) }
+        let home = settlement.pawns.filter { !$0.isAway }
+        return away + home.prefix(max(0, maxVisibleAgents - away.count))
+    }
+
     private static func agents(
         _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement,
-        map: LocalMap, registry: GameDataRegistry, time: Double, zoom: CGFloat,
-        selectedPawnID: UUID?
+        map: LocalMap, continuousTick: Double, registry: GameDataRegistry,
+        time: Double, zoom: CGFloat, selectedPawnID: UUID?
     ) {
-        let scene = AgentMotion.Scene(settlement: settlement, registry: registry)
+        let scene = AgentMotion.Scene(settlement: settlement, registry: registry,
+                                      continuousTick: continuousTick)
         let ticksPerYear = registry.config.ticksPerYear
-        for pawn in settlement.pawns.prefix(maxVisibleAgents) {
+        for pawn in visibleAgents(settlement) {
             let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
                                         time: time, ticksPerYear: ticksPerYear)
             guard map.isExplored(pose.position) else { continue }
@@ -948,7 +1020,9 @@ enum SettlementRenderer {
 
     // MARK: - Fog of war
 
-    private static func fog(_ context: inout GraphicsContext, rect: CGRect, map: LocalMap) {
+    private static func fog(
+        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double
+    ) {
         let cols = LocalMap.gridColumns, rows = LocalMap.gridRows
         let cw = rect.width / CGFloat(cols), ch = rect.height / CGFloat(rows)
         var covered = Path()
@@ -960,6 +1034,31 @@ enum SettlementRenderer {
             }
         }
         context.fill(covered, with: .color(Theme.ink.opacity(0.86)))
+        scoutOrder(&context, rect: rect, map: map, time: time)
+    }
+
+    /// Where the player has sent the scouts, marked in the dark they were sent
+    /// into. Without this an order lands silently and the tap reads as a
+    /// no-op — the ground it points at is, by definition, not yet drawn.
+    private static func scoutOrder(
+        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double
+    ) {
+        guard let focus = map.scoutFocus else { return }
+        let c = point(focus, in: rect)
+        let unit = min(rect.width, rect.height)
+        // A slow beacon: two rings breathing out of phase, so it reads as
+        // "on its way" rather than as something already found.
+        for i in 0..<2 {
+            let phase = (time * 0.5 + Double(i) * 0.5).truncatingRemainder(dividingBy: 1)
+            let r = unit * (0.012 + 0.028 * phase)
+            context.stroke(
+                Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)),
+                with: .color(Theme.accent.opacity(0.5 * (1 - phase))), lineWidth: 1.2)
+        }
+        let dot = unit * 0.006
+        context.fill(Path(ellipseIn: CGRect(x: c.x - dot, y: c.y - dot,
+                                            width: dot * 2, height: dot * 2)),
+                     with: .color(Theme.accent.opacity(0.85)))
     }
 
     // MARK: - Season

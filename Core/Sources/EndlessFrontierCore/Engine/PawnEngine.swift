@@ -96,8 +96,11 @@ public enum PawnEngine {
                 s.pawns[i].isBroken = false
             }
 
-            // Work output + learning-by-doing — adults only, and not broken.
-            if !s.pawns[i].isBroken, s.pawns[i].age >= adultAgeTicks,
+            // Work output + learning-by-doing — adults only, not broken, and
+            // actually here: someone cutting stone out at the cave is not also
+            // at the plough, and an expedition that costs the colony nothing
+            // is not a decision.
+            if !s.pawns[i].isBroken, !s.pawns[i].isAway, s.pawns[i].age >= adultAgeTicks,
                let resource = s.pawns[i].assignedWork.resource {
                 let work = s.pawns[i].assignedWork
                 let moodFactor = 0.5 + 0.5 * (s.pawns[i].mood / 100)   // 0.5…1.0

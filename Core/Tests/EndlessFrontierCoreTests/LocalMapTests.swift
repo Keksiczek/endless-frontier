@@ -37,10 +37,18 @@ struct LocalMapTests {
         }
     }
 
-    @Test("Four points of interest generate, initially hidden or centre-revealed")
+    /// A map used to get the identical cast of all six kinds — which is why two
+    /// valleys felt like the same valley. Now it gets a handful, drawn from what
+    /// the country plausibly holds.
+    @Test("Landmarks are a handful, all different, and on dry land")
     func pois() {
         let map = LocalMapGenerator.generate(mapSeed: 7, regionID: region, biome: nil)
-        #expect(Set(map.pois.map(\.kind)) == Set(LocalPOIKind.allCases))
+        #expect(LocalMapGenerator.poiCountRange.contains(map.pois.count))
+        #expect(Set(map.pois.map(\.kind)).count == map.pois.count, "no map holds the same place twice")
+        #expect(Set(map.pois.map(\.id)).count == map.pois.count, "ids must be unique — they key the UI")
+        for poi in map.pois {
+            #expect(abs(poi.position.y - map.river.y(atX: poi.position.x)) > 0.05)
+        }
     }
 
     @Test("The settlement centre starts revealed, the far edges do not")

@@ -31,7 +31,7 @@ struct ItemTests {
                             needs: PawnNeeds(hunger: 100, rest: 100, recreation: 100),
                             assignedWork: .mining)
             if equipped { pawn.equipment[.weapon] = ItemInstance(definitionID: "masterwork_pick") }
-            return Settlement(name: "C", kind: .capital, pawns: [pawn],
+            return Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-8c546a5f8c9b")!, name: "C", kind: .capital, pawns: [pawn],
                               storage: [.food: 500], storageCapacity: 9999)
         }
         let plain = PawnEngine.advanceOneTick(miner(equipped: false), registry: r)
@@ -42,7 +42,7 @@ struct ItemTests {
     @Test("Colony artifacts add passive production and defense")
     func artifactColonyBuffs() throws {
         let r = try reg()
-        let settlement = Settlement(name: "Vault", kind: .capital, pawns: Fixtures.pawns(5),
+        let settlement = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-4d16e6b48ee7")!, name: "Vault", kind: .capital, pawns: Fixtures.pawns(5),
                                     storage: [.food: 200], storageCapacity: 9999,
                                     inventory: [ItemInstance(definitionID: "harvest_idol"),
                                                 ItemInstance(definitionID: "beacon_stone")])
@@ -55,7 +55,7 @@ struct ItemTests {
         let r = try reg()
         let item = ItemInstance(definitionID: "sturdy_axe")
         let pawn = Pawn(name: "Jo")
-        let capital = Settlement(name: "C", kind: .capital, pawns: [pawn], inventory: [item])
+        let capital = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-af3b34a5075b")!, name: "C", kind: .capital, pawns: [pawn], inventory: [item])
         let world = WorldState(settlements: [capital])
 
         let equipped = GameEngine.equipItem(world, settlementID: capital.id, pawnID: pawn.id,
@@ -73,7 +73,7 @@ struct ItemTests {
         let r = try reg()
         let region = Region(name: "Vault", coord: HexCoord(3, 0), kind: .dungeon, biomeID: "mountains",
                             hazardLevel: 8, explorationState: .fullyExplored)
-        let capital = Settlement(name: "C", kind: .capital,
+        let capital = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-281b8fe67241")!, name: "C", kind: .capital,
                                  pawns: [Pawn(name: "Scout", health: 100)],
                                  storage: [:], storageCapacity: 9999)
         let world = WorldState(mapSeed: 5, settlements: [capital], regions: [region])
@@ -88,7 +88,7 @@ struct ItemTests {
         let r = try reg()
         let region = Region(name: "Vault", coord: HexCoord(3, 0), kind: .ruins, biomeID: "plains",
                             hazardLevel: 6, explorationState: .fullyExplored)
-        let capital = Settlement(name: "C", kind: .capital, pawns: Fixtures.pawns(1), storage: [:], storageCapacity: 9999)
+        let capital = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-b5c128085842")!, name: "C", kind: .capital, pawns: Fixtures.pawns(1), storage: [:], storageCapacity: 9999)
         let world = WorldState(mapSeed: 9, settlements: [capital], regions: [region])
         let a = SiteEngine.interact(world, regionID: region.id, registry: r)!.0
         let b = SiteEngine.interact(world, regionID: region.id, registry: r)!.0

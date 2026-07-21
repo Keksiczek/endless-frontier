@@ -347,50 +347,50 @@ public enum DiplomacyEngine {
         let raiderName = s.tribes[tribeIndex].name
         var strength = s.tribes[tribeIndex].population * 0.5
             + s.tribes[tribeIndex].genes.courage * 20
-        let militia = CombatEngine.militia(s.settlements[capitalIndex].pawns, registry: registry)
+        // The raid is fought out round by round inside this tick — the walls
+        // absorb, the line answers, and whoever is most exposed takes the hit
+        // that gets past. The outcome comes out of the fighting rather than out
+        // of a formula, and the record carries the clock it happened on.
+        let outcome = BattleResolver.resolve(
+            attackerStrength: strength,
+            attackerName: raiderName,
+            defenders: BattleResolver.defenders(
+                s.settlements[capitalIndex].pawns, registry: registry),
+            defenderName: s.settlements[capitalIndex].name,
+            fortification: s.settlements[capitalIndex].stats.defense,
+            tick: s.tick,
+            seed: rng.next())
+        let repelled = outcome.repelled
 
-        // The volley: archers on the wall soften the charge.
-        let volley = militia.ranged * 0.8
-        strength = max(0, strength - volley)
+        // Apply what the fighting did to the people who did it.
+        var deaths = 0
+        for (pawnID, hurt) in outcome.damageByPawn.sorted(by: { $0.key.uuidString < $1.key.uuidString }) {
+            guard let i = s.settlements[capitalIndex].pawns.firstIndex(where: { $0.id == pawnID })
+            else { continue }
+            s.settlements[capitalIndex].pawns[i].health = max(
+                0, s.settlements[capitalIndex].pawns[i].health - hurt)
+            if s.settlements[capitalIndex].pawns[i].health <= 0 { deaths += 1 }
+        }
+        if deaths > 0 {
+            s.settlements[capitalIndex].pawns.removeAll { $0.health <= 0 }
+            s.settlements[capitalIndex].deathTallies[
+                PawnDeathCause.battle.rawValue, default: 0] += deaths
+        }
 
-        // The clash at the palisade. A raid *turned back* carries nothing
-        // home — the old minimum 8% loot leaked grain through walls the
-        // raiders never crossed, which made defense pointless at the margin.
-        let defense = s.settlements[capitalIndex].stats.defense
-            + militia.melee + militia.ranged * 0.2
-        let repelled = strength <= defense
-        let breach = max(0, strength - defense)
-        let lootFraction = repelled ? 0 : min(0.35, 0.08 + breach / 200)
+        // A raid turned back carries nothing home; one that got through takes
+        // what its surviving strength could carry.
+        let lootFraction = repelled ? 0 : min(0.35, 0.08 + outcome.attackerRemaining / 200)
         let loot = s.settlements[capitalIndex].storage[.food] * lootFraction
         s.settlements[capitalIndex].storage[.food] -= loot
         s.tribes[tribeIndex].stores += loot
 
-        // Casualties only when the defense is genuinely overrun.
-        var deaths = 0
-        if breach > 10 {
-            let woundCount = min(3, Int(breach / 15))
-            for _ in 0..<woundCount {
-                guard let victim = s.settlements[capitalIndex].pawns.indices
-                    .filter({ s.settlements[capitalIndex].pawns[$0].health > 0 })
-                    .min(by: { s.settlements[capitalIndex].pawns[$0].health
-                             < s.settlements[capitalIndex].pawns[$1].health }) else { break }
-                let mult = CombatEngine.woundMultiplier(s.settlements[capitalIndex].pawns[victim])
-                s.settlements[capitalIndex].pawns[victim].health = max(
-                    0, s.settlements[capitalIndex].pawns[victim].health - breach * mult)
-                if s.settlements[capitalIndex].pawns[victim].health <= 0 { deaths += 1 }
-            }
-            if deaths > 0 {
-                s.settlements[capitalIndex].pawns.removeAll { $0.health <= 0 }
-                s.settlements[capitalIndex].deathTallies[
-                    PawnDeathCause.battle.rawValue, default: 0] += deaths
-            }
-        }
-
-        // The raiders pay for the attempt: the volley and the wall both bite.
-        let raiderLosses = Double(rng.next() % 3)
-            + volley * 0.06 + militia.melee * 0.03
+        // The raiders pay for the attempt: every round on the wall bit.
+        let raiderLosses = max(0, strength - outcome.attackerRemaining) * 0.12
+            + Double(outcome.rounds)
         s.tribes[tribeIndex].population = max(
             4, s.tribes[tribeIndex].population - raiderLosses)
+
+        s.settlements[capitalIndex].lastBattle = outcome.log
 
         // The day, on the record.
         let entry: LocalizedText

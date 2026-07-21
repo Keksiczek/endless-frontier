@@ -1,7 +1,10 @@
 [
   {
     "id": "basic_tools",
-    "name": "Basic Tools",
+    "name": {
+      "en": "Basic Tools",
+      "cs": "Základní nástroje"
+    },
     "era": "early_settlement",
     "requires": [],
     "cost": {
@@ -17,7 +20,10 @@
   },
   {
     "id": "agriculture",
-    "name": "Agriculture",
+    "name": {
+      "en": "Agriculture",
+      "cs": "Zemědělství"
+    },
     "era": "early_settlement",
     "requires": [
       "basic_tools"
@@ -35,7 +41,10 @@
   },
   {
     "id": "writing",
-    "name": "Writing",
+    "name": {
+      "en": "Writing",
+      "cs": "Písmo"
+    },
     "era": "early_settlement",
     "requires": [
       "basic_tools"
@@ -59,7 +68,10 @@
   },
   {
     "id": "bronze_tools",
-    "name": "Bronze Working",
+    "name": {
+      "en": "Bronze Working",
+      "cs": "Bronzové nástroje"
+    },
     "era": "ancient",
     "requires": [
       "basic_tools"
@@ -81,7 +93,10 @@
   },
   {
     "id": "currency",
-    "name": "Currency",
+    "name": {
+      "en": "Currency",
+      "cs": "Mince"
+    },
     "era": "ancient",
     "requires": [
       "writing"
@@ -103,7 +118,10 @@
   },
   {
     "id": "scholarship",
-    "name": "Scholarship",
+    "name": {
+      "en": "Scholarship",
+      "cs": "Učenost"
+    },
     "era": "medieval",
     "requires": [
       "writing",
@@ -130,7 +148,10 @@
   },
   {
     "id": "pottery",
-    "name": "Pottery",
+    "name": {
+      "en": "Pottery",
+      "cs": "Hrnčířství"
+    },
     "era": "early_settlement",
     "requires": [
       "basic_tools"
@@ -148,7 +169,10 @@
   },
   {
     "id": "masonry",
-    "name": "Masonry",
+    "name": {
+      "en": "Masonry",
+      "cs": "Zdivo"
+    },
     "era": "ancient",
     "requires": [
       "bronze_tools"
@@ -170,7 +194,10 @@
   },
   {
     "id": "mathematics",
-    "name": "Mathematics",
+    "name": {
+      "en": "Mathematics",
+      "cs": "Matematika"
+    },
     "era": "ancient",
     "requires": [
       "writing"
@@ -194,7 +221,10 @@
   },
   {
     "id": "engineering",
-    "name": "Engineering",
+    "name": {
+      "en": "Engineering",
+      "cs": "Stavitelství"
+    },
     "era": "medieval",
     "requires": [
       "masonry",
@@ -213,7 +243,10 @@
   },
   {
     "id": "banking",
-    "name": "Banking",
+    "name": {
+      "en": "Banking",
+      "cs": "Bankovnictví"
+    },
     "era": "medieval",
     "requires": [
       "currency"
@@ -231,7 +264,10 @@
   },
   {
     "id": "guilds",
-    "name": "Guilds",
+    "name": {
+      "en": "Guilds",
+      "cs": "Cechy"
+    },
     "era": "medieval",
     "requires": [
       "currency"
@@ -253,7 +289,10 @@
   },
   {
     "id": "steam_power",
-    "name": "Steam Power",
+    "name": {
+      "en": "Steam Power",
+      "cs": "Parní stroj"
+    },
     "era": "early_industrial",
     "requires": [
       "engineering"
@@ -275,7 +314,10 @@
   },
   {
     "id": "machining",
-    "name": "Machining",
+    "name": {
+      "en": "Machining",
+      "cs": "Obrábění"
+    },
     "era": "early_industrial",
     "requires": [
       "steam_power"
@@ -293,7 +335,10 @@
   },
   {
     "id": "railways",
-    "name": "Railways",
+    "name": {
+      "en": "Railways",
+      "cs": "Železnice"
+    },
     "era": "early_industrial",
     "requires": [
       "machining"
@@ -317,7 +362,10 @@
   },
   {
     "id": "chemistry",
-    "name": "Chemistry",
+    "name": {
+      "en": "Chemistry",
+      "cs": "Chemie"
+    },
     "era": "early_industrial",
     "requires": [
       "machining"
@@ -341,7 +389,10 @@
   },
   {
     "id": "sanitation",
-    "name": "Sanitation",
+    "name": {
+      "en": "Sanitation",
+      "cs": "Kanalizace"
+    },
     "era": "early_industrial",
     "requires": [
       "engineering"
@@ -359,7 +410,10 @@
   },
   {
     "id": "electricity",
-    "name": "Electricity",
+    "name": {
+      "en": "Electricity",
+      "cs": "Elektřina"
+    },
     "era": "modern",
     "requires": [
       "steam_power"
@@ -383,7 +437,10 @@
   },
   {
     "id": "combustion",
-    "name": "Combustion Engine",
+    "name": {
+      "en": "Combustion Engine",
+      "cs": "Spalovací motor"
+    },
     "era": "modern",
     "requires": [
       "chemistry"
@@ -405,7 +462,10 @@
   },
   {
     "id": "mass_production",
-    "name": "Mass Production",
+    "name": {
+      "en": "Mass Production",
+      "cs": "Sériová výroba"
+    },
     "era": "modern",
     "requires": [
       "railways",
@@ -428,7 +488,10 @@
   },
   {
     "id": "medicine",
-    "name": "Modern Medicine",
+    "name": {
+      "en": "Modern Medicine",
+      "cs": "Lékařství"
+    },
     "era": "modern",
     "requires": [
       "sanitation",
@@ -451,7 +514,10 @@
   },
   {
     "id": "electronics",
-    "name": "Electronics",
+    "name": {
+      "en": "Electronics",
+      "cs": "Elektronika"
+    },
     "era": "modern",
     "requires": [
       "electricity"
@@ -475,7 +541,10 @@
   },
   {
     "id": "computing",
-    "name": "Computing",
+    "name": {
+      "en": "Computing",
+      "cs": "Výpočetní technika"
+    },
     "era": "modern",
     "requires": [
       "electronics",
@@ -504,7 +573,10 @@
   },
   {
     "id": "renewables",
-    "name": "Renewable Power",
+    "name": {
+      "en": "Renewable Power",
+      "cs": "Obnovitelné zdroje"
+    },
     "era": "near_future",
     "requires": [
       "electricity"
@@ -526,7 +598,10 @@
   },
   {
     "id": "robotics",
-    "name": "Robotics",
+    "name": {
+      "en": "Robotics",
+      "cs": "Robotika"
+    },
     "era": "near_future",
     "requires": [
       "mass_production",
@@ -545,7 +620,10 @@
   },
   {
     "id": "fusion_power",
-    "name": "Fusion Power",
+    "name": {
+      "en": "Fusion Power",
+      "cs": "Fúzní energetika"
+    },
     "era": "near_future",
     "requires": [
       "renewables",
@@ -564,7 +642,10 @@
   },
   {
     "id": "artificial_intelligence",
-    "name": "Artificial Intelligence",
+    "name": {
+      "en": "Artificial Intelligence",
+      "cs": "Umělá inteligence"
+    },
     "era": "near_future",
     "requires": [
       "computing",
@@ -593,7 +674,10 @@
   },
   {
     "id": "space_program",
-    "name": "Space Program",
+    "name": {
+      "en": "Space Program",
+      "cs": "Kosmický program"
+    },
     "era": "near_future",
     "requires": [
       "fusion_power",
@@ -620,7 +704,10 @@
   },
   {
     "id": "megastructures",
-    "name": "Megastructures",
+    "name": {
+      "en": "Megastructures",
+      "cs": "Megastruktury"
+    },
     "era": "near_future",
     "requires": [
       "fusion_power"
@@ -638,7 +725,10 @@
   },
   {
     "id": "continued_inquiry",
-    "name": "Continued Inquiry",
+    "name": {
+      "en": "Continued Inquiry",
+      "cs": "Neustálé bádání"
+    },
     "era": "medieval",
     "requires": [
       "scholarship"
@@ -659,7 +749,10 @@
   },
   {
     "id": "statecraft",
-    "name": "Statecraft",
+    "name": {
+      "en": "Statecraft",
+      "cs": "Státnictví"
+    },
     "era": "medieval",
     "requires": [
       "currency"

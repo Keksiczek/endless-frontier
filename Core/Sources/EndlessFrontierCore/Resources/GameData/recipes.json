@@ -1,7 +1,10 @@
 [
   {
     "id": "craft_chainmail",
-    "name": "Forge Chainmail",
+    "name": {
+      "en": "Forge Chainmail",
+      "cs": "Ukovat kroužkovou zbroj"
+    },
     "outputItemID": "chainmail",
     "materials": {
       "iron_ingot": 2
@@ -9,23 +12,35 @@
     "resourceCost": {
       "materials": 25
     },
-    "description": "Hammer iron into interlocking rings of protection."
+    "description": {
+      "en": "Hammer iron into interlocking rings of protection.",
+      "cs": "Železo protlučené v kroužky, které do sebe zapadají."
+    }
   },
   {
     "id": "craft_leather_garb",
-    "name": "Stitch Leather Garb",
+    "name": {
+      "en": "Stitch Leather Garb",
+      "cs": "Ušít kožený oděv"
+    },
     "outputItemID": "leather_garb",
     "materials": {
-      "timber_bundle": 1
+      "leather": 2
     },
     "resourceCost": {
       "materials": 10
     },
-    "description": "Cure and stitch hides into hard-wearing garb."
+    "description": {
+      "en": "Cure and stitch hides into hard-wearing garb.",
+      "cs": "Vydělat kůže a sešít je do šatu, co vydrží."
+    }
   },
   {
     "id": "craft_iron_scythe",
-    "name": "Forge Iron Scythe",
+    "name": {
+      "en": "Forge Iron Scythe",
+      "cs": "Ukovat železnou kosu"
+    },
     "outputItemID": "iron_scythe",
     "materials": {
       "iron_ingot": 2,
@@ -35,11 +50,17 @@
       "materials": 20
     },
     "requiresBuilding": "workshop",
-    "description": "A workshop blade that doubles a farmer's reach."
+    "description": {
+      "en": "A workshop blade that doubles a farmer's reach.",
+      "cs": "Dílenské ostří, které sedlákovi zdvojnásobí dosah."
+    }
   },
   {
     "id": "craft_masterwork_pick",
-    "name": "Forge Masterwork Pick",
+    "name": {
+      "en": "Forge Masterwork Pick",
+      "cs": "Ukovat mistrovský špičák"
+    },
     "outputItemID": "masterwork_pick",
     "materials": {
       "iron_ingot": 2,
@@ -49,11 +70,17 @@
       "materials": 40
     },
     "requiresBuilding": "workshop",
-    "description": "Only a true workshop can shape a pick this fine."
+    "description": {
+      "en": "Only a true workshop can shape a pick this fine.",
+      "cs": "Vyvážení, které se nedá popsat — jen vyzkoušet."
+    }
   },
   {
     "id": "craft_plate_armor",
-    "name": "Forge Plate Armor",
+    "name": {
+      "en": "Forge Plate Armor",
+      "cs": "Ukovat plátovou zbroj"
+    },
     "outputItemID": "plate_armor",
     "materials": {
       "iron_ingot": 3,
@@ -63,11 +90,17 @@
       "materials": 50
     },
     "requiresBuilding": "workshop",
-    "description": "Tempered plates that turn aside the worst blows."
+    "description": {
+      "en": "Tempered plates that turn aside the worst blows.",
+      "cs": "Plát po plátu, každý tvarovaný na tělo."
+    }
   },
   {
     "id": "craft_warden_plate",
-    "name": "Forge Warden's Plate",
+    "name": {
+      "en": "Forge Warden's Plate",
+      "cs": "Ukovat zbroj strážce"
+    },
     "outputItemID": "warden_plate",
     "materials": {
       "ancient_alloy": 2,
@@ -79,11 +112,17 @@
     },
     "requiresBuilding": "workshop",
     "requiresTech": "scholarship",
-    "description": "Lost wardens' craft, recovered for a new age."
+    "description": {
+      "en": "Lost wardens' craft, recovered for a new age.",
+      "cs": "Kov, který osada neumí vytavit, jen zpracovat."
+    }
   },
   {
     "id": "smelt_steel",
-    "name": "Smelt Steel Ingot",
+    "name": {
+      "en": "Smelt Steel Ingot",
+      "cs": "Vytavit ocel"
+    },
     "outputItemID": "steel_ingot",
     "materials": {
       "iron_ingot": 2
@@ -94,11 +133,17 @@
     },
     "requiresBuilding": "foundry",
     "requiresTech": "machining",
-    "description": "Carbon and iron, fused in the furnace into something far stronger."
+    "description": {
+      "en": "Carbon and iron, fused in the furnace into something far stronger.",
+      "cs": "Železo ohněm ještě jednou, dokud nezmění povahu."
+    }
   },
   {
     "id": "fab_circuit_board",
-    "name": "Fabricate Circuit Board",
+    "name": {
+      "en": "Fabricate Circuit Board",
+      "cs": "Vyrobit desku spojů"
+    },
     "outputItemID": "circuit_board",
     "materials": {
       "steel_ingot": 1
@@ -110,11 +155,17 @@
     },
     "requiresBuilding": "electronics_lab",
     "requiresTech": "electronics",
-    "description": "Etch, plate and solder — the brain of every modern device."
+    "description": {
+      "en": "Etch, plate and solder — the brain of every modern device.",
+      "cs": "Cesty tenčí než vlas, leptané do desky."
+    }
   },
   {
     "id": "charge_fusion_cell",
-    "name": "Charge Fusion Cell",
+    "name": {
+      "en": "Charge Fusion Cell",
+      "cs": "Nabít fúzní článek"
+    },
     "outputItemID": "fusion_cell",
     "materials": {
       "circuit_board": 2,
@@ -127,11 +178,17 @@
     },
     "requiresBuilding": "fusion_reactor",
     "requiresTech": "fusion_power",
-    "description": "A sliver of contained starfire, sealed and ready to power anything."
+    "description": {
+      "en": "A sliver of contained starfire, sealed and ready to power anything.",
+      "cs": "Uzavřít kus hvězdy do schránky, která to vydrží."
+    }
   },
   {
     "id": "craft_chainsaw",
-    "name": "Assemble Chainsaw",
+    "name": {
+      "en": "Assemble Chainsaw",
+      "cs": "Sestrojit motorovou pilu"
+    },
     "outputItemID": "chainsaw",
     "materials": {
       "steel_ingot": 1,
@@ -140,12 +197,18 @@
     "resourceCost": {
       "materials": 25
     },
-    "requiresBuilding": "workshop",
-    "description": "Steel teeth on a roaring motor — the logger's best friend."
+    "requiresBuilding": "vehicle_works",
+    "description": {
+      "en": "Steel teeth on a roaring motor — the logger's best friend.",
+      "cs": "Zuby na řetězu a motor, který se nezastaví."
+    }
   },
   {
     "id": "craft_power_drill",
-    "name": "Build Power Drill",
+    "name": {
+      "en": "Build Power Drill",
+      "cs": "Sestrojit vrtačku"
+    },
     "outputItemID": "power_drill",
     "materials": {
       "steel_ingot": 2,
@@ -157,11 +220,17 @@
     },
     "requiresBuilding": "vehicle_works",
     "requiresTech": "electronics",
-    "description": "A motorised, diamond-tipped drill that chews through any seam."
+    "description": {
+      "en": "A motorised, diamond-tipped drill that chews through any seam.",
+      "cs": "Kámen přestane být překážkou."
+    }
   },
   {
     "id": "craft_auto_harvester",
-    "name": "Build Auto-Harvester",
+    "name": {
+      "en": "Build Auto-Harvester",
+      "cs": "Sestrojit žací lištu"
+    },
     "outputItemID": "auto_harvester",
     "materials": {
       "steel_ingot": 2,
@@ -172,11 +241,17 @@
     },
     "requiresBuilding": "assembly_plant",
     "requiresTech": "mass_production",
-    "description": "A self-guided reaper that works a field while one hand watches."
+    "description": {
+      "en": "A self-guided reaper that works a field while one hand watches.",
+      "cs": "Sklizeň, která nepotřebuje dozor."
+    }
   },
   {
     "id": "craft_kevlar_vest",
-    "name": "Weave Kevlar Vest",
+    "name": {
+      "en": "Weave Kevlar Vest",
+      "cs": "Utkat neprůstřelnou vestu"
+    },
     "outputItemID": "kevlar_vest",
     "materials": {
       "steel_ingot": 2
@@ -187,11 +262,17 @@
     },
     "requiresBuilding": "chemical_plant",
     "requiresTech": "chemistry",
-    "description": "Synthetic fibre stronger than steel for a fraction of the weight."
+    "description": {
+      "en": "Synthetic fibre stronger than steel for a fraction of the weight.",
+      "cs": "Vlákna, která zastaví víc než ocel téže váhy."
+    }
   },
   {
     "id": "craft_exosuit",
-    "name": "Assemble Powered Exosuit",
+    "name": {
+      "en": "Assemble Powered Exosuit",
+      "cs": "Sestrojit exoskelet"
+    },
     "outputItemID": "exosuit",
     "materials": {
       "steel_ingot": 3,
@@ -204,11 +285,17 @@
     },
     "requiresBuilding": "assembly_plant",
     "requiresTech": "robotics",
-    "description": "Servo-driven armour that lends its wearer mechanical strength."
+    "description": {
+      "en": "Servo-driven armour that lends its wearer mechanical strength.",
+      "cs": "Rám, který nese to, co člověk neunese."
+    }
   },
   {
     "id": "craft_powered_armor",
-    "name": "Forge Sentinel Power Armor",
+    "name": {
+      "en": "Forge Sentinel Power Armor",
+      "cs": "Sestrojit silovou zbroj"
+    },
     "outputItemID": "powered_armor",
     "materials": {
       "fusion_cell": 1,
@@ -222,11 +309,17 @@
     },
     "requiresBuilding": "automated_factory",
     "requiresTech": "artificial_intelligence",
-    "description": "The pinnacle of personal protection — a fortress that walks."
+    "description": {
+      "en": "The pinnacle of personal protection — a fortress that walks.",
+      "cs": "Zbroj, do které se nastupuje."
+    }
   },
   {
     "id": "craft_research_terminal",
-    "name": "Build Research Terminal",
+    "name": {
+      "en": "Build Research Terminal",
+      "cs": "Sestrojit výzkumný terminál"
+    },
     "outputItemID": "research_terminal",
     "materials": {
       "circuit_board": 1
@@ -237,11 +330,17 @@
     },
     "requiresBuilding": "electronics_lab",
     "requiresTech": "electronics",
-    "description": "A personal console that turns any mind into a research institute."
+    "description": {
+      "en": "A personal console that turns any mind into a research institute.",
+      "cs": "Učencům přestane docházet papír."
+    }
   },
   {
     "id": "craft_neural_implant",
-    "name": "Fabricate Neural Implant",
+    "name": {
+      "en": "Fabricate Neural Implant",
+      "cs": "Vyrobit neurální implantát"
+    },
     "outputItemID": "neural_implant",
     "materials": {
       "circuit_board": 2,
@@ -253,11 +352,17 @@
     },
     "requiresBuilding": "research_campus",
     "requiresTech": "artificial_intelligence",
-    "description": "Circuitry laced into living thought — genius, made permanent."
+    "description": {
+      "en": "Circuitry laced into living thought — genius, made permanent.",
+      "cs": "Zrychlit učení tam, kde vzniká."
+    }
   },
   {
     "id": "craft_automation_hub",
-    "name": "Construct Automation Hub",
+    "name": {
+      "en": "Construct Automation Hub",
+      "cs": "Postavit automatizační uzel"
+    },
     "outputItemID": "automation_hub",
     "materials": {
       "circuit_board": 3,
@@ -269,11 +374,17 @@
     },
     "requiresBuilding": "research_campus",
     "requiresTech": "robotics",
-    "description": "A master control node that drives every idle machine in the colony."
+    "description": {
+      "en": "A master control node that drives every idle machine in the colony.",
+      "cs": "Jedno místo, které řídí všechna ostatní."
+    }
   },
   {
     "id": "craft_fusion_core_relic",
-    "name": "Stabilise Fusion Core",
+    "name": {
+      "en": "Stabilise Fusion Core",
+      "cs": "Sestavit relikvii fúzního jádra"
+    },
     "outputItemID": "fusion_core_relic",
     "materials": {
       "fusion_cell": 2,
@@ -286,21 +397,33 @@
     },
     "requiresBuilding": "fusion_reactor",
     "requiresTech": "fusion_power",
-    "description": "A perfected reactor heart that powers a whole settlement for good."
+    "description": {
+      "en": "A perfected reactor heart that powers a whole settlement for good.",
+      "cs": "Srdce, které přežije ty, kdo ho postavili."
+    }
   },
   {
     "id": "craft_bronze_spear",
-    "name": "Forge Bronze Spear",
+    "name": {
+      "en": "Forge Bronze Spear",
+      "cs": "Ukovat bronzové kopí"
+    },
     "outputItemID": "bronze_spear",
     "materials": {},
     "resourceCost": {
       "materials": 15
     },
-    "description": "Hammer a leaf-shaped head onto a straight ash haft."
+    "description": {
+      "en": "Hammer a leaf-shaped head onto a straight ash haft.",
+      "cs": "První zbraň, kterou osada zvládne sama."
+    }
   },
   {
     "id": "craft_hunting_bow",
-    "name": "String Hunting Bow",
+    "name": {
+      "en": "String Hunting Bow",
+      "cs": "Vyrobit lovecký luk"
+    },
     "outputItemID": "hunting_bow",
     "materials": {
       "timber_bundle": 1
@@ -308,11 +431,17 @@
     "resourceCost": {
       "materials": 10
     },
-    "description": "Season, shave and string a stave of yew."
+    "description": {
+      "en": "Season, shave and string a stave of yew.",
+      "cs": "Ohnuté dřevo a tětiva. Stádo nic neuslyší."
+    }
   },
   {
     "id": "craft_iron_sword",
-    "name": "Forge Iron Sword",
+    "name": {
+      "en": "Forge Iron Sword",
+      "cs": "Ukovat železný meč"
+    },
     "outputItemID": "iron_sword",
     "materials": {
       "iron_ingot": 2
@@ -321,11 +450,17 @@
       "materials": 20
     },
     "requiresBuilding": "workshop",
-    "description": "Fold and quench honest iron into an honest blade."
+    "description": {
+      "en": "Fold and quench honest iron into an honest blade.",
+      "cs": "Rovná čepel, poctivě kovaná."
+    }
   },
   {
     "id": "craft_crossbow",
-    "name": "Build Crossbow",
+    "name": {
+      "en": "Build Crossbow",
+      "cs": "Vyrobit kuši"
+    },
     "outputItemID": "crossbow",
     "materials": {
       "iron_ingot": 1,
@@ -335,6 +470,107 @@
       "materials": 30
     },
     "requiresBuilding": "workshop",
-    "description": "A stock, a steel prod and a windlass — patience made lethal."
+    "description": {
+      "en": "A stock, a steel prod and a windlass — patience made lethal.",
+      "cs": "Naučí se z ní střílet každý — v tom je její síla."
+    }
+  },
+  {
+    "id": "saw_timber",
+    "name": {
+      "en": "Saw Timber",
+      "cs": "Nařezat trámy"
+    },
+    "outputItemID": "timber_bundle",
+    "materials": {
+      "wood": 3
+    },
+    "requiresBuilding": "lumberyard",
+    "description": {
+      "en": "Green timber cut and bound into usable stock.",
+      "cs": "Syrové dřevo rozřezané a svázané do použitelné zásoby."
+    }
+  },
+  {
+    "id": "burn_charcoal",
+    "name": {
+      "en": "Burn Charcoal",
+      "cs": "Pálit dřevěné uhlí"
+    },
+    "outputItemID": "charcoal",
+    "materials": {
+      "wood": 4
+    },
+    "requiresBuilding": "lumberyard",
+    "description": {
+      "en": "A slow, smothered burn. Wood becomes the only fuel hot enough to work iron.",
+      "cs": "Pomalý, dušený oheň. Dřevo se mění v jediné palivo dost horké na železo."
+    }
+  },
+  {
+    "id": "smelt_iron",
+    "name": {
+      "en": "Smelt Iron (Bloomery)",
+      "cs": "Vytavit železo (výheň)"
+    },
+    "outputItemID": "iron_ingot",
+    "materials": {
+      "iron_ore": 3,
+      "charcoal": 3
+    },
+    "requiresBuilding": "bloomery",
+    "description": {
+      "en": "Ore and charcoal packed in together, and hours at the bellows for one bloom.",
+      "cs": "Ruda a dřevěné uhlí namačkané dohromady a hodiny u měchů pro jedinou houbu železa."
+    }
+  },
+  {
+    "id": "tan_leather",
+    "name": {
+      "en": "Tan Leather",
+      "cs": "Vydělat kůže"
+    },
+    "outputItemID": "leather",
+    "materials": {
+      "hide": 2
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Hides scraped, soaked and cured until they will hold a seam.",
+      "cs": "Seškrábat, namočit a činit, dokud kůže neudrží steh."
+    }
+  },
+  {
+    "id": "fire_bricks",
+    "name": {
+      "en": "Fire Bricks",
+      "cs": "Vypálit cihly"
+    },
+    "outputItemID": "brick",
+    "materials": {
+      "clay": 4
+    },
+    "requiresBuilding": "quarry",
+    "description": {
+      "en": "Clay pressed into moulds and fired until it rings.",
+      "cs": "Jíl vtlačený do forem a pálený, dokud nezvoní."
+    }
+  },
+  {
+    "id": "smelt_iron_foundry",
+    "name": {
+      "en": "Smelt Iron (Foundry)",
+      "cs": "Vytavit železo (huť)"
+    },
+    "outputItemID": "iron_ingot",
+    "materials": {
+      "iron_ore": 2,
+      "charcoal": 1
+    },
+    "requiresBuilding": "foundry",
+    "description": {
+      "en": "The same iron, from a furnace that does not need coaxing.",
+      "cs": "Totéž železo z pece, kterou není třeba přemlouvat."
+    }
   }
 ]

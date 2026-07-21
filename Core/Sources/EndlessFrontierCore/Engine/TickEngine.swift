@@ -16,6 +16,16 @@ public enum TickEngine {
 
         let interval = max(1, registry.config.plannerInterval)
         for _ in 0..<ticks {
+            // The inside of the tick first: what people are physically doing —
+            // marches, shifts, fights — resolved on the action grid. Then the
+            // civilisation's own systems settle the tick around them.
+            for step in 0..<WorldClock.actionStepsPerTick {
+                s.actionStep = step
+                s = ActionLoop.advanceStep(
+                    s, clock: WorldClock(tick: s.tick, step: step), registry: registry)
+            }
+            s.actionStep = 0
+
             s = ResourceLoop.advanceOneTick(s, registry: registry)
             s = MultiCityEngine.advanceOneTick(s, registry: registry)
             let caravanStep = CaravanEngine.advanceOneTick(s, registry: registry)

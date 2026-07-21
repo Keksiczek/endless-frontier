@@ -114,6 +114,39 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public var journal: ColonyLog
     /// Bonds between colonists — friendships, rivalries, marriages.
     public var relationships: [Relationship]
+    /// Parties currently out working the local map's points of interest.
+    public var expeditions: [POIExpedition]
+    /// Raw and processed materials on hand, by item id.
+    ///
+    /// Materials are *counted*, not individually tracked: nobody cares which
+    /// iron ingot goes into the sword, and a colony that mines for two hundred
+    /// years would otherwise carry a hundred thousand `ItemInstance` UUIDs
+    /// through every save. Equipment and artifacts — where the individual
+    /// matters, because a colonist wears one — stay in `inventory`.
+    public var stockpile: [String: Int]
+    /// Part-finished raw materials, by item id: worker-ticks banked toward the
+    /// next whole unit. Without it a colony too small to complete a unit in one
+    /// tick would have its work rounded away every tick and never bank
+    /// anything at all.
+    public var rawProgress: [String: Double]
+    /// The most recent battle fought here, beat by beat. Kept so the canvas can
+    /// play a raid out over real seconds instead of the player being handed a
+    /// finished result — see `BattleLog`.
+    public var lastBattle: BattleLog?
+
+    /// The party out at a given point of interest, if one is.
+    public func expedition(forPOI poiID: Int) -> POIExpedition? {
+        expeditions.first { $0.poiID == poiID }
+    }
+
+    /// Whether a place already has people on their way to it — you cannot send
+    /// two parties to the same ruins.
+    public func hasPartyOut(poiID: Int) -> Bool {
+        expeditions.contains { $0.poiID == poiID }
+    }
+
+    /// Colonists currently out of the settlement on an expedition.
+    public var awayPawns: [Pawn] { pawns.filter(\.isAway) }
 
     public init(
         id: UUID = UUID(),
@@ -139,7 +172,11 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         constructions: [ConstructionProject] = [],
         constructionSequence: Int = 0,
         journal: ColonyLog = ColonyLog(),
-        relationships: [Relationship] = []
+        relationships: [Relationship] = [],
+        expeditions: [POIExpedition] = [],
+        stockpile: [String: Int] = [:],
+        rawProgress: [String: Double] = [:],
+        lastBattle: BattleLog? = nil
     ) {
         self.id = id
         self.name = name
@@ -165,6 +202,10 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.constructionSequence = constructionSequence
         self.journal = journal
         self.relationships = relationships
+        self.expeditions = expeditions
+        self.stockpile = stockpile
+        self.rawProgress = rawProgress
+        self.lastBattle = lastBattle
     }
 
     // MARK: - Codable (resilient to pre-specialisation saves)
@@ -173,7 +214,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         case id, name, kind, regionID, foundedTick, pawns, deathTallies
         case buildings, storage, storageCapacity, stats, inventory, specialization, colony, localMap
         case laws, leaderID, society, strikeTicksRemaining, faith
-        case constructions, constructionSequence, journal, relationships
+        case constructions, constructionSequence, journal, relationships, expeditions
+        case stockpile, rawProgress, lastBattle
     }
 
     public init(from decoder: Decoder) throws {
@@ -207,5 +249,9 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         constructionSequence = try c.decodeIfPresent(Int.self, forKey: .constructionSequence) ?? 0
         journal = try c.decodeIfPresent(ColonyLog.self, forKey: .journal) ?? ColonyLog()
         relationships = try c.decodeIfPresent([Relationship].self, forKey: .relationships) ?? []
+        expeditions = try c.decodeIfPresent([POIExpedition].self, forKey: .expeditions) ?? []
+        stockpile = try c.decodeIfPresent([String: Int].self, forKey: .stockpile) ?? [:]
+        rawProgress = try c.decodeIfPresent([String: Double].self, forKey: .rawProgress) ?? [:]
+        lastBattle = try c.decodeIfPresent(BattleLog.self, forKey: .lastBattle)
     }
 }

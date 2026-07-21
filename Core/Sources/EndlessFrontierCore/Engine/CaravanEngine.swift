@@ -5,6 +5,10 @@ import Foundation
 /// their cargo and surviving guards to the destination. Fully deterministic —
 /// ambush rolls come from a `SeededRNG` keyed on (mapSeed, caravan, tick).
 public enum CaravanEngine {
+    /// Who the record says fell on the wagons, and who held them.
+    static let ambusherName = LocalizedText(values: [.en: "Bandits", .cs: "Lupiči"])
+    static let escortName = LocalizedText(values: [.en: "The escort", .cs: "Doprovod"])
+
     // Tuning (first-pass constants; candidates for world-config later).
     static let ticksPerHex = 3
     static let minTravelTicks = 2
@@ -143,7 +147,7 @@ public enum CaravanEngine {
             caravan.status = .traveling
             return
         }
-        applyAmbush(&caravan, threat: threat, registry: registry)
+        applyAmbush(&caravan, threat: threat, registry: registry, tick: tick)
     }
 
     /// Per-tick ambush probability. Rises with threat, but a skilled trading
@@ -162,27 +166,44 @@ public enum CaravanEngine {
     /// strength. Split out from the roll so the combat maths is deterministic
     /// and directly testable.
     static func applyAmbush(_ caravan: inout Caravan, threat: Double,
-                            registry: GameDataRegistry = GameDataRegistry()) {
+                            registry: GameDataRegistry = GameDataRegistry(),
+                            tick: Int = 0) {
+        var record = CombatEngine.BattleRecorder()
         let strength = baseAmbushStrength + threat * ambushThreatScale
         // The escort's arms count for real now: bows soften the ambush before
         // it closes, blades hold the wagons.
         let militia = CombatEngine.militia(caravan.guards, registry: registry)
         let defense = militia.melee + militia.ranged * 0.9
+        if militia.ranged > 0 { record.record(.volley, step: 0, amount: militia.ranged * 0.9) }
+        record.record(.charge, step: 1, amount: strength)
+        record.record(.clash, step: 2, amount: defense)
         if defense >= strength {
             caravan.status = .skirmished   // escort beat them off
+            record.record(.repelled, step: 3)
+            caravan.lastBattle = record.finish(
+                id: caravan.id, tick: tick, attackerName: ambusherName.resolve(.en),
+                defenderName: escortName.resolve(.en), repelled: true)
             return
         }
 
         let deficit = strength - defense
         let lossFraction = min(1, deficit / strength)
-        caravan.cargo = max(0, caravan.cargo * (1 - lossFraction))
+        let lost = caravan.cargo * lossFraction
+        caravan.cargo = max(0, caravan.cargo - lost)
 
+        if lost > 0 { record.record(.plunder, step: 3, amount: lost) }
         if let weakest = caravan.guards.indices.min(by: { caravan.guards[$0].health < caravan.guards[$1].health }) {
             let mult = CombatEngine.woundMultiplier(caravan.guards[weakest])
             caravan.guards[weakest].health = max(0, caravan.guards[weakest].health - deficit * woundSeverity * mult)
+            let hurt = caravan.guards[weakest]
+            record.record(hurt.health <= 0 ? .death : .wound, step: 4, pawnID: hurt.id,
+                          pawnName: hurt.name, amount: deficit * woundSeverity * mult)
         }
         caravan.guards.removeAll { $0.health <= 0 }
         caravan.status = .raided
+        caravan.lastBattle = record.finish(
+            id: caravan.id, tick: tick, attackerName: ambusherName.resolve(.en),
+            defenderName: escortName.resolve(.en), repelled: false)
     }
 
     /// Deposits cargo (clamped to storage room) and settles the surviving

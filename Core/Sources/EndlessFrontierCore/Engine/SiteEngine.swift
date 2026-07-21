@@ -267,18 +267,39 @@ public enum SiteEngine {
     /// Rolls a single item drop (rarer the deeper the site), adds it to the
     /// capital's inventory, and returns its display name. Deterministic.
     private static func dropItem(_ s: inout WorldState, registry: GameDataRegistry, hazard: Double, rng: inout SeededRNG) -> String? {
-        let defs = registry.items.values.sorted { $0.id < $1.id }
+        let defs = lootPool(registry: registry)
         guard !defs.isEmpty, let capital = s.settlements.indices.first else { return nil }
         let weights = defs.map { rarityWeight($0.rarity, hazard) }
         guard let index = rng.weightedIndex(weights) else { return nil }
         let def = defs[index]
         s.settlements[capital].inventory.append(ItemInstance(id: rng.nextUUID(), definitionID: def.id))
-        return "the \(def.name) (\(def.rarity.rawValue))"
+        return "the \(def.name.resolve(.en)) (\(def.rarity.rawValue))"
     }
 
     /// Drop weight shifts toward rarer items as hazard (distance) rises.
     static func rarityWeight(_ rarity: ItemRarity, _ hazard: Double) -> Double {
         rarity.dropWeight + hazard * Double(rarity.index) * 0.6
+    }
+
+    /// What a dead city or a buried cache can plausibly hold.
+    ///
+    /// Gear and artifacts always; a *material* only when the colony has no
+    /// other way to get it. Once ordinary materials became things you dig up
+    /// and process, leaving them in the loot table turned every treasure into
+    /// a sack of clay — and made the rare alloys that gate the deep recipes
+    /// vanishingly unlikely. Derived from the data rather than a hand-kept
+    /// list, so a new craftable material stops being treasure the moment
+    /// someone writes its recipe.
+    public static func lootPool(registry: GameDataRegistry) -> [ItemDefinition] {
+        let produced = Set(registry.recipes.values.map(\.outputItemID))
+        let gathered = Set(LocalResourceKind.allCases.compactMap(\.rawMaterialID))
+            .union([ResourceLoop.hideItemID])
+        return registry.items.values
+            .filter { item in
+                guard item.slot == .material else { return true }
+                return !produced.contains(item.id) && !gathered.contains(item.id)
+            }
+            .sorted { $0.id < $1.id }
     }
 
     static func siteSeed(mapSeed: UInt64, coord: HexCoord, tick: Int) -> UInt64 {

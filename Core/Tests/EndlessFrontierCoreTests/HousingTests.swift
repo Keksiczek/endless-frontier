@@ -12,7 +12,11 @@ struct HousingTests {
                 genes: Genes(fertility: fertility)
             )
         }
-        return Settlement(name: "Town", kind: .capital, pawns: pawns,
+        // A fixed id: per-entity randomness is seeded from the settlement's
+        // id, so a default `UUID()` draws a different birth stream on every
+        // run and makes this suite flake (see CLAUDE.md on stable ids).
+        return Settlement(id: UUID(uuidString: "00000000-0000-0000-0002-000000000001")!,
+                          name: "Town", kind: .capital, pawns: pawns,
                           buildings: huts > 0 ? [BuildingInstance(definitionID: "hut", count: huts)] : [],
                           storage: [.food: 500], storageCapacity: 999,
                           stats: SettlementStats(morale: morale))

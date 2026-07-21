@@ -21,7 +21,7 @@ struct TechBuildPanel: View {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Image(systemName: "hourglass")
-                        Text(tech.name).font(.subheadline.weight(.semibold))
+                        Text(tech.name.resolve(AppStrings.language)).font(.subheadline.weight(.semibold))
                         Spacer()
                         Text("\(Int(game.world.researchProgress))/\(Int(tech.knowledgeCost))")
                             .font(.caption.monospacedDigit()).foregroundStyle(Theme.textDim)
@@ -37,7 +37,7 @@ struct TechBuildPanel: View {
                     game.setResearch(tech.id)
                 } label: {
                     rowLabel(
-                        title: tech.name,
+                        title: tech.name.resolve(AppStrings.language),
                         subtitle: "\(Int(tech.knowledgeCost)) knowledge",
                         systemImage: "lightbulb.fill",
                         selected: game.world.activeResearch == tech.id
@@ -61,15 +61,17 @@ struct TechBuildPanel: View {
                     game.build(building.id)
                 } label: {
                     rowLabel(
-                        title: building.name,
-                        subtitle: costSummary(building.cost),
+                        title: building.name.resolve(AppStrings.language),
+                        subtitle: [costSummary(building.cost),
+                                   game.materialCostSummary(building)]
+                            .compactMap { $0 }.joined(separator: "  ·  "),
                         systemImage: "hammer.fill",
                         selected: false
                     )
                 }
                 .buttonStyle(.plain)
-                .disabled(!canAfford(building.cost))
-                .opacity(canAfford(building.cost) ? 1 : 0.45)
+                .disabled(!canAfford(building.cost) || !game.hasMaterials(for: building))
+                .opacity(canAfford(building.cost) && game.hasMaterials(for: building) ? 1 : 0.45)
             }
         }
         .frontierCard()

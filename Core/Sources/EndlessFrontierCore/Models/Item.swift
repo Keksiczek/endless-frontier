@@ -136,18 +136,18 @@ public enum ItemEffect: Codable, Sendable, Equatable {
 /// A data-defined item. Loaded from `items.json`.
 public struct ItemDefinition: Codable, Sendable, Identifiable, Equatable {
     public let id: String
-    public let name: String
+    public let name: LocalizedText
     public let rarity: ItemRarity
     public let slot: ItemSlot
     public let equipSlot: EquipmentSlot?   // which body slot, for equipment items
     public let effects: [ItemEffect]
     /// How the item fights, when it can (weapons and weapon-slot tools).
     public let combat: CombatProfile?
-    public let description: String
+    public let description: LocalizedText
 
-    public init(id: String, name: String, rarity: ItemRarity, slot: ItemSlot,
+    public init(id: String, name: LocalizedText, rarity: ItemRarity, slot: ItemSlot,
                 equipSlot: EquipmentSlot? = nil, effects: [ItemEffect] = [],
-                combat: CombatProfile? = nil, description: String = "") {
+                combat: CombatProfile? = nil, description: LocalizedText = "") {
         self.id = id
         self.name = name
         self.rarity = rarity
@@ -165,13 +165,13 @@ public struct ItemDefinition: Codable, Sendable, Identifiable, Equatable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
-        name = try c.decode(String.self, forKey: .name)
+        name = try c.decode(LocalizedText.self, forKey: .name)
         rarity = try c.decode(ItemRarity.self, forKey: .rarity)
         slot = try c.decode(ItemSlot.self, forKey: .slot)
         equipSlot = try c.decodeIfPresent(EquipmentSlot.self, forKey: .equipSlot)
         effects = try c.decodeIfPresent([ItemEffect].self, forKey: .effects) ?? []
         combat = try c.decodeIfPresent(CombatProfile.self, forKey: .combat)
-        description = try c.decodeIfPresent(String.self, forKey: .description) ?? ""
+        description = try c.decodeIfPresent(LocalizedText.self, forKey: .description) ?? ""
     }
 }
 

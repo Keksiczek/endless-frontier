@@ -18,14 +18,36 @@ public enum LocalResourceKind: String, Codable, Sendable, CaseIterable {
     case forest   // logging → materials
     case stone    // mining → materials
     case herbs    // foraging → knowledge/medicine
+    case ironOre = "iron_ore"   // mining → materials, and the ore the forge needs
+    case clay                   // mining → materials, and the clay the kiln needs
 
     /// The colonist work that harvests this deposit.
     public var work: WorkKind {
         switch self {
         case .field: return .farming
         case .forest: return .logging
-        case .stone: return .mining
+        case .stone, .ironOre, .clay: return .mining
         case .herbs: return .foraging
+        }
+    }
+
+    /// The concrete material this ground yields, by item id — the root of the
+    /// crafting tree.
+    ///
+    /// Everything the colony dug used to dissolve into one abstract
+    /// `materials` pool, while `recipes.json` asked for `iron_ingot` and
+    /// `timber_bundle` that no recipe produced and only random loot could
+    /// supply. Nine of twenty-three recipes, and the whole steel-to-fusion
+    /// chain above them, were unreachable by working for it. A field feeds
+    /// people rather than the forge, so it yields nothing here.
+    public var rawMaterialID: String? {
+        switch self {
+        case .field: return nil
+        case .forest: return "wood"
+        case .stone: return "rough_stone"
+        case .herbs: return "herb_bundle"
+        case .ironOre: return "iron_ore"
+        case .clay: return "clay"
         }
     }
 }
@@ -53,6 +75,11 @@ public struct ResourceNode: Codable, Sendable, Equatable, Identifiable {
 /// a spring, buried treasure, a forgotten shrine or a wrecked caravan.
 /// Discovery grants a one-off reward and a journal line (see
 /// `ResourceLoop.chartGround`) — finding something *feels* like finding it.
+///
+/// Finding it is only the first half. A discovered POI is a *place you can
+/// work* (see `LocalPOIEngine`): the finite ones give up their goods over a
+/// few runs and are then picked clean, while a spring and a shrine keep
+/// giving as long as you let them rest between visits.
 public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
     case ruins      // ancient knowledge
     case cave       // rich stone
@@ -84,19 +111,171 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
             .cs: "Zvědové našli vrak karavany — dřevo je pořád dobré."])
         }
     }
+
+    /// A spring does not run dry and the old gods do not stop listening: these
+    /// two recover with time instead of being used up.
+    public var isRenewable: Bool {
+        switch self {
+        case .spring, .shrine: return true
+        case .ruins, .cave, .treasure, .wreck: return false
+        }
+    }
+
+    /// How many working visits a finite place holds before it is picked clean.
+    /// Ignored for renewable kinds.
+    public var maxVisits: Int {
+        switch self {
+        case .treasure: return 1   // a cache is a cache: you empty it once
+        case .ruins, .wreck: return 2
+        case .cave: return 3       // a seam of stone outlasts a rummage
+        case .spring, .shrine: return .max
+        }
+    }
+
+    /// In-game years a renewable place needs before it is worth walking to
+    /// again. Ignored for finite kinds.
+    public var cooldownYears: Int {
+        switch self {
+        case .spring: return 3
+        case .shrine: return 4
+        default: return 0
+        }
+    }
+
+    // MARK: - What working the place asks of the colony
+
+    /// How many colonists the job wants. Kept small: a party is people the
+    /// fields do without until they are back.
+    public var partySize: Int {
+        switch self {
+        case .spring: return 2
+        case .ruins, .treasure: return 2
+        case .shrine, .wreck: return 3
+        case .cave: return 3
+        }
+    }
+
+    /// Ticks of work once the party arrives — a spring is a errand, a cave
+    /// is a season of cutting.
+    public var workTicks: Int {
+        switch self {
+        case .spring: return 3
+        case .shrine: return 4
+        case .treasure: return 5
+        case .wreck: return 6
+        case .ruins: return 8
+        case .cave: return 10
+        }
+    }
+
+    /// The trade the place rewards — the party is picked for it.
+    public var wantedSkill: WorkKind {
+        switch self {
+        case .ruins: return .research
+        case .cave: return .mining
+        case .wreck, .treasure: return .logging
+        case .spring: return .healing
+        case .shrine: return .priest
+        }
+    }
+
+    /// Odds that working here hurts one of the party, and how hard.
+    public var hazardChance: Double {
+        switch self {
+        case .cave: return 0.22
+        case .ruins: return 0.08
+        default: return 0
+        }
+    }
+
+    public var hazardDamage: Double {
+        switch self {
+        case .cave: return 18
+        case .ruins: return 10
+        default: return 0
+        }
+    }
+
+    /// The bare noun, for sentences the journal builds.
+    public var plainName: LocalizedText {
+        switch self {
+        case .ruins: return LocalizedText(values: [.en: "ruins", .cs: "zříceniny"])
+        case .cave: return LocalizedText(values: [.en: "deep cave", .cs: "jeskyně"])
+        case .spring: return LocalizedText(values: [.en: "spring", .cs: "pramen"])
+        case .treasure: return LocalizedText(values: [.en: "buried cache", .cs: "skrýš"])
+        case .shrine: return LocalizedText(values: [.en: "old shrine", .cs: "svatyně"])
+        case .wreck: return LocalizedText(values: [.en: "wrecked caravan", .cs: "vrak"])
+        }
+    }
+
+    /// Czech needs the dative for "set out for the …", and a lookup table beats
+    /// a sentence that reads like a machine wrote it.
+    public var plainNameDative: String {
+        switch self {
+        case .ruins: return "zříceninám"
+        case .cave: return "jeskyni"
+        case .spring: return "prameni"
+        case .treasure: return "skrýši"
+        case .shrine: return "svatyni"
+        case .wreck: return "vraku"
+        }
+    }
 }
 
+/// A point of interest and everything the colony has done with it. `visits`
+/// and `lastVisitTick` are live state written only by `LocalPOIEngine`.
 public struct LocalPOI: Codable, Sendable, Equatable, Identifiable {
     public let id: Int
     public let kind: LocalPOIKind
     public let position: LocalPoint
     public var discovered: Bool
+    /// How many times the colony has worked this place.
+    public var visits: Int
+    /// The tick of the last visit — the clock a renewable place rests against.
+    public var lastVisitTick: Int?
 
-    public init(id: Int, kind: LocalPOIKind, position: LocalPoint, discovered: Bool = false) {
+    public init(id: Int, kind: LocalPOIKind, position: LocalPoint, discovered: Bool = false,
+                visits: Int = 0, lastVisitTick: Int? = nil) {
         self.id = id
         self.kind = kind
         self.position = position
         self.discovered = discovered
+        self.visits = visits
+        self.lastVisitTick = lastVisitTick
+    }
+
+    /// A finite place that has given up everything it had.
+    public var isExhausted: Bool {
+        !kind.isRenewable && visits >= kind.maxVisits
+    }
+
+    /// Ticks until a renewable place is worth visiting again — 0 when it is
+    /// ready now, and always 0 for finite kinds.
+    public func ticksUntilReady(tick: Int, ticksPerYear: Int) -> Int {
+        guard kind.isRenewable, let last = lastVisitTick else { return 0 }
+        let cooldown = kind.cooldownYears * max(1, ticksPerYear)
+        return max(0, last + cooldown - tick)
+    }
+
+    /// Whether the colony can work this place right now.
+    public func isWorkable(tick: Int, ticksPerYear: Int) -> Bool {
+        discovered && !isExhausted && ticksUntilReady(tick: tick, ticksPerYear: ticksPerYear) == 0
+    }
+
+    // MARK: - Codable (resilient: visit state was added after the first saves)
+
+    private enum CodingKeys: String, CodingKey {
+        case id, kind, position, discovered, visits, lastVisitTick
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(Int.self, forKey: .id)
+        kind = try c.decode(LocalPOIKind.self, forKey: .kind)
+        position = try c.decode(LocalPoint.self, forKey: .position)
+        discovered = try c.decode(Bool.self, forKey: .discovered)
+        visits = try c.decodeIfPresent(Int.self, forKey: .visits) ?? 0
+        lastVisitTick = try c.decodeIfPresent(Int.self, forKey: .lastVisitTick)
     }
 }
 
@@ -166,6 +345,14 @@ public struct LocalMap: Codable, Sendable, Equatable {
     public var terrainSeed: UInt64
     /// Decorative landscape features, placed by the seed.
     public var scenery: [SceneryProp]
+    /// Scout-steps walked so far — one per scout per reveal step. How far the
+    /// frontier has moved is a function of *work done*, never of the world
+    /// clock: a colony founded in year 200 charts its own valley from scratch
+    /// exactly like the first one did.
+    public var scoutProgress: Double
+    /// Where the player has pointed the scouts, if anywhere. Set by tapping
+    /// the fog; cleared by `reveal` once that ground is charted.
+    public var scoutFocus: LocalPoint?
 
     /// The ground cover of a grid cell, derived from the seed and the biome.
     public func cover(column: Int, row: Int) -> GroundCover {
@@ -180,7 +367,9 @@ public struct LocalMap: Codable, Sendable, Equatable {
         exploredCells: Set<Int> = [],
         biomeID: String = "plains",
         terrainSeed: UInt64 = 0,
-        scenery: [SceneryProp] = []
+        scenery: [SceneryProp] = [],
+        scoutProgress: Double = 0,
+        scoutFocus: LocalPoint? = nil
     ) {
         self.river = river
         self.nodes = nodes
@@ -190,12 +379,15 @@ public struct LocalMap: Codable, Sendable, Equatable {
         self.biomeID = biomeID
         self.terrainSeed = terrainSeed
         self.scenery = scenery
+        self.scoutProgress = scoutProgress
+        self.scoutFocus = scoutFocus
     }
 
     // MARK: - Codable (resilient: fields were added incrementally)
 
     private enum CodingKeys: String, CodingKey {
         case river, nodes, pois, wildlife, exploredCells, biomeID, terrainSeed, scenery
+        case scoutProgress, scoutFocus
     }
 
     public init(from decoder: Decoder) throws {
@@ -208,6 +400,8 @@ public struct LocalMap: Codable, Sendable, Equatable {
         biomeID = try c.decodeIfPresent(String.self, forKey: .biomeID) ?? "plains"
         terrainSeed = try c.decodeIfPresent(UInt64.self, forKey: .terrainSeed) ?? 0
         scenery = try c.decodeIfPresent([SceneryProp].self, forKey: .scenery) ?? []
+        scoutProgress = try c.decodeIfPresent(Double.self, forKey: .scoutProgress) ?? 0
+        scoutFocus = try c.decodeIfPresent(LocalPoint.self, forKey: .scoutFocus)
     }
 
     /// Fraction of the map revealed (0…1).
@@ -245,5 +439,58 @@ public struct LocalMap: Codable, Sendable, Equatable {
         for i in pois.indices where !pois[i].discovered && isExplored(pois[i].position) {
             pois[i].discovered = true
         }
+        // Scouts sent somewhere specific stop being sent once they've been:
+        // the order is finished, not standing.
+        if let focus = scoutFocus, isExplored(focus) {
+            scoutFocus = nil
+        }
+    }
+
+    /// Whether any ground is left to chart. Drives the "the fog will not move"
+    /// warning and the scouting floor in `LaborEngine`.
+    public var isFullyCharted: Bool {
+        exploredCells.count >= LocalMap.gridColumns * LocalMap.gridRows
+    }
+
+    /// The centre of a random still-dark cell lying within `reach` of the
+    /// heart, or `nil` when everything in range is already known.
+    ///
+    /// Scouts used to walk a random *bearing*, which meant most outings
+    /// re-trod ground the colony already knew and the fog crawled — the map
+    /// looked static because, most steps, it was. Walking at the dark instead
+    /// makes every outing count and makes a valley finishable: with a random
+    /// bearing the four corners were a coupon-collector's tail that in practice
+    /// never came up.
+    ///
+    /// Two passes and a single RNG draw, so it stays cheap on offline catch-up
+    /// and deterministic for a seed.
+    public func unchartedCell(within reach: Double, rng: inout SeededRNG) -> LocalPoint? {
+        let reach2 = reach * reach
+        func isCandidate(column: Int, row: Int) -> Bool {
+            guard !exploredCells.contains(row * Self.gridColumns + column) else { return false }
+            let dx = (Double(column) + 0.5) / Double(Self.gridColumns) - 0.5
+            let dy = (Double(row) + 0.5) / Double(Self.gridRows) - 0.5
+            return dx * dx + dy * dy <= reach2
+        }
+
+        var count = 0
+        for row in 0..<Self.gridRows {
+            for col in 0..<Self.gridColumns where isCandidate(column: col, row: row) {
+                count += 1
+            }
+        }
+        guard count > 0 else { return nil }
+
+        var pick = min(count - 1, Int(rng.nextUnit() * Double(count)))
+        for row in 0..<Self.gridRows {
+            for col in 0..<Self.gridColumns where isCandidate(column: col, row: row) {
+                if pick == 0 {
+                    return LocalPoint(x: (Double(col) + 0.5) / Double(Self.gridColumns),
+                                      y: (Double(row) + 0.5) / Double(Self.gridRows))
+                }
+                pick -= 1
+            }
+        }
+        return nil
     }
 }

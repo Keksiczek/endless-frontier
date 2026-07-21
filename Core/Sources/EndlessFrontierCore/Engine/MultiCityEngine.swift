@@ -52,6 +52,18 @@ public enum MultiCityEngine {
                   let to = s.settlements.firstIndex(where: { $0.id == route.toID }) else { continue }
             // A mercantile source settlement pushes more goods per tick.
             let throughput = route.amountPerTick * s.settlements[from].specialization.profile.tradeThroughput
+
+            // Goods move as whole units off one pile and onto another — there
+            // is no half an ingot, and a stockpile has no cap to fill.
+            if let materialID = route.materialID {
+                let stocked = s.settlements[from].stockpile[materialID] ?? 0
+                let moved = min(stocked, max(throughput > 0 ? 1 : 0, Int(throughput)))
+                guard moved > 0 else { continue }
+                s.settlements[from].stockpile[materialID] = stocked - moved
+                s.settlements[to].stockpile[materialID, default: 0] += moved
+                continue
+            }
+
             let available = min(throughput, s.settlements[from].storage[route.resource])
             guard available > 0 else { continue }
             let capacity = s.settlements[to].storageCapacity

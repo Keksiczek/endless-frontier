@@ -1,10 +1,11 @@
 import Testing
+import Foundation
 @testable import EndlessFrontierCore
 
 @Suite("Pawn growth & mood breaks")
 struct PawnGrowthTests {
     private func wellFed(_ pawn: Pawn) -> Settlement {
-        Settlement(name: "Camp", kind: .capital, pawns: [pawn],
+        Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-b46b8f6f4d01")!, name: "Camp", kind: .capital, pawns: [pawn],
                    storage: [.food: 500], storageCapacity: 500, stats: SettlementStats(morale: 60))
     }
 
@@ -35,7 +36,7 @@ struct PawnGrowthTests {
         let miserable = Pawn(name: "Glum", trait: .pessimist, skills: [.farming: 10],
                              needs: PawnNeeds(hunger: 5, rest: 5, recreation: 5),
                              mood: 10, assignedWork: .farming)
-        var s = Settlement(name: "Camp", kind: .capital, pawns: [miserable],
+        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-18e92d8f0b01")!, name: "Camp", kind: .capital, pawns: [miserable],
                            storage: [.food: 0], storageCapacity: 500, stats: SettlementStats(morale: 60))
         let foodBefore = s.storage[.food]
         s = PawnEngine.advanceOneTick(s)

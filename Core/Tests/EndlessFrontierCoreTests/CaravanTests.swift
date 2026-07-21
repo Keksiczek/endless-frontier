@@ -15,9 +15,9 @@ struct CaravanTests {
 
     /// Two settlements with no placed region → fallback travel time (4 ticks).
     private func twoTowns(originFood: Double = 100, guards: [Pawn]) -> WorldState {
-        let origin = Settlement(name: "A", kind: .capital,
+        let origin = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-05d51edaf3d7")!, name: "A", kind: .capital,
                                 pawns: guards + Fixtures.pawns(5), storage: [.food: originFood], storageCapacity: 99999)
-        let dest = Settlement(name: "B", kind: .city, pawns: Fixtures.pawns(5),
+        let dest = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-529f54b6886f")!, name: "B", kind: .city, pawns: Fixtures.pawns(5),
                               storage: Resources(), storageCapacity: 99999)
         return WorldState(settlements: [origin, dest])
     }

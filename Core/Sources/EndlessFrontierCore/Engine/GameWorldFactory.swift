@@ -36,8 +36,13 @@ public enum GameWorldFactory {
             storageCapacity: registry.config.defaultStorageCapacity,
             stats: SettlementStats(stability: 60, morale: 60),
             colony: ColonyBuilder.seededLayout(for: buildings, registry: registry),
+            // The homeland's own character and danger, not defaults: the
+            // starting valley was generated as generic wilderness at hazard
+            // zero regardless of what the world map said sat there.
             localMap: LocalMapGenerator.generate(mapSeed: seed, regionID: homeland.id,
-                                                 biome: registry.biome(homeland.biomeID))
+                                                 biome: registry.biome(homeland.biomeID),
+                                                 flavor: homeland.kind,
+                                                 hazard: homeland.hazardLevel)
         )
 
         // Put the founding colonists to work on the buildings that suit them.
@@ -135,8 +140,12 @@ public enum GameWorldFactory {
                  assignedWork: .logging, genes: .founder(using: &rng)),
             Pawn(name: "Eli", trait: .none, skills: [.research: 6, .trade: 3],
                  assignedWork: .research, genes: .founder(using: &rng)),
-            Pawn(name: "Nadia", trait: .pessimist, skills: [.farming: 5, .trade: 6],
-                 assignedWork: .farming, genes: .founder(using: &rng))
+            // Someone has to walk out and look. Without a scout on day one the
+            // valley stays the circle it was born with: `chartGround` needs at
+            // least one, and `LaborEngine`'s 5% share is the last quota filled,
+            // so at founding size it never was.
+            Pawn(name: "Nadia", trait: .pessimist, skills: [.scouting: 6, .trade: 5],
+                 assignedWork: .scouting, genes: .founder(using: &rng))
         ]
         let settlers = (0..<14).map { PawnFactory.generate(seed: rng.next() &+ UInt64($0)) }
         return named + settlers
