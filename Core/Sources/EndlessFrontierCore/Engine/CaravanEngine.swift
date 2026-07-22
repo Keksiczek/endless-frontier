@@ -208,11 +208,25 @@ public enum CaravanEngine {
 
     /// Deposits cargo (clamped to storage room) and settles the surviving
     /// guards into the destination — a caravan also migrates colonists.
+    ///
+    /// A caravan to a *full* store used to burn its whole load: the cargo left
+    /// the origin at dispatch, `min(cargo, room)` with `room == 0` delivered
+    /// nothing, and the goods simply vanished — "the caravans leave but never
+    /// send any goods." Now whatever the destination has no room for comes back
+    /// to the origin instead of being destroyed.
     static func deliver(_ caravan: Caravan, into s: inout WorldState) {
         guard let di = s.settlements.firstIndex(where: { $0.id == caravan.destinationID }) else { return }
         let room = max(0, s.settlements[di].storageCapacity - s.settlements[di].storage[caravan.resource])
-        s.settlements[di].storage[caravan.resource] = s.settlements[di].storage[caravan.resource] + min(caravan.cargo, room)
+        let delivered = min(caravan.cargo, room)
+        s.settlements[di].storage[caravan.resource] += delivered
         s.settlements[di].pawns.append(contentsOf: caravan.guards)
+
+        // Return the undeliverable remainder to the origin rather than losing it.
+        let returned = caravan.cargo - delivered
+        if returned > 0, let oi = s.settlements.firstIndex(where: { $0.id == caravan.originID }) {
+            let originRoom = max(0, s.settlements[oi].storageCapacity - s.settlements[oi].storage[caravan.resource])
+            s.settlements[oi].storage[caravan.resource] += min(returned, originRoom)
+        }
     }
 
     private static func dispatchSeed(state: WorldState, originID: UUID, destinationID: UUID) -> UInt64 {
