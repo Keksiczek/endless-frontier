@@ -55,6 +55,19 @@ enum AgentMotion {
         let stride: Double
     }
 
+    /// A building a colonist works *at*, and the ground it covers — so several
+    /// workers spread across the lot instead of stacking on one point.
+    struct WorkSite {
+        let center: LocalPoint
+        let halfW: Double
+        let halfH: Double
+        init(_ b: SettlementRenderer.NormalizedBuilding) {
+            center = b.center
+            halfW = b.footprintW / 2
+            halfH = b.footprintH / 2
+        }
+    }
+
     // MARK: - The stage
 
     /// Everything the motion needs to know about *where things are*, computed
@@ -62,10 +75,10 @@ enum AgentMotion {
     struct Scene {
         let layout: [SettlementRenderer.NormalizedBuilding]
         let homes: [LocalPoint]
-        let civic: LocalPoint?      // temple/library — scholars and priests
-        let workshop: LocalPoint?
-        let granary: LocalPoint?
-        let sites: [LocalPoint]     // active scaffolding
+        let civic: WorkSite?        // temple/library — scholars and priests
+        let workshop: WorkSite?
+        let granary: WorkSite?
+        let sites: [WorkSite]       // active scaffolding
         let heart: LocalPoint
         /// A paved plaza the player laid out, if any — the midday crowd
         /// gathers there instead of the bare heart, so the layout you paint
@@ -84,20 +97,20 @@ enum AgentMotion {
             let layout = SettlementRenderer.normalizedLayout(settlement: settlement, registry: registry)
             self.layout = layout
             var homes: [LocalPoint] = []
-            var civic: LocalPoint?
-            var workshop: LocalPoint?
-            var granary: LocalPoint?
-            var sites: [LocalPoint] = []
+            var civic: WorkSite?
+            var workshop: WorkSite?
+            var granary: WorkSite?
+            var sites: [WorkSite] = []
             for building in layout {
                 if building.underConstruction {
-                    sites.append(building.center)
+                    sites.append(WorkSite(building))
                     continue
                 }
                 switch building.glyph {
                 case .house: homes.append(building.center)
-                case .temple: civic = civic ?? building.center
-                case .workshop, .mill, .generator: workshop = workshop ?? building.center
-                case .granary: granary = granary ?? building.center
+                case .temple: civic = civic ?? WorkSite(building)
+                case .workshop, .mill, .generator: workshop = workshop ?? WorkSite(building)
+                case .granary: granary = granary ?? WorkSite(building)
                 default: break
                 }
             }
@@ -304,15 +317,17 @@ enum AgentMotion {
             return jitter(herd, seed: seed, radius: 0.035)
         case .building:
             if !scene.sites.isEmpty {
-                return scene.sites[Int(seed % UInt64(scene.sites.count))]
+                return spot(in: scene.sites[Int(seed % UInt64(scene.sites.count))], seed: seed)
             }
-            return scene.workshop ?? scene.heart
+            return scene.workshop.map { spot(in: $0, seed: seed) } ?? scene.heart
         case .research:
-            return scene.civic ?? scene.workshop ?? jitter(scene.heart, seed: seed, radius: 0.03)
+            return (scene.civic ?? scene.workshop).map { spot(in: $0, seed: seed) }
+                ?? jitter(scene.heart, seed: seed, radius: 0.03)
         case .priest:
-            return scene.civic ?? scene.heart
+            return scene.civic.map { spot(in: $0, seed: seed) } ?? scene.heart
         case .trade:
-            return scene.granary ?? scene.workshop ?? jitter(scene.heart, seed: seed, radius: 0.04)
+            return (scene.granary ?? scene.workshop).map { spot(in: $0, seed: seed) }
+                ?? jitter(scene.heart, seed: seed, radius: 0.04)
         case .healing:
             // The healer does the rounds of the houses.
             if !scene.homes.isEmpty {
@@ -405,6 +420,15 @@ enum AgentMotion {
         let r = unit(seed &* 17) * radius
         return clampPoint(LocalPoint(x: point.x + cos(angle) * r,
                                      y: point.y + sin(angle) * r))
+    }
+
+    /// A stable spot inside a work building's lot for one colonist — offset by
+    /// their seed so several workers spread across the floor instead of stacking
+    /// on its centre. Kept just inside the footprint so nobody stands on a wall.
+    private static func spot(in site: WorkSite, seed: UInt64) -> LocalPoint {
+        let ox = (unit(seed &* 7) - 0.5) * 1.6 * site.halfW
+        let oy = (unit(seed &* 13) - 0.5) * 1.6 * site.halfH
+        return clampPoint(LocalPoint(x: site.center.x + ox, y: site.center.y + oy))
     }
 
     // MARK: - Maths
