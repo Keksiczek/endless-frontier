@@ -47,7 +47,7 @@
     },
     "footprint": {
       "w": 2,
-      "h": 1
+      "h": 2
     }
   },
   {
@@ -85,6 +85,10 @@
     "description": {
       "en": "A simple farm feeding a small community.",
       "cs": "Prosté políčko, které uživí malou osadu."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 2
     }
   },
   {
@@ -106,6 +110,10 @@
     "description": {
       "en": "Harvests timber from the surrounding land.",
       "cs": "Těží dřevo z okolních lesů."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -130,6 +138,10 @@
     "description": {
       "en": "Hunters bring in game to supplement the harvest.",
       "cs": "Lovci nosí zvěřinu, když pole nestačí."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 1
     }
   },
   {
@@ -154,6 +166,10 @@
     "description": {
       "en": "Backbreaking work, but the stone fuels construction.",
       "cs": "Dřina k zlomení hřbetu — ale kámen žene stavby kupředu."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -176,6 +192,10 @@
     "description": {
       "en": "Irrigation multiplies the yield of every field.",
       "cs": "Zavlažování znásobí úrodu každého pole."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 2
     }
   },
   {
@@ -218,6 +238,10 @@
     "description": {
       "en": "Recorded knowledge accelerates research.",
       "cs": "Zapsané vědění zrychluje bádání."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -242,6 +266,10 @@
     "description": {
       "en": "Harnesses the wind to grind grain and power workshops.",
       "cs": "Vítr mele obilí a pohání dílny."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 1
     }
   },
   {
@@ -269,6 +297,10 @@
     "description": {
       "en": "Caravans and traders extend the settlement's reach.",
       "cs": "Karavany a kupci prodlužují dosah osady."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -304,6 +336,10 @@
     "description": {
       "en": "Educates the next generation of thinkers.",
       "cs": "Vychovává další pokolení myslitelů."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -376,7 +412,7 @@
     },
     "footprint": {
       "w": 2,
-      "h": 1
+      "h": 2
     }
   },
   {
@@ -401,6 +437,10 @@
     "description": {
       "en": "Stores grain against the lean months.",
       "cs": "Uchovává obilí na hubená léta."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -438,6 +478,10 @@
     "description": {
       "en": "Charting the heavens advances the sciences.",
       "cs": "Mapování nebes posouvá vědy kupředu."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 1
     }
   },
   {
@@ -485,6 +529,10 @@
     "description": {
       "en": "Fresh water carried for miles lets the city grow and thrive.",
       "cs": "Čerstvá voda vedená z dálky nechá město růst a vzkvétat."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 1
     }
   },
   {
@@ -519,8 +567,8 @@
       }
     ],
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     },
     "description": {
       "en": "A seat of higher learning that compounds discovery.",
@@ -566,8 +614,8 @@
       "cs": "Rušné stánky svazují kraj obchodem."
     },
     "footprint": {
-      "w": 2,
-      "h": 1
+      "w": 3,
+      "h": 2
     }
   },
   {
@@ -595,6 +643,10 @@
     "description": {
       "en": "Credit and coin extend the colony's reach across the map.",
       "cs": "Úvěr a mince prodlužují dosah kolonie přes celou mapu."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -634,6 +686,10 @@
     "description": {
       "en": "Skilled artisans multiply what raw labour can produce.",
       "cs": "Zruční řemeslníci znásobí, co zmůže hrubá práce."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -672,8 +728,8 @@
       }
     ],
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     },
     "description": {
       "en": "Mass production on a scale never before seen — at a cost to the air.",
@@ -717,7 +773,7 @@
     ],
     "footprint": {
       "w": 2,
-      "h": 1
+      "h": 2
     },
     "description": {
       "en": "Roaring furnaces smelt metal for the industrial age.",
@@ -745,7 +801,7 @@
     },
     "pollution": 25,
     "footprint": {
-      "w": 2,
+      "w": 3,
       "h": 2
     },
     "description": {
@@ -779,7 +835,7 @@
       "cs": "Náklad se valí dnem i nocí a svazuje říši dohromady."
     },
     "footprint": {
-      "w": 2,
+      "w": 3,
       "h": 2
     }
   },
@@ -805,6 +861,10 @@
     "description": {
       "en": "Fertilisers, dyes and fuels pour from the vats — and so does the smog.",
       "cs": "Z kádí tečou hnojiva, barvy i paliva — a s nimi smog."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -829,8 +889,8 @@
       "cs": "Sály a ranhojiči drží osadu při síle skrz mor i zranění."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     }
   },
   {
@@ -854,8 +914,8 @@
       "cs": "Betonová stěna mění váhu řeky v čistou, stálou energii."
     },
     "footprint": {
-      "w": 2,
-      "h": 1
+      "w": 3,
+      "h": 2
     }
   },
   {
@@ -878,6 +938,10 @@
     "description": {
       "en": "Crude becomes fuel — the lifeblood of an age of engines.",
       "cs": "Z ropy se stává palivo — krev věku motorů."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 2
     }
   },
   {
@@ -903,6 +967,10 @@
     "description": {
       "en": "Cars, tractors and trucks roll off the line and out into the world.",
       "cs": "Auta, traktory a náklaďáky sjíždějí z linky do světa."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 2
     }
   },
   {
@@ -925,7 +993,7 @@
     },
     "pollution": 25,
     "footprint": {
-      "w": 2,
+      "w": 3,
       "h": 2
     },
     "description": {
@@ -955,8 +1023,8 @@
       "cs": "Patra bytů ubytují celou čtvrť na jediné parcele."
     },
     "footprint": {
-      "w": 2,
-      "h": 1
+      "w": 3,
+      "h": 2
     }
   },
   {
@@ -982,6 +1050,10 @@
     "description": {
       "en": "Modern medicine on every street corner — illness loses its terror.",
       "cs": "Moderní medicína na každém rohu — nemoc ztrácí hrůzu."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -1005,6 +1077,10 @@
     "description": {
       "en": "Circuits and signals — the workshops where the information age is born.",
       "cs": "Obvody a signály — dílny, kde se rodí věk informací."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -1040,7 +1116,7 @@
     ],
     "footprint": {
       "w": 2,
-      "h": 1
+      "h": 2
     },
     "description": {
       "en": "Halls of humming machines remember and reason for the whole civilisation.",
@@ -1074,8 +1150,8 @@
       }
     ],
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     },
     "description": {
       "en": "A city of laboratories where the next era is invented.",
@@ -1100,6 +1176,10 @@
     "description": {
       "en": "Fields of panels drink the sun and give back boundless clean power.",
       "cs": "Pole panelů pijí slunce a vracejí čistou energii bez konce."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 2
     }
   },
   {
@@ -1120,6 +1200,10 @@
     "description": {
       "en": "Rows of turbines turn the open sky into a power station.",
       "cs": "Řady turbín mění otevřené nebe v elektrárnu."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 2
     }
   },
   {
@@ -1146,8 +1230,8 @@
       "cs": "Roboti vedou celý provoz; stačí hrstka dohlížitelů."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     }
   },
   {
@@ -1167,8 +1251,8 @@
     },
     "morale_effect": 1,
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     },
     "description": {
       "en": "A miniature star held in magnetic chains — power without limit or smoke.",
@@ -1196,6 +1280,10 @@
     "description": {
       "en": "A thinking machine that researches, plans and dreams faster than any academy.",
       "cs": "Myslící stroj, který bádá, plánuje a sní rychleji než kterákoli akademie."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -1220,8 +1308,8 @@
     "morale_effect": 3,
     "storage": 800,
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     },
     "description": {
       "en": "Rockets climb the sky from here — the colony's reach leaves the ground entirely.",
@@ -1250,6 +1338,10 @@
     "description": {
       "en": "Satellites watch, relay and survey — knowledge and influence rain down from orbit.",
       "cs": "Družice hlídají, přenášejí a měří — vědění a vliv prší z oběžné dráhy."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -1270,8 +1362,8 @@
     "morale_effect": 5,
     "housing": 600,
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     },
     "description": {
       "en": "A self-contained city in a single structure — a million live, work and thrive within.",
@@ -1304,7 +1396,7 @@
       }
     ],
     "footprint": {
-      "w": 1,
+      "w": 2,
       "h": 1
     },
     "description": {
