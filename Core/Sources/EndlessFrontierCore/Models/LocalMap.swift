@@ -307,11 +307,27 @@ public struct WildlifeState: Codable, Sendable, Equatable {
     public var deerCapacity: Double
     /// How dangerous the predators are right now (0…100) — drives attack rolls.
     public var predatorPressure: Double
+    /// The wild as *entities* — a pawn-like `Animal` per head (life, body parts,
+    /// conditions). The emerging layer that will take over from the abstract
+    /// `deerHerd` count above. Old saves have none; they decode to empty.
+    public var animals: [Animal]
 
-    public init(deerHerd: Double = 40, deerCapacity: Double = 80, predatorPressure: Double = 10) {
+    public init(deerHerd: Double = 40, deerCapacity: Double = 80,
+                predatorPressure: Double = 10, animals: [Animal] = []) {
         self.deerHerd = deerHerd
         self.deerCapacity = deerCapacity
         self.predatorPressure = predatorPressure
+        self.animals = animals
+    }
+
+    // Resilient decode: `animals` postdates the abstract herd, so older saves
+    // lack it — default to none rather than failing the settlement load.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        deerHerd = try c.decodeIfPresent(Double.self, forKey: .deerHerd) ?? 40
+        deerCapacity = try c.decodeIfPresent(Double.self, forKey: .deerCapacity) ?? 80
+        predatorPressure = try c.decodeIfPresent(Double.self, forKey: .predatorPressure) ?? 10
+        animals = try c.decodeIfPresent([Animal].self, forKey: .animals) ?? []
     }
 
     /// How well-stocked the herd is (0…1) — hunting yield scales with this.

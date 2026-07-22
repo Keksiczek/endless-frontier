@@ -127,11 +127,14 @@ public enum LocalMapGenerator {
         // reached the ground the colony actually stands on, so a frontier
         // valley six rings out was exactly as safe as the homeland.
         let capacity = herdCapacity(for: biomeID, rng: &rng)
+        let herd = capacity * (0.4 + rng.nextUnit() * 0.3)
+        let pressure = 8 + rng.nextUnit() * 8 + Double(max(0, hazard)) * 2.5
+        // Real `Animal` entities too — drawn last, so the rest of generation
+        // (deposits, scenery, POIs) keeps its exact seeded outcome.
+        let residents = AnimalFactory.wildPopulation(rng: &rng)
         let wildlife = WildlifeState(
-            deerHerd: capacity * (0.4 + rng.nextUnit() * 0.3),
-            deerCapacity: capacity,
-            predatorPressure: 8 + rng.nextUnit() * 8 + Double(max(0, hazard)) * 2.5
-        )
+            deerHerd: herd, deerCapacity: capacity,
+            predatorPressure: pressure, animals: residents)
 
         var map = LocalMap(
             river: river, nodes: nodes, pois: pois, wildlife: wildlife,
