@@ -871,6 +871,8 @@ enum SettlementRenderer {
         let underConstruction: Bool
         /// Construction completion 0…1 (1 when built).
         let progress: Double
+        /// A stable per-building seed for cosmetic variation (tone, size).
+        let seed: UInt64
     }
 
     /// The same structure mapped to pixels for one frame.
@@ -885,6 +887,20 @@ enum SettlementRenderer {
         let footprint: CGSize
         let underConstruction: Bool
         let progress: Double
+        let seed: UInt64
+    }
+
+    /// A stable per-building seed for cosmetic variation — from a placement's
+    /// id where there is one, else its kind and ring slot.
+    static func buildingSeed(_ uuid: UUID) -> UInt64 {
+        let u = uuid.uuid
+        return UInt64(u.0) << 56 | UInt64(u.1) << 48 | UInt64(u.2) << 40 | UInt64(u.3) << 32
+             | UInt64(u.4) << 24 | UInt64(u.5) << 16 | UInt64(u.6) << 8 | UInt64(u.7)
+    }
+    static func buildingSeed(_ id: String, _ index: Int) -> UInt64 {
+        var h: UInt64 = 0xCBF2_9CE4_8422_2325
+        for byte in id.utf8 { h = (h ^ UInt64(byte)) &* 0x0100_0000_01B3 }
+        return h ^ UInt64(bitPattern: Int64(index))
     }
 
     /// Where the settlement's heart sits on the canvas — the fog is cleared
@@ -925,7 +941,7 @@ enum SettlementRenderer {
             PlacedBuilding(id: b.id, definitionID: b.definitionID, name: b.name, glyph: b.glyph,
                            center: point(b.center, in: rect), size: unit * b.size,
                            footprint: CGSize(width: b.footprintW * unit, height: b.footprintH * unit),
-                           underConstruction: b.underConstruction, progress: b.progress)
+                           underConstruction: b.underConstruction, progress: b.progress, seed: b.seed)
         }
     }
 
@@ -961,7 +977,8 @@ enum SettlementRenderer {
                 footprintW: Double(max(1, placement.width)) * tileW,
                 footprintH: Double(max(1, placement.height)) * tileH,
                 underConstruction: placement.underConstruction,
-                progress: placement.underConstruction ? (progress ?? 0) : 1)
+                progress: placement.underConstruction ? (progress ?? 0) : 1,
+                seed: buildingSeed(placement.id))
         }
     }
 
@@ -999,7 +1016,8 @@ enum SettlementRenderer {
                     id: drawn, definitionID: expanded[drawn].id,
                     name: expanded[drawn].name, glyph: expanded[drawn].glyph,
                     center: c, size: 0.021, footprintW: 0.05, footprintH: 0.05,
-                    underConstruction: false, progress: 1))
+                    underConstruction: false, progress: 1,
+                    seed: buildingSeed(expanded[drawn].id, drawn)))
                 drawn += 1
             }
             ringIndex += 1
@@ -1040,7 +1058,7 @@ enum SettlementRenderer {
             } else {
                 SettlementStructures.building(building.glyph, at: building.center,
                                               s: building.size, time: time, night: night,
-                                              context: &context)
+                                              seed: building.seed, context: &context)
             }
             if building.id == selectedBuildingID {
                 let r = building.size * 2.6

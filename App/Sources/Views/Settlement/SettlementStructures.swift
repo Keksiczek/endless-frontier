@@ -223,11 +223,24 @@ enum SettlementStructures {
     }
 
     // A building's materials — a warm dark timber body under bright bone
-    // linework, so a structure reads as a *solid mass* on the ground instead of
-    // an outline the green terrain shows straight through.
-    private static let wallFill = Color(red: 0.20, green: 0.18, blue: 0.16)
-    private static let roofFill = Color(red: 0.12, green: 0.11, blue: 0.11)
-    private static let stoneFill = Color(red: 0.24, green: 0.24, blue: 0.26)
+    // linework, a solid mass on the ground rather than an outline. The base
+    // tones below are nudged per building by `tone(...)`, so two of the same
+    // kind read as neighbours, not clones.
+    private static let baseWall = (0.20, 0.18, 0.16)
+    private static let baseRoof = (0.12, 0.11, 0.11)
+    private static let baseStone = (0.24, 0.24, 0.26)
+
+    /// A base tone shifted a little — lighter/darker and warmer/cooler — from a
+    /// per-building seed, so a row of houses isn't a row of identical stamps.
+    private static func tone(_ rgb: (Double, Double, Double), _ seed: UInt64,
+                             spread: Double = 0.05) -> Color {
+        let u: (UInt64) -> Double = { Double(($0 &* 0x2545_F491_4F6C_DD1D) >> 40 & 0xFFFF) / 65535 - 0.5 }
+        let l = u(seed) * 2 * spread          // lighter or darker
+        let warm = u(seed &* 7) * spread      // warmer or cooler: +red, −blue
+        return Color(red: min(1, max(0, rgb.0 + l + warm)),
+                     green: min(1, max(0, rgb.1 + l)),
+                     blue: min(1, max(0, rgb.2 + l - warm)))
+    }
 
     /// The soft pool of shade a structure casts on the ground — the cheapest,
     /// strongest cue that it *sits* somewhere rather than floating.
@@ -242,9 +255,16 @@ enum SettlementStructures {
     }
 
     static func building(
-        _ glyph: SettlementRenderer.BuildingGlyph, at c: CGPoint, s: CGFloat,
-        time: Double = 0, night: Double = 0, context: inout GraphicsContext
+        _ glyph: SettlementRenderer.BuildingGlyph, at c: CGPoint, s s0: CGFloat,
+        time: Double = 0, night: Double = 0, seed: UInt64 = 0, context: inout GraphicsContext
     ) {
+        // Per-building variation so same-type structures aren't clones: a nudge
+        // to overall size, and to each material's tone.
+        let sizeJ = Double((seed &* 0x9E37_79B9_7F4A_7C15) >> 40 & 0xFFFF) / 65535
+        let s = s0 * CGFloat(0.9 + sizeJ * 0.2)
+        let wall = tone(baseWall, seed)
+        let roof = tone(baseRoof, seed &* 3, spread: 0.035)
+        let stone = tone(baseStone, seed &* 5)
         let ink = Theme.bone.opacity(0.85)
         let bright = Theme.bone.opacity(0.96)
         let lit = Theme.accent.opacity(0.32 + night * 0.55)   // a lamp lit after dark
@@ -254,16 +274,16 @@ enum SettlementStructures {
             let body = CGRect(x: c.x - w / 2, y: c.y - h / 2, width: w, height: h)
             groundShadow(at: c, halfWidth: w / 2, footY: body.maxY + s * 0.08, context: &context)
             // Walls, then a filled roof over them — a solid gabled house.
-            context.fill(Path(body), with: .color(wallFill))
-            let roof = Path { p in
+            context.fill(Path(body), with: .color(wall))
+            let roofShape = Path { p in
                 p.move(to: CGPoint(x: body.minX - s * 0.14, y: body.minY))
                 p.addLine(to: CGPoint(x: c.x, y: body.minY - h * 0.72))
                 p.addLine(to: CGPoint(x: body.maxX + s * 0.14, y: body.minY))
                 p.closeSubpath()
             }
-            context.fill(roof, with: .color(roofFill))
+            context.fill(roofShape, with: .color(roof))
             context.stroke(Path(body), with: .color(ink), lineWidth: 1)
-            context.stroke(roof, with: .color(bright), lineWidth: 1.1)
+            context.stroke(roofShape, with: .color(bright), lineWidth: 1.1)
             // Two courses of shingles down the roof.
             for k in 1...2 {
                 let t = CGFloat(k) / 3
@@ -286,12 +306,12 @@ enum SettlementStructures {
                 p.addLine(to: CGPoint(x: c.x + s * 0.6, y: c.y + s * 0.02))
                 p.addLine(to: CGPoint(x: c.x + s * 0.6, y: body.maxY))
             }
-            context.fill(door, with: .color(roofFill))
+            context.fill(door, with: .color(roof))
             context.stroke(door, with: .color(ink), lineWidth: 0.8)
         case .granary:
             let silo = CGRect(x: c.x - s * 0.7, y: c.y - s * 0.5, width: s * 1.4, height: s * 1.4)
             groundShadow(at: c, halfWidth: s * 0.7, footY: silo.maxY + s * 0.05, context: &context)
-            context.fill(Path(ellipseIn: silo), with: .color(wallFill))
+            context.fill(Path(ellipseIn: silo), with: .color(wall))
             context.stroke(Path(ellipseIn: silo), with: .color(ink), lineWidth: 1)
             // The hoops that hold a full silo together — narrower toward the
             // curved top and bottom, so the barrel reads as round.
@@ -310,12 +330,12 @@ enum SettlementStructures {
                 p.addLine(to: CGPoint(x: c.x + s * 0.82, y: c.y - s * 0.4))
                 p.closeSubpath()
             }
-            context.fill(cap, with: .color(roofFill))
+            context.fill(cap, with: .color(roof))
             context.stroke(cap, with: .color(bright), lineWidth: 1)
         case .workshop:
             let body = CGRect(x: c.x - s * 0.9, y: c.y - s * 0.5, width: s * 1.8, height: s)
             groundShadow(at: c, halfWidth: s * 0.9, footY: body.maxY + s * 0.06, context: &context)
-            context.fill(Path(body), with: .color(wallFill))
+            context.fill(Path(body), with: .color(wall))
             // A sawtooth roof — the workshop skylight.
             let saw = Path { p in
                 p.move(to: CGPoint(x: body.minX, y: body.minY))
@@ -331,14 +351,14 @@ enum SettlementStructures {
                                      width: s * 0.4, height: s * 0.4)),
                          with: .color(Theme.accent.opacity(0.45 + 0.2 * sin(time * 4))))
             context.fill(Path(CGRect(x: body.maxX - s * 0.35, y: body.minY - s * 0.75,
-                                     width: s * 0.2, height: s * 0.5)), with: .color(roofFill))
+                                     width: s * 0.2, height: s * 0.5)), with: .color(roof))
             context.stroke(Path(CGRect(x: body.maxX - s * 0.35, y: body.minY - s * 0.75,
                                        width: s * 0.2, height: s * 0.5)),
                            with: .color(ink), lineWidth: 0.8)
         case .tower:
             let shaft = CGRect(x: c.x - s * 0.45, y: c.y - s * 1.2, width: s * 0.9, height: s * 1.9)
             groundShadow(at: c, halfWidth: s * 0.5, footY: shaft.maxY + s * 0.04, context: &context)
-            context.fill(Path(shaft), with: .color(stoneFill))
+            context.fill(Path(shaft), with: .color(stone))
             context.stroke(Path(shaft), with: .color(ink), lineWidth: 1)
             // Crenellations along the top.
             let bat = Path { p in
@@ -347,7 +367,7 @@ enum SettlementStructures {
                     p.addRect(CGRect(x: x, y: shaft.minY - s * 0.22, width: s * 0.18, height: s * 0.22))
                 }
             }
-            context.fill(bat, with: .color(stoneFill))
+            context.fill(bat, with: .color(stone))
             context.stroke(bat, with: .color(bright), lineWidth: 0.9)
             // Stone courses, an arrow slit, and a banner that answers the wind.
             for course in 1...3 {
@@ -371,14 +391,14 @@ enum SettlementStructures {
         case .temple:
             let base = CGRect(x: c.x - s * 0.95, y: c.y - s * 0.35, width: s * 1.9, height: s * 0.9)
             groundShadow(at: c, halfWidth: s * 1.05, footY: base.maxY + s * 0.35, context: &context)
-            context.fill(Path(base), with: .color(stoneFill))
+            context.fill(Path(base), with: .color(stone))
             let pediment = Path { p in
                 p.move(to: CGPoint(x: c.x - s * 1.08, y: c.y - s * 0.35))
                 p.addLine(to: CGPoint(x: c.x, y: c.y - s * 1.18))
                 p.addLine(to: CGPoint(x: c.x + s * 1.08, y: c.y - s * 0.35))
                 p.closeSubpath()
             }
-            context.fill(pediment, with: .color(roofFill))
+            context.fill(pediment, with: .color(roof))
             context.stroke(pediment, with: .color(bright), lineWidth: 1)
             context.stroke(Path(base), with: .color(ink), lineWidth: 1)
             // Fluted columns with dark gaps between them.
@@ -406,7 +426,7 @@ enum SettlementStructures {
                 p.addLine(to: CGPoint(x: c.x, y: c.y - s * 1.05))
                 p.addLine(to: CGPoint(x: c.x + s * 0.95, y: c.y + s * 0.6))
                 p.closeSubpath()
-            }, with: .color(stoneFill))
+            }, with: .color(stone))
             context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.42, y: c.y - s * 0.1,
                                                 width: s * 0.84, height: s * 0.5)),
                          with: .color(Theme.ink))   // the dark adit
@@ -424,16 +444,16 @@ enum SettlementStructures {
             let shuttle = CGFloat(0.5 + 0.5 * sin(time * 1.1))
             let cart = CGPoint(x: c.x + s * 0.2 + s * 1.25 * shuttle, y: c.y + s * (0.5 + 0.1 * shuttle))
             context.fill(Path(CGRect(x: cart.x - s * 0.18, y: cart.y - s * 0.16,
-                                     width: s * 0.36, height: s * 0.2)), with: .color(roofFill))
+                                     width: s * 0.36, height: s * 0.2)), with: .color(roof))
             context.stroke(Path(CGRect(x: cart.x - s * 0.18, y: cart.y - s * 0.16,
                                        width: s * 0.36, height: s * 0.2)), with: .color(ink), lineWidth: 0.6)
         case .mill:
             let body = CGRect(x: c.x - s * 0.9, y: c.y - s * 0.4, width: s * 1.5, height: s * 0.9)
             groundShadow(at: c, halfWidth: s * 0.9, footY: body.maxY + s * 0.06, context: &context)
-            context.fill(Path(body), with: .color(wallFill))
+            context.fill(Path(body), with: .color(wall))
             context.stroke(Path(body), with: .color(ink), lineWidth: 1)
             let wheel = CGRect(x: c.x + s * 0.35, y: c.y - s * 0.75, width: s * 0.9, height: s * 0.9)
-            context.fill(Path(ellipseIn: wheel), with: .color(roofFill))
+            context.fill(Path(ellipseIn: wheel), with: .color(roof))
             context.stroke(Path(ellipseIn: wheel), with: .color(bright), lineWidth: 1)
             // The wheel actually turns — a working mill is the town's clock.
             let hub = CGPoint(x: wheel.midX, y: wheel.midY)
@@ -450,7 +470,7 @@ enum SettlementStructures {
         case .generator:
             let body = CGRect(x: c.x - s * 0.75, y: c.y - s * 0.4, width: s * 1.5, height: s * 1.0)
             groundShadow(at: c, halfWidth: s * 0.75, footY: body.maxY + s * 0.06, context: &context)
-            context.fill(Path(body), with: .color(stoneFill))
+            context.fill(Path(body), with: .color(stone))
             context.stroke(Path(body), with: .color(ink), lineWidth: 1)
             // Cooling ribs, and a bolt that hums on a fast flicker.
             for i in 1...3 {
