@@ -55,7 +55,7 @@ struct BalanceTests {
     func threatRampsWithEra() throws {
         let r = try reg()
         func threatAfterDrift(era: Era) -> Double {
-            var w = WorldState(era: era, settlements: [Settlement(name: "S")])
+            var w = WorldState(era: era, settlements: [Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-50155ed4ed44")!, name: "S")])
             w.globalStats.threatLevel = 10
             for _ in 0..<60 { w = ResourceLoop.advanceOneTick(w, registry: r) }
             return w.globalStats.threatLevel

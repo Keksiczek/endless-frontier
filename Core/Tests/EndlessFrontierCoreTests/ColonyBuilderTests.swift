@@ -6,7 +6,7 @@ import Testing
 struct ColonyBuilderTests {
     private func town(pawnCount: Int = 0) -> Settlement {
         let pawns = (0..<pawnCount).map { Pawn(name: "P\($0)") }
-        return Settlement(name: "Town", kind: .capital,
+        return Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-9de42c4b1d82")!, name: "Town", kind: .capital,
                           pawns: pawns)
     }
 
@@ -142,7 +142,7 @@ struct ColonyBuilderTests {
     @Test("A multi-tile building occupies its whole footprint")
     func multiTileFootprint() {
         let reg = keepRegistry()
-        let s = ColonyBuilder.place(Settlement(name: "T", kind: .capital),
+        let s = ColonyBuilder.place(Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-9b29d61e120a")!, name: "T", kind: .capital),
                                     definitionID: "keep", at: TileCoord(0, 0), registry: reg)
         #expect(s.colony?.placements.count == 1)
         #expect(s.colony?.placement(at: TileCoord(1, 1))?.definitionID == "keep")  // covers far corner
@@ -152,7 +152,7 @@ struct ColonyBuilderTests {
     @Test("A footprint can't overlap another building; demolishing any tile removes it")
     func footprintCollisionAndRemoval() {
         let reg = keepRegistry()
-        var s = ColonyBuilder.place(Settlement(name: "T", kind: .capital),
+        var s = ColonyBuilder.place(Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-78a6849343b8")!, name: "T", kind: .capital),
                                     definitionID: "keep", at: TileCoord(0, 0), registry: reg)
         let overlap = ColonyBuilder.place(s, definitionID: "keep", at: TileCoord(1, 1), registry: reg)
         #expect(overlap.colony?.placements.count == 1)   // rejected — shares a tile
@@ -164,7 +164,7 @@ struct ColonyBuilderTests {
     @Test("GameEngine.placeBuilding pays the cost and opens a site on the tile")
     func enginePlacePays() throws {
         let reg = try GameDataRegistry.bundled()
-        let cap = Settlement(name: "C", kind: .capital, storage: [.materials: 100], storageCapacity: 9999)
+        let cap = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-ef0fba5c0afe")!, name: "C", kind: .capital, storage: [.materials: 100], storageCapacity: 9999)
         let world = WorldState(settlements: [cap])
         let after = GameEngine.placeBuilding(world, settlementID: cap.id,
                                              buildingID: "farm_basic", at: TileCoord(0, 0), registry: reg)
@@ -181,7 +181,7 @@ struct ColonyBuilderTests {
     @Test("GameEngine.placeBuilding is rejected when the cost can't be paid")
     func enginePlaceUnaffordable() throws {
         let reg = try GameDataRegistry.bundled()
-        let cap = Settlement(name: "C", kind: .capital, storage: [.materials: 5], storageCapacity: 9999)
+        let cap = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-7f477fe6b83d")!, name: "C", kind: .capital, storage: [.materials: 5], storageCapacity: 9999)
         let world = WorldState(settlements: [cap])
         let after = GameEngine.placeBuilding(world, settlementID: cap.id,
                                              buildingID: "farm_basic", at: TileCoord(0, 0), registry: reg)
@@ -209,7 +209,7 @@ struct CenteredPlacementTests {
     @Test("A quick-build site opens near the heart too")
     func quickBuildCenters() throws {
         let reg = try GameDataRegistry.bundled()
-        var settlement = Settlement(name: "C", kind: .capital,
+        var settlement = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-dc926643f909")!, name: "C", kind: .capital,
                                     storage: [.materials: 200], storageCapacity: 999)
         settlement = ColonyBuilder.ensureMap(settlement)
         let (sited, id) = ColonyBuilder.placeSiteAtFirstFit(
@@ -219,17 +219,17 @@ struct CenteredPlacementTests {
         #expect(coord.map { abs($0.x - 5) <= 1 && abs($0.y - 5) <= 1 } == true)
     }
 
-    @Test("Big buildings really take ground: university is 2×2 and blocks overlap")
+    @Test("Big buildings really take ground: university is 3×3 and blocks overlap")
     func footprintsBite() throws {
         let reg = try GameDataRegistry.bundled()
         let uni = try #require(reg.building("university"))
-        #expect(uni.footprint.width == 2 && uni.footprint.height == 2)
+        #expect(uni.footprint.width == 3 && uni.footprint.height == 3)
         #expect(reg.building("longhouse")?.footprint.width == 2)
 
-        var s = Settlement(name: "C", kind: .capital)
+        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-9fdb5f227968")!, name: "C", kind: .capital)
         s = ColonyBuilder.placeSite(s, definitionID: "university",
                                     at: TileCoord(4, 4), registry: reg)
-        #expect(s.colony?.placement(at: TileCoord(5, 5)) != nil)   // covers 4 tiles
+        #expect(s.colony?.placement(at: TileCoord(6, 6)) != nil)   // covers 9 tiles
         #expect(!ColonyBuilder.canPlace(s, definitionID: "hut",
                                         at: TileCoord(5, 4), registry: reg))
     }

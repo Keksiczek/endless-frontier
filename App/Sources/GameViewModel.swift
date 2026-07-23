@@ -39,6 +39,9 @@ final class GameViewModel {
             self.world = GameWorldFactory.newGame(registry: registry,
                                                   language: AppStrings.language)
         }
+        // Battles already on the books at load are history, not news — mark them
+        // seen so the report only springs up for fights fought from here on.
+        self.acknowledgedBattleIDs = Set(world.settlements.compactMap { $0.lastBattle?.id })
     }
 
     /// Builds the view model with the bundled game data, falling back to an
@@ -117,6 +120,12 @@ final class GameViewModel {
     }
 
     private(set) var toasts: [LiveToast] = []
+
+    /// Battles the player has already been shown. A fight lands as a `BattleLog`
+    /// on the settlement; the report springs up once, and stays down after the
+    /// player closes it — see `battleReport`.
+    private var acknowledgedBattleIDs: Set<UUID> = []
+
     private var liveLoop: Task<Void, Never>?
     /// How often the loop checks whether a tick has come due.
     private let livePollSeconds: Double = 5
@@ -203,6 +212,25 @@ final class GameViewModel {
         Task { [weak self] in
             try? await Task.sleep(for: .seconds(7))
             self?.toasts.removeAll { $0.id == toast.id }
+        }
+    }
+
+    // MARK: - Battle report
+
+    /// The most recent battle at the viewed settlement that the player has not
+    /// yet dismissed — the canvas plays the fight, this makes it legible and
+    /// impossible to miss even if you looked away. Reactive: when a tick lands a
+    /// new `lastBattle`, the observed `world` change surfaces this card.
+    var battleReport: BattleLog? {
+        guard let battle = selectedSettlement?.lastBattle,
+              !acknowledgedBattleIDs.contains(battle.id) else { return nil }
+        return battle
+    }
+
+    /// Puts the battle report away for good.
+    func dismissBattleReport() {
+        if let id = selectedSettlement?.lastBattle?.id {
+            acknowledgedBattleIDs.insert(id)
         }
     }
 
@@ -639,6 +667,31 @@ final class GameViewModel {
         world.settlements.first { $0.id == id }?.name ?? "?"
     }
 
+    /// Materials worth offering as cargo: anything the game defines as a
+    /// material, so a route can be set up *before* the origin has any — you
+    /// plan the supply line, then dig.
+    var tradableMaterials: [(id: String, name: String)] {
+        registry.items.values
+            .filter { $0.slot == .material }
+            .map { (id: $0.id, name: $0.name.resolve(AppStrings.language)) }
+            .sorted { $0.name < $1.name }
+    }
+
+    /// A standing shipment of goods — timber, ore, clay — between settlements.
+    /// The reason a coastal colony with no iron is a *choice* rather than a
+    /// dead end.
+    func addMaterialRoute(from: UUID, to: UUID, materialID: String, units: Double) {
+        world = GameEngine.addMaterialRoute(world, from: from, to: to,
+                                            materialID: materialID, unitsPerTick: units,
+                                            registry: registry)
+        persist()
+    }
+
+    /// What a route carries, named for display.
+    func routeCargoName(_ route: TradeRoute) -> String {
+        route.materialID.map { itemName($0) } ?? route.resource.displayName
+    }
+
     func addTradeRoute(from: UUID, to: UUID, resource: ResourceType, amount: Double) {
         world = GameEngine.addTradeRoute(world, from: from, to: to, resource: resource, amountPerTick: amount)
         persist()
@@ -679,14 +732,66 @@ final class GameViewModel {
     }
 
     func recipeOutputName(_ recipe: RecipeDefinition) -> String {
-        registry.item(recipe.outputItemID)?.name ?? recipe.outputItemID
+        registry.item(recipe.outputItemID)?.name.resolve(AppStrings.language) ?? recipe.outputItemID
     }
 
     func recipeOutputRarity(_ recipe: RecipeDefinition) -> ItemRarity? {
         registry.item(recipe.outputItemID)?.rarity
     }
 
-    func itemName(_ id: String) -> String { registry.item(id)?.name ?? id }
+    func itemName(_ id: String) -> String {
+        registry.item(id)?.name.resolve(AppStrings.language) ?? id
+    }
+
+    /// What the settlement holds of a material, counting both the stockpile and
+    /// any loose instances (loot, or a save from before the stockpile existed).
+    func materialCount(_ id: String) -> Int {
+        guard let s = selectedSettlement else { return 0 }
+        return (s.stockpile[id] ?? 0) + s.inventory.count { $0.definitionID == id }
+    }
+
+    /// The materials on hand, named and ordered for display. Raw goods first —
+    /// they are what the colony's own work produces — then everything made.
+    var stockpileEntries: [(id: String, name: String, count: Int, isRaw: Bool)] {
+        guard let s = selectedSettlement else { return [] }
+        let raw = Set(LocalResourceKind.allCases.compactMap(\.rawMaterialID))
+            .union([ResourceLoop.hideItemID])
+        var counts = s.stockpile
+        for instance in s.inventory where registry.item(instance.definitionID)?.slot == .material {
+            counts[instance.definitionID, default: 0] += 1
+        }
+        return counts
+            .filter { $0.value > 0 }
+            .map { (id: $0.key, name: itemName($0.key), count: $0.value, isRaw: raw.contains($0.key)) }
+            .sorted {
+                if $0.isRaw != $1.isRaw { return $0.isRaw }
+                return $0.name < $1.name
+            }
+    }
+
+    /// Recipes this settlement is *equipped* to make — its building and tech
+    /// gates are satisfied — whether or not the materials are on hand.
+    ///
+    /// The panel used to list only what could be crafted right now, so a player
+    /// short one ingot saw nothing at all and had no way to learn what the
+    /// workshop was for. Showing the shortfall is the whole point.
+    var recipesHere: [RecipeDefinition] {
+        guard let s = selectedSettlement else { return [] }
+        return registry.recipes.values
+            .filter { recipe in
+                if let building = recipe.requiresBuilding,
+                   !s.buildings.contains(where: { $0.definitionID == building }) { return false }
+                if let tech = recipe.requiresTech, !world.researchedTechs.contains(tech) { return false }
+                return true
+            }
+            .sorted { $0.name.resolve(AppStrings.language) < $1.name.resolve(AppStrings.language) }
+    }
+
+    /// Whether everything a recipe needs is on hand at the selected settlement.
+    func canCraft(_ recipe: RecipeDefinition) -> Bool {
+        CraftingEngine.canCraft(recipe, in: world,
+                                settlementID: selectedSettlement?.id, registry: registry)
+    }
 
     func craft(_ recipeID: String) {
         world = GameEngine.craft(world, recipeID: recipeID, settlementID: selectedSettlement?.id, registry: registry)
@@ -705,6 +810,74 @@ final class GameViewModel {
         persist()
     }
 
+    /// The simulation clock, handed to the canvas so it can interpolate between
+    /// ticks. Presentation only — nothing in the simulation reads it back.
+    var tickClock: TickClock {
+        TickClock(tick: world.tick, lastTickAt: world.lastRealTimestamp,
+                  realSecondsPerTick: registry.config.realSecondsPerTick)
+    }
+
+    /// `world.tick` plus how far the current tick has already run.
+    func continuousTick(now: Date = Date()) -> Double {
+        tickClock.continuous(at: now)
+    }
+
+    // MARK: - The local map
+
+    /// Sends a party out to work a landmark the scouts found. The haul lands
+    /// when they walk back in — watch them go.
+    func dispatchToPOI(_ poiID: Int) {
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.dispatchToPOI(
+            world, settlementID: settlement.id, poiID: poiID, registry: registry)
+        persist()
+    }
+
+    /// The live POI behind a canvas selection — read fresh every time, so a
+    /// card never offers an action the world has since spent.
+    func poi(_ poiID: Int) -> LocalPOI? {
+        viewedLocalMap?.pois.first { $0.id == poiID }
+    }
+
+    /// The party out at a place, if one is.
+    func expedition(forPOI poiID: Int) -> POIExpedition? {
+        selectedSettlement?.expedition(forPOI: poiID)
+    }
+
+    /// Who went, by name — the card names them so a party is people, not a
+    /// number.
+    func partyNames(_ expedition: POIExpedition) -> [String] {
+        guard let settlement = selectedSettlement else { return [] }
+        return expedition.memberIDs.compactMap { id in
+            settlement.pawns.first { $0.id == id }?.name
+        }
+    }
+
+    /// Whether the colony could actually field a party for this place right
+    /// now — the card explains itself rather than showing a dead button.
+    func canDispatch(to poi: LocalPOI) -> Bool {
+        guard let settlement = selectedSettlement else { return false }
+        guard poi.isWorkable(tick: world.tick, ticksPerYear: ticksPerYear),
+              !settlement.hasPartyOut(poiID: poi.id) else { return false }
+        return !LocalPOIEngine.chooseParty(settlement, for: poi.kind,
+                                           ticksPerYear: ticksPerYear).isEmpty
+    }
+
+    /// Points the settlement's scouts at a patch of fog.
+    func sendScouts(to point: LocalPoint) {
+        guard let settlement = selectedSettlement else { return }
+        world = GameEngine.sendScouts(world, settlementID: settlement.id, to: point)
+        persist()
+    }
+
+    /// Adults currently walking the frontier — the card says whether an order
+    /// has anyone to carry it.
+    var scoutCount: Int {
+        selectedSettlement?.pawns.filter {
+            $0.assignedWork == .scouting && $0.isAdult(ticksPerYear: ticksPerYear) && !$0.isBroken
+        }.count ?? 0
+    }
+
     // MARK: - Colony layout (in-settlement base building)
 
     /// The build grid of the settlement currently being viewed.
@@ -714,7 +887,7 @@ final class GameViewModel {
     var placeableBuildings: [BuildingDefinition] {
         registry.buildings.values
             .filter { world.unlockedBuildings.contains($0.id) || $0.era == .earlySettlement }
-            .sorted { $0.name < $1.name }
+            .sorted { $0.name.resolve(AppStrings.language) < $1.name.resolve(AppStrings.language) }
     }
 
     func buildingDefinition(_ id: String) -> BuildingDefinition? { registry.building(id) }
@@ -724,7 +897,23 @@ final class GameViewModel {
         ResourceLoop.upkeep(for: definition, config: registry.config)
     }
 
-    func buildingName(_ id: String) -> String { registry.building(id)?.name ?? id }
+    /// Whether the settlement holds the goods a building calls for.
+    func hasMaterials(for def: BuildingDefinition) -> Bool {
+        guard let settlement = selectedSettlement else { return false }
+        return GameEngine.hasMaterials(def.materialCost, in: world, settlementID: settlement.id)
+    }
+
+    /// "4/6 trámy, 0/2 cihly" — what the build still needs off the pile.
+    func materialCostSummary(_ def: BuildingDefinition) -> String? {
+        guard !def.materialCost.isEmpty else { return nil }
+        return def.materialCost.sorted { $0.key < $1.key }
+            .map { "\(itemName($0.key)) \(materialCount($0.key))/\($0.value)" }
+            .joined(separator: ", ")
+    }
+
+    func buildingName(_ id: String) -> String {
+        registry.building(id)?.name.resolve(AppStrings.language) ?? id
+    }
 
     func canAfford(_ cost: Resources) -> Bool {
         guard let capital else { return false }
@@ -812,10 +1001,12 @@ final class GameViewModel {
     var buildableBuildings: [BuildingDefinition] {
         registry.buildings.values
             .filter { world.unlockedBuildings.contains($0.id) }
-            .sorted { $0.name < $1.name }
+            .sorted { $0.name.resolve(AppStrings.language) < $1.name.resolve(AppStrings.language) }
     }
 
-    func techName(_ id: String) -> String { registry.tech(id)?.name ?? id }
+    func techName(_ id: String) -> String {
+        registry.tech(id)?.name.resolve(AppStrings.language) ?? id
+    }
 
     private func persist() {
         try? store.save(world)

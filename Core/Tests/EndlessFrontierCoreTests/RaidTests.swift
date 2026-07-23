@@ -1,10 +1,11 @@
 import Testing
+import Foundation
 @testable import EndlessFrontierCore
 
 @Suite("Raids & defense")
 struct RaidTests {
     private func capitalWorld(defense: Double, materials: Double = 100, pawns: [Pawn] = []) -> WorldState {
-        var capital = Settlement(name: "C", kind: .capital,                                  pawns: pawns, storage: [.materials: materials, .food: 100],
+        var capital = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-d77439b698b1")!, name: "C", kind: .capital,                                  pawns: pawns, storage: [.materials: materials, .food: 100],
                                  storageCapacity: 999)
         capital.stats.defense = defense
         return WorldState(settlements: [capital])
@@ -32,7 +33,7 @@ struct RaidTests {
     @Test("Defensive buildings raise a settlement's defense over time")
     func buildingsGrantDefense() throws {
         let reg = try GameDataRegistry.bundled()
-        var settlement = Settlement(name: "Fort", kind: .capital, pawns: Fixtures.pawns(10),
+        var settlement = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-47f2bc92ebfc")!, name: "Fort", kind: .capital, pawns: Fixtures.pawns(10),
                                     buildings: [BuildingInstance(definitionID: "palisade", count: 2)],
                                     storage: [.food: 200], storageCapacity: 999)
         settlement.stats.defense = 0
@@ -48,6 +49,25 @@ struct RaidTests {
         let a = EffectApplier.apply([.raid(strength: 30)], to: world, registry: Fixtures.registry())
         let b = EffectApplier.apply([.raid(strength: 30)], to: world, registry: Fixtures.registry())
         #expect(a == b)
+    }
+
+    @Test("An overrun raid leaves a battle log the canvas and report can read")
+    func overrunLeavesLog() {
+        let world = capitalWorld(defense: 0, materials: 100, pawns: [Pawn(name: "Guard", health: 100)])
+        let after = EffectApplier.apply([.raid(strength: 25)], to: world, registry: Fixtures.registry())
+        let log = after.settlements[0].lastBattle
+        #expect(log != nil)
+        #expect(log?.repelled == false)
+        #expect((log?.moments.contains { $0.kind == .charge }) == true)
+        #expect((log?.moments.contains { $0.kind == .clash }) == true)
+    }
+
+    @Test("A repelled raid is recorded as held")
+    func repelledLeavesLog() {
+        var world = capitalWorld(defense: 40)
+        world.globalStats.threatLevel = 60
+        let after = EffectApplier.apply([.raid(strength: 20)], to: world, registry: Fixtures.registry())
+        #expect(after.settlements[0].lastBattle?.repelled == true)
     }
 
     @Test("Shipped data includes the raid event and defensive buildings")

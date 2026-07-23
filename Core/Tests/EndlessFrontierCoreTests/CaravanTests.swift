@@ -15,9 +15,9 @@ struct CaravanTests {
 
     /// Two settlements with no placed region → fallback travel time (4 ticks).
     private func twoTowns(originFood: Double = 100, guards: [Pawn]) -> WorldState {
-        let origin = Settlement(name: "A", kind: .capital,
+        let origin = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-05d51edaf3d7")!, name: "A", kind: .capital,
                                 pawns: guards + Fixtures.pawns(5), storage: [.food: originFood], storageCapacity: 99999)
-        let dest = Settlement(name: "B", kind: .city, pawns: Fixtures.pawns(5),
+        let dest = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-529f54b6886f")!, name: "B", kind: .city, pawns: Fixtures.pawns(5),
                               storage: Resources(), storageCapacity: 99999)
         return WorldState(settlements: [origin, dest])
     }
@@ -47,6 +47,25 @@ struct CaravanTests {
         #expect(w.caravans.isEmpty)
         #expect(w.settlements[1].storage[.food] == 40)       // cargo arrived
         #expect(w.settlements[1].pawns.contains { $0.id == g.id })   // guard migrated in
+    }
+
+    @Test("A caravan to a full destination returns its cargo to the origin, not the void")
+    func fullDestinationReturnsCargo() throws {
+        let r = try reg()
+        let g = escort("Ada")
+        let origin = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-05d51edaf3d7")!, name: "A", kind: .capital,
+                                pawns: [g] + Fixtures.pawns(5), storage: [.food: 100], storageCapacity: 99999)
+        let dest = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-529f54b6886f")!, name: "B", kind: .city,
+                              pawns: Fixtures.pawns(5), storage: [.food: 50], storageCapacity: 50)   // already full
+        var w = WorldState(settlements: [origin, dest])
+        w = CaravanEngine.dispatch(w, originID: origin.id, destinationID: dest.id,
+                                   resource: .food, amount: 40, guardIDs: [g.id])
+        #expect(w.settlements[0].storage[.food] == 60)   // 40 left the origin
+        w.globalStats.threatLevel = 0
+        for _ in 0..<4 { w = CaravanEngine.advanceOneTick(w, registry: r).state }
+        #expect(w.caravans.isEmpty)
+        #expect(w.settlements[1].storage[.food] == 50)   // destination full — took nothing
+        #expect(w.settlements[0].storage[.food] == 100)  // …so the 40 came back, not burned
     }
 
     @Test("canDispatch rejects impossible shipments")

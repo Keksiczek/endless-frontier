@@ -135,10 +135,13 @@ public enum ConstructionEngine {
             map.placements[pi].underConstruction = false
             s.colony = map
         }
-        let name = registry.building(project.definitionID)?.name ?? project.definitionID
+        // Each language gets the building's name *in that language* — the
+        // diary should not say "Stavba dokončena: Foundry".
+        let name = registry.building(project.definitionID)?.name
+            ?? LocalizedText(project.definitionID)
         s.journal.append(tick: tick, kind: .construction, text: LocalizedText(values: [
-            .en: "The \(name) is finished — the builders lay down their tools.",
-            .cs: "Stavba dokončena: \(name). Stavitelé odkládají nářadí."
+            .en: "The \(name.resolve(.en)) is finished — the builders lay down their tools.",
+            .cs: "Stavba dokončena: \(name.resolve(.cs)). Stavitelé odkládají nářadí."
         ]))
         return s
     }
@@ -175,8 +178,8 @@ public enum ConstructionEngine {
             required: workRequired(for: def)))
         s.constructionSequence += 1
         s.journal.append(tick: tick, kind: .construction, text: LocalizedText(values: [
-            .en: "Ground is broken for a \(def.name).",
-            .cs: "Začala stavba: \(def.name)."
+            .en: "Ground is broken for a \(def.name.resolve(.en)).",
+            .cs: "Začala stavba: \(def.name.resolve(.cs))."
         ]))
         return s
     }

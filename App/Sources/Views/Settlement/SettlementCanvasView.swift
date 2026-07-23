@@ -13,9 +13,15 @@ enum CanvasSelection: Equatable {
     case none
     case pawn(UUID)
     case building(index: Int, definitionID: String)
-    /// A tapped piece of the land itself — a deposit or a landmark, resolved
-    /// to the line the info capsule shows. The map stops being anonymous.
+    /// A tapped deposit, resolved to the line the info capsule shows. The map
+    /// stops being anonymous.
     case landmark(String)
+    /// A tapped point of interest, by id. Carries only the id so the card
+    /// always reads live state: a place worked or rested since the tap must
+    /// not still be offering yesterday's action.
+    case poi(Int)
+    /// A tapped patch of fog — the offer to send the scouts there.
+    case fog(LocalPoint)
 }
 
 /// The living settlement: a `TimelineView`-driven `Canvas` where colonists walk
@@ -27,6 +33,9 @@ struct SettlementCanvasView: View {
     let map: LocalMap
     let registry: GameDataRegistry
     let season: Season
+    /// The simulation clock, so an expedition walks smoothly rather than
+    /// jumping once a minute.
+    let clock: TickClock
     @Binding var selection: CanvasSelection
 
     /// A fixed, *absolute* epoch so the animation clock is stable across
@@ -42,11 +51,12 @@ struct SettlementCanvasView: View {
         GeometryReader { geo in
             TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
                 let t = timeline.date.timeIntervalSince(start)
+                let now = clock.continuous(at: timeline.date)
                 Canvas { context, size in
                     SettlementRenderer.draw(
                         &context, size: size, settlement: settlement, map: map,
                         registry: registry, time: t, season: season,
-                        camera: camera,
+                        camera: camera, continuousTick: now,
                         selectedPawnID: selectedPawnID,
                         selectedBuildingID: selectedBuildingID)
                 }
@@ -147,12 +157,13 @@ struct SettlementCanvasView: View {
         let viewRect = CGRect(origin: .zero, size: size)
         let rect = SettlementRenderer.worldRect(viewRect: viewRect, camera: camera)
         let t = Date().timeIntervalSince(start)
-        let scene = AgentMotion.Scene(settlement: settlement, registry: registry)
+        let scene = AgentMotion.Scene(settlement: settlement, registry: registry,
+                                      continuousTick: clock.continuous(at: Date()))
         let ticksPerYear = registry.config.ticksPerYear
 
         var best: CanvasSelection = .none
         var bestDistance = touchRadius * touchRadius
-        for pawn in settlement.pawns.prefix(SettlementRenderer.maxVisibleAgents) {
+        for pawn in SettlementRenderer.visibleAgents(settlement) {
             let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
                                         time: t, ticksPerYear: ticksPerYear)
             guard map.isExplored(pose.position) else { continue }
@@ -188,8 +199,14 @@ struct SettlementCanvasView: View {
             let d2 = distanceSquared(SettlementRenderer.point(poi.position, in: rect), location)
             if d2 < bestDistance {
                 bestDistance = d2
-                best = .landmark(poi.kind.displayLabel)
+                best = .poi(poi.id)
             }
+        }
+        if case .none = best {
+            // Nothing known is near the tap. If the player reached into the
+            // dark, that's an instruction waiting to be given.
+            let world = SettlementRenderer.normalised(location, in: rect)
+            if !map.isExplored(world) { return .fog(world) }
         }
         return best
     }

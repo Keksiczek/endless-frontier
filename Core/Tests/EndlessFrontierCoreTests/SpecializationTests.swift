@@ -13,7 +13,7 @@ struct SpecializationTests {
     /// stocked with the given buildings and specialisation.
     private func world(spec: SettlementSpecialization, buildings: [String]) -> WorldState {
         let bld = buildings.map { BuildingInstance(definitionID: $0, count: 1) }
-        let s = Settlement(name: "S", kind: .capital, pawns: [],
+        let s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-5eceda7ce01f")!, name: "S", kind: .capital, pawns: [],
                            buildings: bld, storage: Resources(), storageCapacity: 99999,
                            specialization: spec)
         return WorldState(settlements: [s])
@@ -70,8 +70,8 @@ struct SpecializationTests {
     @Test("A mercantile source ships more down a trade route")
     func mercantileBoostsTradeThroughput() throws {
         func delivered(sourceSpec: SettlementSpecialization) -> Double {
-            let source = Settlement(name: "Src", kind: .capital,                                     storage: [.food: 1000], storageCapacity: 99999, specialization: sourceSpec)
-            let dest = Settlement(name: "Dst", kind: .city,                                   storage: Resources(), storageCapacity: 99999)
+            let source = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-c1b765057783")!, name: "Src", kind: .capital,                                     storage: [.food: 1000], storageCapacity: 99999, specialization: sourceSpec)
+            let dest = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-b8ab6a014f51")!, name: "Dst", kind: .city,                                   storage: Resources(), storageCapacity: 99999)
             var w = WorldState(settlements: [source, dest])
             w.tradeRoutes = [TradeRoute(fromID: source.id, toID: dest.id, resource: .food, amountPerTick: 10)]
             let after = MultiCityEngine.applyTradeRoutes(w)
@@ -85,7 +85,7 @@ struct SpecializationTests {
         let r = try reg()
         // A settlement constructed without naming a specialisation defaults to
         // balanced and must tick identically to an explicitly-balanced one.
-        let implicit = Settlement(name: "S", kind: .capital,                                   buildings: [BuildingInstance(definitionID: "farm_basic")],
+        let implicit = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-a795a6871ea9")!, name: "S", kind: .capital,                                   buildings: [BuildingInstance(definitionID: "farm_basic")],
                                   storageCapacity: 99999)
         let explicitBalanced = world(spec: .balanced, buildings: ["farm_basic"])
         var a = WorldState(settlements: [implicit])
@@ -99,7 +99,7 @@ struct SpecializationTests {
 
     @Test("Switching specialisation costs stability; re-confirming the same one does not")
     func switchingCostsStability() throws {
-        var s = Settlement(name: "S", kind: .capital, specialization: .balanced)
+        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-aad09d117bc3")!, name: "S", kind: .capital, specialization: .balanced)
         s.stats.stability = 80
         let w = WorldState(settlements: [s])
         let switched = GameEngine.setSpecialization(w, settlementID: s.id, specialization: .industrial)
@@ -121,7 +121,7 @@ struct SpecializationTests {
     func legacySaveDefaultsToBalanced() throws {
         // Encode a settlement, then strip the specialisation key to simulate a
         // save written before the field existed.
-        let s = Settlement(name: "Old", kind: .capital, specialization: .scholarly)
+        let s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-4912fee66873")!, name: "Old", kind: .capital, specialization: .scholarly)
         let data = try JSONEncoder().encode(s)
         var json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
         json.removeValue(forKey: "specialization")

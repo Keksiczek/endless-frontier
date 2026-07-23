@@ -9,6 +9,9 @@ struct TradePanel: View {
     @State private var fromID: UUID?
     @State private var toID: UUID?
     @State private var resource: ResourceType = .food
+    /// When set, the route carries goods off the stockpile instead of a
+    /// resource out of storage.
+    @State private var materialID: String?
     @State private var amount: Double = 5
     @State private var caravanCargo: Double = 25
     @State private var escort: Int = 1
@@ -44,6 +47,47 @@ struct TradePanel: View {
         }
     }
 
+    /// What happened on the road. A fight out in the country is recorded like
+    /// any other battle, but it belongs to the caravan rather than to a
+    /// settlement — so it has nowhere to be drawn but here, next to the wagons
+    /// it happened to.
+    private func ambush(_ battle: BattleLog) -> some View {
+        let cs = AppStrings.language == .cs
+        return VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 6) {
+                Image(systemName: battle.repelled ? "shield.fill" : "burst.fill")
+                    .font(.caption2)
+                    .foregroundStyle(battle.repelled ? Theme.good : Theme.danger)
+                Text(battle.repelled
+                     ? (cs ? "Doprovod přepad odrazil" : "The escort beat them off")
+                     : (cs ? "Přepadeni na cestě" : "Ambushed on the road"))
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(battle.repelled ? Theme.good : Theme.danger)
+            }
+            // The beats, in the order they happened — the same record the
+            // settlement canvas animates, read here as a line.
+            Text(battle.moments.compactMap { beat(in: $0, cs: cs) }.joined(separator: " · "))
+                .font(.caption2)
+                .foregroundStyle(Theme.textDim)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 8).padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    private func beat(in moment: BattleMoment, cs: Bool) -> String? {
+        switch moment.kind {
+        case .volley: return cs ? "salva" : "volley"
+        case .charge: return cs ? "nápor" : "charge"
+        case .clash: return cs ? "střet" : "clash"
+        case .repelled: return nil          // already in the headline
+        case .plunder: return cs ? "ztraceno \(Int(moment.amount))" : "\(Int(moment.amount)) lost"
+        case .wound: return (moment.pawnName ?? "?") + (cs ? " zraněn" : " wounded")
+        case .death: return (moment.pawnName ?? "?") + (cs ? " padl" : " killed")
+        }
+    }
+
     private func caravanRow(_ caravan: Caravan) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 10) {
@@ -61,6 +105,7 @@ struct TradePanel: View {
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(statusTint(caravan.status))
             }
+            if let battle = caravan.lastBattle { ambush(battle) }
         }
         .padding(.vertical, 8).padding(.horizontal, 10)
         .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -75,11 +120,21 @@ struct TradePanel: View {
             }
             HStack {
                 Menu {
-                    ForEach(ResourceType.allCases, id: \.self) { r in
-                        Button(r.displayName) { resource = r }
+                    Section(AppStrings.language == .cs ? "Zdroje" : "Resources") {
+                        ForEach(ResourceType.allCases, id: \.self) { r in
+                            Button(r.displayName) { resource = r; materialID = nil }
+                        }
+                    }
+                    // Goods move off the stockpile, not out of storage — this is
+                    // the only way ore ever reaches a colony that has none.
+                    Section(AppStrings.language == .cs ? "Suroviny" : "Materials") {
+                        ForEach(game.tradableMaterials, id: \.id) { material in
+                            Button(material.name) { materialID = material.id }
+                        }
                     }
                 } label: {
-                    chip(label: resource.displayName, icon: resource.symbolName)
+                    chip(label: materialID.map { game.itemName($0) } ?? resource.displayName,
+                         icon: materialID == nil ? resource.symbolName : "shippingbox.fill")
                 }
                 Stepper("\(Int(caravanCargo)) cargo", value: $caravanCargo, in: 5...500, step: 5)
                     .font(.caption)
@@ -130,9 +185,15 @@ struct TradePanel: View {
 
     private func routeRow(_ route: TradeRoute) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: route.resource.symbolName).foregroundStyle(Theme.accent).frame(width: 20)
-            Text("\(game.settlementName(route.fromID)) → \(game.settlementName(route.toID))")
-                .font(.subheadline.weight(.medium))
+            Image(systemName: route.carriesMaterial ? "shippingbox.fill" : route.resource.symbolName)
+                .foregroundStyle(route.carriesMaterial ? Theme.good : Theme.accent)
+                .frame(width: 20)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("\(game.settlementName(route.fromID)) → \(game.settlementName(route.toID))")
+                    .font(.subheadline.weight(.medium))
+                Text(game.routeCargoName(route))
+                    .font(.caption2).foregroundStyle(Theme.textDim)
+            }
             Spacer()
             Text("\(Int(route.amountPerTick))/tick").font(.caption.monospacedDigit()).foregroundStyle(Theme.textDim)
             Button {
@@ -155,17 +216,30 @@ struct TradePanel: View {
             }
             HStack {
                 Menu {
-                    ForEach(ResourceType.allCases, id: \.self) { r in
-                        Button(r.displayName) { resource = r }
+                    Section(AppStrings.language == .cs ? "Zdroje" : "Resources") {
+                        ForEach(ResourceType.allCases, id: \.self) { r in
+                            Button(r.displayName) { resource = r; materialID = nil }
+                        }
+                    }
+                    // Goods move off the stockpile, not out of storage — this is
+                    // the only way ore ever reaches a colony that has none.
+                    Section(AppStrings.language == .cs ? "Suroviny" : "Materials") {
+                        ForEach(game.tradableMaterials, id: \.id) { material in
+                            Button(material.name) { materialID = material.id }
+                        }
                     }
                 } label: {
-                    chip(label: resource.displayName, icon: resource.symbolName)
+                    chip(label: materialID.map { game.itemName($0) } ?? resource.displayName,
+                         icon: materialID == nil ? resource.symbolName : "shippingbox.fill")
                 }
                 Stepper("\(Int(amount))/tick", value: $amount, in: 1...50, step: 1)
                     .font(.caption)
                 Spacer()
-                Button("Add") {
-                    if let f = resolvedFrom, let t = resolvedTo, f != t {
+                Button(AppStrings.language == .cs ? "Přidat" : "Add") {
+                    guard let f = resolvedFrom, let t = resolvedTo, f != t else { return }
+                    if let materialID {
+                        game.addMaterialRoute(from: f, to: t, materialID: materialID, units: amount)
+                    } else {
                         game.addTradeRoute(from: f, to: t, resource: resource, amount: amount)
                     }
                 }

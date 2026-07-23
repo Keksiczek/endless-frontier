@@ -125,7 +125,7 @@ struct ConstructionEngineTests {
 
     @Test("Demolishing a site cancels its project without touching the ledger")
     func demolishSiteCancelsProject() {
-        let cap = Settlement(name: "C", kind: .capital, storage: [.materials: 100], storageCapacity: 9999)
+        let cap = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-87cb5c040202")!, name: "C", kind: .capital, storage: [.materials: 100], storageCapacity: 9999)
         let world = WorldState(settlements: [cap])
         let placed = GameEngine.placeBuilding(world, settlementID: cap.id,
                                               buildingID: "farm", at: TileCoord(0, 0), registry: registry)
@@ -165,7 +165,7 @@ struct ConstructionEngineTests {
 
     @Test("A settlement JSON without construction fields still decodes")
     func decodesLegacySettlement() throws {
-        let legacy = Settlement(name: "Old", kind: .capital, pawns: Fixtures.pawns(2))
+        let legacy = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-d2f36cc36640")!, name: "Old", kind: .capital, pawns: Fixtures.pawns(2))
         var json = try JSONSerialization.jsonObject(
             with: JSONEncoder().encode(legacy)) as! [String: Any]
         json.removeValue(forKey: "constructions")

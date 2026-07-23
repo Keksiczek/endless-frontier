@@ -51,6 +51,7 @@ enum SettlementRenderer {
         time: Double,
         season: Season,
         camera: Camera,
+        continuousTick: Double = 0,
         selectedPawnID: UUID?,
         selectedBuildingID: Int?
     ) {
@@ -86,10 +87,14 @@ enum SettlementRenderer {
             houses: placed.filter { $0.glyph == .house && !$0.underConstruction },
             time: time, zoom: zoom)
 
-        agents(&context, rect: rect, settlement: settlement, map: map,
+        agents(&context, rect: rect, settlement: settlement, map: map, continuousTick: continuousTick,
                registry: registry, time: time, zoom: zoom, selectedPawnID: selectedPawnID)
         SettlementFigures.birds(&context, rect: rect, season: season, time: time, zoom: zoom)
-        fog(&context, rect: rect, map: map)
+        // A raid plays out over the scene it happens to — above the people,
+        // under the fog, so the dark still hides what the colony cannot see.
+        SettlementBattle.draw(&context, rect: rect, settlement: settlement,
+                              continuousTick: continuousTick, time: time, zoom: zoom)
+        fog(&context, rect: rect, map: map, time: time)
         // The seasonal wash is atmosphere over the lens, not part of the world,
         // so it stays in view space and doesn't slide when you pan.
         seasonWash(&context, rect: viewRect, size: size, season: season, time: time)
@@ -122,6 +127,15 @@ enum SettlementRenderer {
     /// Maps a normalised model point to a pixel point in `rect`.
     static func point(_ p: LocalPoint, in rect: CGRect) -> CGPoint {
         CGPoint(x: rect.minX + p.x * rect.width, y: rect.minY + p.y * rect.height)
+    }
+
+    /// The inverse of `point`: where on the map a tap landed, clamped to it.
+    /// Lets a tap on the fog name the ground the scouts should walk to.
+    static func normalised(_ p: CGPoint, in rect: CGRect) -> LocalPoint {
+        guard rect.width > 0, rect.height > 0 else { return LocalPoint(x: 0.5, y: 0.5) }
+        return LocalPoint(
+            x: min(1, max(0, (p.x - rect.minX) / rect.width)),
+            y: min(1, max(0, (p.y - rect.minY) / rect.height)))
     }
 
     // MARK: - Wilderness (surveying a region without a settlement)
@@ -316,14 +330,19 @@ enum SettlementRenderer {
         let unit = min(rect.width, rect.height)
         for poi in map.pois where poi.discovered && map.isExplored(poi.position) {
             let c = point(poi.position, in: rect)
-            // A faint halo separates a landmark from mere scenery.
+            // A faint halo separates a landmark from mere scenery — and says
+            // at a glance whether the place still has anything to give. A
+            // picked-clean ruin should not keep inviting you over.
+            let spent = poi.isExhausted
             let halo = unit * 0.024
             context.fill(Path(ellipseIn: CGRect(x: c.x - halo, y: c.y - halo,
                                                 width: halo * 2, height: halo * 2)),
-                         with: .color(Theme.accent.opacity(0.06)))
+                         with: .color(Theme.accent.opacity(spent ? 0.02 : 0.06)))
             context.stroke(Path(ellipseIn: CGRect(x: c.x - halo, y: c.y - halo,
                                                   width: halo * 2, height: halo * 2)),
-                           with: .color(Theme.accent.opacity(0.22)), lineWidth: 0.7)
+                           with: .color(spent ? Theme.textDim.opacity(0.18)
+                                              : Theme.accent.opacity(0.22)),
+                           lineWidth: 0.7)
             SettlementStructures.poi(poi.kind, at: c,
                                      s: unit * 0.014, time: time, context: &context)
             if showLabels {
@@ -491,73 +510,131 @@ enum SettlementRenderer {
     ) {
         switch kind {
         case .tree:
-            context.stroke(Path { p in
-                p.move(to: CGPoint(x: c.x, y: c.y + s * 0.9))
-                p.addLine(to: CGPoint(x: c.x, y: c.y))
-            }, with: .color(Color(red: 0.40, green: 0.33, blue: 0.26)), lineWidth: 1)
+            // A shadow, a filled trunk, and a lobed canopy with real mass —
+            // not an outline the terrain shows straight through.
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.85, y: c.y + s * 0.72,
+                                                width: s * 1.7, height: s * 0.5)),
+                         with: .color(Theme.ink.opacity(0.20)))
+            context.fill(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.15, y: c.y + s * 0.9))
+                p.addLine(to: CGPoint(x: c.x - s * 0.06, y: c.y - s * 0.1))
+                p.addLine(to: CGPoint(x: c.x + s * 0.06, y: c.y - s * 0.1))
+                p.addLine(to: CGPoint(x: c.x + s * 0.15, y: c.y + s * 0.9))
+                p.closeSubpath()
+            }, with: .color(Color(red: 0.34, green: 0.27, blue: 0.20)))
             if season == .winter {
                 // Bare branches instead of a canopy.
                 context.stroke(Path { p in
-                    p.move(to: CGPoint(x: c.x, y: c.y))
+                    p.move(to: CGPoint(x: c.x, y: c.y + s * 0.2))
                     p.addLine(to: CGPoint(x: c.x - s * 0.7, y: c.y - s * 1.0))
-                    p.move(to: CGPoint(x: c.x, y: c.y - s * 0.3))
+                    p.move(to: CGPoint(x: c.x, y: c.y - s * 0.1))
                     p.addLine(to: CGPoint(x: c.x + s * 0.65, y: c.y - s * 1.15))
-                    p.move(to: CGPoint(x: c.x, y: c.y - s * 0.6))
+                    p.move(to: CGPoint(x: c.x, y: c.y - s * 0.4))
                     p.addLine(to: CGPoint(x: c.x - s * 0.3, y: c.y - s * 1.4))
-                }, with: .color(canopyColor(season)), lineWidth: 0.9)
+                }, with: .color(Color(red: 0.34, green: 0.27, blue: 0.20)), lineWidth: 0.9)
             } else {
-                context.stroke(Path(ellipseIn: CGRect(x: c.x - s * 0.8, y: c.y - s * 1.5,
-                                                      width: s * 1.6, height: s * 1.5)),
-                               with: .color(canopyColor(season)), lineWidth: 1)
+                let canopy = canopyColor(season)
+                let lobes: [(CGFloat, CGFloat, CGFloat)] =
+                    [(-0.5, -0.75, 0.8), (0.5, -0.8, 0.78), (0, -1.25, 0.92)]
+                for (dx, dy, r) in lobes {
+                    context.fill(Path(ellipseIn: CGRect(x: c.x + dx * s - r * s, y: c.y + dy * s - r * s,
+                                                        width: r * s * 2, height: r * s * 2)),
+                                 with: .color(canopy))
+                }
+                // A sunlit highlight on the crown gives the foliage form.
+                context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.55, y: c.y - s * 1.55,
+                                                    width: s * 0.7, height: s * 0.7)),
+                             with: .color(.white.opacity(0.12)))
                 if season == .autumn {
-                    // A few fallen leaves at the foot.
                     for i in 0..<3 {
                         let lx = c.x + CGFloat(i - 1) * s * 0.5
-                        context.fill(Path(ellipseIn: CGRect(x: lx, y: c.y + s * 0.85,
-                                                            width: 1.4, height: 1.0)),
-                                     with: .color(canopyColor(season).opacity(0.7)))
+                        context.fill(Path(ellipseIn: CGRect(x: lx, y: c.y + s * 0.8,
+                                                            width: 1.6, height: 1.1)),
+                                     with: .color(canopy.opacity(0.8)))
                     }
                 }
             }
         case .pine:
             let pine = season == .winter
-                ? Color(red: 0.42, green: 0.52, blue: 0.50)
-                : Color(red: 0.32, green: 0.50, blue: 0.38)
-            context.stroke(Path { p in
-                p.move(to: CGPoint(x: c.x, y: c.y + s))
-                p.addLine(to: CGPoint(x: c.x, y: c.y + s * 0.5))
-            }, with: .color(Color(red: 0.34, green: 0.28, blue: 0.22)), lineWidth: 1)
+                ? Color(red: 0.36, green: 0.46, blue: 0.44)
+                : Color(red: 0.28, green: 0.44, blue: 0.33)
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.7, y: c.y + s * 0.78,
+                                                width: s * 1.4, height: s * 0.42)),
+                         with: .color(Theme.ink.opacity(0.20)))
+            context.fill(Path(CGRect(x: c.x - s * 0.09, y: c.y + s * 0.45,
+                                     width: s * 0.18, height: s * 0.65)),
+                         with: .color(Color(red: 0.32, green: 0.25, blue: 0.19)))
             for tier in 0..<3 {
                 let t = CGFloat(tier)
-                context.stroke(Path { p in
-                    let top = c.y - s * 1.4 + t * s * 0.55
-                    let w = s * (0.4 + t * 0.28)
-                    p.move(to: CGPoint(x: c.x - w, y: top + s * 0.5))
+                let top = c.y - s * 1.4 + t * s * 0.55
+                let w = s * (0.42 + t * 0.3)
+                context.fill(Path { p in
+                    p.move(to: CGPoint(x: c.x - w, y: top + s * 0.58))
                     p.addLine(to: CGPoint(x: c.x, y: top))
-                    p.addLine(to: CGPoint(x: c.x + w, y: top + s * 0.5))
-                }, with: .color(pine), lineWidth: 1)
+                    p.addLine(to: CGPoint(x: c.x + w, y: top + s * 0.58))
+                    p.closeSubpath()
+                }, with: .color(pine.opacity(1 - t * 0.08)))
+            }
+            if season == .winter {
+                // Snow settled on the crown.
+                context.fill(Path { p in
+                    p.move(to: CGPoint(x: c.x - s * 0.32, y: c.y - s * 0.95))
+                    p.addLine(to: CGPoint(x: c.x, y: c.y - s * 1.4))
+                    p.addLine(to: CGPoint(x: c.x + s * 0.32, y: c.y - s * 0.95))
+                    p.closeSubpath()
+                }, with: .color(.white.opacity(0.5)))
             }
         case .bush:
-            context.stroke(Path(ellipseIn: CGRect(x: c.x - s * 0.6, y: c.y - s * 0.45,
-                                                  width: s * 1.2, height: s * 0.9)),
-                           with: .color(canopyColor(season).opacity(0.9)), lineWidth: 1)
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.7, y: c.y + s * 0.32,
+                                                width: s * 1.4, height: s * 0.34)),
+                         with: .color(Theme.ink.opacity(0.16)))
+            let bushC = canopyColor(season)
+            let lobes: [(CGFloat, CGFloat, CGFloat)] = [(-0.4, 0, 0.55), (0.4, 0, 0.55), (0, -0.2, 0.66)]
+            for (dx, dy, r) in lobes {
+                context.fill(Path(ellipseIn: CGRect(x: c.x + dx * s - r * s, y: c.y + dy * s - r * s,
+                                                    width: r * s * 2, height: r * s * 2)),
+                             with: .color(bushC.opacity(0.92)))
+            }
         case .rock:
-            context.stroke(Path { p in
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.6, y: c.y + s * 0.3,
+                                                width: s * 1.2, height: s * 0.3)),
+                         with: .color(Theme.ink.opacity(0.18)))
+            let face = Path { p in
                 p.move(to: CGPoint(x: c.x - s * 0.5, y: c.y + s * 0.4))
                 p.addLine(to: CGPoint(x: c.x - s * 0.2, y: c.y - s * 0.4))
                 p.addLine(to: CGPoint(x: c.x + s * 0.4, y: c.y - s * 0.25))
                 p.addLine(to: CGPoint(x: c.x + s * 0.55, y: c.y + s * 0.4))
                 p.closeSubpath()
-            }, with: .color(Color(red: 0.55, green: 0.57, blue: 0.61)), lineWidth: 1)
+            }
+            context.fill(face, with: .color(Color(red: 0.55, green: 0.57, blue: 0.61)))
+            // A shaded facet turns the flat stone into a solid.
+            context.fill(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.2, y: c.y - s * 0.4))
+                p.addLine(to: CGPoint(x: c.x + s * 0.4, y: c.y - s * 0.25))
+                p.addLine(to: CGPoint(x: c.x + s * 0.55, y: c.y + s * 0.4))
+                p.closeSubpath()
+            }, with: .color(Color(red: 0.42, green: 0.44, blue: 0.48)))
+            context.stroke(face, with: .color(Color(red: 0.70, green: 0.72, blue: 0.76).opacity(0.5)), lineWidth: 0.6)
         case .boulder:
-            context.stroke(Path { p in
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.95, y: c.y + s * 0.5,
+                                                width: s * 1.9, height: s * 0.4)),
+                         with: .color(Theme.ink.opacity(0.2)))
+            let boulder = Path { p in
                 p.move(to: CGPoint(x: c.x - s * 0.9, y: c.y + s * 0.7))
                 p.addLine(to: CGPoint(x: c.x - s * 0.5, y: c.y - s * 0.6))
                 p.addLine(to: CGPoint(x: c.x + s * 0.3, y: c.y - s * 0.85))
                 p.addLine(to: CGPoint(x: c.x + s * 0.95, y: c.y + s * 0.2))
                 p.addLine(to: CGPoint(x: c.x + s * 0.6, y: c.y + s * 0.7))
                 p.closeSubpath()
-            }, with: .color(Color(red: 0.50, green: 0.52, blue: 0.57)), lineWidth: 1.2)
+            }
+            context.fill(boulder, with: .color(Color(red: 0.50, green: 0.52, blue: 0.57)))
+            context.fill(Path { p in
+                p.move(to: CGPoint(x: c.x + s * 0.3, y: c.y - s * 0.85))
+                p.addLine(to: CGPoint(x: c.x + s * 0.95, y: c.y + s * 0.2))
+                p.addLine(to: CGPoint(x: c.x + s * 0.6, y: c.y + s * 0.7))
+                p.closeSubpath()
+            }, with: .color(Color(red: 0.38, green: 0.40, blue: 0.45)))
+            context.stroke(boulder, with: .color(Color(red: 0.66, green: 0.68, blue: 0.72).opacity(0.45)), lineWidth: 0.7)
         case .flowers:
             // Blooms in spring and summer; bare stems otherwise.
             let blooming = season == .spring || season == .summer
@@ -716,6 +793,41 @@ enum SettlementRenderer {
                     p.addLine(to: CGPoint(x: ox + 1.6 * z, y: oy))
                 }, with: .color(herb), lineWidth: 1)
             }
+        case .ironOre:
+            // A cut face with the seam running through it — rock, but rock
+            // that's worth something to a forge.
+            let face = CGRect(x: c.x - 9 * z, y: c.y - 6 * z, width: 18 * z, height: 12 * z)
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: face.minX, y: face.maxY))
+                p.addLine(to: CGPoint(x: face.minX + 3 * z, y: face.minY))
+                p.addLine(to: CGPoint(x: face.maxX - 3 * z, y: face.minY))
+                p.addLine(to: CGPoint(x: face.maxX, y: face.maxY))
+                p.closeSubpath()
+            }, with: .color(shade.opacity(0.55)), lineWidth: 1)
+            for i in 0..<max(2, count / 2) {
+                let t = Double(i) / Double(max(1, count / 2))
+                let y = face.minY + CGFloat(t) * face.height
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: face.minX + 3 * z, y: y))
+                    p.addLine(to: CGPoint(x: face.maxX - 4 * z, y: y + 1.5 * z))
+                }, with: .color(shade.opacity(0.35 + fraction * 0.5)),
+                style: StrokeStyle(lineWidth: 1.4, dash: [3, 2]))
+            }
+        case .clay:
+            // A dug pit: an open bowl with spoil heaped beside it.
+            context.stroke(Path { p in
+                p.addArc(center: CGPoint(x: c.x, y: c.y - 1 * z), radius: 8 * z,
+                         startAngle: .degrees(0), endAngle: .degrees(180), clockwise: false)
+            }, with: .color(shade.opacity(0.7)), lineWidth: 1)
+            for i in 0..<max(2, count / 2) {
+                let ox = c.x + (CGFloat((i * 9) % 15) - 7) * z
+                let oy = c.y + 4 * z + CGFloat(i % 2) * 2 * z
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: ox - 3 * z, y: oy))
+                    p.addLine(to: CGPoint(x: ox, y: oy - 2.4 * z))
+                    p.addLine(to: CGPoint(x: ox + 3 * z, y: oy))
+                }, with: .color(shade.opacity(0.3 + fraction * 0.5)), lineWidth: 1)
+            }
         }
     }
 
@@ -749,11 +861,18 @@ enum SettlementRenderer {
         let name: String
         let glyph: BuildingGlyph
         let center: LocalPoint
-        /// Footprint size as a fraction of the canvas's short side.
+        /// Glyph size as a fraction of the canvas's short side.
         let size: Double
+        /// The ground the building actually covers, as fractions of the short
+        /// side — width×height of its footprint, so a 2×2 stands on a 2×2 plot
+        /// instead of hovering as a single glyph.
+        let footprintW: Double
+        let footprintH: Double
         let underConstruction: Bool
         /// Construction completion 0…1 (1 when built).
         let progress: Double
+        /// A stable per-building seed for cosmetic variation (tone, size).
+        let seed: UInt64
     }
 
     /// The same structure mapped to pixels for one frame.
@@ -764,8 +883,24 @@ enum SettlementRenderer {
         let glyph: BuildingGlyph
         let center: CGPoint
         let size: CGFloat
+        /// The building's footprint on the ground, in pixels.
+        let footprint: CGSize
         let underConstruction: Bool
         let progress: Double
+        let seed: UInt64
+    }
+
+    /// A stable per-building seed for cosmetic variation — from a placement's
+    /// id where there is one, else its kind and ring slot.
+    static func buildingSeed(_ uuid: UUID) -> UInt64 {
+        let u = uuid.uuid
+        return UInt64(u.0) << 56 | UInt64(u.1) << 48 | UInt64(u.2) << 40 | UInt64(u.3) << 32
+             | UInt64(u.4) << 24 | UInt64(u.5) << 16 | UInt64(u.6) << 8 | UInt64(u.7)
+    }
+    static func buildingSeed(_ id: String, _ index: Int) -> UInt64 {
+        var h: UInt64 = 0xCBF2_9CE4_8422_2325
+        for byte in id.utf8 { h = (h ^ UInt64(byte)) &* 0x0100_0000_01B3 }
+        return h ^ UInt64(bitPattern: Int64(index))
     }
 
     /// Where the settlement's heart sits on the canvas — the fog is cleared
@@ -805,7 +940,8 @@ enum SettlementRenderer {
         return normalizedLayout(settlement: settlement, registry: registry).map { b in
             PlacedBuilding(id: b.id, definitionID: b.definitionID, name: b.name, glyph: b.glyph,
                            center: point(b.center, in: rect), size: unit * b.size,
-                           underConstruction: b.underConstruction, progress: b.progress)
+                           footprint: CGSize(width: b.footprintW * unit, height: b.footprintH * unit),
+                           underConstruction: b.underConstruction, progress: b.progress, seed: b.seed)
         }
     }
 
@@ -825,15 +961,24 @@ enum SettlementRenderer {
             let glyph = def.map(glyph(for:)) ?? .house
             let progress = settlement.constructions
                 .first { $0.placementID == placement.id }?.fraction
+            let label = def?.name.resolve(AppStrings.language) ?? placement.definitionID
+            // The footprint in canvas fractions: one tile is this slice of the
+            // built span, and the plot is as many tiles wide and tall as the
+            // building covers.
+            let tileW = colonySpan / Double(max(1, colony.width))
+            let tileH = colonySpan / Double(max(1, colony.height))
             return NormalizedBuilding(
                 id: index,
                 definitionID: placement.definitionID,
-                name: def?.name ?? placement.definitionID,
+                name: label,
                 glyph: glyph,
                 center: p,
                 size: 0.021 * Double(max(placement.width, placement.height)),
+                footprintW: Double(max(1, placement.width)) * tileW,
+                footprintH: Double(max(1, placement.height)) * tileH,
                 underConstruction: placement.underConstruction,
-                progress: placement.underConstruction ? (progress ?? 0) : 1)
+                progress: placement.underConstruction ? (progress ?? 0) : 1,
+                seed: buildingSeed(placement.id))
         }
     }
 
@@ -848,7 +993,8 @@ enum SettlementRenderer {
             let def = registry.building(instance.definitionID)
             let g = def.map(glyph(for:)) ?? .house
             for _ in 0..<instance.count where expanded.count < maxVisibleBuildings {
-                expanded.append((instance.definitionID, def?.name ?? instance.definitionID, g))
+                expanded.append((instance.definitionID,
+                                 def?.name.resolve(AppStrings.language) ?? instance.definitionID, g))
             }
         }
         guard !expanded.isEmpty else { return [] }
@@ -869,7 +1015,9 @@ enum SettlementRenderer {
                 placed.append(NormalizedBuilding(
                     id: drawn, definitionID: expanded[drawn].id,
                     name: expanded[drawn].name, glyph: expanded[drawn].glyph,
-                    center: c, size: 0.021, underConstruction: false, progress: 1))
+                    center: c, size: 0.021, footprintW: 0.05, footprintH: 0.05,
+                    underConstruction: false, progress: 1,
+                    seed: buildingSeed(expanded[drawn].id, drawn)))
                 drawn += 1
             }
             ringIndex += 1
@@ -896,6 +1044,13 @@ enum SettlementRenderer {
         time: Double, night: Double = 0, showLabels: Bool = false,
         selectedBuildingID: Int?
     ) {
+        // Foundations first — every building's plot, drawn before any structure,
+        // so a later lot never paints over an earlier roof and adjacent lots
+        // knit into one cleared, built-up ground the town sits on.
+        for building in placed {
+            floorPlot(&context, at: building.center, footprint: building.footprint,
+                      underConstruction: building.underConstruction)
+        }
         for building in placed {
             if building.underConstruction {
                 SettlementStructures.site(at: building.center, s: building.size,
@@ -903,7 +1058,7 @@ enum SettlementRenderer {
             } else {
                 SettlementStructures.building(building.glyph, at: building.center,
                                               s: building.size, time: time, night: night,
-                                              context: &context)
+                                              seed: building.seed, context: &context)
             }
             if building.id == selectedBuildingID {
                 let r = building.size * 2.6
@@ -926,16 +1081,59 @@ enum SettlementRenderer {
         }
     }
 
+    /// The plot a structure stands on — cleared, framed ground the size of the
+    /// building's footprint. This is the foundation of the multi-tile world:
+    /// a 2×2 building owns a 2×2 lot, adjacent lots merge into built-up land,
+    /// and a construction site reserves its ground with a dashed outline. Read
+    /// only from the layout; nothing here touches the simulation.
+    private static func floorPlot(
+        _ context: inout GraphicsContext, at c: CGPoint, footprint: CGSize,
+        underConstruction: Bool
+    ) {
+        guard footprint.width > 2, footprint.height > 2 else { return }
+        // A hair of margin so neighbouring lots still read as separate parcels.
+        let w = footprint.width * 0.92, h = footprint.height * 0.92
+        let rect = CGRect(x: c.x - w / 2, y: c.y - h / 2, width: w, height: h)
+        let radius = min(w, h) * 0.16
+        let shape = Path(roundedRect: rect, cornerRadius: radius)
+        if underConstruction {
+            context.fill(shape, with: .color(Theme.bone.opacity(0.05)))
+            context.stroke(shape, with: .color(Theme.boneFaint.opacity(0.65)),
+                           style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+        } else {
+            // Packed, cleared earth — warmer and darker than the wild grass, so
+            // the built ground reads as a place people made.
+            context.fill(shape, with: .color(Color(red: 0.20, green: 0.18, blue: 0.15).opacity(0.6)))
+            context.stroke(shape, with: .color(Theme.boneFaint.opacity(0.4)), lineWidth: 0.8)
+        }
+    }
+
     // MARK: - Colonists
+
+    /// Who gets drawn when the crowd is capped.
+    ///
+    /// The cap keeps a boom-town cheap, but taking a plain `prefix` means that
+    /// in a colony past ninety souls the party out at the ruins — the one thing
+    /// the player is deliberately watching — could fall off the end of the array
+    /// and simply not be drawn. Anyone away goes in first; the rest fill the
+    /// remaining seats.
+    static func visibleAgents(_ settlement: Settlement) -> [Pawn] {
+        guard settlement.pawns.count > maxVisibleAgents else { return settlement.pawns }
+        let away = settlement.pawns.filter(\.isAway)
+        guard !away.isEmpty else { return Array(settlement.pawns.prefix(maxVisibleAgents)) }
+        let home = settlement.pawns.filter { !$0.isAway }
+        return away + home.prefix(max(0, maxVisibleAgents - away.count))
+    }
 
     private static func agents(
         _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement,
-        map: LocalMap, registry: GameDataRegistry, time: Double, zoom: CGFloat,
-        selectedPawnID: UUID?
+        map: LocalMap, continuousTick: Double, registry: GameDataRegistry,
+        time: Double, zoom: CGFloat, selectedPawnID: UUID?
     ) {
-        let scene = AgentMotion.Scene(settlement: settlement, registry: registry)
+        let scene = AgentMotion.Scene(settlement: settlement, registry: registry,
+                                      continuousTick: continuousTick)
         let ticksPerYear = registry.config.ticksPerYear
-        for pawn in settlement.pawns.prefix(maxVisibleAgents) {
+        for pawn in visibleAgents(settlement) {
             let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
                                         time: time, ticksPerYear: ticksPerYear)
             guard map.isExplored(pose.position) else { continue }
@@ -948,7 +1146,9 @@ enum SettlementRenderer {
 
     // MARK: - Fog of war
 
-    private static func fog(_ context: inout GraphicsContext, rect: CGRect, map: LocalMap) {
+    private static func fog(
+        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double
+    ) {
         let cols = LocalMap.gridColumns, rows = LocalMap.gridRows
         let cw = rect.width / CGFloat(cols), ch = rect.height / CGFloat(rows)
         var covered = Path()
@@ -960,6 +1160,31 @@ enum SettlementRenderer {
             }
         }
         context.fill(covered, with: .color(Theme.ink.opacity(0.86)))
+        scoutOrder(&context, rect: rect, map: map, time: time)
+    }
+
+    /// Where the player has sent the scouts, marked in the dark they were sent
+    /// into. Without this an order lands silently and the tap reads as a
+    /// no-op — the ground it points at is, by definition, not yet drawn.
+    private static func scoutOrder(
+        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double
+    ) {
+        guard let focus = map.scoutFocus else { return }
+        let c = point(focus, in: rect)
+        let unit = min(rect.width, rect.height)
+        // A slow beacon: two rings breathing out of phase, so it reads as
+        // "on its way" rather than as something already found.
+        for i in 0..<2 {
+            let phase = (time * 0.5 + Double(i) * 0.5).truncatingRemainder(dividingBy: 1)
+            let r = unit * (0.012 + 0.028 * phase)
+            context.stroke(
+                Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)),
+                with: .color(Theme.accent.opacity(0.5 * (1 - phase))), lineWidth: 1.2)
+        }
+        let dot = unit * 0.006
+        context.fill(Path(ellipseIn: CGRect(x: c.x - dot, y: c.y - dot,
+                                            width: dot * 2, height: dot * 2)),
+                     with: .color(Theme.accent.opacity(0.85)))
     }
 
     // MARK: - Season

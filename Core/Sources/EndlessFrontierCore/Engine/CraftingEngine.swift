@@ -62,11 +62,20 @@ public enum CraftingEngine {
         }
         var s = state
 
-        // Consume materials.
+        // Consume materials: the counted stockpile first, then whatever is
+        // still held as loose instances from loot or an older save.
         for (materialID, needed) in recipe.materials {
+            var remaining = needed
+            let stocked = s.settlements[index].stockpile[materialID] ?? 0
+            let fromStock = min(stocked, remaining)
+            if fromStock > 0 {
+                s.settlements[index].stockpile[materialID] = stocked - fromStock
+                remaining -= fromStock
+            }
+            guard remaining > 0 else { continue }
             var removed = 0
             s.settlements[index].inventory.removeAll { instance in
-                guard removed < needed, instance.definitionID == materialID else { return false }
+                guard removed < remaining, instance.definitionID == materialID else { return false }
                 removed += 1
                 return true
             }
@@ -76,14 +85,27 @@ public enum CraftingEngine {
             s.settlements[index].storage[resource] =
                 s.settlements[index].storage[resource] - recipe.resourceCost[resource]
         }
-        // Produce the output (deterministic id).
-        var rng = SeededRNG(seed: craftSeed(state: s, recipeID: recipeID, settlementIndex: index))
-        s.settlements[index].inventory.append(ItemInstance(id: rng.nextUUID(), definitionID: recipe.outputItemID))
+        // Produce the output. A material is a count on the pile; a piece of
+        // gear or an artifact is a thing, with an id, that someone can carry.
+        if registry.item(recipe.outputItemID)?.slot == .material {
+            s.settlements[index].stockpile[recipe.outputItemID, default: 0] += 1
+        } else {
+            var rng = SeededRNG(seed: craftSeed(state: s, recipeID: recipeID, settlementIndex: index))
+            s.settlements[index].inventory.append(
+                ItemInstance(id: rng.nextUUID(), definitionID: recipe.outputItemID))
+        }
         return s
     }
 
+    /// Materials on hand: the counted stockpile plus anything still sitting in
+    /// the inventory as individual instances.
+    ///
+    /// Both are read because materials used to be loot instances only. A save
+    /// written before the stockpile existed still has its ingots in
+    /// `inventory`, and site drops may still land there — a craft must see
+    /// them either way, or a player's hoard silently stops counting.
     static func materialCounts(_ settlement: Settlement) -> [String: Int] {
-        settlement.inventory.reduce(into: [:]) { counts, instance in
+        settlement.inventory.reduce(into: settlement.stockpile) { counts, instance in
             counts[instance.definitionID, default: 0] += 1
         }
     }

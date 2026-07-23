@@ -23,7 +23,7 @@ struct ColonyBonusTests {
     @Test("Adjacent complementary buildings grant production and morale")
     func adjacencyGrantsBonus() {
         let reg = registry()
-        var s = Settlement(name: "T", kind: .capital)
+        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-e64efd26898d")!, name: "T", kind: .capital)
         s = ColonyBuilder.place(s, definitionID: "farm", at: TileCoord(0, 0), registry: reg)
         s = ColonyBuilder.place(s, definitionID: "well", at: TileCoord(1, 0), registry: reg)
 
@@ -34,7 +34,7 @@ struct ColonyBonusTests {
     @Test("No bonus when the buildings are not adjacent")
     func noBonusApart() {
         let reg = registry()
-        var s = Settlement(name: "T", kind: .capital)
+        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-9d2acf13f1f8")!, name: "T", kind: .capital)
         s = ColonyBuilder.place(s, definitionID: "farm", at: TileCoord(0, 0), registry: reg)
         s = ColonyBuilder.place(s, definitionID: "well", at: TileCoord(5, 5), registry: reg)
 
@@ -45,7 +45,7 @@ struct ColonyBonusTests {
     @Test("Adjacency feeds the resource loop's per-tick production")
     func adjacencyFeedsTick() {
         let reg = registry()
-        var s = Settlement(name: "T", kind: .capital,                            storage: [.food: 0], storageCapacity: 9999)
+        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-44b69a27541b")!, name: "T", kind: .capital,                            storage: [.food: 0], storageCapacity: 9999)
         s = ColonyBuilder.place(s, definitionID: "farm", at: TileCoord(0, 0), registry: reg)
         s = ColonyBuilder.place(s, definitionID: "well", at: TileCoord(1, 0), registry: reg)
 
@@ -58,7 +58,7 @@ struct ColonyBonusTests {
     @Test("A settlement with no colony grid gets no synergies")
     func noColonyNoBonus() {
         let reg = registry()
-        let s = Settlement(name: "T", kind: .capital,
+        let s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-3ccd428880cc")!, name: "T", kind: .capital,
                            buildings: [BuildingInstance(definitionID: "farm", count: 1)])
         #expect(ColonyBonus.adjacencyProduction(s, registry: reg)[.food] == 0)
     }
@@ -66,7 +66,7 @@ struct ColonyBonusTests {
     @Test("Painted zones add morale, and it flows through the morale bonus")
     func zoneMorale() {
         let reg = registry()
-        var s = Settlement(name: "T", kind: .capital)
+        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-3137a579224a")!, name: "T", kind: .capital)
         s = ColonyBuilder.paintZone(s, at: TileCoord(2, 2), kind: .park)
         s = ColonyBuilder.paintZone(s, at: TileCoord(3, 2), kind: .park)
         // park = 0.6 morale per tile × 2 tiles.
@@ -76,7 +76,7 @@ struct ColonyBonusTests {
 
     @Test("Repainting replaces a tile's zone; erasing clears it")
     func zonePaintErase() {
-        var s = Settlement(name: "T", kind: .capital)
+        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-1c700058615a")!, name: "T", kind: .capital)
         s = ColonyBuilder.paintZone(s, at: TileCoord(1, 1), kind: .park)
         #expect(s.colony?.zoneKind(at: TileCoord(1, 1)) == .park)
 
@@ -90,7 +90,7 @@ struct ColonyBonusTests {
 
     @Test("Zone morale is capped so a colony can't be all parks")
     func zoneMoraleCapped() {
-        var s = Settlement(name: "T", kind: .capital)
+        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-c9bcf9e2ac87")!, name: "T", kind: .capital)
         for x in 0..<12 { for y in 0..<10 {
             s = ColonyBuilder.paintZone(s, at: TileCoord(x, y), kind: .park)
         } }

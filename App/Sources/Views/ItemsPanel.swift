@@ -58,7 +58,7 @@ struct ItemsPanel: View {
             Circle().fill(def.rarity.color).frame(width: 10, height: 10)
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 6) {
-                    Text(def.name).font(.subheadline.weight(.semibold))
+                    Text(def.name.resolve(AppStrings.language)).font(.subheadline.weight(.semibold))
                     Text(def.rarity.rawValue.capitalized)
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(def.rarity.color)

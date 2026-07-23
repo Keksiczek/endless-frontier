@@ -56,69 +56,117 @@ enum SettlementWildlife {
         }
     }
 
-    /// A grazing deer: body, neck, and now and then the head goes down to the
-    /// grass — enough motion to read as an animal, not a rock.
+    /// A grazing deer — a stag lifts an antlered head now and then, a doe just
+    /// grazes. Filled hide, four legs, a soft shadow, a white scut: an animal,
+    /// not a mark on the grass.
     private static func deer(
         _ context: inout GraphicsContext, at p: CGPoint, s: CGFloat,
         time: Double, phase: Double
     ) {
-        let hide = Color(red: 0.72, green: 0.62, blue: 0.46).opacity(0.9)
+        let hide = Color(red: 0.72, green: 0.62, blue: 0.46)
+        let dark = Color(red: 0.53, green: 0.44, blue: 0.32)
         let grazing = sin(time * 0.6 + phase) > 0.3
-        let headY = grazing ? p.y + s * 0.55 : p.y - s * 0.9
+        let stag = Int(phase.rounded()) % 2 == 0
+        let headY = grazing ? p.y + s * 0.55 : p.y - s * 0.95
         let headX = p.x + s * 1.35
 
-        // Body and legs.
-        context.stroke(Path(ellipseIn: CGRect(x: p.x - s, y: p.y - s * 0.5,
-                                              width: s * 2, height: s)),
-                       with: .color(hide), lineWidth: 1)
-        var legs = Path()
-        legs.move(to: CGPoint(x: p.x - s * 0.6, y: p.y + s * 0.4))
-        legs.addLine(to: CGPoint(x: p.x - s * 0.6, y: p.y + s * 1.3))
-        legs.move(to: CGPoint(x: p.x + s * 0.6, y: p.y + s * 0.4))
-        legs.addLine(to: CGPoint(x: p.x + s * 0.6, y: p.y + s * 1.3))
-        context.stroke(legs, with: .color(hide), lineWidth: 0.9)
-        // Neck and head.
-        var head = Path()
-        head.move(to: CGPoint(x: p.x + s * 0.9, y: p.y - s * 0.2))
-        head.addLine(to: CGPoint(x: headX, y: headY))
-        context.stroke(head, with: .color(hide), lineWidth: 0.9)
-        context.fill(Path(ellipseIn: CGRect(x: headX - s * 0.25, y: headY - s * 0.25,
-                                            width: s * 0.5, height: s * 0.5)),
+        // Shadow.
+        context.fill(Path(ellipseIn: CGRect(x: p.x - s * 1.1, y: p.y + s * 1.05,
+                                            width: s * 2.4, height: s * 0.5)),
+                     with: .color(Theme.ink.opacity(0.18)))
+        // Four legs.
+        for dx in [-0.65, -0.45, 0.45, 0.65] as [CGFloat] {
+            context.fill(Path(CGRect(x: p.x + dx * s - s * 0.09, y: p.y + s * 0.2,
+                                     width: s * 0.18, height: s * 1.15)),
+                         with: .color(dark))
+        }
+        // Body.
+        context.fill(Path(ellipseIn: CGRect(x: p.x - s, y: p.y - s * 0.55,
+                                            width: s * 2, height: s * 1.1)),
                      with: .color(hide))
-        // Ears when the head is up.
+        // A white scut at the tail.
+        context.fill(Path(ellipseIn: CGRect(x: p.x - s * 1.12, y: p.y - s * 0.3,
+                                            width: s * 0.4, height: s * 0.4)),
+                     with: .color(.white.opacity(0.5)))
+        // Neck + head.
+        context.fill(Path { n in
+            n.move(to: CGPoint(x: p.x + s * 0.55, y: p.y - s * 0.35))
+            n.addLine(to: CGPoint(x: p.x + s * 1.0, y: p.y - s * 0.1))
+            n.addLine(to: CGPoint(x: headX, y: headY))
+            n.addLine(to: CGPoint(x: headX - s * 0.3, y: headY + s * 0.25))
+            n.closeSubpath()
+        }, with: .color(hide))
+        context.fill(Path(ellipseIn: CGRect(x: headX - s * 0.32, y: headY - s * 0.28,
+                                            width: s * 0.62, height: s * 0.52)),
+                     with: .color(hide))
         if !grazing {
-            context.stroke(Path { path in
-                path.move(to: CGPoint(x: headX, y: headY - s * 0.2))
-                path.addLine(to: CGPoint(x: headX + s * 0.3, y: headY - s * 0.6))
-            }, with: .color(hide), lineWidth: 0.7)
+            context.stroke(Path { e in
+                e.move(to: CGPoint(x: headX, y: headY - s * 0.2))
+                e.addLine(to: CGPoint(x: headX + s * 0.32, y: headY - s * 0.55))
+            }, with: .color(dark), lineWidth: 0.7)
+            if stag {
+                // Branching antlers.
+                context.stroke(Path { a in
+                    a.move(to: CGPoint(x: headX - s * 0.05, y: headY - s * 0.25))
+                    a.addLine(to: CGPoint(x: headX + s * 0.05, y: headY - s * 0.98))
+                    a.move(to: CGPoint(x: headX, y: headY - s * 0.6))
+                    a.addLine(to: CGPoint(x: headX - s * 0.35, y: headY - s * 0.82))
+                    a.move(to: CGPoint(x: headX + s * 0.02, y: headY - s * 0.8))
+                    a.addLine(to: CGPoint(x: headX + s * 0.42, y: headY - s * 1.02))
+                }, with: .color(dark), style: StrokeStyle(lineWidth: 0.7, lineCap: .round))
+            }
         }
     }
 
-    /// Something grey at the tree line, head low, moving. At pack pressure the
-    /// eye catches red — the colony should be worried.
+    /// Something grey at the tree line — a filled wolf, head low, loping. At
+    /// pack pressure the eye catches red and the colony should be worried.
     private static func prowler(
         _ context: inout GraphicsContext, at p: CGPoint, s: CGFloat,
         time: Double, hungry: Bool
     ) {
-        let coat = Color(red: 0.55, green: 0.56, blue: 0.60).opacity(0.85)
+        let coat = Color(red: 0.50, green: 0.51, blue: 0.55)
+        let dark = Color(red: 0.36, green: 0.37, blue: 0.41)
         let lope = CGFloat(sin(time * 2.2)) * s * 0.15
+        let sw = CGFloat(sin(time * 2.2)) * s * 0.22
 
-        var body = Path()
-        body.move(to: CGPoint(x: p.x - s * 1.2, y: p.y + lope * 0.4))         // tail root
-        body.addLine(to: CGPoint(x: p.x - s * 1.7, y: p.y - s * 0.4 + lope)) // tail
-        body.move(to: CGPoint(x: p.x - s * 1.2, y: p.y))
-        body.addLine(to: CGPoint(x: p.x + s * 0.9, y: p.y - s * 0.15))       // spine
-        body.addLine(to: CGPoint(x: p.x + s * 1.5, y: p.y + s * 0.25))       // head, low
-        body.move(to: CGPoint(x: p.x - s * 0.8, y: p.y))
-        body.addLine(to: CGPoint(x: p.x - s * 0.8 - lope, y: p.y + s * 0.9))
-        body.move(to: CGPoint(x: p.x + s * 0.5, y: p.y))
-        body.addLine(to: CGPoint(x: p.x + s * 0.5 + lope, y: p.y + s * 0.9))
-        context.stroke(body, with: .color(coat),
-                       style: StrokeStyle(lineWidth: 1, lineCap: .round))
-        if hungry {
-            context.fill(Path(ellipseIn: CGRect(x: p.x + s * 1.3, y: p.y + s * 0.05,
-                                                width: 1.6, height: 1.6)),
-                         with: .color(Theme.danger.opacity(0.9)))
-        }
+        // Shadow.
+        context.fill(Path(ellipseIn: CGRect(x: p.x - s * 1.4, y: p.y + s * 0.9,
+                                            width: s * 3.1, height: s * 0.5)),
+                     with: .color(Theme.ink.opacity(0.16)))
+        // Legs — the far pair darker, the near pair in coat.
+        context.fill(Path(CGRect(x: p.x - s * 0.85 - sw, y: p.y + s * 0.1, width: s * 0.2, height: s * 0.95)), with: .color(dark))
+        context.fill(Path(CGRect(x: p.x + s * 0.55 + sw, y: p.y + s * 0.1, width: s * 0.2, height: s * 0.95)), with: .color(dark))
+        context.fill(Path(CGRect(x: p.x - s * 0.55 + sw, y: p.y + s * 0.1, width: s * 0.18, height: s * 0.9)), with: .color(coat))
+        context.fill(Path(CGRect(x: p.x + s * 0.85 - sw, y: p.y + s * 0.1, width: s * 0.18, height: s * 0.9)), with: .color(coat))
+        // Tail sweeping off the rump.
+        context.fill(Path { t in
+            t.move(to: CGPoint(x: p.x - s * 1.05, y: p.y - s * 0.05))
+            t.addLine(to: CGPoint(x: p.x - s * 1.75, y: p.y - s * 0.5 + lope))
+            t.addLine(to: CGPoint(x: p.x - s * 1.5, y: p.y - s * 0.15 + lope))
+            t.addLine(to: CGPoint(x: p.x - s * 1.0, y: p.y + s * 0.15))
+            t.closeSubpath()
+        }, with: .color(coat))
+        // Body: rump, spine, low head, snout, jaw, belly.
+        context.fill(Path { b in
+            b.move(to: CGPoint(x: p.x - s * 1.1, y: p.y - s * 0.1))
+            b.addLine(to: CGPoint(x: p.x + s * 0.9, y: p.y - s * 0.28))
+            b.addLine(to: CGPoint(x: p.x + s * 1.5, y: p.y + s * 0.15))
+            b.addLine(to: CGPoint(x: p.x + s * 1.7, y: p.y + s * 0.35))
+            b.addLine(to: CGPoint(x: p.x + s * 1.2, y: p.y + s * 0.5))
+            b.addLine(to: CGPoint(x: p.x + s * 0.7, y: p.y + s * 0.42))
+            b.addLine(to: CGPoint(x: p.x - s * 1.0, y: p.y + s * 0.45))
+            b.closeSubpath()
+        }, with: .color(coat))
+        // Ear.
+        context.fill(Path { e in
+            e.move(to: CGPoint(x: p.x + s * 0.98, y: p.y - s * 0.28))
+            e.addLine(to: CGPoint(x: p.x + s * 1.1, y: p.y - s * 0.62))
+            e.addLine(to: CGPoint(x: p.x + s * 1.24, y: p.y - s * 0.22))
+            e.closeSubpath()
+        }, with: .color(dark))
+        // Eye — red and larger when the pack is hungry.
+        context.fill(Path(ellipseIn: CGRect(x: p.x + s * 1.4, y: p.y + s * 0.14,
+                                            width: hungry ? 2.0 : 1.4, height: hungry ? 2.0 : 1.4)),
+                     with: .color(hungry ? Theme.danger.opacity(0.95) : Theme.ink.opacity(0.85)))
     }
 }

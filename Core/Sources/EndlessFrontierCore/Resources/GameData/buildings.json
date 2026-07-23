@@ -2,7 +2,10 @@
   {
     "id": "hut",
     "era": "early_settlement",
-    "name": "Dwelling Hut",
+    "name": {
+      "en": "Dwelling Hut",
+      "cs": "Chatrč"
+    },
     "cost": {
       "materials": 10
     },
@@ -25,9 +28,15 @@
   {
     "id": "longhouse",
     "era": "early_settlement",
-    "name": "Longhouse",
+    "name": {
+      "en": "Longhouse",
+      "cs": "Dlouhý dům"
+    },
     "cost": {
       "materials": 35
+    },
+    "material_cost": {
+      "timber_bundle": 2
     },
     "workers": 0,
     "morale_effect": 1,
@@ -38,13 +47,16 @@
     },
     "footprint": {
       "w": 2,
-      "h": 1
+      "h": 2
     }
   },
   {
     "id": "farm_basic",
     "era": "early_settlement",
-    "name": "Subsistence Farm",
+    "name": {
+      "en": "Subsistence Farm",
+      "cs": "Políčko"
+    },
     "cost": {
       "materials": 20
     },
@@ -73,12 +85,19 @@
     "description": {
       "en": "A simple farm feeding a small community.",
       "cs": "Prosté políčko, které uživí malou osadu."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 2
     }
   },
   {
     "id": "lumberyard",
     "era": "early_settlement",
-    "name": "Lumberyard",
+    "name": {
+      "en": "Lumberyard",
+      "cs": "Pilařství"
+    },
     "cost": {
       "materials": 15
     },
@@ -91,14 +110,24 @@
     "description": {
       "en": "Harvests timber from the surrounding land.",
       "cs": "Těží dřevo z okolních lesů."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
     "id": "hunters_lodge",
     "era": "early_settlement",
-    "name": "Hunter's Lodge",
+    "name": {
+      "en": "Hunter's Lodge",
+      "cs": "Lovecká chata"
+    },
     "cost": {
       "materials": 18
+    },
+    "material_cost": {
+      "timber_bundle": 2
     },
     "workers": 2,
     "production": {
@@ -109,14 +138,24 @@
     "description": {
       "en": "Hunters bring in game to supplement the harvest.",
       "cs": "Lovci nosí zvěřinu, když pole nestačí."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 1
     }
   },
   {
     "id": "quarry",
     "era": "early_settlement",
-    "name": "Stone Quarry",
+    "name": {
+      "en": "Stone Quarry",
+      "cs": "Lom"
+    },
     "cost": {
       "materials": 25
+    },
+    "material_cost": {
+      "timber_bundle": 2
     },
     "workers": 3,
     "production": {
@@ -127,12 +166,19 @@
     "description": {
       "en": "Backbreaking work, but the stone fuels construction.",
       "cs": "Dřina k zlomení hřbetu — ale kámen žene stavby kupředu."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
     "id": "farm_advanced",
     "era": "ancient",
-    "name": "Irrigated Farm",
+    "name": {
+      "en": "Irrigated Farm",
+      "cs": "Statek"
+    },
     "cost": {
       "materials": 40,
       "knowledge": 10
@@ -146,14 +192,25 @@
     "description": {
       "en": "Irrigation multiplies the yield of every field.",
       "cs": "Zavlažování znásobí úrodu každého pole."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 2
     }
   },
   {
     "id": "library",
     "era": "early_settlement",
-    "name": "Library",
+    "name": {
+      "en": "Library",
+      "cs": "Knihovna"
+    },
     "cost": {
       "materials": 30
+    },
+    "material_cost": {
+      "timber_bundle": 5,
+      "brick": 4
     },
     "workers": 1,
     "production": {
@@ -181,14 +238,24 @@
     "description": {
       "en": "Recorded knowledge accelerates research.",
       "cs": "Zapsané vědění zrychluje bádání."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
     "id": "windmill",
     "era": "ancient",
-    "name": "Windmill",
+    "name": {
+      "en": "Windmill",
+      "cs": "Větrný mlýn"
+    },
     "cost": {
       "materials": 35
+    },
+    "material_cost": {
+      "timber_bundle": 4
     },
     "workers": 1,
     "production": {
@@ -199,14 +266,24 @@
     "description": {
       "en": "Harnesses the wind to grind grain and power workshops.",
       "cs": "Vítr mele obilí a pohání dílny."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 1
     }
   },
   {
     "id": "trade_post",
     "era": "ancient",
-    "name": "Trade Post",
+    "name": {
+      "en": "Trade Post",
+      "cs": "Obchodní stanice"
+    },
     "cost": {
       "materials": 30
+    },
+    "material_cost": {
+      "timber_bundle": 4
     },
     "workers": 2,
     "production": {
@@ -220,15 +297,26 @@
     "description": {
       "en": "Caravans and traders extend the settlement's reach.",
       "cs": "Karavany a kupci prodlužují dosah osady."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
     "id": "school",
     "era": "medieval",
-    "name": "School",
+    "name": {
+      "en": "School",
+      "cs": "Škola"
+    },
     "cost": {
       "materials": 50,
       "knowledge": 20
+    },
+    "material_cost": {
+      "timber_bundle": 4,
+      "brick": 3
     },
     "workers": 3,
     "production": {
@@ -248,14 +336,24 @@
     "description": {
       "en": "Educates the next generation of thinkers.",
       "cs": "Vychovává další pokolení myslitelů."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
     "id": "palisade",
     "era": "early_settlement",
-    "name": "Wooden Palisade",
+    "name": {
+      "en": "Wooden Palisade",
+      "cs": "Palisáda"
+    },
     "cost": {
       "materials": 30
+    },
+    "material_cost": {
+      "timber_bundle": 6
     },
     "workers": 1,
     "defense": 12,
@@ -268,9 +366,16 @@
   {
     "id": "watchtower",
     "era": "ancient",
-    "name": "Watchtower",
+    "name": {
+      "en": "Watchtower",
+      "cs": "Strážní věž"
+    },
     "cost": {
       "materials": 45
+    },
+    "material_cost": {
+      "timber_bundle": 3,
+      "brick": 2
     },
     "workers": 2,
     "defense": 20,
@@ -283,10 +388,17 @@
   {
     "id": "barracks",
     "era": "medieval",
-    "name": "Barracks",
+    "name": {
+      "en": "Barracks",
+      "cs": "Kasárna"
+    },
     "cost": {
       "materials": 70,
       "knowledge": 10
+    },
+    "material_cost": {
+      "timber_bundle": 4,
+      "iron_ingot": 2
     },
     "workers": 4,
     "consumption": {
@@ -300,15 +412,21 @@
     },
     "footprint": {
       "w": 2,
-      "h": 1
+      "h": 2
     }
   },
   {
     "id": "granary",
     "era": "early_settlement",
-    "name": "Granary",
+    "name": {
+      "en": "Granary",
+      "cs": "Sýpka"
+    },
     "cost": {
       "materials": 20
+    },
+    "material_cost": {
+      "timber_bundle": 3
     },
     "workers": 1,
     "production": {
@@ -319,12 +437,19 @@
     "description": {
       "en": "Stores grain against the lean months.",
       "cs": "Uchovává obilí na hubená léta."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
     "id": "well",
     "era": "early_settlement",
-    "name": "Well",
+    "name": {
+      "en": "Well",
+      "cs": "Studna"
+    },
     "cost": {
       "materials": 12
     },
@@ -337,7 +462,10 @@
   {
     "id": "observatory",
     "era": "ancient",
-    "name": "Observatory",
+    "name": {
+      "en": "Observatory",
+      "cs": "Hvězdárna"
+    },
     "cost": {
       "materials": 40,
       "knowledge": 15
@@ -350,14 +478,24 @@
     "description": {
       "en": "Charting the heavens advances the sciences.",
       "cs": "Mapování nebes posouvá vědy kupředu."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 1
     }
   },
   {
     "id": "stone_walls",
     "era": "ancient",
-    "name": "Stone Walls",
+    "name": {
+      "en": "Stone Walls",
+      "cs": "Kamenné hradby"
+    },
     "cost": {
       "materials": 80
+    },
+    "material_cost": {
+      "brick": 8
     },
     "workers": 2,
     "defense": 45,
@@ -374,10 +512,16 @@
   {
     "id": "aqueduct",
     "era": "ancient",
-    "name": "Aqueduct",
+    "name": {
+      "en": "Aqueduct",
+      "cs": "Akvadukt"
+    },
     "cost": {
       "materials": 60,
       "knowledge": 10
+    },
+    "material_cost": {
+      "brick": 8
     },
     "workers": 1,
     "morale_effect": 3,
@@ -385,12 +529,19 @@
     "description": {
       "en": "Fresh water carried for miles lets the city grow and thrive.",
       "cs": "Čerstvá voda vedená z dálky nechá město růst a vzkvétat."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 1
     }
   },
   {
     "id": "university",
     "era": "medieval",
-    "name": "University",
+    "name": {
+      "en": "University",
+      "cs": "Univerzita"
+    },
     "cost": {
       "materials": 90,
       "knowledge": 40
@@ -416,8 +567,8 @@
       }
     ],
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     },
     "description": {
       "en": "A seat of higher learning that compounds discovery.",
@@ -427,9 +578,15 @@
   {
     "id": "market",
     "era": "medieval",
-    "name": "Market",
+    "name": {
+      "en": "Market",
+      "cs": "Tržiště"
+    },
     "cost": {
       "materials": 55
+    },
+    "material_cost": {
+      "timber_bundle": 3
     },
     "workers": 3,
     "production": {
@@ -457,14 +614,17 @@
       "cs": "Rušné stánky svazují kraj obchodem."
     },
     "footprint": {
-      "w": 2,
-      "h": 1
+      "w": 3,
+      "h": 2
     }
   },
   {
     "id": "bank",
     "era": "medieval",
-    "name": "Bank",
+    "name": {
+      "en": "Bank",
+      "cs": "Banka"
+    },
     "cost": {
       "materials": 70,
       "knowledge": 25
@@ -483,15 +643,26 @@
     "description": {
       "en": "Credit and coin extend the colony's reach across the map.",
       "cs": "Úvěr a mince prodlužují dosah kolonie přes celou mapu."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
     "id": "workshop",
     "era": "medieval",
-    "name": "Workshop",
+    "name": {
+      "en": "Workshop",
+      "cs": "Dílna"
+    },
     "cost": {
       "materials": 60,
       "knowledge": 15
+    },
+    "material_cost": {
+      "timber_bundle": 4,
+      "brick": 2
     },
     "workers": 4,
     "production": {
@@ -515,15 +686,26 @@
     "description": {
       "en": "Skilled artisans multiply what raw labour can produce.",
       "cs": "Zruční řemeslníci znásobí, co zmůže hrubá práce."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
     "id": "factory",
     "era": "early_industrial",
-    "name": "Factory",
+    "name": {
+      "en": "Factory",
+      "cs": "Továrna"
+    },
     "cost": {
       "materials": 120,
       "knowledge": 40
+    },
+    "material_cost": {
+      "brick": 12,
+      "steel_ingot": 4
     },
     "workers": 6,
     "production": {
@@ -546,8 +728,8 @@
       }
     ],
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     },
     "description": {
       "en": "Mass production on a scale never before seen — at a cost to the air.",
@@ -557,10 +739,17 @@
   {
     "id": "foundry",
     "era": "early_industrial",
-    "name": "Foundry",
+    "name": {
+      "en": "Foundry",
+      "cs": "Huť"
+    },
     "cost": {
       "materials": 100,
       "knowledge": 30
+    },
+    "material_cost": {
+      "brick": 10,
+      "iron_ingot": 2
     },
     "workers": 5,
     "production": {
@@ -584,7 +773,7 @@
     ],
     "footprint": {
       "w": 2,
-      "h": 1
+      "h": 2
     },
     "description": {
       "en": "Roaring furnaces smelt metal for the industrial age.",
@@ -594,10 +783,17 @@
   {
     "id": "power_plant",
     "era": "early_industrial",
-    "name": "Power Plant",
+    "name": {
+      "en": "Power Plant",
+      "cs": "Elektrárna"
+    },
     "cost": {
       "materials": 110,
       "knowledge": 35
+    },
+    "material_cost": {
+      "brick": 10,
+      "steel_ingot": 4
     },
     "workers": 4,
     "production": {
@@ -605,7 +801,7 @@
     },
     "pollution": 25,
     "footprint": {
-      "w": 2,
+      "w": 3,
       "h": 2
     },
     "description": {
@@ -616,7 +812,10 @@
   {
     "id": "railyard",
     "era": "early_industrial",
-    "name": "Railyard",
+    "name": {
+      "en": "Railyard",
+      "cs": "Seřaďovací nádraží"
+    },
     "cost": {
       "materials": 130,
       "knowledge": 40
@@ -636,14 +835,17 @@
       "cs": "Náklad se valí dnem i nocí a svazuje říši dohromady."
     },
     "footprint": {
-      "w": 2,
+      "w": 3,
       "h": 2
     }
   },
   {
     "id": "chemical_plant",
     "era": "early_industrial",
-    "name": "Chemical Plant",
+    "name": {
+      "en": "Chemical Plant",
+      "cs": "Chemička"
+    },
     "cost": {
       "materials": 140,
       "knowledge": 50
@@ -659,12 +861,19 @@
     "description": {
       "en": "Fertilisers, dyes and fuels pour from the vats — and so does the smog.",
       "cs": "Z kádí tečou hnojiva, barvy i paliva — a s nimi smog."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
     "id": "hospital",
     "era": "early_industrial",
-    "name": "Hospital",
+    "name": {
+      "en": "Hospital",
+      "cs": "Špitál"
+    },
     "cost": {
       "materials": 120,
       "knowledge": 40
@@ -680,14 +889,17 @@
       "cs": "Sály a ranhojiči drží osadu při síle skrz mor i zranění."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     }
   },
   {
     "id": "hydro_dam",
     "era": "modern",
-    "name": "Hydroelectric Dam",
+    "name": {
+      "en": "Hydroelectric Dam",
+      "cs": "Přehrada"
+    },
     "cost": {
       "materials": 200,
       "knowledge": 60
@@ -702,14 +914,17 @@
       "cs": "Betonová stěna mění váhu řeky v čistou, stálou energii."
     },
     "footprint": {
-      "w": 2,
-      "h": 1
+      "w": 3,
+      "h": 2
     }
   },
   {
     "id": "oil_refinery",
     "era": "modern",
-    "name": "Oil Refinery",
+    "name": {
+      "en": "Oil Refinery",
+      "cs": "Rafinerie"
+    },
     "cost": {
       "materials": 180,
       "knowledge": 60
@@ -723,12 +938,19 @@
     "description": {
       "en": "Crude becomes fuel — the lifeblood of an age of engines.",
       "cs": "Z ropy se stává palivo — krev věku motorů."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 2
     }
   },
   {
     "id": "vehicle_works",
     "era": "modern",
-    "name": "Vehicle Works",
+    "name": {
+      "en": "Vehicle Works",
+      "cs": "Vozovna"
+    },
     "cost": {
       "materials": 170,
       "knowledge": 50
@@ -745,12 +967,19 @@
     "description": {
       "en": "Cars, tractors and trucks roll off the line and out into the world.",
       "cs": "Auta, traktory a náklaďáky sjíždějí z linky do světa."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 2
     }
   },
   {
     "id": "assembly_plant",
     "era": "modern",
-    "name": "Assembly Plant",
+    "name": {
+      "en": "Assembly Plant",
+      "cs": "Montovna"
+    },
     "cost": {
       "materials": 220,
       "knowledge": 80
@@ -764,7 +993,7 @@
     },
     "pollution": 25,
     "footprint": {
-      "w": 2,
+      "w": 3,
       "h": 2
     },
     "description": {
@@ -775,9 +1004,16 @@
   {
     "id": "apartment_block",
     "era": "modern",
-    "name": "Apartment Block",
+    "name": {
+      "en": "Apartment Block",
+      "cs": "Činžovní dům"
+    },
     "cost": {
       "materials": 160
+    },
+    "material_cost": {
+      "timber_bundle": 4,
+      "brick": 6
     },
     "workers": 0,
     "morale_effect": 1,
@@ -787,17 +1023,24 @@
       "cs": "Patra bytů ubytují celou čtvrť na jediné parcele."
     },
     "footprint": {
-      "w": 2,
-      "h": 1
+      "w": 3,
+      "h": 2
     }
   },
   {
     "id": "clinic",
     "era": "modern",
-    "name": "Medical Clinic",
+    "name": {
+      "en": "Medical Clinic",
+      "cs": "Ošetřovna"
+    },
     "cost": {
       "materials": 130,
       "knowledge": 50
+    },
+    "material_cost": {
+      "timber_bundle": 3,
+      "leather": 2
     },
     "workers": 3,
     "consumption": {
@@ -807,12 +1050,19 @@
     "description": {
       "en": "Modern medicine on every street corner — illness loses its terror.",
       "cs": "Moderní medicína na každém rohu — nemoc ztrácí hrůzu."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
     "id": "electronics_lab",
     "era": "modern",
-    "name": "Electronics Lab",
+    "name": {
+      "en": "Electronics Lab",
+      "cs": "Elektrotechnická laboratoř"
+    },
     "cost": {
       "materials": 160,
       "knowledge": 90
@@ -827,12 +1077,19 @@
     "description": {
       "en": "Circuits and signals — the workshops where the information age is born.",
       "cs": "Obvody a signály — dílny, kde se rodí věk informací."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
     "id": "data_center",
     "era": "modern",
-    "name": "Data Center",
+    "name": {
+      "en": "Data Center",
+      "cs": "Datové centrum"
+    },
     "cost": {
       "materials": 240,
       "knowledge": 120
@@ -859,7 +1116,7 @@
     ],
     "footprint": {
       "w": 2,
-      "h": 1
+      "h": 2
     },
     "description": {
       "en": "Halls of humming machines remember and reason for the whole civilisation.",
@@ -869,7 +1126,10 @@
   {
     "id": "research_campus",
     "era": "modern",
-    "name": "Research Campus",
+    "name": {
+      "en": "Research Campus",
+      "cs": "Výzkumný areál"
+    },
     "cost": {
       "materials": 220,
       "knowledge": 110
@@ -890,8 +1150,8 @@
       }
     ],
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     },
     "description": {
       "en": "A city of laboratories where the next era is invented.",
@@ -901,7 +1161,10 @@
   {
     "id": "solar_array",
     "era": "near_future",
-    "name": "Solar Array",
+    "name": {
+      "en": "Solar Array",
+      "cs": "Solární pole"
+    },
     "cost": {
       "materials": 220,
       "knowledge": 90
@@ -913,12 +1176,19 @@
     "description": {
       "en": "Fields of panels drink the sun and give back boundless clean power.",
       "cs": "Pole panelů pijí slunce a vracejí čistou energii bez konce."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 2
     }
   },
   {
     "id": "wind_farm",
     "era": "near_future",
-    "name": "Wind Farm",
+    "name": {
+      "en": "Wind Farm",
+      "cs": "Větrný park"
+    },
     "cost": {
       "materials": 200,
       "knowledge": 80
@@ -930,12 +1200,19 @@
     "description": {
       "en": "Rows of turbines turn the open sky into a power station.",
       "cs": "Řady turbín mění otevřené nebe v elektrárnu."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 2
     }
   },
   {
     "id": "automated_factory",
     "era": "near_future",
-    "name": "Automated Factory",
+    "name": {
+      "en": "Automated Factory",
+      "cs": "Automatizovaná továrna"
+    },
     "cost": {
       "materials": 320,
       "knowledge": 160
@@ -953,14 +1230,17 @@
       "cs": "Roboti vedou celý provoz; stačí hrstka dohlížitelů."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     }
   },
   {
     "id": "fusion_reactor",
     "era": "near_future",
-    "name": "Fusion Reactor",
+    "name": {
+      "en": "Fusion Reactor",
+      "cs": "Fúzní reaktor"
+    },
     "cost": {
       "materials": 400,
       "knowledge": 240
@@ -971,8 +1251,8 @@
     },
     "morale_effect": 1,
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     },
     "description": {
       "en": "A miniature star held in magnetic chains — power without limit or smoke.",
@@ -982,7 +1262,10 @@
   {
     "id": "ai_core",
     "era": "near_future",
-    "name": "AI Core",
+    "name": {
+      "en": "AI Core",
+      "cs": "Jádro UI"
+    },
     "cost": {
       "materials": 360,
       "knowledge": 300
@@ -997,12 +1280,19 @@
     "description": {
       "en": "A thinking machine that researches, plans and dreams faster than any academy.",
       "cs": "Myslící stroj, který bádá, plánuje a sní rychleji než kterákoli akademie."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
     "id": "spaceport",
     "era": "near_future",
-    "name": "Spaceport",
+    "name": {
+      "en": "Spaceport",
+      "cs": "Kosmodrom"
+    },
     "cost": {
       "materials": 500,
       "knowledge": 260
@@ -1018,8 +1308,8 @@
     "morale_effect": 3,
     "storage": 800,
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     },
     "description": {
       "en": "Rockets climb the sky from here — the colony's reach leaves the ground entirely.",
@@ -1029,7 +1319,10 @@
   {
     "id": "orbital_array",
     "era": "near_future",
-    "name": "Orbital Array",
+    "name": {
+      "en": "Orbital Array",
+      "cs": "Orbitální soustava"
+    },
     "cost": {
       "materials": 420,
       "knowledge": 280
@@ -1045,12 +1338,19 @@
     "description": {
       "en": "Satellites watch, relay and survey — knowledge and influence rain down from orbit.",
       "cs": "Družice hlídají, přenášejí a měří — vědění a vliv prší z oběžné dráhy."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
     "id": "arcology",
     "era": "near_future",
-    "name": "Arcology",
+    "name": {
+      "en": "Arcology",
+      "cs": "Arkologie"
+    },
     "cost": {
       "materials": 480,
       "knowledge": 200
@@ -1062,12 +1362,46 @@
     "morale_effect": 5,
     "housing": 600,
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     },
     "description": {
       "en": "A self-contained city in a single structure — a million live, work and thrive within.",
       "cs": "Soběstačné město v jediné stavbě — milion lidí žije, pracuje a sní uvnitř."
+    }
+  },
+  {
+    "id": "bloomery",
+    "era": "early_settlement",
+    "name": {
+      "en": "Bloomery",
+      "cs": "Výheň"
+    },
+    "cost": {
+      "materials": 30
+    },
+    "material_cost": {
+      "brick": 4
+    },
+    "workers": 2,
+    "production": {
+      "materials": 4
+    },
+    "pollution": 4,
+    "adjacency": [
+      {
+        "neighbor": "quarry",
+        "resource": "materials",
+        "bonus": 1
+      }
+    ],
+    "footprint": {
+      "w": 2,
+      "h": 1
+    },
+    "description": {
+      "en": "A clay stack and a pair of bellows. Slow, hungry for charcoal, and the only way to win iron before the great furnaces.",
+      "cs": "Hliněná pec a měchy. Pomalá, hltá dřevěné uhlí — a do příchodu velkých pecí jediná cesta k železu."
     }
   }
 ]

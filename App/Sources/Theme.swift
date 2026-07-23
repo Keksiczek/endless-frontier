@@ -59,6 +59,8 @@ enum Theme {
         case .forest: return Color(red: 0.42, green: 0.56, blue: 0.44)
         case .stone:  return Color(red: 0.56, green: 0.58, blue: 0.64)
         case .herbs:  return Color(red: 0.54, green: 0.68, blue: 0.56)
+        case .ironOre: return Color(red: 0.70, green: 0.48, blue: 0.38)
+        case .clay:    return Color(red: 0.68, green: 0.52, blue: 0.42)
         }
     }
 

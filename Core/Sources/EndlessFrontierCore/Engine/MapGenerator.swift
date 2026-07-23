@@ -81,11 +81,39 @@ public enum MapGenerator {
         return z ^ (z >> 31)
     }
 
+    /// The country the colony wakes up in, drawn from `homeland_weight` in
+    /// `biomes.json`.
+    ///
+    /// This was hardcoded to plains, which meant the one map a player looks at
+    /// for an entire game — their capital's valley — was the same grass, the
+    /// same scenery mix and the same deposit spread every single run, no matter
+    /// what the world map said. `LocalTerrain` and `LocalMapGenerator` have
+    /// always had real per-biome variety; nothing was ever feeding them
+    /// anything but "plains".
+    ///
+    /// Derived from `mapSeed` alone, so a seed keeps its homeland for the life
+    /// of the world.
+    static func homelandBiome(
+        mapSeed: UInt64, registry: GameDataRegistry, biomeIDs: [String]
+    ) -> String {
+        let fallback = biomeIDs.contains("plains") ? "plains" : (biomeIDs.first ?? "plains")
+        let candidates = biomeIDs.compactMap { id -> (String, Double)? in
+            guard let weight = registry.biome(id)?.homelandWeight, weight > 0 else { return nil }
+            return (id, weight)
+        }
+        // A biome set that nominates nobody keeps the old behaviour rather than
+        // dropping the player into a world with no ground.
+        guard !candidates.isEmpty else { return fallback }
+        var rng = SeededRNG(seed: splitmix64(mapSeed ^ 0xB10E_5EED_0000_0001))
+        guard let index = rng.weightedIndex(candidates.map(\.1)) else { return fallback }
+        return candidates[index].0
+    }
+
     /// The region at a coordinate. Pure: same `(mapSeed, coord)` → same region.
     public static func region(at coord: HexCoord, mapSeed: UInt64, registry: GameDataRegistry,
                               language: GameLanguage = .en) -> Region {
         let biomeIDs = registry.biomes.keys.sorted()
-        let homelandBiome = biomeIDs.contains("plains") ? "plains" : (biomeIDs.first ?? "plains")
+        let homelandBiome = homelandBiome(mapSeed: mapSeed, registry: registry, biomeIDs: biomeIDs)
         var rng = SeededRNG(seed: hexSeed(mapSeed, coord))
 
         if coord == .origin {

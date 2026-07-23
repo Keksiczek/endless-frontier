@@ -50,7 +50,7 @@ public enum TechEffect: Codable, Sendable, Equatable {
 /// A node in the tech-tree DAG. Loaded from `techs.json`.
 public struct TechDefinition: Codable, Sendable, Identifiable, Equatable {
     public let id: String
-    public let name: String
+    public let name: LocalizedText
     public let era: Era
     public let requires: [String]
     public let cost: Resources
@@ -64,7 +64,7 @@ public struct TechDefinition: Codable, Sendable, Identifiable, Equatable {
 
     public init(
         id: String,
-        name: String,
+        name: LocalizedText,
         era: Era,
         requires: [String] = [],
         cost: Resources,
@@ -89,7 +89,7 @@ public struct TechDefinition: Codable, Sendable, Identifiable, Equatable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
-        name = try c.decode(String.self, forKey: .name)
+        name = try c.decode(LocalizedText.self, forKey: .name)
         era = try c.decode(Era.self, forKey: .era)
         requires = try c.decodeIfPresent([String].self, forKey: .requires) ?? []
         cost = try c.decode(Resources.self, forKey: .cost)

@@ -36,6 +36,10 @@ public enum SocialEngine {
     // How much of colonist chatter makes the journal — most of it stays
     // between the two of them, or the diary would drown in small talk.
     static let chatJournalChance = 0.10
+    // And even less of the quarrelling. A friendship breaking always earns a
+    // line, but a routine spat only rarely — otherwise the page fills with
+    // "so-and-so quarrelled" and drowns out births, deaths, raids and roofs.
+    static let quarrelJournalChance = 0.06
 
     /// Where a chat happens — journal flavour.
     static let chatSpots: [LocalizedText] = [
@@ -163,6 +167,7 @@ public enum SocialEngine {
         adjustRecreation(&s, first.id, by: quarrelRecreation)
         adjustRecreation(&s, second.id, by: quarrelRecreation)
 
+        var friendshipBroke = false
         if let e = existing {
             switch s.relationships[e].kind {
             case .rival:
@@ -174,6 +179,7 @@ public enum SocialEngine {
                 if s.relationships[e].strength <= 0 {
                     s.relationships[e] = Relationship(
                         between: first.id, and: second.id, kind: .rival, strength: strengthPerQuarrel)
+                    friendshipBroke = true
                 }
             case .partner:
                 // Married couples quarrel too; the marriage holds.
@@ -187,10 +193,20 @@ public enum SocialEngine {
                 between: first.id, and: second.id, kind: .rival, strength: strengthPerQuarrel))
         }
 
-        s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
-            .en: "\(first.name) and \(second.name) quarrelled — hard words carried across the green.",
-            .cs: "\(first.name) a \(second.name) se pohádali — ostrá slova bylo slyšet přes náves."
-        ]))
+        // A friendship curdling into a grudge is a real turn in a life and
+        // always earns a line. A routine spat does not — like small talk, only
+        // a sliver reaches the diary, so the page stays about what mattered.
+        if friendshipBroke {
+            s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
+                .en: "\(first.name) and \(second.name) fell out — a friendship soured into a grudge.",
+                .cs: "\(first.name) a \(second.name) se rozkmotřili — z přátelství se stala zášť."
+            ]))
+        } else if rng.nextUnit() < quarrelJournalChance {
+            s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
+                .en: "\(first.name) and \(second.name) quarrelled — hard words carried across the green.",
+                .cs: "\(first.name) a \(second.name) se pohádali — ostrá slova bylo slyšet přes náves."
+            ]))
+        }
         return s
     }
 

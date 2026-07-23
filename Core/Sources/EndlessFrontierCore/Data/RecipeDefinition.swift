@@ -4,23 +4,23 @@ import Foundation
 /// of gear or an artifact. Loaded from `recipes.json`.
 public struct RecipeDefinition: Codable, Sendable, Identifiable, Equatable {
     public let id: String
-    public let name: String
+    public let name: LocalizedText
     public let outputItemID: String
     public let materials: [String: Int]   // material item id → count required
     public let resourceCost: Resources
     public let requiresBuilding: String?
     public let requiresTech: String?
-    public let description: String
+    public let description: LocalizedText
 
     public init(
         id: String,
-        name: String,
+        name: LocalizedText,
         outputItemID: String,
         materials: [String: Int] = [:],
         resourceCost: Resources = Resources(),
         requiresBuilding: String? = nil,
         requiresTech: String? = nil,
-        description: String = ""
+        description: LocalizedText = ""
     ) {
         self.id = id
         self.name = name
@@ -39,12 +39,12 @@ public struct RecipeDefinition: Codable, Sendable, Identifiable, Equatable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
-        name = try c.decode(String.self, forKey: .name)
+        name = try c.decode(LocalizedText.self, forKey: .name)
         outputItemID = try c.decode(String.self, forKey: .outputItemID)
         materials = try c.decodeIfPresent([String: Int].self, forKey: .materials) ?? [:]
         resourceCost = try c.decodeIfPresent(Resources.self, forKey: .resourceCost) ?? Resources()
         requiresBuilding = try c.decodeIfPresent(String.self, forKey: .requiresBuilding)
         requiresTech = try c.decodeIfPresent(String.self, forKey: .requiresTech)
-        description = try c.decodeIfPresent(String.self, forKey: .description) ?? ""
+        description = try c.decodeIfPresent(LocalizedText.self, forKey: .description) ?? ""
     }
 }

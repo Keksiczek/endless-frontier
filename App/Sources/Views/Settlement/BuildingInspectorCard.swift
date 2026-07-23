@@ -42,7 +42,7 @@ struct BuildingInspectorCard: View {
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(definition.name)
+                Text(definition.name.resolve(AppStrings.language))
                     .font(.system(.title3, design: .serif).weight(.semibold))
                     .foregroundStyle(Theme.text)
                 Text("\(AppStrings.eraTitle(definition.era)) · \(standing)× \(cs ? "postaveno" : "standing")")

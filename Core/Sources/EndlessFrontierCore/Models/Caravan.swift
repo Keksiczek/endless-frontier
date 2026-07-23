@@ -23,6 +23,10 @@ public struct Caravan: Codable, Sendable, Equatable, Identifiable {
     public var ticksRemaining: Int
     public let totalTicks: Int
     public var status: CaravanStatus
+    /// The ambush on the road, beat by beat, if one happened. An attack out in
+    /// the country is not the settlement's battle — it belongs to the caravan,
+    /// and travels home with it.
+    public var lastBattle: BattleLog?
 
     public init(
         id: UUID = UUID(),

@@ -1,7 +1,10 @@
 [
   {
     "id": "worn_tools",
-    "name": "Worn Tools",
+    "name": {
+      "en": "Worn Tools",
+      "cs": "Ošoupané nářadí"
+    },
     "rarity": "common",
     "slot": "equipment",
     "equipSlot": "weapon",
@@ -12,7 +15,10 @@
         "amount": 2
       }
     ],
-    "description": "Chipped but serviceable. A farmer works a little faster.",
+    "description": {
+      "en": "Chipped but serviceable. A farmer works a little faster.",
+      "cs": "Otlučené, ale poslouží. Se sedlákem to jde o kus rychleji."
+    },
     "combat": {
       "class": "melee",
       "damage": 2
@@ -20,7 +26,10 @@
   },
   {
     "id": "sturdy_axe",
-    "name": "Sturdy Axe",
+    "name": {
+      "en": "Sturdy Axe",
+      "cs": "Pevná sekera"
+    },
     "rarity": "common",
     "slot": "equipment",
     "equipSlot": "weapon",
@@ -31,7 +40,10 @@
         "amount": 2
       }
     ],
-    "description": "A good axe makes short work of tall trees.",
+    "description": {
+      "en": "A good axe makes short work of tall trees.",
+      "cs": "Násada vyhlazená rukama. Dřevo pod ní padá ochotněji."
+    },
     "combat": {
       "class": "melee",
       "damage": 4
@@ -39,7 +51,10 @@
   },
   {
     "id": "miners_pick",
-    "name": "Miner's Pick",
+    "name": {
+      "en": "Miner's Pick",
+      "cs": "Hornický špičák"
+    },
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "weapon",
@@ -50,7 +65,10 @@
         "amount": 3
       }
     ],
-    "description": "Balanced and sharp — stone yields more readily.",
+    "description": {
+      "en": "Balanced and sharp — stone yields more readily.",
+      "cs": "Kalená hlava, která urve kámen tam, kde jiná sklouzne."
+    },
     "combat": {
       "class": "melee",
       "damage": 4
@@ -58,7 +76,10 @@
   },
   {
     "id": "iron_scythe",
-    "name": "Iron Scythe",
+    "name": {
+      "en": "Iron Scythe",
+      "cs": "Železná kosa"
+    },
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "weapon",
@@ -69,7 +90,10 @@
         "amount": 4
       }
     ],
-    "description": "A keen blade that brings in the harvest in half the time.",
+    "description": {
+      "en": "A keen blade that brings in the harvest in half the time.",
+      "cs": "Dílenské ostří, které sedlákovi zdvojnásobí dosah."
+    },
     "combat": {
       "class": "melee",
       "damage": 4
@@ -77,7 +101,10 @@
   },
   {
     "id": "masterwork_pick",
-    "name": "Masterwork Pick",
+    "name": {
+      "en": "Masterwork Pick",
+      "cs": "Mistrovský špičák"
+    },
     "rarity": "epic",
     "slot": "equipment",
     "equipSlot": "weapon",
@@ -88,7 +115,10 @@
         "amount": 6
       }
     ],
-    "description": "Forged by a true master — it bites stone like timber.",
+    "description": {
+      "en": "Forged by a true master — it bites stone like timber.",
+      "cs": "Vyvážený tak, že se sám vede. Kámen se pod ním otevírá."
+    },
     "combat": {
       "class": "melee",
       "damage": 5
@@ -96,7 +126,10 @@
   },
   {
     "id": "leather_garb",
-    "name": "Leather Garb",
+    "name": {
+      "en": "Leather Garb",
+      "cs": "Kožený oděv"
+    },
     "rarity": "common",
     "slot": "equipment",
     "equipSlot": "armor",
@@ -106,11 +139,17 @@
         "amount": 0.5
       }
     ],
-    "description": "Tough hides that turn the worst of the weather and the work."
+    "description": {
+      "en": "Tough hides that turn the worst of the weather and the work.",
+      "cs": "Vydělaný a sešitý. Vydrží víc než jednu zimu."
+    }
   },
   {
     "id": "chainmail",
-    "name": "Chainmail",
+    "name": {
+      "en": "Chainmail",
+      "cs": "Kroužková zbroj"
+    },
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "armor",
@@ -120,11 +159,17 @@
         "amount": 1.0
       }
     ],
-    "description": "Interlocking rings that keep a colonist whole through danger."
+    "description": {
+      "en": "Interlocking rings that keep a colonist whole through danger.",
+      "cs": "Tisíce oček, každé zaklepané zvlášť."
+    }
   },
   {
     "id": "plate_armor",
-    "name": "Plate Armor",
+    "name": {
+      "en": "Plate Armor",
+      "cs": "Plátová zbroj"
+    },
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "armor",
@@ -134,11 +179,17 @@
         "amount": 2.0
       }
     ],
-    "description": "Heavy and protective — little gets through tempered steel."
+    "description": {
+      "en": "Heavy and protective — little gets through tempered steel.",
+      "cs": "Tíha, kterou si člověk zvykne nosit, protože ho přežije."
+    }
   },
   {
     "id": "warden_plate",
-    "name": "Warden's Plate",
+    "name": {
+      "en": "Warden's Plate",
+      "cs": "Zbroj strážce"
+    },
     "rarity": "epic",
     "slot": "equipment",
     "equipSlot": "armor",
@@ -152,11 +203,17 @@
         "amount": 5
       }
     ],
-    "description": "Armor of the old wardens — its bearer feels invincible."
+    "description": {
+      "en": "Armor of the old wardens — its bearer feels invincible.",
+      "cs": "Plát z kovu, který nikdo v osadě neumí vyrobit."
+    }
   },
   {
     "id": "scholars_quill",
-    "name": "Scholar's Quill",
+    "name": {
+      "en": "Scholar's Quill",
+      "cs": "Učencovo brko"
+    },
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "trinket",
@@ -167,11 +224,17 @@
         "amount": 3
       }
     ],
-    "description": "Ideas flow faster from a fine pen."
+    "description": {
+      "en": "Ideas flow faster from a fine pen.",
+      "cs": "Píše rychleji, než stačí myšlenka vychladnout."
+    }
   },
   {
     "id": "merchants_ledger",
-    "name": "Merchant's Ledger",
+    "name": {
+      "en": "Merchant's Ledger",
+      "cs": "Kupecká kniha"
+    },
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "trinket",
@@ -182,11 +245,17 @@
         "amount": 3
       }
     ],
-    "description": "Every deal recorded, every advantage pressed."
+    "description": {
+      "en": "Every deal recorded, every advantage pressed.",
+      "cs": "Sloupce čísel, které vědí o osadě víc než rada."
+    }
   },
   {
     "id": "lucky_charm",
-    "name": "Lucky Charm",
+    "name": {
+      "en": "Lucky Charm",
+      "cs": "Talisman pro štěstí"
+    },
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "trinket",
@@ -196,11 +265,17 @@
         "amount": 10
       }
     ],
-    "description": "Its bearer always seems to keep their spirits up."
+    "description": {
+      "en": "Its bearer always seems to keep their spirits up.",
+      "cs": "Nikdo neví, jestli funguje. Nikdo ho taky nechce odložit."
+    }
   },
   {
     "id": "ancient_talisman",
-    "name": "Ancient Talisman",
+    "name": {
+      "en": "Ancient Talisman",
+      "cs": "Prastarý talisman"
+    },
     "rarity": "epic",
     "slot": "equipment",
     "equipSlot": "trinket",
@@ -214,11 +289,17 @@
         "amount": 1.5
       }
     ],
-    "description": "A relic that wards both body and mind."
+    "description": {
+      "en": "A relic that wards both body and mind.",
+      "cs": "Starší než všechno, co kolem stojí."
+    }
   },
   {
     "id": "crown_of_ages",
-    "name": "Crown of Ages",
+    "name": {
+      "en": "Crown of Ages",
+      "cs": "Koruna věků"
+    },
     "rarity": "legendary",
     "slot": "equipment",
     "equipSlot": "trinket",
@@ -233,39 +314,69 @@
         "amount": 5
       }
     ],
-    "description": "Worn by leaders of forgotten empires. None who carry it despair."
+    "description": {
+      "en": "Worn by leaders of forgotten empires. None who carry it despair.",
+      "cs": "Nosí se jednou za pár generací a pamatuje si všechny."
+    }
   },
   {
     "id": "timber_bundle",
-    "name": "Timber Bundle",
+    "name": {
+      "en": "Timber Bundle",
+      "cs": "Svazek trámů"
+    },
     "rarity": "common",
     "slot": "material",
-    "description": "Seasoned wood, ready for the workshop."
+    "description": {
+      "en": "Seasoned wood, ready for the workshop.",
+      "cs": "Nařezané a svázané dřevo, připravené ke stavbě."
+    }
   },
   {
     "id": "iron_ingot",
-    "name": "Iron Ingot",
+    "name": {
+      "en": "Iron Ingot",
+      "cs": "Železný ingot"
+    },
     "rarity": "common",
     "slot": "material",
-    "description": "A bar of smelted iron — the backbone of good gear."
+    "description": {
+      "en": "A bar of smelted iron — the backbone of good gear.",
+      "cs": "Houba železa protlučená do podoby, se kterou se dá pracovat."
+    }
   },
   {
     "id": "ancient_alloy",
-    "name": "Ancient Alloy",
+    "name": {
+      "en": "Ancient Alloy",
+      "cs": "Prastará slitina"
+    },
     "rarity": "rare",
     "slot": "material",
-    "description": "A metal whose making was lost to time. Stronger than steel."
+    "description": {
+      "en": "A metal whose making was lost to time. Stronger than steel.",
+      "cs": "Kov, jehož recept se ztratil. Nikdo ho neumí vytavit znovu."
+    }
   },
   {
     "id": "spirit_essence",
-    "name": "Spirit Essence",
+    "name": {
+      "en": "Spirit Essence",
+      "cs": "Esence ducha"
+    },
     "rarity": "epic",
     "slot": "material",
-    "description": "A captured wisp of something not entirely of this world."
+    "description": {
+      "en": "A captured wisp of something not entirely of this world.",
+      "cs": "Drží světlo i ve tmě. Učenci se neshodnou proč."
+    }
   },
   {
     "id": "harvest_idol",
-    "name": "Harvest Idol",
+    "name": {
+      "en": "Harvest Idol",
+      "cs": "Modla úrody"
+    },
     "rarity": "uncommon",
     "slot": "artifact",
     "effects": [
@@ -275,11 +386,17 @@
         "perTick": 3
       }
     ],
-    "description": "A carved figure that seems to bless the fields."
+    "description": {
+      "en": "A carved figure that seems to bless the fields.",
+      "cs": "Stojí na kraji pole a pole se jí drží."
+    }
   },
   {
     "id": "forge_totem",
-    "name": "Forge Totem",
+    "name": {
+      "en": "Forge Totem",
+      "cs": "Totem kovárny"
+    },
     "rarity": "rare",
     "slot": "artifact",
     "effects": [
@@ -289,11 +406,17 @@
         "perTick": 4
       }
     ],
-    "description": "Set by the kilns, it lends strength to every smith."
+    "description": {
+      "en": "Set by the kilns, it lends strength to every smith.",
+      "cs": "U ohně, který nemá vyhasnout."
+    }
   },
   {
     "id": "beacon_stone",
-    "name": "Beacon Stone",
+    "name": {
+      "en": "Beacon Stone",
+      "cs": "Kámen majáku"
+    },
     "rarity": "rare",
     "slot": "artifact",
     "effects": [
@@ -302,11 +425,17 @@
         "amount": 18
       }
     ],
-    "description": "A watch-stone that warns of danger long before it arrives."
+    "description": {
+      "en": "A watch-stone that warns of danger long before it arrives.",
+      "cs": "Svítí, když se setmí nad krajem."
+    }
   },
   {
     "id": "prosperity_relic",
-    "name": "Relic of Prosperity",
+    "name": {
+      "en": "Relic of Prosperity",
+      "cs": "Relikvie hojnosti"
+    },
     "rarity": "epic",
     "slot": "artifact",
     "effects": [
@@ -315,11 +444,17 @@
         "amount": 8
       }
     ],
-    "description": "Its presence lifts the whole colony's heart."
+    "description": {
+      "en": "Its presence lifts the whole colony's heart.",
+      "cs": "Kde leží, tam se sýpky plní rychleji."
+    }
   },
   {
     "id": "eternal_engine",
-    "name": "Eternal Engine",
+    "name": {
+      "en": "Eternal Engine",
+      "cs": "Věčný stroj"
+    },
     "rarity": "legendary",
     "slot": "artifact",
     "effects": [
@@ -329,11 +464,17 @@
         "perTick": 10
       }
     ],
-    "description": "An impossible machine that never stops turning."
+    "description": {
+      "en": "An impossible machine that never stops turning.",
+      "cs": "Běží. Nikdo neotevřel, aby zjistil jak."
+    }
   },
   {
     "id": "world_seed",
-    "name": "World Seed",
+    "name": {
+      "en": "World Seed",
+      "cs": "Semeno světa"
+    },
     "rarity": "legendary",
     "slot": "artifact",
     "effects": [
@@ -343,32 +484,56 @@
         "perTick": 8
       }
     ],
-    "description": "A shard of first creation that whispers endless secrets."
+    "description": {
+      "en": "A shard of first creation that whispers endless secrets.",
+      "cs": "Ještě neklíčilo. Zatím."
+    }
   },
   {
     "id": "steel_ingot",
-    "name": "Steel Ingot",
+    "name": {
+      "en": "Steel Ingot",
+      "cs": "Ocelový ingot"
+    },
     "rarity": "uncommon",
     "slot": "material",
-    "description": "Carbon-tempered iron — stronger, lighter, the stuff of modern industry."
+    "description": {
+      "en": "Carbon-tempered iron — stronger, lighter, the stuff of modern industry.",
+      "cs": "Železo, které prošlo ohněm ještě jednou."
+    }
   },
   {
     "id": "circuit_board",
-    "name": "Circuit Board",
+    "name": {
+      "en": "Circuit Board",
+      "cs": "Deska plošných spojů"
+    },
     "rarity": "rare",
     "slot": "material",
-    "description": "Etched copper and silicon — the nervous system of every modern machine."
+    "description": {
+      "en": "Etched copper and silicon — the nervous system of every modern machine.",
+      "cs": "Cesty tenčí než vlas, a všechny někam vedou."
+    }
   },
   {
     "id": "fusion_cell",
-    "name": "Fusion Cell",
+    "name": {
+      "en": "Fusion Cell",
+      "cs": "Fúzní článek"
+    },
     "rarity": "epic",
     "slot": "material",
-    "description": "A sealed sliver of caged starfire, humming with contained power."
+    "description": {
+      "en": "A sealed sliver of caged starfire, humming with contained power.",
+      "cs": "Drží v sobě kus hvězdy."
+    }
   },
   {
     "id": "chainsaw",
-    "name": "Chainsaw",
+    "name": {
+      "en": "Chainsaw",
+      "cs": "Motorová pila"
+    },
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "weapon",
@@ -379,7 +544,10 @@
         "amount": 4
       }
     ],
-    "description": "A snarling blade that fells in seconds what once took an hour.",
+    "description": {
+      "en": "A snarling blade that fells in seconds what once took an hour.",
+      "cs": "Les padá rychleji, než stačí dorůst."
+    },
     "combat": {
       "class": "melee",
       "damage": 6
@@ -387,7 +555,10 @@
   },
   {
     "id": "power_drill",
-    "name": "Power Drill",
+    "name": {
+      "en": "Power Drill",
+      "cs": "Vrtačka"
+    },
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "weapon",
@@ -398,7 +569,10 @@
         "amount": 5
       }
     ],
-    "description": "Diamond-tipped and motor-driven — stone gives way like sand.",
+    "description": {
+      "en": "Diamond-tipped and motor-driven — stone gives way like sand.",
+      "cs": "Kámen ustupuje bez vyjednávání."
+    },
     "combat": {
       "class": "melee",
       "damage": 4
@@ -406,7 +580,10 @@
   },
   {
     "id": "auto_harvester",
-    "name": "Auto-Harvester",
+    "name": {
+      "en": "Auto-Harvester",
+      "cs": "Automatická žací lišta"
+    },
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "weapon",
@@ -417,7 +594,10 @@
         "amount": 5
       }
     ],
-    "description": "One operator reaps what a whole crew once did.",
+    "description": {
+      "en": "One operator reaps what a whole crew once did.",
+      "cs": "Sklízí i tehdy, když se nikdo nedívá."
+    },
     "combat": {
       "class": "melee",
       "damage": 2
@@ -425,7 +605,10 @@
   },
   {
     "id": "kevlar_vest",
-    "name": "Kevlar Vest",
+    "name": {
+      "en": "Kevlar Vest",
+      "cs": "Neprůstřelná vesta"
+    },
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "armor",
@@ -435,11 +618,17 @@
         "amount": 2.5
       }
     ],
-    "description": "Woven fibre that stops what steel never could."
+    "description": {
+      "en": "Woven fibre that stops what steel never could.",
+      "cs": "Lehká tak, že se na ni zapomene — dokud není potřeba."
+    }
   },
   {
     "id": "exosuit",
-    "name": "Powered Exosuit",
+    "name": {
+      "en": "Powered Exosuit",
+      "cs": "Exoskelet"
+    },
     "rarity": "epic",
     "slot": "equipment",
     "equipSlot": "armor",
@@ -453,11 +642,17 @@
         "amount": 4
       }
     ],
-    "description": "Hydraulic muscle and armour plate — its wearer shrugs off the impossible."
+    "description": {
+      "en": "Hydraulic muscle and armour plate — its wearer shrugs off the impossible.",
+      "cs": "Nese břemeno za člověka a nechá mu záda."
+    }
   },
   {
     "id": "powered_armor",
-    "name": "Sentinel Power Armor",
+    "name": {
+      "en": "Sentinel Power Armor",
+      "cs": "Silová zbroj"
+    },
     "rarity": "legendary",
     "slot": "equipment",
     "equipSlot": "armor",
@@ -471,11 +666,17 @@
         "amount": 8
       }
     ],
-    "description": "A walking fortress. Few threats in any era can touch its bearer."
+    "description": {
+      "en": "A walking fortress. Few threats in any era can touch its bearer.",
+      "cs": "Chodí se v ní jako v domě, který se hýbe s vámi."
+    }
   },
   {
     "id": "research_terminal",
-    "name": "Research Terminal",
+    "name": {
+      "en": "Research Terminal",
+      "cs": "Výzkumný terminál"
+    },
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "trinket",
@@ -486,11 +687,17 @@
         "amount": 5
       }
     ],
-    "description": "A personal console that turns any thinker into a one-person institute."
+    "description": {
+      "en": "A personal console that turns any thinker into a one-person institute.",
+      "cs": "Odpovídá dřív, než se stihne doformulovat otázka."
+    }
   },
   {
     "id": "morale_booster",
-    "name": "Morale Broadcaster",
+    "name": {
+      "en": "Morale Broadcaster",
+      "cs": "Zesilovač morálky"
+    },
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "trinket",
@@ -500,11 +707,17 @@
         "amount": 12
       }
     ],
-    "description": "A pocket device that pipes in music, news and good cheer all day."
+    "description": {
+      "en": "A pocket device that pipes in music, news and good cheer all day.",
+      "cs": "Hraje. Lidem se u toho pracuje líp."
+    }
   },
   {
     "id": "neural_implant",
-    "name": "Neural Implant",
+    "name": {
+      "en": "Neural Implant",
+      "cs": "Neurální implantát"
+    },
     "rarity": "epic",
     "slot": "equipment",
     "equipSlot": "trinket",
@@ -519,11 +732,17 @@
         "amount": 5
       }
     ],
-    "description": "A mind laced with circuitry — thought itself runs faster and calmer."
+    "description": {
+      "en": "A mind laced with circuitry — thought itself runs faster and calmer.",
+      "cs": "Učení přestává být pomalé."
+    }
   },
   {
     "id": "automation_hub",
-    "name": "Automation Hub",
+    "name": {
+      "en": "Automation Hub",
+      "cs": "Automatizační uzel"
+    },
     "rarity": "epic",
     "slot": "artifact",
     "effects": [
@@ -533,11 +752,17 @@
         "perTick": 8
       }
     ],
-    "description": "A control node that drives idle machines across the whole colony."
+    "description": {
+      "en": "A control node that drives idle machines across the whole colony.",
+      "cs": "Řídí ruce, které nikdo nemusí platit."
+    }
   },
   {
     "id": "med_bay",
-    "name": "Automated Med-Bay",
+    "name": {
+      "en": "Automated Med-Bay",
+      "cs": "Ošetřovna"
+    },
     "rarity": "epic",
     "slot": "artifact",
     "effects": [
@@ -546,11 +771,17 @@
         "amount": 10
       }
     ],
-    "description": "Tireless surgeons of steel keep every colonist on their feet."
+    "description": {
+      "en": "Tireless surgeons of steel keep every colonist on their feet.",
+      "cs": "Rány se zavírají rychleji, než by měly."
+    }
   },
   {
     "id": "fusion_core_relic",
-    "name": "Stabilised Fusion Core",
+    "name": {
+      "en": "Stabilised Fusion Core",
+      "cs": "Relikvie fúzního jádra"
+    },
     "rarity": "legendary",
     "slot": "artifact",
     "effects": [
@@ -560,11 +791,17 @@
         "perTick": 14
       }
     ],
-    "description": "A perfected reactor heart that pours out power for a whole settlement."
+    "description": {
+      "en": "A perfected reactor heart that pours out power for a whole settlement.",
+      "cs": "Srdce, které nepřestává."
+    }
   },
   {
     "id": "orbital_uplink",
-    "name": "Orbital Uplink",
+    "name": {
+      "en": "Orbital Uplink",
+      "cs": "Orbitální spoj"
+    },
     "rarity": "legendary",
     "slot": "artifact",
     "effects": [
@@ -574,11 +811,17 @@
         "perTick": 12
       }
     ],
-    "description": "A direct line to the satellites — the sum of human knowledge, on tap."
+    "description": {
+      "en": "A direct line to the satellites — the sum of human knowledge, on tap.",
+      "cs": "Mluví s něčím, co je vidět jen v noci."
+    }
   },
   {
     "id": "planetary_shield",
-    "name": "Planetary Shield Generator",
+    "name": {
+      "en": "Planetary Shield Generator",
+      "cs": "Planetární štít"
+    },
     "rarity": "legendary",
     "slot": "artifact",
     "effects": [
@@ -587,11 +830,17 @@
         "amount": 40
       }
     ],
-    "description": "A dome of force no raider, beast or storm has ever broken."
+    "description": {
+      "en": "A dome of force no raider, beast or storm has ever broken.",
+      "cs": "Obloha nad krajem přestala být otevřená."
+    }
   },
   {
     "id": "bronze_spear",
-    "name": "Bronze Spear",
+    "name": {
+      "en": "Bronze Spear",
+      "cs": "Bronzové kopí"
+    },
     "rarity": "common",
     "slot": "equipment",
     "equipSlot": "weapon",
@@ -599,11 +848,17 @@
       "class": "melee",
       "damage": 6
     },
-    "description": "A plain spear — the first argument a raider understands."
+    "description": {
+      "en": "A plain spear — the first argument a raider understands.",
+      "cs": "První zbraň, kterou osada dokáže vyrobit sama."
+    }
   },
   {
     "id": "hunting_bow",
-    "name": "Hunting Bow",
+    "name": {
+      "en": "Hunting Bow",
+      "cs": "Lovecký luk"
+    },
     "rarity": "common",
     "slot": "equipment",
     "equipSlot": "weapon",
@@ -618,11 +873,17 @@
         "amount": 2
       }
     ],
-    "description": "Feeds the pot in peace, thins a raiding party in war."
+    "description": {
+      "en": "Feeds the pot in peace, thins a raiding party in war.",
+      "cs": "Tichý. Stádo se nedozví, odkud to přišlo."
+    }
   },
   {
     "id": "iron_sword",
-    "name": "Iron Sword",
+    "name": {
+      "en": "Iron Sword",
+      "cs": "Železný meč"
+    },
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "weapon",
@@ -630,11 +891,17 @@
       "class": "melee",
       "damage": 10
     },
-    "description": "Honest iron with an edge — a militia line stiffens around it."
+    "description": {
+      "en": "Honest iron with an edge — a militia line stiffens around it.",
+      "cs": "Rovný, těžký a poctivě kovaný."
+    }
   },
   {
     "id": "longbow",
-    "name": "Longbow",
+    "name": {
+      "en": "Longbow",
+      "cs": "Dlouhý luk"
+    },
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "weapon",
@@ -649,11 +916,17 @@
         "amount": 2
       }
     ],
-    "description": "A man-high stave that reaches the far bank of the river."
+    "description": {
+      "en": "A man-high stave that reaches the far bank of the river.",
+      "cs": "Dostřelí dál, než kam dohlédne nezkušené oko."
+    }
   },
   {
     "id": "steel_halberd",
-    "name": "Steel Halberd",
+    "name": {
+      "en": "Steel Halberd",
+      "cs": "Ocelová halapartna"
+    },
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "weapon",
@@ -661,11 +934,17 @@
       "class": "melee",
       "damage": 14
     },
-    "description": "Axe, hook and spike on one long haft — a wall in a single pair of hands."
+    "description": {
+      "en": "Axe, hook and spike on one long haft — a wall in a single pair of hands.",
+      "cs": "Drží útočníka dál, než dosáhne on."
+    }
   },
   {
     "id": "crossbow",
-    "name": "Crossbow",
+    "name": {
+      "en": "Crossbow",
+      "cs": "Kuše"
+    },
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "weapon",
@@ -673,11 +952,17 @@
       "class": "ranged",
       "damage": 12
     },
-    "description": "Slow to span, terrible to receive."
+    "description": {
+      "en": "Slow to span, terrible to receive.",
+      "cs": "Naučí se z ní střílet každý. To je na ní to nebezpečné."
+    }
   },
   {
     "id": "marksman_rifle",
-    "name": "Marksman Rifle",
+    "name": {
+      "en": "Marksman Rifle",
+      "cs": "Odstřelovací puška"
+    },
     "rarity": "epic",
     "slot": "equipment",
     "equipSlot": "weapon",
@@ -685,6 +970,126 @@
       "class": "ranged",
       "damage": 18
     },
-    "description": "One shot from the tower ends most arguments before they start."
+    "description": {
+      "en": "One shot from the tower ends most arguments before they start.",
+      "cs": "Vzdálenost přestala být ochranou."
+    }
+  },
+  {
+    "id": "wood",
+    "name": {
+      "en": "Wood",
+      "cs": "Dřevo"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Felled timber, still green. The start of everything built.",
+      "cs": "Čerstvě skácené, ještě syrové. Začátek všeho postaveného."
+    }
+  },
+  {
+    "id": "rough_stone",
+    "name": {
+      "en": "Rough Stone",
+      "cs": "Lomový kámen"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Broken from the quarry face, unshaped.",
+      "cs": "Vylámaný ze stěny, neotesaný."
+    }
+  },
+  {
+    "id": "iron_ore",
+    "name": {
+      "en": "Iron Ore",
+      "cs": "Železná ruda"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Rusty rock from the seam. Useless until it meets a fire.",
+      "cs": "Rezavý kámen ze žíly. K ničemu, dokud nepotká oheň."
+    }
+  },
+  {
+    "id": "clay",
+    "name": {
+      "en": "Clay",
+      "cs": "Jíl"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Heavy grey clay, dug wet from the pit.",
+      "cs": "Těžký šedý jíl, vykopaný mokrý z jámy."
+    }
+  },
+  {
+    "id": "herb_bundle",
+    "name": {
+      "en": "Herb Bundle",
+      "cs": "Svazek bylin"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Bound stems and roots, dried for the healer.",
+      "cs": "Svázané stonky a kořeny, usušené pro léčitele."
+    }
+  },
+  {
+    "id": "hide",
+    "name": {
+      "en": "Hide",
+      "cs": "Kůže"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Taken with the meat, and worth as much.",
+      "cs": "Bere se s masem a stojí za stejně tolik."
+    }
+  },
+  {
+    "id": "charcoal",
+    "name": {
+      "en": "Charcoal",
+      "cs": "Dřevěné uhlí"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Wood burned slow and starved of air. The forge cannot do without it.",
+      "cs": "Dřevo pálené pomalu a bez vzduchu. Bez něj kovárna nehne."
+    }
+  },
+  {
+    "id": "leather",
+    "name": {
+      "en": "Leather",
+      "cs": "Vydělaná kůže"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Hide cured until it will take a stitch.",
+      "cs": "Vyčiněná tak, aby udržela steh."
+    }
+  },
+  {
+    "id": "brick",
+    "name": {
+      "en": "Brick",
+      "cs": "Cihla"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Clay fired hard. It will outlast the people who laid it.",
+      "cs": "Vypálený jíl. Přežije ty, kdo ji kladli."
+    }
   }
 ]

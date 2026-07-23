@@ -33,7 +33,7 @@ struct TechTreeView: View {
                 Image(systemName: icon(status)).foregroundStyle(color(status)).frame(width: 22)
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 6) {
-                        Text(tech.name).font(.subheadline.weight(.semibold))
+                        Text(tech.name.resolve(AppStrings.language)).font(.subheadline.weight(.semibold))
                         // An endless study wears its tally: what it's cost so far.
                         if let done = game.completions(tech) {
                             Text("×\(done)")

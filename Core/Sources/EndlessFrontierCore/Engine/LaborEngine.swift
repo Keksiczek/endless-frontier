@@ -54,11 +54,14 @@ public enum LaborEngine {
         let hasTemple = settlement.faith.hasTemple
         // Builders are only a trade while something is actually being raised.
         let hasConstruction = !settlement.constructions.isEmpty
+        // Ground left to chart keeps one pair of boots on the job.
+        let needsScouts = !(settlement.localMap?.isFullyCharted ?? true)
 
         for index in idleIndices {
             let best = neediestRole(counts: counts, adultCount: adultCountD,
                                     population: adultCount, hasTemple: hasTemple,
-                                    hasConstruction: hasConstruction)
+                                    hasConstruction: hasConstruction,
+                                    needsScouts: needsScouts)
             s.pawns[index].assignedWork = best
             counts[best, default: 0] += 1
         }
@@ -66,10 +69,19 @@ public enum LaborEngine {
     }
 
     /// The role furthest below its quota right now.
+    ///
+    /// `needsScouts` is a floor, not a quota: scouting's 0.05 share is the
+    /// smallest on the table, so at founding size it loses every comparison and
+    /// the colony charts nothing for decades. While there is fog left, the first
+    /// idle pair of hands walks out — after that the ordinary deficit maths
+    /// resumes and scouting has to earn its second body like anything else.
     static func neediestRole(
         counts: [WorkKind: Int], adultCount: Double, population: Int,
-        hasTemple: Bool = false, hasConstruction: Bool = true
+        hasTemple: Bool = false, hasConstruction: Bool = true,
+        needsScouts: Bool = false
     ) -> WorkKind {
+        if needsScouts, counts[.scouting, default: 0] == 0 { return .scouting }
+
         var table = quotas
         if hasTemple { table.append((.priest, priestShare)) }
 

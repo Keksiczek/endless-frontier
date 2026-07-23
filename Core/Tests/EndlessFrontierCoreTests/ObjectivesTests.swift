@@ -1,4 +1,5 @@
 import Testing
+import Foundation
 @testable import EndlessFrontierCore
 
 @Suite("Objectives")
@@ -19,7 +20,7 @@ struct ObjectivesTests {
     func hurtColonistFirst() {
         let reg = Fixtures.registry()
         let hurt = Pawn(name: "Wren", health: 15)
-        let capital = Settlement(name: "C", kind: .capital, pawns: [hurt])
+        let capital = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-534225a77b42")!, name: "C", kind: .capital, pawns: [hurt])
         let world = WorldState(settlements: [capital])
         let objectives = ObjectivesEngine.current(world, registry: reg)
         #expect(objectives.first?.category == .colonists)

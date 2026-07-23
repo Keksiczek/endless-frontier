@@ -74,4 +74,66 @@ public enum CombatEngine {
             return count + 1
         }
     }
+
+    // MARK: - Sub-tick timing
+
+    /// Builds a battle's record as it resolves.
+    ///
+    /// Every beat is stamped with the **action step** it happened on — the
+    /// simulation's own finer grain, not a decoration applied afterwards. The
+    /// first cut of this spread beats evenly across the tick regardless of what
+    /// happened, which made the timing a lie: two exchanges and eight looked
+    /// identical on the clock. A round is an action step, so a long fight now
+    /// genuinely occupies more of its tick than a short one.
+    public struct BattleRecorder {
+        private struct Pending {
+            let step: Int
+            let kind: BattleMoment.Kind
+            let pawnID: UUID?
+            let pawnName: String?
+            let amount: Double
+        }
+        private var pending: [Pending] = []
+
+        public init() {}
+
+        /// Records a beat on a given action step. Steps beyond the tick's grid
+        /// are clamped into it — a battle resolves inside one world tick.
+        public mutating func record(
+            _ kind: BattleMoment.Kind, step: Int = 0, pawnID: UUID? = nil,
+            pawnName: String? = nil, amount: Double = 0
+        ) {
+            pending.append(Pending(
+                step: min(max(0, step), WorldClock.actionStepsPerTick - 1),
+                kind: kind, pawnID: pawnID, pawnName: pawnName, amount: amount))
+        }
+
+        /// Seals the record. Beats sharing a step are spread inside that step's
+        /// slice in the order they were recorded, so simultaneous things stay
+        /// distinguishable without pretending to be sequential.
+        public func finish(
+            id: UUID, tick: Int, attackerName: String, defenderName: String, repelled: Bool
+        ) -> BattleLog {
+            let slice = 1.0 / Double(WorldClock.actionStepsPerTick)
+            var seenInStep: [Int: Int] = [:]
+            var countInStep: [Int: Int] = [:]
+            for beat in pending { countInStep[beat.step, default: 0] += 1 }
+
+            let moments = pending.enumerated().map { index, beat -> BattleMoment in
+                let n = countInStep[beat.step] ?? 1
+                let ordinal = seenInStep[beat.step, default: 0]
+                seenInStep[beat.step] = ordinal + 1
+                let within = (Double(ordinal) + 0.5) / Double(n)
+                return BattleMoment(
+                    id: index,
+                    at: Double(beat.step) * slice + within * slice,
+                    kind: beat.kind, pawnID: beat.pawnID,
+                    pawnName: beat.pawnName, amount: beat.amount)
+            }
+            return BattleLog(id: id, tick: tick, attackerName: attackerName,
+                             defenderName: defenderName, moments: moments, repelled: repelled)
+        }
+
+        public var isEmpty: Bool { pending.isEmpty }
+    }
 }

@@ -55,8 +55,15 @@ public struct AdjacencyRule: Codable, Sendable, Equatable {
 public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
     public let id: String
     public let era: Era
-    public let name: String
+    public let name: LocalizedText
     public let cost: Resources
+    /// Goods the build also consumes, by item id — timber, brick, ingots.
+    ///
+    /// Without this the whole production chain had no customer but the armoury:
+    /// you could saw a thousand beams and the only thing that ever wanted them
+    /// was a sword. A building that eats brick is what makes a kiln worth
+    /// standing.
+    public let materialCost: [String: Int]
     public let workers: Int
     public let production: Resources
     public let consumption: Resources
@@ -83,8 +90,9 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
     public init(
         id: String,
         era: Era,
-        name: String,
+        name: LocalizedText,
         cost: Resources = Resources(),
+        materialCost: [String: Int] = [:],
         workers: Int = 0,
         production: Resources = Resources(),
         consumption: Resources = Resources(),
@@ -102,6 +110,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         self.era = era
         self.name = name
         self.cost = cost
+        self.materialCost = materialCost
         self.workers = workers
         self.production = production
         self.consumption = consumption
@@ -118,6 +127,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case id, era, name, cost, workers, production, consumption
+        case materialCost = "material_cost"
         case moraleEffect = "morale_effect"
         case defense, housing, storage, upkeep, pollution, footprint, adjacency
         case description
@@ -127,8 +137,9 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
         era = try c.decode(Era.self, forKey: .era)
-        name = try c.decode(String.self, forKey: .name)
+        name = try c.decode(LocalizedText.self, forKey: .name)
         cost = try c.decodeIfPresent(Resources.self, forKey: .cost) ?? Resources()
+        materialCost = try c.decodeIfPresent([String: Int].self, forKey: .materialCost) ?? [:]
         workers = try c.decodeIfPresent(Int.self, forKey: .workers) ?? 0
         production = try c.decodeIfPresent(Resources.self, forKey: .production) ?? Resources()
         consumption = try c.decodeIfPresent(Resources.self, forKey: .consumption) ?? Resources()

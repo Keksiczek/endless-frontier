@@ -16,7 +16,7 @@ struct LaborTests {
         pawns += (0..<idleAdults).map { _ in Pawn(id: id(), name: "Idle") }
         pawns += (0..<children).map { _ in Pawn(id: id(), name: "Kid", age: 0) }
         pawns += assigned.map { Pawn(id: id(), name: "Worker", assignedWork: $0) }
-        return Settlement(name: "Village", kind: .capital, pawns: pawns)
+        return Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-8a32c39c808d")!, name: "Village", kind: .capital, pawns: pawns)
     }
 
     @Test("Idle adults are put to work")

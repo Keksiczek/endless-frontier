@@ -81,10 +81,20 @@ public enum EffectApplier {
 
     /// Resolves a raid against the capital's defense. If defended, it's
     /// repelled with a morale lift; otherwise the shortfall in defense
-    /// determines the damage to resources, stability, morale and a colonist.
-    /// Deterministic — no RNG.
+    /// determines the damage to resources, stability, morale and colonists.
+    ///
+    /// The *numbers* are one deterministic step, unchanged — but the raid now
+    /// also leaves a `BattleLog`, the same record a tribe's raid does, so the
+    /// canvas can play it out and the report can lay out its cost. A storyteller
+    /// raid was the one fight that resolved invisibly; now it shows.
     static func resolveRaid(_ s: inout WorldState, strength: Double, registry: GameDataRegistry) {
         guard let capital = s.settlements.indices.first else { return }
+        let raiderName = s.language == .cs ? "Nájezdníci" : "Raiders"
+        let defenderName = s.settlements[capital].name
+        // A deterministic id/seed from (mapSeed, tick): the record is identical
+        // on identical input, so the raid stays reproducible.
+        var rng = SeededRNG(seed: s.mapSeed &+ UInt64(bitPattern: Int64(s.tick)) &+ 0x5241_4944)
+        var record = CombatEngine.BattleRecorder()
 
         // Defense = fortifications (walls/artifacts) + the colonists who
         // muster to fight — real arms weighed by class (see `CombatEngine`),
@@ -93,15 +103,28 @@ public enum EffectApplier {
         let softened = max(0, strength - militia.ranged * 0.8)
         let effectiveDefense = s.settlements[capital].stats.defense + militia.melee + militia.ranged * 0.2
 
+        // The opening volley (if anyone can shoot), then the charge onto the line.
+        if militia.ranged > 0 { record.record(.volley, step: 0, amount: militia.ranged * 0.8) }
+        record.record(.charge, step: 0, amount: strength)
+        record.record(.clash, step: 1, amount: effectiveDefense)
+
         if effectiveDefense >= softened {
+            record.record(.repelled, step: 2)
+            s.settlements[capital].lastBattle = record.finish(
+                id: rng.nextUUID(), tick: s.tick,
+                attackerName: raiderName, defenderName: defenderName, repelled: true)
             s.settlements[capital].stats = s.settlements[capital].stats.applying(delta: 6, to: "morale")
             s.globalStats = s.globalStats.applying(delta: -8, to: "threatLevel")
+            s.settlements[capital].journal.append(tick: s.tick, kind: .danger, text: LocalizedText(values: [
+                .en: "\(raiderName) came for \(defenderName) — the wall held and turned them back.",
+                .cs: "\(raiderName) přišli na \(defenderName) — hradba vydržela a zahnala je."]))
             return
         }
 
         let deficit = softened - effectiveDefense
         applyResourceDelta(&s, resource: .materials, delta: -deficit * 4, scope: .global)
         applyResourceDelta(&s, resource: .food, delta: -deficit * 2, scope: .global)
+        record.record(.plunder, step: 5, amount: deficit * 6)
         s.settlements[capital].stats = s.settlements[capital].stats
             .applying(delta: -deficit * 0.5, to: "stability")
             .applying(delta: -deficit * 0.3, to: "morale")
@@ -111,21 +134,43 @@ public enum EffectApplier {
         // the most vulnerable defenders. Armed colonists take less harm.
         let woundCount = min(s.settlements[capital].pawns.count, max(1, Int(deficit / 18)))
         var deaths = 0
+        var woundStep = 2
         for _ in 0..<woundCount {
             guard let pawnIndex = s.settlements[capital].pawns.indices
                 .filter({ s.settlements[capital].pawns[$0].health > 0 })
                 .min(by: { s.settlements[capital].pawns[$0].health < s.settlements[capital].pawns[$1].health }) else { break }
             var pawn = s.settlements[capital].pawns[pawnIndex]
             // Armor, not a weapon, is what blunts the blow you receive.
-            pawn.health = max(0, pawn.health - deficit * 1.5 * CombatEngine.woundMultiplier(pawn))
+            let dealt = deficit * 1.5 * CombatEngine.woundMultiplier(pawn)
+            pawn.health = max(0, pawn.health - dealt)
+            let killed = pawn.health <= 0
+            record.record(killed ? .death : .wound, step: min(4, woundStep),
+                          pawnID: pawn.id, pawnName: pawn.name, amount: dealt)
+            woundStep += 1
             s.settlements[capital].pawns[pawnIndex] = pawn
-            if pawn.health <= 0 { deaths += 1 }
+            if killed { deaths += 1 }
         }
         if deaths > 0 {
             s.settlements[capital].pawns.removeAll { $0.health <= 0 }
             s.settlements[capital].deathTallies[PawnDeathCause.battle.rawValue, default: 0] += deaths
             s.settlements[capital].stats = s.settlements[capital].stats.applying(delta: -10 * Double(deaths), to: "morale")
         }
+
+        s.settlements[capital].lastBattle = record.finish(
+            id: rng.nextUUID(), tick: s.tick,
+            attackerName: raiderName, defenderName: defenderName, repelled: false)
+        // The day, on the record — a raid resolved off-screen still tells you.
+        let entry: LocalizedText
+        if deaths > 0 {
+            entry = LocalizedText(values: [
+                .en: "\(raiderName) broke into \(defenderName) — \(deaths) of ours fell and the stores are lighter.",
+                .cs: "\(raiderName) prolomili obranu \(defenderName) — \(deaths) našich padlo a zásoby jsou lehčí."])
+        } else {
+            entry = LocalizedText(values: [
+                .en: "\(raiderName) broke the line at \(defenderName) and carried off part of the stores.",
+                .cs: "\(raiderName) prorazili obranu \(defenderName) a odnesli část zásob."])
+        }
+        s.settlements[capital].journal.append(tick: s.tick, kind: .danger, text: entry)
     }
 
     /// The defensive value the colonists themselves provide. Delegates to

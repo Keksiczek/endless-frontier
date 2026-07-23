@@ -12,6 +12,8 @@ extension LocalResourceKind {
         case .forest: return cs ? "Les" : "Forest"
         case .stone: return cs ? "Ložisko kamene" : "Stone deposit"
         case .herbs: return cs ? "Byliny" : "Herbs"
+        case .ironOre: return cs ? "Žíla železné rudy" : "Iron seam"
+        case .clay: return cs ? "Jílovna" : "Clay pit"
         }
     }
 }

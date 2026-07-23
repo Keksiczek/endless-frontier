@@ -9,7 +9,7 @@ struct CraftingTests {
     private func capital(materials: [String], buildings: [String] = [], resources: Resources = [.materials: 100]) -> WorldState {
         let inv = materials.map { ItemInstance(definitionID: $0) }
         let bld = buildings.map { BuildingInstance(definitionID: $0, count: 1) }
-        let c = Settlement(name: "C", kind: .capital, pawns: Fixtures.pawns(5), buildings: bld,
+        let c = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-7b233e2c671d")!, name: "C", kind: .capital, pawns: Fixtures.pawns(5), buildings: bld,
                            storage: resources, storageCapacity: 9999, inventory: inv)
         return WorldState(settlements: [c])
     }
@@ -55,7 +55,8 @@ struct CraftingTests {
     @Test("availableRecipes lists only craftable recipes")
     func available() throws {
         let r = try reg()
-        let world = capital(materials: ["timber_bundle"])   // can craft leather_garb (1 timber + 10 mat)
+        // Leather garb is stitched from leather, not from a bundle of timber.
+        let world = capital(materials: ["leather", "leather"])
         let ids = Set(CraftingEngine.availableRecipes(world, registry: r).map(\.id))
         #expect(ids.contains("craft_leather_garb"))
         #expect(!ids.contains("craft_warden_plate"))   // needs rare materials + workshop + tech

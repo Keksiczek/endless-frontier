@@ -66,7 +66,7 @@ struct SettlementScreen: View {
             if let map = game.viewedLocalMap, let settlement = game.selectedSettlement {
                 SettlementCanvasView(
                     settlement: settlement, map: map, registry: game.registry,
-                    season: game.season, selection: $selection)
+                    season: game.season, clock: game.tickClock, selection: $selection)
                 .overlay(alignment: .topTrailing) {
                     MinimapView(map: map).padding(12)
                 }
@@ -124,10 +124,37 @@ struct SettlementScreen: View {
                 EventDecisionCard(game: game, template: decision,
                                   queued: max(0, game.pendingEvents.count - 1))
                     .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if let battle = game.battleReport {
+                // A fight just happened here — show what it cost before idle
+                // curiosity about the scene.
+                BattleReportCard(battle: battle) {
+                    withAnimation(.easeOut(duration: 0.15)) { game.dismissBattleReport() }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if let pawn = selectedPawn {
                 PawnInspectorCard(pawn: pawn, ticksPerYear: game.ticksPerYear,
                                   activity: activityLine(for: pawn),
                                   bonds: bondLines(for: pawn)) {
+                    withAnimation(.easeOut(duration: 0.15)) { selection = .none }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if case let .poi(id) = selection, let poi = game.poi(id) {
+                let party = game.expedition(forPOI: id)
+                POIInspectorCard(
+                    poi: poi, ticksPerYear: game.ticksPerYear, tick: game.world.tick,
+                    expedition: party,
+                    partyNames: party.map { game.partyNames($0) } ?? [],
+                    canDispatch: game.canDispatch(to: poi),
+                    onDispatch: { game.dispatchToPOI(id) },
+                    onClose: {
+                        withAnimation(.easeOut(duration: 0.15)) { selection = .none }
+                    })
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if case let .fog(point) = selection {
+                ScoutOrderCard(scouts: game.scoutCount) {
+                    game.sendScouts(to: point)
+                    withAnimation(.easeOut(duration: 0.15)) { selection = .none }
+                } onClose: {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -165,6 +192,7 @@ struct SettlementScreen: View {
         }
         .padding(12)
         .animation(.easeOut(duration: 0.2), value: game.pendingEvents.count)
+        .animation(.easeOut(duration: 0.25), value: game.battleReport?.id)
     }
 
     private var controlBar: some View {
@@ -224,7 +252,8 @@ struct SettlementScreen: View {
     /// so the card says what the figure is visibly doing.
     private func activityLine(for pawn: Pawn) -> String? {
         guard let map = game.viewedLocalMap, let settlement = game.selectedSettlement else { return nil }
-        let scene = AgentMotion.Scene(settlement: settlement, registry: game.registry)
+        let scene = AgentMotion.Scene(settlement: settlement, registry: game.registry,
+                                      continuousTick: game.continuousTick())
         let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
                                     time: Date().timeIntervalSinceReferenceDate,
                                     ticksPerYear: game.ticksPerYear)
