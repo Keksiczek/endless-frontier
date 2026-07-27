@@ -139,8 +139,12 @@ public enum WildlifeEngine {
         // Their own lives: ageing, wounds, illness, cold and heat, and death.
         map = AnimalEngine.advanceOneTick(map, tick: tick, ticksPerYear: ticksPerYear)
         map = AnimalEngine.breed(map, tick: tick, ticksPerYear: ticksPerYear)
-        // And the wood grows while all this happens.
-        map = FloraEngine.advanceOneTick(map)
+        // And the wood grows while all this happens — in batches, since a tree
+        // takes thousands of ticks to grow and ageing one every tick is a copy
+        // of the whole wood for no visible difference.
+        if tick % LaborEngine.staffingInterval == 0 {
+            map = FloraEngine.advanceOneTick(map, by: LaborEngine.staffingInterval)
+        }
 
         s.localMap = map
         return s

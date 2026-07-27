@@ -14,6 +14,7 @@ public enum WorkKind: String, Codable, Sendable, CaseIterable, Equatable {
     case building   // raises structures (no resource)
     case scouting   // reveals the fog of war (no resource)
     case priest     // tends faith (no resource)
+    case garrison   // mans the walls and the barracks (no resource)
     case idle
 
     /// The resource this work contributes to, if any.
@@ -23,7 +24,7 @@ public enum WorkKind: String, Codable, Sendable, CaseIterable, Equatable {
         case .logging, .mining: return .materials
         case .research, .foraging: return .knowledge
         case .trade: return .influence
-        case .healing, .building, .scouting, .priest, .idle: return nil
+        case .healing, .building, .scouting, .priest, .garrison, .idle: return nil
         }
     }
 

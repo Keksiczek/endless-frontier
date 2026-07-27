@@ -48,8 +48,11 @@ public enum LocalMapGenerator {
             }
         }
 
-        // Biome shapes what the land actually offers.
-        let mix = depositMix(for: biomeID)
+        // Biome shapes what the land actually offers — but not to the last
+        // deposit. A fixed mix per biome meant every forest valley held exactly
+        // six woods, two fields and one seam: the *positions* moved and nothing
+        // else did, which is why one map felt like the last one.
+        let mix = jittered(depositMix(for: biomeID), rng: &rng)
         var nodes: [ResourceNode] = []
         nodes += makeNodes(.field, count: mix.fields)
         nodes += makeNodes(.forest, count: mix.forests)
@@ -238,6 +241,23 @@ public enum LocalMapGenerator {
         case "coast":     return (3, 2, 2, 3, 0, 3)   // clay beds, no iron
         default:          return (4, 3, 2, 2, 1, 2)   // plains & homeland
         }
+    }
+
+    /// The biome's mix, varied per map.
+    ///
+    /// Each count lands between roughly half and one and a half times the
+    /// biome's character, so two valleys of the same country genuinely differ:
+    /// one is thick with timber where the next has the ore. Anything the biome
+    /// says it holds keeps at least one, so a forest is never woodless — the
+    /// point is variety, not a map that can't be played.
+    static func jittered(_ mix: DepositMix, rng: inout SeededRNG) -> DepositMix {
+        func vary(_ n: Int) -> Int {
+            guard n > 0 else { return 0 }
+            return max(1, Int((Double(n) * (0.5 + rng.nextUnit())).rounded()))
+        }
+        return (fields: vary(mix.fields), forests: vary(mix.forests),
+                stone: vary(mix.stone), herbs: vary(mix.herbs),
+                ironOre: vary(mix.ironOre), clay: vary(mix.clay))
     }
 
     /// The land's carrying capacity for game.

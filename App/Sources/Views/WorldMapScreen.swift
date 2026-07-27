@@ -58,10 +58,21 @@ struct WorldMapScreen: View {
         }
         .foregroundStyle(Theme.text)
         .animation(.snappy, value: selectedRegionID)
-        .alert("Site Explored", isPresented: siteOutcomeBinding, presenting: game.lastSiteOutcome) { _ in
-            Button("Continue") { game.dismissSiteOutcome() }
-        } message: { outcome in
-            Text(outcome.narrative)
+        // A find is a place, not a dialog. What the expedition turned up now
+        // shows over the living survey of the country it came from — the same
+        // view the world map already opens for any explored region.
+        .sheet(isPresented: siteOutcomeBinding) {
+            if let outcome = game.lastSiteOutcome {
+                ZStack(alignment: .bottom) {
+                    if let region = game.region(named: outcome.regionName) {
+                        RegionCanvasView(region: region, game: game)
+                    } else {
+                        Theme.ink.ignoresSafeArea()
+                    }
+                    SiteOutcomeCard(outcome: outcome) { game.dismissSiteOutcome() }
+                        .padding(14)
+                }
+            }
         }
         // Opening a chunk: any explored region unfolds into a living survey.
         .sheet(item: $surveyRegion) { region in

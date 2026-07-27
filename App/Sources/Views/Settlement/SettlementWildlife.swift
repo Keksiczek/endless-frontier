@@ -25,8 +25,79 @@ enum SettlementWildlife {
             y: 0.52 + sin(t * 2) * 0.20)  // lissajous keeps it off the houses
     }
 
-    /// Draws the herd and any prowler. Everything is skipped under fog.
+    /// Draws the wild. Where there are real `Animal`s on the map each one is
+    /// drawn as itself — its own species, its own wander, and visibly the worse
+    /// for a hard winter — and the abstract herd is only the fallback for saves
+    /// that predate them. Everything is skipped under fog.
     static func draw(
+        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double
+    ) {
+        guard map.wildlife.animals.isEmpty else {
+            entities(&context, rect: rect, map: map, time: time)
+            return
+        }
+        abstractHerd(&context, rect: rect, map: map, time: time)
+    }
+
+    /// Every beast the simulation is actually running.
+    ///
+    /// Position is presentation, exactly as it is for colonists: derived from
+    /// `(animal.id, frame clock)` and never stored, so the deterministic Core
+    /// stays untouched. Prey graze around the herd's slow lap of the valley;
+    /// predators keep to the tree line.
+    private static func entities(
+        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double
+    ) {
+        let unit = min(rect.width, rect.height)
+        let herd = herdCenter(map: map, time: time)
+        for animal in map.wildlife.animals {
+            let phase = Double(hash(animal.id) % 6199) / 6199 * 2 * .pi
+            // A limping beast covers less ground; a sick one drifts.
+            let vigour = animal.canWalk ? 1.0 : 0.35
+            let position: LocalPoint
+            if animal.species.isPredator {
+                let angle = time * 0.05 * vigour + phase
+                position = LocalPoint(x: 0.5 + cos(angle) * 0.42,
+                                      y: 0.52 + sin(angle) * 0.36)
+            } else {
+                position = LocalPoint(
+                    x: herd.x + cos(time * 0.18 * vigour + phase) * 0.035,
+                    y: herd.y + sin(time * 0.14 * vigour + phase * 1.7) * 0.028)
+            }
+            guard map.isExplored(position) else { continue }
+            let at = SettlementRenderer.point(position, in: rect)
+            let ailing = !animal.conditions.isEmpty
+                || animal.health < animal.species.baseHealth * 0.55
+
+            switch animal.species {
+            case .deer:
+                deer(&context, at: at, s: unit * 0.010, time: time, phase: phase)
+            case .boar:
+                boar(&context, at: at, s: unit * 0.009, time: time, phase: phase)
+            case .hare:
+                hare(&context, at: at, s: unit * 0.006, time: time, phase: phase)
+            case .fox:
+                prowler(&context, at: at, s: unit * 0.007, time: time, hungry: false)
+            case .wolf:
+                prowler(&context, at: at, s: unit * 0.011, time: time, hungry: ailing)
+            case .bear:
+                prowler(&context, at: at, s: unit * 0.015, time: time, hungry: ailing)
+            }
+
+            // A beast that is hurt, ill or frozen says so, so a hard winter is
+            // something you can see happening rather than read about later.
+            if ailing {
+                context.fill(
+                    Path(ellipseIn: CGRect(x: at.x - unit * 0.0022,
+                                           y: at.y - unit * 0.018,
+                                           width: unit * 0.0044, height: unit * 0.0044)),
+                    with: .color(Theme.danger.opacity(0.75)))
+            }
+        }
+    }
+
+    /// The old behaviour, for maps generated before the wild had bodies.
+    private static func abstractHerd(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double
     ) {
         let unit = min(rect.width, rect.height)
@@ -54,6 +125,79 @@ enum SettlementWildlife {
             prowler(&context, at: SettlementRenderer.point(p, in: rect),
                     s: unit * 0.011, time: time, hungry: pressure > packPressure)
         }
+    }
+
+    /// A stable number per beast, so its wander is its own and never jitters.
+    private static func hash(_ id: UUID) -> UInt64 {
+        var h: UInt64 = 0xCBF2_9CE4_8422_2325
+        let b = id.uuid
+        for byte in [b.0, b.1, b.2, b.3, b.4, b.5, b.6, b.7] {
+            h = (h ^ UInt64(byte)) &* 0x0100_0000_01B3
+        }
+        return h
+    }
+
+    /// A boar: low, heavy, snout down, with a bristled back.
+    private static func boar(
+        _ context: inout GraphicsContext, at p: CGPoint, s: CGFloat,
+        time: Double, phase: Double
+    ) {
+        let hide = Color(red: 0.33, green: 0.27, blue: 0.23)
+        let body = CGRect(x: p.x - s * 1.0, y: p.y - s * 0.5, width: s * 2.0, height: s * 0.95)
+        context.fill(Path(ellipseIn: CGRect(x: p.x - s * 0.9, y: p.y + s * 0.4,
+                                            width: s * 1.8, height: s * 0.4)),
+                     with: .color(.black.opacity(0.2)))
+        context.fill(Path(ellipseIn: body), with: .color(hide))
+        // A wedge of a head, always rooting at the ground.
+        context.fill(Path { q in
+            q.move(to: CGPoint(x: body.minX + s * 0.1, y: p.y - s * 0.3))
+            q.addLine(to: CGPoint(x: body.minX - s * 0.75, y: p.y + s * 0.42))
+            q.addLine(to: CGPoint(x: body.minX + s * 0.2, y: p.y + s * 0.4))
+            q.closeSubpath()
+        }, with: .color(hide))
+        // Bristles.
+        for i in 0..<4 {
+            let x = body.minX + body.width * (CGFloat(i) + 0.8) / 5
+            context.stroke(Path { q in
+                q.move(to: CGPoint(x: x, y: body.minY + s * 0.06))
+                q.addLine(to: CGPoint(x: x + s * 0.06, y: body.minY - s * 0.24))
+            }, with: .color(Theme.bone.opacity(0.4)), lineWidth: 0.6)
+        }
+        // Four short legs, working.
+        let gait = CGFloat(sin(time * 3 + phase)) * s * 0.16
+        for i in 0..<4 {
+            let x = body.minX + body.width * (CGFloat(i) + 0.5) / 4
+            context.stroke(Path { q in
+                q.move(to: CGPoint(x: x, y: body.maxY - s * 0.1))
+                q.addLine(to: CGPoint(x: x + (i % 2 == 0 ? gait : -gait), y: body.maxY + s * 0.42))
+            }, with: .color(hide), lineWidth: max(0.7, s * 0.2))
+        }
+    }
+
+    /// A hare: small, still, then suddenly not.
+    private static func hare(
+        _ context: inout GraphicsContext, at p: CGPoint, s: CGFloat,
+        time: Double, phase: Double
+    ) {
+        let fur = Color(red: 0.62, green: 0.55, blue: 0.44)
+        // It sits, then bolts a short way and sits again.
+        let bolt = max(0, sin(time * 0.9 + phase) - 0.86) * 7
+        let hop = CGFloat(abs(sin(time * 9 + phase))) * s * CGFloat(bolt)
+        let c = CGPoint(x: p.x + CGFloat(bolt) * s * 0.8, y: p.y - hop)
+        context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.8, y: c.y - s * 0.5,
+                                            width: s * 1.6, height: s * 1.0)),
+                     with: .color(fur))
+        // Two long ears, laid back when it runs.
+        for side in [-1.0, 1.0] {
+            let lean = CGFloat(side) * s * (0.18 + CGFloat(bolt) * 0.5)
+            context.stroke(Path { q in
+                q.move(to: CGPoint(x: c.x + s * 0.4, y: c.y - s * 0.35))
+                q.addLine(to: CGPoint(x: c.x + s * 0.4 + lean, y: c.y - s * 1.15))
+            }, with: .color(fur), lineWidth: max(0.6, s * 0.2))
+        }
+        context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.95, y: c.y - s * 0.3,
+                                            width: s * 0.4, height: s * 0.4)),
+                     with: .color(Theme.bone.opacity(0.75)))   // the scut
     }
 
     /// A grazing deer — a stag lifts an antlered head now and then, a doe just

@@ -37,6 +37,10 @@ struct SettlementCanvasView: View {
     /// jumping once a minute.
     let clock: TickClock
     @Binding var selection: CanvasSelection
+    /// What the player is placing, if they are placing anything. When this is
+    /// set the canvas becomes the build surface: the grid and a full-size ghost
+    /// are drawn over the colony, and a tap aims instead of selecting.
+    @Binding var buildPlan: BuildPlan?
 
     /// A fixed, *absolute* epoch so the animation clock is stable across
     /// redraws — and so anyone else (the pawn inspector's "right now" line)
@@ -59,6 +63,15 @@ struct SettlementCanvasView: View {
                         camera: camera, continuousTick: now,
                         selectedPawnID: selectedPawnID,
                         selectedBuildingID: selectedBuildingID)
+                    if let plan = buildPlan {
+                        // Over everything, including the fog: you are laying
+                        // out your own ground, not discovering it.
+                        let rect = SettlementRenderer.worldRect(
+                            viewRect: CGRect(origin: .zero, size: size), camera: camera)
+                        SettlementBuildOverlay.draw(
+                            &context, rect: rect, settlement: settlement,
+                            registry: registry, plan: plan)
+                    }
                 }
             }
             .background(Theme.ink)
@@ -86,11 +99,32 @@ struct SettlementCanvasView: View {
 
     private func tap(in size: CGSize) -> some Gesture {
         SpatialTapGesture().onEnded { value in
+            // While placing, a tap aims the ghost rather than selecting what is
+            // under it — otherwise you'd inspect the building you are trying to
+            // build beside.
+            if let plan = buildPlan {
+                aim(plan, at: value.location, size: size)
+                return
+            }
             let hit = hitTest(value.location, size: size)
             withAnimation(.easeOut(duration: 0.15)) {
                 selection = (hit == selection) ? .none : hit
             }
         }
+    }
+
+    /// Points the ghost at the tapped ground.
+    private func aim(_ plan: BuildPlan, at location: CGPoint, size: CGSize) {
+        guard let colony = settlement.colony else { return }
+        let rect = SettlementRenderer.worldRect(
+            viewRect: CGRect(origin: .zero, size: size), camera: camera)
+        let world = SettlementRenderer.normalised(location, in: rect)
+        let footprint = registry.building(plan.definitionID)?.footprint ?? TileSize()
+        guard let coord = SettlementBuildOverlay.aim(
+            at: world, colony: colony, footprint: footprint) else { return }
+        var updated = plan
+        updated.coord = coord
+        withAnimation(.easeOut(duration: 0.12)) { buildPlan = updated }
     }
 
     private func pan(in size: CGSize) -> some Gesture {

@@ -348,6 +348,7 @@
   },
   {
     "id": "palisade",
+    "work": "garrison",
     "era": "early_settlement",
     "name": {
       "en": "Wooden Palisade",
@@ -369,6 +370,7 @@
   },
   {
     "id": "watchtower",
+    "work": "garrison",
     "era": "ancient",
     "name": {
       "en": "Watchtower",
@@ -391,6 +393,7 @@
   },
   {
     "id": "barracks",
+    "work": "garrison",
     "era": "medieval",
     "name": {
       "en": "Barracks",
@@ -491,6 +494,7 @@
   },
   {
     "id": "stone_walls",
+    "work": "garrison",
     "era": "ancient",
     "name": {
       "en": "Stone Walls",

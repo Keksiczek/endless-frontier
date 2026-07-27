@@ -72,6 +72,10 @@ enum SettlementRenderer {
         heartGlow(&context, rect: rect)
         river(&context, rect: rect, river: map.river, season: season, zoom: zoom)
         scenery(&context, rect: rect, map: map, season: season)
+        // The real wood and rock, over the decorative landscape but under
+        // anything built — a tree stands in front of the grass and behind the
+        // roof it shades.
+        SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time)
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels)
@@ -163,6 +167,10 @@ enum SettlementRenderer {
         ground(&context, rect: rect, map: map, season: season)
         river(&context, rect: rect, river: map.river, season: season, zoom: zoom)
         scenery(&context, rect: rect, map: map, season: season)
+        // The real wood and rock, over the decorative landscape but under
+        // anything built — a tree stands in front of the grass and behind the
+        // roof it shades.
+        SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time)
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels)
@@ -455,12 +463,17 @@ enum SettlementRenderer {
             var size = s
             if kind == .tree || kind == .pine {
                 if let fraction = nearestNodeFraction(map: map, kind: .forest, to: prop.position) {
+                    // A wood that has real trees in it draws those instead —
+                    // otherwise the same copse is drawn twice, once as standing
+                    // stock and once as furniture that only pretends to be cut.
+                    if !map.trees.isEmpty { continue }
                     let threshold = propRoll(prop.id)
                     if fraction < threshold * 0.5 { continue }        // felled and hauled
                     if fraction < threshold * 0.9 { kind = .stump }   // fresh-cut
                 }
             } else if kind == .rock || kind == .boulder {
                 if let fraction = nearestNodeFraction(map: map, kind: .stone, to: prop.position) {
+                    if !map.rocks.isEmpty { continue }
                     let threshold = propRoll(prop.id)
                     if fraction < threshold * 0.4 { continue }        // quarried away
                     size *= CGFloat(0.6 + fraction * 0.4)             // being cut down
@@ -978,6 +991,19 @@ enum SettlementRenderer {
         return LocalPoint(
             x: colonyHeart.x + fx * colonySpan,
             y: colonyHeart.y + fy * colonySpan)
+    }
+
+    /// The inverse of `canvasPoint`: which build tile a point on the canvas
+    /// falls on, or nil when it lies off the colony's ground. This is what lets
+    /// the player place a building by pointing at the settlement itself rather
+    /// than at an abstract grid on another screen.
+    static func tile(at p: LocalPoint, in colony: ColonyMap) -> TileCoord? {
+        guard colony.width > 0, colony.height > 0, colonySpan > 0 else { return nil }
+        let fx = (p.x - colonyHeart.x) / colonySpan + 0.5
+        let fy = (p.y - colonyHeart.y) / colonySpan + 0.5
+        guard fx >= 0, fx < 1, fy >= 0, fy < 1 else { return nil }
+        return TileCoord(min(colony.width - 1, Int(fx * Double(colony.width))),
+                         min(colony.height - 1, Int(fy * Double(colony.height))))
     }
 
     /// Where the settlement's structures stand, in normalised space. The grid

@@ -21,11 +21,11 @@ public enum FloraEngine {
     /// Ages every tree by a tick. Cheap on purpose: growth is a function of
     /// age, so this is one increment per tree and no allocation when the wood
     /// is empty.
-    public static func advanceOneTick(_ map: LocalMap) -> LocalMap {
-        guard !map.trees.isEmpty else { return map }
+    public static func advanceOneTick(_ map: LocalMap, by ticks: Int = 1) -> LocalMap {
+        guard !map.trees.isEmpty, ticks > 0 else { return map }
         var updated = map
         for i in updated.trees.indices {
-            updated.trees[i].age += 1
+            updated.trees[i].age += ticks
         }
         return updated
     }

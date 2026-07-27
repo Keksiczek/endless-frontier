@@ -7,6 +7,11 @@ import EndlessFrontierCore
 struct SettlementScreen: View {
     @Bindable var game: GameViewModel
     @State private var selection: CanvasSelection = .none
+    /// What the player is placing, if anything. Set from the picker; the canvas
+    /// turns into the build surface while it holds a value.
+    @State private var buildPlan: BuildPlan?
+    /// Whether the "what to build" strip is showing.
+    @State private var picking = false
 
     /// Which drawer is open, if any.
     ///
@@ -66,7 +71,8 @@ struct SettlementScreen: View {
             if let map = game.viewedLocalMap, let settlement = game.selectedSettlement {
                 SettlementCanvasView(
                     settlement: settlement, map: map, registry: game.registry,
-                    season: game.season, clock: game.tickClock, selection: $selection)
+                    season: game.season, clock: game.tickClock, selection: $selection,
+                    buildPlan: $buildPlan)
                 .overlay(alignment: .topTrailing) {
                     MinimapView(map: map).padding(12)
                 }
@@ -119,8 +125,17 @@ struct SettlementScreen: View {
     @ViewBuilder
     private var bottomLayer: some View {
         VStack(spacing: 10) {
-            // A decision outranks idle curiosity about the scene.
-            if let decision = game.currentDecision {
+            // Laying a building out owns the screen while it is happening: the
+            // ghost on the canvas and this bar are one interaction.
+            if buildPlan != nil {
+                BuildPlacementBar(game: game, plan: $buildPlan)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if picking {
+                BuildPickerBar(game: game, plan: $buildPlan) {
+                    withAnimation(.easeOut(duration: 0.15)) { picking = false }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if let decision = game.currentDecision {
                 EventDecisionCard(game: game, template: decision,
                                   queued: max(0, game.pendingEvents.count - 1))
                     .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -208,6 +223,21 @@ struct SettlementScreen: View {
             // nothing anywhere constructed ColonyMapScreen, so the layout, its
             // zones and every adjacency synergy the loop computes each tick
             // were invisible.
+            // Building happens *here*, on the colony you are looking at — the
+            // abstract grid screen is still one tap further in for the fiddly
+            // work (zones, per-building staffing), but choosing where a roof
+            // goes should never have needed a second picture of the town.
+            Button {
+                withAnimation(.easeOut(duration: 0.15)) {
+                    if buildPlan != nil { buildPlan = nil } else { picking.toggle() }
+                }
+            } label: {
+                Label(AppStrings.language == .cs ? "Stavět" : "Build",
+                      systemImage: "hammer.fill")
+                    .font(.subheadline.weight(.semibold))
+            }
+            .buttonStyle(.bordered)
+            .tint(picking || buildPlan != nil ? Theme.accent : Theme.text)
             Button {
                 drawer = .layout
             } label: {

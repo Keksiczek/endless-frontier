@@ -99,6 +99,45 @@ public enum ResourceLoop {
     ///
     /// The hand-authored `consumption` field stays separate: that's the
     /// building's *operating* draw (a factory's energy), not its maintenance.
+    ///
+    /// (Defined below `staffingFactors` — see `upkeep(for:config:)`.)
+
+    /// What an unmanned building still yields. Not zero: a mill with no miller
+    /// still turns for a while, and a hard floor would make one bad winter of
+    /// deaths collapse a colony outright rather than merely set it back.
+    public static let unstaffedFloor: Double = 0.4
+
+    /// How well each kind of building is actually manned, as a production
+    /// multiplier in `unstaffedFloor…1`.
+    ///
+    /// `LaborEngine.staffBuildings` keeps the rosters honest; this is what makes
+    /// them *matter*. Output came from building counts alone, so an empty
+    /// workshop produced exactly as much as a full one and the entire labour
+    /// economy was decoration — you could lose half the colony and the ledger
+    /// would not notice.
+    ///
+    /// A settlement with no grid laid out is taken as fully manned, so outposts
+    /// and anything predating the colony layer are unaffected. Buildings that
+    /// employ nobody (huts, granaries) never appear here and keep a factor of 1.
+    public static func staffingFactors(
+        _ settlement: Settlement, registry: GameDataRegistry
+    ) -> [String: Double] {
+        guard let colony = settlement.colony, !colony.placements.isEmpty else { return [:] }
+        var seats: [String: (filled: Int, total: Int)] = [:]
+        for placement in colony.placements where !placement.underConstruction {
+            guard let def = registry.building(placement.definitionID), def.workers > 0 else { continue }
+            var entry = seats[placement.definitionID] ?? (filled: 0, total: 0)
+            entry.filled += min(def.workers, placement.assignedPawnIDs.count)
+            entry.total += def.workers
+            seats[placement.definitionID] = entry
+        }
+        return seats.mapValues { entry in
+            guard entry.total > 0 else { return 1 }
+            let manned = Double(entry.filled) / Double(entry.total)
+            return unstaffedFloor + (1 - unstaffedFloor) * manned
+        }
+    }
+
     public static func upkeep(for def: BuildingDefinition, config: WorldConfig) -> Resources {
         if let explicit = def.upkeep { return explicit }
         var derived = Resources()
@@ -144,15 +183,20 @@ public enum ResourceLoop {
         //    Upkeep is charged alongside operating consumption: a standing
         //    colony costs materials to keep standing, which is what stops the
         //    stores from simply filling and pinning at the cap forever.
+        //    And it matters who is standing at the bench: a workshop with
+        //    nobody posted to it runs at `unstaffedFloor`, not at full tilt.
+        let staffing = staffingFactors(s, registry: registry)
         var net = Resources()
         for instance in s.buildings {
             guard let def = registry.building(instance.definitionID) else { continue }
             let count = Double(instance.count)
             let maintenance = upkeep(for: def, config: config)
+            let manned = staffing[instance.definitionID] ?? 1
             for resource in ResourceType.allCases {
                 let produced = def.production[resource]
                     * profile.productionMultiplier(resource)
                     * config.seasonYieldMultiplier(for: resource, tick: tick)
+                    * manned
                 let consumed = def.consumption[resource] + maintenance[resource]
                 net[resource] = net[resource] + (produced - consumed) * count
             }
@@ -264,7 +308,13 @@ public enum ResourceLoop {
         //    then seat them at a building that wants their trade — a trade
         //    without an address is how workshops came to stand empty.
         s = LaborEngine.assignIdleAdults(s, registry: registry)
-        s = LaborEngine.staffBuildings(s, registry: registry)
+        // Seating people is done on a cadence, not every tick. A post changing
+        // within ten minutes of game time is imperceptible, and the pass copies
+        // the colony's placements — on the widened 18×18 grid, paying that
+        // every tick made offline catch-up superlinear as a colony filled up.
+        if tick % LaborEngine.staffingInterval == 0 {
+            s = LaborEngine.staffBuildings(s, registry: registry)
+        }
 
         // 8b. Raise what's being built: sites draft hands, progress accrues,
         //     and a finished roof joins the economy ledger above.

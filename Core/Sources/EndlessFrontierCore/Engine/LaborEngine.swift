@@ -24,6 +24,14 @@ public enum LaborEngine {
     static let healingMinPopulation = 16
     /// A temple needs tending — but only once one stands.
     static let priestShare = 0.04
+    /// Walls and barracks need manning — but only once something is built to
+    /// man. Until this existed, the four defensive buildings employed people on
+    /// paper and no colonist could ever hold the post: their trade was
+    /// unknowable, so nobody was ever seated at them.
+    static let garrisonShare = 0.06
+    /// How often posts are reconciled with trades, in ticks. Cheap enough to do
+    /// often, too expensive to do every tick on a full grid.
+    public static let staffingInterval = 10
 
     /// Puts every idle adult in the settlement to work, each filling whatever
     /// role is furthest below its quota at that moment.
@@ -52,6 +60,11 @@ public enum LaborEngine {
 
         // A temple in the settlement opens the priesthood as a trade.
         let hasTemple = settlement.faith.hasTemple
+        // So do walls, for the watch.
+        let hasWalls = settlement.colony?.placements.contains {
+            !$0.underConstruction
+                && (registry.building($0.definitionID)?.defense ?? 0) > 0
+        } ?? false
         // Builders are only a trade while something is actually being raised.
         let hasConstruction = !settlement.constructions.isEmpty
         // Ground left to chart keeps one pair of boots on the job.
@@ -61,7 +74,7 @@ public enum LaborEngine {
             let best = neediestRole(counts: counts, adultCount: adultCountD,
                                     population: adultCount, hasTemple: hasTemple,
                                     hasConstruction: hasConstruction,
-                                    needsScouts: needsScouts)
+                                    needsScouts: needsScouts, hasWalls: hasWalls)
             s.pawns[index].assignedWork = best
             counts[best, default: 0] += 1
         }
@@ -165,12 +178,13 @@ public enum LaborEngine {
     static func neediestRole(
         counts: [WorkKind: Int], adultCount: Double, population: Int,
         hasTemple: Bool = false, hasConstruction: Bool = true,
-        needsScouts: Bool = false
+        needsScouts: Bool = false, hasWalls: Bool = false
     ) -> WorkKind {
         if needsScouts, counts[.scouting, default: 0] == 0 { return .scouting }
 
         var table = quotas
         if hasTemple { table.append((.priest, priestShare)) }
+        if hasWalls { table.append((.garrison, garrisonShare)) }
 
         var best: WorkKind = .farming
         var bestDeficit = -Double.infinity

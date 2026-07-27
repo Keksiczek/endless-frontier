@@ -316,6 +316,12 @@ final class GameViewModel {
 
     func dismissSiteOutcome() { lastSiteOutcome = nil }
 
+    /// The region a find came from, so the outcome can be shown over the ground
+    /// it happened on rather than in a bare dialog.
+    func region(named name: String) -> Region? {
+        world.regions.first { $0.name == name }
+    }
+
     /// Player-facing label for the site action available in a region, if any.
     func siteActionLabel(for region: Region) -> String? {
         guard region.hasActiveSite else { return nil }

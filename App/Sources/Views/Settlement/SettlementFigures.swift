@@ -252,6 +252,24 @@ enum SettlementFigures {
                          with: .color(Theme.accent.opacity(0.8)))
         case .idle:
             break
+        case .garrison:
+            // A grounded spear and a shield on the arm — a watch stands, where
+            // a scout's spear is carried. The butt rests on the ground.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x + 0.9 * scale, y: hand.y + 5.2 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 0.9 * scale, y: hand.y - 5.8 * scale))
+            }, with: .color(wood), lineWidth: 0.8 * scale)
+            context.fill(Path { p in
+                p.move(to: CGPoint(x: hand.x + 0.9 * scale, y: hand.y - 7.0 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 0.4 * scale, y: hand.y - 5.6 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 1.4 * scale, y: hand.y - 5.6 * scale))
+                p.closeSubpath()
+            }, with: .color(iron))
+            let shield = CGRect(x: hand.x - 2.6 * scale, y: hand.y - 1.4 * scale,
+                                width: 2.4 * scale, height: 3.2 * scale)
+            context.fill(Path(ellipseIn: shield), with: .color(iron.opacity(0.85)))
+            context.stroke(Path(ellipseIn: shield),
+                           with: .color(Theme.bone.opacity(alpha)), lineWidth: 0.5)
         }
     }
 

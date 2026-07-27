@@ -9,9 +9,19 @@ import Foundation
 /// `Settlement.buildings` ledger in sync, so the resource loop — which still
 /// reads `buildings` — stays the single source of truth for the economy.
 public enum ColonyBuilder {
-    /// Default grid size used when a settlement is built on for the first time.
-    public static let defaultWidth = 12
-    public static let defaultHeight = 12
+    /// The build grid a new colony gets.
+    ///
+    /// 12×12 was sized when every building stood on a single tile. Now that 43
+    /// of 47 own real ground — up to 3×3, nine tiles apiece — a late colony ran
+    /// out of room long before it ran out of things to build: a dozen 3×3 works
+    /// alone would fill three quarters of the old grid. 18×18 is 2.25× the
+    /// ground for the same span on screen, so lots stay legible while a mature
+    /// town actually fits.
+    ///
+    /// Existing saves keep whatever grid they were created with — `ColonyMap`
+    /// stores its own width and height — so this only widens new colonies.
+    public static let defaultWidth = 18
+    public static let defaultHeight = 18
 
     /// Ensures the settlement has a colony grid, creating an empty one if needed.
     public static func ensureMap(

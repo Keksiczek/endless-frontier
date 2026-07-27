@@ -18,6 +18,50 @@ struct MapVarietyTests {
     private func registry() throws -> GameDataRegistry { try GameDataRegistry.bundled() }
     private let region = UUID(uuidString: "DDDDDDDD-0000-0000-0000-000000000001")!
 
+    /// Reported again after the first pass: the maps *still* felt the same.
+    /// They did — `depositMix` returned a fixed tuple per biome, so every forest
+    /// valley held exactly six woods, two fields and one seam. Only the
+    /// positions moved, and a landscape whose composition never changes reads as
+    /// one landscape however you scatter it.
+    @Test("Two valleys of the same country are not the same valley")
+    func sameBiomeStillDiffers() throws {
+        let reg = try registry()
+        let biome = reg.biome("forest")
+        // The whole *composition*, not just where things landed.
+        let shapes = Set((0..<25).map { seed -> String in
+            let map = LocalMapGenerator.generate(
+                mapSeed: UInt64(seed) &* 0x9E37_79B9, regionID: region, biome: biome)
+            let counts = LocalResourceKind.allCases.map { kind in
+                "\(kind.rawValue):\(map.nodes.count { $0.kind == kind })"
+            }
+            return counts.joined(separator: ",")
+        })
+        #expect(shapes.count > 8,
+                "25 forest valleys produced only \(shapes.count) distinct deposit mixes")
+    }
+
+    @Test("A biome still keeps its character — a forest is never woodless")
+    func varietyDoesNotErasePlace() throws {
+        let reg = try registry()
+        for seed in 0..<20 {
+            let map = LocalMapGenerator.generate(
+                mapSeed: UInt64(seed) &* 0x2545_F491, regionID: region,
+                biome: reg.biome("forest"))
+            #expect(map.nodes.contains { $0.kind == .forest },
+                    "forest map \(seed) has no wood at all")
+        }
+    }
+
+    @Test("The same seed still grows the same valley")
+    func varietyStaysDeterministic() throws {
+        let reg = try registry()
+        let a = LocalMapGenerator.generate(mapSeed: 777, regionID: region, biome: reg.biome("forest"))
+        let b = LocalMapGenerator.generate(mapSeed: 777, regionID: region, biome: reg.biome("forest"))
+        #expect(a.nodes.map(\.kind) == b.nodes.map(\.kind))
+        #expect(a.trees == b.trees)
+        #expect(a.rocks == b.rocks)
+    }
+
     // MARK: - The world map reaches the ground
 
     @Test("A new game's homeland is not always the same country")
