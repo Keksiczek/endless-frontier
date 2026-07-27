@@ -70,6 +70,9 @@ enum SettlementRenderer {
         paths(&context, rect: rect, settlement: settlement, registry: registry,
               map: map, zoom: zoom)
         heartGlow(&context, rect: rect)
+        // The sea, before the river and the landscape: everything else stands
+        // on the land it leaves.
+        sea(&context, rect: rect, shore: map.shore, season: season, time: time)
         river(&context, rect: rect, river: map.river, season: season, zoom: zoom)
         scenery(&context, rect: rect, map: map, season: season)
         // The real wood and rock, over the decorative landscape but under
@@ -165,6 +168,9 @@ enum SettlementRenderer {
         let zoom = camera.scale
         let showLabels = zoom >= 1.6
         ground(&context, rect: rect, map: map, season: season)
+        // The sea, before the river and the landscape: everything else stands
+        // on the land it leaves.
+        sea(&context, rect: rect, shore: map.shore, season: season, time: time)
         river(&context, rect: rect, river: map.river, season: season, zoom: zoom)
         scenery(&context, rect: rect, map: map, season: season)
         // The real wood and rock, over the decorative landscape but under
@@ -714,6 +720,207 @@ enum SettlementRenderer {
             context.stroke(Path(CGRect(x: c.x - s * 0.25, y: c.y - s * 1.1,
                                        width: s * 0.5, height: s * 1.5)),
                            with: .color(Theme.boneDim), lineWidth: 1)
+
+        case .cliff:
+            // A face with a lit top edge and a deep shadow at its foot, so it
+            // reads as ground you could not walk up.
+            let face = Path { p in
+                p.move(to: CGPoint(x: c.x - s * 1.3, y: c.y + s * 0.7))
+                p.addLine(to: CGPoint(x: c.x - s * 0.9, y: c.y - s * 0.9))
+                p.addLine(to: CGPoint(x: c.x + s * 0.3, y: c.y - s * 1.1))
+                p.addLine(to: CGPoint(x: c.x + s * 1.3, y: c.y - s * 0.3))
+                p.addLine(to: CGPoint(x: c.x + s * 1.1, y: c.y + s * 0.7))
+                p.closeSubpath()
+            }
+            context.fill(face, with: .color(Color(red: 0.30, green: 0.29, blue: 0.31)))
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.9, y: c.y - s * 0.9))
+                p.addLine(to: CGPoint(x: c.x + s * 0.3, y: c.y - s * 1.1))
+                p.addLine(to: CGPoint(x: c.x + s * 1.3, y: c.y - s * 0.3))
+            }, with: .color(Theme.bone.opacity(0.5)), lineWidth: 1)
+            // Strata, and the dark at the base.
+            for band in 1...2 {
+                let y = c.y - s * 0.6 + CGFloat(band) * s * 0.45
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: c.x - s * 1.1, y: y))
+                    p.addLine(to: CGPoint(x: c.x + s * 1.1, y: y))
+                }, with: .color(.black.opacity(0.22)), lineWidth: 0.7)
+            }
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 1.2, y: c.y + s * 0.5,
+                                                width: s * 2.4, height: s * 0.45)),
+                         with: .color(.black.opacity(0.25)))
+
+        case .crag:
+            // A spire — two jagged teeth, the taller one lit down one side.
+            let spire = Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.8, y: c.y + s * 0.7))
+                p.addLine(to: CGPoint(x: c.x - s * 0.2, y: c.y - s * 1.4))
+                p.addLine(to: CGPoint(x: c.x + s * 0.25, y: c.y - s * 0.2))
+                p.addLine(to: CGPoint(x: c.x + s * 0.6, y: c.y - s * 0.95))
+                p.addLine(to: CGPoint(x: c.x + s * 0.95, y: c.y + s * 0.7))
+                p.closeSubpath()
+            }
+            context.fill(spire, with: .color(Color(red: 0.33, green: 0.32, blue: 0.35)))
+            context.stroke(spire, with: .color(Theme.bone.opacity(0.42)), lineWidth: 0.8)
+
+        case .dune:
+            // A long low ridge with a bright windward face.
+            let ridge = Path { p in
+                p.move(to: CGPoint(x: c.x - s * 1.5, y: c.y + s * 0.45))
+                p.addQuadCurve(to: CGPoint(x: c.x + s * 1.5, y: c.y + s * 0.45),
+                               control: CGPoint(x: c.x + s * 0.3, y: c.y - s * 0.85))
+                p.closeSubpath()
+            }
+            context.fill(ridge, with: .color(Color(red: 0.66, green: 0.57, blue: 0.38).opacity(0.5)))
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 1.5, y: c.y + s * 0.45))
+                p.addQuadCurve(to: CGPoint(x: c.x + s * 1.5, y: c.y + s * 0.45),
+                               control: CGPoint(x: c.x + s * 0.3, y: c.y - s * 0.85))
+            }, with: .color(Theme.bone.opacity(0.3)), lineWidth: 0.7)
+
+        case .deadTree:
+            // A bare snag: a pale forked trunk, no crown at all.
+            let bone = Color(red: 0.62, green: 0.58, blue: 0.50)
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x, y: c.y + s * 0.7))
+                p.addLine(to: CGPoint(x: c.x - s * 0.1, y: c.y - s * 1.2))
+                p.move(to: CGPoint(x: c.x - s * 0.08, y: c.y - s * 0.5))
+                p.addLine(to: CGPoint(x: c.x + s * 0.7, y: c.y - s * 1.0))
+                p.move(to: CGPoint(x: c.x - s * 0.09, y: c.y - s * 0.85))
+                p.addLine(to: CGPoint(x: c.x - s * 0.75, y: c.y - s * 1.25))
+            }, with: .color(bone), lineWidth: max(0.7, s * 0.16))
+
+        case .tallGrass:
+            // Tufts leaning one way, so a meadow has a wind in it.
+            for blade in 0..<5 {
+                let dx = (CGFloat(blade) - 2) * s * 0.32
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: c.x + dx, y: c.y + s * 0.5))
+                    p.addQuadCurve(to: CGPoint(x: c.x + dx + s * 0.42, y: c.y - s * 0.75),
+                                   control: CGPoint(x: c.x + dx, y: c.y - s * 0.2))
+                }, with: .color(Color(red: 0.44, green: 0.52, blue: 0.30).opacity(0.75)),
+                   lineWidth: 0.8)
+            }
+
+        case .mushroom:
+            // A little cluster in the leaf litter.
+            for (dx, scale) in [(-0.45, 0.8), (0.0, 1.0), (0.4, 0.65)] {
+                let m = CGPoint(x: c.x + CGFloat(dx) * s, y: c.y + s * 0.35)
+                let r = s * 0.42 * CGFloat(scale)
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: m.x, y: m.y))
+                    p.addLine(to: CGPoint(x: m.x, y: m.y - r * 0.9))
+                }, with: .color(Theme.bone.opacity(0.55)), lineWidth: 0.7)
+                context.fill(Path { p in
+                    p.move(to: CGPoint(x: m.x - r, y: m.y - r * 0.85))
+                    p.addQuadCurve(to: CGPoint(x: m.x + r, y: m.y - r * 0.85),
+                                   control: CGPoint(x: m.x, y: m.y - r * 2.1))
+                    p.closeSubpath()
+                }, with: .color(Color(red: 0.60, green: 0.34, blue: 0.28)))
+            }
+
+        case .driftwood:
+            // Bleached wood above the tideline, lying down.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 1.1, y: c.y + s * 0.3))
+                p.addQuadCurve(to: CGPoint(x: c.x + s * 1.1, y: c.y + s * 0.05),
+                               control: CGPoint(x: c.x, y: c.y - s * 0.3))
+            }, with: .color(Color(red: 0.68, green: 0.64, blue: 0.57)),
+               style: StrokeStyle(lineWidth: max(1, s * 0.28), lineCap: .round))
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x + s * 0.3, y: c.y + s * 0.1))
+                p.addLine(to: CGPoint(x: c.x + s * 0.8, y: c.y - s * 0.5))
+            }, with: .color(Color(red: 0.68, green: 0.64, blue: 0.57)), lineWidth: max(0.7, s * 0.16))
+
+        case .hotSpring:
+            // Steaming water in a rim of mineral stone.
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.9, y: c.y - s * 0.4,
+                                                width: s * 1.8, height: s * 0.9)),
+                         with: .color(Color(red: 0.76, green: 0.72, blue: 0.60).opacity(0.5)))
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.62, y: c.y - s * 0.26,
+                                                width: s * 1.24, height: s * 0.6)),
+                         with: .color(Color(red: 0.34, green: 0.62, blue: 0.66).opacity(0.8)))
+            for wisp in 0..<2 {
+                let dx = CGFloat(wisp) * s * 0.4 - s * 0.2
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: c.x + dx, y: c.y - s * 0.35))
+                    p.addQuadCurve(to: CGPoint(x: c.x + dx + s * 0.2, y: c.y - s * 1.2),
+                                   control: CGPoint(x: c.x + dx - s * 0.3, y: c.y - s * 0.8))
+                }, with: .color(Theme.bone.opacity(0.22)), lineWidth: 0.8)
+            }
+        }
+    }
+
+    /// Open water along one edge of a coastal map, with a beach fading into it
+    /// and a surf line that breathes.
+    ///
+    /// A coast used to be a field with a stream through it, exactly like the
+    /// plains — the one country whose whole character is the water had none.
+    private static func sea(
+        _ context: inout GraphicsContext, rect: CGRect, shore: ShoreShape?,
+        season: Season, time: Double
+    ) {
+        guard let shore else { return }
+        // Walk the coast in steps, so the waterline wanders rather than ruling
+        // a straight edge across the map.
+        let steps = 64
+        func waterPoint(_ t: Double, reach: Double) -> CGPoint {
+            let p: LocalPoint
+            switch shore.side {
+            case .north: p = LocalPoint(x: t, y: reach)
+            case .south: p = LocalPoint(x: t, y: 1 - reach)
+            case .west:  p = LocalPoint(x: reach, y: t)
+            case .east:  p = LocalPoint(x: 1 - reach, y: t)
+            }
+            return point(p, in: rect)
+        }
+        func edgePoint(_ t: Double) -> CGPoint { waterPoint(t, reach: 0) }
+
+        // The tide breathes: the whole waterline creeps in and out a little.
+        let tide = sin(time * 0.09) * 0.006
+
+        var water = Path()
+        water.move(to: edgePoint(0))
+        for step in 0...steps {
+            let t = Double(step) / Double(steps)
+            water.addLine(to: waterPoint(t, reach: shore.reach(at: t) + tide))
+        }
+        water.addLine(to: edgePoint(1))
+        water.closeSubpath()
+
+        let deep = season == .winter
+            ? Color(red: 0.13, green: 0.22, blue: 0.30)
+            : Color(red: 0.12, green: 0.26, blue: 0.36)
+        context.fill(water, with: .color(deep))
+
+        // The shallows: a paler band just inside the waterline.
+        var shallow = Path()
+        shallow.move(to: waterPoint(0, reach: shore.reach(at: 0) + tide))
+        for step in 0...steps {
+            let t = Double(step) / Double(steps)
+            shallow.addLine(to: waterPoint(t, reach: shore.reach(at: t) + tide))
+        }
+        for step in stride(from: steps, through: 0, by: -1) {
+            let t = Double(step) / Double(steps)
+            shallow.addLine(to: waterPoint(t, reach: shore.reach(at: t) + tide - 0.035))
+        }
+        shallow.closeSubpath()
+        context.fill(shallow, with: .color(Color(red: 0.22, green: 0.44, blue: 0.52).opacity(0.55)))
+
+        // Surf, running along the coast rather than sitting still.
+        var surf = Path()
+        for step in 0...steps {
+            let t = Double(step) / Double(steps)
+            let foam = shore.reach(at: t) + tide + sin(t * 26 + time * 0.9) * 0.004
+            let p = waterPoint(t, reach: foam)
+            step == 0 ? surf.move(to: p) : surf.addLine(to: p)
+        }
+        context.stroke(surf, with: .color(Theme.bone.opacity(0.42)), lineWidth: 1.1)
+
+        if season == .winter {
+            // Ice hugging the shore.
+            context.stroke(surf, with: .color(Color(red: 0.80, green: 0.86, blue: 0.92).opacity(0.3)),
+                           lineWidth: 3)
         }
     }
 

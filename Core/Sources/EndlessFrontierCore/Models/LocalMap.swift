@@ -71,6 +71,59 @@ public struct ResourceNode: Codable, Sendable, Equatable, Identifiable {
     }
 }
 
+/// The sea's edge on a coastal map.
+///
+/// A coast used to be a field with a stream through it like everywhere else —
+/// the same `RiverShape` every biome got — so the one country whose whole
+/// character is *the water* read exactly like the plains. This is an edge of
+/// open sea along one side of the map, with a coastline that wanders.
+public struct ShoreShape: Codable, Sendable, Equatable {
+    public enum Side: String, Codable, Sendable, CaseIterable {
+        case north, south, east, west
+    }
+    public var side: Side
+    /// How far in from that edge the water reaches on average, 0…1.
+    public var depth: Double
+    /// How much the coastline wanders in and out.
+    public var amplitude: Double
+    public var phase: Double
+
+    public init(side: Side, depth: Double, amplitude: Double, phase: Double) {
+        self.side = side
+        self.depth = depth
+        self.amplitude = amplitude
+        self.phase = phase
+    }
+
+    /// How far the water reaches in from its edge at a position `t` (0…1)
+    /// along the coast.
+    public func reach(at t: Double) -> Double {
+        max(0.02, depth + sin(t * 6.283185 + phase) * amplitude
+                        + sin(t * 15.5 + phase * 1.7) * amplitude * 0.35)
+    }
+
+    /// Whether a point is out in the water.
+    public func isWater(_ p: LocalPoint) -> Bool {
+        switch side {
+        case .north: return p.y < reach(at: p.x)
+        case .south: return p.y > 1 - reach(at: p.x)
+        case .west:  return p.x < reach(at: p.y)
+        case .east:  return p.x > 1 - reach(at: p.y)
+        }
+    }
+
+    /// How far inland a point is from the waterline — negative out at sea.
+    /// Lets the shore fade into the beach instead of stopping at a hard line.
+    public func distanceInland(_ p: LocalPoint) -> Double {
+        switch side {
+        case .north: return p.y - reach(at: p.x)
+        case .south: return (1 - reach(at: p.x)) - p.y
+        case .west:  return p.x - reach(at: p.y)
+        case .east:  return (1 - reach(at: p.y)) - p.x
+        }
+    }
+}
+
 /// A point of interest discovered by exploring the fog of war — ruins, a cave,
 /// a spring, buried treasure, a forgotten shrine or a wrecked caravan.
 /// Discovery grants a one-off reward and a journal line (see
@@ -368,6 +421,9 @@ public struct LocalMap: Codable, Sendable, Equatable {
     public var trees: [Tree]
     /// The stone as *outcrops* — bodies with ore in them that do not grow back.
     public var rocks: [Rock]
+    /// The sea, on the maps that have one. Nil inland — most country has none,
+    /// and a save written before coasts existed decodes to nil.
+    public var shore: ShoreShape?
     /// Scout-steps walked so far — one per scout per reveal step. How far the
     /// frontier has moved is a function of *work done*, never of the world
     /// clock: a colony founded in year 200 charts its own valley from scratch
@@ -393,6 +449,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
         scenery: [SceneryProp] = [],
         trees: [Tree] = [],
         rocks: [Rock] = [],
+        shore: ShoreShape? = nil,
         scoutProgress: Double = 0,
         scoutFocus: LocalPoint? = nil
     ) {
@@ -406,6 +463,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
         self.scenery = scenery
         self.trees = trees
         self.rocks = rocks
+        self.shore = shore
         self.scoutProgress = scoutProgress
         self.scoutFocus = scoutFocus
     }
@@ -414,7 +472,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case river, nodes, pois, wildlife, exploredCells, biomeID, terrainSeed, scenery
-        case trees, rocks
+        case trees, rocks, shore
         case scoutProgress, scoutFocus
     }
 
@@ -430,6 +488,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
         scenery = try c.decodeIfPresent([SceneryProp].self, forKey: .scenery) ?? []
         trees = try c.decodeIfPresent([Tree].self, forKey: .trees) ?? []
         rocks = try c.decodeIfPresent([Rock].self, forKey: .rocks) ?? []
+        shore = try c.decodeIfPresent(ShoreShape.self, forKey: .shore)
         scoutProgress = try c.decodeIfPresent(Double.self, forKey: .scoutProgress) ?? 0
         scoutFocus = try c.decodeIfPresent(LocalPoint.self, forKey: .scoutFocus)
     }

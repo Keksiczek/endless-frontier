@@ -198,13 +198,40 @@ heap of overlapping glyphs (found from a screenshot, not a test). Size now comes
 from the footprint; `structuresFitTheirFootprint` and `neighboursKeepTheirDistance`
 pin it.
 
-**Still open here**: animals are simulated but **not yet drawn** as individuals
-(the canvas still draws the abstract herd), trees and rocks likewise; hunting
-still goes through `deerHerd` rather than the entities being the source of truth;
-hunting the entities so the abstract `deerHerd` can retire, temperature and
-disease actually applying the conditions that exist, per-species rendering,
-building interiors + pathing/LOS, and the big one — a real **job/think layer**
-so colonists visibly *do* things rather than standing near the right building.
+**The land got drawn, and got more of it** (2026-07-27, second pass):
+
+- Trees, rocks and animals are **rendered** (`SettlementFlora`, rewritten
+  `SettlementWildlife`) — species-specific, growth-sized, with a chop wedge that
+  deepens and a worked face on a quarried rock. Ailing beasts show it.
+- **Build grid 12×12 → 18×18.** It was sized for one-tile buildings; with 43 of
+  47 owning up to nine tiles, a dozen works filled three quarters of the old one.
+- **Building moved onto the settlement canvas** (`SettlementBuildOverlay`,
+  `BuildBar`): grid overlay, taken ground shaded, a full-size ghost you aim with
+  a tap and then commit. Two steps on purpose.
+- **Staffing pays**: `ResourceLoop.staffingFactors` scales output by who is at
+  the bench, floored at `unstaffedFloor` (0.4). Reconciling posts runs on a
+  ten-tick cadence — every tick was superlinear on the wider grid.
+- **`WorkKind.garrison`**: palisade, watchtower, barracks and stone walls
+  employed people and produced nothing countable, so nobody could ever be seated
+  at them. Opens as a role once walls stand.
+- **Map variety**: `depositMix` was a fixed tuple per biome, so every forest
+  valley held exactly six woods and one seam and only positions moved. Now
+  jittered per map (½…1½×, floor of one for anything the biome claims).
+- **Geography**: `ShoreShape` gives coastal maps a real **sea** along one edge —
+  wandering waterline, shallows, surf, winter ice — instead of the same river
+  every biome got. Eight new scenery kinds (cliff, crag, dune, dead tree, tall
+  grass, mushroom, driftwood, hot spring) and per-biome palettes rebuilt around
+  them. Nothing generates in the water.
+- **A find is a place**: the `.alert("Site Explored")` became `SiteOutcomeCard`
+  over the region's living survey, bilingual, showing the haul and the cost.
+
+**Still open here**: hunting still goes through `deerHerd` with the entities
+following it, rather than the animals being the source of truth; felling and
+quarrying are engine functions the economy does not call yet (`ResourceLoop`
+still harvests the abstract nodes); elevation is faked by scenery rather than
+being real terrain; building interiors + pathing/LOS; and the big one — a real
+**job/think layer** so colonists visibly *do* things rather than standing at the
+right building.
 
 ## Local notifications (requested 2026-07-27)
 

@@ -29,6 +29,17 @@ public enum SceneryKind: String, Codable, Sendable, CaseIterable {
     case cactus
     case snowdrift
     case ruinPillar = "ruin_pillar"
+    // Geology and growth added because every valley read as the same flat
+    // field with a stream through it. A coast should have driftwood and dunes,
+    // a mountain should have a face you could not walk up.
+    case cliff          // a rock face, shadowed at its foot
+    case crag           // a jagged spire
+    case dune           // a ridge of blown sand
+    case deadTree       // a bleached snag
+    case tallGrass      // tufts that move in the wind
+    case mushroom       // a cluster in the leaf litter
+    case driftwood      // bleached wood above the tideline
+    case hotSpring      // steaming water
 }
 
 public struct SceneryProp: Codable, Sendable, Equatable, Identifiable {
@@ -100,17 +111,24 @@ public enum LocalTerrain {
     public static func sceneryMix(for biomeID: String) -> (kinds: [(SceneryKind, Double)], count: Int) {
         switch biomeID {
         case "forest":
-            return ([(.pine, 0.42), (.tree, 0.26), (.bush, 0.16), (.stump, 0.10), (.rock, 0.06)], 46)
+            return ([(.pine, 0.32), (.tree, 0.22), (.bush, 0.14), (.stump, 0.08),
+                     (.mushroom, 0.10), (.deadTree, 0.06), (.tallGrass, 0.05),
+                     (.rock, 0.03)], 48)
         case "desert":
-            return ([(.cactus, 0.42), (.rock, 0.30), (.boulder, 0.18), (.bush, 0.10)], 26)
+            return ([(.cactus, 0.30), (.dune, 0.24), (.rock, 0.18), (.boulder, 0.12),
+                     (.crag, 0.08), (.deadTree, 0.05), (.bush, 0.03)], 30)
         case "tundra":
-            return ([(.snowdrift, 0.40), (.rock, 0.26), (.pine, 0.20), (.boulder, 0.14)], 30)
+            return ([(.snowdrift, 0.30), (.rock, 0.18), (.pine, 0.14), (.crag, 0.12),
+                     (.deadTree, 0.10), (.hotSpring, 0.06), (.boulder, 0.10)], 32)
         case "mountains":
-            return ([(.boulder, 0.40), (.rock, 0.32), (.pine, 0.18), (.bush, 0.10)], 34)
+            return ([(.cliff, 0.24), (.boulder, 0.24), (.crag, 0.20), (.rock, 0.18),
+                     (.pine, 0.09), (.hotSpring, 0.05)], 38)
         case "coast":
-            return ([(.reeds, 0.36), (.pond, 0.18), (.bush, 0.20), (.tree, 0.16), (.rock, 0.10)], 32)
+            return ([(.reeds, 0.24), (.dune, 0.20), (.driftwood, 0.16), (.bush, 0.14),
+                     (.tree, 0.10), (.cliff, 0.09), (.rock, 0.07)], 36)
         default: // plains & homeland
-            return ([(.tree, 0.28), (.bush, 0.24), (.flowers, 0.24), (.rock, 0.14), (.pond, 0.10)], 36)
+            return ([(.tallGrass, 0.24), (.tree, 0.20), (.bush, 0.18), (.flowers, 0.18),
+                     (.rock, 0.10), (.pond, 0.06), (.deadTree, 0.04)], 40)
         }
     }
 
