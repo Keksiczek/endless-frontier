@@ -93,6 +93,7 @@
   },
   {
     "id": "lumberyard",
+    "look": "mill",
     "era": "early_settlement",
     "name": {
       "en": "Lumberyard",
@@ -118,6 +119,7 @@
   },
   {
     "id": "hunters_lodge",
+    "look": "workshop",
     "era": "early_settlement",
     "name": {
       "en": "Hunter's Lodge",
@@ -146,6 +148,7 @@
   },
   {
     "id": "quarry",
+    "look": "mine",
     "era": "early_settlement",
     "name": {
       "en": "Stone Quarry",
@@ -246,6 +249,7 @@
   },
   {
     "id": "windmill",
+    "look": "mill",
     "era": "ancient",
     "name": {
       "en": "Windmill",
@@ -445,6 +449,7 @@
   },
   {
     "id": "well",
+    "look": "granary",
     "era": "early_settlement",
     "name": {
       "en": "Well",
@@ -511,6 +516,7 @@
   },
   {
     "id": "aqueduct",
+    "look": "hall",
     "era": "ancient",
     "name": {
       "en": "Aqueduct",
@@ -811,6 +817,7 @@
   },
   {
     "id": "railyard",
+    "look": "plant",
     "era": "early_industrial",
     "name": {
       "en": "Railyard",
@@ -869,6 +876,7 @@
   },
   {
     "id": "hospital",
+    "look": "hall",
     "era": "early_industrial",
     "name": {
       "en": "Hospital",
@@ -1030,6 +1038,7 @@
   },
   {
     "id": "clinic",
+    "look": "hall",
     "era": "modern",
     "name": {
       "en": "Medical Clinic",
@@ -1238,6 +1247,7 @@
   },
   {
     "id": "fusion_reactor",
+    "look": "generator",
     "era": "near_future",
     "name": {
       "en": "Fusion Reactor",
@@ -1348,6 +1358,7 @@
   },
   {
     "id": "arcology",
+    "look": "pad",
     "era": "near_future",
     "name": {
       "en": "Arcology",

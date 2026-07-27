@@ -835,21 +835,72 @@ enum SettlementRenderer {
 
     /// What a structure looks like on the map. Derived from what the building
     /// actually *does*, so new content picks up a sensible silhouette for free.
+    /// The silhouettes a structure can be drawn as.
+    ///
+    /// Eight of these used to carry all forty-seven buildings, which is why a
+    /// spaceport and a workshop were the same shed and every library, school,
+    /// bank and market was the same Greek temple. A colony reads as a place
+    /// when its skyline has more than one idea in it.
     enum BuildingGlyph {
-        case house, granary, workshop, tower, temple, mine, mill, generator
+        case house      // anything anyone lives in
+        case hall       // learning: library, school, university, observatory
+        case market     // exchange: market, bank, trade post
+        case granary    // food and stores
+        case workshop   // light craft
+        case plant      // heavy industry — the smoking block
+        case tower      // walls, towers, barracks
+        case temple     // civic monument
+        case mine
+        case mill
+        case generator  // a machine that makes power
+        case array      // fields of panels and turbines
+        case pad        // spaceport, orbital array
     }
 
+    /// The archetype names `buildings.json` may state outright via `look`.
+    static func glyph(named name: String) -> BuildingGlyph? {
+        switch name {
+        case "house": return .house
+        case "hall": return .hall
+        case "market": return .market
+        case "granary": return .granary
+        case "workshop": return .workshop
+        case "plant": return .plant
+        case "tower": return .tower
+        case "temple": return .temple
+        case "mine": return .mine
+        case "mill": return .mill
+        case "generator": return .generator
+        case "array": return .array
+        case "pad": return .pad
+        default: return nil
+        }
+    }
+
+    /// What a building looks like: what the content says, else what the numbers
+    /// imply. Order matters — the strongest signal is asked first.
+    ///
+    /// Deriving alone was never enough. Every materials producer answers
+    /// `workKind` the same way, so lumberyard, quarry, workshop, foundry and
+    /// factory were all drawn as one waterwheel; `look` is how the handful the
+    /// numbers cannot separate say what they are.
     static func glyph(for def: BuildingDefinition) -> BuildingGlyph {
+        if let stated = def.look, let g = glyph(named: stated) { return g }
         if def.housing > 0 { return .house }
         if def.defense > 0 { return .tower }
-        if def.production[.knowledge] > 0 || def.production[.influence] > 0 { return .temple }
-        if def.production[.energy] > 0 { return .generator }
-        if def.production[.food] > 0 { return .granary }
-        switch ColonyBuilder.workKind(for: def) {
-        case .mining: return .mine
-        case .logging: return .mill
-        default: return .workshop
+        // Anything that smokes is heavy industry, whatever else it does.
+        if def.pollution >= 10 { return .plant }
+        // The furthest-out civic works read as nothing else.
+        if def.era == .nearFuture, def.production[.influence] > 0 { return .pad }
+        if def.production[.energy] > 0 {
+            // Panels and turbines lie flat over the ground; everything earlier
+            // that makes power is a machine in a shed.
+            return def.era == .nearFuture ? .array : .generator
         }
+        if def.production[.knowledge] > 0 { return .hall }
+        if def.production[.influence] > 0 { return .market }
+        if def.production[.food] > 0 || def.storage > 0 { return .granary }
+        return .workshop
     }
 
     /// One structure in the settlement, in normalised (0…1) space — the shared
@@ -873,6 +924,9 @@ enum SettlementRenderer {
         let progress: Double
         /// A stable per-building seed for cosmetic variation (tone, size).
         let seed: UInt64
+        /// The era that raised it — timber and thatch give way to brick, then
+        /// to panel and glass, so a data centre is not a wattle hut in a hat.
+        let era: Era
         /// The colonists the *simulation* has posted here
         /// (`BuildingPlacement.assignedPawnIDs`). The canvas stands them on
         /// this lot rather than guessing a workplace from their trade, so what
@@ -893,6 +947,7 @@ enum SettlementRenderer {
         let underConstruction: Bool
         let progress: Double
         let seed: UInt64
+        let era: Era
     }
 
     /// A stable per-building seed for cosmetic variation — from a placement's
@@ -946,7 +1001,8 @@ enum SettlementRenderer {
             PlacedBuilding(id: b.id, definitionID: b.definitionID, name: b.name, glyph: b.glyph,
                            center: point(b.center, in: rect), size: unit * b.size,
                            footprint: CGSize(width: b.footprintW * unit, height: b.footprintH * unit),
-                           underConstruction: b.underConstruction, progress: b.progress, seed: b.seed)
+                           underConstruction: b.underConstruction, progress: b.progress,
+                           seed: b.seed, era: b.era)
         }
     }
 
@@ -984,6 +1040,7 @@ enum SettlementRenderer {
                 underConstruction: placement.underConstruction,
                 progress: placement.underConstruction ? (progress ?? 0) : 1,
                 seed: buildingSeed(placement.id),
+                era: def?.era ?? .earlySettlement,
                 assignedPawnIDs: placement.assignedPawnIDs)
         }
     }
@@ -994,13 +1051,14 @@ enum SettlementRenderer {
     private static func ringLayout(
         settlement: Settlement, registry: GameDataRegistry
     ) -> [NormalizedBuilding] {
-        var expanded: [(id: String, name: String, glyph: BuildingGlyph)] = []
+        var expanded: [(id: String, name: String, glyph: BuildingGlyph, era: Era)] = []
         for instance in settlement.buildings {
             let def = registry.building(instance.definitionID)
             let g = def.map(glyph(for:)) ?? .house
             for _ in 0..<instance.count where expanded.count < maxVisibleBuildings {
                 expanded.append((instance.definitionID,
-                                 def?.name.resolve(AppStrings.language) ?? instance.definitionID, g))
+                                 def?.name.resolve(AppStrings.language) ?? instance.definitionID,
+                                 g, def?.era ?? .earlySettlement))
             }
         }
         guard !expanded.isEmpty else { return [] }
@@ -1024,6 +1082,7 @@ enum SettlementRenderer {
                     center: c, size: 0.021, footprintW: 0.05, footprintH: 0.05,
                     underConstruction: false, progress: 1,
                     seed: buildingSeed(expanded[drawn].id, drawn),
+                    era: expanded[drawn].era,
                     assignedPawnIDs: []))
                 drawn += 1
             }
@@ -1036,13 +1095,18 @@ enum SettlementRenderer {
     private static func rank(_ g: BuildingGlyph) -> Int {
         switch g {
         case .temple: return 0
-        case .granary: return 1
-        case .workshop: return 2
-        case .mill: return 3
-        case .generator: return 4
-        case .mine: return 5
-        case .tower: return 6
-        case .house: return 7
+        case .hall: return 1
+        case .market: return 2
+        case .granary: return 3
+        case .workshop: return 4
+        case .mill: return 5
+        case .plant: return 6
+        case .generator: return 7
+        case .array: return 8
+        case .pad: return 9
+        case .mine: return 10
+        case .tower: return 11
+        case .house: return 12
         }
     }
 
@@ -1065,7 +1129,8 @@ enum SettlementRenderer {
             } else {
                 SettlementStructures.building(building.glyph, at: building.center,
                                               s: building.size, time: time, night: night,
-                                              seed: building.seed, context: &context)
+                                              seed: building.seed, era: building.era,
+                                              footprint: building.footprint, context: &context)
             }
             if building.id == selectedBuildingID {
                 let r = building.size * 2.6

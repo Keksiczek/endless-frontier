@@ -119,7 +119,50 @@ Unchanged by design: deposit work (fields, forest, quarry) already spread
 across nodes, and the midday gathering on the green is *supposed* to be a
 crowd in one place.
 
-### 2.5 Buildings vary
+### 2.5 Buildings look like what they are
+
+Forty-seven buildings used to be drawn as **eight** silhouettes, and the mapping
+was blunt enough to be actively wrong:
+
+- The Greek temple carried 12 of 47 — library, school, university, observatory,
+  market, bank, trade post, all the same monument.
+- Worse, every materials producer answered `ColonyBuilder.workKind` identically.
+  Both `.logging` and `.mining` map to `materials`, and the scan takes the first
+  maximum, so lumberyard, quarry, workshop, foundry and factory *all* resolved
+  to `.logging` — every one of them drawn as the same waterwheel mill.
+
+Now there are **13** archetypes (`house, hall, market, granary, workshop, plant,
+tower, temple, mine, mill, generator, array, pad`), and a building's shape comes
+from two places:
+
+1. **What the numbers imply**, asked strongest-first: housing → house, defense →
+   tower, `pollution >= 10` → plant, near-future influence → pad, energy → array
+   in the near future else generator, knowledge → hall, influence → market, food
+   or storage → granary, otherwise workshop.
+2. **What the content says**, via an optional `look` on the building definition,
+   which wins outright.
+
+`look` exists because some shapes genuinely are *not* derivable — a lumberyard,
+a quarry and a workshop all just "produce materials". It is an **opaque string**
+in Core, which never interprets it; `SettlementRenderer.glyph(named:)` maps it,
+and a test asserts every `look` in the content resolves, so a typo can't quietly
+pick a shape. Eleven buildings state one: lumberyard/windmill → mill, quarry →
+mine, hunters_lodge → workshop, aqueduct/hospital/clinic → hall, railyard →
+plant, fusion_reactor → generator, arcology → pad, well → granary.
+
+The result: the biggest silhouette now carries 11 of 47 (23%) instead of a
+quarter of the town being one temple and most of the rest a waterwheel.
+
+Two more things drive the look:
+
+- **Era materials** (`SettlementStructures.materials`): timber and thatch warm
+  into brick and soot, cool into concrete, then pale into panel and glass. A
+  fusion-era colony is no longer drawn in wattle.
+- **Footprint aspect**: box-bodied archetypes stretch to the lot they own
+  (clamped to 0.6…1.7), so a 3×2 farm is long and a 2×2 workshop is square. The
+  workshop's sawtooth roof grows a tooth per bay rather than stretching four.
+
+### 2.6 Buildings vary
 
 Every building of a kind used to draw identically — a row of houses was one
 stencil repeated. Each placement now carries a stable `seed`:
