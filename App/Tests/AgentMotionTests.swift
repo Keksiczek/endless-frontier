@@ -1,0 +1,170 @@
+import Testing
+import Foundation
+import EndlessFrontierCore
+@testable import EndlessFrontier
+
+/// The colonists' day used to be a flat fifteen hours of work over three and a
+/// half hours of sleep, identical in every season — a convincing-looking round
+/// built from numbers nobody had ever added up. These tests add them up.
+///
+/// Presentation only: nothing here touches `WorldState`, and the simulation
+/// still has no clock of its own. What is asserted is that what the player
+/// *watches* is a day a person could plausibly live.
+
+private let ticksPerYear = 60
+
+private func registry() -> GameDataRegistry {
+    GameDataRegistry(
+        buildings: [
+            BuildingDefinition(id: "hut", era: .earlySettlement, name: "Hut",
+                               cost: [.materials: 10], housing: 30)
+        ],
+        techs: [], eras: [], biomes: [], events: [], config: .default)
+}
+
+private func settlement(pawns: [Pawn]) -> Settlement {
+    var s = Settlement(
+        id: UUID(uuidString: "00000000-0000-0000-0000-00000000BBB1")!,
+        name: "Day Town",
+        buildings: [BuildingInstance(definitionID: "hut", count: 3)]
+    )
+    s.pawns = pawns
+    return s
+}
+
+private func map() -> LocalMap {
+    LocalMap(river: RiverShape(baseY: 0.5, amplitude: 0.05, phase: 0),
+             nodes: [], pois: [],
+             exploredCells: Set(0..<(LocalMap.gridColumns * LocalMap.gridRows)))
+}
+
+/// A tick that lands inside the given season, so the motion derives it back.
+private func tick(in season: Season) -> Int {
+    season.rawValue * (ticksPerYear / 4) + 1
+}
+
+@Suite("The colonists' day is one a person could live")
+struct DayShapeTests {
+
+    @Test("At the equinox the day is humane — about ten hours' work, eight of sleep")
+    func equinoxIsHumane() {
+        let shape = AgentMotion.dayShape(.spring)
+        #expect(shape.workingHours > 9 && shape.workingHours < 11)
+        #expect(shape.sleepingHours > 7.5 && shape.sleepingHours < 9)
+    }
+
+    /// The regression this whole change exists for.
+    @Test("Nobody works a fifteen-hour day or sleeps under six hours, in any season",
+          arguments: Season.allCases)
+    func noSeasonIsInhumane(season: Season) {
+        let shape = AgentMotion.dayShape(season)
+        #expect(shape.workingHours <= 13.5)
+        #expect(shape.sleepingHours >= 5.9)
+    }
+
+    @Test("Summer works a longer day than winter, and winter sleeps it off")
+    func seasonsTradeLightForSleep() {
+        let summer = AgentMotion.dayShape(.summer)
+        let winter = AgentMotion.dayShape(.winter)
+        #expect(summer.workingHours > winter.workingHours + 3)
+        #expect(winter.sleepingHours > summer.sleepingHours + 3)
+    }
+
+    @Test("Spring and autumn are the same mean day")
+    func equinoxesMatch() {
+        #expect(AgentMotion.dayShape(.spring) == AgentMotion.dayShape(.autumn))
+    }
+
+    /// A seasonal shift that pushed one boundary past the next would make the
+    /// schedule's legs run backwards and the day would come apart.
+    @Test("The day's landmarks stay in order all year", arguments: Season.allCases)
+    func dayStaysOrdered(season: Season) {
+        let s = AgentMotion.dayShape(season)
+        #expect(s.wake > 0)
+        #expect(s.wake < s.workStart)
+        #expect(s.workStart < s.middayStart)
+        #expect(s.middayStart < s.middayEnd)
+        #expect(s.middayEnd < s.workEnd)
+        #expect(s.workEnd < s.bed)
+        #expect(s.bed < 1)
+    }
+}
+
+@Suite("The day the canvas actually plays")
+struct DayScheduleTests {
+
+    /// Samples a colonist's whole day and reports what fraction of it was spent
+    /// in each activity — the day as the player would watch it.
+    private func dayProfile(pawn: Pawn, tickOfYear: Int) -> [String: Double] {
+        let reg = registry()
+        let scene = AgentMotion.Scene(settlement: settlement(pawns: [pawn]),
+                                      registry: reg,
+                                      continuousTick: Double(tickOfYear))
+        let samples = 480
+        var counts: [String: Double] = [:]
+        for i in 0..<samples {
+            let time = Double(i) / Double(samples) * AgentMotion.dayLength
+            let pose = AgentMotion.pose(for: pawn, map: map(), scene: scene,
+                                        time: time, ticksPerYear: ticksPerYear)
+            counts["\(pose.activity)", default: 0] += 1 / Double(samples)
+        }
+        return counts
+    }
+
+    @Test("An adult's watched day is mostly sleep and work, not a single endless shift")
+    func adultDayIsBalanced() {
+        let pawn = Pawn(id: UUID(uuidString: "00000000-0000-0000-0000-00000000CCC1")!,
+                        name: "Vesna", assignedWork: .farming)
+        let profile = dayProfile(pawn: pawn, tickOfYear: tick(in: .spring))
+        let sleeping = profile["sleeping"] ?? 0
+        let working = profile["working"] ?? 0
+        // Sampled through `pose`, so the walk at the head of each leg eats a
+        // little from both — the point is the balance, not the exact minute.
+        #expect(sleeping > 0.28)
+        #expect(working > 0.30 && working < 0.45)
+        #expect(sleeping + working > 0.65)
+        // And the midday gathering has to actually happen, not be spent walking.
+        #expect((profile["socializing"] ?? 0) > 0.05)
+    }
+
+    @Test("Children sleep longer than the adults who work")
+    func childrenSleepLonger() {
+        let adult = Pawn(id: UUID(uuidString: "00000000-0000-0000-0000-00000000CCC2")!,
+                         name: "Radek", assignedWork: .farming)
+        let child = Pawn(id: UUID(uuidString: "00000000-0000-0000-0000-00000000CCC3")!,
+                         name: "Mila", assignedWork: .idle,
+                         age: 6 * ticksPerYear)
+        let adultSleep = dayProfile(pawn: adult, tickOfYear: tick(in: .spring))["sleeping"] ?? 0
+        let childSleep = dayProfile(pawn: child, tickOfYear: tick(in: .spring))["sleeping"] ?? 0
+        #expect(childSleep > adultSleep)
+    }
+
+    @Test("A child never works")
+    func childrenDoNotWork() {
+        let child = Pawn(id: UUID(uuidString: "00000000-0000-0000-0000-00000000CCC4")!,
+                         name: "Bela", assignedWork: .farming,
+                         age: 5 * ticksPerYear)
+        let profile = dayProfile(pawn: child, tickOfYear: tick(in: .spring))
+        #expect(profile["working"] == nil)
+        #expect((profile["playing"] ?? 0) > 0.3)
+    }
+
+    @Test("The sick keep to their bed all day")
+    func theSickRest() {
+        let sick = Pawn(id: UUID(uuidString: "00000000-0000-0000-0000-00000000CCC5")!,
+                        name: "Jarek", assignedWork: .farming, health: 20)
+        let profile = dayProfile(pawn: sick, tickOfYear: tick(in: .spring))
+        #expect((profile["resting"] ?? 0) > 0.99)
+    }
+
+    /// The seasonal day has to survive the trip through `pose` — deriving the
+    /// season from the scene's tick is where this could silently do nothing.
+    @Test("A summer day on the canvas really is more work than a winter one")
+    func seasonReachesTheCanvas() {
+        let pawn = Pawn(id: UUID(uuidString: "00000000-0000-0000-0000-00000000CCC6")!,
+                        name: "Hana", assignedWork: .farming)
+        let summer = dayProfile(pawn: pawn, tickOfYear: tick(in: .summer))["working"] ?? 0
+        let winter = dayProfile(pawn: pawn, tickOfYear: tick(in: .winter))["working"] ?? 0
+        #expect(summer > winter)
+    }
+}

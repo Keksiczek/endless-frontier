@@ -11,6 +11,13 @@ import EndlessFrontierCore
 /// scaffolding, the temple — gather on the green at midday, work the
 /// afternoon, and drift home for the night. What you see is what the colony
 /// is genuinely doing.
+///
+/// The day is **seasonal** (`DayShape`): people rise with the light and stop
+/// when it goes, so midsummer is a long working day over a short night and
+/// deep winter is the reverse. Note this is still the *look* of work — the
+/// simulation has no clock of its own, and `ResourceLoop` produces the same
+/// amount at midnight as at noon. Making the hours count is the job layer,
+/// see `docs/RIMWORLD_LAYER.md`.
 /// Places the simulation's clock on the frame clock.
 ///
 /// A tick is a real minute, so anything driven by whole ticks moves once a
@@ -178,40 +185,45 @@ enum AgentMotion {
                                 home: home, seed: seed, ticksPerYear: ticksPerYear,
                                 time: time)
 
-        // Find the current leg of the day.
-        var from = schedule[schedule.count - 1]
-        var to = schedule[0]
+        // Find the leg of the day that has come: the last waypoint whose hour
+        // has passed. A waypoint means "from now, do this here" — so the leg a
+        // colonist is living is `current`, not the one they are heading for.
+        var index = schedule.count - 1
         for i in 0..<schedule.count {
             let next = schedule[(i + 1) % schedule.count]
             if t >= schedule[i].at, i + 1 == schedule.count || t < next.at {
-                from = schedule[i]
-                to = next
+                index = i
                 break
             }
         }
+        let current = schedule[index]
+        let previous = schedule[(index + schedule.count - 1) % schedule.count]
+        let nextAt = schedule[(index + 1) % schedule.count].at
 
-        // Travel takes a fixed slice at the start of each leg; the rest of the
-        // leg is spent *at* the destination, drifting gently.
-        let legStart = from.at
-        let legEnd = to.at <= legStart ? to.at + 1 : to.at
-        let travelSlice = min(0.06, (legEnd - legStart) * 0.6)
+        // Travel takes a short slice at the start of each leg — the walk *to*
+        // this leg's place — and the rest of the leg is spent there, drifting
+        // gently. Kept short: a colonist should be seen doing the thing, not
+        // gliding towards it.
+        let legStart = current.at
+        let legEnd = nextAt <= legStart ? nextAt + 1 : nextAt
+        let travelSlice = min(0.025, (legEnd - legStart) * 0.4)
         let progress = t - legStart
-        if from.place != to.place, progress < travelSlice {
+        if previous.place != current.place, progress < travelSlice {
             let u = smoothstep(progress / travelSlice)
-            let x = from.place.x + (to.place.x - from.place.x) * u
-            let y = from.place.y + (to.place.y - from.place.y) * u
+            let x = previous.place.x + (current.place.x - previous.place.x) * u
+            let y = previous.place.y + (current.place.y - previous.place.y) * u
             // A touch of path wobble so walkers don't ride rails.
             let wobble = sin(u * .pi * 3 + unit(seed) * 6) * 0.006
             return Pose(position: clampPoint(LocalPoint(x: x + wobble, y: y + wobble * 0.6)),
                         activity: .walking, stride: 1)
         }
 
-        // Settled at the destination: hold with a personal drift.
+        // Arrived: hold with a personal drift.
         let drift = drift(seed: seed, time: time,
-                          amplitude: driftAmplitude(for: to.doing))
-        let p = clampPoint(LocalPoint(x: to.place.x + drift.x, y: to.place.y + drift.y))
-        let stride: Double = to.doing == .working ? 0.35 : (to.doing == .playing ? 0.8 : 0)
-        return Pose(position: p, activity: to.doing, stride: stride)
+                          amplitude: driftAmplitude(for: current.doing))
+        let p = clampPoint(LocalPoint(x: current.place.x + drift.x, y: current.place.y + drift.y))
+        let stride: Double = current.doing == .working ? 0.35 : (current.doing == .playing ? 0.8 : 0)
+        return Pose(position: p, activity: current.doing, stride: stride)
     }
 
     /// A colonist out with a party: walking the road to a landmark, working it,
@@ -262,6 +274,55 @@ enum AgentMotion {
         }
     }
 
+    /// The shape of one day, as fractions of it.
+    ///
+    /// A colony is not a factory floor. People rise with the light, break at
+    /// midday, and stop when the light goes — so the working day is long in
+    /// summer, short in winter, and the night takes back whatever the day gives
+    /// up. (Before this, everyone worked a flat fifteen hours and slept three
+    /// and a half, all year round.)
+    struct DayShape: Equatable {
+        let wake: Double         // out of bed, still indoors
+        let workStart: Double
+        let middayStart: Double  // the gathering on the green
+        let middayEnd: Double
+        let workEnd: Double
+        let bed: Double
+
+        /// Hours actually spent at the workplace.
+        var workingHours: Double {
+            ((middayStart - workStart) + (workEnd - middayEnd)) * 24
+        }
+        /// Hours asleep — the night wraps past midnight, hence the two pieces.
+        var sleepingHours: Double { ((1 - bed) + wake) * 24 }
+    }
+
+    /// How much daylight a season lends the working day, as a fraction of the
+    /// day added to *each* end. Spring and autumn are the mean.
+    static func daylight(_ season: Season) -> Double {
+        switch season {
+        case .summer: return 0.06
+        case .spring, .autumn: return 0
+        case .winter: return -0.07
+        }
+    }
+
+    /// The day's shape in a given season — roughly 10 working hours and 8 of
+    /// sleep at the equinox, stretching to 13 and 6 at midsummer and closing to
+    /// 7 and 11 in deep winter.
+    static func dayShape(_ season: Season) -> DayShape {
+        let light = daylight(season)
+        return DayShape(
+            wake: 0.22 - light,
+            workStart: 0.28 - light,
+            middayStart: 0.48,
+            middayEnd: 0.58,
+            workEnd: 0.80 + light,
+            // The night closes in faster than the morning opens, so bed moves
+            // only half as far as the working day's ends.
+            bed: 0.88 + light * 0.5)
+    }
+
     /// The colonist's daily round.
     private static func schedule(
         for pawn: Pawn, map: LocalMap, scene: Scene,
@@ -271,15 +332,22 @@ enum AgentMotion {
         if pawn.isBroken || pawn.health < 35 {
             return [Waypoint(at: 0, place: home, doing: .resting)]
         }
-        // Children play on the green while the adults work.
+        // The same season the canvas is painting — derived, never stored.
+        let season = Season(tick: Int(scene.continuousTick), ticksPerYear: ticksPerYear)
+        let shape = dayShape(season)
+
+        // Children play on the green while the adults work, and keep longer
+        // nights than their parents.
         if pawn.age < Pawn.adultAgeYears * ticksPerYear {
             let green = jitter(scene.green, seed: seed, radius: 0.05)
             return [
                 Waypoint(at: 0.0, place: home, doing: .sleeping),
-                Waypoint(at: 0.12, place: green, doing: .playing),
-                Waypoint(at: 0.5, place: jitter(scene.green, seed: seed &>> 5, radius: 0.06), doing: .playing),
-                Waypoint(at: 0.88, place: home, doing: .atHome),
-                Waypoint(at: 0.94, place: home, doing: .sleeping),
+                Waypoint(at: shape.wake + 0.04, place: green, doing: .playing),
+                Waypoint(at: shape.middayEnd,
+                         place: jitter(scene.green, seed: seed &>> 5, radius: 0.06),
+                         doing: .playing),
+                Waypoint(at: shape.workEnd - 0.02, place: home, doing: .atHome),
+                Waypoint(at: shape.bed - 0.06, place: home, doing: .sleeping),
             ]
         }
 
@@ -287,12 +355,12 @@ enum AgentMotion {
         let social = jitter(scene.green, seed: seed &>> 9, radius: 0.045)
         return [
             Waypoint(at: 0.0, place: home, doing: .sleeping),
-            Waypoint(at: 0.07, place: home, doing: .atHome),
-            Waypoint(at: 0.11, place: work, doing: .working),
-            Waypoint(at: 0.46, place: social, doing: .socializing),
-            Waypoint(at: 0.56, place: work, doing: .working),
-            Waypoint(at: 0.84, place: home, doing: .atHome),
-            Waypoint(at: 0.93, place: home, doing: .sleeping),
+            Waypoint(at: shape.wake, place: home, doing: .atHome),
+            Waypoint(at: shape.workStart, place: work, doing: .working),
+            Waypoint(at: shape.middayStart, place: social, doing: .socializing),
+            Waypoint(at: shape.middayEnd, place: work, doing: .working),
+            Waypoint(at: shape.workEnd, place: home, doing: .atHome),
+            Waypoint(at: shape.bed, place: home, doing: .sleeping),
         ]
     }
 

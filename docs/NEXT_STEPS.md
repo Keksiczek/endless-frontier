@@ -167,6 +167,22 @@ write-up: **[`docs/RIMWORLD_LAYER.md`](RIMWORLD_LAYER.md)**. In short:
   `WildlifeState.animals` at map generation, drawn **last** so nothing else's
   determinism moves.
 
+**The colonists' day is seasonal** (2026-07-27): `AgentMotion.DayShape` derives
+the day's shape from the season — roughly 10 working hours over 8 of sleep at
+the equinox, stretching to 13 and 6 at midsummer, closing to 7 and 11 in deep
+winter. Children keep longer nights and never work; the sick keep to their bed.
+
+This also fixed a real bug in `AgentMotion.pose`: a waypoint's activity was read
+from the *next* waypoint, so what a colonist appeared to be doing was always one
+leg ahead of the schedule — the reason the village looked like it spent its
+afternoons socializing. A waypoint now means "from this hour, do this here".
+The walk at the head of each leg was also cut (0.06 → 0.025 of a day), because
+the midday gathering was so short that it was entirely walking.
+
+Still presentation only — `ResourceLoop` produces the same at midnight as at
+noon. Making the hours count is the job layer below. Covered by
+`App/Tests/AgentMotionTests.swift`.
+
 **Still open here**: per-tick animal life (ageing, hunger, movement, death),
 hunting the entities so the abstract `deerHerd` can retire, temperature and
 disease actually applying the conditions that exist, per-species rendering,
