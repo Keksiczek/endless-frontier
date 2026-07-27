@@ -873,6 +873,11 @@ enum SettlementRenderer {
         let progress: Double
         /// A stable per-building seed for cosmetic variation (tone, size).
         let seed: UInt64
+        /// The colonists the *simulation* has posted here
+        /// (`BuildingPlacement.assignedPawnIDs`). The canvas stands them on
+        /// this lot rather than guessing a workplace from their trade, so what
+        /// the player watches is the roster the engine actually keeps.
+        let assignedPawnIDs: [UUID]
     }
 
     /// The same structure mapped to pixels for one frame.
@@ -978,7 +983,8 @@ enum SettlementRenderer {
                 footprintH: Double(max(1, placement.height)) * tileH,
                 underConstruction: placement.underConstruction,
                 progress: placement.underConstruction ? (progress ?? 0) : 1,
-                seed: buildingSeed(placement.id))
+                seed: buildingSeed(placement.id),
+                assignedPawnIDs: placement.assignedPawnIDs)
         }
     }
 
@@ -1017,7 +1023,8 @@ enum SettlementRenderer {
                     name: expanded[drawn].name, glyph: expanded[drawn].glyph,
                     center: c, size: 0.021, footprintW: 0.05, footprintH: 0.05,
                     underConstruction: false, progress: 1,
-                    seed: buildingSeed(expanded[drawn].id, drawn)))
+                    seed: buildingSeed(expanded[drawn].id, drawn),
+                    assignedPawnIDs: []))
                 drawn += 1
             }
             ringIndex += 1

@@ -205,6 +205,10 @@ public enum ColonyBuilder {
     /// produces most. Buildings that produce nothing a colonist can work toward
     /// (e.g. pure energy, housing or defence) map to `.idle`.
     public static func workKind(for def: BuildingDefinition) -> WorkKind {
+        // A building may name its trade outright — the only way to know that a
+        // hospital is where the healer works, since it produces nothing the
+        // ledger counts.
+        if let stated = def.work { return stated }
         var best: WorkKind = .idle
         var bestAmount = 0.0
         for kind in WorkKind.allCases {

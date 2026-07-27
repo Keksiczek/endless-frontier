@@ -82,9 +82,13 @@ enum AgentMotion {
     struct Scene {
         let layout: [SettlementRenderer.NormalizedBuilding]
         let homes: [LocalPoint]
-        let civic: WorkSite?        // temple/library — scholars and priests
-        let workshop: WorkSite?
-        let granary: WorkSite?
+        /// The post the simulation gave each colonist: pawn id → the lot of the
+        /// building they are actually on the roster of. This is the truth the
+        /// canvas prefers over any guess made from their trade.
+        let posts: [UUID: WorkSite]
+        /// Places a trade is plied, for colonists the engine has not seated
+        /// anywhere — the fallback, keyed by the work the building is for.
+        let byTrade: [WorkKind: [WorkSite]]
         let sites: [WorkSite]       // active scaffolding
         let heart: LocalPoint
         /// A paved plaza the player laid out, if any — the midday crowd
@@ -104,27 +108,27 @@ enum AgentMotion {
             let layout = SettlementRenderer.normalizedLayout(settlement: settlement, registry: registry)
             self.layout = layout
             var homes: [LocalPoint] = []
-            var civic: WorkSite?
-            var workshop: WorkSite?
-            var granary: WorkSite?
+            var posts: [UUID: WorkSite] = [:]
+            var byTrade: [WorkKind: [WorkSite]] = [:]
             var sites: [WorkSite] = []
             for building in layout {
                 if building.underConstruction {
                     sites.append(WorkSite(building))
                     continue
                 }
-                switch building.glyph {
-                case .house: homes.append(building.center)
-                case .temple: civic = civic ?? WorkSite(building)
-                case .workshop, .mill, .generator: workshop = workshop ?? WorkSite(building)
-                case .granary: granary = granary ?? WorkSite(building)
-                default: break
+                let site = WorkSite(building)
+                let def = registry.building(building.definitionID)
+                if (def?.housing ?? 0) > 0 { homes.append(building.center) }
+                // Everyone the engine posted here stands here.
+                for pawnID in building.assignedPawnIDs { posts[pawnID] = site }
+                if let def, def.workers > 0 {
+                    let kind = ColonyBuilder.workKind(for: def)
+                    if kind != .idle { byTrade[kind, default: []].append(site) }
                 }
             }
             self.homes = homes
-            self.civic = civic
-            self.workshop = workshop
-            self.granary = granary
+            self.posts = posts
+            self.byTrade = byTrade
             self.sites = sites
             self.heart = SettlementRenderer.colonyHeart
             if let colony = settlement.colony,
@@ -378,6 +382,12 @@ enum AgentMotion {
             let any = map.nodes.filter { worked.contains($0.kind) }
             if !any.isEmpty { return any[Int(seed % UInt64(any.count))].position }
         }
+        // The post the engine actually gave them. `LaborEngine.staffBuildings`
+        // keeps this roster in step with each colonist's trade, so a smith on
+        // the workshop's books is drawn standing in the workshop — the canvas
+        // is showing the simulation's own answer, not guessing one.
+        if let post = scene.posts[pawn.id] { return spot(in: post, seed: seed) }
+
         switch pawn.assignedWork {
         case .hunting:
             // Hunters trail the same herd the canvas draws grazing.
@@ -387,17 +397,15 @@ enum AgentMotion {
             if !scene.sites.isEmpty {
                 return spot(in: scene.sites[Int(seed % UInt64(scene.sites.count))], seed: seed)
             }
-            return scene.workshop.map { spot(in: $0, seed: seed) } ?? scene.heart
-        case .research:
-            return (scene.civic ?? scene.workshop).map { spot(in: $0, seed: seed) }
-                ?? jitter(scene.heart, seed: seed, radius: 0.03)
+            return trade(.mining, scene: scene, seed: seed)
+                ?? jitter(scene.heart, seed: seed, radius: 0.05)
         case .priest:
-            return scene.civic.map { spot(in: $0, seed: seed) } ?? scene.heart
-        case .trade:
-            return (scene.granary ?? scene.workshop).map { spot(in: $0, seed: seed) }
-                ?? jitter(scene.heart, seed: seed, radius: 0.04)
+            // No building produces priesthood, so the priest keeps the civic
+            // house — the library or hall the colony gathers its learning in.
+            return trade(.research, scene: scene, seed: seed) ?? scene.heart
         case .healing:
-            // The healer does the rounds of the houses.
+            // Unposted — no infirmary stands yet, so the healer does the rounds
+            // of the houses.
             if !scene.homes.isEmpty {
                 return scene.homes[Int(seed % UInt64(scene.homes.count))]
             }
@@ -408,8 +416,17 @@ enum AgentMotion {
             return clampPoint(LocalPoint(x: 0.5 + cos(angle) * 0.30,
                                          y: 0.52 + sin(angle) * 0.26))
         default:
-            return jitter(scene.heart, seed: seed, radius: 0.07)
+            // Any building this colony keeps for the trade, even if the engine
+            // has not seated this particular colonist at it.
+            return trade(pawn.assignedWork, scene: scene, seed: seed)
+                ?? jitter(scene.heart, seed: seed, radius: 0.07)
         }
+    }
+
+    /// A spot inside some building this colony keeps for a given trade.
+    private static func trade(_ kind: WorkKind, scene: Scene, seed: UInt64) -> LocalPoint? {
+        guard let sites = scene.byTrade[kind], !sites.isEmpty else { return nil }
+        return spot(in: sites[Int(seed % UInt64(sites.count))], seed: seed)
     }
 
     /// The house a colonist calls home — stable per colonist.

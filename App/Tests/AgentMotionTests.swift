@@ -90,6 +90,92 @@ struct DayShapeTests {
     }
 }
 
+/// The canvas used to guess where a colonist worked from their trade, and the
+/// guess was thin: three building slots for the whole colony, so every scholar
+/// went to the same civic house and everyone else stood in the middle of town.
+/// The engine has known who is on which building's roster all along.
+@Suite("A colonist stands at the building the engine posted them to")
+struct WorkplacePostTests {
+    private let placementID = UUID(uuidString: "00000000-0000-0000-D0D0-000000000001")!
+    private let scholarID = UUID(uuidString: "00000000-0000-0000-D0D0-000000000002")!
+
+    private func registryWithLibrary() -> GameDataRegistry {
+        GameDataRegistry(
+            buildings: [
+                BuildingDefinition(id: "hut", era: .earlySettlement, name: "Hut",
+                                   cost: [.materials: 10], housing: 30),
+                BuildingDefinition(id: "library", era: .earlySettlement, name: "Library",
+                                   cost: [.materials: 30], workers: 2,
+                                   production: [.knowledge: 5],
+                                   footprint: TileSize(width: 2, height: 2))
+            ],
+            techs: [], eras: [], biomes: [], events: [], config: .default)
+    }
+
+    /// A town whose library sits far off-centre, so "at the library" and
+    /// "somewhere near the middle of town" cannot be confused.
+    private func town(posted: Bool) -> Settlement {
+        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-D0D0-00000000FFFF")!,
+                           name: "Postville",
+                           buildings: [BuildingInstance(definitionID: "library", count: 1)])
+        s.pawns = [Pawn(id: scholarID, name: "Zora", assignedWork: .research)]
+        var colony = ColonyMap(width: 12, height: 12)
+        colony.placements = [
+            BuildingPlacement(id: placementID, definitionID: "library",
+                              coord: TileCoord(0, 0), width: 2, height: 2,
+                              assignedPawnIDs: posted ? [scholarID] : [])
+        ]
+        s.colony = colony
+        return s
+    }
+
+    private func library(in scene: AgentMotion.Scene) -> SettlementRenderer.NormalizedBuilding {
+        scene.layout.first { $0.definitionID == "library" }!
+    }
+
+    @Test("A scholar on the library's roster is drawn inside the library")
+    func aPostedColonistStandsAtTheirPost() {
+        let reg = registryWithLibrary()
+        let scene = AgentMotion.Scene(settlement: town(posted: true), registry: reg)
+        let pawn = town(posted: true).pawns[0]
+        let spot = AgentMotion.workplace(for: pawn, map: emptyMap(), scene: scene,
+                                         seed: 12345)
+        let lib = library(in: scene)
+        #expect(abs(spot.x - lib.center.x) <= lib.footprintW / 2)
+        #expect(abs(spot.y - lib.center.y) <= lib.footprintH / 2)
+    }
+
+    /// Several scholars on one roster should fill the floor, not stack on a pin.
+    @Test("Two colonists posted to the same building stand apart")
+    func postedWorkersSpreadAcrossTheFloor() {
+        let reg = registryWithLibrary()
+        let scene = AgentMotion.Scene(settlement: town(posted: true), registry: reg)
+        let pawn = town(posted: true).pawns[0]
+        let a = AgentMotion.workplace(for: pawn, map: emptyMap(), scene: scene, seed: 11)
+        let b = AgentMotion.workplace(for: pawn, map: emptyMap(), scene: scene, seed: 987_654)
+        #expect(a != b)
+    }
+
+    /// Without a post the colonist still has to end up somewhere sensible —
+    /// a building kept for their trade, not the middle of the green.
+    @Test("An unposted scholar still finds a library")
+    func unpostedFallsBackToTheTrade() {
+        let reg = registryWithLibrary()
+        let scene = AgentMotion.Scene(settlement: town(posted: false), registry: reg)
+        let pawn = town(posted: false).pawns[0]
+        let spot = AgentMotion.workplace(for: pawn, map: emptyMap(), scene: scene, seed: 7)
+        let lib = library(in: scene)
+        #expect(abs(spot.x - lib.center.x) <= lib.footprintW / 2)
+        #expect(abs(spot.y - lib.center.y) <= lib.footprintH / 2)
+    }
+
+    private func emptyMap() -> LocalMap {
+        LocalMap(river: RiverShape(baseY: 0.5, amplitude: 0.05, phase: 0),
+                 nodes: [], pois: [],
+                 exploredCells: Set(0..<(LocalMap.gridColumns * LocalMap.gridRows)))
+    }
+}
+
 @Suite("The day the canvas actually plays")
 struct DayScheduleTests {
 

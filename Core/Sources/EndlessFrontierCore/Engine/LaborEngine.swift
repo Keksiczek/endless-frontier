@@ -68,6 +68,93 @@ public enum LaborEngine {
         return s
     }
 
+    /// Keeps the colony's *posts* in step with its trades.
+    ///
+    /// `assignedWork` is a colonist's trade; a post is the building they ply it
+    /// in (`BuildingPlacement.assignedPawnIDs`). Until now the two only met at
+    /// founding — `ColonyBuilder.autoAssign` ran once over the first colonists
+    /// and never again — so everyone born after it, come of age, or moved to a
+    /// new trade held a trade with no address. A century in, a colony's
+    /// workshops stood empty on paper while the town was full of smiths.
+    ///
+    /// Deterministic: placements and pawns are walked in stored order, so the
+    /// same world always fills the same benches in the same order. Linear in
+    /// (pawns + placements) — offline catch-up replays tens of thousands of
+    /// ticks through here, so it must never scan the roster per bench.
+    ///
+    /// Note this is bookkeeping and presentation, not yet economics:
+    /// `ResourceLoop` still produces from building *counts*, not from who is
+    /// stood at the bench. Making the post pay is the next slice.
+    public static func staffBuildings(
+        _ settlement: Settlement, registry: GameDataRegistry
+    ) -> Settlement {
+        guard let map = settlement.colony, !map.placements.isEmpty else { return settlement }
+        let adultAgeTicks = Pawn.adultAgeYears * registry.config.ticksPerYear
+
+        // Who may hold a post, and at what trade. Children, the away and the
+        // untrained hold none.
+        var trade: [UUID: WorkKind] = [:]
+        for pawn in settlement.pawns
+        where pawn.age >= adultAgeTicks && !pawn.isAway && pawn.assignedWork != .idle {
+            trade[pawn.id] = pawn.assignedWork
+        }
+
+        var placements = map.placements
+        var changed = false
+        var posted: Set<UUID> = []
+
+        // 1. Vacate what no longer fits — the colonist left, changed trade, or
+        //    the roof went back to being a building site.
+        for i in placements.indices {
+            let def = registry.building(placements[i].definitionID)
+            let wanted = def.map(ColonyBuilder.workKind(for:)) ?? .idle
+            let room = (placements[i].underConstruction || wanted == .idle) ? 0 : (def?.workers ?? 0)
+            var kept: [UUID] = []
+            kept.reserveCapacity(min(room, placements[i].assignedPawnIDs.count))
+            for id in placements[i].assignedPawnIDs
+            where kept.count < room && trade[id] == wanted && !posted.contains(id) {
+                kept.append(id)
+                posted.insert(id)
+            }
+            if kept.count != placements[i].assignedPawnIDs.count {
+                placements[i].assignedPawnIDs = kept
+                changed = true
+            }
+        }
+
+        // 2. Fill the empty benches. Colonists without a post are bucketed by
+        //    trade once, so this stays one pass rather than a scan per bench.
+        var free: [WorkKind: [UUID]] = [:]
+        for pawn in settlement.pawns where !posted.contains(pawn.id) {
+            guard let t = trade[pawn.id] else { continue }
+            free[t, default: []].append(pawn.id)
+        }
+        guard !free.isEmpty else {
+            guard changed else { return settlement }
+            var s = settlement
+            s.colony?.placements = placements
+            return s
+        }
+
+        for i in placements.indices {
+            guard !placements[i].underConstruction,
+                  let def = registry.building(placements[i].definitionID),
+                  def.workers > 0 else { continue }
+            let wanted = ColonyBuilder.workKind(for: def)
+            guard wanted != .idle, placements[i].assignedPawnIDs.count < def.workers else { continue }
+            while placements[i].assignedPawnIDs.count < def.workers,
+                  let id = free[wanted]?.popLast() {
+                placements[i].assignedPawnIDs.append(id)
+                changed = true
+            }
+        }
+
+        guard changed else { return settlement }
+        var s = settlement
+        s.colony?.placements = placements
+        return s
+    }
+
     /// The role furthest below its quota right now.
     ///
     /// `needsScouts` is a floor, not a quota: scouting's 0.05 share is the

@@ -260,8 +260,11 @@ public enum ResourceLoop {
         }
         s.stats = s.stats.clamped()
 
-        // 8. Put any idle adults (new arrivals, those who came of age) to work.
+        // 8. Put any idle adults (new arrivals, those who came of age) to work,
+        //    then seat them at a building that wants their trade — a trade
+        //    without an address is how workshops came to stand empty.
         s = LaborEngine.assignIdleAdults(s, registry: registry)
+        s = LaborEngine.staffBuildings(s, registry: registry)
 
         // 8b. Raise what's being built: sites draft hands, progress accrues,
         //     and a finished roof joins the economy ledger above.
