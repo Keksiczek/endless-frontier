@@ -186,7 +186,7 @@ public enum AnimalEngine {
         guard tick % seasonLength == 0,
               Season(tick: tick, ticksPerYear: ticksPerYear) == .spring else { return map }
 
-        let capacity = Int(max(0, map.wildlife.deerCapacity / 4))
+        let capacity = map.wildlife.preyCapacity
         let living = map.wildlife.animals.count
         guard living > 1, living < capacity else { return map }
 

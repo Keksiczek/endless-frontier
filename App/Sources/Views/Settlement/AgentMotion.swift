@@ -382,6 +382,13 @@ enum AgentMotion {
             let any = map.nodes.filter { worked.contains($0.kind) }
             if !any.isEmpty { return any[Int(seed % UInt64(any.count))].position }
         }
+        // The job the engine actually gave them: *this* tree, *this* outcrop,
+        // this scaffold. It outranks the post, because a logger's bench at the
+        // lumberyard is not where the logging happens.
+        if let job = pawn.currentJob {
+            return jitter(job.position, seed: seed, radius: 0.012)
+        }
+
         // The post the engine actually gave them. `LaborEngine.staffBuildings`
         // keeps this roster in step with each colonist's trade, so a smith on
         // the workshop's books is drawn standing in the workshop — the canvas

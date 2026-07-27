@@ -129,6 +129,11 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     /// ruins is not also at the plough: `PawnEngine` skips their output and
     /// `AgentMotion` walks them across the map instead of through their day.
     public var expeditionID: UUID?
+    /// The concrete piece of work this colonist is on right now — which tree,
+    /// which outcrop, which scaffold. A trade says what they do; this says what
+    /// they are doing. Nil when idle, away or unemployed; old saves decode to
+    /// nil and are given work on the next posting.
+    public var currentJob: Job?
 
     /// Whether this colonist is out of the settlement right now.
     public var isAway: Bool { expeditionID != nil }
@@ -149,7 +154,8 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         genes: Genes = Genes(),
         wealth: Double = 0,
         pregnancyTicksRemaining: Int = 0,
-        expeditionID: UUID? = nil
+        expeditionID: UUID? = nil,
+        currentJob: Job? = nil
     ) {
         self.id = id
         self.name = name
@@ -167,6 +173,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         self.wealth = wealth
         self.pregnancyTicksRemaining = pregnancyTicksRemaining
         self.expeditionID = expeditionID
+        self.currentJob = currentJob
     }
 
     public func skill(_ kind: WorkKind) -> Int { skills[kind] ?? 0 }
@@ -187,7 +194,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case id, name, trait, skills, skillXP, needs, mood, assignedWork
         case health, isBroken, equipment
-        case age, genes, wealth, pregnancyTicksRemaining, expeditionID
+        case age, genes, wealth, pregnancyTicksRemaining, expeditionID, currentJob
     }
 
     public init(from decoder: Decoder) throws {
@@ -208,5 +215,6 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         wealth = try c.decodeIfPresent(Double.self, forKey: .wealth) ?? 0
         pregnancyTicksRemaining = try c.decodeIfPresent(Int.self, forKey: .pregnancyTicksRemaining) ?? 0
         expeditionID = try c.decodeIfPresent(UUID.self, forKey: .expeditionID)
+        currentJob = try c.decodeIfPresent(Job.self, forKey: .currentJob)
     }
 }

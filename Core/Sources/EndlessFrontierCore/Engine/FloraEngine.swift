@@ -97,6 +97,60 @@ public enum FloraEngine {
         return (updated, yield)
     }
 
+    /// How far from a deposit's centre the things standing on it count as
+    /// belonging to it. Generation scatters a wood inside 0.07 and outcrops
+    /// inside 0.05, so this comfortably covers both with room for the fringe.
+    public static let claimRadius: Double = 0.10
+
+    static func within(_ a: LocalPoint, _ b: LocalPoint, _ radius: Double) -> Bool {
+        let dx = a.x - b.x, dy = a.y - b.y
+        return dx * dx + dy * dy <= radius * radius
+    }
+
+    /// Rewrites every deposit's `amount` from what is actually standing on it.
+    ///
+    /// A forest node used to be an independent number that dipped when someone
+    /// worked it and crept back in spring, while the trees drawn over it were
+    /// scenery that only *pretended* to thin out. Now the number **is** the
+    /// wood: fell the trees and the deposit falls with them, let them grow and
+    /// it recovers on its own. Stone is the same, except it never comes back.
+    ///
+    /// Deposits with nothing standing on them — an old save, a field, a herb
+    /// patch — are left exactly as they were, so this can be applied to any map.
+    public static func syncDeposits(_ map: LocalMap) -> LocalMap {
+        guard map.usesEntityLand else { return map }
+        var updated = map
+        for i in updated.nodes.indices {
+            let node = updated.nodes[i]
+            switch node.kind {
+            case .forest:
+                let standing = map.trees
+                    .filter { within($0.position, node.position, claimRadius) }
+                    .reduce(0.0) { $0 + $1.timberYield }
+                updated.nodes[i].amount = min(node.capacity, standing)
+            case .stone, .ironOre, .clay:
+                let left = map.rocks
+                    .filter { $0.kind.deposit == node.kind
+                              && within($0.position, node.position, claimRadius) }
+                    .reduce(0.0) { $0 + $1.amount }
+                updated.nodes[i].amount = min(node.capacity, left)
+            case .field, .herbs:
+                continue    // nothing stands on these; they keep the old arithmetic
+            }
+        }
+        return updated
+    }
+
+    /// Whether a deposit kind is backed by real things, and so should neither
+    /// be depleted nor regrown by the old node arithmetic.
+    public static func isEntityBacked(_ kind: LocalResourceKind, in map: LocalMap) -> Bool {
+        guard map.usesEntityLand else { return false }
+        switch kind {
+        case .forest, .stone, .ironOre, .clay: return true
+        case .field, .herbs: return false
+        }
+    }
+
     /// Plants a sapling — the other half of felling, and the only way a wood
     /// that has been cleared ever comes back inside a colony's lifetime.
     public static func plant(

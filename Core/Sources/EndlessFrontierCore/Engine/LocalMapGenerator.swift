@@ -150,7 +150,7 @@ public enum LocalMapGenerator {
         let residents = AnimalFactory.wildPopulation(rng: &rng)
         let wildlife = WildlifeState(
             deerHerd: herd, deerCapacity: capacity,
-            predatorPressure: pressure, animals: residents)
+            predatorPressure: pressure, animals: residents, usesEntities: true)
 
         // The land as standing things: trees on the ground the forests claim,
         // outcrops on the stone, iron and clay. Drawn *after* the wildlife and
@@ -167,7 +167,8 @@ public enum LocalMapGenerator {
             river: river, nodes: nodes, pois: pois, wildlife: wildlife,
             biomeID: biomeID,
             terrainSeed: seed(mapSeed: mapSeed, regionID: regionID) ^ 0x7E_44_A1_04_5E_ED,
-            scenery: scenery, trees: trees, rocks: rocks, shore: shore)
+            scenery: scenery, trees: trees, rocks: rocks,
+            usesEntityLand: true, shore: shore)
         // The settlement sits at the centre; its surroundings start revealed.
         map.reveal(around: LocalPoint(x: 0.5, y: 0.5), radius: 0.28)
         return map

@@ -128,10 +128,13 @@ public enum WildlifeEngine {
         // The herd stays the economy's truth for now; the prey on the map are
         // culled down to what it implies, and `breed` puts them back each
         // spring as it recovers.
-        let preyCapacity = Int(max(0, map.wildlife.deerCapacity / 4))
+        // Deliberately the *abstract* fraction: `herdFraction` now reads the
+        // animals themselves, so using it here would have the two chase each
+        // other down to nothing.
+        let preyCapacity = map.wildlife.preyCapacity
         if preyCapacity > 0 {
-            let target = Int((map.wildlife.herdFraction * Double(preyCapacity)).rounded())
-            let prey = map.wildlife.animals.count { !$0.species.isPredator }
+            let target = Int((map.wildlife.abstractHerdFraction * Double(preyCapacity)).rounded())
+            let prey = map.wildlife.preyCount
             if prey > target {
                 map = AnimalEngine.hunt(map, count: prey - target).map
             }

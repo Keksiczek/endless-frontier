@@ -315,6 +315,12 @@ public enum ResourceLoop {
         if tick % LaborEngine.staffingInterval == 0 {
             s = LaborEngine.staffBuildings(s, registry: registry)
         }
+        // …and each of them a concrete piece of work: which tree, which
+        // outcrop, which scaffold. A trade says what a colonist does; a job
+        // says what they are doing.
+        if tick % JobBoard.interval == 0 {
+            s = JobBoard.assign(s, registry: registry)
+        }
 
         // 8b. Raise what's being built: sites draft hands, progress accrues,
         //     and a finished roof joins the economy ledger above.
@@ -651,8 +657,28 @@ public enum ResourceLoop {
             }
         }
 
+        // The wood and the rock are worked as *things*: the axe goes into real
+        // trees and the pick into real outcrops, and the deposit's number is
+        // recomputed from what is left standing. Everything else (fields, herb
+        // patches) keeps the old proportional arithmetic.
+        //
+        // `harvestPerWorker` is a deposit-units-per-tick demand, so it converts
+        // to whole workers at the face by the same measure.
+        let timberDemand = demand[.forest, default: 0]
+        if timberDemand > 0, !map.trees.isEmpty {
+            map = FloraEngine.fell(map, loggers: max(1, Int(timberDemand / harvestPerWorker))).map
+        }
+        let stoneDemand = demand[.stone, default: 0]
+            + demand[.ironOre, default: 0] + demand[.clay, default: 0]
+        if stoneDemand > 0, !map.rocks.isEmpty {
+            map = FloraEngine.quarry(map, miners: max(1, Int(stoneDemand / harvestPerWorker))).map
+        }
+
         // Deplete proportionally across the nodes of each kind.
         for kind in Set(map.nodes.map(\.kind)) {
+            // A kind backed by real things is depleted by working those things,
+            // not by subtracting from the number that describes them.
+            guard !FloraEngine.isEntityBacked(kind, in: map) else { continue }
             let want = demand[kind, default: 0]
             guard want > 0 else { continue }
             let indices = map.nodes.indices.filter { map.nodes[$0].kind == kind }
@@ -665,13 +691,18 @@ public enum ResourceLoop {
             }
         }
 
-        // Regrow toward capacity, faster in the growing seasons.
-        for i in map.nodes.indices {
+        // Regrow toward capacity, faster in the growing seasons. A wood regrows
+        // by its trees ageing and a quarry does not regrow at all, so neither
+        // gets the blanket creep-back that used to refill everything.
+        for i in map.nodes.indices where !FloraEngine.isEntityBacked(map.nodes[i].kind, in: map) {
             let resource: ResourceType = map.nodes[i].kind == .field ? .food : .materials
             let season = config.seasonYieldMultiplier(for: resource, tick: tick)
             let regrow = map.nodes[i].capacity * depositRegrowthFraction * season * regrowthMultiplier
             map.nodes[i].amount = min(map.nodes[i].capacity, map.nodes[i].amount + regrow)
         }
+
+        // And the deposits now read what is standing on them.
+        map = FloraEngine.syncDeposits(map)
 
         var s = settlement
         s.localMap = map

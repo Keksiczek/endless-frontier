@@ -364,13 +364,20 @@ public struct WildlifeState: Codable, Sendable, Equatable {
     /// conditions). The emerging layer that will take over from the abstract
     /// `deerHerd` count above. Old saves have none; they decode to empty.
     public var animals: [Animal]
+    /// Whether this wild is made of animals. Not the same question as
+    /// `animals.isEmpty`: a valley whose every beast has died is empty too, and
+    /// falling back to the abstract herd there let a dead valley go on feeding
+    /// its hunters exactly as before.
+    public var usesEntities: Bool
 
     public init(deerHerd: Double = 40, deerCapacity: Double = 80,
-                predatorPressure: Double = 10, animals: [Animal] = []) {
+                predatorPressure: Double = 10, animals: [Animal] = [],
+                usesEntities: Bool = false) {
         self.deerHerd = deerHerd
         self.deerCapacity = deerCapacity
         self.predatorPressure = predatorPressure
         self.animals = animals
+        self.usesEntities = usesEntities || !animals.isEmpty
     }
 
     // Resilient decode: `animals` postdates the abstract herd, so older saves
@@ -381,10 +388,34 @@ public struct WildlifeState: Codable, Sendable, Equatable {
         deerCapacity = try c.decodeIfPresent(Double.self, forKey: .deerCapacity) ?? 80
         predatorPressure = try c.decodeIfPresent(Double.self, forKey: .predatorPressure) ?? 10
         animals = try c.decodeIfPresent([Animal].self, forKey: .animals) ?? []
+        usesEntities = try c.decodeIfPresent(Bool.self, forKey: .usesEntities) ?? !animals.isEmpty
     }
 
-    /// How well-stocked the herd is (0…1) — hunting yield scales with this.
+    /// Prey the land can carry, as a head count — the entity counterpart of
+    /// `deerCapacity`, which is measured in the older abstract units.
+    public var preyCapacity: Int { Int(max(0, deerCapacity / 4)) }
+
+    /// The game actually alive on this map right now.
+    public var preyCount: Int { animals.count { !$0.species.isPredator } }
+
+    /// How well-stocked the wild is (0…1) — hunting yield scales with this.
+    ///
+    /// Reads the **real animals** wherever there are any. That is the whole
+    /// point of them: a valley whose deer froze to death over a hard winter
+    /// should stop feeding its hunters, and while this was only
+    /// `deerHerd / deerCapacity` it went on feeding them exactly as before —
+    /// the beasts could all die and the larder would never notice. Saves that
+    /// predate the entities fall back to the abstract number.
     public var herdFraction: Double {
+        if usesEntities, preyCapacity > 0 {
+            return min(1, Double(preyCount) / Double(preyCapacity))
+        }
+        return abstractHerdFraction
+    }
+
+    /// The old number on its own, without the animals. Used where the two must
+    /// not chase each other — the cull that keeps the entities in step with it.
+    public var abstractHerdFraction: Double {
         deerCapacity > 0 ? min(1, deerHerd / deerCapacity) : 0
     }
 }
@@ -421,6 +452,15 @@ public struct LocalMap: Codable, Sendable, Equatable {
     public var trees: [Tree]
     /// The stone as *outcrops* — bodies with ore in them that do not grow back.
     public var rocks: [Rock]
+    /// Whether this map's wood and stone are made of *things*.
+    ///
+    /// `!trees.isEmpty` looked like the same question and is not: a map whose
+    /// last tree has just been felled has no trees either, and treating that as
+    /// "no entity layer" made the forest deposit keep the value it held before
+    /// the final trunk came down — a wood logged flat that still read as
+    /// half-full. Maps generated before the entity layer decode this as false
+    /// and keep the old arithmetic for ever.
+    public var usesEntityLand: Bool
     /// The sea, on the maps that have one. Nil inland — most country has none,
     /// and a save written before coasts existed decodes to nil.
     public var shore: ShoreShape?
@@ -449,6 +489,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
         scenery: [SceneryProp] = [],
         trees: [Tree] = [],
         rocks: [Rock] = [],
+        usesEntityLand: Bool = false,
         shore: ShoreShape? = nil,
         scoutProgress: Double = 0,
         scoutFocus: LocalPoint? = nil
@@ -463,6 +504,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
         self.scenery = scenery
         self.trees = trees
         self.rocks = rocks
+        self.usesEntityLand = usesEntityLand
         self.shore = shore
         self.scoutProgress = scoutProgress
         self.scoutFocus = scoutFocus
@@ -472,7 +514,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case river, nodes, pois, wildlife, exploredCells, biomeID, terrainSeed, scenery
-        case trees, rocks, shore
+        case trees, rocks, shore, usesEntityLand
         case scoutProgress, scoutFocus
     }
 
@@ -488,6 +530,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
         scenery = try c.decodeIfPresent([SceneryProp].self, forKey: .scenery) ?? []
         trees = try c.decodeIfPresent([Tree].self, forKey: .trees) ?? []
         rocks = try c.decodeIfPresent([Rock].self, forKey: .rocks) ?? []
+        usesEntityLand = try c.decodeIfPresent(Bool.self, forKey: .usesEntityLand) ?? false
         shore = try c.decodeIfPresent(ShoreShape.self, forKey: .shore)
         scoutProgress = try c.decodeIfPresent(Double.self, forKey: .scoutProgress) ?? 0
         scoutFocus = try c.decodeIfPresent(LocalPoint.self, forKey: .scoutFocus)

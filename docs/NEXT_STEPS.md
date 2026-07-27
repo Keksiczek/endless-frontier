@@ -233,6 +233,41 @@ being real terrain; building interiors + pathing/LOS; and the big one — a real
 **job/think layer** so colonists visibly *do* things rather than standing at the
 right building.
 
+## Real terrain elevation — its own phase (requested 2026-07-27)
+
+Cliffs and crags are currently **scenery**: props drawn on flat ground. They read
+as height and are not height. Making elevation real is the single change left
+that would alter the maps most, and it is big enough to plan as its own phase
+rather than fold into a rendering pass.
+
+**What it means:**
+
+- A **height field** per local map (a coarse grid, generated from the same seed
+  and biome — a mountain map is a ridge and a valley, a plain is gently rolling).
+- **Slope decides what ground is**: shallow ground is buildable and walkable,
+  steep ground is neither. `ColonyBuilder.canPlace` gains a flatness check, and
+  the build overlay shades unbuildable tiles the way it already shades taken
+  ones.
+- **Cliffs become the boundary** between two height bands rather than a prop —
+  drawn from the field, so they run in lines across the map instead of being
+  scattered.
+- **Rendering gains a third dimension**: things higher up are drawn smaller and
+  further "back", shadows fall down-slope, and the sea meets the land where the
+  height field crosses zero (which also gives real beaches and headlands).
+- **Pathing** has to respect it once colonists genuinely walk (see the job
+  layer): a route around a bluff rather than through it.
+
+**Why it is a phase and not a task:** it touches generation, placement
+validation, the renderer's whole coordinate story, the shore, and eventually
+pathfinding. Each of those is individually fine; together they want their own
+plan, and doing half of it (a height field nothing reads) would be worse than
+none.
+
+**Cheap first slice, if it should be started before the whole thing:** generate
+and store the height field, draw ground shading from it, and gate building on
+slope. That alone makes mountains feel like mountains and costs nothing in
+pathing.
+
 ## Local notifications (requested 2026-07-27)
 
 The game runs while the player is away — catch-up ticks up to 30 days on open —
