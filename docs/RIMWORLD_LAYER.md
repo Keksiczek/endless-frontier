@@ -220,13 +220,78 @@ Predators are **not** seeded as residents; they arrive with pressure.
 > anywhere earlier would shift every subsequent roll and change existing
 > worlds. If you add wildlife generation, add it at the end.
 
-### 3.3 What still drives the economy
+### 3.3 The wild has a life (2026-07-27)
+
+`AnimalEngine` runs the wild the way the colony is run — one tick at a time,
+per animal. Beasts age, wounds knit, illness peaks and breaks, cold and heat
+bite when the season turns against them, and what dies leaves the map.
+
+- `advanceOneTick` — ageing, exposure, suffering, recovery, death by old age.
+- `hunt(_:count:)` — takes prey **worst-off first**: the lame and the sick go
+  before the strong, which is what keeps a hunted herd healthy. Predators are
+  never game.
+- `breed` — once a year, in spring, while there is room and breeding stock. A
+  valley hunted flat stays flat.
+- `temperature(_:)` — spring 11 °C, summer 31, autumn 9, winter −22.
+
+> **Two bugs worth remembering, both the same shape: a mechanic that could
+> never fire.**
+>
+> 1. The first pass had winter at −12 °C against a hardiest comfort floor of
+>    −15, and summer at 24 against a softest ceiling of 28 — so **no animal
+>    could ever be cold or hot** and two of the four condition kinds were
+>    unreachable code. `bandsAreReachable` now pins that the seasons reach past
+>    *some* species' bands but not *all* of them.
+> 2. Exposure then healed on the tick it was taken (`healPerTick` ran over the
+>    condition just added), and the keep-threshold (0.01) was **higher than a
+>    mild exposure's per-tick increment** (a bear in 31 °C takes 0.0075) — so
+>    the condition was created and binned on the same tick, for ever. Frostbite
+>    now doesn't mend in a blizzard, and a condition is kept until it is
+>    actually healed away rather than until it clears an arbitrary bar.
+>
+> When adding a threshold, check it against the rate that has to cross it.
+
+### 3.4 What still drives the economy
 
 The abstract `deerHerd` **still drives hunting**. The entities are the layer
 that grows to take it over — they are not yet the source of truth for the food
 loop. Don't wire hunting to `animals` until per-tick animal life exists.
 
 ---
+
+## 3b. The land as things — trees and rock
+
+`Core/…/Models/Flora.swift`, `Engine/FloraEngine.swift`.
+
+A forest was a `ResourceNode` with an `amount` that dipped when someone worked
+it and crept back in spring. Nobody ever felled a tree; a number fell.
+
+| Type | What it is |
+|---|---|
+| `TreeSpecies` | pine, oak, birch, spruce. A Flyweight: `timber`, `maturityTicks`, `hardiness`, `displayName` (CZ+EN). A birch is back inside a decade; an oak is a lifetime — so clearing an oak wood is a real loss. |
+| `Tree` | id, species, position, `age`, `chopped`. `growth` is **derived** from age, so nothing is recomputed or stored; `timberYield` scales with it. |
+| `RockKind` | granite, limestone, iron seam, clay bank — each with `hardness` (work per unit) and the `deposit` it reads as. |
+| `Rock` | id, kind, position, `amount`, `capacity`. Does **not** grow back. |
+| `FloraFactory` | `woods(around:biomeID:rng:)` and `outcrops(at:rng:)` — deterministic, ids assigned in one sweep, stands thinning at the fringe rather than a hard circle. |
+
+`FloraEngine`:
+
+- `advanceOneTick` — one increment per tree, nothing else. No allocation on an
+  empty wood.
+- `fell(_:loggers:)` — axe-work is **banked in the tree**, so a half-chopped oak
+  stays half-chopped between shifts. Work goes to the biggest workable tree
+  first; nobody fells a sapling while an oak stands. What comes down is removed.
+- `quarry(_:miners:)` — harder stone gives up less for the same work. A spent
+  outcrop **stays on the ground** rather than vanishing: a worked-out quarry is
+  a feature of the land, not a hole in the save.
+- `plant` — the other half of felling.
+
+Generated **last** in `LocalMapGenerator`, after wildlife, for the same
+determinism reason as the animals. Old saves decode to no trees and no rocks.
+
+`WildlifeEngine` keeps the two layers honest: the prey on the map are culled
+down to what the abstract herd implies, so the canvas can't show six deer
+grazing in a valley the ledger says was hunted flat.
 
 ## 4. Invariants this layer must not break
 

@@ -183,7 +183,24 @@ Still presentation only — `ResourceLoop` produces the same at midnight as at
 noon. Making the hours count is the job layer below. Covered by
 `App/Tests/AgentMotionTests.swift`.
 
-**Still open here**: per-tick animal life (ageing, hunger, movement, death),
+**The land became things** (2026-07-27): `AnimalEngine` runs the wild per tick
+(ageing, exposure, illness, death, spring breeding, hunting that takes the
+weakest first), and `Flora`/`FloraEngine` make the wood into `Tree`s that grow
+from age and bank their own axe-work, and the stone into `Rock` outcrops that do
+not grow back. Both generated last, both decode-if-present. See
+`docs/RIMWORLD_LAYER.md` §3b and §3.3 — including two bugs of the same shape
+worth remembering: a threshold higher than the rate that had to cross it, and a
+comfort band no season ever reached.
+
+**Building scale fixed**: structures were sized `0.021 × max(w, h)`, unrelated to
+the lot, so a 3×2 drew twice as wide as its own plot and the colony read as a
+heap of overlapping glyphs (found from a screenshot, not a test). Size now comes
+from the footprint; `structuresFitTheirFootprint` and `neighboursKeepTheirDistance`
+pin it.
+
+**Still open here**: animals are simulated but **not yet drawn** as individuals
+(the canvas still draws the abstract herd), trees and rocks likewise; hunting
+still goes through `deerHerd` rather than the entities being the source of truth;
 hunting the entities so the abstract `deerHerd` can retire, temperature and
 disease actually applying the conditions that exist, per-species rendering,
 building interiors + pathing/LOS, and the big one — a real **job/think layer**

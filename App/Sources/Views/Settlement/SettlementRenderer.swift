@@ -1034,7 +1034,14 @@ enum SettlementRenderer {
                 name: label,
                 glyph: glyph,
                 center: p,
-                size: 0.021 * Double(max(placement.width, placement.height)),
+                // Sized to the ground it owns, not to a bare tile count. The
+                // old `0.021 × max(w, h)` was unrelated to the lot: a 3×2 came
+                // out twice as wide as its own plot, so neighbouring buildings
+                // grew into each other and the colony read as a heap of glyphs.
+                // A body runs about 2.2 × `size` across, so this keeps it
+                // inside the parcel while roofs still rise above it.
+                size: min(Double(max(1, placement.width)) * tileW,
+                          Double(max(1, placement.height)) * tileH) / 2.2,
                 footprintW: Double(max(1, placement.width)) * tileW,
                 footprintH: Double(max(1, placement.height)) * tileH,
                 underConstruction: placement.underConstruction,

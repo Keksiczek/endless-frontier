@@ -361,6 +361,13 @@ public struct LocalMap: Codable, Sendable, Equatable {
     public var terrainSeed: UInt64
     /// Decorative landscape features, placed by the seed.
     public var scenery: [SceneryProp]
+    /// The wood as *trees* — individual things that grow for years and are gone
+    /// when felled, standing on the ground the forest deposits claim. The
+    /// abstract nodes still drive the economy; these are the layer taking it
+    /// over. Old saves have none and decode to empty.
+    public var trees: [Tree]
+    /// The stone as *outcrops* — bodies with ore in them that do not grow back.
+    public var rocks: [Rock]
     /// Scout-steps walked so far — one per scout per reveal step. How far the
     /// frontier has moved is a function of *work done*, never of the world
     /// clock: a colony founded in year 200 charts its own valley from scratch
@@ -384,6 +391,8 @@ public struct LocalMap: Codable, Sendable, Equatable {
         biomeID: String = "plains",
         terrainSeed: UInt64 = 0,
         scenery: [SceneryProp] = [],
+        trees: [Tree] = [],
+        rocks: [Rock] = [],
         scoutProgress: Double = 0,
         scoutFocus: LocalPoint? = nil
     ) {
@@ -395,6 +404,8 @@ public struct LocalMap: Codable, Sendable, Equatable {
         self.biomeID = biomeID
         self.terrainSeed = terrainSeed
         self.scenery = scenery
+        self.trees = trees
+        self.rocks = rocks
         self.scoutProgress = scoutProgress
         self.scoutFocus = scoutFocus
     }
@@ -403,6 +414,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case river, nodes, pois, wildlife, exploredCells, biomeID, terrainSeed, scenery
+        case trees, rocks
         case scoutProgress, scoutFocus
     }
 
@@ -416,6 +428,8 @@ public struct LocalMap: Codable, Sendable, Equatable {
         biomeID = try c.decodeIfPresent(String.self, forKey: .biomeID) ?? "plains"
         terrainSeed = try c.decodeIfPresent(UInt64.self, forKey: .terrainSeed) ?? 0
         scenery = try c.decodeIfPresent([SceneryProp].self, forKey: .scenery) ?? []
+        trees = try c.decodeIfPresent([Tree].self, forKey: .trees) ?? []
+        rocks = try c.decodeIfPresent([Rock].self, forKey: .rocks) ?? []
         scoutProgress = try c.decodeIfPresent(Double.self, forKey: .scoutProgress) ?? 0
         scoutFocus = try c.decodeIfPresent(LocalPoint.self, forKey: .scoutFocus)
     }

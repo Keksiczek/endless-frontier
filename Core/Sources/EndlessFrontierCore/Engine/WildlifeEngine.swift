@@ -121,6 +121,27 @@ public enum WildlifeEngine {
             }
         }
 
+        // The wild as entities, kept in step with the abstraction above.
+        //
+        // The herd number and the real animals have to agree, or the canvas
+        // shows six deer grazing in a valley the ledger says was hunted flat.
+        // The herd stays the economy's truth for now; the prey on the map are
+        // culled down to what it implies, and `breed` puts them back each
+        // spring as it recovers.
+        let preyCapacity = Int(max(0, map.wildlife.deerCapacity / 4))
+        if preyCapacity > 0 {
+            let target = Int((map.wildlife.herdFraction * Double(preyCapacity)).rounded())
+            let prey = map.wildlife.animals.count { !$0.species.isPredator }
+            if prey > target {
+                map = AnimalEngine.hunt(map, count: prey - target).map
+            }
+        }
+        // Their own lives: ageing, wounds, illness, cold and heat, and death.
+        map = AnimalEngine.advanceOneTick(map, tick: tick, ticksPerYear: ticksPerYear)
+        map = AnimalEngine.breed(map, tick: tick, ticksPerYear: ticksPerYear)
+        // And the wood grows while all this happens.
+        map = FloraEngine.advanceOneTick(map)
+
         s.localMap = map
         return s
     }

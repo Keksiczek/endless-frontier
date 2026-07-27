@@ -136,11 +136,22 @@ public enum LocalMapGenerator {
             deerHerd: herd, deerCapacity: capacity,
             predatorPressure: pressure, animals: residents)
 
+        // The land as standing things: trees on the ground the forests claim,
+        // outcrops on the stone, iron and clay. Drawn *after* the wildlife and
+        // everything else, so no earlier roll shifts and existing worlds keep
+        // the exact valley they had.
+        let woodCentres = nodes.filter { $0.kind == .forest }.map(\.position)
+        let trees = FloraFactory.woods(around: woodCentres, biomeID: biomeID, rng: &rng)
+        let outcropSites = nodes
+            .filter { $0.kind == .stone || $0.kind == .ironOre || $0.kind == .clay }
+            .map { (kind: $0.kind, position: $0.position, capacity: $0.capacity) }
+        let rocks = FloraFactory.outcrops(at: outcropSites, rng: &rng)
+
         var map = LocalMap(
             river: river, nodes: nodes, pois: pois, wildlife: wildlife,
             biomeID: biomeID,
             terrainSeed: seed(mapSeed: mapSeed, regionID: regionID) ^ 0x7E_44_A1_04_5E_ED,
-            scenery: scenery)
+            scenery: scenery, trees: trees, rocks: rocks)
         // The settlement sits at the centre; its surroundings start revealed.
         map.reveal(around: LocalPoint(x: 0.5, y: 0.5), radius: 0.28)
         return map

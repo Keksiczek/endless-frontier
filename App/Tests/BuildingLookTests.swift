@@ -41,6 +41,60 @@ struct BuildingLookTests {
         #expect(glyph("quarry", defs) == .mine)
     }
 
+    /// The bug a screenshot found and the tests had not: `size` came from
+    /// `0.021 × max(w, h)`, which has nothing to do with the lot, so a 3×2 was
+    /// drawn twice as wide as its own plot and the colony read as a heap of
+    /// overlapping glyphs.
+    @Test("A building is drawn small enough to stand on its own lot",
+          arguments: [(1, 1), (2, 1), (2, 2), (3, 2), (3, 3)])
+    func structuresFitTheirFootprint(w: Int, h: Int) {
+        let reg = GameDataRegistry(
+            buildings: [BuildingDefinition(id: "b", era: .earlySettlement, name: "B",
+                                           cost: [.materials: 10],
+                                           production: [.materials: 3],
+                                           footprint: TileSize(width: w, height: h))],
+            techs: [], eras: [], biomes: [], events: [], config: .default)
+        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-F17F-000000000001")!,
+                           name: "Fitville",
+                           buildings: [BuildingInstance(definitionID: "b", count: 1)])
+        var colony = ColonyMap(width: 12, height: 12)
+        colony.placements = [BuildingPlacement(
+            id: UUID(uuidString: "00000000-0000-0000-F17F-000000000002")!,
+            definitionID: "b", coord: TileCoord(4, 4), width: w, height: h)]
+        s.colony = colony
+        let b = SettlementRenderer.normalizedLayout(settlement: s, registry: reg)[0]
+        // A body runs roughly 2.2 × size across; it must not spill its parcel.
+        #expect(b.size * 2.2 <= b.footprintW + 1e-9)
+        #expect(b.size * 2.2 <= b.footprintH + 1e-9)
+    }
+
+    /// Two buildings on neighbouring tiles must not grow into each other.
+    @Test("Neighbouring buildings do not overlap")
+    func neighboursKeepTheirDistance() {
+        let reg = GameDataRegistry(
+            buildings: [BuildingDefinition(id: "b", era: .earlySettlement, name: "B",
+                                           cost: [.materials: 10],
+                                           production: [.materials: 3])],
+            techs: [], eras: [], biomes: [], events: [], config: .default)
+        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-F17F-000000000003")!,
+                           name: "Rowville",
+                           buildings: [BuildingInstance(definitionID: "b", count: 2)])
+        var colony = ColonyMap(width: 12, height: 12)
+        colony.placements = [
+            BuildingPlacement(id: UUID(uuidString: "00000000-0000-0000-F17F-000000000004")!,
+                              definitionID: "b", coord: TileCoord(4, 4)),
+            BuildingPlacement(id: UUID(uuidString: "00000000-0000-0000-F17F-000000000005")!,
+                              definitionID: "b", coord: TileCoord(5, 4))
+        ]
+        s.colony = colony
+        let layout = SettlementRenderer.normalizedLayout(settlement: s, registry: reg)
+        let gap = abs(layout[1].center.x - layout[0].center.x)
+        // Bodies run 2.2 × size across, so half-widths must not exceed the gap.
+        // They are sized to fill the lot exactly, so this touches rather than
+        // clears — the epsilon is float slack, not headroom.
+        #expect(gap >= (layout[0].size + layout[1].size) * 1.1 - 1e-9)
+    }
+
     /// `look` is content, so a typo must not silently pick a shape.
     @Test("Every look named in the content is one the renderer knows")
     func statedLooksAllResolve() throws {
