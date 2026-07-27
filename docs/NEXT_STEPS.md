@@ -93,7 +93,8 @@ destination); still open — connector lines / graph layout for the tech tree
 ## Tier 4 — product polish
 
 11. Onboarding/tutorial, settings (tick rate, reset, toggles).
-12. Local notifications for the "while you were away" summary.
+12. Local notifications for the "while you were away" summary — scoped out in
+    **Local notifications** below.
 13. Accessibility (VoiceOver, Dynamic Type) and Czech/English localization.
 14. Multiple saves + optional iCloud sync; audio & haptics.
 
@@ -142,6 +143,72 @@ backward-compatible (new fields decode-if-present, defaulting to 1×1 / no zones
 surface it lands on — separate PR); tuning the synergy/zone/footprint numbers
 from the balance trace; optional room detection (enclosed areas) for further
 bonuses.
+
+## The RimWorld layer (2026-07-22, commit `7782249`)
+
+Buildings became **ground they own** and wildlife became **entities**. Full
+write-up: **[`docs/RIMWORLD_LAYER.md`](RIMWORLD_LAYER.md)**. In short:
+
+- **Real footprint lots** — every building draws a cleared, framed earth plot
+  the size of what it covers, in a pass *before* any structure so a later lot
+  never paints over an earlier roof; construction sites reserve ground with a
+  dashed outline.
+- **Bigger, varied footprints** — 43 of 47 buildings are multi-tile, sized to
+  what they are (fields 3×2, workshops 2×2, spaceport/arcology 3×3), capped at
+  3×3. Grid stays 12×12; placement, seeding and balance hold.
+- **Colonists spread across their lot** — `AgentMotion.WorkSite` carries the
+  footprint, so a staffed building reads as people working across its floor
+  instead of stacked on a pin.
+- **Buildings vary** — a stable per-placement seed nudges size and the tone of
+  wall/roof/stone, so a row of houses is a neighbourhood, not one stencil.
+- **Animals are pawn-like entities** — `Animal` with species (health, a °C
+  comfort band, a predator flag), sex, age, a body of parts that can be wounded
+  and lost, and conditions (injury/disease/frostbite/heatstroke). Seeded into
+  `WildlifeState.animals` at map generation, drawn **last** so nothing else's
+  determinism moves.
+
+**Still open here**: per-tick animal life (ageing, hunger, movement, death),
+hunting the entities so the abstract `deerHerd` can retire, temperature and
+disease actually applying the conditions that exist, per-species rendering,
+building interiors + pathing/LOS, and the big one — a real **job/think layer**
+so colonists visibly *do* things rather than standing near the right building.
+
+## Local notifications (requested 2026-07-27)
+
+The game runs while the player is away — catch-up ticks up to 30 days on open —
+but nothing ever reaches them in the meantime. It should.
+
+**What to notify on** (each should be individually toggleable in settings):
+
+- **"While you were away"** summary — the one that already exists as a concept
+  in Tier 4 below. Population, resources, era progress, what the chronicle
+  recorded since the last session.
+- **Something needs a decision** — a storyteller event with choices, an assembly
+  law awaiting ratification, a quest stage that stalled. These are the ones the
+  player actually loses progress by missing.
+- **Something went wrong** — a raid incoming or resolved, famine, an uprising or
+  strike, a death that mattered.
+- **Something finished** — construction completed, research unlocked, an era
+  reached, an expedition or caravan home.
+
+**Constraints:**
+
+- Notification scheduling is **app-side**, never in `Core`. The engine stays
+  offline-first and platform-agnostic; the app reads state and schedules.
+- Local only (`UNUserNotificationCenter`) — no server, no push, consistent with
+  offline-first.
+- Content ships **CZ+EN** through `AppStrings`/`LocalizedText` like everything
+  else.
+- Permission is requested at a moment that makes sense (after the first real
+  session, not on cold launch), and the game must stay fully playable if it's
+  denied.
+- Rate-limit hard. A civilization sim generates events constantly; a
+  notification per event would be unusable. Coalesce into at most a small number
+  per day, and prefer one digest over many pings.
+
+Open question: whether the "while you were away" numbers are computed at
+schedule time (predicting forward) or the notification just prompts a return
+and the summary is generated on open. The second is simpler and can't be wrong.
 
 ## Known debt
 
