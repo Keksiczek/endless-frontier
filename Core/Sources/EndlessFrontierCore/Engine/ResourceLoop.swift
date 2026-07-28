@@ -124,18 +124,36 @@ public enum ResourceLoop {
     ) -> [String: Double] {
         guard let colony = settlement.colony, !colony.placements.isEmpty else { return [:] }
         var seats: [String: (filled: Int, total: Int)] = [:]
+        // How sound the buildings of each kind are, alongside how well manned.
+        // A workshop with the roof off produces less than one with it on, and a
+        // derelict one produces nothing — which is what makes keeping a town up
+        // a claim on the colony rather than a cosmetic number.
+        var soundness: [String: (sum: Double, count: Double)] = [:]
         for placement in colony.placements where !placement.underConstruction {
-            guard let def = registry.building(placement.definitionID), def.workers > 0 else { continue }
+            guard let def = registry.building(placement.definitionID) else { continue }
+            var state = soundness[placement.definitionID] ?? (sum: 0, count: 0)
+            state.sum += BuildingEngine.output(placement.condition)
+            state.count += 1
+            soundness[placement.definitionID] = state
+            guard def.workers > 0 else { continue }
             var entry = seats[placement.definitionID] ?? (filled: 0, total: 0)
-            entry.filled += min(def.workers, placement.assignedPawnIDs.count)
+            // Nobody is at a bench in a building that has fallen in.
+            entry.filled += BuildingEngine.isWorking(placement)
+                ? min(def.workers, placement.assignedPawnIDs.count) : 0
             entry.total += def.workers
             seats[placement.definitionID] = entry
         }
-        return seats.mapValues { entry in
+        var factors = seats.mapValues { entry -> Double in
             guard entry.total > 0 else { return 1 }
             let manned = Double(entry.filled) / Double(entry.total)
             return unstaffedFloor + (1 - unstaffedFloor) * manned
         }
+        // …and how sound they are, which applies to every building, including
+        // the ones nobody works in.
+        for (id, state) in soundness where state.count > 0 {
+            factors[id] = (factors[id] ?? 1) * (state.sum / state.count)
+        }
+        return factors
     }
 
     public static func upkeep(for def: BuildingDefinition, config: WorldConfig) -> Resources {
@@ -312,6 +330,14 @@ public enum ResourceLoop {
         // within ten minutes of game time is imperceptible, and the pass copies
         // the colony's placements — on the widened 18×18 grid, paying that
         // every tick made offline catch-up superlinear as a colony filled up.
+        if tick % BuildingEngine.interval == 0 {
+            // The town weathers, and the masons put it back. A building that
+            // nobody keeps up stops working and stops sheltering anyone, which
+            // is what makes the mason's trade outlive the building of the
+            // thing.
+            s = BuildingEngine.weather(s, registry: registry, tick: tick)
+            s = BuildingEngine.repair(s, registry: registry)
+        }
         if tick % LaborEngine.staffingInterval == 0 {
             s = LaborEngine.staffBuildings(s, registry: registry)
             // And a roof over their head, held until it comes down. A colonist

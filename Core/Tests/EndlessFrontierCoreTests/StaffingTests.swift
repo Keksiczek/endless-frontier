@@ -202,12 +202,33 @@ struct StaffingEconomyTests {
         #expect(ResourceLoop.staffingFactors(s, registry: registry).isEmpty)
     }
 
+    /// A hut has no bench to stand empty, so nothing about staffing may dock it.
+    ///
+    /// It *does* appear in the table now — every standing building carries its
+    /// state of repair, and a hut with the roof off produces no shelter — so
+    /// the question is whether the factor is whole, not whether the building is
+    /// absent from the map.
     @Test("A building that employs nobody is never docked")
     func unstaffableBuildingsKeepTheirOutput() {
         var s = farmTown(staffed: 0)
         s.colony?.placements.append(BuildingPlacement(
             id: id(3), definitionID: "hut", coord: TileCoord(6, 6)))
-        #expect(ResourceLoop.staffingFactors(s, registry: registry)["hut"] == nil)
+        #expect(ResourceLoop.staffingFactors(s, registry: registry)["hut"] == 1)
+    }
+
+    @Test("A building falling down produces less, and a ruin produces nothing")
+    func disrepairDocksOutput() {
+        var s = farmTown(staffed: 2)
+        s.colony?.placements.append(BuildingPlacement(
+            id: id(4), definitionID: "hut", coord: TileCoord(8, 8), condition: 0.5))
+        let battered = ResourceLoop.staffingFactors(s, registry: registry)["hut"] ?? 1
+        #expect(battered < 1)
+
+        if var colony = s.colony {
+            colony.placements[colony.placements.count - 1].condition = 0.05
+            s.colony = colony
+        }
+        #expect((ResourceLoop.staffingFactors(s, registry: registry)["hut"] ?? 1) == 0)
     }
 
     @Test("A building site is not docked for standing empty")

@@ -15,6 +15,11 @@ public enum EventEffect: Codable, Sendable, Equatable {
     case regionHazardDelta(delta: Int, selector: RegionSelector)
     case regionKindChange(kind: RegionKind, selector: RegionSelector)
     case raid(strength: Double)
+    /// Harm to the colony's buildings, of a named kind. What authored content
+    /// uses to give a storm, a fire or a tremor something to actually break —
+    /// before this, a disaster took goods and morale and left the town looking
+    /// exactly as it had the morning before.
+    case damageBuildings(kind: BuildingEngine.DamageKind, severity: Double)
 
     private enum CodingKeys: String, CodingKey {
         case type
@@ -94,6 +99,10 @@ public enum EventEffect: Codable, Sendable, Equatable {
             self = .regionKindChange(kind: kind, selector: selector)
         case "raid":
             self = .raid(strength: try c.decode(Double.self, forKey: .strength))
+        case "damage_buildings":
+            let kind = try c.decodeIfPresent(BuildingEngine.DamageKind.self, forKey: .kind) ?? .storm
+            let severity = try c.decodeIfPresent(Double.self, forKey: .strength) ?? 0.5
+            self = .damageBuildings(kind: kind, severity: severity)
         default:
             throw DecodingError.dataCorruptedError(
                 forKey: .type,
@@ -137,6 +146,10 @@ public enum EventEffect: Codable, Sendable, Equatable {
             try c.encode(selector, forKey: .selector)
         case .addPawn:
             try c.encode("add_pawn", forKey: .type)
+        case let .damageBuildings(kind, severity):
+            try c.encode("damage_buildings", forKey: .type)
+            try c.encode(kind, forKey: .kind)
+            try c.encode(severity, forKey: .strength)
         case let .removePawn(selector):
             try c.encode("remove_pawn", forKey: .type)
             try c.encode(selector, forKey: .selector)

@@ -47,6 +47,8 @@ public enum HouseholdEngine {
 
     /// How many sleepers a placement can take.
     public static func beds(_ placement: BuildingPlacement, registry: GameDataRegistry) -> Int {
+        // Nobody sleeps in a house with the roof off.
+        guard BuildingEngine.isWorking(placement) else { return 0 }
         guard let def = registry.building(placement.definitionID), def.housing > 0 else { return 0 }
         let tiles = max(1, placement.width * placement.height)
         // A dwelling never sleeps more than its own ledger capacity claims it

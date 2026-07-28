@@ -5,6 +5,67 @@ import EndlessFrontierCore
 /// scaffolding of what's still being raised. Split from `SettlementRenderer`
 /// so the world stays one readable file and the architecture another.
 enum SettlementStructures {
+    /// What time and trouble have done to a building.
+    ///
+    /// Buildings used to be immortal, so nothing in the art ever had to say
+    /// otherwise. Now a raid, a storm or a hard winter leaves a mark, and the
+    /// mark has to be legible from across the valley or the whole layer is a
+    /// number in an inspector: first cracks, then a hole in the roof and a
+    /// prop holding what is left, then a ruin with the walls down.
+    static func wear(
+        _ context: inout GraphicsContext, at c: CGPoint, footprint: CGSize,
+        condition: Double, seed: UInt64
+    ) {
+        guard condition < 0.92 else { return }
+        let w = max(6, footprint.width), h = max(6, footprint.height)
+        let ruin = condition < 0.25
+        var roll = seed | 1
+        func next() -> CGFloat {
+            roll ^= roll >> 33; roll = roll &* 0xFF51_AFD7_ED55_8CCD; roll ^= roll >> 29
+            return CGFloat(Double((roll >> 40) & 0xFFFF) / 65535)
+        }
+
+        // Cracks: more of them, and longer, the worse it is.
+        let cracks = ruin ? 5 : Int((1 - condition) * 6)
+        var lines = Path()
+        for _ in 0..<max(1, cracks) {
+            let x = c.x - w / 2 + next() * w
+            let y = c.y - h / 2 + next() * h
+            let run = (0.18 + next() * 0.3) * min(w, h)
+            lines.move(to: CGPoint(x: x, y: y))
+            lines.addLine(to: CGPoint(x: x + (next() - 0.5) * run, y: y + run * 0.6))
+        }
+        context.stroke(lines, with: .color(Theme.ink.opacity(ruin ? 0.75 : 0.45)),
+                       lineWidth: ruin ? 1.1 : 0.7)
+
+        guard condition < 0.6 else { return }
+        // A hole where the roof gave: dark, and it does not move.
+        let hole = min(w, h) * CGFloat(0.18 + (0.6 - condition) * 0.5)
+        context.fill(Path(ellipseIn: CGRect(x: c.x - hole / 2 + (next() - 0.5) * w * 0.3,
+                                            y: c.y - hole / 2 - h * 0.1,
+                                            width: hole, height: hole * 0.7)),
+                     with: .color(Theme.ink.opacity(0.7)))
+
+        guard ruin else {
+            // Not a ruin yet: a prop under the sagging side.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x + w * 0.34, y: c.y + h * 0.42))
+                p.addLine(to: CGPoint(x: c.x + w * 0.22, y: c.y - h * 0.18))
+            }, with: .color(Color(red: 0.52, green: 0.42, blue: 0.30)), lineWidth: 1.2)
+            return
+        }
+        // A ruin: the wall line broken, and rubble at its foot.
+        for i in 0..<4 {
+            let r = min(w, h) * (0.10 + next() * 0.08)
+            let p = CGPoint(x: c.x - w * 0.4 + CGFloat(i) * w * 0.27 + (next() - 0.5) * w * 0.1,
+                            y: c.y + h * (0.30 + next() * 0.2))
+            context.fill(Path(roundedRect: CGRect(x: p.x - r / 2, y: p.y - r / 2,
+                                                  width: r, height: r * 0.8),
+                              cornerRadius: r * 0.2),
+                         with: .color(Color(red: 0.36, green: 0.34, blue: 0.32)))
+        }
+    }
+
     /// A construction site: staked ground, rising scaffold, a timber pile and
     /// a thin progress mark — the colony visibly *making* something.
     static func site(

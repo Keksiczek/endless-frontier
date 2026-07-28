@@ -1123,6 +1123,8 @@ enum SettlementRenderer {
         /// The placement this came from, where there is one. How a colonist's
         /// `homeID` finds the house it names.
         let placementID: UUID?
+        /// How sound the building is, 0…1.
+        let condition: Double
     }
 
     /// The same structure mapped to pixels for one frame.
@@ -1144,6 +1146,8 @@ enum SettlementRenderer {
         let workers: Int
         /// …and how many live here, for a dwelling: a bed apiece.
         let residents: Int
+        /// How sound it is, 0…1 — cracks, then a hole in the roof, then a ruin.
+        let condition: Double
     }
 
     /// A stable per-building seed for cosmetic variation — from a placement's
@@ -1224,7 +1228,8 @@ enum SettlementRenderer {
                            footprint: CGSize(width: b.footprintW * unit, height: b.footprintH * unit),
                            underConstruction: b.underConstruction, progress: b.progress,
                            seed: b.seed, era: b.era, workers: b.assignedPawnIDs.count,
-                           residents: b.placementID.map { household[$0] ?? 0 } ?? 0)
+                           residents: b.placementID.map { household[$0] ?? 0 } ?? 0,
+                           condition: b.condition)
         }
     }
 
@@ -1271,7 +1276,8 @@ enum SettlementRenderer {
                 seed: buildingSeed(placement.id),
                 era: def?.era ?? .earlySettlement,
                 assignedPawnIDs: placement.assignedPawnIDs,
-                placementID: placement.id)
+                placementID: placement.id,
+                condition: placement.condition)
         }
     }
 
@@ -1313,7 +1319,7 @@ enum SettlementRenderer {
                     underConstruction: false, progress: 1,
                     seed: buildingSeed(expanded[drawn].id, drawn),
                     era: expanded[drawn].era,
-                    assignedPawnIDs: [], placementID: nil))
+                    assignedPawnIDs: [], placementID: nil, condition: 1))
                 drawn += 1
             }
             ringIndex += 1
@@ -1377,6 +1383,13 @@ enum SettlementRenderer {
                                               s: building.size, time: time, night: night,
                                               seed: building.seed, era: building.era,
                                               footprint: building.footprint, context: &roofContext)
+            }
+            // What time and trouble have done to it, over whatever is drawn —
+            // a ruin has to read as one whether its roof is on or off.
+            if !building.underConstruction, building.condition < 0.92 {
+                SettlementStructures.wear(&context, at: building.center,
+                                          footprint: building.footprint,
+                                          condition: building.condition, seed: building.seed)
             }
             if building.id == selectedBuildingID {
                 let r = building.size * 2.6

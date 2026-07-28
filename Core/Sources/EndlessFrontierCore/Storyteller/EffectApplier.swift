@@ -75,8 +75,36 @@ public enum EffectApplier {
             }
         case let .raid(strength):
             resolveRaid(&s, strength: strength, registry: registry)
+        case let .damageBuildings(kind, severity):
+            resolveDamage(&s, kind: kind, severity: severity)
         }
         return s
+    }
+
+    /// Breaks things. What authored disasters use, so a storm or a fire leaves
+    /// the town looking like it happened rather than merely costing goods.
+    static func resolveDamage(
+        _ s: inout WorldState, kind: BuildingEngine.DamageKind, severity: Double
+    ) {
+        guard let capital = s.settlements.indices.first else { return }
+        var rng = SeededRNG(
+            seed: s.mapSeed &+ UInt64(bitPattern: Int64(s.tick)) &+ 0x0D_A0_9A_6E)
+        let result = BuildingEngine.damage(s.settlements[capital], kind: kind,
+                                           severity: severity, rng: &rng)
+        guard result.hit > 0 else { return }
+        s.settlements[capital] = result.settlement
+        let what = kind.displayName
+        let entry: LocalizedText
+        if result.ruined.isEmpty {
+            entry = LocalizedText(values: [
+                .en: "\(result.hit) buildings were knocked about by \(what.resolve(.en)).",
+                .cs: "\(result.hit) staveb poničila \(what.resolve(.cs))."])
+        } else {
+            entry = LocalizedText(values: [
+                .en: "\(what.resolve(.en).capitalized) left \(result.ruined.count) buildings in ruins.",
+                .cs: "\(what.resolve(.cs).capitalized) nechala \(result.ruined.count) staveb v troskách."])
+        }
+        s.settlements[capital].journal.append(tick: s.tick, kind: .danger, text: entry)
     }
 
     /// Resolves a raid against the capital's defense. If defended, it's
@@ -135,6 +163,20 @@ public enum EffectApplier {
         let deficit = softened - effectiveDefense
         applyResourceDelta(&s, resource: .materials, delta: -deficit * 4, scope: .global)
         applyResourceDelta(&s, resource: .food, delta: -deficit * 2, scope: .global)
+        // And they break the place while they are in it. A raid used to cost
+        // goods and people and leave the town itself untouched, so the morning
+        // after looked exactly like the morning before.
+        let broken = BuildingEngine.damage(
+            s.settlements[capital], kind: .raid,
+            severity: min(1, deficit / 40), rng: &rng)
+        s.settlements[capital] = broken.settlement
+        if !broken.ruined.isEmpty {
+            let count = broken.ruined.count
+            s.settlements[capital].journal.append(
+                tick: s.tick, kind: .danger, text: LocalizedText(values: [
+                    .en: "\(count) of the colony's buildings were left in ruins.",
+                    .cs: "\(count) staveb v osadě zůstalo v troskách."]))
+        }
         record.record(.plunder, step: 5, amount: deficit * 6)
         s.settlements[capital].stats = s.settlements[capital].stats
             .applying(delta: -deficit * 0.5, to: "stability")
