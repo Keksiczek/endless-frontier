@@ -314,6 +314,10 @@ public enum ResourceLoop {
         // every tick made offline catch-up superlinear as a colony filled up.
         if tick % LaborEngine.staffingInterval == 0 {
             s = LaborEngine.staffBuildings(s, registry: registry)
+            // And a roof over their head, held until it comes down. A colonist
+            // with no bed sleeps badly and shows it — which is how a colony
+            // that has outgrown its houses asks for another one.
+            s = HouseholdEngine.assignHomes(s, registry: registry)
         }
         // …and each of them a concrete piece of work: which tree, which
         // outcrop, which scaffold. A trade says what a colonist does; a job

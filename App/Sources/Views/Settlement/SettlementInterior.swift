@@ -110,6 +110,22 @@ enum SettlementInterior {
         slots(for: glyph, seed: seed, stations: stations).filter { $0.fitting.isStation }
     }
 
+    /// Where a dwelling's beds stand.
+    ///
+    /// A separate question from the workroom's stations: a house is laid out
+    /// around sleeping, so its beds go along the walls in a row rather than
+    /// being scattered among benches. Deterministic in the seed, so the same
+    /// house always has its beds in the same corners — the whole point being
+    /// that a colonist has *their own* bed to go back to.
+    static func bedSlots(seed: UInt64, sleepers: Int) -> [Slot] {
+        let count = max(1, min(sleepers, 12))
+        var h = seed | 1
+        return perimeter(count: count, jitter: {
+            h ^= h >> 33; h = h &* 0xFF51_AFD7_ED55_8CCD; h ^= h >> 29
+            return Double((h >> 40) & 0xFFFF) / 65535
+        }).map { Slot(dx: $0.dx, dy: $0.dy, fitting: .bed) }
+    }
+
     private static let corners: [(dx: Double, dy: Double)] = [
         (-0.34, -0.30), (0.34, -0.30), (-0.34, 0.30), (0.34, 0.30),
     ]
@@ -194,7 +210,7 @@ enum SettlementInterior {
         _ context: inout GraphicsContext,
         glyph: SettlementRenderer.BuildingGlyph,
         at c: CGPoint, footprint: CGSize, seed: UInt64, era: Era,
-        workers: Int, night: Double, time: Double
+        workers: Int, residents: Int = 0, night: Double, time: Double
     ) {
         guard isLegible(footprint: footprint) else { return }
         let inset = CGSize(width: footprint.width * wallInset,
@@ -211,7 +227,16 @@ enum SettlementInterior {
         if night > 0.05, workers > 0 {
             context.fill(Path(room), with: .color(Theme.accent.opacity(0.10 * night)))
         }
-        for slot in slots(for: glyph, seed: seed, stations: workers) {
+        // A house is furnished around who lives in it: a bed apiece and a
+        // hearth. Anything else is furnished around the work done in it.
+        let plan: [Slot]
+        if glyph == .house, residents > 0 {
+            plan = bedSlots(seed: seed, sleepers: residents)
+                + [Slot(dx: 0, dy: 0.12, fitting: .hearth)]
+        } else {
+            plan = slots(for: glyph, seed: seed, stations: workers)
+        }
+        for slot in plan {
             let p = CGPoint(x: c.x + CGFloat(slot.dx) * footprint.width,
                             y: c.y + CGFloat(slot.dy) * footprint.height)
             fitting(&context, slot.fitting, at: p, scale: min(room.width, room.height),

@@ -62,9 +62,14 @@ public enum PawnEngine {
         // copying every pawn's dictionaries each tick — this runs up to 43,200
         // times on offline catch-up, so allocation churn matters.
         for i in s.pawns.indices {
-            // Needs decay.
+            // Needs decay. A colonist with a bed of their own sleeps it off;
+            // one without gets a fraction of the night back, which is what
+            // makes a colony that has outgrown its roofs *feel* crowded rather
+            // than merely reporting a number.
+            let housed = s.pawns[i].homeID != nil
             s.pawns[i].needs.hunger -= hungerDecay
-            s.pawns[i].needs.rest = s.pawns[i].needs.rest - restDecay + restRecovery
+            s.pawns[i].needs.rest = s.pawns[i].needs.rest - restDecay
+                + restRecovery * (housed ? 1 : HouseholdEngine.roughSleepFactor)
             s.pawns[i].needs.recreation = s.pawns[i].needs.recreation - recreationDecay + recreationRecovery
 
             // Eat if hungry and food is available. Rationing stretches a meal.
@@ -85,9 +90,12 @@ public enum PawnEngine {
             }
             s.pawns[i].health = max(0, s.pawns[i].health)
 
-            // Mood from needs + trait + equipment, clamped.
+            // Mood from needs + trait + equipment, clamped — less whatever it
+            // costs to have slept on the ground again.
             let moodBonus = hasEquipment ? ItemEngine.moodBonus(s.pawns[i], registry: registry) : 0
-            s.pawns[i].mood = min(max(s.pawns[i].needs.average + s.pawns[i].trait.moodModifier + moodBonus, 0), 100)
+            let roofless = housed ? 0 : HouseholdEngine.roughSleepMood
+            s.pawns[i].mood = min(max(s.pawns[i].needs.average + s.pawns[i].trait.moodModifier
+                                      + moodBonus - roofless, 0), 100)
 
             // Mental break with hysteresis.
             if s.pawns[i].mood < breakEnterMood {

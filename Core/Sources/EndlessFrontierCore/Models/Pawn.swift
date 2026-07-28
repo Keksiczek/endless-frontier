@@ -134,6 +134,17 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     /// they are doing. Nil when idle, away or unemployed; old saves decode to
     /// nil and are given work on the next posting.
     public var currentJob: Job?
+    /// The dwelling this colonist sleeps in — a `BuildingPlacement.id`, or nil
+    /// for someone sleeping rough.
+    ///
+    /// A settlement's *housing capacity* says how many souls it can hold. This
+    /// says where one of them actually lives, which is a different question and
+    /// the one that had never been asked: everybody picked a house from a list
+    /// every frame, so a dozen colonists slept stacked on one doorstep while
+    /// three huts stood empty next door. A home is a place now, held by one
+    /// household, with a bed in it — and the colonists who could not get one
+    /// sleep badly and say so.
+    public var homeID: UUID?
 
     /// Whether this colonist is out of the settlement right now.
     public var isAway: Bool { expeditionID != nil }
@@ -155,7 +166,8 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         wealth: Double = 0,
         pregnancyTicksRemaining: Int = 0,
         expeditionID: UUID? = nil,
-        currentJob: Job? = nil
+        currentJob: Job? = nil,
+        homeID: UUID? = nil
     ) {
         self.id = id
         self.name = name
@@ -174,6 +186,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         self.pregnancyTicksRemaining = pregnancyTicksRemaining
         self.expeditionID = expeditionID
         self.currentJob = currentJob
+        self.homeID = homeID
     }
 
     public func skill(_ kind: WorkKind) -> Int { skills[kind] ?? 0 }
@@ -195,6 +208,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         case id, name, trait, skills, skillXP, needs, mood, assignedWork
         case health, isBroken, equipment
         case age, genes, wealth, pregnancyTicksRemaining, expeditionID, currentJob
+        case homeID
     }
 
     public init(from decoder: Decoder) throws {
@@ -216,5 +230,6 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         pregnancyTicksRemaining = try c.decodeIfPresent(Int.self, forKey: .pregnancyTicksRemaining) ?? 0
         expeditionID = try c.decodeIfPresent(UUID.self, forKey: .expeditionID)
         currentJob = try c.decodeIfPresent(Job.self, forKey: .currentJob)
+        homeID = try c.decodeIfPresent(UUID.self, forKey: .homeID)
     }
 }

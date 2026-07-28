@@ -151,6 +151,13 @@ enum AgentMotion {
         /// The fight going on right now, if one is. Everyone in its line is
         /// pulled out of their day and sent to it.
         let battle: (log: BattleLog, progress: Double)?
+        /// Where each household's beds are: dwelling id → the spots inside it
+        /// that its residents sleep at. Built from the same room plan the
+        /// interiors are drawn from, so a colonist asleep is asleep in a bed
+        /// that is on the screen.
+        let bedsByHome: [UUID: [LocalPoint]]
+        /// One bed per colonist, taken in roster order.
+        let beds: [UUID: LocalPoint]
 
         init(settlement: Settlement, registry: GameDataRegistry, continuousTick: Double = 0) {
             let layout = SettlementRenderer.normalizedLayout(settlement: settlement, registry: registry)
@@ -159,6 +166,7 @@ enum AgentMotion {
             var posts: [UUID: WorkSite] = [:]
             var byTrade: [WorkKind: [WorkSite]] = [:]
             var sites: [WorkSite] = []
+            var bedsByHome: [UUID: [LocalPoint]] = [:]
             for building in layout {
                 if building.underConstruction {
                     sites.append(WorkSite(building))
@@ -166,7 +174,17 @@ enum AgentMotion {
                 }
                 let site = WorkSite(building)
                 let def = registry.building(building.definitionID)
-                if (def?.housing ?? 0) > 0 { homes.append(building.center) }
+                if (def?.housing ?? 0) > 0 {
+                    homes.append(building.center)
+                    // Where this household actually sleeps: the beds in the
+                    // room, from the same plan the interior is drawn from.
+                    if let placementID = building.placementID {
+                        bedsByHome[placementID] = SettlementInterior
+                            .bedSlots(seed: building.seed, sleepers: HouseholdEngine.maxPerDwelling)
+                            .map { LocalPoint(x: building.center.x + $0.dx * building.footprintW,
+                                              y: building.center.y + $0.dy * building.footprintH) }
+                    }
+                }
                 // Everyone the engine posted here stands here.
                 for pawnID in building.assignedPawnIDs { posts[pawnID] = site }
                 if let def, def.workers > 0 {
@@ -188,6 +206,19 @@ enum AgentMotion {
             self.expeditions = settlement.expeditions
             self.continuousTick = continuousTick
             self.battle = SettlementBattle.live(settlement, continuousTick: continuousTick)
+            self.bedsByHome = bedsByHome
+            // A bed each, taken in the settlement's own roster order, so two
+            // people who share a house do not share a mattress.
+            var beds: [UUID: LocalPoint] = [:]
+            var takenPerHome: [UUID: Int] = [:]
+            for pawn in settlement.pawns {
+                guard let homeID = pawn.homeID, let places = bedsByHome[homeID],
+                      !places.isEmpty else { continue }
+                let index = takenPerHome[homeID, default: 0]
+                beds[pawn.id] = places[index % places.count]
+                takenPerHome[homeID] = index + 1
+            }
+            self.beds = beds
             var positions: [Int: LocalPoint] = [:]
             for poi in settlement.localMap?.pois ?? [] {
                 positions[poi.id] = poi.position
@@ -508,8 +539,17 @@ enum AgentMotion {
         return spot(in: sites[Int(seed % UInt64(sites.count))], seed: seed)
     }
 
-    /// The house a colonist calls home — stable per colonist.
+    /// The house a colonist calls home.
+    ///
+    /// Their *own* house, where the engine has given them one: a colonist holds
+    /// a dwelling now (`Pawn.homeID`) and sleeps in a bed inside it. Picking a
+    /// house out of a list by hashing the colonist is what put a dozen people
+    /// on one doorstep while three huts stood empty beside them — the same
+    /// mistake, in the same shape, as seating workers by hash.
     static func home(for pawn: Pawn, scene: Scene, seed: UInt64) -> LocalPoint {
+        if let homeID = pawn.homeID, let bed = scene.beds[homeID] {
+            return bed
+        }
         if !scene.homes.isEmpty {
             let base = scene.homes[Int(seed % UInt64(scene.homes.count))]
             return jitter(base, seed: seed &>> 3, radius: 0.012)

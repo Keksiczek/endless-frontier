@@ -15,6 +15,9 @@ enum SettlementFigures {
 
     // MARK: - One colonist
 
+    /// How big a grown colonist is drawn, against the buildings they live in.
+    static let bodyScale: CGFloat = 0.82
+
     static func draw(
         pawn: Pawn, pose: AgentMotion.Pose, at p: CGPoint,
         time: Double, ticksPerYear: Int, selected: Bool, zoom: CGFloat = 1,
@@ -27,7 +30,12 @@ enum SettlementFigures {
         // Every stroke of the figure is `scale`-relative, so folding the
         // camera in here scales the whole person — zooming in no longer grows
         // the town around doll-sized colonists.
-        let scale: CGFloat = (child ? 0.7 : (elder ? 0.94 : 1.0)) * zoom
+        //
+        // `bodyScale` shrank people a notch once buildings gained insides: at
+        // full size a colonist stood as tall as the hut they came out of, and
+        // a household at its hearth was one blob. Small enough now to fit in a
+        // room with the furniture, big enough to still read as a person.
+        let scale: CGFloat = (child ? 0.7 : (elder ? 0.94 : 1.0)) * zoom * bodyScale
 
         let tunic = Theme.roleShade(pawn.assignedWork)
         var alpha = max(0.45, pawn.health / 100)

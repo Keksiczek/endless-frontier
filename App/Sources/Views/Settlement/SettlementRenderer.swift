@@ -1110,6 +1110,9 @@ enum SettlementRenderer {
         /// this lot rather than guessing a workplace from their trade, so what
         /// the player watches is the roster the engine actually keeps.
         let assignedPawnIDs: [UUID]
+        /// The placement this came from, where there is one. How a colonist's
+        /// `homeID` finds the house it names.
+        let placementID: UUID?
     }
 
     /// The same structure mapped to pixels for one frame.
@@ -1129,6 +1132,8 @@ enum SettlementRenderer {
         /// How many colonists the engine posted here — the room is furnished
         /// with a station apiece, and they are drawn standing at them.
         let workers: Int
+        /// …and how many live here, for a dwelling: a bed apiece.
+        let residents: Int
     }
 
     /// A stable per-building seed for cosmetic variation — from a placement's
@@ -1197,12 +1202,19 @@ enum SettlementRenderer {
         settlement: Settlement, registry: GameDataRegistry, rect: CGRect
     ) -> [PlacedBuilding] {
         let unit = min(rect.width, rect.height)
+        // Who sleeps where, counted once for the whole frame.
+        var household: [UUID: Int] = [:]
+        for pawn in settlement.pawns {
+            guard let home = pawn.homeID else { continue }
+            household[home, default: 0] += 1
+        }
         return normalizedLayout(settlement: settlement, registry: registry).map { b in
             PlacedBuilding(id: b.id, definitionID: b.definitionID, name: b.name, glyph: b.glyph,
                            center: point(b.center, in: rect), size: unit * b.size,
                            footprint: CGSize(width: b.footprintW * unit, height: b.footprintH * unit),
                            underConstruction: b.underConstruction, progress: b.progress,
-                           seed: b.seed, era: b.era, workers: b.assignedPawnIDs.count)
+                           seed: b.seed, era: b.era, workers: b.assignedPawnIDs.count,
+                           residents: b.placementID.map { household[$0] ?? 0 } ?? 0)
         }
     }
 
@@ -1248,7 +1260,8 @@ enum SettlementRenderer {
                 progress: placement.underConstruction ? (progress ?? 0) : 1,
                 seed: buildingSeed(placement.id),
                 era: def?.era ?? .earlySettlement,
-                assignedPawnIDs: placement.assignedPawnIDs)
+                assignedPawnIDs: placement.assignedPawnIDs,
+                placementID: placement.id)
         }
     }
 
@@ -1290,7 +1303,7 @@ enum SettlementRenderer {
                     underConstruction: false, progress: 1,
                     seed: buildingSeed(expanded[drawn].id, drawn),
                     era: expanded[drawn].era,
-                    assignedPawnIDs: []))
+                    assignedPawnIDs: [], placementID: nil))
                 drawn += 1
             }
             ringIndex += 1
@@ -1338,7 +1351,8 @@ enum SettlementRenderer {
                 SettlementInterior.draw(
                     &context, glyph: building.glyph, at: building.center,
                     footprint: building.footprint, seed: building.seed, era: building.era,
-                    workers: building.workers, night: night, time: time)
+                    workers: building.workers, residents: building.residents,
+                    night: night, time: time)
             }
         }
         for building in placed {
