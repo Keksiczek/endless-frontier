@@ -3494,5 +3494,284 @@
       "en": "the tremor under the valley",
       "cs": "otřes pod údolím"
     }
+  },
+  {
+    "id": "visitors_refugees",
+    "type": "opportunity",
+    "name": {
+      "en": "Families at the gate",
+      "cs": "Rodiny u brány"
+    },
+    "description": {
+      "en": "They came in off the road with what they could carry. There is room, or there is not.",
+      "cs": "Přišli po cestě s tím, co unesli. Buď je kam dát, nebo není."
+    },
+    "narrative_hint": {
+      "en": "the year we decided about the people at the gate",
+      "cs": "rok, kdy jsme se rozhodli o lidech u brány"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval",
+      "early_industrial",
+      "modern",
+      "near_future"
+    ],
+    "weight": 0,
+    "cooldown_ticks": 60,
+    "decision_ticks": 30,
+    "effects": [],
+    "choices": [
+      {
+        "id": "take_them_in",
+        "label": {
+          "en": "Take them in",
+          "cs": "Vzít je k nám"
+        },
+        "description": {
+          "en": "More hands, more mouths, and a colony that remembers it was kind.",
+          "cs": "Víc rukou, víc krků — a osada, která si pamatuje, že byla milosrdná."
+        },
+        "cost": {
+          "food": 40
+        },
+        "effects": [
+          {
+            "type": "add_pawn"
+          },
+          {
+            "type": "add_pawn"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "send_them_on",
+        "label": {
+          "en": "Send them on",
+          "cs": "Poslat je dál"
+        },
+        "description": {
+          "en": "The stores will hold. Somebody will remember this too.",
+          "cs": "Zásoby vydrží. I tohle si někdo bude pamatovat."
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -6
+          },
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": -8,
+            "scope": "global"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "visitors_envoy",
+    "type": "opportunity",
+    "name": {
+      "en": "The envoy is waiting",
+      "cs": "Vyslanec čeká"
+    },
+    "description": {
+      "en": "They have come a long way to hear what kind of neighbour you are.",
+      "cs": "Přišli zdaleka, aby slyšeli, jaký jsi soused."
+    },
+    "narrative_hint": {
+      "en": "the year we answered the envoy",
+      "cs": "rok, kdy jsme odpověděli vyslanci"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval",
+      "early_industrial",
+      "modern",
+      "near_future"
+    ],
+    "weight": 0,
+    "cooldown_ticks": 60,
+    "decision_ticks": 30,
+    "effects": [],
+    "choices": [
+      {
+        "id": "feast",
+        "label": {
+          "en": "Sit them at the long table",
+          "cs": "Posadit je ke stolu"
+        },
+        "description": {
+          "en": "Feed them well and let them carry that home.",
+          "cs": "Dobře je nakrmit, ať si to odnesou domů."
+        },
+        "cost": {
+          "food": 30
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 25,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 3
+          }
+        ]
+      },
+      {
+        "id": "hear_and_send",
+        "label": {
+          "en": "Hear them and send them back",
+          "cs": "Vyslechnout a poslat zpět"
+        },
+        "description": {
+          "en": "Courteous, and nothing more. Nobody is offended and nobody is impressed.",
+          "cs": "Zdvořile, a nic víc. Nikoho to neurazí a nikoho nenadchne."
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 6,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "turn_away",
+        "label": {
+          "en": "Refuse them the square",
+          "cs": "Nepustit je na náves"
+        },
+        "description": {
+          "en": "Let them see the walls and nothing else.",
+          "cs": "Ať vidí jen hradbu a nic víc."
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": -12,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.threatLevel",
+            "delta": 6
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "visitors_traders",
+    "type": "opportunity",
+    "name": {
+      "en": "The traders have unpacked",
+      "cs": "Obchodníci vybalili"
+    },
+    "description": {
+      "en": "Their mules are unloaded in the square and they are in no hurry.",
+      "cs": "Mezky mají složené na návsi a nikam nespěchají."
+    },
+    "narrative_hint": {
+      "en": "the year of the good bargain",
+      "cs": "rok dobrého obchodu"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval",
+      "early_industrial",
+      "modern",
+      "near_future"
+    ],
+    "weight": 0,
+    "cooldown_ticks": 60,
+    "decision_ticks": 30,
+    "effects": [],
+    "choices": [
+      {
+        "id": "buy_deep",
+        "label": {
+          "en": "Buy everything they brought",
+          "cs": "Koupit vše, co přivezli"
+        },
+        "description": {
+          "en": "Empty the coffers; fill the storehouse.",
+          "cs": "Vyprázdnit pokladnu, naplnit sklad."
+        },
+        "cost": {
+          "influence": 30
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 90,
+            "scope": "global"
+          },
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 40,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "sell_surplus",
+        "label": {
+          "en": "Sell them the surplus",
+          "cs": "Prodat jim přebytky"
+        },
+        "description": {
+          "en": "The stores are deep enough to spare some, and coin is coin.",
+          "cs": "Zásob je dost a peníze jsou peníze."
+        },
+        "cost": {
+          "materials": 50
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 40,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "browse",
+        "label": {
+          "en": "Look, and buy nothing",
+          "cs": "Prohlédnout si to a nekoupit"
+        },
+        "description": {
+          "en": "The colony gets an evening's talk out of it, at least.",
+          "cs": "Osada z toho aspoň má večerní řeči."
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 2
+          }
+        ]
+      }
+    ]
   }
 ]

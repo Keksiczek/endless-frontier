@@ -42,6 +42,23 @@ public enum VisitorEngine {
 
     // MARK: - The tick
 
+    /// The decision each kind of party puts in front of the Leader when it
+    /// reaches the square.
+    ///
+    /// Authored content, not code: the choices, their costs and their
+    /// consequences live in `events.json` in both languages, and the whole
+    /// decision UI — the card, the deadline, the queue — is the one the
+    /// storyteller already uses. A party that merely arrived and left again was
+    /// scenery; a party you have to *answer* is the game.
+    public static func decision(for kind: VisitorKind) -> String? {
+        switch kind {
+        case .refugee: return "visitors_refugees"
+        case .envoy: return "visitors_envoy"
+        case .trader: return "visitors_traders"
+        case .wanderer: return nil   // a traveller wants nothing from you
+        }
+    }
+
     public static func advanceOneTick(
         _ state: WorldState, registry: GameDataRegistry, mapSeed: UInt64
     ) -> WorldState {
@@ -58,7 +75,16 @@ public enum VisitorEngine {
         if anyoneAbout {
             for index in s.settlements.indices
             where !(s.settlements[index].localMap?.visitors.isEmpty ?? true) {
-                s.settlements[index] = walk(s.settlements[index], world: s, tick: tick)
+                let stepped = walk(s.settlements[index], world: s, tick: tick)
+                s.settlements[index] = stepped.settlement
+                // A party that has reached the square wants an answer. Only the
+                // capital's callers reach the Leader — an outpost settles its
+                // own visits, which is what an outpost is for.
+                if let ask = stepped.asks, index == 0,
+                   registry.events.contains(where: { $0.id == ask }) {
+                    s.pendingEvents.removeAll { $0.templateID == ask }
+                    s.pendingEvents.append(PendingEvent(templateID: ask, tick: tick))
+                }
             }
         }
         guard tick % interval == 0 else { return s }
@@ -73,10 +99,13 @@ public enum VisitorEngine {
 
     /// Moves every party a step and settles the business of any that have
     /// reached the square.
-    static func walk(_ settlement: Settlement, world: WorldState, tick: Int) -> Settlement {
+    static func walk(
+        _ settlement: Settlement, world: WorldState, tick: Int
+    ) -> (settlement: Settlement, asks: String?) {
         guard let existing = settlement.localMap, !existing.visitors.isEmpty else {
-            return settlement
+            return (settlement, nil)
         }
+        var asks: String?
         var s = settlement
         var map = existing
         let square = SettlementGeometry.heart
@@ -94,6 +123,7 @@ public enum VisitorEngine {
             case .visiting:
                 if !visitor.settled {
                     s = settle(s, visitor: visitor, tick: tick)
+                    asks = asks ?? decision(for: visitor.kind)
                     visitor.settled = true
                 }
                 visitor.ticksRemaining -= 1
@@ -108,7 +138,7 @@ public enum VisitorEngine {
 
         map.visitors = remaining
         s.localMap = map
-        return s
+        return (s, asks)
     }
 
     /// Rolls for a party on the road, and puts them at the edge if one comes.
