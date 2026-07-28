@@ -100,6 +100,23 @@ enum SettlementFigures {
             lineWidth: 1.1 * scale)
         }
 
+        // What they are carrying, on their back — the visible half of hauling.
+        // A colonist walking home under a load of timber is the whole point of
+        // the piles being on the ground in the first place.
+        if let load = pawn.carrying {
+            let w = 2.4 * scale, h = 1.9 * scale
+            let bundle = CGRect(x: p.x - w / 2, y: shoulderY - h * 0.35, width: w, height: h)
+            context.fill(Path(roundedRect: bundle, cornerRadius: 0.5 * scale),
+                         with: .color(SettlementPiles.goodsColour(load.itemID).opacity(alpha)))
+            context.stroke(Path(roundedRect: bundle, cornerRadius: 0.5 * scale),
+                           with: .color(Theme.ink.opacity(0.45)), lineWidth: 0.5)
+            // A strap over the shoulder, so it reads as carried and not worn.
+            context.stroke(Path { path in
+                path.move(to: CGPoint(x: p.x - 1.2 * scale, y: shoulderY + 0.4 * scale))
+                path.addLine(to: CGPoint(x: p.x + 1.2 * scale, y: shoulderY - 0.2 * scale))
+            }, with: .color(Theme.boneDim.opacity(alpha * 0.8)), lineWidth: 0.6 * scale)
+        }
+
         // The tool of the trade, in the working hand — or the weapon, when the
         // day has been interrupted by something that wants killing.
         // A hunter at work is a hunter fighting something: the bow comes up the

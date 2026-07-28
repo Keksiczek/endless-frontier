@@ -82,6 +82,8 @@ enum SettlementRenderer {
         // front of it, and nothing stands on top of solid rock.
         SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
         SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time)
+        // What has been cut and not yet carried in.
+        SettlementPiles.draw(&context, rect: rect, map: map, zoom: zoom)
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels)
@@ -183,6 +185,8 @@ enum SettlementRenderer {
         // front of it, and nothing stands on top of solid rock.
         SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
         SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time)
+        // What has been cut and not yet carried in.
+        SettlementPiles.draw(&context, rect: rect, map: map, zoom: zoom)
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels)

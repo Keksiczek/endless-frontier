@@ -70,6 +70,7 @@ enum AgentMotion {
         case travelling    // out on the road to a landmark, or coming back
         case expedition    // at the landmark, working it
         case fighting      // called out of the day and into the line
+        case hauling       // carrying a load home
     }
 
     /// A colonist's place and doing at an instant.
@@ -257,6 +258,16 @@ enum AgentMotion {
     /// combat marker, they simply go where the fighting is.
     static func pose(for pawn: Pawn, map: LocalMap, scene: Scene,
                      time: Double, ticksPerYear: Int) -> Pose {
+        // Somebody carrying a load, or walking out to fetch one, is where the
+        // engine has walked them to. This is the one case where a colonist's
+        // position is *simulation* rather than a function of the clock: a load
+        // has to be picked up somewhere and put down somewhere else, and both
+        // ends are real. Hauling outranks the day and yields only to a fight.
+        if let carried = pawn.haulPosition, scene.battle == nil {
+            return Pose(position: carried,
+                        activity: pawn.carrying == nil ? .walking : .hauling,
+                        stride: 1)
+        }
         let base = dailyPose(for: pawn, map: map, scene: scene,
                              time: time, ticksPerYear: ticksPerYear)
         guard let battle = scene.battle,
@@ -570,6 +581,8 @@ enum AgentMotion {
         case .socializing: return cs ? "Na návsi mezi lidmi" : "On the green with the others"
         case .playing: return cs ? "Hraje si" : "Playing"
         case .resting: return cs ? "Stůně doma" : "Laid up at home"
+        case .hauling: return cs ? "Nese náklad do skladu" : "Carrying a load to the store"
+        case .fighting: return cs ? "V linii" : "In the line"
         case .travelling: return cs ? "Na cestě mimo osadu" : "On the road, away from the settlement"
         case .expedition: return cs ? "Pracuje na výpravě" : "Working the site"
         case .fighting: return cs ? "V řadě, brání osadu" : "In the line, defending the settlement"
@@ -613,6 +626,9 @@ enum AgentMotion {
         // Holding a line is not standing still — but the drift is small, or
         // the rank dissolves while it is supposed to be holding.
         case .fighting: return 0.004
+        // A hauler's position is the engine's own; drifting it would take them
+        // off the path they are actually walking.
+        case .hauling: return 0
         }
     }
 

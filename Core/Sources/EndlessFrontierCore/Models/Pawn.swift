@@ -179,6 +179,13 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     /// household, with a bed in it — and the colonists who could not get one
     /// sleep badly and say so.
     public var homeID: UUID?
+    /// What they have in their arms, if anything — a heap of timber or stone
+    /// on its way to the store. Nil for everyone not presently carrying.
+    public var carrying: HaulLoad?
+    /// Where a hauler has walked to. Only ever set while they are fetching or
+    /// carrying: the rest of the time their place on the canvas is a function
+    /// of their day, and this stays nil so nothing overrides it.
+    public var haulPosition: LocalPoint?
 
     /// Whether this colonist is out of the settlement right now.
     public var isAway: Bool { expeditionID != nil }
@@ -201,7 +208,9 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         pregnancyTicksRemaining: Int = 0,
         expeditionID: UUID? = nil,
         currentJob: Job? = nil,
-        homeID: UUID? = nil
+        homeID: UUID? = nil,
+        carrying: HaulLoad? = nil,
+        haulPosition: LocalPoint? = nil
     ) {
         self.id = id
         self.name = name
@@ -221,6 +230,8 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         self.expeditionID = expeditionID
         self.currentJob = currentJob
         self.homeID = homeID
+        self.carrying = carrying
+        self.haulPosition = haulPosition
     }
 
     public func skill(_ kind: WorkKind) -> Int { skills[kind] ?? 0 }
@@ -242,7 +253,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         case id, name, trait, skills, skillXP, needs, mood, assignedWork
         case health, isBroken, equipment
         case age, genes, wealth, pregnancyTicksRemaining, expeditionID, currentJob
-        case homeID
+        case homeID, carrying, haulPosition
     }
 
     public init(from decoder: Decoder) throws {
@@ -265,5 +276,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         expeditionID = try c.decodeIfPresent(UUID.self, forKey: .expeditionID)
         currentJob = try c.decodeIfPresent(Job.self, forKey: .currentJob)
         homeID = try c.decodeIfPresent(UUID.self, forKey: .homeID)
+        carrying = try c.decodeIfPresent(HaulLoad.self, forKey: .carrying)
+        haulPosition = try c.decodeIfPresent(LocalPoint.self, forKey: .haulPosition)
     }
 }

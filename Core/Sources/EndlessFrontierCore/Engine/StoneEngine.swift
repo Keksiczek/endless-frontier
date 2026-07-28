@@ -86,6 +86,23 @@ public enum StoneEngine {
         }
     }
 
+    /// What is *in* a country's rock, as shares of a block.
+    ///
+    /// Mirrors `LocalMapGenerator.depositMix`: the coast has clay beds and no
+    /// iron, the mountains are the ore country. A cliff that yielded the same
+    /// seams everywhere made a coastal colony self-sufficient in iron and undid
+    /// the reason to have a world map at all.
+    static func seamMix(for biomeID: String) -> (iron: Double, clay: Double) {
+        switch biomeID {
+        case "mountains": return (0.24, 0.04)
+        case "tundra":    return (0.16, 0.02)
+        case "desert":    return (0.10, 0.00)
+        case "forest":    return (0.08, 0.08)
+        case "coast":     return (0.00, 0.26)
+        default:          return (0.05, 0.14)   // plains & homeland
+        }
+    }
+
     /// The ground the colony's own buildings need, kept clear of rock. A massif
     /// grown over the build grid would wall a colony into its own founding site
     /// — the recurring shape of bug where a threshold and the thing meant to
@@ -141,6 +158,9 @@ public enum StoneEngine {
             }
         }
         guard solid.count >= 4 else { return StoneField() }
-        return StoneField(solid: solid, seed: seed, usesBlocks: true)
+        let seams = seamMix(for: biomeID)
+        return StoneField(solid: solid, seed: seed,
+                          ironShare: seams.iron, clayShare: seams.clay,
+                          usesBlocks: true)
     }
 }

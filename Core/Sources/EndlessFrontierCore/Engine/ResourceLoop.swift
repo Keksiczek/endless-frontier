@@ -345,7 +345,13 @@ public enum ResourceLoop {
         // 10. Deposits deplete under the harvest and regrow with the seasons —
         //     faster where the woods are protected by law.
         s = evolveDeposits(s, registry: registry, tick: tick, config: config,
+                           mapSeed: mapSeed,
                            regrowthMultiplier: laws.depositRegrowthMultiplier)
+        // 10a. And somebody carries it in. A felled trunk and a broken block
+        //      are heaps on the ground until they are; this walks the haulers
+        //      every tick, because a load has to *move* rather than jump
+        //      between job-board cycles.
+        s = HaulEngine.advanceOneTick(s, registry: registry, tick: tick)
 
         // 10b. Scouts chart the valley.
         s = chartGround(s, tick: tick, mapSeed: mapSeed, config: config)
@@ -379,6 +385,8 @@ public enum ResourceLoop {
     static let depositFloorFactor: Double = 0.35
     /// Harvest a single assigned worker pulls from a deposit each tick.
     static let harvestPerWorker: Double = 0.45
+    /// How many whole units of timber a felled trunk leaves at the stump.
+    static let timberPerTree = 4
     /// Fraction of a node's capacity it regrows each tick (before seasonality).
     static let depositRegrowthFraction: Double = 0.0009
 
@@ -549,10 +557,14 @@ public enum ResourceLoop {
                 earned[hideItemID, default: 0] += effort
                 continue
             }
-            // Split across the kinds of ground this trade works that this
-            // valley actually has — an ore-less map yields no ore — weighted by
-            // how much of each is down there.
-            let worked = work.harvestedDeposits.filter(present.contains)
+            // Timber and stone are not earned by the week any more: they are
+            // *carried in*. A felled trunk leaves wood at the stump and a
+            // broken block leaves stone at the face, and `HaulEngine` banks
+            // them when somebody walks them home — so granting them here as
+            // well would pay the colony twice for the same tree.
+            let worked = work.harvestedDeposits
+                .filter(present.contains)
+                .filter { !HaulEngine.isHauled($0) }
             guard !worked.isEmpty else { continue }
             let total = worked.reduce(0.0) { $0 + (capacityByKind[$1] ?? 0) }
             guard total > 0 else { continue }
@@ -637,6 +649,7 @@ public enum ResourceLoop {
         registry: GameDataRegistry,
         tick: Int,
         config: WorldConfig,
+        mapSeed: UInt64 = 0,
         regrowthMultiplier: Double = 1
     ) -> Settlement {
         guard var map = settlement.localMap, !map.nodes.isEmpty else { return settlement }
@@ -668,9 +681,15 @@ public enum ResourceLoop {
         //
         // `harvestPerWorker` is a deposit-units-per-tick demand, so it converts
         // to whole workers at the face by the same measure.
+        // Where the work leaves goods on the ground for somebody to carry in.
+        var dropped: [(itemID: String, amount: Int, at: LocalPoint)] = []
         let timberDemand = demand[.forest, default: 0]
         if timberDemand > 0, !map.trees.isEmpty {
-            map = FloraEngine.fell(map, loggers: max(1, Int(timberDemand / harvestPerWorker))).map
+            let cut = FloraEngine.fell(map, loggers: max(1, Int(timberDemand / harvestPerWorker)))
+            map = cut.map
+            for stump in cut.stumps {
+                dropped.append((itemID: "wood", amount: timberPerTree, at: stump))
+            }
         }
         let stoneDemand = demand[.stone, default: 0]
             + demand[.ironOre, default: 0] + demand[.clay, default: 0]
@@ -685,9 +704,14 @@ public enum ResourceLoop {
             let miners = max(1, Int(stoneDemand / harvestPerWorker))
             let dug = StoneEngine.mine(map.stone, miners: miners)
             map.stone = dug.field
-            // The hole a block leaves is ground the colony can now see through.
+            // The hole a block leaves is ground the colony can now see through,
+            // and a heap of stone at the face for somebody to carry in.
             for index in dug.broken {
                 map.exploredCells.insert(index)
+                if let item = map.stone.kind(of: index).deposit.rawMaterialID {
+                    dropped.append((itemID: item, amount: StoneEngine.itemsPerBlock,
+                                    at: StoneField.centre(of: index)))
+                }
             }
             hewn = dug.yield
         }
@@ -724,14 +748,24 @@ public enum ResourceLoop {
 
         var s = settlement
         s.localMap = map
-        // What came out of the mountain. Deliberately banked here rather than
-        // folded into the abstract harvest: a block is a *thing that was there*
-        // and is now stone in your hands, and the whole point of digging into a
-        // hillside is that it pays differently from scratching at the surface.
-        for (kind, amount) in hewn {
+        // What came out of the mountain, as materials. The *goods* it also
+        // yielded are lying at the face in `dropped`, waiting to be carried.
+        for (_, amount) in hewn {
             s.storage[.materials] = min(s.storageCapacity, s.storage[.materials] + amount)
-            guard let item = kind.rawMaterialID else { continue }
-            s.stockpile[item, default: 0] += StoneEngine.itemsPerBlock
+        }
+        // And the heaps themselves. A felled trunk and a broken block are
+        // things on the ground now: the timber is at the stump and the stone at
+        // the face until somebody walks out and brings them in.
+        if !dropped.isEmpty {
+            var rng = SeededRNG(seed: societyLikeSeed(mapSeed: mapSeed, settlementID: s.id,
+                                                      tick: tick) ^ 0x48_41_55_4C)
+            var withPiles = s.localMap ?? map
+            for drop in dropped {
+                withPiles = HaulEngine.drop(withPiles, itemID: drop.itemID,
+                                            amount: drop.amount, at: drop.at,
+                                            tick: tick, rng: &rng)
+            }
+            s.localMap = withPiles
         }
         return s
     }

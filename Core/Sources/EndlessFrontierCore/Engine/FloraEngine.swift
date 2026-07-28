@@ -36,8 +36,8 @@ public enum FloraEngine {
     /// removed from the map.
     public static func fell(
         _ map: LocalMap, loggers: Int
-    ) -> (map: LocalMap, timber: Double, felled: Int) {
-        guard loggers > 0, !map.trees.isEmpty else { return (map, 0, 0) }
+    ) -> (map: LocalMap, timber: Double, felled: Int, stumps: [LocalPoint]) {
+        guard loggers > 0, !map.trees.isEmpty else { return (map, 0, 0, []) }
 
         // The standing wood worth an axe, biggest first. Ties break on id so
         // the same world always fells the same tree.
@@ -48,16 +48,20 @@ public enum FloraEngine {
                 if a.timberYield != b.timberYield { return a.timberYield > b.timberYield }
                 return a.id < b.id
             }
-        guard !workable.isEmpty else { return (map, 0, 0) }
+        guard !workable.isEmpty else { return (map, 0, 0, []) }
 
         var updated = map
         var timber = 0.0
         var downed: Set<Int> = []
+        // Where each trunk came down, so the timber can be left at the stump
+        // for somebody to carry in rather than appearing in the storehouse.
+        var stumps: [LocalPoint] = []
         for (worker, index) in workable.prefix(loggers).enumerated() {
             _ = worker
             updated.trees[index].chopped += chopPerTick
             if updated.trees[index].chopped >= 1 {
                 timber += updated.trees[index].timberYield
+                stumps.append(updated.trees[index].position)
                 downed.insert(index)
             }
         }
@@ -66,7 +70,7 @@ public enum FloraEngine {
                 .filter { !downed.contains($0.offset) }
                 .map(\.element)
         }
-        return (updated, timber, downed.count)
+        return (updated, timber, downed.count, stumps)
     }
 
     /// Puts `miners` to the rock for one tick and returns what they broke out.

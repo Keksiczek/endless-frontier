@@ -29,6 +29,16 @@ public struct StoneField: Codable, Sendable, Equatable {
     public var cut: [Int: Double]
     /// Seed for what the seams are made of.
     public var seed: UInt64
+    /// How much of this massif is ore, and how much is clay — the country's own
+    /// character, carried into the rock.
+    ///
+    /// Without these a cliff was the same cliff everywhere: a coastal headland
+    /// gave up iron at the same rate a mountain did, which quietly undid the
+    /// whole point of putting ore in the mountains and making a coastal colony
+    /// trade or expand for it. Stored rather than derived from the biome id so
+    /// the field answers for itself.
+    public var ironShare: Double
+    public var clayShare: Double
     /// Whether this map has a stone layer at all.
     ///
     /// Not the same question as `solid.isEmpty`: a massif dug flat has no solid
@@ -38,22 +48,29 @@ public struct StoneField: Codable, Sendable, Equatable {
     public var usesBlocks: Bool
 
     public init(solid: Set<Int> = [], cut: [Int: Double] = [:], seed: UInt64 = 0,
+                ironShare: Double = 0.12, clayShare: Double = 0.12,
                 usesBlocks: Bool = false) {
         self.solid = solid
         self.cut = cut
         self.seed = seed
+        self.ironShare = max(0, ironShare)
+        self.clayShare = max(0, clayShare)
         self.usesBlocks = usesBlocks || !solid.isEmpty
     }
 
     // MARK: - Codable (resilient: most maps have no mountain in them)
 
-    private enum CodingKeys: String, CodingKey { case solid, cut, seed, usesBlocks }
+    private enum CodingKeys: String, CodingKey {
+        case solid, cut, seed, usesBlocks, ironShare, clayShare
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         solid = try c.decodeIfPresent(Set<Int>.self, forKey: .solid) ?? []
         cut = try c.decodeIfPresent([Int: Double].self, forKey: .cut) ?? [:]
         seed = try c.decodeIfPresent(UInt64.self, forKey: .seed) ?? 0
+        ironShare = try c.decodeIfPresent(Double.self, forKey: .ironShare) ?? 0.12
+        clayShare = try c.decodeIfPresent(Double.self, forKey: .clayShare) ?? 0.12
         usesBlocks = try c.decodeIfPresent(Bool.self, forKey: .usesBlocks) ?? !solid.isEmpty
     }
 
@@ -123,10 +140,12 @@ public struct StoneField: Codable, Sendable, Equatable {
         let col = Self.column(of: index), row = Self.row(of: index)
         let patch = hash(seed &+ 0x5EA_11, col / 3, row / 3)
         let roll = Double(patch & 0xFFFF) / 65535
-        // Most of a mountain is just rock. Ore is worth going in for.
-        if roll < 0.12 { return .ironSeam }
-        if roll < 0.24 { return .clayBank }
-        if roll < 0.62 { return .granite }
+        // Most of a mountain is just rock. What else is in it is the country's
+        // business: ore country is riddled with seams, a coastal headland has
+        // none at all and clay instead.
+        if roll < ironShare { return .ironSeam }
+        if roll < ironShare + clayShare { return .clayBank }
+        if roll < ironShare + clayShare + 0.45 { return .granite }
         return .limestone
     }
 

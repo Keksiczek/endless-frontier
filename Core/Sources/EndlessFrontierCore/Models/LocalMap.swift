@@ -468,6 +468,8 @@ public struct LocalMap: Codable, Sendable, Equatable {
     /// face. Empty on most country, and on every map made before there were
     /// mountains to dig.
     public var stone: StoneField
+    /// Goods lying where the work happened, waiting to be carried in.
+    public var piles: [HaulPile]
     /// Scout-steps walked so far — one per scout per reveal step. How far the
     /// frontier has moved is a function of *work done*, never of the world
     /// clock: a colony founded in year 200 charts its own valley from scratch
@@ -496,10 +498,12 @@ public struct LocalMap: Codable, Sendable, Equatable {
         usesEntityLand: Bool = false,
         shore: ShoreShape? = nil,
         stone: StoneField = StoneField(),
+        piles: [HaulPile] = [],
         scoutProgress: Double = 0,
         scoutFocus: LocalPoint? = nil
     ) {
         self.stone = stone
+        self.piles = piles
         self.river = river
         self.nodes = nodes
         self.pois = pois
@@ -520,7 +524,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case river, nodes, pois, wildlife, exploredCells, biomeID, terrainSeed, scenery
-        case trees, rocks, shore, usesEntityLand, stone
+        case trees, rocks, shore, usesEntityLand, stone, piles
         case scoutProgress, scoutFocus
     }
 
@@ -539,6 +543,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
         usesEntityLand = try c.decodeIfPresent(Bool.self, forKey: .usesEntityLand) ?? false
         shore = try c.decodeIfPresent(ShoreShape.self, forKey: .shore)
         stone = try c.decodeIfPresent(StoneField.self, forKey: .stone) ?? StoneField()
+        piles = try c.decodeIfPresent([HaulPile].self, forKey: .piles) ?? []
         scoutProgress = try c.decodeIfPresent(Double.self, forKey: .scoutProgress) ?? 0
         scoutFocus = try c.decodeIfPresent(LocalPoint.self, forKey: .scoutFocus)
     }
