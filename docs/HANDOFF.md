@@ -130,6 +130,28 @@ village appeared to socialise all afternoon.
 
 ---
 
+## 4b. Fixed from real play (2026-07-28)
+
+Four things a session on a real device found that 649 tests did not:
+
+- **Everyone walked at a different speed.** Travel took a *fixed slice of the
+  day whatever the distance*, so a colonist whose field was next door crept
+  while one across the valley covered twenty times the ground in the same
+  moment. `AgentMotion.walkSpeed` now gives everyone one pace and a long walk
+  simply takes longer.
+- **Colonists were sent into the fog.** `JobBoard` offered work at every tree on
+  the map, charted or not — and the canvas refuses to draw anyone under fog, so
+  they vanished en route. Jobs are now only posted on explored ground.
+- **A trip across your own valley took months.** `travelTicksPerDistance` was 26
+  against a tick that is a real minute and a sixtieth of a year. Now 8.
+- **The control bar wrapped** into "St av ět" and "De tail y" — four worded
+  controls do not fit a phone. They no longer wrap, and shrink to icons when
+  they must.
+
+**Still open from that session** — see `docs/NEXT_PHASE.md`: defence is
+invisible (nobody runs to the walls), battle visuals are placeholder blobs, and
+colonists huddle at the centre of town.
+
 ## 5. Next steps, in the order I would take them
 
 1. **Play it.** Two sessions of changes have not been seen running. Specifically:

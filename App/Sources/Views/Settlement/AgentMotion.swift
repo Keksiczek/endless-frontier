@@ -40,6 +40,23 @@ enum AgentMotion {
     /// Seconds of real time one settlement day takes on screen.
     static let dayLength: Double = 150
 
+    /// How far apart two points on the map are — the walk a colonist has ahead
+    /// of them.
+    static func distance(_ a: LocalPoint, _ b: LocalPoint) -> Double {
+        let dx = a.x - b.x, dy = a.y - b.y
+        return (dx * dx + dy * dy).squareRoot()
+    }
+
+    /// How much ground a colonist covers in a day of walking, in map widths.
+    ///
+    /// Travel used to take a **fixed slice of the day whatever the distance**,
+    /// so someone whose field was next door crept across it while someone whose
+    /// field was clear across the valley crossed twenty times as much ground in
+    /// the same moment — a village of ploddders with the odd sprinter shooting
+    /// past them. Everyone now keeps the same pace and a long walk simply takes
+    /// longer, which is also why the far side of the map now feels far.
+    static let walkSpeed: Double = 4.5
+
     /// What a colonist is visibly doing right now — drives posture, tools and
     /// the inspector's "right now" line.
     enum Activity {
@@ -204,13 +221,13 @@ enum AgentMotion {
         let previous = schedule[(index + schedule.count - 1) % schedule.count]
         let nextAt = schedule[(index + 1) % schedule.count].at
 
-        // Travel takes a short slice at the start of each leg — the walk *to*
-        // this leg's place — and the rest of the leg is spent there, drifting
-        // gently. Kept short: a colonist should be seen doing the thing, not
-        // gliding towards it.
+        // Travel takes however long the walk *is*, at a pace everyone keeps.
+        // Capped at most of the leg so a colonist with a very long way to go
+        // still arrives and does some work rather than walking all day.
         let legStart = current.at
         let legEnd = nextAt <= legStart ? nextAt + 1 : nextAt
-        let travelSlice = min(0.025, (legEnd - legStart) * 0.4)
+        let walk = distance(previous.place, current.place) / walkSpeed
+        let travelSlice = min(max(0.004, walk), (legEnd - legStart) * 0.8)
         let progress = t - legStart
         if previous.place != current.place, progress < travelSlice {
             let u = smoothstep(progress / travelSlice)

@@ -16,7 +16,11 @@ private func id(_ n: Int) -> UUID {
 
 private func wooded(trees: Int = 3, rocks: Int = 2) -> LocalMap {
     var map = LocalMap(river: RiverShape(baseY: 0.5, amplitude: 0.04, phase: 0),
-                       nodes: [], pois: [], terrainSeed: mapSeed, usesEntityLand: true)
+                       nodes: [], pois: [],
+                       // Work is only offered on charted ground, so a fixture
+                       // that tests job-posting has to have some.
+                       exploredCells: Set(0..<(LocalMap.gridColumns * LocalMap.gridRows)),
+                       terrainSeed: mapSeed, usesEntityLand: true)
     map.trees = (0..<trees).map {
         Tree(id: $0, species: .oak, position: LocalPoint(x: 0.2 + Double($0) * 0.1, y: 0.3),
              age: TreeSpecies.oak.maturityTicks)
@@ -104,6 +108,22 @@ struct JobBoardTests {
         let a = JobBoard.assign(town([.logging, .mining, .logging]), registry: registry)
         let b = JobBoard.assign(town([.logging, .mining, .logging]), registry: registry)
         #expect(a.pawns.map(\.currentJob) == b.pawns.map(\.currentJob))
+    }
+
+    /// Reported from a real game: colonists walking off into ground nobody has
+    /// charted. Jobs came from every tree on the map, fog or not — and the
+    /// canvas refuses to draw anyone under fog, so they simply vanished en route.
+    @Test("No work is offered out in the fog")
+    func jobsStayOnChartedGround() {
+        var map = wooded(trees: 3, rocks: 0)
+        map.exploredCells = []                      // nothing charted at all
+        let jobs = JobBoard.post(for: town([.logging], map: map), registry: registry)
+        #expect(jobs.isEmpty)
+
+        // Chart the ground the wood stands on and the work appears.
+        var charted = map
+        charted.reveal(around: LocalPoint(x: 0.3, y: 0.3), radius: 0.3)
+        #expect(!JobBoard.post(for: town([.logging], map: charted), registry: registry).isEmpty)
     }
 
     @Test("A settlement with no map offers nothing")

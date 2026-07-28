@@ -81,21 +81,29 @@ public enum JobBoard {
         var jobs: [Job] = []
         guard let map = settlement.localMap else { return jobs }
 
+        // Only ground the colony has actually charted. Sending a logger to a
+        // tree out in the fog had them walk off into country nobody has seen —
+        // and the canvas, which refuses to draw anyone under fog, simply made
+        // them vanish on the way.
+        func charted(_ p: LocalPoint) -> Bool { map.isExplored(p) }
+
         // Standing wood worth an axe, biggest first — the same order the felling
         // itself uses, so the job you are sent to is the one that gets chopped.
         for tree in map.trees
-            .filter({ $0.growth >= FloraEngine.minimumWorkableGrowth })
+            .filter({ $0.growth >= FloraEngine.minimumWorkableGrowth && charted($0.position) })
             .sorted(by: { $0.timberYield == $1.timberYield
                           ? $0.id < $1.id : $0.timberYield > $1.timberYield }) {
             jobs.append(Job(id: jobID("fell", tree.id), kind: .fellTree,
                             position: tree.position, treeID: tree.id))
         }
-        for rock in map.rocks.filter({ !$0.isSpent }).sorted(by: { $0.id < $1.id }) {
+        for rock in map.rocks.filter({ !$0.isSpent && charted($0.position) })
+            .sorted(by: { $0.id < $1.id }) {
             jobs.append(Job(id: jobID("quarry", rock.id), kind: .quarryRock,
                             position: rock.position, rockID: rock.id))
         }
         // Ground that is worked rather than a thing that is taken.
-        for node in map.nodes where node.kind == .field || node.kind == .herbs {
+        for node in map.nodes
+        where (node.kind == .field || node.kind == .herbs) && charted(node.position) {
             jobs.append(Job(id: jobID("tend", node.id), kind: .tendDeposit,
                             position: node.position))
         }

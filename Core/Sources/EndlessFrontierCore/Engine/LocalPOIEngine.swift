@@ -48,9 +48,15 @@ public struct LocalPOIOutcome: Sendable, Equatable {
 public enum LocalPOIEngine {
     /// Where the party forms up and returns to.
     public static let heart = LocalPoint(x: 0.5, y: 0.5)
-    /// Ticks of walking per unit of normalised map distance. The valley is one
-    /// unit across, so the far corner is roughly a season's march each way.
-    static let travelTicksPerDistance: Double = 26
+    /// Ticks of walking per unit of normalised map distance.
+    ///
+    /// This was 26, which read as "roughly a season's march each way" — but the
+    /// map it crosses is the settlement's *own valley*, the ground its farmers
+    /// walk to work every morning. A party took months of game time and half an
+    /// hour of real time to reach a cave the colony can see from its doorstep.
+    /// A tick is a real minute and a sixtieth of a year, so this is about as
+    /// short as the trip can be and still be a trip.
+    static let travelTicksPerDistance: Double = 8
 
     // MARK: - Ordering a visit
 
