@@ -35,7 +35,11 @@ enum NotificationScheduler {
     /// The least time between two of them.
     static let minimumGap: TimeInterval = 6 * 3600
     /// How long a session has to run before it is worth asking to be let in.
-    static let sessionBeforeAsking: TimeInterval = 4 * 60
+    /// Long enough that the player has decided they like the game, short
+    /// enough that they are still in the same sitting when the sheet appears —
+    /// the ask happens in the foreground now, so it has to land while they are
+    /// looking at the thing it is about.
+    static let sessionBeforeAsking: TimeInterval = 2 * 60
 
     private static var cs: Bool { AppStrings.language == .cs }
     private static func s(_ en: String, _ cz: String) -> String { cs ? cz : en }
@@ -44,6 +48,14 @@ enum NotificationScheduler {
 
     /// Asks, once, and only after the player has actually played for a while.
     /// Requesting on first launch is how an app gets denied for ever.
+    ///
+    /// **Called from the foreground, deliberately.** The first cut asked as the
+    /// app went to the background, which is why not one notification ever
+    /// arrived: iOS will not put the permission sheet in front of an app that
+    /// is not on screen, so the status stayed `.notDetermined`, and
+    /// `scheduleOnLeaving` — which runs a moment later and is gated on being
+    /// authorised — queued nothing. Every session. For ever. The ask has to
+    /// happen while the player is looking at the game.
     static func requestPermissionIfEarned(sessionLength: TimeInterval) async {
         guard sessionLength >= sessionBeforeAsking else { return }
         let centre = UNUserNotificationCenter.current()
@@ -60,13 +72,22 @@ enum NotificationScheduler {
 
     // MARK: - Scheduling
 
-    /// Called as the player leaves. Clears anything already queued (it was
-    /// written for a world state that is now out of date) and lays out what the
-    /// colony has to say next.
-    static func scheduleOnLeaving(_ world: WorldState, registry: GameDataRegistry) async {
+    /// Lays out what the colony has to say next, and clears whatever was
+    /// queued before (it was written for a world state that has moved on).
+    ///
+    /// **Armed while the game is running, not on the way out.** Backgrounding
+    /// gives an app a few seconds and no promises; an `async` chain started
+    /// there can simply never finish, and this one never did. A queued local
+    /// notification costs nothing while the app is up — it only ever fires
+    /// once the player has gone — so the queue is kept current *during* play
+    /// and the exit path becomes a top-up rather than the only chance.
+    static func arm(_ world: WorldState, registry: GameDataRegistry) async {
         let centre = UNUserNotificationCenter.current()
+        guard await isAllowed() else {
+            centre.removeAllPendingNotificationRequests()
+            return
+        }
         centre.removeAllPendingNotificationRequests()
-        guard await isAllowed() else { return }
 
         var messages: [(id: String, after: TimeInterval, title: String, body: String)] = []
 
@@ -100,11 +121,11 @@ enum NotificationScheduler {
         }
     }
 
-    /// Nothing should be waiting for the player once they are looking at it.
-    static func clearAll() {
-        let centre = UNUserNotificationCenter.current()
-        centre.removeAllPendingNotificationRequests()
-        centre.removeAllDeliveredNotifications()
+    /// Anything already *delivered* is stale the moment the player is looking
+    /// at the game. What is merely queued is left alone: it is the whole point,
+    /// and re-arming will replace it.
+    static func clearDelivered() {
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
     }
 
     private static func schedule(id: String, after: TimeInterval, title: String, body: String) {
