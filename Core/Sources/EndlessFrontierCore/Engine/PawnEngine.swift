@@ -57,6 +57,9 @@ public enum PawnEngine {
         for resource in ResourceType.allCases {
             seasonByResource[resource] = registry.config.seasonYieldMultiplier(for: resource, tick: tick)
         }
+        // So is the weather, and what the colony's walls and fires keep out.
+        let season = Season(tick: tick, ticksPerYear: max(1, registry.config.ticksPerYear))
+        let shelterWarmth = ComfortEngine.shelter(s, registry: registry)
 
         // Mutate pawns in place (index loop) to avoid rebuilding the array and
         // copying every pawn's dictionaries each tick — this runs up to 43,200
@@ -71,6 +74,12 @@ public enum PawnEngine {
             s.pawns[i].needs.rest = s.pawns[i].needs.rest - restDecay
                 + restRecovery * (housed ? 1 : HouseholdEngine.roughSleepFactor)
             s.pawns[i].needs.recreation = s.pawns[i].needs.recreation - recreationDecay + recreationRecovery
+            // And what the weather is doing to them: winter bites whoever has
+            // no roof, no coat and no fire, and costs them health until it
+            // stops. The wild has had comfort bands since animals got bodies;
+            // this is the same question asked of a person.
+            s.pawns[i] = ComfortEngine.advanceOneTick(
+                s.pawns[i], season: season, shelter: shelterWarmth)
 
             // Eat if hungry and food is available. Rationing stretches a meal.
             let meal = foodPerMeal * laws.foodUpkeepMultiplier

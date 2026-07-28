@@ -54,21 +54,44 @@ public struct PawnNeeds: Codable, Sendable, Equatable {
     public var hunger: Double
     public var rest: Double
     public var recreation: Double
+    /// How warm they are, 0…100. Not a temperature — a *comfort*: what the
+    /// season is doing to them, less whatever their clothes, their roof and
+    /// their hearth give back.
+    ///
+    /// The wild has had comfort bands since animals got bodies, and colonists
+    /// had nothing: a colony on the tundra was exactly as comfortable in
+    /// January as one on the plains in June. Winter is the season the whole
+    /// game is shaped around and it did nothing to anybody.
+    public var warmth: Double
 
-    public init(hunger: Double = 80, rest: Double = 80, recreation: Double = 70) {
+    public init(hunger: Double = 80, rest: Double = 80, recreation: Double = 70,
+                warmth: Double = 80) {
         self.hunger = hunger
         self.rest = rest
         self.recreation = recreation
+        self.warmth = warmth
+    }
+
+    // Resilient decode: warmth postdates the first three needs.
+    private enum CodingKeys: String, CodingKey { case hunger, rest, recreation, warmth }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        hunger = try c.decode(Double.self, forKey: .hunger)
+        rest = try c.decode(Double.self, forKey: .rest)
+        recreation = try c.decode(Double.self, forKey: .recreation)
+        warmth = try c.decodeIfPresent(Double.self, forKey: .warmth) ?? 80
     }
 
     /// The average satisfaction across needs — the basis for mood.
     public var average: Double {
-        (hunger + rest + recreation) / 3
+        (hunger + rest + recreation + warmth) / 4
     }
 
     public func clamped() -> PawnNeeds {
         func c(_ v: Double) -> Double { min(max(v, 0), 100) }
-        return PawnNeeds(hunger: c(hunger), rest: c(rest), recreation: c(recreation))
+        return PawnNeeds(hunger: c(hunger), rest: c(rest),
+                         recreation: c(recreation), warmth: c(warmth))
     }
 }
 
@@ -95,6 +118,17 @@ public enum PawnTrait: String, Codable, Sendable, CaseIterable, Equatable {
         case .optimist: return 8
         case .pessimist: return -8
         default: return 0
+        }
+    }
+
+    /// What to call it, in the player's language.
+    public var displayName: LocalizedText {
+        switch self {
+        case .optimist: return LocalizedText(values: [.en: "Optimist", .cs: "Optimista"])
+        case .pessimist: return LocalizedText(values: [.en: "Pessimist", .cs: "Pesimista"])
+        case .hardWorker: return LocalizedText(values: [.en: "Hard worker", .cs: "Dříč"])
+        case .lazy: return LocalizedText(values: [.en: "Idler", .cs: "Lenoch"])
+        case .none: return LocalizedText(values: [.en: "Ordinary", .cs: "Obyčejný"])
         }
     }
 }

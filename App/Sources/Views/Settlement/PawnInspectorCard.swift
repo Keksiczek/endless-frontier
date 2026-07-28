@@ -1,9 +1,14 @@
 import SwiftUI
 import EndlessFrontierCore
 
-/// A tap-to-inspect card for a single colonist: who they are, what they're
-/// doing *right now*, who they love and quarrel with, how they fare, and
-/// their inherited disposition. Slides up over the living canvas.
+/// A tap-to-inspect card for a single colonist.
+///
+/// It used to say health, mood and four inherited numbers, which told you what
+/// a colonist *was* and nothing about how they were getting on. A colony sim is
+/// about people having a bad time in interesting ways — so this now leads with
+/// the four needs, says plainly **why** their mood is where it is, and names
+/// the two things that had never been on screen at all: the bed they sleep in
+/// and the piece of work they are on.
 struct PawnInspectorCard: View {
     /// One bond, resolved to a living name for display.
     struct BondLine: Identifiable {
@@ -16,21 +21,29 @@ struct PawnInspectorCard: View {
     let ticksPerYear: Int
     var activity: String?
     var bonds: [BondLine] = []
+    /// Why their mood is what it is, from `MoodLedger`.
+    var moodFactors: [MoodFactor] = []
+    /// Whether the engine has given them a roof.
+    var housed: Bool = true
     var onClose: () -> Void
+
+    private var cs: Bool { AppStrings.language == .cs }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
             HStack(spacing: 10) {
                 vital(icon: "heart.fill", label: "HP", value: pawn.health, tint: Theme.good)
-                vital(icon: "face.smiling", label: AppStrings.language == .cs ? "Nálada" : "Mood",
+                vital(icon: "face.smiling", label: cs ? "Nálada" : "Mood",
                       value: pawn.mood, tint: Theme.accent)
                 if pawn.wealth > 0 {
                     vital(icon: "circle.hexagongrid.fill",
-                          label: AppStrings.language == .cs ? "Jmění" : "Wealth",
+                          label: cs ? "Jmění" : "Wealth",
                           value: nil, text: "\(Int(pawn.wealth))", tint: Theme.textDim)
                 }
             }
+            needs
+            if !moodFactors.isEmpty { moodBreakdown }
             if !bonds.isEmpty { bondRows }
             genes
         }
@@ -41,6 +54,55 @@ struct PawnInspectorCard: View {
                 .strokeBorder(Theme.roleShade(pawn.assignedWork).opacity(0.35), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.4), radius: 18, y: 8)
+    }
+
+    /// The four needs, with the ones that are biting marked.
+    private var needs: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            sectionTitle(cs ? "Potřeby" : "Needs")
+            NeedBar(label: cs ? "Hlad" : "Food", value: pawn.needs.hunger,
+                    icon: "fork.knife", tint: Color(red: 0.85, green: 0.72, blue: 0.42))
+            NeedBar(label: cs ? "Spánek" : "Rest", value: pawn.needs.rest,
+                    icon: "moon.fill", tint: Color(red: 0.62, green: 0.70, blue: 0.88))
+            NeedBar(label: cs ? "Teplo" : "Warmth", value: pawn.needs.warmth,
+                    icon: "flame.fill", tint: Color(red: 0.88, green: 0.55, blue: 0.36))
+            NeedBar(label: cs ? "Odpočinek" : "Leisure", value: pawn.needs.recreation,
+                    icon: "leaf.fill", tint: Color(red: 0.60, green: 0.80, blue: 0.62))
+            if !housed {
+                HStack(spacing: 5) {
+                    Image(systemName: "house.slash").font(.caption2)
+                    Text(cs ? "Nemá kde spát" : "Nowhere to sleep")
+                        .font(.caption)
+                }
+                .foregroundStyle(Theme.danger)
+            }
+        }
+    }
+
+    /// Why they feel the way they do — the thing a mood number can never say.
+    private var moodBreakdown: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            sectionTitle(cs ? "Proč" : "Why")
+            ForEach(moodFactors.prefix(5)) { factor in
+                HStack(spacing: 6) {
+                    Text(factor.label.resolve(AppStrings.language))
+                        .font(.caption)
+                        .foregroundStyle(Theme.text)
+                    Spacer(minLength: 8)
+                    Text(factor.amount >= 0
+                         ? "+\(Int(factor.amount.rounded()))"
+                         : "\(Int(factor.amount.rounded()))")
+                        .font(.caption.monospacedDigit().weight(.semibold))
+                        .foregroundStyle(factor.amount >= 0 ? Theme.good : Theme.danger)
+                }
+            }
+        }
+    }
+
+    private func sectionTitle(_ text: String) -> some View {
+        Text(text)
+            .font(.caption2.weight(.bold)).tracking(1.2)
+            .foregroundStyle(Theme.textDim)
     }
 
     private var header: some View {
@@ -150,6 +212,44 @@ struct PawnInspectorCard: View {
             GeneBar(label: AppStrings.language == .cs ? "Plodnost" : "Fertility", value: pawn.genes.fertility)
             GeneBar(label: AppStrings.language == .cs ? "Družnost" : "Sociability", value: pawn.genes.sociability)
             GeneBar(label: AppStrings.language == .cs ? "Odvaha" : "Courage", value: pawn.genes.courage)
+        }
+    }
+}
+
+/// A need, 0…100, with the colour warning you when it is running out.
+private struct NeedBar: View {
+    let label: String
+    let value: Double
+    let icon: String
+    let tint: Color
+
+    /// A need under this is doing them harm, and is drawn as such — the point
+    /// of a bar is that you can see trouble without reading the number.
+    private var urgent: Bool { value < 30 }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 9))
+                .foregroundStyle(urgent ? Theme.danger : tint)
+                .frame(width: 12)
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(Theme.textDim)
+                .frame(width: 62, alignment: .leading)
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Theme.surfaceInset)
+                    Capsule()
+                        .fill(urgent ? Theme.danger : tint)
+                        .frame(width: geo.size.width * CGFloat(min(max(value / 100, 0), 1)))
+                }
+            }
+            .frame(height: 5)
+            Text("\(Int(value.rounded()))")
+                .font(.caption2.monospacedDigit())
+                .foregroundStyle(urgent ? Theme.danger : Theme.textDim)
+                .frame(width: 26, alignment: .trailing)
         }
     }
 }
