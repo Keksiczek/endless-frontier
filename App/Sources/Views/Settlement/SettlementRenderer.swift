@@ -82,7 +82,7 @@ enum SettlementRenderer {
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels)
-        SettlementWildlife.draw(&context, rect: rect, map: map, time: time)
+        SettlementWildlife.draw(&context, rect: rect, map: map, time: time, zoom: zoom)
 
         let placed = layout(settlement: settlement, registry: registry, rect: rect)
         // Pushed in close, every structure says what it is — the answer to
@@ -180,7 +180,7 @@ enum SettlementRenderer {
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels)
-        SettlementWildlife.draw(&context, rect: rect, map: map, time: time)
+        SettlementWildlife.draw(&context, rect: rect, map: map, time: time, zoom: zoom)
         if regionKind == .anomaly {
             anomalyGlow(&context, rect: rect, time: time)
         }
@@ -1425,10 +1425,14 @@ enum SettlementRenderer {
             let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
                                         time: time, ticksPerYear: ticksPerYear)
             guard map.isExplored(pose.position) else { continue }
+            // What they would do with what they are carrying — the same split
+            // the simulation fights on, so a bow is drawn being drawn.
+            let ranged = CombatEngine.weaponProfile(pawn, registry: registry)?.kind == .ranged
             SettlementFigures.draw(
                 pawn: pawn, pose: pose, at: point(pose.position, in: rect),
                 time: time, ticksPerYear: ticksPerYear,
-                selected: pawn.id == selectedPawnID, zoom: zoom, context: &context)
+                selected: pawn.id == selectedPawnID, zoom: zoom, ranged: ranged,
+                context: &context)
         }
     }
 

@@ -17,6 +17,7 @@ public enum JobKind: String, Codable, Sendable, CaseIterable {
     case raiseBuilding
     case tendDeposit     // fields and herb patches — ground, not a thing
     case standWatch
+    case stalkAnimal     // *this* deer, standing over there
 
     /// The trade that does this work.
     public var work: WorkKind {
@@ -26,6 +27,7 @@ public enum JobKind: String, Codable, Sendable, CaseIterable {
         case .raiseBuilding: return .building
         case .tendDeposit: return .farming
         case .standWatch: return .garrison
+        case .stalkAnimal: return .hunting
         }
     }
 }
@@ -35,20 +37,40 @@ public struct Job: Codable, Sendable, Equatable, Identifiable {
     public let kind: JobKind
     /// Where the work is, in local-map space.
     public let position: LocalPoint
-    /// The tree, outcrop or building site it is being done to, when it is being
-    /// done to something. Ids are per-kind, hence three fields rather than one.
+    /// The tree, outcrop, building site or beast it is being done to, when it
+    /// is being done to something. Ids are per-kind, hence a field each.
     public let treeID: Int?
     public let rockID: Int?
     public let placementID: UUID?
+    public let animalID: UUID?
 
     public init(id: UUID, kind: JobKind, position: LocalPoint,
-                treeID: Int? = nil, rockID: Int? = nil, placementID: UUID? = nil) {
+                treeID: Int? = nil, rockID: Int? = nil, placementID: UUID? = nil,
+                animalID: UUID? = nil) {
         self.id = id
         self.kind = kind
         self.position = position
         self.treeID = treeID
         self.rockID = rockID
         self.placementID = placementID
+        self.animalID = animalID
+    }
+
+    // MARK: - Codable (resilient: quarry came before the hunt)
+
+    private enum CodingKeys: String, CodingKey {
+        case id, kind, position, treeID, rockID, placementID, animalID
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        kind = try c.decode(JobKind.self, forKey: .kind)
+        position = try c.decode(LocalPoint.self, forKey: .position)
+        treeID = try c.decodeIfPresent(Int.self, forKey: .treeID)
+        rockID = try c.decodeIfPresent(Int.self, forKey: .rockID)
+        placementID = try c.decodeIfPresent(UUID.self, forKey: .placementID)
+        animalID = try c.decodeIfPresent(UUID.self, forKey: .animalID)
     }
 
     public var work: WorkKind { kind.work }
@@ -100,6 +122,15 @@ public enum JobBoard {
             .sorted(by: { $0.id < $1.id }) {
             jobs.append(Job(id: jobID("quarry", rock.id), kind: .quarryRock,
                             position: rock.position, rockID: rock.id))
+        }
+        // The game itself: a hunter is sent after *this* beast, standing where
+        // it is standing. It moves, so the job's position is only good for as
+        // long as the board is — which is exactly why the board is re-posted.
+        for animal in map.wildlife.animals
+            .filter({ !$0.species.isPredator && charted($0.position) })
+            .sorted(by: { $0.id.uuidString < $1.id.uuidString }) {
+            jobs.append(Job(id: jobID("stalk", animal.id), kind: .stalkAnimal,
+                            position: animal.position, animalID: animal.id))
         }
         // Ground that is worked rather than a thing that is taken.
         for node in map.nodes
@@ -175,9 +206,23 @@ public enum JobBoard {
     /// posted — otherwise a colonist would be "given" the tree they are already
     /// chopping as a brand-new job every cycle and never get anywhere.
     static func jobID(_ prefix: String, _ target: Int) -> UUID {
+        hashedID(prefix) { h in (h ^ UInt64(bitPattern: Int64(target))) &* 0x0100_0000_01B3 }
+    }
+
+    /// The same, for work done to a thing that is identified by a UUID rather
+    /// than by an index — a beast, unlike a tree, is not numbered by the map.
+    static func jobID(_ prefix: String, _ target: UUID) -> UUID {
+        hashedID(prefix) { start in
+            var h = start
+            for byte in target.uuidString.utf8 { h = (h ^ UInt64(byte)) &* 0x0100_0000_01B3 }
+            return h
+        }
+    }
+
+    private static func hashedID(_ prefix: String, _ mix: (UInt64) -> UInt64) -> UUID {
         var h: UInt64 = 0xCBF2_9CE4_8422_2325
         for byte in prefix.utf8 { h = (h ^ UInt64(byte)) &* 0x0100_0000_01B3 }
-        h = (h ^ UInt64(bitPattern: Int64(target))) &* 0x0100_0000_01B3
+        h = mix(h)
         var bytes = [UInt8](repeating: 0, count: 16)
         for i in 0..<8 {
             bytes[i] = UInt8((h >> (8 * UInt64(i))) & 0xFF)

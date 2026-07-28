@@ -175,6 +175,124 @@ public enum AnimalEngine {
         return (updated, doomed.count)
     }
 
+    // MARK: - The think-step
+
+    /// How often the wild thinks, in ticks. A beast does not need a decision
+    /// every minute of the year, and offline catch-up replays tens of thousands
+    /// of ticks through here.
+    public static let thinkInterval = 10
+    /// How far a beast covers in one think, at a walk.
+    static let stride = 0.012
+    /// A frightened one covers this much instead.
+    static let bolt = 0.055
+    /// How near a predator has to be before prey notice it.
+    static let alarmRange = 0.10
+    /// How near a hunter has to be before prey bolt.
+    static let hunterAlarmRange = 0.07
+
+    /// Moves the wild one step of its own life: prey drift with the herd and
+    /// bolt from anything that means them harm, predators close on the nearest
+    /// meal, and the hurt lie up.
+    ///
+    /// Deliberately a *cadence* rather than every tick. This is the whole mind
+    /// an animal gets — no schedule, no memory, no plan — but it is enough that
+    /// the valley behaves like somewhere things live: a herd that keeps
+    /// together, moves off when a wolf comes down, and is somewhere a hunter
+    /// can actually walk to.
+    public static func roam(
+        _ map: LocalMap, tick: Int, threats: [LocalPoint] = []
+    ) -> LocalMap {
+        guard !map.wildlife.animals.isEmpty else { return map }
+        var rng = SeededRNG(seed: map.terrainSeed
+                            &+ UInt64(bitPattern: Int64(tick)) &* 0xD1B5_4A32_D192_ED03
+                            &+ 0x4D_4F_56_45)
+        let animals = map.wildlife.animals
+
+        // Where the herd is, so prey have something to keep together around.
+        let prey = animals.filter { !$0.species.isPredator }
+        let centre: LocalPoint
+        if prey.isEmpty {
+            centre = LocalPoint(x: 0.5, y: 0.52)
+        } else {
+            centre = LocalPoint(
+                x: prey.reduce(0) { $0 + $1.position.x } / Double(prey.count),
+                y: prey.reduce(0) { $0 + $1.position.y } / Double(prey.count))
+        }
+        let predators = animals.filter { $0.species.isPredator }.map(\.position)
+
+        var moved: [Animal] = []
+        moved.reserveCapacity(animals.count)
+        for var animal in animals {
+            // The lame do not roam. Nor does anything badly hurt.
+            guard animal.canWalk, animal.health > animal.species.baseHealth * 0.25 else {
+                animal.activity = .resting
+                moved.append(animal)
+                continue
+            }
+            let scared = nearest(to: animal.position, among: predators + threats,
+                                 within: animal.species.isPredator ? hunterAlarmRange : alarmRange,
+                                 ignoringSelf: animal.position)
+            let target: LocalPoint
+            let pace: Double
+            if let scared, !animal.species.isPredator {
+                // Straight away from it, and quickly.
+                animal.activity = .fleeing
+                target = LocalPoint(x: animal.position.x * 2 - scared.x,
+                                    y: animal.position.y * 2 - scared.y)
+                pace = bolt
+            } else if animal.species.isPredator {
+                // A predator goes where the eating is.
+                if let meal = nearest(to: animal.position, among: prey.map(\.position),
+                                      within: 1, ignoringSelf: animal.position) {
+                    animal.activity = .stalking
+                    target = meal
+                    pace = stride * 1.3
+                } else {
+                    animal.activity = .wary
+                    target = centre
+                    pace = stride
+                }
+            } else {
+                // Grazing: with the herd, but not on top of it.
+                animal.activity = .grazing
+                let wander = 0.06
+                target = LocalPoint(x: centre.x + (rng.nextUnit() - 0.5) * wander * 2,
+                                    y: centre.y + (rng.nextUnit() - 0.5) * wander * 2)
+                pace = stride
+            }
+            animal.position = step(from: animal.position, toward: target, by: pace)
+            moved.append(animal)
+        }
+
+        var updated = map
+        updated.wildlife.animals = moved
+        return updated
+    }
+
+    /// The nearest of `points` within `within`, skipping the one at `ignoringSelf`.
+    static func nearest(to p: LocalPoint, among points: [LocalPoint],
+                        within: Double, ignoringSelf: LocalPoint) -> LocalPoint? {
+        var best: LocalPoint?
+        var bestD = within * within
+        for q in points {
+            let dx = q.x - p.x, dy = q.y - p.y
+            let d = dx * dx + dy * dy
+            guard d > 1e-9 else { continue }   // itself
+            if d < bestD { bestD = d; best = q }
+        }
+        return best
+    }
+
+    /// One step toward a point, kept on the map.
+    static func step(from: LocalPoint, toward: LocalPoint, by distance: Double) -> LocalPoint {
+        let dx = toward.x - from.x, dy = toward.y - from.y
+        let length = (dx * dx + dy * dy).squareRoot()
+        guard length > 1e-6 else { return from }
+        let t = min(1, distance / length)
+        return LocalPoint(x: min(0.97, max(0.03, from.x + dx * t)),
+                          y: min(0.97, max(0.03, from.y + dy * t)))
+    }
+
     /// Lets the wild breed back toward what the land can feed. Only mature,
     /// healthy prey breed, and only while there is room — so a valley hunted
     /// flat stays flat until something is left to breed from.
@@ -196,14 +314,22 @@ public enum AnimalEngine {
         }
         guard !breeders.isEmpty else { return map }
 
+        // Half the healthy breeding stock brings something through the spring.
+        // A third was too few once hunters started taking *named* animals
+        // rather than a fraction of a number: the wild could not put back what
+        // a two-hunter colony took out, and a valley slid to the hunting floor
+        // and stayed there.
         let room = capacity - living
-        let born = min(room, max(1, breeders.count / 3))
+        let born = min(room, max(1, breeders.count / 2))
         var updated = map
         for _ in 0..<born {
             let parent = breeders[Int(rng.nextUnit() * Double(breeders.count)) % breeders.count]
+            let id = rng.nextUUID()
             updated.wildlife.animals.append(
-                Animal(id: rng.nextUUID(), species: parent.species,
-                       sex: rng.nextUnit() < 0.5 ? .male : .female, age: 0))
+                Animal(id: id, species: parent.species,
+                       sex: rng.nextUnit() < 0.5 ? .male : .female, age: 0,
+                       // A calf is born where its mother is standing.
+                       position: parent.position))
         }
         return updated
     }

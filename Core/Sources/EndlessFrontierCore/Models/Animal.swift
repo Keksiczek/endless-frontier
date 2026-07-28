@@ -130,6 +130,17 @@ public struct AnimalCondition: Codable, Sendable, Equatable, Identifiable {
     }
 }
 
+/// What a beast is presently up to. A far lighter mind than a colonist's — an
+/// animal has no schedule, no post and no trade — but enough of one that the
+/// valley is inhabited rather than decorated.
+public enum AnimalActivity: String, Codable, Sendable {
+    case grazing    // head down, drifting with the herd
+    case wary       // something is wrong; it has stopped to look
+    case fleeing    // running, and not stopping to think about where
+    case stalking   // a predator closing on something
+    case resting
+}
+
 /// One wild animal: a life the world can eventually run the way it runs a pawn.
 public struct Animal: Codable, Sendable, Equatable, Identifiable {
     public let id: UUID
@@ -143,9 +154,24 @@ public struct Animal: Codable, Sendable, Equatable, Identifiable {
     public var body: [AnimalBodyPart]
     public var conditions: [AnimalCondition]
 
+    /// Where it is, in the same normalised space everything else on the local
+    /// map lives in.
+    ///
+    /// It used to be nowhere. The canvas derived a position from the animal's
+    /// id and the frame clock, which is the right answer for a *decoration* and
+    /// the wrong one for a thing with a body: a deer could not be somewhere a
+    /// hunter walks to, could not be startled off a field, could not be found
+    /// dead where it fell. Storing it is what lets the hunt be an encounter
+    /// between two things that are in the same place.
+    public var position: LocalPoint
+    /// What it is doing right now — set by the think-step, read by the canvas.
+    public var activity: AnimalActivity
+
     public init(id: UUID, species: AnimalSpecies, sex: AnimalSex, age: Int,
                 health: Double? = nil, body: [AnimalBodyPart]? = nil,
-                conditions: [AnimalCondition] = []) {
+                conditions: [AnimalCondition] = [],
+                position: LocalPoint = LocalPoint(x: 0.5, y: 0.5),
+                activity: AnimalActivity = .grazing) {
         self.id = id
         self.species = species
         self.sex = sex
@@ -153,6 +179,45 @@ public struct Animal: Codable, Sendable, Equatable, Identifiable {
         self.health = health ?? species.baseHealth
         self.body = body ?? species.bodyPlan.map { AnimalBodyPart(kind: $0) }
         self.conditions = conditions
+        self.position = position
+        self.activity = activity
+    }
+
+    // MARK: - Codable (resilient: beasts stood nowhere before they roamed)
+
+    private enum CodingKeys: String, CodingKey {
+        case id, species, sex, age, health, body, conditions, position, activity
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        species = try c.decode(AnimalSpecies.self, forKey: .species)
+        sex = try c.decode(AnimalSex.self, forKey: .sex)
+        age = try c.decode(Int.self, forKey: .age)
+        health = try c.decode(Double.self, forKey: .health)
+        body = try c.decode([AnimalBodyPart].self, forKey: .body)
+        conditions = try c.decode([AnimalCondition].self, forKey: .conditions)
+        // An older save's beasts have never stood anywhere. Scattering them from
+        // their own id puts the herd back on the map without a fresh RNG draw,
+        // which would shift every roll after it.
+        position = try c.decodeIfPresent(LocalPoint.self, forKey: .position)
+            ?? Animal.scatter(id)
+        activity = try c.decodeIfPresent(AnimalActivity.self, forKey: .activity) ?? .grazing
+    }
+
+    /// A stable spot on the map for a beast that has never had one, spread over
+    /// the middle distance and clear of the built heart.
+    public static func scatter(_ id: UUID) -> LocalPoint {
+        var h: UInt64 = 0xCBF2_9CE4_8422_2325
+        let b = id.uuid
+        for byte in [b.0, b.1, b.2, b.3, b.4, b.5, b.6, b.7] {
+            h = (h ^ UInt64(byte)) &* 0x0100_0000_01B3
+        }
+        let angle = Double(h % 6283) / 1000
+        let radius = 0.18 + Double((h >> 20) % 1000) / 1000 * 0.22
+        return LocalPoint(x: min(0.97, max(0.03, 0.5 + cos(angle) * radius)),
+                          y: min(0.97, max(0.03, 0.52 + sin(angle) * radius * 0.82)))
     }
 
     public var isAlive: Bool { health > 0 && bodyPart(.head)?.missing != true && bodyPart(.torso)?.missing != true }
@@ -164,6 +229,42 @@ public struct Animal: Codable, Sendable, Equatable, Identifiable {
     /// Can it still stand? A quadruped needs at least two legs.
     public var canWalk: Bool {
         body.filter { $0.kind.isLeg && !$0.missing }.count >= 2
+    }
+
+    /// How much meat a carcass of this kind is worth. A bear is a season's
+    /// eating and a hare is a supper, and until the hunt took *named animals*
+    /// there was no way for that to be true.
+    public var meatYield: Double {
+        let size: Double
+        switch species {
+        case .bear: size = 34
+        case .boar: size = 22
+        case .deer: size = 20
+        case .wolf: size = 12
+        case .fox: size = 6
+        case .hare: size = 3
+        }
+        // A half-starved beast carries less on it.
+        return size * (0.55 + 0.45 * min(1, health / species.baseHealth))
+    }
+
+    /// Whether this is a beast that fights back. A cornered boar is the reason
+    /// hunting is dangerous work and not a harvest.
+    public var isDangerous: Bool {
+        switch species {
+        case .bear, .boar, .wolf: return true
+        case .deer, .fox, .hare: return false
+        }
+    }
+
+    /// What it does to a hunter who gets it wrong, before armour.
+    public var retaliation: Double {
+        switch species {
+        case .bear: return 34
+        case .boar: return 20
+        case .wolf: return 15
+        default: return 0
+        }
     }
 
     /// Wounds a body part; when its condition hits zero the part is lost, and if
@@ -188,13 +289,19 @@ public enum AnimalFactory {
     static let ticksPerYear = 60
 
     /// A group of one species, sized to `count`. Deterministic from `rng`.
+    ///
+    /// They are put down as a *group*: one loose gathering place, with each
+    /// beast a short step from it, because a herd is a herd and six deer
+    /// scattered over the whole valley is six lone deer.
     public static func herd(_ species: AnimalSpecies, count: Int,
                             rng: inout SeededRNG) -> [Animal] {
         (0..<max(0, count)).map { _ in
             let sex: AnimalSex = rng.nextUnit() < 0.5 ? .male : .female
             let years = 1 + rng.nextUnit() * 4          // yearling to a few years
-            return Animal(id: rng.nextUUID(), species: species,
-                          sex: sex, age: Int(years * Double(ticksPerYear)))
+            let id = rng.nextUUID()
+            return Animal(id: id, species: species,
+                          sex: sex, age: Int(years * Double(ticksPerYear)),
+                          position: Animal.scatter(id))
         }
     }
 

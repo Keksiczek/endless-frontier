@@ -18,6 +18,7 @@ enum SettlementFigures {
     static func draw(
         pawn: Pawn, pose: AgentMotion.Pose, at p: CGPoint,
         time: Double, ticksPerYear: Int, selected: Bool, zoom: CGFloat = 1,
+        ranged: Bool = false,
         context: inout GraphicsContext
     ) {
         let years = pawn.ageYears(ticksPerYear: ticksPerYear)
@@ -91,8 +92,14 @@ enum SettlementFigures {
             lineWidth: 1.1 * scale)
         }
 
-        // The tool of the trade, in the working hand.
-        if working {
+        // The tool of the trade, in the working hand — or the weapon, when the
+        // day has been interrupted by something that wants killing.
+        // A hunter at work is a hunter fighting something: the bow comes up the
+        // same way whether the thing in front of them is a raider or a deer.
+        if pose.activity == .fighting || (working && pawn.assignedWork == .hunting) {
+            fightingArms(ranged: ranged, at: CGPoint(x: handX, y: handY),
+                         scale: scale, alpha: alpha, time: time, context: &context)
+        } else if working {
             tool(for: pawn.assignedWork, at: CGPoint(x: handX, y: handY),
                  scale: scale, alpha: alpha, time: time, context: &context)
         }
@@ -133,6 +140,77 @@ enum SettlementFigures {
                 .font(.system(size: 6, weight: .semibold))
                 .foregroundStyle(Theme.bone)
             context.draw(context.resolve(name), at: CGPoint(x: p.x, y: headY - 8))
+        }
+    }
+
+    /// What a colonist does with their hands when there is fighting to do.
+    ///
+    /// The same distinction the simulation already draws — `CombatEngine`
+    /// splits a colony's strength into what it looses and what it swings —
+    /// finally visible on the person doing it. Someone with a bow is drawn
+    /// nocking, drawing and loosing on a cycle; someone without is drawn
+    /// swinging. It is also what a hunter does, because a hunt is the same
+    /// question asked of a deer: reach it from over there, or walk up to it.
+    private static func fightingArms(
+        ranged: Bool, at hand: CGPoint, scale: CGFloat, alpha: Double,
+        time: Double, context: inout GraphicsContext
+    ) {
+        let wood = Color(red: 0.60, green: 0.48, blue: 0.34).opacity(alpha)
+        let iron = Color(red: 0.80, green: 0.83, blue: 0.88).opacity(alpha)
+
+        guard ranged else {
+            // A blade, swung: back over the shoulder, then down and through.
+            let swing = sin(time * 7)
+            let angle = -2.3 + swing * 1.5
+            let reach = 4.2 * scale
+            context.stroke(Path { p in
+                p.move(to: hand)
+                p.addLine(to: CGPoint(x: hand.x + CGFloat(cos(angle)) * reach,
+                                      y: hand.y + CGFloat(sin(angle)) * reach))
+            }, with: .color(iron), style: StrokeStyle(lineWidth: 1.1 * scale, lineCap: .round))
+            // The arc it cuts, faint, so the swing reads at a glance.
+            context.stroke(Path { p in
+                p.addArc(center: hand, radius: reach,
+                         startAngle: .radians(angle - 0.5), endAngle: .radians(angle),
+                         clockwise: false)
+            }, with: .color(Theme.bone.opacity(alpha * 0.22)), lineWidth: 0.8 * scale)
+            return
+        }
+
+        // A bow, on a cycle: nock, draw, loose, and the arrow away.
+        let cycle = (time * 1.6).truncatingRemainder(dividingBy: 1)
+        let draw = cycle < 0.7 ? cycle / 0.7 : 0            // pulled back…
+        let loosed = cycle >= 0.7 ? (cycle - 0.7) / 0.3 : 0 // …then gone
+        let limb = 2.8 * scale
+
+        context.stroke(Path { p in
+            p.addArc(center: hand, radius: limb,
+                     startAngle: .degrees(-58), endAngle: .degrees(58), clockwise: false)
+        }, with: .color(wood), lineWidth: 0.9 * scale)
+        // The string, bent back as far as the draw has come.
+        let pull = CGFloat(draw) * 1.7 * scale
+        let limbAngle = 58.0 * Double.pi / 180
+        let top = CGPoint(x: hand.x + limb * CGFloat(cos(-limbAngle)),
+                          y: hand.y + limb * CGFloat(sin(-limbAngle)))
+        let bottom = CGPoint(x: hand.x + limb * CGFloat(cos(limbAngle)),
+                             y: hand.y + limb * CGFloat(sin(limbAngle)))
+        context.stroke(Path { p in
+            p.move(to: top)
+            p.addQuadCurve(to: bottom, control: CGPoint(x: hand.x - pull, y: hand.y))
+        }, with: .color(Theme.boneDim.opacity(alpha)), lineWidth: 0.5)
+        // The arrow: on the string while drawing, in the air after.
+        if loosed > 0 {
+            let flight = CGFloat(loosed) * 9 * scale
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x + limb + flight, y: hand.y))
+                p.addLine(to: CGPoint(x: hand.x + limb + flight + 2.2 * scale, y: hand.y))
+            }, with: .color(Theme.bone.opacity(alpha * (1 - Double(loosed) * 0.5))),
+               style: StrokeStyle(lineWidth: 0.6 * scale, lineCap: .round))
+        } else {
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x - pull, y: hand.y))
+                p.addLine(to: CGPoint(x: hand.x + limb * 1.1, y: hand.y))
+            }, with: .color(Theme.bone.opacity(alpha * 0.8)), lineWidth: 0.5 * scale)
         }
     }
 

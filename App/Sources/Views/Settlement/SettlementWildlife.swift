@@ -14,10 +14,19 @@ enum SettlementWildlife {
     /// The most deer ever drawn — a full herd, thinned as hunters cull it.
     static let maxVisibleDeer = 5
 
-    /// Where the herd is grazing right now: a slow figure-eight around the
-    /// valley's middle distance, well clear of the built heart. Hunters anchor
-    /// to this too, so the figures chase the same deer you see.
+    /// Where the herd is right now. Hunters anchor to this, so the figures
+    /// chase the same deer you see.
+    ///
+    /// Where there are real beasts this is simply *where they are* — the wild
+    /// walks its own valley now, and a herd worked hard has genuinely moved to
+    /// the far side of it. The old slow figure-eight is left as the answer for
+    /// maps generated before the wild had bodies.
     static func herdCenter(map: LocalMap, time: Double) -> LocalPoint {
+        let prey = map.wildlife.animals.filter { !$0.species.isPredator }
+        if !prey.isEmpty {
+            return LocalPoint(x: prey.reduce(0) { $0 + $1.position.x } / Double(prey.count),
+                              y: prey.reduce(0) { $0 + $1.position.y } / Double(prey.count))
+        }
         let seed = Double(map.terrainSeed % 977) / 977 * 2 * .pi
         let t = time / 90 + seed          // one slow lap ≈ a minute and a half
         return LocalPoint(
@@ -30,67 +39,95 @@ enum SettlementWildlife {
     /// for a hard winter — and the abstract herd is only the fallback for saves
     /// that predate them. Everything is skipped under fog.
     static func draw(
-        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double
+        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double,
+        zoom: CGFloat = 1
     ) {
         guard map.wildlife.animals.isEmpty else {
-            entities(&context, rect: rect, map: map, time: time)
+            entities(&context, rect: rect, map: map, time: time, zoom: zoom)
             return
         }
         abstractHerd(&context, rect: rect, map: map, time: time)
     }
 
-    /// Every beast the simulation is actually running.
+    /// How big each beast is drawn, in screen points at zoom 1.
     ///
-    /// Position is presentation, exactly as it is for colonists: derived from
-    /// `(animal.id, frame clock)` and never stored, so the deterministic Core
-    /// stays untouched. Prey graze around the herd's slow lap of the valley;
-    /// predators keep to the tree line.
+    /// Sized against the *colonists*, not against the canvas. Everything here
+    /// used to be a fraction of the map's short side, which made a deer wider
+    /// than a house: a one-tile hut covers about 2% of the canvas and a deer
+    /// was drawn at 2.7% of it. Animals are people-sized things standing among
+    /// people-sized things, so they take their scale from the same place people
+    /// do — a deer a little lower than a colonist, a hare you have to look for,
+    /// a bear you do not.
+    static func size(_ species: AnimalSpecies) -> CGFloat {
+        switch species {
+        case .hare: return 1.5
+        case .fox:  return 2.2
+        case .boar: return 3.0
+        case .wolf: return 3.2
+        case .deer: return 3.4
+        case .bear: return 4.6
+        }
+    }
+
+    /// Every beast the simulation is actually running, standing where the
+    /// simulation says it is standing.
+    ///
+    /// This used to be derived from `(animal.id, frame clock)` — the right
+    /// answer for decoration and the wrong one for a thing with a body. The
+    /// wild has positions now (`AnimalEngine.roam`), so a deer is somewhere a
+    /// hunter can walk to, bolts when one gets close, and lies where it fell.
+    /// The frame clock is left with what it is actually for: the breathing,
+    /// the gait, the head coming up.
     private static func entities(
-        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double
+        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double,
+        zoom: CGFloat
     ) {
-        let unit = min(rect.width, rect.height)
-        let herd = herdCenter(map: map, time: time)
-        for animal in map.wildlife.animals {
+        // Back to front, so a beast in front overlaps the one behind it.
+        for animal in map.wildlife.animals.sorted(by: { $0.position.y < $1.position.y }) {
             let phase = Double(hash(animal.id) % 6199) / 6199 * 2 * .pi
-            // A limping beast covers less ground; a sick one drifts.
-            let vigour = animal.canWalk ? 1.0 : 0.35
-            let position: LocalPoint
-            if animal.species.isPredator {
-                let angle = time * 0.05 * vigour + phase
-                position = LocalPoint(x: 0.5 + cos(angle) * 0.42,
-                                      y: 0.52 + sin(angle) * 0.36)
-            } else {
-                position = LocalPoint(
-                    x: herd.x + cos(time * 0.18 * vigour + phase) * 0.035,
-                    y: herd.y + sin(time * 0.14 * vigour + phase * 1.7) * 0.028)
-            }
-            guard map.isExplored(position) else { continue }
-            let at = SettlementRenderer.point(position, in: rect)
+            guard map.isExplored(animal.position) else { continue }
+            let at = SettlementRenderer.point(animal.position, in: rect)
             let ailing = !animal.conditions.isEmpty
                 || animal.health < animal.species.baseHealth * 0.55
+            // A running beast is drawn running: the gait clock speeds up, which
+            // is the cheapest way for "that herd has been startled" to read at
+            // a glance.
+            let urgency = animal.activity == .fleeing ? 3.4
+                : (animal.activity == .stalking ? 1.8 : 1.0)
+            let beat = time * urgency
+            let s = size(animal.species) * zoom
 
             switch animal.species {
             case .deer:
-                deer(&context, at: at, s: unit * 0.010, time: time, phase: phase)
+                deer(&context, at: at, s: s, time: beat, phase: phase)
             case .boar:
-                boar(&context, at: at, s: unit * 0.009, time: time, phase: phase)
+                boar(&context, at: at, s: s, time: beat, phase: phase)
             case .hare:
-                hare(&context, at: at, s: unit * 0.006, time: time, phase: phase)
+                hare(&context, at: at, s: s, time: beat, phase: phase)
             case .fox:
-                prowler(&context, at: at, s: unit * 0.007, time: time, hungry: false)
+                prowler(&context, at: at, s: s, time: beat, hungry: false)
             case .wolf:
-                prowler(&context, at: at, s: unit * 0.011, time: time, hungry: ailing)
+                prowler(&context, at: at, s: s, time: beat, hungry: ailing)
             case .bear:
-                prowler(&context, at: at, s: unit * 0.015, time: time, hungry: ailing)
+                prowler(&context, at: at, s: s, time: beat, hungry: ailing)
+            }
+            // Something has spooked it: a mark over the head, the way a herd
+            // lifting all at once tells you a wolf came down the valley.
+            if animal.activity == .fleeing {
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: at.x, y: at.y - s * 2.2))
+                    p.addLine(to: CGPoint(x: at.x, y: at.y - s * 1.5))
+                }, with: .color(Theme.bone.opacity(0.55)),
+                   style: StrokeStyle(lineWidth: max(0.8, zoom), lineCap: .round))
             }
 
             // A beast that is hurt, ill or frozen says so, so a hard winter is
             // something you can see happening rather than read about later.
             if ailing {
+                let r = max(0.9, zoom * 0.9)
                 context.fill(
-                    Path(ellipseIn: CGRect(x: at.x - unit * 0.0022,
-                                           y: at.y - unit * 0.018,
-                                           width: unit * 0.0044, height: unit * 0.0044)),
+                    Path(ellipseIn: CGRect(x: at.x - r, y: at.y - s * 2.4,
+                                           width: r * 2, height: r * 2)),
                     with: .color(Theme.danger.opacity(0.75)))
             }
         }
