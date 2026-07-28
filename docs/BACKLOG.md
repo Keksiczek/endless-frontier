@@ -19,8 +19,8 @@ Last updated: 2026-07-28 (evening).
 | 1.6 | **Mineable rock**: a massif of stone blocks you dig into | **done** |
 | 1.7 | Pawn **needs that bite**: hunger, rest, warmth | **done** |
 | 1.8 | A house is a **household**; sleeping rough hurts | **done** |
-| 1.9 | Buildings are the truth: condition, damage, repair | todo |
-| 1.10 | **Haul jobs** — felled timber and cut stone carried to a store | todo |
+| 1.9 | **Haul jobs** — felled timber and cut stone carried to a store | **done** |
+| 1.10 | Buildings are the truth: condition, damage, repair | todo |
 | 1.11 | Animals you can **tame**, and beasts of burden | todo |
 | 1.12 | Colonists carry **wounds by body part**, like animals already do | todo |
 
@@ -44,11 +44,13 @@ Last updated: 2026-07-28 (evening).
 
 | # | Thing | State |
 |---|---|---|
-| 3.1 | **Supply** between your own settlements | todo |
-| 3.2 | **Trade** you can watch — caravans as figures on the road | todo |
-| 3.3 | **Diplomacy** arriving as envoys rather than as a panel | todo |
-| 3.4 | More **events**, each happening *somewhere* to *someone* | todo |
-| 3.5 | More **POIs** and more **items** | todo |
+| 3.1 | **Trade** you can watch — traders with mules walking in | **done** |
+| 3.2 | **Diplomacy** arriving as envoys rather than as a panel | **done** |
+| 3.3 | Refugees from a neighbour's bad winter | **done** (they arrive; taking them in is still todo) |
+| 3.4 | **Supply** between your own settlements — a caravan you can see leave | todo |
+| 3.5 | A visit the player can **answer** — accept the refugees, refuse the envoy | todo |
+| 3.6 | More **events**, each happening *somewhere* to *someone* | todo |
+| 3.7 | More **POIs** and more **items** | todo |
 
 ## 4. Scale — a colony of sixty-five must still be a place
 
