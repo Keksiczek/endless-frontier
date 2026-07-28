@@ -108,11 +108,22 @@ public enum EffectApplier {
         record.record(.charge, step: 0, amount: strength)
         record.record(.clash, step: 1, amount: effectiveDefense)
 
+        // Who turns out to meet them, garrison first — the same line the canvas
+        // sends running to the wall.
+        let muster = s.settlements[capital].pawns
+            .filter { $0.health > 0 && !$0.isBroken && !$0.isAway }
+            .sorted { ($0.assignedWork == .garrison ? 0 : 1) < ($1.assignedWork == .garrison ? 0 : 1) }
+            .prefix(12).map(\.id)
+
         if effectiveDefense >= softened {
             record.record(.repelled, step: 2)
+            let id = rng.nextUUID()
+            let approach = rng.nextUnit() * 2 * .pi
             s.settlements[capital].lastBattle = record.finish(
-                id: rng.nextUUID(), tick: s.tick,
-                attackerName: raiderName, defenderName: defenderName, repelled: true)
+                id: id, tick: s.tick,
+                attackerName: raiderName, defenderName: defenderName, repelled: true,
+                approach: approach, attackers: BattleResolver.drawnStrength(strength),
+                line: Array(muster))
             s.settlements[capital].stats = s.settlements[capital].stats.applying(delta: 6, to: "morale")
             s.globalStats = s.globalStats.applying(delta: -8, to: "threatLevel")
             s.settlements[capital].journal.append(tick: s.tick, kind: .danger, text: LocalizedText(values: [
@@ -156,9 +167,13 @@ public enum EffectApplier {
             s.settlements[capital].stats = s.settlements[capital].stats.applying(delta: -10 * Double(deaths), to: "morale")
         }
 
+        let id = rng.nextUUID()
+        let approach = rng.nextUnit() * 2 * .pi
         s.settlements[capital].lastBattle = record.finish(
-            id: rng.nextUUID(), tick: s.tick,
-            attackerName: raiderName, defenderName: defenderName, repelled: false)
+            id: id, tick: s.tick,
+            attackerName: raiderName, defenderName: defenderName, repelled: false,
+            approach: approach, attackers: BattleResolver.drawnStrength(strength),
+            line: Array(muster))
         // The day, on the record — a raid resolved off-screen still tells you.
         let entry: LocalizedText
         if deaths > 0 {

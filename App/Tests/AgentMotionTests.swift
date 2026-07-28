@@ -146,14 +146,42 @@ struct WorkplacePostTests {
     }
 
     /// Several scholars on one roster should fill the floor, not stack on a pin.
+    ///
+    /// They are seated by the roster now, not by a hash of who they are: a hash
+    /// spreads people *on average*, which is no help at all in a two-seat room,
+    /// where it put both scholars on the same stool about half the time. So the
+    /// test asks the real question — two names on the books, two desks — rather
+    /// than the old one of whether the same scholar moves when you re-roll a
+    /// number they should not depend on.
     @Test("Two colonists posted to the same building stand apart")
     func postedWorkersSpreadAcrossTheFloor() {
         let reg = registryWithLibrary()
-        let scene = AgentMotion.Scene(settlement: town(posted: true), registry: reg)
-        let pawn = town(posted: true).pawns[0]
-        let a = AgentMotion.workplace(for: pawn, map: emptyMap(), scene: scene, seed: 11)
-        let b = AgentMotion.workplace(for: pawn, map: emptyMap(), scene: scene, seed: 987_654)
+        let town = crowdedLibraryTown()
+        let scene = AgentMotion.Scene(settlement: town, registry: reg)
+        let a = AgentMotion.workplace(for: town.pawns[0], map: emptyMap(), scene: scene, seed: 11)
+        let b = AgentMotion.workplace(for: town.pawns[1], map: emptyMap(), scene: scene, seed: 11)
         #expect(a != b)
+    }
+
+    /// The same colonist stands at the same desk from one frame to the next —
+    /// a seat is a seat, not something re-rolled every time you look.
+    @Test("A posted colonist keeps their own station")
+    func aStationIsStable() {
+        let reg = registryWithLibrary()
+        let town = crowdedLibraryTown()
+        let scene = AgentMotion.Scene(settlement: town, registry: reg)
+        let first = AgentMotion.workplace(for: town.pawns[0], map: emptyMap(), scene: scene, seed: 3)
+        let again = AgentMotion.workplace(for: town.pawns[0], map: emptyMap(), scene: scene, seed: 77)
+        #expect(first == again)
+    }
+
+    /// Two scholars, both on the library's books.
+    private func crowdedLibraryTown() -> Settlement {
+        let second = UUID(uuidString: "00000000-0000-0000-D0D0-000000000003")!
+        var s = town(posted: true)
+        s.pawns.append(Pawn(id: second, name: "Milo", assignedWork: .research))
+        s.colony?.placements[0].assignedPawnIDs = [scholarID, second]
+        return s
     }
 
     /// Without a post the colonist still has to end up somewhere sensible —

@@ -61,7 +61,7 @@ struct BattleReportCard: View {
     /// Who came for whom.
     private var engagementLine: some View {
         HStack(spacing: 6) {
-            Text(battle.attackerName)
+            Text(battle.attacker(AppStrings.language))
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Theme.text)
             Image(systemName: "arrow.right").font(.caption2).foregroundStyle(Theme.textDim)

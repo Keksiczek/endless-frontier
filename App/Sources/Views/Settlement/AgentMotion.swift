@@ -69,6 +69,7 @@ enum AgentMotion {
         case resting       // broken/sick — home all day
         case travelling    // out on the road to a landmark, or coming back
         case expedition    // at the landmark, working it
+        case fighting      // called out of the day and into the line
     }
 
     /// A colonist's place and doing at an instant.
@@ -93,15 +94,29 @@ enum AgentMotion {
         let halfW: Double
         let halfH: Double
         let stations: [LocalPoint]
+        /// Which station each colonist on the roster holds.
+        ///
+        /// Picking a station by hashing the colonist put two of them on the
+        /// same stool about half the time in a two-seat room — a hash spreads
+        /// things *on average*, which is no use at all when there are two of
+        /// them. The roster is an order, so it is the seating plan: the first
+        /// name on the building's books takes the first station.
+        let byPawn: [UUID: LocalPoint]
 
         init(_ b: SettlementRenderer.NormalizedBuilding) {
             center = b.center
             halfW = b.footprintW / 2
             halfH = b.footprintH / 2
-            stations = SettlementInterior
+            let places = SettlementInterior
                 .stationSlots(for: b.glyph, seed: b.seed, stations: b.assignedPawnIDs.count)
                 .map { LocalPoint(x: b.center.x + $0.dx * b.footprintW,
                                   y: b.center.y + $0.dy * b.footprintH) }
+            stations = places
+            var seating: [UUID: LocalPoint] = [:]
+            for (index, id) in b.assignedPawnIDs.enumerated() where !places.isEmpty {
+                seating[id] = places[index % places.count]
+            }
+            byPawn = seating
         }
     }
 
@@ -133,6 +148,9 @@ enum AgentMotion {
         /// A tick is a real minute; without the fraction a walking party would
         /// cross the valley in half a dozen jumps.
         let continuousTick: Double
+        /// The fight going on right now, if one is. Everyone in its line is
+        /// pulled out of their day and sent to it.
+        let battle: (log: BattleLog, progress: Double)?
 
         init(settlement: Settlement, registry: GameDataRegistry, continuousTick: Double = 0) {
             let layout = SettlementRenderer.normalizedLayout(settlement: settlement, registry: registry)
@@ -169,6 +187,7 @@ enum AgentMotion {
             }
             self.expeditions = settlement.expeditions
             self.continuousTick = continuousTick
+            self.battle = SettlementBattle.live(settlement, continuousTick: continuousTick)
             var positions: [Int: LocalPoint] = [:]
             for poi in settlement.localMap?.pois ?? [] {
                 positions[poi.id] = poi.position
@@ -198,8 +217,28 @@ enum AgentMotion {
     }
 
     /// Where a colonist is (and what they're doing) at `time`.
+    ///
+    /// A fight outranks everything. While one is running, anyone the engine
+    /// mustered into the line stops living their day and runs to their post —
+    /// from wherever they happened to be, which is why the farmer arrives from
+    /// the field and the smith from the bench. This is the whole of "the
+    /// garrison converges": the colonist is not drawn a second time as a
+    /// combat marker, they simply go where the fighting is.
     static func pose(for pawn: Pawn, map: LocalMap, scene: Scene,
                      time: Double, ticksPerYear: Int) -> Pose {
+        let base = dailyPose(for: pawn, map: map, scene: scene,
+                             time: time, ticksPerYear: ticksPerYear)
+        guard let battle = scene.battle,
+              let post = SettlementBattle.station(
+                for: pawn.id, log: battle.log, progress: battle.progress,
+                from: base.position) else { return base }
+        return Pose(position: post.position, activity: .fighting,
+                    stride: post.arrived ? 0.3 : 1)
+    }
+
+    /// Where a colonist would be if nothing were happening — the ordinary day.
+    private static func dailyPose(for pawn: Pawn, map: LocalMap, scene: Scene,
+                                  time: Double, ticksPerYear: Int) -> Pose {
         let seed = hash(pawn.id)
         // Someone out at the ruins is not living the village day at all. The
         // road outranks the schedule.
@@ -423,7 +462,10 @@ enum AgentMotion {
         // keeps this roster in step with each colonist's trade, so a smith on
         // the workshop's books is drawn standing in the workshop — the canvas
         // is showing the simulation's own answer, not guessing one.
-        if let post = scene.posts[pawn.id] { return spot(in: post, seed: seed) }
+        if let post = scene.posts[pawn.id] {
+            // Their own seat if the roster gave them one, else somewhere on the lot.
+            return post.byPawn[pawn.id] ?? spot(in: post, seed: seed)
+        }
 
         switch pawn.assignedWork {
         case .hunting:
@@ -490,6 +532,7 @@ enum AgentMotion {
         case .resting: return cs ? "Stůně doma" : "Laid up at home"
         case .travelling: return cs ? "Na cestě mimo osadu" : "On the road, away from the settlement"
         case .expedition: return cs ? "Pracuje na výpravě" : "Working the site"
+        case .fighting: return cs ? "V řadě, brání osadu" : "In the line, defending the settlement"
         case .working:
             switch work {
             case .farming: return cs ? "Pracuje na poli" : "Working the field"
@@ -527,6 +570,9 @@ enum AgentMotion {
         case .playing: return 0.022
         case .walking, .travelling: return 0
         case .expedition: return 0.012
+        // Holding a line is not standing still — but the drift is small, or
+        // the rank dissolves while it is supposed to be holding.
+        case .fighting: return 0.004
         }
     }
 
@@ -551,8 +597,14 @@ enum AgentMotion {
     private static func spot(in site: WorkSite, seed: UInt64) -> LocalPoint {
         // A station if the room has one: standing at the bench beats standing
         // somewhere on the lot, and it is the same bench the renderer drew.
+        // Nudged per colonist, because this path is for people the roster did
+        // *not* seat — two of them picking the same bench should still read as
+        // two people at a bench rather than as one.
         if !site.stations.isEmpty {
-            return clampPoint(site.stations[Int(seed % UInt64(site.stations.count))])
+            let station = site.stations[Int(seed % UInt64(site.stations.count))]
+            return clampPoint(LocalPoint(
+                x: station.x + (unit(seed &* 7) - 0.5) * site.halfW * 0.5,
+                y: station.y + (unit(seed &* 13) - 0.5) * site.halfH * 0.5))
         }
         let ox = (unit(seed &* 7) - 0.5) * 1.6 * site.halfW
         let oy = (unit(seed &* 13) - 0.5) * 1.6 * site.halfH

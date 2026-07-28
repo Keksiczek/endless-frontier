@@ -97,9 +97,21 @@ public enum WildlifeEngine {
                 let killed = s.pawns[victim].health <= 0
                 record.record(killed ? .death : .wound, step: 2, pawnID: pawnID,
                               pawnName: name, amount: attackWound * mult)
+                // Whoever is standing watch runs at it, with the victim at the
+                // front — the mauling happens where the line is, not off in the
+                // journal. Everything the canvas needs is settled here so the
+                // renderer never has to guess at a fight it did not see.
+                let watch = s.pawns
+                    .filter { $0.health > 0 && !$0.isBroken && $0.id != pawnID }
+                    .sorted { $0.assignedWork == .garrison && $1.assignedWork != .garrison }
+                    .prefix(4).map(\.id)
+                let id = rng.nextUUID()
+                let approach = rng.nextUnit() * 2 * .pi
                 s.lastBattle = record.finish(
-                    id: rng.nextUUID(), tick: tick,
-                    attackerName: beastName.resolve(.en), defenderName: s.name, repelled: false)
+                    id: id, tick: tick,
+                    attackerName: beastName.resolve(.en), defenderName: s.name, repelled: false,
+                    attackerLabel: beastName, approach: approach,
+                    attackers: 1, line: [pawnID] + watch)
                 if killed {
                     s.pawns.remove(at: victim)
                     s.deathTallies[PawnDeathCause.beast.rawValue, default: 0] += 1
