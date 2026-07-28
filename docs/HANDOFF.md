@@ -1,183 +1,106 @@
-# Handoff — 2026-07-27
+# Handoff — 2026-07-28 (evening)
 
-Where the project stands after a long working session, what changed, what is
-*genuinely* done versus merely built, and what to pick up next.
-
-Branch: `docs/rimworld-layer` (all work pushed; **not yet merged to `main`**).
-Tests: **608 Core**, **41 app** — all green.
+Branch: `docs/rimworld-layer`, everything pushed, **not yet merged to `main`**.
+Tests: **654 Core**, **52 app** — all green.
 
 ---
 
 ## 1. Read this first
 
-Three documents carry the context:
-
 | For | Read |
 |---|---|
+| Everything asked for and its state | `docs/BACKLOG.md` |
 | What the RimWorld-leaning layer *is* | `docs/RIMWORLD_LAYER.md` |
-| The backlog, with everything below scoped out | `docs/NEXT_STEPS.md` |
-| Rules that must not be broken | `CLAUDE.md` §"Key design rules" |
-
-The invariants that actually bite, in the order they have bitten:
-
-1. **Presentation never writes the simulation.** The canvas derives positions
-   from ids and a frame clock. If a renderer change needs new state, the state
-   goes in the engine and the renderer reads it.
-2. **Determinism.** Every roll comes from a seed derived from stable ids. New
-   RNG draws go at the **end** of a generation pass or every existing world
-   changes.
-3. **Saves decode-if-present.** Every field added this session
-   (`work`, `look`, `trees`, `rocks`, `shore`, `usesEntityLand`, `usesEntities`,
-   `currentJob`) is optional with a sane default.
-4. **Offline catch-up is linear.** Anything added to the per-tick path is
-   replayed tens of thousands of times. Two things this session had to move to a
-   cadence (see §4).
-5. **Content is data, and bilingual.** CZ+EN in the same change.
+| Rules that must not be broken | `docs/BACKLOG.md` §"Rules", `CLAUDE.md` |
 
 ---
 
 ## 2. What changed this session
 
-### The land became things
-- `Tree` / `Rock` (`Models/Flora.swift`) with `FloraEngine`: trees grow from age,
-  bank their own axe-work, and are gone when felled; rock is spent and does not
-  return.
-- `Animal` gained a life (`AnimalEngine`): ageing, exposure, illness, death,
-  spring breeding, and a hunt that takes the weakest prey first.
-- **The economy now runs on them.** `FloraEngine.syncDeposits` rewrites each
-  forest/stone/iron/clay deposit's `amount` from what is standing on it, and
-  `ResourceLoop.evolveDeposits` routes logger and miner work through
-  `fell`/`quarry` instead of subtracting from a number. Fields and herb patches
-  keep the old arithmetic.
-- **Hunting reads the animals**: `WildlifeState.herdFraction` is a head count
-  where there are heads to count, so a valley whose deer froze stops feeding its
-  hunters.
+Seven blocks, each committed on its own.
 
-### Work became concrete
-- `LaborEngine.staffBuildings` keeps colonists' *posts* in step with their
-  trades every ten ticks (before, `autoAssign` ran once at founding and never
-  again).
-- `ResourceLoop.staffingFactors` makes the post **pay**: output scales with who
-  is at the bench, floored at `unstaffedFloor` (0.4).
-- `JobBoard` (`Models/Job.swift`) gives every worker a **named piece of work at a
-  named place** — this tree, this outcrop, this scaffold — and the canvas draws
-  them there.
-- `WorkKind.garrison` so walls and barracks can finally be manned.
+### The roof comes off
+`SettlementInterior` — a building is a room: floor, walls with a door, and
+fittings that say what it is for. Every fitting somebody uses is a **station**,
+and the engine's own roster decides who stands at which. Push the camera in and
+the roof fades off; pull back and it is a town of roofs again. The build grid
+widened to 0.52 (in the Core too — `SettlementGeometry.span` and
+`SettlementRenderer.colonySpan` are one number in two files).
 
-### The world got wider and more varied
-- Build grid **12×12 → 18×18**.
-- `depositMix` jittered per map, so two forest valleys differ in composition.
-- `ShoreShape`: coastal maps get a real **sea** along one edge.
-- Eight new scenery kinds and rebuilt per-biome palettes.
+### The earth stops being a bar chart
+`SettlementGround` — the ground was the fog grid painted in, and on a phone
+that grid is three times taller than wide, so every meadow was a green column.
+It now has its own square grain, dovetailing edges, per-tile shade and surface
+texture. Fog falls off in three bands instead of one flat black.
 
-### The screen caught up
-- `SettlementFlora` draws trees and rock; `SettlementWildlife` draws animals as
-  individuals.
-- Building moved **onto the settlement canvas** (`SettlementBuildOverlay`,
-  `BuildBar`): grid, taken ground, a full-size ghost you aim then commit.
-- `SiteOutcomeCard` replaced a hardcoded-English `.alert`.
-- `NotificationScheduler`: local notifications, app-side only, rate-limited,
-  permission asked on *leaving* a session that lasted long enough.
+### A raid you watch people go to
+`BattleLog` carries the staging: how many came, from which bearing, and **who
+turned out**. The mustered pawns stop living their day and run to their post
+from wherever they were. Raiders form up opposite; arrows go out on a volley;
+whoever falls falls at their own place in the line.
+
+### The wild walks its own valley
+`Animal.position` + `AnimalEngine.roam` (cadence 10). `HuntEngine` makes the
+hunt an encounter: a bow kills from cover, a spear means closing with it and a
+boar that survives will gore you. A kill is a carcass — meat and a hide.
+`deerHerd` is now a *view* recomputed from the beasts standing on the map.
+
+### A mountain you dig into
+`StoneField` + `StoneEngine` — solid rock in blocks, worked at the **face**,
+never grows back, blocks building until it is mined. Raised clear of the
+colony's founding ground. Drawn as blocks with a lit top and a cliff outline.
+
+### Everyone gets a bed
+`HouseholdEngine` + `Pawn.homeID` — a colonist holds one dwelling; a house
+sleeps four to a tile. The roofless get half a night's rest and −8 mood until
+somebody builds another house. Colonists shrunk to 0.82 so a household fits in
+its own room.
+
+### Winter bites, and people can say why
+`ComfortEngine` — a warmth need, fed by season, roof, clothes and the colony's
+fires. Exposure costs health. `MoodLedger` recomputes mood as a list of reasons,
+and the colonist screen leads with four need bars and **why** they feel that
+way.
+
+### Notifications that can arrive
+The permission sheet was asked for while backgrounding, where iOS will not show
+it, so nothing was ever queued. Both the ask and the arming happen in the
+foreground now.
 
 ---
 
-## 3. Done vs. built-but-not-wired
-
-Be careful with this distinction — it is where the last three sessions found
-their worst bugs.
+## 3. Done vs. built-but-not-verified
 
 | Thing | State |
 |---|---|
-| Trees/rock drive the deposit economy | **Done and wired** |
-| Hunting reads live animals | **Done and wired** |
-| Staffing affects production | **Done and wired** |
-| Jobs assigned + drawn | **Done and wired** |
-| `FloraEngine.plant` | **Built, never called.** Nothing replants; a cleared wood only regrows from surviving saplings |
-| `AnimalEngine.hunt` yield | Culls animals, but the *food* still comes from the abstract `deerHerd` path |
-| Notifications | **Built and wired, never verified on device.** Needs a real run: permission prompt, delivery, and that the digest doesn't fire while playing |
-| Build-on-canvas | **Built and wired, never played.** Unverified: whether 18×18 tiles are tappable at default zoom |
-| Elevation | **Not started** — scoped in `NEXT_STEPS.md` as its own phase |
+| Interiors, stations, roof fade | **done and seen running** |
+| Ground grain, fog bands | **done and seen running** |
+| Households, beds, rough sleeping | **done, wants a play at 60+ souls** |
+| Warmth and exposure | **done, wants a winter watched** |
+| Mineable stone | **wired, never seen on screen** — needs a mountain map |
+| Live combat | **wired, never seen fire** — needs a raid |
+| Hunt as an encounter | **wired**, but no *visual* of the kill yet |
+| Notifications | **fixed, never verified on device** |
 
 ---
 
-## 4. Traps a newcomer will hit
+## 4. Where I would go next
 
-**The recurring bug shape** — a mechanic that cannot fire because a threshold is
-out of reach of the rate meant to cross it. It has appeared five times now:
-storyteller disasters, animal comfort bands, the condition keep-threshold,
-`autoAssign` running once, and the entity-layer flags below. *When you add a
-threshold, write down the rate that must cross it and check the arithmetic. Then
-test that the mechanic is reachable, not just that it behaves once triggered.*
-
-**`isEmpty` is not "has no layer".** `map.trees.isEmpty` is true both for a map
-that predates trees *and* for a wood logged flat — and treating them alike made a
-cleared forest keep its last value. Hence `LocalMap.usesEntityLand` and
-`WildlifeState.usesEntities`. Any future entity layer needs the same flag.
-
-**Per-tick cost is not free.** Widening the grid made `staffBuildings` superlinear
-over a catch-up and tripped `OfflineCatchUpTests`. Both it and `JobBoard` now run
-every `10` ticks. If you add per-tick work touching placements or pawns, check
-that test.
-
-**Waypoint semantics.** `AgentMotion` waypoints mean "from this hour, do this
-here". They previously read the *next* waypoint's activity, which is why the
-village appeared to socialise all afternoon.
-
-**`ColonyBuilder.workKind` is data-first.** It returns `def.work` if set. Adding a
-`WorkKind` case breaks exhaustive switches in `SocietyEngine.wage`,
-`ColonistsPanel`, `ColonyMapScreen`, `AgentMotion.activityLabel` and
-`SettlementFigures` — the compiler will find all five.
+1. **Haul jobs.** Felled timber and cut stone are goods that appear in a ledger;
+   they should be piles somebody carries. It is the last big hole in "work is a
+   thing done at a place".
+2. **Supply, trade, diplomacy you can watch** — caravans as figures, envoys
+   arriving. The whole world map is still a panel.
+3. **Districts + crowd LOD** — the remaining half of scale (`BACKLOG` §4.3–4.4).
+4. **Buildings as the truth** — condition, damage, repair.
+5. **An app icon.**
 
 ---
 
-## 4b. Fixed from real play (2026-07-28)
-
-Four things a session on a real device found that 649 tests did not:
-
-- **Everyone walked at a different speed.** Travel took a *fixed slice of the
-  day whatever the distance*, so a colonist whose field was next door crept
-  while one across the valley covered twenty times the ground in the same
-  moment. `AgentMotion.walkSpeed` now gives everyone one pace and a long walk
-  simply takes longer.
-- **Colonists were sent into the fog.** `JobBoard` offered work at every tree on
-  the map, charted or not — and the canvas refuses to draw anyone under fog, so
-  they vanished en route. Jobs are now only posted on explored ground.
-- **A trip across your own valley took months.** `travelTicksPerDistance` was 26
-  against a tick that is a real minute and a sixtieth of a year. Now 8.
-- **The control bar wrapped** into "St av ět" and "De tail y" — four worded
-  controls do not fit a phone. They no longer wrap, and shrink to icons when
-  they must.
-
-**Still open from that session** — see `docs/NEXT_PHASE.md`: defence is
-invisible (nobody runs to the walls), battle visuals are placeholder blobs, and
-colonists huddle at the centre of town.
-
-## 5. Next steps, in the order I would take them
-
-1. **Play it.** Two sessions of changes have not been seen running. Specifically:
-   is 18×18 legible and tappable; do the ghost + build bar make sense; do trees
-   and animals read at default zoom; does the sea look like a sea.
-2. **Replanting** (`FloraEngine.plant` has no caller). Without it a colony can
-   permanently deforest its valley, which may be the right game — but it should
-   be a decision, not an oversight.
-3. **Hunting yield from the kill**, so `deerHerd` can finally retire rather than
-   being shadowed.
-4. **Verify notifications on device**, then decide whether the digest wants real
-   numbers (currently deliberately vague, because a prediction made on leaving
-   can be wrong by morning).
-5. **Elevation** as its own phase — see `NEXT_STEPS.md`. Biggest remaining change
-   to how the maps feel.
-6. **The rest of the job layer**: jobs are assigned and drawn but not *worked* —
-   progress still comes from the aggregate harvest, not from the specific tree a
-   specific colonist is standing at. Closing that loop is what makes the day
-   schedule mean something.
-
----
-
-## 6. Commands
+## 5. Commands
 
 ```bash
-cd Core && swift test
+swift test --package-path Core
 ```
 
 ```bash
@@ -188,5 +111,5 @@ cd App && xcodegen generate
 xcodebuild -project App/EndlessFrontier.xcodeproj -scheme EndlessFrontier -destination 'platform=iOS Simulator,name=iPhone 17' test
 ```
 
-Note: `iPhone 16` (still named in `CLAUDE.md`) does not exist on this machine —
-the installed simulators are iPhone 17 / 17 Pro / 17 Pro Max / Air / 16e.
+Installed simulators are iPhone 17 / 17 Pro / 17 Pro Max / Air / 16e — not
+iPhone 16.
