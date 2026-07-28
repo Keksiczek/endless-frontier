@@ -109,8 +109,16 @@ public enum HaulEngine {
 
             // Otherwise: hands free, and a heap out there with their name on it.
             guard canHaul(s.pawns[i], ticksPerYear: ticksPerYear) else { continue }
-            guard let index = map.piles.firstIndex(where: { $0.claimedBy == s.pawns[i].id })
-                    ?? nearestUnclaimed(in: map, to: store) else { continue }
+            let held = map.piles.firstIndex(where: { $0.claimedBy == s.pawns[i].id })
+            // Looking for *new* work is the expensive half — it walks every
+            // heap for every free pair of hands — and it is also the half that
+            // does not need answering every minute. Fetching and carrying stay
+            // per-tick, because a load has to move; picking up a fresh errand
+            // happens on the job board's cadence. Without this an offline
+            // catch-up pays that search forty thousand times over.
+            guard let index = held
+                    ?? (tick % JobBoard.interval == 0
+                        ? nearestUnclaimed(in: map, to: store) : nil) else { continue }
             // Claim it, walk to it, and pick it up when they get there.
             map.piles[index].claimedBy = s.pawns[i].id
             let pilePosition = map.piles[index].position

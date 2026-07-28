@@ -31,6 +31,10 @@ public enum TickEngine {
             let caravanStep = CaravanEngine.advanceOneTick(s, registry: registry)
             s = caravanStep.state
             fired.append(contentsOf: caravanStep.fired)
+            // The world beyond the valley, arriving: traders, envoys and the
+            // people somebody else's bad winter turned out. Same diplomacy,
+            // walking in over your own ground.
+            s = VisitorEngine.advanceOneTick(s, registry: registry, mapSeed: s.mapSeed)
             s.tick += 1
             let scheduled = ScheduledEffectEngine.advanceOneTick(s, registry: registry)
             s = scheduled.state
