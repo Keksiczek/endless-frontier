@@ -81,14 +81,27 @@ enum AgentMotion {
 
     /// A building a colonist works *at*, and the ground it covers — so several
     /// workers spread across the lot instead of stacking on one point.
+    ///
+    /// It also carries the room's own furniture plan: a building is a room now
+    /// (`SettlementInterior`), and a worker belongs at a *station* in it — the
+    /// anvil, the desk, the counter — not somewhere on its roof. `stations`
+    /// holds those places in the same normalised space the rest of the motion
+    /// speaks, computed from exactly the seed and footprint the fittings are
+    /// drawn from, so the smith stands at the anvil that is on the screen.
     struct WorkSite {
         let center: LocalPoint
         let halfW: Double
         let halfH: Double
+        let stations: [LocalPoint]
+
         init(_ b: SettlementRenderer.NormalizedBuilding) {
             center = b.center
             halfW = b.footprintW / 2
             halfH = b.footprintH / 2
+            stations = SettlementInterior
+                .stationSlots(for: b.glyph, seed: b.seed, stations: b.assignedPawnIDs.count)
+                .map { LocalPoint(x: b.center.x + $0.dx * b.footprintW,
+                                  y: b.center.y + $0.dy * b.footprintH) }
         }
     }
 
@@ -536,6 +549,11 @@ enum AgentMotion {
     /// their seed so several workers spread across the floor instead of stacking
     /// on its centre. Kept just inside the footprint so nobody stands on a wall.
     private static func spot(in site: WorkSite, seed: UInt64) -> LocalPoint {
+        // A station if the room has one: standing at the bench beats standing
+        // somewhere on the lot, and it is the same bench the renderer drew.
+        if !site.stations.isEmpty {
+            return clampPoint(site.stations[Int(seed % UInt64(site.stations.count))])
+        }
         let ox = (unit(seed &* 7) - 0.5) * 1.6 * site.halfW
         let oy = (unit(seed &* 13) - 0.5) * 1.6 * site.halfH
         return clampPoint(LocalPoint(x: site.center.x + ox, y: site.center.y + oy))

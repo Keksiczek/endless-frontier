@@ -65,7 +65,7 @@ enum SettlementRenderer {
         // doll-sized.
         let zoom = camera.scale
         let showLabels = zoom >= 1.6
-        ground(&context, rect: rect, map: map, season: season)
+        SettlementGround.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
         zones(&context, rect: rect, settlement: settlement, season: season)
         paths(&context, rect: rect, settlement: settlement, registry: registry,
               map: map, zoom: zoom)
@@ -88,7 +88,7 @@ enum SettlementRenderer {
         // Pushed in close, every structure says what it is — the answer to
         // "which roof is the library?" without a single tap.
         buildings(&context, placed: placed, time: time, night: night,
-                  showLabels: showLabels, selectedBuildingID: selectedBuildingID)
+                  showLabels: showLabels, zoom: zoom, selectedBuildingID: selectedBuildingID)
         SettlementFigures.smoke(
             &context,
             houses: placed.filter { $0.glyph == .house && !$0.underConstruction },
@@ -167,7 +167,7 @@ enum SettlementRenderer {
         let night = nightness(time: time)
         let zoom = camera.scale
         let showLabels = zoom >= 1.6
-        ground(&context, rect: rect, map: map, season: season)
+        SettlementGround.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
         // The sea, before the river and the landscape: everything else stands
         // on the land it leaves.
         sea(&context, rect: rect, shore: map.shore, season: season, time: time)
@@ -227,59 +227,11 @@ enum SettlementRenderer {
 
     // MARK: - Ground tiles
 
-    /// The tiled earth: every revealed cell painted with its seeded ground
-    /// cover in the current season's colours. Batched into one path per cover
-    /// so a full map is a handful of fills, not a thousand.
-    private static func ground(
-        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, season: Season
-    ) {
-        let cols = LocalMap.gridColumns, rows = LocalMap.gridRows
-        let cw = rect.width / CGFloat(cols), ch = rect.height / CGFloat(rows)
-        var batches: [GroundCover: Path] = [:]
-        for index in map.exploredCells {
-            let col = index % cols, row = index / cols
-            guard row < rows else { continue }
-            let cover = map.cover(column: col, row: row)
-            batches[cover, default: Path()].addRect(
-                CGRect(x: rect.minX + CGFloat(col) * cw, y: rect.minY + CGFloat(row) * ch,
-                       width: cw + 0.6, height: ch + 0.6))
-        }
-        for (cover, path) in batches {
-            context.fill(path, with: .color(coverColor(cover, season: season)))
-        }
-    }
-
-    /// The raw earth tones, before the season passes over them. Lifted from
-    /// the original near-black palette — the map read as permanently dusk.
-    private static func baseCover(_ cover: GroundCover) -> (r: Double, g: Double, b: Double) {
-        switch cover {
-        case .grass:  return (0.15, 0.22, 0.15)
-        case .meadow: return (0.19, 0.26, 0.16)
-        case .dirt:   return (0.23, 0.19, 0.14)
-        case .sand:   return (0.29, 0.26, 0.17)
-        case .rock:   return (0.19, 0.20, 0.23)
-        case .snow:   return (0.30, 0.33, 0.39)
-        case .marsh:  return (0.15, 0.23, 0.20)
-        }
-    }
-
-    /// The ground as the season paints it: fresh in spring, warm in summer,
-    /// rusted in autumn, and pale under winter snow.
+    /// The earth, drawn by `SettlementGround` — a square grain over the fog
+    /// grid rather than the fog grid itself, which on a phone is three times
+    /// taller than it is wide and made every meadow a green column.
     static func coverColor(_ cover: GroundCover, season: Season) -> Color {
-        var (r, g, b) = baseCover(cover)
-        switch season {
-        case .spring:
-            g *= 1.22; r *= 0.96
-        case .summer:
-            r *= 1.12; g *= 1.10; b *= 0.94
-        case .autumn:
-            r *= 1.38; g *= 1.02; b *= 0.82
-        case .winter:
-            // Everything cools and lightens toward snow, but keeps a trace of
-            // what lies underneath.
-            r = r * 0.45 + 0.26; g = g * 0.45 + 0.28; b = b * 0.45 + 0.34
-        }
-        return Color(red: min(1, r), green: min(1, g), blue: min(1, b))
+        SettlementGround.coverColor(cover, season: season)
     }
 
     // MARK: - Zones
@@ -1168,6 +1120,9 @@ enum SettlementRenderer {
         let progress: Double
         let seed: UInt64
         let era: Era
+        /// How many colonists the engine posted here — the room is furnished
+        /// with a station apiece, and they are drawn standing at them.
+        let workers: Int
     }
 
     /// A stable per-building seed for cosmetic variation — from a placement's
@@ -1188,7 +1143,13 @@ enum SettlementRenderer {
     /// seen.
     static let colonyHeart = LocalPoint(x: 0.5, y: 0.52)
     /// How wide a slice of the canvas the whole build grid covers.
-    static let colonySpan: Double = 0.42
+    ///
+    /// Widened from 0.42 once buildings gained insides: an 18×18 grid squeezed
+    /// into 0.42 gave each tile about nine pixels at rest, which is a room you
+    /// cannot see into and a town whose people are drawn on top of one another.
+    /// Mirrored by `SettlementGeometry.span` in the Core — a colonist must be
+    /// sent to the building that is *drawn*, so the two must agree.
+    static let colonySpan: Double = 0.52
 
     /// Maps a grid tile to the point on the canvas it sits at, centred on the
     /// heart so the built colony always lands inside the cleared ground.
@@ -1235,7 +1196,7 @@ enum SettlementRenderer {
                            center: point(b.center, in: rect), size: unit * b.size,
                            footprint: CGSize(width: b.footprintW * unit, height: b.footprintH * unit),
                            underConstruction: b.underConstruction, progress: b.progress,
-                           seed: b.seed, era: b.era)
+                           seed: b.seed, era: b.era, workers: b.assignedPawnIDs.count)
         }
     }
 
@@ -1353,7 +1314,7 @@ enum SettlementRenderer {
     private static func buildings(
         _ context: inout GraphicsContext, placed: [PlacedBuilding],
         time: Double, night: Double = 0, showLabels: Bool = false,
-        selectedBuildingID: Int?
+        zoom: CGFloat = 1, selectedBuildingID: Int?
     ) {
         // Foundations first — every building's plot, drawn before any structure,
         // so a later lot never paints over an earlier roof and adjacent lots
@@ -1362,15 +1323,30 @@ enum SettlementRenderer {
             floorPlot(&context, at: building.center, footprint: building.footprint,
                       underConstruction: building.underConstruction)
         }
+        // Then the insides: floor, fittings, walls. Drawn under the roofs, so
+        // pushing the camera in lifts the roof off a room that is already there
+        // rather than swapping one drawing for another.
+        let roof = SettlementInterior.roofFade(zoom: zoom)
+        if roof < 0.999 {
+            for building in placed where !building.underConstruction {
+                SettlementInterior.draw(
+                    &context, glyph: building.glyph, at: building.center,
+                    footprint: building.footprint, seed: building.seed, era: building.era,
+                    workers: building.workers, night: night, time: time)
+            }
+        }
         for building in placed {
             if building.underConstruction {
                 SettlementStructures.site(at: building.center, s: building.size,
                                           progress: building.progress, time: time, context: &context)
-            } else {
+            } else if roof > 0.001 {
+                // The roof, as solid as the distance warrants.
+                var roofContext = context
+                roofContext.opacity = roof
                 SettlementStructures.building(building.glyph, at: building.center,
                                               s: building.size, time: time, night: night,
                                               seed: building.seed, era: building.era,
-                                              footprint: building.footprint, context: &context)
+                                              footprint: building.footprint, context: &roofContext)
             }
             if building.id == selectedBuildingID {
                 let r = building.size * 2.6
@@ -1461,17 +1437,7 @@ enum SettlementRenderer {
     private static func fog(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double
     ) {
-        let cols = LocalMap.gridColumns, rows = LocalMap.gridRows
-        let cw = rect.width / CGFloat(cols), ch = rect.height / CGFloat(rows)
-        var covered = Path()
-        for row in 0..<rows {
-            for col in 0..<cols where !map.exploredCells.contains(row * cols + col) {
-                covered.addRect(CGRect(x: rect.minX + CGFloat(col) * cw,
-                                       y: rect.minY + CGFloat(row) * ch,
-                                       width: cw + 0.5, height: ch + 0.5))
-            }
-        }
-        context.fill(covered, with: .color(Theme.ink.opacity(0.86)))
+        SettlementGround.fog(&context, rect: rect, map: map)
         scoutOrder(&context, rect: rect, map: map, time: time)
     }
 

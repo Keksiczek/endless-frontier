@@ -198,7 +198,10 @@ public enum SettlementGeometry {
     /// The colony grid's centre on the local map, and how wide a slice of it the
     /// grid covers. Mirrored by `SettlementRenderer.colonyHeart` / `colonySpan`.
     public static let heart = LocalPoint(x: 0.5, y: 0.52)
-    public static let span: Double = 0.42
+    /// Widened with the renderer's `colonySpan` when buildings gained insides.
+    /// These two numbers are one number in two places: a colonist sent to a
+    /// scaffold at 0.42 while the scaffold is drawn at 0.52 stands in a field.
+    public static let span: Double = 0.52
 
     public static func canvasPoint(for placement: BuildingPlacement, in colony: ColonyMap) -> LocalPoint {
         let w = Double(max(1, colony.width)), h = Double(max(1, colony.height))

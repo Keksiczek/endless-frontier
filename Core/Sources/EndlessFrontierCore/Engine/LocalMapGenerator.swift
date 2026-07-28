@@ -170,7 +170,11 @@ public enum LocalMapGenerator {
             scenery: scenery, trees: trees, rocks: rocks,
             usesEntityLand: true, shore: shore)
         // The settlement sits at the centre; its surroundings start revealed.
-        map.reveal(around: LocalPoint(x: 0.5, y: 0.5), radius: 0.28)
+        // Wide enough to cover the whole build grid (`SettlementGeometry.span`
+        // reaches 0.26 from the heart, 0.37 to a corner) — a colony that can
+        // build on ground nobody has charted sends its people into the fog,
+        // where the canvas refuses to draw them and they vanish at work.
+        map.reveal(around: LocalPoint(x: 0.5, y: 0.5), radius: 0.38)
         return map
     }
 
