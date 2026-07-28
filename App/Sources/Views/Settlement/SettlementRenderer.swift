@@ -78,6 +78,9 @@ enum SettlementRenderer {
         // The real wood and rock, over the decorative landscape but under
         // anything built — a tree stands in front of the grass and behind the
         // roof it shades.
+        // The mountain, before the wood: a tree at the foot of a cliff stands in
+        // front of it, and nothing stands on top of solid rock.
+        SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
         SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time)
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
@@ -176,6 +179,9 @@ enum SettlementRenderer {
         // The real wood and rock, over the decorative landscape but under
         // anything built — a tree stands in front of the grass and behind the
         // roof it shades.
+        // The mountain, before the wood: a tree at the foot of a cliff stands in
+        // front of it, and nothing stands on top of solid rock.
+        SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
         SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time)
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)

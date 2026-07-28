@@ -48,6 +48,33 @@ public enum ColonyBuilder {
         guard let def = registry.building(definitionID) else { return false }
         let map = settlement.colony ?? ColonyMap(width: defaultWidth, height: defaultHeight)
         return fits(def.footprint, at: coord, in: map)
+            && isClearOfRock(def.footprint, at: coord, in: map, settlement: settlement)
+    }
+
+    /// Whether a footprint's ground is free of standing rock.
+    ///
+    /// A mountain is generated clear of the colony's founding ground, but a
+    /// colony grows outward and can reach a hillside — and when it does, the
+    /// answer is to *mine the block first*, not to build a granary inside a
+    /// cliff. This is the one place a `StoneField` reaches into the build
+    /// rules, and it is the whole of what "solid" means.
+    static func isClearOfRock(
+        _ size: TileSize, at coord: TileCoord, in map: ColonyMap, settlement: Settlement
+    ) -> Bool {
+        guard let stone = settlement.localMap?.stone, stone.usesBlocks, !stone.isEmpty else {
+            return true
+        }
+        for dx in 0..<max(1, size.width) {
+            for dy in 0..<max(1, size.height) {
+                let tile = TileCoord(coord.x + dx, coord.y + dy)
+                let placement = BuildingPlacement(
+                    id: UUID(), definitionID: "", coord: tile, width: 1, height: 1)
+                if stone.blocks(SettlementGeometry.canvasPoint(for: placement, in: map)) {
+                    return false
+                }
+            }
+        }
+        return true
     }
 
     /// Places a building (with its footprint) on the grid with its top-left at
@@ -61,7 +88,8 @@ public enum ColonyBuilder {
     ) -> Settlement {
         guard let def = registry.building(definitionID) else { return settlement }
         var s = ensureMap(settlement)
-        guard var map = s.colony, fits(def.footprint, at: coord, in: map) else {
+        guard var map = s.colony, fits(def.footprint, at: coord, in: map),
+              isClearOfRock(def.footprint, at: coord, in: map, settlement: s) else {
             return settlement
         }
 
@@ -95,7 +123,8 @@ public enum ColonyBuilder {
     ) -> Settlement {
         guard let def = registry.building(definitionID) else { return settlement }
         var s = ensureMap(settlement)
-        guard var map = s.colony, fits(def.footprint, at: coord, in: map) else {
+        guard var map = s.colony, fits(def.footprint, at: coord, in: map),
+              isClearOfRock(def.footprint, at: coord, in: map, settlement: s) else {
             return settlement
         }
         map.placements.append(BuildingPlacement(

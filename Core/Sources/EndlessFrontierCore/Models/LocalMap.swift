@@ -464,6 +464,10 @@ public struct LocalMap: Codable, Sendable, Equatable {
     /// The sea, on the maps that have one. Nil inland — most country has none,
     /// and a save written before coasts existed decodes to nil.
     public var shore: ShoreShape?
+    /// The mountain, where there is one: solid rock in blocks, dug into at the
+    /// face. Empty on most country, and on every map made before there were
+    /// mountains to dig.
+    public var stone: StoneField
     /// Scout-steps walked so far — one per scout per reveal step. How far the
     /// frontier has moved is a function of *work done*, never of the world
     /// clock: a colony founded in year 200 charts its own valley from scratch
@@ -491,9 +495,11 @@ public struct LocalMap: Codable, Sendable, Equatable {
         rocks: [Rock] = [],
         usesEntityLand: Bool = false,
         shore: ShoreShape? = nil,
+        stone: StoneField = StoneField(),
         scoutProgress: Double = 0,
         scoutFocus: LocalPoint? = nil
     ) {
+        self.stone = stone
         self.river = river
         self.nodes = nodes
         self.pois = pois
@@ -514,7 +520,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case river, nodes, pois, wildlife, exploredCells, biomeID, terrainSeed, scenery
-        case trees, rocks, shore, usesEntityLand
+        case trees, rocks, shore, usesEntityLand, stone
         case scoutProgress, scoutFocus
     }
 
@@ -532,6 +538,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
         rocks = try c.decodeIfPresent([Rock].self, forKey: .rocks) ?? []
         usesEntityLand = try c.decodeIfPresent(Bool.self, forKey: .usesEntityLand) ?? false
         shore = try c.decodeIfPresent(ShoreShape.self, forKey: .shore)
+        stone = try c.decodeIfPresent(StoneField.self, forKey: .stone) ?? StoneField()
         scoutProgress = try c.decodeIfPresent(Double.self, forKey: .scoutProgress) ?? 0
         scoutFocus = try c.decodeIfPresent(LocalPoint.self, forKey: .scoutFocus)
     }

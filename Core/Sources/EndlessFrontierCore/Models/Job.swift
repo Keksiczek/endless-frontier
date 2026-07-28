@@ -18,12 +18,13 @@ public enum JobKind: String, Codable, Sendable, CaseIterable {
     case tendDeposit     // fields and herb patches — ground, not a thing
     case standWatch
     case stalkAnimal     // *this* deer, standing over there
+    case cutStone        // *this* block of the hillside, at the face
 
     /// The trade that does this work.
     public var work: WorkKind {
         switch self {
         case .fellTree: return .logging
-        case .quarryRock: return .mining
+        case .quarryRock, .cutStone: return .mining
         case .raiseBuilding: return .building
         case .tendDeposit: return .farming
         case .standWatch: return .garrison
@@ -122,6 +123,14 @@ public enum JobBoard {
             .sorted(by: { $0.id < $1.id }) {
             jobs.append(Job(id: jobID("quarry", rock.id), kind: .quarryRock,
                             position: rock.position, rockID: rock.id))
+        }
+        // The rock face: only blocks with open ground beside them, nearest the
+        // town first, so a colony eats into a hillside from its near edge and
+        // you can watch the working advance.
+        for block in StoneEngine.workableBlocks(
+            map.stone, from: SettlementGeometry.heart, charted: charted) {
+            jobs.append(Job(id: jobID("hew", block), kind: .cutStone,
+                            position: StoneField.centre(of: block), rockID: block))
         }
         // The game itself: a hunter is sent after *this* beast, standing where
         // it is standing. It moves, so the job's position is only good for as

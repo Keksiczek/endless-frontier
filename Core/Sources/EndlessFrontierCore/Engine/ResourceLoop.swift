@@ -673,6 +673,20 @@ public enum ResourceLoop {
         if stoneDemand > 0, !map.rocks.isEmpty {
             map = FloraEngine.quarry(map, miners: max(1, Int(stoneDemand / harvestPerWorker))).map
         }
+        // And into the hillside itself. A mountain is worked at the face, block
+        // by block, and what comes out of it is on top of what the outcrops
+        // give — going *into* rock is the reason to settle under a mountain.
+        var hewn: [LocalResourceKind: Double] = [:]
+        if stoneDemand > 0, map.stone.usesBlocks, !map.stone.isEmpty {
+            let miners = max(1, Int(stoneDemand / harvestPerWorker))
+            let dug = StoneEngine.mine(map.stone, miners: miners)
+            map.stone = dug.field
+            // The hole a block leaves is ground the colony can now see through.
+            for index in dug.broken {
+                map.exploredCells.insert(index)
+            }
+            hewn = dug.yield
+        }
 
         // Deplete proportionally across the nodes of each kind.
         for kind in Set(map.nodes.map(\.kind)) {
@@ -706,6 +720,15 @@ public enum ResourceLoop {
 
         var s = settlement
         s.localMap = map
+        // What came out of the mountain. Deliberately banked here rather than
+        // folded into the abstract harvest: a block is a *thing that was there*
+        // and is now stone in your hands, and the whole point of digging into a
+        // hillside is that it pays differently from scratching at the surface.
+        for (kind, amount) in hewn {
+            s.storage[.materials] = min(s.storageCapacity, s.storage[.materials] + amount)
+            guard let item = kind.rawMaterialID else { continue }
+            s.stockpile[item, default: 0] += StoneEngine.itemsPerBlock
+        }
         return s
     }
 

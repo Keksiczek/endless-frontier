@@ -163,12 +163,16 @@ public enum LocalMapGenerator {
             .map { (kind: $0.kind, position: $0.position, capacity: $0.capacity) }
         let rocks = FloraFactory.outcrops(at: outcropSites, rng: &rng)
 
+        // The mountain, last of all — a new draw inserted anywhere earlier would
+        // shift every roll after it and every existing valley with it.
+        let stone = StoneEngine.raise(biomeID: biomeID, river: river, shore: shore, rng: &rng)
+
         var map = LocalMap(
             river: river, nodes: nodes, pois: pois, wildlife: wildlife,
             biomeID: biomeID,
             terrainSeed: seed(mapSeed: mapSeed, regionID: regionID) ^ 0x7E_44_A1_04_5E_ED,
             scenery: scenery, trees: trees, rocks: rocks,
-            usesEntityLand: true, shore: shore)
+            usesEntityLand: true, shore: shore, stone: stone)
         // The settlement sits at the centre; its surroundings start revealed.
         // Wide enough to cover the whole build grid (`SettlementGeometry.span`
         // reaches 0.26 from the heart, 0.37 to a corner) — a colony that can
