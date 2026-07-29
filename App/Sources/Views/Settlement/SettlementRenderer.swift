@@ -1471,6 +1471,44 @@ enum SettlementRenderer {
         let scene = AgentMotion.Scene(settlement: settlement, registry: registry,
                                       continuousTick: continuousTick)
         let ticksPerYear = registry.config.ticksPerYear
+        let close = SettlementCrowd.showsIndividuals(zoom: zoom)
+
+        // Pushed in, people are people. Pulled back, a town of sixty drawn as
+        // sixty eleven-pixel figures is a smear — so they gather into group
+        // marks that say how many and at what, and resolve back into people as
+        // the camera comes in.
+        guard close else {
+            let standing = visibleAgents(settlement).compactMap {
+                pawn -> (id: UUID, position: LocalPoint, trade: WorkKind, hurt: Bool)? in
+                let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
+                                            time: time, ticksPerYear: ticksPerYear)
+                guard map.isExplored(pose.position) else { return nil }
+                return (pawn.id, pose.position, pawn.assignedWork,
+                        pawn.body.needsTending || pawn.isBroken)
+            }
+            for cluster in SettlementCrowd.cluster(standing) {
+                guard cluster.count >= SettlementCrowd.minimumGroup else {
+                    // Two people read better as two people than as a mark
+                    // saying "2".
+                    for id in cluster.members {
+                        guard let pawn = settlement.pawns.first(where: { $0.id == id }) else { continue }
+                        let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
+                                                    time: time, ticksPerYear: ticksPerYear)
+                        SettlementFigures.draw(
+                            pawn: pawn, pose: pose, at: point(pose.position, in: rect),
+                            time: time, ticksPerYear: ticksPerYear,
+                            selected: pawn.id == selectedPawnID, zoom: zoom,
+                            context: &context)
+                    }
+                    continue
+                }
+                SettlementCrowd.draw(&context, cluster: cluster,
+                                     at: point(cluster.position, in: rect),
+                                     time: time, zoom: zoom)
+            }
+            return
+        }
+
         for pawn in visibleAgents(settlement) {
             let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
                                         time: time, ticksPerYear: ticksPerYear)

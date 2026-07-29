@@ -347,10 +347,74 @@ public enum ColonyBuilder {
     /// corner — which the canvas maps to the fog's edge, leaving the cleared
     /// ground around the settlement heart conspicuously empty. Growth now
     /// spirals outward from the centre, the way a town actually grows.
+    /// How many buildings one district holds before the colony opens another.
+    ///
+    /// Everything used to be packed as near the middle as it would go, so a
+    /// town of sixty was one dense knot with fields all round it: you could not
+    /// tell the quarter you worked in from the quarter you slept in, because
+    /// there were no quarters. A district is what makes a town a *place* — a
+    /// second little square with its own houses around it, and a walk between
+    /// them.
+    public static let buildingsPerDistrict = 9
+
+    /// Where the colony's districts sit on the grid, heart first.
+    ///
+    /// They open as the town needs them and always in the same order, so a
+    /// colony's shape is a consequence of its history rather than a shuffle.
+    /// The ring is deliberately tight — these are quarters of one town, not
+    /// separate villages — and every centre stays inside the grid.
+    public static func districtCentres(in map: ColonyMap, count: Int) -> [TileCoord] {
+        let heart = TileCoord(map.width / 2, map.height / 2)
+        guard count > 1 else { return [heart] }
+        var centres = [heart]
+        let reach = Double(min(map.width, map.height)) * 0.28
+        for i in 0..<(count - 1) {
+            let angle = Double(i) / Double(max(1, count - 1)) * 2 * .pi
+            let x = Int((Double(heart.x) + cos(angle) * reach).rounded())
+            let y = Int((Double(heart.y) + sin(angle) * reach).rounded())
+            centres.append(TileCoord(min(map.width - 1, max(0, x)),
+                                     min(map.height - 1, max(0, y))))
+        }
+        return centres
+    }
+
+    /// The free spot a new building should take.
+    ///
+    /// Not simply "nearest the middle" any more: the colony fills its heart,
+    /// then opens a second quarter and fills that, and so on — so a town grows
+    /// outward into recognisable neighbourhoods instead of packing tighter and
+    /// tighter around one point.
     static func centerFit(_ size: TileSize, in map: ColonyMap) -> TileCoord? {
-        // The footprint's *centre* should land near the grid's centre.
-        let cx = Double(map.width - size.width) / 2
-        let cy = Double(map.height - size.height) / 2
+        let districts = max(1, (map.placements.count / buildingsPerDistrict) + 1)
+        let centres = districtCentres(in: map, count: districts)
+
+        // How busy each quarter already is, so the newest one gets the work.
+        var occupancy = [Int](repeating: 0, count: centres.count)
+        for placement in map.placements {
+            let nearest = centres.indices.min {
+                squaredDistance(placement.coord, centres[$0])
+                    < squaredDistance(placement.coord, centres[$1])
+            } ?? 0
+            occupancy[nearest] += 1
+        }
+        let order = centres.indices.sorted {
+            occupancy[$0] == occupancy[$1] ? $0 < $1 : occupancy[$0] < occupancy[$1]
+        }
+
+        // Nearest free ground to the emptiest quarter's centre; if that quarter
+        // is full, the next one, and so on — a colony never fails to build
+        // merely because its newest square filled up.
+        for index in order {
+            if let spot = nearestFit(size, to: centres[index], in: map) { return spot }
+        }
+        return nil
+    }
+
+    /// The free spot closest to a given point on the grid.
+    static func nearestFit(_ size: TileSize, to centre: TileCoord, in map: ColonyMap) -> TileCoord? {
+        guard map.width >= size.width, map.height >= size.height else { return nil }
+        let cx = Double(centre.x) - Double(size.width - 1) / 2
+        let cy = Double(centre.y) - Double(size.height - 1) / 2
         var best: (coord: TileCoord, d2: Double)?
         for y in 0...(map.height - size.height) {
             for x in 0...(map.width - size.width) {
@@ -358,12 +422,15 @@ public enum ColonyBuilder {
                 guard fits(size, at: coord, in: map) else { continue }
                 let dx = Double(x) - cx, dy = Double(y) - cy
                 let d2 = dx * dx + dy * dy
-                if d2 < (best?.d2 ?? .infinity) {
-                    best = (coord, d2)
-                }
+                if d2 < (best?.d2 ?? .infinity) { best = (coord, d2) }
             }
         }
         return best?.coord
+    }
+
+    static func squaredDistance(_ a: TileCoord, _ b: TileCoord) -> Double {
+        let dx = Double(a.x - b.x), dy = Double(a.y - b.y)
+        return dx * dx + dy * dy
     }
 
     /// Best-effort: assigns a colonist to the first placed building that employs
