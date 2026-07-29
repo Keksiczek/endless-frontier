@@ -367,6 +367,10 @@ public enum ResourceLoop {
         }
         s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick,
                                       gatheringFactors: factors, laws: laws)
+        // 9b. Bleeding, mending, and the healers doing the mending. After the
+        //     pawns' own tick so a wound taken this minute is bleeding by the
+        //     next one — and so the healer's trade finally has something to do.
+        s = MedicineEngine.advanceOneTick(s, registry: registry, tick: tick)
 
         // 10. Deposits deplete under the harvest and regrow with the seasons —
         //     faster where the woods are protected by law.

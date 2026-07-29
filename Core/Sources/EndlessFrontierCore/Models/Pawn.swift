@@ -186,6 +186,13 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     /// carrying: the rest of the time their place on the canvas is a function
     /// of their day, and this stays nil so nothing overrides it.
     public var haulPosition: LocalPoint?
+    /// What happened to them, part by part.
+    ///
+    /// `health` is still the aggregate everything balances on; this is the
+    /// answer to *what* took it. A hunter gored by a boar and a hunter who had
+    /// a bad winter used to be the same colonist at sixty — now one of them has
+    /// an arm that will not swing an axe until somebody sees to it.
+    public var body: Body
 
     /// Whether this colonist is out of the settlement right now.
     public var isAway: Bool { expeditionID != nil }
@@ -210,7 +217,8 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         currentJob: Job? = nil,
         homeID: UUID? = nil,
         carrying: HaulLoad? = nil,
-        haulPosition: LocalPoint? = nil
+        haulPosition: LocalPoint? = nil,
+        body: Body = Body()
     ) {
         self.id = id
         self.name = name
@@ -232,6 +240,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         self.homeID = homeID
         self.carrying = carrying
         self.haulPosition = haulPosition
+        self.body = body
     }
 
     public func skill(_ kind: WorkKind) -> Int { skills[kind] ?? 0 }
@@ -253,7 +262,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         case id, name, trait, skills, skillXP, needs, mood, assignedWork
         case health, isBroken, equipment
         case age, genes, wealth, pregnancyTicksRemaining, expeditionID, currentJob
-        case homeID, carrying, haulPosition
+        case homeID, carrying, haulPosition, body
     }
 
     public init(from decoder: Decoder) throws {
@@ -278,5 +287,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         homeID = try c.decodeIfPresent(UUID.self, forKey: .homeID)
         carrying = try c.decodeIfPresent(HaulLoad.self, forKey: .carrying)
         haulPosition = try c.decodeIfPresent(LocalPoint.self, forKey: .haulPosition)
+        // A colonist from before bodies is whole.
+        body = try c.decodeIfPresent(Body.self, forKey: .body) ?? Body()
     }
 }

@@ -195,7 +195,9 @@ public enum EffectApplier {
             var pawn = s.settlements[capital].pawns[pawnIndex]
             // Armor, not a weapon, is what blunts the blow you receive.
             let dealt = deficit * 1.5 * CombatEngine.woundMultiplier(pawn)
-            pawn.health = max(0, pawn.health - dealt)
+            // The blow lands on a part of them, so a raid leaves the colony
+            // carrying wounds rather than merely lighter.
+            pawn = MedicineEngine.wound(pawn, amount: dealt, tick: s.tick, rng: &rng)
             let killed = pawn.health <= 0
             record.record(killed ? .death : .wound, step: min(4, woundStep),
                           pawnID: pawn.id, pawnName: pawn.name, amount: dealt)

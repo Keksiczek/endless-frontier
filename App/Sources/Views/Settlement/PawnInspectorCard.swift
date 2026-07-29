@@ -43,6 +43,7 @@ struct PawnInspectorCard: View {
                 }
             }
             needs
+            if !pawn.body.ailments.isEmpty || pawn.body.capacity < 0.99 { condition }
             if !moodFactors.isEmpty { moodBreakdown }
             if !bonds.isEmpty { bondRows }
             genes
@@ -75,6 +76,51 @@ struct PawnInspectorCard: View {
                         .font(.caption)
                 }
                 .foregroundStyle(Theme.danger)
+            }
+        }
+    }
+
+    /// What has happened to them, part by part.
+    ///
+    /// A number called health could tell you a colonist was at sixty and never
+    /// whether that was a bad winter or a boar. This says which arm, whether
+    /// anybody has seen to it, and what it is costing them — which is the whole
+    /// reason to give a person a body.
+    private var condition: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            sectionTitle(cs ? "Zranění" : "Condition")
+            ForEach(pawn.body.ailments.sorted { $0.severity > $1.severity }) { ailment in
+                HStack(spacing: 6) {
+                    Image(systemName: ailment.tended ? "bandage.fill" : "drop.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(ailment.tended ? Theme.good : Theme.danger)
+                        .frame(width: 12)
+                    Text(ailment.part?.displayName.resolve(AppStrings.language)
+                         ?? ailment.kind.displayName.resolve(AppStrings.language))
+                        .font(.caption)
+                        .foregroundStyle(Theme.text)
+                    Spacer(minLength: 6)
+                    Text(ailment.tended
+                         ? (cs ? "ošetřeno" : "tended")
+                         : (cs ? "krvácí" : "bleeding"))
+                        .font(.caption2)
+                        .foregroundStyle(ailment.tended ? Theme.textDim : Theme.danger)
+                }
+            }
+            // What is left of them for a day's work.
+            if pawn.body.capacity < 0.99 {
+                HStack(spacing: 6) {
+                    Image(systemName: "figure.walk").font(.system(size: 9))
+                        .foregroundStyle(Theme.textDim).frame(width: 12)
+                    Text(cs ? "Zvládne \(Int(pawn.body.capacity * 100)) % práce"
+                            : "Good for \(Int(pawn.body.capacity * 100))% of a day")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.textDim)
+                }
+            }
+            if !pawn.body.canWalk {
+                Text(cs ? "Nemůže chodit" : "Cannot walk")
+                    .font(.caption).foregroundStyle(Theme.danger)
             }
         }
     }

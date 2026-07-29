@@ -88,7 +88,10 @@ public enum WildlifeEngine {
                 let name = s.pawns[victim].name
                 let pawnID = s.pawns[victim].id
                 let mult = CombatEngine.woundMultiplier(s.pawns[victim])
-                s.pawns[victim].health = max(0, s.pawns[victim].health - attackWound * mult)
+                // Teeth land *somewhere*: the mauling leaves a mauled arm or a
+                // torn leg, not a smaller number.
+                s.pawns[victim] = MedicineEngine.wound(
+                    s.pawns[victim], amount: attackWound * mult, tick: tick, rng: &rng)
                 // The attack, beat by beat, so the canvas can play it out
                 // instead of the journal being the only trace it happened.
                 var record = CombatEngine.BattleRecorder()
@@ -214,7 +217,11 @@ public enum WildlifeEngine {
         // And whoever got it wrong.
         for wound in bag.wounds {
             guard let i = s.pawns.firstIndex(where: { $0.id == wound.hunterID }) else { continue }
-            s.pawns[i].health = max(0, s.pawns[i].health - wound.damage)
+            // A boar's tusks go into a leg, not into an abstraction.
+            var goring = SeededRNG(seed: wildlifeSeed(mapSeed: mapSeed, settlementID: s.id,
+                                                      tick: tick) ^ 0x60_52_45_44)
+            s.pawns[i] = MedicineEngine.wound(s.pawns[i], amount: wound.damage,
+                                              tick: tick, rng: &goring)
             let beast = wound.species.displayName
             if s.pawns[i].health <= 0 {
                 s.pawns.remove(at: i)
