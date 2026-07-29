@@ -280,6 +280,108 @@ enum SettlementStructures {
                          radius: s * 0.35, startAngle: .degrees(200),
                          endAngle: .degrees(30), clockwise: false)
             }, with: .color(wood.opacity(0.7)), lineWidth: 0.9)
+
+        case .orchard:
+            // Three trees in a row that used to be a row.
+            let bark = Color(red: 0.44, green: 0.34, blue: 0.24)
+            let leaf = Color(red: 0.32, green: 0.46, blue: 0.28)
+            for k in 0..<3 {
+                let x = c.x + CGFloat(k - 1) * s * 0.72
+                let lift = s * (k == 1 ? 0.18 : 0)
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: x, y: c.y + s * 0.7))
+                    p.addLine(to: CGPoint(x: x, y: c.y - s * 0.1 - lift))
+                }, with: .color(bark), lineWidth: 1)
+                context.fill(
+                    Path(ellipseIn: CGRect(x: x - s * 0.34, y: c.y - s * 0.7 - lift,
+                                           width: s * 0.68, height: s * 0.66)),
+                    with: .color(leaf))
+                // The fruit is the point.
+                context.fill(
+                    Path(ellipseIn: CGRect(x: x + s * 0.10, y: c.y - s * 0.34 - lift,
+                                           width: 1.8, height: 1.8)),
+                    with: .color(Theme.accent.opacity(0.85)))
+            }
+
+        case .hermit:
+            // A lean-to against nothing, and a fire that is always lit.
+            let wood = Color(red: 0.46, green: 0.36, blue: 0.26)
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.85, y: c.y + s * 0.6))
+                p.addLine(to: CGPoint(x: c.x + s * 0.15, y: c.y - s * 0.8))
+                p.addLine(to: CGPoint(x: c.x + s * 0.85, y: c.y + s * 0.6))
+                p.closeSubpath()
+            }, with: .color(wood), lineWidth: 1.1)
+            let fire = 0.55 + 0.35 * sin(time * 4.2)
+            context.fill(
+                Path(ellipseIn: CGRect(x: c.x - s * 0.14, y: c.y + s * 0.16,
+                                       width: s * 0.28, height: s * 0.34)),
+                with: .color(Theme.accent.opacity(fire)))
+
+        case .watchtower:
+            // A broken shaft with the top gone and a stair still showing.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.42, y: c.y + s * 0.75))
+                p.addLine(to: CGPoint(x: c.x - s * 0.30, y: c.y - s * 1.05))
+                p.addLine(to: CGPoint(x: c.x + s * 0.34, y: c.y - s * 0.72))
+                p.addLine(to: CGPoint(x: c.x + s * 0.46, y: c.y + s * 0.75))
+            }, with: .color(stone), lineWidth: 1.1)
+            for k in 0..<3 {
+                let y = c.y + s * (0.42 - CGFloat(k) * 0.46)
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: c.x - s * 0.36, y: y))
+                    p.addLine(to: CGPoint(x: c.x + s * 0.40, y: y))
+                }, with: .color(stone.opacity(0.55)), lineWidth: 0.7)
+            }
+
+        case .saltPan:
+            // Flat crusted plates with a rake's furrows across them.
+            let crust = Color(red: 0.82, green: 0.84, blue: 0.86)
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.95, y: c.y - s * 0.42,
+                                                width: s * 1.9, height: s * 0.84)),
+                         with: .color(crust.opacity(0.42)))
+            context.stroke(Path(ellipseIn: CGRect(x: c.x - s * 0.95, y: c.y - s * 0.42,
+                                                  width: s * 1.9, height: s * 0.84)),
+                           with: .color(crust.opacity(0.85)), lineWidth: 0.9)
+            for k in 0..<3 {
+                let y = c.y + s * (CGFloat(k) - 1) * 0.24
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: c.x - s * 0.62, y: y))
+                    p.addLine(to: CGPoint(x: c.x + s * 0.62, y: y))
+                }, with: .color(crust.opacity(0.55)), lineWidth: 0.6)
+            }
+
+        case .barrow:
+            // A long low mound with a stone door let into its end.
+            let earth = Color(red: 0.30, green: 0.30, blue: 0.26)
+            context.fill(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 1.0, y: c.y + s * 0.6))
+                p.addQuadCurve(to: CGPoint(x: c.x + s * 1.0, y: c.y + s * 0.6),
+                               control: CGPoint(x: c.x, y: c.y - s * 0.95))
+                p.closeSubpath()
+            }, with: .color(earth))
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 1.0, y: c.y + s * 0.6))
+                p.addQuadCurve(to: CGPoint(x: c.x + s * 1.0, y: c.y + s * 0.6),
+                               control: CGPoint(x: c.x, y: c.y - s * 0.95))
+            }, with: .color(stone), lineWidth: 1)
+            context.fill(Path(CGRect(x: c.x - s * 0.20, y: c.y + s * 0.06,
+                                     width: s * 0.40, height: s * 0.54)),
+                         with: .color(Theme.ink))
+
+        case .starfall:
+            // A crater lip, and something in the bottom of it that still glows.
+            context.stroke(Path(ellipseIn: CGRect(x: c.x - s * 1.0, y: c.y - s * 0.5,
+                                                  width: s * 2.0, height: s * 1.0)),
+                           with: .color(stone), lineWidth: 1)
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.5, y: c.y - s * 0.25,
+                                                width: s * 1.0, height: s * 0.5)),
+                         with: .color(Theme.ink))
+            let heat = 0.45 + 0.4 * abs(sin(time * 1.1))
+            context.fill(
+                Path(ellipseIn: CGRect(x: c.x - s * 0.20, y: c.y - s * 0.11,
+                                       width: s * 0.40, height: s * 0.22)),
+                with: .color(Color(red: 1.0, green: 0.62, blue: 0.34).opacity(heat)))
         }
     }
 

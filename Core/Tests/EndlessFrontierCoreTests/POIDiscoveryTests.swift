@@ -49,6 +49,12 @@ struct POIDiscoveryTests {
             #expect(after.pawns[0].health > before.pawns[0].health)
         case .shrine:
             #expect(after.pawns[0].needs.recreation > before.pawns[0].needs.recreation)
+        case .orchard, .saltPan:
+            #expect(after.storage[.food] > before.storage[.food])
+        case .hermit, .starfall:
+            #expect(after.storage[.knowledge] > before.storage[.knowledge])
+        case .watchtower, .barrow:
+            #expect(after.storage[.influence] > before.storage[.influence])
         }
     }
 

@@ -28,6 +28,12 @@ extension LocalPOIKind {
         case .treasure: return cs ? "Zakopaná skrýš" : "A buried cache"
         case .shrine: return cs ? "Zapomenutá svatyně" : "A forgotten shrine"
         case .wreck: return cs ? "Vrak karavany" : "A wrecked caravan"
+        case .orchard: return cs ? "Zplanělý sad" : "A wild orchard"
+        case .hermit: return cs ? "Poustevna" : "A hermit's hut"
+        case .watchtower: return cs ? "Strážní věž" : "A ruined watchtower"
+        case .saltPan: return cs ? "Solisko" : "A salt pan"
+        case .barrow: return cs ? "Mohyla" : "A burial mound"
+        case .starfall: return cs ? "Spadlá hvězda" : "A fallen star"
         }
     }
 }

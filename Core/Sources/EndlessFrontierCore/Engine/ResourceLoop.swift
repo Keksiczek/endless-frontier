@@ -663,6 +663,21 @@ public enum ResourceLoop {
             }
         case .wreck:
             deposit(.materials, 30)
+        case .orchard:
+            deposit(.food, 20)
+        case .hermit:
+            // He gives nothing on the doorstep. Come back and sit down.
+            deposit(.knowledge, 6)
+        case .watchtower:
+            deposit(.influence, 8)
+        case .saltPan:
+            deposit(.food, 14)
+        case .barrow:
+            // Finding a grave is not the same as opening one.
+            deposit(.influence, 6)
+        case .starfall:
+            deposit(.knowledge, 20)
+            s.stats.morale = min(100, s.stats.morale + 3)
         }
         s.journal.append(tick: tick, kind: .discovery, text: poi.kind.discoveryText)
         return s

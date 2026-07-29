@@ -50,7 +50,7 @@ Last updated: 2026-07-29.
 | 3.4 | **Supply** between your own settlements — a caravan you can see leave | **done** |
 | 3.5 | A visit the player can **answer** — accept the refugees, refuse the envoy | **done** |
 | 3.6 | More **events**, each happening *somewhere* to *someone* | part done (3 disasters, 3 visits) |
-| 3.7 | More **POIs** and more **items** | todo |
+| 3.7 | More **POIs** and more **items** | **done** (6 kinds → 12, 57 items → 71) |
 
 ## 4. Scale — a colony of sixty-five must still be a place
 
@@ -100,6 +100,11 @@ Every one of them has cost a session at least once:
    along every tile edge and the whole valley turns into brickwork. Resolve
    cover, season skin and light band into one colour and fill it solid —
    `SettlementGround.Tone`.
+9b. **`GameDataRegistry.bundled()` loads items with `try?`.** One malformed
+   effect anywhere in `items.json` silently empties the *entire* table — no
+   loot, no equipment, no error. `colony_production` takes `perTick`, not
+   `amount`. Guarded by "A single bad item cannot silently empty the whole
+   table".
 10. **A cell one tile wide is against both its side borders.** With the fog grid
    three times taller than it is wide, `subX` comes out as 1 and a dither that
    only borrows from an edge it is strictly on borrows vertically alone — which

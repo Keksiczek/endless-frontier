@@ -185,6 +185,24 @@ struct POIInspectorCard: View {
         case .wreck: return cs
             ? "Dřevo, kování a co zbylo pod plachtou."
             : "Timber, ironwork, and whatever is still under the canvas."
+        case .orchard: return cs
+            ? "Něčí sad, hodně dávno. Přestali chodit — sad rodit nepřestal."
+            : "Somebody's orchard, a long time ago. They stopped coming; it did not stop bearing."
+        case .hermit: return cs
+            ? "Nedá nic na prahu. Sedněte si — a vrátí se vám lepší ve svém řemesle."
+            : "He gives nothing on the doorstep. Sit down, and they come home better at their trades."
+        case .watchtower: return cs
+            ? "Čtyři sta let staré schodiště. Z jeho hlavy se kraj obkreslí sám."
+            : "Four hundred years of stair. From its head the country draws itself."
+        case .saltPan: return cs
+            ? "Sůl je rozdíl mezi masem a masem, které vydrží do jara."
+            : "Salt is the difference between meat and meat that keeps until spring."
+        case .barrow: return cs
+            ? "Pohřbili ho bohatě. Vzít si to jde jednou — a osada to nese těžce."
+            : "They buried them rich. You can take it once, and the colony will feel it."
+        case .starfall: return cs
+            ? "Není to kámen. Za tu cestu to stojí — a bezpečné to není."
+            : "It is not stone. Worth every day of the walk, and not safe."
         }
     }
 
@@ -217,6 +235,12 @@ struct POIInspectorCard: View {
         case .treasure: return cs ? "Poslat vykopat skrýš" : "Send to dig it out"
         case .shrine: return cs ? "Vyslat poutníky" : "Send pilgrims"
         case .wreck: return cs ? "Poslat rozebrat vrak" : "Send a salvage party"
+        case .orchard: return cs ? "Poslat česáče" : "Send pickers"
+        case .hermit: return cs ? "Poslat se učit" : "Send them to learn"
+        case .watchtower: return cs ? "Poslat na věž" : "Send them up the tower"
+        case .saltPan: return cs ? "Poslat hrabat sůl" : "Send salt rakers"
+        case .barrow: return cs ? "Otevřít mohylu" : "Open the mound"
+        case .starfall: return cs ? "Poslat vysekat hvězdu" : "Send to cut the star out"
         }
     }
 

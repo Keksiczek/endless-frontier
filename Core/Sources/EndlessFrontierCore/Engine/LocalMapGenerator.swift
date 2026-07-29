@@ -203,29 +203,43 @@ public enum LocalMapGenerator {
         switch biomeID {
         case "forest":
             return [(.ruins, 0.9), (.shrine, 1.0), (.cave, 0.5), (.spring, 0.9),
-                    (.treasure, 0.6), (.wreck, 0.5)]
+                    (.treasure, 0.6), (.wreck, 0.5),
+                    (.orchard, 1.1), (.hermit, 1.0), (.barrow, 0.8),
+                    (.watchtower, 0.5), (.saltPan, 0), (.starfall, 0.15)]
         case "desert":
-            // Water is the whole story here: a spring is rare and worth a lot.
+            // Water is the whole story here: a spring is rare and worth a lot,
+            // and salt is everywhere the water used to be.
             return [(.ruins, 1.2), (.treasure, 1.0), (.wreck, 1.0), (.cave, 0.6),
-                    (.spring, 0.2), (.shrine, 0.5)]
+                    (.spring, 0.2), (.shrine, 0.5),
+                    (.saltPan, 1.6), (.barrow, 1.0), (.hermit, 0.8),
+                    (.watchtower, 0.7), (.orchard, 0.15), (.starfall, 0.3)]
         case "tundra":
             return [(.cave, 0.9), (.ruins, 1.0), (.wreck, 0.8), (.shrine, 0.5),
-                    (.treasure, 0.5), (.spring, 0.3)]
+                    (.treasure, 0.5), (.spring, 0.3),
+                    (.barrow, 0.9), (.hermit, 0.7), (.watchtower, 0.6),
+                    (.starfall, 0.35), (.saltPan, 0.2), (.orchard, 0)]
         case "mountains":
             return [(.cave, 1.6), (.ruins, 0.8), (.shrine, 0.7), (.treasure, 0.6),
-                    (.spring, 0.5), (.wreck, 0.2)]
+                    (.spring, 0.5), (.wreck, 0.2),
+                    (.watchtower, 1.2), (.hermit, 1.1), (.starfall, 0.3),
+                    (.barrow, 0.5), (.orchard, 0.2), (.saltPan, 0.2)]
         case "coast":
             return [(.wreck, 1.5), (.spring, 0.9), (.shrine, 0.8), (.treasure, 0.8),
-                    (.ruins, 0.6), (.cave, 0.4)]
+                    (.ruins, 0.6), (.cave, 0.4),
+                    (.saltPan, 1.3), (.watchtower, 1.0), (.orchard, 0.7),
+                    (.hermit, 0.5), (.barrow, 0.5), (.starfall, 0.15)]
         default: // plains & homeland
             return [(.spring, 1.0), (.shrine, 0.9), (.ruins, 0.9), (.treasure, 0.8),
-                    (.wreck, 0.7), (.cave, 0.5)]
+                    (.wreck, 0.7), (.cave, 0.5),
+                    (.orchard, 1.2), (.barrow, 1.0), (.watchtower, 0.8),
+                    (.hermit, 0.7), (.saltPan, 0.4), (.starfall, 0.2)]
         }
     }
 
-    /// How many landmarks a map gets — three to five, so the count itself is
-    /// part of what makes one valley unlike another.
-    static let poiCountRange = 3...5
+    /// How many landmarks a map gets. Four to seven now there are twelve kinds
+    /// to draw from: the count is part of what makes one valley unlike another,
+    /// and with six kinds a map that took five of them was most of the set.
+    static let poiCountRange = 4...7
 
     /// Draws this map's landmarks: distinct kinds, weighted by the biome,
     /// scattered on dry land.

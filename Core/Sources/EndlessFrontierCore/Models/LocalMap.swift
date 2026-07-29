@@ -140,6 +140,16 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
     case treasure   // a cache of goods
     case shrine     // the old gods still listen
     case wreck      // a caravan that never arrived
+    // Six place kinds was thin after an evening: by the second valley you had
+    // seen all of them and a landmark stopped being news. These six each give a
+    // *different* reason to send people out — food, a teacher, a map, salt,
+    // grave goods, and something that fell out of the sky.
+    case orchard    // a farm gone feral — food, year after year
+    case hermit     // somebody living out there who will teach
+    case watchtower // climb it and the country draws itself
+    case saltPan    // salt: the difference between meat and meat that keeps
+    case barrow     // a burial mound, and what was buried with them
+    case starfall   // a fallen star, still warm
 
     /// The journal's line for the moment of discovery.
     public var discoveryText: LocalizedText {
@@ -162,15 +172,35 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
         case .wreck: return LocalizedText(values: [
             .en: "Scouts found a wrecked caravan, its timber still good.",
             .cs: "Zvědové našli vrak karavany — dřevo je pořád dobré."])
+        case .orchard: return LocalizedText(values: [
+            .en: "Scouts walked into an old orchard gone wild — and still bearing.",
+            .cs: "Zvědové vešli do starého sadu, co zplaněl — a pořád rodí."])
+        case .hermit: return LocalizedText(values: [
+            .en: "Scouts found a hermit's hut. Somebody has been out here a long time.",
+            .cs: "Zvědové našli poustevnu. Někdo tu žije už hodně dlouho."])
+        case .watchtower: return LocalizedText(values: [
+            .en: "Scouts found a ruined watchtower. From its top you would see the whole country.",
+            .cs: "Zvědové našli rozbořenou strážní věž. Z jejího vrcholu je vidět celý kraj."])
+        case .saltPan: return LocalizedText(values: [
+            .en: "Scouts found a salt pan — white crust as far as the eye goes.",
+            .cs: "Zvědové našli solisko — bílá kůra, kam oko dohlédne."])
+        case .barrow: return LocalizedText(values: [
+            .en: "Scouts found a burial mound. Whoever lies there was buried rich.",
+            .cs: "Zvědové našli mohylu. Ať v ní leží kdokoli, pohřbili ho bohatě."])
+        case .starfall: return LocalizedText(values: [
+            .en: "Scouts found a crater with something at the bottom of it that fell from the sky.",
+            .cs: "Zvědové našli kráter a na jeho dně něco, co spadlo z nebe."])
         }
     }
 
-    /// A spring does not run dry and the old gods do not stop listening: these
-    /// two recover with time instead of being used up.
+    /// A spring does not run dry, the old gods do not stop listening, an orchard
+    /// bears again next year and a hermit is still there when you go back: these
+    /// recover with time instead of being used up.
     public var isRenewable: Bool {
         switch self {
-        case .spring, .shrine: return true
-        case .ruins, .cave, .treasure, .wreck: return false
+        case .spring, .shrine, .orchard, .hermit: return true
+        case .ruins, .cave, .treasure, .wreck, .watchtower, .saltPan,
+             .barrow, .starfall: return false
         }
     }
 
@@ -178,10 +208,10 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
     /// Ignored for renewable kinds.
     public var maxVisits: Int {
         switch self {
-        case .treasure: return 1   // a cache is a cache: you empty it once
-        case .ruins, .wreck: return 2
-        case .cave: return 3       // a seam of stone outlasts a rummage
-        case .spring, .shrine: return .max
+        case .treasure, .barrow, .starfall: return 1  // you empty it once
+        case .ruins, .wreck, .watchtower: return 2
+        case .cave, .saltPan: return 3                // a seam outlasts a rummage
+        case .spring, .shrine, .orchard, .hermit: return .max
         }
     }
 
@@ -191,6 +221,8 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
         switch self {
         case .spring: return 3
         case .shrine: return 4
+        case .orchard: return 1     // it fruits every year, like anything else
+        case .hermit: return 5      // he has only so much to teach
         default: return 0
         }
     }
@@ -205,6 +237,10 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
         case .ruins, .treasure: return 2
         case .shrine, .wreck: return 3
         case .cave: return 3
+        case .hermit, .watchtower: return 2
+        case .orchard, .barrow: return 3
+        case .saltPan: return 3
+        case .starfall: return 4   // whatever it is, you do not go alone
         }
     }
 
@@ -214,10 +250,16 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
         switch self {
         case .spring: return 3
         case .shrine: return 4
+        case .watchtower: return 4
+        case .orchard: return 5
         case .treasure: return 5
+        case .hermit: return 6
         case .wreck: return 6
+        case .barrow: return 7
+        case .saltPan: return 8
         case .ruins: return 8
         case .cave: return 10
+        case .starfall: return 12
         }
     }
 
@@ -225,10 +267,13 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
     public var wantedSkill: WorkKind {
         switch self {
         case .ruins: return .research
-        case .cave: return .mining
+        case .cave, .saltPan, .starfall: return .mining
         case .wreck, .treasure: return .logging
         case .spring: return .healing
-        case .shrine: return .priest
+        case .shrine, .barrow: return .priest
+        case .orchard: return .farming
+        case .hermit: return .research
+        case .watchtower: return .scouting
         }
     }
 
@@ -236,6 +281,9 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
     public var hazardChance: Double {
         switch self {
         case .cave: return 0.22
+        case .starfall: return 0.26   // it is still hot, and it is not stone
+        case .barrow: return 0.16     // a mound is a hole that wants to close
+        case .watchtower: return 0.12 // the stair is four hundred years old
         case .ruins: return 0.08
         default: return 0
         }
@@ -243,7 +291,10 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
 
     public var hazardDamage: Double {
         switch self {
+        case .starfall: return 24
         case .cave: return 18
+        case .watchtower: return 16
+        case .barrow: return 14
         case .ruins: return 10
         default: return 0
         }
@@ -258,6 +309,12 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
         case .treasure: return LocalizedText(values: [.en: "buried cache", .cs: "skrýš"])
         case .shrine: return LocalizedText(values: [.en: "old shrine", .cs: "svatyně"])
         case .wreck: return LocalizedText(values: [.en: "wrecked caravan", .cs: "vrak"])
+        case .orchard: return LocalizedText(values: [.en: "wild orchard", .cs: "zplanělý sad"])
+        case .hermit: return LocalizedText(values: [.en: "hermit's hut", .cs: "poustevna"])
+        case .watchtower: return LocalizedText(values: [.en: "watchtower", .cs: "strážní věž"])
+        case .saltPan: return LocalizedText(values: [.en: "salt pan", .cs: "solisko"])
+        case .barrow: return LocalizedText(values: [.en: "burial mound", .cs: "mohyla"])
+        case .starfall: return LocalizedText(values: [.en: "fallen star", .cs: "spadlá hvězda"])
         }
     }
 
@@ -271,6 +328,12 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
         case .treasure: return "skrýši"
         case .shrine: return "svatyni"
         case .wreck: return "vraku"
+        case .orchard: return "zplanělému sadu"
+        case .hermit: return "poustevně"
+        case .watchtower: return "strážní věži"
+        case .saltPan: return "solisku"
+        case .barrow: return "mohyle"
+        case .starfall: return "spadlé hvězdě"
         }
     }
 }
