@@ -21,8 +21,8 @@ Last updated: 2026-07-28 (evening).
 | 1.8 | A house is a **household**; sleeping rough hurts | **done** |
 | 1.9 | **Haul jobs** — felled timber and cut stone carried to a store | **done** |
 | 1.10 | Buildings are the truth: condition, damage, repair | **done** |
-| 1.11 | Animals you can **tame**, and beasts of burden | todo |
-| 1.12 | Colonists carry **wounds by body part**, like animals already do | todo |
+| 1.11 | Animals you can **tame**, and beasts of burden | **done** |
+| 1.12 | Colonists carry **wounds by body part**, like animals already do | **done** |
 
 ## 2. What it looks like
 
@@ -36,7 +36,7 @@ Last updated: 2026-07-28 (evening).
 | 2.6 | Colonists huddling in the middle of town | **done** (own beds) |
 | 2.7 | Battle was three enormous red blobs | **done** |
 | 2.8 | Weapons visible in the hand — bow drawn and loosed, blade swung | **done** |
-| 2.9 | An app icon | todo |
+| 2.9 | An app icon | **done** |
 | 2.10 | Ground still reads flat at a distance — wants light and shade | todo |
 | 2.11 | Seasons should change the *land*, not just its tint (snow lying, mud) | todo |
 
@@ -57,10 +57,10 @@ Last updated: 2026-07-28 (evening).
 1. **A house is a household.** — **done.** Four sleepers to a tile, never more
    than the ledger claims; the roofless sleep badly and say so.
 2. **Home is a place, not a pool.** — **done.** `Pawn.homeID`, a bed apiece.
-3. **Districts.** When the build grid fills, the colony spills into outlying
-   clusters instead of packing tighter. — todo.
-4. **Level of detail.** Past a threshold, distant figures draw as a group mark
-   that resolves into people as you push in. — todo.
+3. **Districts.** — **done.** The colony fills its heart, opens a second
+   quarter, fills that; a building whose quarter is full goes to the next one.
+4. **Level of detail.** — **done.** Below zoom 1.5, people standing together
+   draw as one group mark with a headcount and the commonest trade's colour.
 5. **Manage by policy, not by pawn.** Trades, rosters and rations as rules;
    the pawn screen is for *looking at someone*. — partly done (the screen is
    now worth looking at).
