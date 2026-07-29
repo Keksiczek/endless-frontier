@@ -53,12 +53,18 @@ enum SettlementRenderer {
         camera: Camera,
         continuousTick: Double = 0,
         caravans: [Caravan] = [],
+        /// How far through its season the year has got, 0…1. Snow lies deeper
+        /// at midwinter than on its first day, and spring's mud dries.
+        seasonProgress: Double = 0.5,
         selectedPawnID: UUID?,
         selectedBuildingID: Int?
     ) {
         let viewRect = CGRect(origin: .zero, size: size)
         let rect = worldRect(viewRect: viewRect, camera: camera)
         let night = nightness(time: time)
+        // Where the sun is standing. Everything that casts, shades or warms
+        // reads this one value, so the whole valley is lit from one place.
+        let sun = SettlementLight.sun(time: time)
         // One world scale for everything drawn in absolute pixels. Geometry
         // derived from `rect` grows with the camera by construction; the
         // fixed-pixel art (figures, river body, deposit furniture, smoke) has
@@ -66,7 +72,8 @@ enum SettlementRenderer {
         // doll-sized.
         let zoom = camera.scale
         let showLabels = zoom >= 1.6
-        SettlementGround.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
+        SettlementGround.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
+                              sun: sun, seasonProgress: seasonProgress)
         zones(&context, rect: rect, settlement: settlement, season: season)
         paths(&context, rect: rect, settlement: settlement, registry: registry,
               map: map, zoom: zoom)
@@ -82,7 +89,7 @@ enum SettlementRenderer {
         // The mountain, before the wood: a tree at the foot of a cliff stands in
         // front of it, and nothing stands on top of solid rock.
         SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
-        SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time)
+        SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time, sun: sun)
         // What has been cut and not yet carried in.
         SettlementPiles.draw(&context, rect: rect, map: map, zoom: zoom)
         // And whoever has come in over the edge to trade or to talk.
@@ -103,7 +110,8 @@ enum SettlementRenderer {
         // Pushed in close, every structure says what it is — the answer to
         // "which roof is the library?" without a single tap.
         buildings(&context, placed: placed, time: time, night: night,
-                  showLabels: showLabels, zoom: zoom, selectedBuildingID: selectedBuildingID)
+                  showLabels: showLabels, zoom: zoom, sun: sun,
+                  selectedBuildingID: selectedBuildingID)
         SettlementFigures.smoke(
             &context,
             houses: placed.filter { $0.glyph == .house && !$0.underConstruction },
@@ -120,6 +128,7 @@ enum SettlementRenderer {
         // The seasonal wash is atmosphere over the lens, not part of the world,
         // so it stays in view space and doesn't slide when you pan.
         seasonWash(&context, rect: viewRect, size: size, season: season, time: time)
+        SettlementLight.wash(&context, rect: viewRect, sun: sun)
         nightWash(&context, rect: viewRect, night: night)
     }
 
@@ -175,14 +184,17 @@ enum SettlementRenderer {
         time: Double,
         camera: Camera,
         regionKind: RegionKind,
-        tribe: Tribe?
+        tribe: Tribe?,
+        seasonProgress: Double = 0.5
     ) {
         let viewRect = CGRect(origin: .zero, size: size)
         let rect = worldRect(viewRect: viewRect, camera: camera)
         let night = nightness(time: time)
+        let sun = SettlementLight.sun(time: time)
         let zoom = camera.scale
         let showLabels = zoom >= 1.6
-        SettlementGround.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
+        SettlementGround.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
+                              sun: sun, seasonProgress: seasonProgress)
         // The sea, before the river and the landscape: everything else stands
         // on the land it leaves.
         sea(&context, rect: rect, shore: map.shore, season: season, time: time)
@@ -194,7 +206,7 @@ enum SettlementRenderer {
         // The mountain, before the wood: a tree at the foot of a cliff stands in
         // front of it, and nothing stands on top of solid rock.
         SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
-        SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time)
+        SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time, sun: sun)
         // What has been cut and not yet carried in.
         SettlementPiles.draw(&context, rect: rect, map: map, zoom: zoom)
         // And whoever has come in over the edge to trade or to talk.
@@ -214,6 +226,7 @@ enum SettlementRenderer {
                 seed: map.terrainSeed, night: night, zoom: zoom)
         }
         seasonWash(&context, rect: viewRect, size: size, season: season, time: time)
+        SettlementLight.wash(&context, rect: viewRect, sun: sun)
         nightWash(&context, rect: viewRect, night: night)
     }
 
@@ -1356,7 +1369,8 @@ enum SettlementRenderer {
     private static func buildings(
         _ context: inout GraphicsContext, placed: [PlacedBuilding],
         time: Double, night: Double = 0, showLabels: Bool = false,
-        zoom: CGFloat = 1, selectedBuildingID: Int?
+        zoom: CGFloat = 1, sun: SettlementLight.Sun = SettlementLight.sun(time: 0),
+        selectedBuildingID: Int?
     ) {
         // Foundations first — every building's plot, drawn before any structure,
         // so a later lot never paints over an earlier roof and adjacent lots
@@ -1365,6 +1379,10 @@ enum SettlementRenderer {
             floorPlot(&context, at: building.center, footprint: building.footprint,
                       underConstruction: building.underConstruction)
         }
+        // Then what the town throws across its own ground. Every shadow in one
+        // path, filled once: a shadow must never fall on the *building* next
+        // door, only on the earth between them.
+        castShadows(&context, placed: placed, sun: sun)
         // Then the insides: floor, fittings, walls. Drawn under the roofs, so
         // pushing the camera in lifts the roof off a room that is already there
         // rather than swapping one drawing for another.
@@ -1417,6 +1435,47 @@ enum SettlementRenderer {
                                          y: building.center.y + building.size * 2.5))
             }
         }
+    }
+
+    /// How tall a structure stands, as a multiple of its glyph size — what
+    /// decides how far it throws a shadow. A tower reaches across the square at
+    /// evening; a field of panels barely lifts off the ground.
+    static func height(of glyph: BuildingGlyph) -> CGFloat {
+        switch glyph {
+        case .tower:     return 3.4
+        case .temple:    return 2.8
+        case .plant:     return 2.6
+        case .hall:      return 2.2
+        case .mill:      return 2.2
+        case .pad:       return 2.4
+        case .granary:   return 1.9
+        case .house:     return 1.7
+        case .market:    return 1.6
+        case .workshop:  return 1.5
+        case .generator: return 1.4
+        case .mine:      return 1.2
+        case .array:     return 0.6
+        }
+    }
+
+    /// Everything the town throws on the ground, as one silhouette.
+    private static func castShadows(
+        _ context: inout GraphicsContext, placed: [PlacedBuilding],
+        sun: SettlementLight.Sun
+    ) {
+        guard sun.strength > 0.01 else { return }
+        var shadows = Path()
+        for building in placed where !building.underConstruction {
+            let tall = building.size * height(of: building.glyph)
+            // A shadow starts at the foot of the wall, not at the roof line.
+            let foot = CGPoint(x: building.center.x, y: building.center.y + building.size * 0.3)
+            let base = CGSize(width: max(4, building.footprint.width * 0.78),
+                              height: max(3, building.footprint.height * 0.52))
+            shadows.addPath(SettlementLight.boxShadow(
+                at: foot, footprint: base, height: tall, sun: sun))
+        }
+        guard !shadows.isEmpty else { return }
+        context.fill(shadows, with: .color(SettlementLight.shadowColour(sun)))
     }
 
     /// The plot a structure stands on — cleared, framed ground the size of the

@@ -37,8 +37,8 @@ Last updated: 2026-07-29.
 | 2.7 | Battle was three enormous red blobs | **done** |
 | 2.8 | Weapons visible in the hand — bow drawn and loosed, blade swung | **done** |
 | 2.9 | An app icon | **done** |
-| 2.10 | Ground still reads flat at a distance — wants light and shade | todo |
-| 2.11 | Seasons should change the *land*, not just its tint (snow lying, mud) | todo |
+| 2.10 | Ground still reads flat at a distance — wants light and shade | **done** |
+| 2.11 | Seasons should change the *land*, not just its tint (snow lying, mud) | **done** |
 
 ## 3. The world beyond the valley
 
@@ -94,3 +94,13 @@ Every one of them has cost a session at least once:
 7. **Content is data, CZ+EN, in the same change.**
 8. **Two numbers that must agree live in one place** — `SettlementGeometry.span`
    and `SettlementRenderer.colonySpan` are one number in two files.
+9. **Ground tiles overlap by a hair, so every layer over them must be opaque.**
+   The overlap hides seams under an opaque fill and *doubles* under a
+   translucent one, so a see-through snow or light sheet paints a bright line
+   along every tile edge and the whole valley turns into brickwork. Resolve
+   cover, season skin and light band into one colour and fill it solid —
+   `SettlementGround.Tone`.
+10. **A cell one tile wide is against both its side borders.** With the fog grid
+   three times taller than it is wide, `subX` comes out as 1 and a dither that
+   only borrows from an edge it is strictly on borrows vertically alone — which
+   drew the valley as vertical stripes for as long as the ground has existed.

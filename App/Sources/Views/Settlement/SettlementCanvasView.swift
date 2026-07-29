@@ -68,6 +68,7 @@ struct SettlementCanvasView: View {
                         registry: registry, time: t, season: season,
                         camera: camera, continuousTick: now,
                         caravans: caravans,
+                        seasonProgress: seasonProgress(at: now),
                         selectedPawnID: selectedPawnID,
                         selectedBuildingID: selectedBuildingID)
                     if let plan = buildPlan {
@@ -90,6 +91,21 @@ struct SettlementCanvasView: View {
                                 ? "Živá osada. Přiblížení \(Int(camera.scale * 100)) procent."
                                 : "The living settlement. Zoom \(Int(camera.scale * 100)) percent.")
         }
+    }
+
+    /// How far through the current season the year has got, 0…1.
+    ///
+    /// The renderer needs this and not just the season itself: snow that lies
+    /// the same depth on the first day of winter as at its heart is a tint with
+    /// extra steps. Derived from the simulation clock, so a long absence
+    /// caught up on opening lands you in exactly the winter the ledger says.
+    private func seasonProgress(at tick: Double) -> Double {
+        let perYear = Double(registry.config.ticksPerYear)
+        guard perYear >= 4 else { return 0.5 }
+        let perSeason = perYear / 4
+        let ofYear = tick.truncatingRemainder(dividingBy: perYear)
+        let year = ofYear < 0 ? ofYear + perYear : ofYear
+        return (year.truncatingRemainder(dividingBy: perSeason)) / perSeason
     }
 
     private var selectedPawnID: UUID? {

@@ -43,9 +43,16 @@ enum SettlementGround {
 
     // MARK: - The earth
 
+    /// How many steps the sun's light is quantised into across the ground.
+    /// Five is enough to read as a lit landscape and cheap enough to be five
+    /// extra fills for the whole map.
+    static let lightBands = 5
+
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap,
-        season: Season, zoom: CGFloat
+        season: Season, zoom: CGFloat,
+        sun: SettlementLight.Sun = SettlementLight.sun(time: 0),
+        seasonProgress: Double = 0.5
     ) {
         let cols = LocalMap.gridColumns, rows = LocalMap.gridRows
         let cw = rect.width / CGFloat(cols), ch = rect.height / CGFloat(rows)
@@ -55,48 +62,116 @@ enum SettlementGround {
         let subY = max(1, min(6, Int((ch / max(1, want)).rounded())))
         let tw = cw / CGFloat(subX), th = ch / CGFloat(subY)
 
-        var batches: [GroundCover: Path] = [:]
-        var shade: [GroundCover: Path] = [:]
+        // One bucket per *finished* colour — cover, season's skin and light band
+        // resolved together — and every bucket filled opaque. Painting the skin
+        // and the light as translucent sheets over the earth instead drew a
+        // grid across the whole valley: tiles overlap by a hair so no seam
+        // shows, and that overlap blends twice under anything see-through.
+        var batches: [Tone: Path] = [:]
         var texture: [GroundCover: Path] = [:]
+        var skinMarks: [SettlementSeasons.Skin: Path] = [:]
+
+        let coverage = SettlementSeasons.coverage(season: season, progress: seasonProgress)
+        // Only autumn needs to know where the wood stands.
+        let canopy = season == .autumn ? SettlementSeasons.canopy(map: map) : []
+        let seed = map.terrainSeed
 
         for index in map.exploredCells {
             let col = index % cols, row = index / cols
             guard row < rows else { continue }
             let own = map.cover(column: col, row: row)
+            let wood = canopy.isEmpty ? 0 : canopy[min(canopy.count - 1, index)]
             for sy in 0..<subY {
                 for sx in 0..<subX {
-                    let h = hash(map.terrainSeed &+ 0x9D_11_A5, col * 8 + sx, row * 8 + sy)
+                    let h = hash(seed &+ 0x9D_11_A5, col * 8 + sx, row * 8 + sy)
                     let cover = dithered(own, map: map, col: col, row: row,
                                          sx: sx, sy: sy, subX: subX, subY: subY, hash: h)
                     let x = rect.minX + CGFloat(col) * cw + CGFloat(sx) * tw
                     let y = rect.minY + CGFloat(row) * ch + CGFloat(sy) * th
                     // A hair of overlap, so no seam shows between tiles.
                     let tile = CGRect(x: x, y: y, width: tw + 0.7, height: th + 0.7)
-                    batches[cover, default: Path()].addRect(tile)
-                    // A third of the tiles are a shade darker, which is what
+
+                    // Where this tile sits in the world, 0…1, for the relief.
+                    let u = (Double(col) + Double(sx) / Double(subX)) / Double(cols)
+                    let v = (Double(row) + Double(sy) / Double(subY)) / Double(rows)
+                    let relief = SettlementLight.relief(u, v, seed: seed)
+                    let skin = SettlementSeasons.skin(
+                        cover: cover, season: season, coverage: coverage,
+                        relief: relief, wood: wood, hash: h)
+                    let lit = SettlementLight.slopeLight(u, v, seed: seed, sun: sun)
+                    let band = min(lightBands - 1,
+                                   max(0, Int((lit + 1) / 2 * Double(lightBands))))
+                    // A quarter of the tiles are a shade darker, which is what
                     // keeps a field from reading as one printed colour.
-                    if (h >> 12) & 7 < 2 {
-                        shade[cover, default: Path()].addRect(tile)
-                    }
-                    if unit(h >> 20) < textureChance {
-                        mark(&texture, cover: cover, at: CGPoint(x: x + tw / 2, y: y + th / 2),
+                    let dim = (h >> 12) & 7 < 2
+
+                    batches[Tone(cover: cover, skin: skin, band: band, dim: dim),
+                            default: Path()].addRect(tile)
+
+                    if skin != .bare {
+                        SettlementSeasons.mark(
+                            &skinMarks, skin: skin,
+                            at: CGPoint(x: x + tw / 2, y: y + th / 2),
+                            size: min(tw, th), hash: h)
+                    } else if unit(h >> 20) < textureChance {
+                        // Grain belongs to the ground itself; a tile under snow
+                        // shows the snow's own marks instead.
+                        mark(&texture, cover: cover,
+                             at: CGPoint(x: x + tw / 2, y: y + th / 2),
                              size: min(tw, th), hash: h)
                     }
                 }
             }
         }
 
-        for (cover, path) in batches {
-            context.fill(path, with: .color(coverColor(cover, season: season)))
+        for (tone, path) in batches {
+            context.fill(path, with: .color(colour(tone, season: season, sun: sun)))
         }
-        for (_, path) in shade {
-            context.fill(path, with: .color(Theme.ink.opacity(0.10)))
-        }
+        let stroke = StrokeStyle(lineWidth: max(0.4, min(tw, th) * 0.10), lineCap: .round)
         for (cover, path) in texture {
-            context.stroke(path, with: .color(textureColour(cover, season: season)),
-                           style: StrokeStyle(lineWidth: max(0.4, min(tw, th) * 0.10),
-                                              lineCap: .round))
+            context.stroke(path, with: .color(textureColour(cover, season: season)), style: stroke)
         }
+        for (skin, path) in skinMarks {
+            context.stroke(path, with: .color(SettlementSeasons.markColour(skin)), style: stroke)
+        }
+    }
+
+    /// Everything that decides what colour a tile of earth ends up. Grouping
+    /// tiles by the *finished* tone is what lets every fill be opaque.
+    struct Tone: Hashable {
+        let cover: GroundCover
+        let skin: SettlementSeasons.Skin
+        let band: Int
+        /// The one-in-four tiles drawn a shade darker for grain.
+        let dim: Bool
+    }
+
+    /// The earth, the season lying on it and the sun falling on it, resolved
+    /// into one opaque colour.
+    static func colour(_ tone: Tone, season: Season, sun: SettlementLight.Sun) -> Color {
+        var (r, g, b) = seasonal(tone.cover, season: season)
+        if let skin = SettlementSeasons.tint(tone.skin) {
+            let w = skin.weight
+            r = r * (1 - w) + skin.r * w
+            g = g * (1 - w) + skin.g * w
+            b = b * (1 - w) + skin.b * w
+        }
+        if tone.dim {
+            r *= 0.90; g *= 0.90; b *= 0.90
+        }
+        // −1 (turned away from the sun) … +1 (facing it).
+        let t = Double(tone.band) / Double(lightBands - 1) * 2 - 1
+        if t > 0 {
+            // Toward the light's own colour, and only part of the way there —
+            // lifting the lit ground toward white washed the whole valley to
+            // milk and cost more contrast than the shading bought.
+            let k = t * sun.relief
+            r += (0.82 - r) * k; g += (0.78 - g) * k; b += (0.62 - b) * k
+        } else if t < 0 {
+            let k = -t * sun.relief
+            r *= 1 - k * 0.72; g *= 1 - k * 0.68; b *= 1 - k * 0.52
+        }
+        return Color(red: min(1, max(0, r)), green: min(1, max(0, g)), blue: min(1, max(0, b)))
     }
 
     /// The cover a sub-tile actually takes: its own cell's, unless it sits
@@ -106,9 +181,16 @@ enum SettlementGround {
         sx: Int, sy: Int, subX: Int, subY: Int, hash h: UInt64
     ) -> GroundCover {
         guard unit(h) < dither else { return own }
-        // Which way this tile leans, from where it sits inside its cell.
-        let dx = subX == 1 ? 0 : (sx == 0 ? -1 : (sx == subX - 1 ? 1 : 0))
-        let dy = subY == 1 ? 0 : (sy == 0 ? -1 : (sy == subY - 1 ? 1 : 0))
+        // Which way this tile leans, from where it sits inside its cell. A cell
+        // only one tile across is against *both* its side borders at once, so it
+        // picks a side rather than declining to dither — on a phone the fog grid
+        // is three times taller than it is wide, `subX` comes out as 1, and
+        // without this the earth interlocked vertically only and the valley
+        // came out as vertical stripes.
+        let dx = subX == 1 ? (unit(h >> 50) < 0.5 ? -1 : 1)
+                           : (sx == 0 ? -1 : (sx == subX - 1 ? 1 : 0))
+        let dy = subY == 1 ? (unit(h >> 54) < 0.5 ? -1 : 1)
+                           : (sy == 0 ? -1 : (sy == subY - 1 ? 1 : 0))
         guard dx != 0 || dy != 0 else { return own }
         let nc = col + dx, nr = row + dy
         guard nc >= 0, nc < LocalMap.gridColumns, nr >= 0, nr < LocalMap.gridRows,
@@ -182,6 +264,13 @@ enum SettlementGround {
     /// The ground as the season paints it: fresh in spring, warm in summer,
     /// rusted in autumn, and pale under winter snow.
     static func coverColor(_ cover: GroundCover, season: Season) -> Color {
+        let (r, g, b) = seasonal(cover, season: season)
+        return Color(red: r, green: g, blue: b)
+    }
+
+    /// The same, as raw components, so the light and the season's skin can be
+    /// blended into it before anything is drawn.
+    static func seasonal(_ cover: GroundCover, season: Season) -> (r: Double, g: Double, b: Double) {
         var (r, g, b) = baseCover(cover)
         switch season {
         case .spring:
@@ -195,7 +284,7 @@ enum SettlementGround {
             // what lies underneath.
             r = r * 0.45 + 0.26; g = g * 0.45 + 0.28; b = b * 0.45 + 0.34
         }
-        return Color(red: min(1, r), green: min(1, g), blue: min(1, b))
+        return (min(1, r), min(1, g), min(1, b))
     }
 
     /// What the grain on a given earth is drawn in — a lift of the ground's own

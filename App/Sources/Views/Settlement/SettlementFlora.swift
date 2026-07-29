@@ -19,17 +19,45 @@ enum SettlementFlora {
 
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap,
-        season: Season, time: Double
+        season: Season, time: Double,
+        sun: SettlementLight.Sun = SettlementLight.sun(time: 0)
     ) {
         let unit = min(rect.width, rect.height)
+        let standing = map.trees.sorted(by: { $0.position.y < $1.position.y })
+            .filter { map.isExplored($0.position) }
+        let outcrops = map.rocks.filter { map.isExplored($0.position) }
+
+        // Every shadow the wood throws, in one path filled once — before any
+        // trunk is drawn, so a tree's shadow lies on the ground rather than
+        // across the tree standing behind it.
+        if sun.strength > 0.01 {
+            var shadows = Path()
+            for rock in outcrops {
+                let s = unit * 0.014 * (0.45 + CGFloat(rock.remaining) * 0.75)
+                let c = SettlementRenderer.point(rock.position, in: rect)
+                shadows.addPath(SettlementLight.blobShadow(
+                    at: CGPoint(x: c.x, y: c.y + s * 0.2), halfWidth: s * 0.72,
+                    height: s * 1.1, sun: sun))
+            }
+            for tree in standing {
+                let s = unit * 0.013 * (0.35 + CGFloat(tree.growth) * 0.95)
+                let c = SettlementRenderer.point(tree.position, in: rect)
+                shadows.addPath(SettlementLight.blobShadow(
+                    at: CGPoint(x: c.x, y: c.y + s * 0.1), halfWidth: s * 0.5,
+                    height: s * 2.1, sun: sun))
+            }
+            if !shadows.isEmpty {
+                context.fill(shadows, with: .color(SettlementLight.shadowColour(sun)))
+            }
+        }
+
         // Rock first: a tree in front of an outcrop should overlap it.
-        for rock in map.rocks where map.isExplored(rock.position) {
+        for rock in outcrops {
             outcrop(&context, rock, at: SettlementRenderer.point(rock.position, in: rect),
                     unit: unit, season: season)
         }
         // Back to front, so nearer trees overlap the ones behind them.
-        for tree in map.trees.sorted(by: { $0.position.y < $1.position.y })
-        where map.isExplored(tree.position) {
+        for tree in standing {
             trunk(&context, tree, at: SettlementRenderer.point(tree.position, in: rect),
                   unit: unit, season: season, time: time)
         }
@@ -206,12 +234,16 @@ enum SettlementFlora {
         }
     }
 
+    /// The dark right at the foot of a thing — contact, not cast. The long
+    /// shadow is `SettlementLight`'s job and swings with the sun; this one is
+    /// always there, including at midnight, and is what keeps a trunk from
+    /// looking like a sticker.
     private static func groundShadow(
         _ context: inout GraphicsContext, at c: CGPoint, halfWidth: CGFloat
     ) {
         context.fill(
             Path(ellipseIn: CGRect(x: c.x - halfWidth, y: c.y - halfWidth * 0.26,
                                    width: halfWidth * 2, height: halfWidth * 0.52)),
-            with: .color(.black.opacity(0.22)))
+            with: .color(.black.opacity(0.15)))
     }
 }
