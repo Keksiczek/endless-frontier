@@ -20,7 +20,7 @@ Last updated: 2026-07-28 (evening).
 | 1.7 | Pawn **needs that bite**: hunger, rest, warmth | **done** |
 | 1.8 | A house is a **household**; sleeping rough hurts | **done** |
 | 1.9 | **Haul jobs** — felled timber and cut stone carried to a store | **done** |
-| 1.10 | Buildings are the truth: condition, damage, repair | todo |
+| 1.10 | Buildings are the truth: condition, damage, repair | **done** |
 | 1.11 | Animals you can **tame**, and beasts of burden | todo |
 | 1.12 | Colonists carry **wounds by body part**, like animals already do | todo |
 
@@ -47,9 +47,9 @@ Last updated: 2026-07-28 (evening).
 | 3.1 | **Trade** you can watch — traders with mules walking in | **done** |
 | 3.2 | **Diplomacy** arriving as envoys rather than as a panel | **done** |
 | 3.3 | Refugees from a neighbour's bad winter | **done** (they arrive; taking them in is still todo) |
-| 3.4 | **Supply** between your own settlements — a caravan you can see leave | todo |
-| 3.5 | A visit the player can **answer** — accept the refugees, refuse the envoy | todo |
-| 3.6 | More **events**, each happening *somewhere* to *someone* | todo |
+| 3.4 | **Supply** between your own settlements — a caravan you can see leave | **done** |
+| 3.5 | A visit the player can **answer** — accept the refugees, refuse the envoy | **done** |
+| 3.6 | More **events**, each happening *somewhere* to *someone* | part done (3 disasters, 3 visits) |
 | 3.7 | More **POIs** and more **items** | todo |
 
 ## 4. Scale — a colony of sixty-five must still be a place
