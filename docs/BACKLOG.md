@@ -61,9 +61,15 @@ Last updated: 2026-07-29.
    quarter, fills that; a building whose quarter is full goes to the next one.
 4. **Level of detail.** — **done.** Below zoom 1.5, people standing together
    draw as one group mark with a headcount and the commonest trade's colour.
-5. **Manage by policy, not by pawn.** Trades, rosters and rations as rules;
-   the pawn screen is for *looking at someone*. — partly done (the screen is
-   now worth looking at).
+5. **Manage by policy, not by pawn.** — **done.** `ColonyPolicy` on the
+   settlement, set from *Standing orders* on the Council screen: a weight per
+   trade (`.off` … `.priority`), the ration on the table, and whether an
+   expedition may take hands off the trades you said matter. `LaborEngine`
+   scales its own quotas by the weights and **renormalises** them — an
+   unnormalised `.priority` means "only", and swallows the whole town.
+   `LaborEngine.rebalance` moves one colonist per staffing pass, so a policy
+   set on a town of sixty actually reaches it instead of waiting for sixty
+   people to fall idle.
 
 ## 5. Housekeeping
 
@@ -105,6 +111,12 @@ Every one of them has cost a session at least once:
    loot, no equipment, no error. `colony_production` takes `perTick`, not
    `amount`. Guarded by "A single bad item cannot silently empty the whole
    table".
+9c. **A standing order has to *reach* a town that is already full.** The
+   assigner only ever touches the idle — rightly, or it would undo the
+   player's own choices — so a policy alone changes nothing in a colony where
+   nobody is idle, which is every colony past its first decade. `rebalance`
+   is the slow hand that makes the rule bite. Same shape as rule 6: a lever
+   whose effect cannot reach the thing it is aimed at.
 10. **A cell one tile wide is against both its side borders.** With the fog grid
    three times taller than it is wide, `subX` comes out as 1 and a dither that
    only borrows from an edge it is strictly on borrows vertically alone — which

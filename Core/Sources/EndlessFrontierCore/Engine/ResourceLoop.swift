@@ -342,6 +342,10 @@ public enum ResourceLoop {
             s = BuildingEngine.repair(s, registry: registry)
         }
         if tick % LaborEngine.staffingInterval == 0 {
+            // The colony's standing orders, moving one person at a time. Before
+            // this, a policy set on a town of sixty changed nothing until sixty
+            // people happened to fall idle — which is never.
+            s = LaborEngine.rebalance(s, registry: registry)
             s = LaborEngine.staffBuildings(s, registry: registry)
             // And a roof over their head, held until it comes down. A colonist
             // with no bed sleeps badly and shows it — which is how a colony

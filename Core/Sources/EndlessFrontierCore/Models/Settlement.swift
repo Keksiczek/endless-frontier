@@ -138,6 +138,11 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     /// finished result — see `BattleLog`.
     public var lastBattle: BattleLog?
 
+    /// The colony's standing orders — trades, rations and who parties may take.
+    /// At sixty souls the pawn screen is for looking at somebody; this is how
+    /// the town is actually run. See `ColonyPolicy`.
+    public var policy: ColonyPolicy
+
     /// The party out at a given point of interest, if one is.
     public func expedition(forPOI poiID: Int) -> POIExpedition? {
         expeditions.first { $0.poiID == poiID }
@@ -181,7 +186,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         tamed: [TamedAnimal] = [],
         stockpile: [String: Int] = [:],
         rawProgress: [String: Double] = [:],
-        lastBattle: BattleLog? = nil
+        lastBattle: BattleLog? = nil,
+        policy: ColonyPolicy = ColonyPolicy()
     ) {
         self.id = id
         self.name = name
@@ -212,6 +218,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.stockpile = stockpile
         self.rawProgress = rawProgress
         self.lastBattle = lastBattle
+        self.policy = policy
     }
 
     // MARK: - Codable (resilient to pre-specialisation saves)
@@ -222,7 +229,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         case laws, leaderID, society, strikeTicksRemaining, faith
         case constructions, constructionSequence, journal, relationships, expeditions
         case tamed
-        case stockpile, rawProgress, lastBattle
+        case stockpile, rawProgress, lastBattle, policy
     }
 
     public init(from decoder: Decoder) throws {
@@ -261,5 +268,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         stockpile = try c.decodeIfPresent([String: Int].self, forKey: .stockpile) ?? [:]
         rawProgress = try c.decodeIfPresent([String: Double].self, forKey: .rawProgress) ?? [:]
         lastBattle = try c.decodeIfPresent(BattleLog.self, forKey: .lastBattle)
+        // Decode-if-present: a save from before standing orders loads as a
+        // colony under none, and plays exactly as it did.
+        policy = try c.decodeIfPresent(ColonyPolicy.self, forKey: .policy) ?? ColonyPolicy()
     }
 }

@@ -60,6 +60,8 @@ public enum PawnEngine {
         // So is the weather, and what the colony's walls and fires keep out.
         let season = Season(tick: tick, ticksPerYear: max(1, registry.config.ticksPerYear))
         let shelterWarmth = ComfortEngine.shelter(s, registry: registry)
+        // And what the colony has decided a meal is this year.
+        let ration = s.policy.ration
 
         // Mutate pawns in place (index loop) to avoid rebuilding the array and
         // copying every pawn's dictionaries each tick — this runs up to 43,200
@@ -81,11 +83,13 @@ public enum PawnEngine {
             s.pawns[i] = ComfortEngine.advanceOneTick(
                 s.pawns[i], season: season, shelter: shelterWarmth)
 
-            // Eat if hungry and food is available. Rationing stretches a meal.
-            let meal = foodPerMeal * laws.foodUpkeepMultiplier
+            // Eat if hungry and food is available. Rationing stretches a meal —
+            // both by law and by the colony's own standing order, which is the
+            // one lever a player can pull the moment a winter turns bad.
+            let meal = foodPerMeal * laws.foodUpkeepMultiplier * ration.foodPerMeal
             if food >= meal, s.pawns[i].needs.hunger < mealHungerThreshold {
                 food -= meal
-                s.pawns[i].needs.hunger += hungerPerMeal
+                s.pawns[i].needs.hunger += hungerPerMeal * ration.hungerPerMeal
             }
             s.pawns[i].needs = s.pawns[i].needs.clamped()
 
@@ -106,8 +110,11 @@ public enum PawnEngine {
             // costs to have slept on the ground again.
             let moodBonus = hasEquipment ? ItemEngine.moodBonus(s.pawns[i], registry: registry) : 0
             let roofless = housed ? 0 : HouseholdEngine.roughSleepMood
+            // People notice what is on the table. Short rations are a decision
+            // the colony can feel, which is what makes them a real choice
+            // rather than a free saving.
             s.pawns[i].mood = min(max(s.pawns[i].needs.average + s.pawns[i].trait.moodModifier
-                                      + moodBonus - roofless, 0), 100)
+                                      + moodBonus - roofless + ration.moodEffect, 0), 100)
 
             // Mental break with hysteresis.
             if s.pawns[i].mood < breakEnterMood {

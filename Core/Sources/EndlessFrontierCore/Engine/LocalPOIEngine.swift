@@ -114,10 +114,18 @@ public enum LocalPOIEngine {
     public static func chooseParty(
         _ settlement: Settlement, for kind: LocalPOIKind, ticksPerYear: Int
     ) -> [UUID] {
+        // The colony's standing roster comes first: a town that has said nobody
+        // leaves sends nobody, whatever is out there.
+        guard settlement.policy.roster != .nobody else { return [] }
         let wanted = kind.wantedSkill
+        // "Spare hands only" means the trades the orders marked as priority
+        // keep their people — the mines stay manned while the ruins call.
+        let protected = settlement.policy.roster == .spareHands
+            ? settlement.policy.protectedTrades : []
         let eligible = settlement.pawns
             .filter { $0.isAdult(ticksPerYear: ticksPerYear) && !$0.isBroken
-                      && !$0.isAway && $0.health >= 40 }
+                      && !$0.isAway && $0.health >= 40
+                      && !protected.contains($0.assignedWork) }
             .sorted {
                 let a = $0.skill(wanted), b = $1.skill(wanted)
                 if a != b { return a > b }
