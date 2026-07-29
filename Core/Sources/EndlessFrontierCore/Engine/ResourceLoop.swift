@@ -306,8 +306,11 @@ public enum ResourceLoop {
         let buildingDefense = s.buildings.reduce(0.0) { acc, instance in
             acc + (registry.building(instance.definitionID)?.defense ?? 0) * Double(instance.count)
         }
+        // …and whatever is chained at the gate. A wolf that stayed is worth
+        // several spears, which is why gentling one is worth a season.
+        let kennel = TamingEngine.bonuses(s)
         let defenseTarget = buildingDefense + ItemEngine.colonyDefenseBonus(s, registry: registry)
-            + profile.defenseFlat + laws.defenseFlat
+            + profile.defenseFlat + laws.defenseFlat + kennel.defense
         s.stats.defense += (defenseTarget - s.stats.defense) * 0.15
 
         // 7. Pollution drifts toward what industry emits; heavy pollution hurts
@@ -371,6 +374,10 @@ public enum ResourceLoop {
         //     pawns' own tick so a wound taken this minute is bleeding by the
         //     next one — and so the healer's trade finally has something to do.
         s = MedicineEngine.advanceOneTick(s, registry: registry, tick: tick)
+        // 9c. The farmyard: hunters gentle what they can, and the beasts the
+        //     colony already keeps eat, work and occasionally leave.
+        s = TamingEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: mapSeed)
+        s = TamingEngine.keepAnimals(s, registry: registry, tick: tick, mapSeed: mapSeed)
 
         // 10. Deposits deplete under the harvest and regrow with the seasons —
         //     faster where the woods are protected by law.

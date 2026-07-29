@@ -166,12 +166,17 @@ public struct Animal: Codable, Sendable, Equatable, Identifiable {
     public var position: LocalPoint
     /// What it is doing right now — set by the think-step, read by the canvas.
     public var activity: AnimalActivity
+    /// How far somebody has got with gentling it, 0…1. At 1 it stops running
+    /// and joins the colony (`TamedAnimal`). Wild beasts sit at 0 for ever
+    /// unless a hunter starts working at them.
+    public var tameProgress: Double
 
     public init(id: UUID, species: AnimalSpecies, sex: AnimalSex, age: Int,
                 health: Double? = nil, body: [AnimalBodyPart]? = nil,
                 conditions: [AnimalCondition] = [],
                 position: LocalPoint = LocalPoint(x: 0.5, y: 0.5),
-                activity: AnimalActivity = .grazing) {
+                activity: AnimalActivity = .grazing,
+                tameProgress: Double = 0) {
         self.id = id
         self.species = species
         self.sex = sex
@@ -181,12 +186,14 @@ public struct Animal: Codable, Sendable, Equatable, Identifiable {
         self.conditions = conditions
         self.position = position
         self.activity = activity
+        self.tameProgress = min(1, max(0, tameProgress))
     }
 
     // MARK: - Codable (resilient: beasts stood nowhere before they roamed)
 
     private enum CodingKeys: String, CodingKey {
         case id, species, sex, age, health, body, conditions, position, activity
+        case tameProgress
     }
 
     public init(from decoder: Decoder) throws {
@@ -204,6 +211,7 @@ public struct Animal: Codable, Sendable, Equatable, Identifiable {
         position = try c.decodeIfPresent(LocalPoint.self, forKey: .position)
             ?? Animal.scatter(id)
         activity = try c.decodeIfPresent(AnimalActivity.self, forKey: .activity) ?? .grazing
+        tameProgress = try c.decodeIfPresent(Double.self, forKey: .tameProgress) ?? 0
     }
 
     /// A stable spot on the map for a beast that has never had one, spread over

@@ -116,6 +116,10 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public var relationships: [Relationship]
     /// Parties currently out working the local map's points of interest.
     public var expeditions: [POIExpedition]
+    /// The beasts that belong to this settlement — gentled out of the wild and
+    /// kept for what they do. They eat out of the stores, they can be hurt, and
+    /// a badly kept one goes back to the woods.
+    public var tamed: [TamedAnimal]
     /// Raw and processed materials on hand, by item id.
     ///
     /// Materials are *counted*, not individually tracked: nobody cares which
@@ -174,6 +178,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         journal: ColonyLog = ColonyLog(),
         relationships: [Relationship] = [],
         expeditions: [POIExpedition] = [],
+        tamed: [TamedAnimal] = [],
         stockpile: [String: Int] = [:],
         rawProgress: [String: Double] = [:],
         lastBattle: BattleLog? = nil
@@ -203,6 +208,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.journal = journal
         self.relationships = relationships
         self.expeditions = expeditions
+        self.tamed = tamed
         self.stockpile = stockpile
         self.rawProgress = rawProgress
         self.lastBattle = lastBattle
@@ -215,6 +221,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         case buildings, storage, storageCapacity, stats, inventory, specialization, colony, localMap
         case laws, leaderID, society, strikeTicksRemaining, faith
         case constructions, constructionSequence, journal, relationships, expeditions
+        case tamed
         case stockpile, rawProgress, lastBattle
     }
 
@@ -250,6 +257,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         journal = try c.decodeIfPresent(ColonyLog.self, forKey: .journal) ?? ColonyLog()
         relationships = try c.decodeIfPresent([Relationship].self, forKey: .relationships) ?? []
         expeditions = try c.decodeIfPresent([POIExpedition].self, forKey: .expeditions) ?? []
+        tamed = try c.decodeIfPresent([TamedAnimal].self, forKey: .tamed) ?? []
         stockpile = try c.decodeIfPresent([String: Int].self, forKey: .stockpile) ?? [:]
         rawProgress = try c.decodeIfPresent([String: Double].self, forKey: .rawProgress) ?? [:]
         lastBattle = try c.decodeIfPresent(BattleLog.self, forKey: .lastBattle)

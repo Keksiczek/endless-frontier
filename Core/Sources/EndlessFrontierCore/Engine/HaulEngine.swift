@@ -86,6 +86,9 @@ public enum HaulEngine {
         var s = settlement
         let store = storePosition(s)
         let ticksPerYear = max(1, registry.config.ticksPerYear)
+        // A pack animal takes the weight off: the colony's beasts of burden
+        // make every hauler quicker, which is the whole reason to keep one.
+        let pace = carrySpeed * (1 + TamingEngine.bonuses(s).haul)
 
         for i in s.pawns.indices {
             // Someone already carrying just walks, and hands it over on arrival.
@@ -97,7 +100,7 @@ public enum HaulEngine {
                     continue
                 }
                 let next = step(from: s.pawns[i].haulPosition ?? store,
-                                toward: load.destination, by: carrySpeed)
+                                toward: load.destination, by: pace)
                 s.pawns[i].haulPosition = next
                 if within(next, load.destination, arrivalRadius) {
                     s.stockpile[load.itemID, default: 0] += load.amount
@@ -130,7 +133,7 @@ public enum HaulEngine {
                 s.pawns[i].haulPosition = pilePosition
             } else {
                 s.pawns[i].haulPosition = step(from: standing, toward: pilePosition,
-                                               by: carrySpeed)
+                                               by: pace)
             }
         }
 

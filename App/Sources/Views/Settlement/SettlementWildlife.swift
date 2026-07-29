@@ -38,6 +38,52 @@ enum SettlementWildlife {
     /// drawn as itself — its own species, its own wander, and visibly the worse
     /// for a hard winter — and the abstract herd is only the fallback for saves
     /// that predate them. Everything is skipped under fog.
+    /// The beasts that belong to the colony, drawn among its buildings rather
+    /// than out in the wild.
+    ///
+    /// A tamed animal is the same `Animal` the valley is made of, so it is
+    /// drawn the same way — and then marked, because the one thing you need to
+    /// know at a glance is that this wolf is *yours*. It wanders its own small
+    /// circuit of the town instead of the herd's lap of the valley.
+    static func drawTamed(
+        _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement,
+        map: LocalMap, time: Double, zoom: CGFloat
+    ) {
+        let heart = SettlementGeometry.heart
+        for (index, kept) in settlement.tamed.enumerated() {
+            // A slow round of the yard, each beast on its own arc.
+            let phase = Double(hash(kept.animal.id) % 6199) / 6199 * 2 * .pi
+            let radius = 0.05 + Double(index % 3) * 0.022
+            let angle = time * 0.06 + phase
+            let position = LocalPoint(x: heart.x + cos(angle) * radius,
+                                      y: heart.y + sin(angle) * radius * 0.7)
+            guard map.isExplored(position) else { continue }
+            let at = SettlementRenderer.point(position, in: rect)
+            let s = size(kept.animal.species) * zoom
+
+            switch kept.animal.species {
+            case .deer: deer(&context, at: at, s: s, time: time, phase: phase)
+            case .boar: boar(&context, at: at, s: s, time: time, phase: phase)
+            case .hare: hare(&context, at: at, s: s, time: time, phase: phase)
+            case .fox, .wolf, .bear:
+                prowler(&context, at: at, s: s, time: time, hungry: false)
+            }
+            // The collar: a small ring under it, in the colony's own amber, so
+            // a tamed wolf never reads as one that came out of the trees.
+            context.stroke(
+                Path(ellipseIn: CGRect(x: at.x - s * 0.9, y: at.y + s * 0.5,
+                                       width: s * 1.8, height: s * 0.5)),
+                with: .color(Theme.accent.opacity(0.55)), lineWidth: max(0.6, zoom * 0.5))
+            // And a pack on the ones that carry.
+            if kept.role == .beastOfBurden {
+                context.fill(Path(roundedRect: CGRect(x: at.x - s * 0.5, y: at.y - s * 0.85,
+                                                      width: s, height: s * 0.5),
+                                  cornerRadius: s * 0.14),
+                             with: .color(Color(red: 0.46, green: 0.36, blue: 0.25)))
+            }
+        }
+    }
+
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double,
         zoom: CGFloat = 1

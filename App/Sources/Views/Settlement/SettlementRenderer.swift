@@ -91,6 +91,9 @@ enum SettlementRenderer {
         // Your own carts, on the leg of the road that crosses this valley.
         SettlementConvoys.draw(&context, rect: rect, settlement: settlement,
                                caravans: caravans, map: map, time: time, zoom: zoom)
+        // And the beasts that stopped running and stayed.
+        SettlementWildlife.drawTamed(&context, rect: rect, settlement: settlement,
+                                     map: map, time: time, zoom: zoom)
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels)
