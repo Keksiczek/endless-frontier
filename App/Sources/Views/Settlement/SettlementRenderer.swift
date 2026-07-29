@@ -52,6 +52,7 @@ enum SettlementRenderer {
         season: Season,
         camera: Camera,
         continuousTick: Double = 0,
+        caravans: [Caravan] = [],
         selectedPawnID: UUID?,
         selectedBuildingID: Int?
     ) {
@@ -87,6 +88,9 @@ enum SettlementRenderer {
         // And whoever has come in over the edge to trade or to talk.
         SettlementVisitors.draw(&context, rect: rect, map: map, time: time,
                                 zoom: zoom, showLabels: showLabels)
+        // Your own carts, on the leg of the road that crosses this valley.
+        SettlementConvoys.draw(&context, rect: rect, settlement: settlement,
+                               caravans: caravans, map: map, time: time, zoom: zoom)
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels)

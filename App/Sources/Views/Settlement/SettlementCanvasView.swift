@@ -33,6 +33,9 @@ struct SettlementCanvasView: View {
     let map: LocalMap
     let registry: GameDataRegistry
     let season: Season
+    /// Shipments on the road right now. The legs that cross this valley are
+    /// drawn; the rest of the journey is out in country this map does not show.
+    var caravans: [Caravan] = []
     /// The simulation clock, so an expedition walks smoothly rather than
     /// jumping once a minute.
     let clock: TickClock
@@ -61,6 +64,7 @@ struct SettlementCanvasView: View {
                         &context, size: size, settlement: settlement, map: map,
                         registry: registry, time: t, season: season,
                         camera: camera, continuousTick: now,
+                        caravans: caravans,
                         selectedPawnID: selectedPawnID,
                         selectedBuildingID: selectedBuildingID)
                     if let plan = buildPlan {

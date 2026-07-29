@@ -28,6 +28,9 @@ public enum TickEngine {
 
             s = ResourceLoop.advanceOneTick(s, registry: registry)
             s = MultiCityEngine.advanceOneTick(s, registry: registry)
+            // One of your towns keeping another alive: a cart loaded and sent,
+            // rather than an accountant's entry moving goods nobody carried.
+            s = SupplyEngine.advanceOneTick(s, registry: registry)
             let caravanStep = CaravanEngine.advanceOneTick(s, registry: registry)
             s = caravanStep.state
             fired.append(contentsOf: caravanStep.fired)
