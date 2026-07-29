@@ -3,7 +3,7 @@
 Everything requested, kept here so nothing is lost between sessions. The
 ordering inside each section is my recommendation, not a promise.
 
-Last updated: 2026-07-28 (evening).
+Last updated: 2026-07-29.
 
 ---
 
@@ -67,8 +67,9 @@ Last updated: 2026-07-28 (evening).
 
 ## 5. Housekeeping
 
-- Notifications — **fixed**; still wants one real run on device to confirm the
-  sheet appears and the digest does not fire while playing.
+- Notifications — permission state is now **visible and settable** in Settings.
+  If it says *Refused*, that is an iOS record only the user can undo.
+- Animals: stutter, stacking and un-tappability all fixed 2026-07-29.
 - The old English content (events, buildings, techs) is still untranslated;
   everything new ships CZ+EN in the same change.
 
