@@ -1,7 +1,7 @@
-# Handoff — 2026-07-29
+# Handoff — 2026-07-29 (evening)
 
 Branch: `docs/rimworld-layer`, all pushed, **not merged to `main`**.
-Tests: **741 Core**, **61 app** — green. Build green.
+Tests: **773 Core**, **83 app** — green. Build green.
 
 ---
 
@@ -11,82 +11,84 @@ Tests: **741 Core**, **61 app** — green. Build green.
 |---|---|
 | Everything asked for and its state | `docs/BACKLOG.md` |
 | What the RimWorld-leaning layer *is* | `docs/RIMWORLD_LAYER.md` |
-| Rules that must not break | `docs/BACKLOG.md` §"Rules", `CLAUDE.md` |
+| Rules that must not break | `docs/BACKLOG.md` §"Rules" (now ten), `CLAUDE.md` |
 
 ---
 
-## 2. Where the game is now
+## 2. Done this session — the whole of the previous handoff's list
 
-Every complaint from the last two play sessions is closed. The shape of the
-game today:
+**§2.10 Light and shade.** There is a sun now. It rises, crosses and sets on
+the same clock the colonists keep, and one value — `SettlementLight.sun(time:)`
+— is read by everything that casts, shades or warms, so the valley is lit from
+one place. A slow relief field the simulation knows nothing about gives the
+land shape; buildings, trees and rock throw shadows along the sun's line, long
+at dawn, tucked under at noon.
 
-- **Everything alive is a pawn with a body.** Colonists and animals both carry
-  named parts, wounds on those parts, illness and cold. A wound bleeds until
-  somebody tends it; a ruined arm costs the colony work; a lost part never
-  grows back.
-- **Work happens at a place.** A logger fells *this* tree, a miner cuts *this*
-  block of hillside, a hunter stalks *this* deer, and the timber and stone lie
-  on the ground until somebody carries them in.
-- **Buildings are rooms.** Floor, walls, a door, fittings, and the colonists
-  the engine posted standing at them. Push the camera in, the roof lifts off.
-  They weather, take damage by kind (raid, storm, fire, beast, quake), stop
-  working when derelict, and masons repair them at a cost.
-- **The colony is a place.** A house is a household with beds; the roofless
-  sleep badly and say so. The town opens districts as it grows. Pulled back,
-  people gather into group marks with headcounts.
-- **The world beyond arrives.** Traders with mules, envoys with a standard,
-  refugees — each puts a decision to you. Your own towns ship carts to each
-  other and you can watch them leave.
-- **Beasts can be tamed** and then haul, guard or keep company — and eat.
+**§2.11 Seasons on the land.** Snow *lies* rather than tinting: hollows fill
+first, ridges stay scoured, deep by midwinter and still deep at its end. Spring
+opens as mud and standing meltwater and dries out of it. Autumn drops leaves
+under the woods that dropped them. High summer burns the ridges off.
 
----
+**§3.7 More places, more things.** Six POI kinds → twelve. A wild orchard, a
+hermit who teaches the party rather than paying the colony, a watchtower that
+pays in *map*, a salt pan, a burial mound that costs morale to open, and a
+fallen star. Fourteen new items, CZ+EN. A map draws 4–7 of 12 rather than
+3–5 of 6.
 
-## 3. Fixed this session (from screenshots)
-
-- **Animal animation stutter.** Was `time * urgency`; changing activity jumped
-  the phase by (urgency − 1) × time. Clock is one rate now; urgency changes
-  amplitude.
-- **Animals stacking into one smeared beast.** Grazing targeted the herd
-  centroid, so the herd converged. Each beast keeps its own `herdStation`
-  offset, stable per id.
-- **Animals were not tappable.** `CanvasSelection.animal(UUID)` +
-  `AnimalInspectorCard` — species, health, what it is doing, its body part by
-  part, and taming progress.
-- **Pawn card too thin.** Now shows all six body parts always, top three
-  trades, bed, carried load, equipment count.
-- **Notifications invisible.** Settings shows the real
-  `UNAuthorizationStatus` with a button that asks (not-determined) or opens iOS
-  Settings (denied).
+**§4.5 Manage by policy.** `ColonyPolicy` on the settlement, set from *Standing
+orders* on the Council screen: a weight per trade, the ration on the table, and
+whether an expedition may take hands off the trades you said matter.
 
 ---
 
-## 4. Known open — read before touching
+## 3. Three traps this session walked into — all now backlog rules
+
+1. **Rule 9 — translucent layers over overlapping tiles.** Ground tiles are
+   drawn a hair larger than their cell so no seam shows. Harmless under an
+   opaque fill; under a *see-through* one the overlap blends twice and paints a
+   bright line along every tile edge. The first light-and-snow build turned the
+   whole valley into brickwork. Cover, season skin and light band resolve into
+   one colour now (`SettlementGround.Tone`) and every fill is solid.
+2. **Rule 10 — a one-tile-wide cell is against both side borders.** On a phone
+   the fog grid is three times taller than wide, `subX` is 1, and the cover
+   dither borrowed vertically only. The land has been drawn as vertical stripes
+   for as long as there has been land.
+3. **Rule 9c — an order must reach a town that is already full.** The labour
+   assigner only touches the idle, so a policy alone changed nothing in any
+   colony past its first decade. `LaborEngine.rebalance` is the slow hand.
+
+Also: `GameDataRegistry.bundled()` loads items with `try?`, so **one** bad
+effect anywhere in `items.json` silently empties the entire table. There is a
+tripwire test for it now. (`colony_production` takes `perTick`, not `amount`.)
+
+---
+
+## 4. Known open
 
 1. **Notifications may still not arrive on device.** The code path is correct
-   and the status is now visible. If Settings says *Refused*, that is an iOS
-   record from an earlier build and only the user can undo it. Verify by
-   checking the card before assuming a code bug.
+   and the status is visible in Settings. If it says *Refused*, that is an iOS
+   record only the user can undo.
 2. **Old English content is untranslated** — events, buildings, techs from
    before `LocalizedText`. Everything new ships CZ+EN.
-3. **`deerHerd` is a view now**, recomputed from live animals. Do not write to
-   it; write animals.
-4. **`SupplyEngine` sends one cart per resource per check** on purpose — the
-   first version was O(settlements²) per check and broke
-   `catchUpScalesLinearly`.
+3. **`deerHerd` is a view**, recomputed from live animals. Write animals.
+4. **`SupplyEngine` sends one cart per resource per check** on purpose.
 
 ---
 
 ## 5. Next, in the order I would take it
 
-1. **Ground light and shade** (`BACKLOG` 2.10). It still reads flat from a
-   distance — the one remaining "it looks boring" complaint. Wants a low sun,
-   long shadows off buildings and trees, and seasons that change the *land*
-   (snow lying, spring mud) rather than only tinting it (2.11).
-2. **More POIs and items** (3.7). Six place kinds is thin after a few hours.
-3. **Manage by policy, not by pawn** (§4.5). At sixty souls nobody wants to
-   click each colonist — trades, rosters and rations as standing rules.
-4. **Merge to `main`.** This branch is a long way ahead and nothing here is
-   experimental any more.
+1. **Merge to `main`.** This branch is a long way ahead and nothing on it is
+   experimental any more. This is the top item now that the backlog's visual
+   and scale sections are closed.
+2. **Translate the old content.** Events, buildings and techs are the last
+   English-only surface, and it is the one the player reads most.
+3. **Make the post pay.** `ResourceLoop` still produces from building *counts*,
+   not from who is stood at the bench (`LaborEngine.staffBuildings` note). The
+   standing orders make this matter: telling a colony to prioritise mining
+   should change what comes out of the ground, and right now it changes who is
+   standing where.
+4. **More events** (`BACKLOG` 3.6) — three disasters and three visits is thin
+   against twelve kinds of place.
 
 ---
 
