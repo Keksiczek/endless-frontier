@@ -22,6 +22,9 @@ enum CanvasSelection: Equatable {
     case poi(Int)
     /// A tapped patch of fog — the offer to send the scouts there.
     case fog(LocalPoint)
+    /// A tapped beast, wild or kept. The wild are pawns with bodies and lives;
+    /// until now they were the only thing on the canvas you could not ask about.
+    case animal(UUID)
 }
 
 /// The living settlement: a `TimelineView`-driven `Canvas` where colonists walk
@@ -213,6 +216,26 @@ struct SettlementCanvasView: View {
             }
         }
         if case .pawn = best { return best }
+
+        // The beasts, wild and kept. They are pawns with bodies, wounds and a
+        // mind — the only living things on the map you could not tap.
+        for animal in map.wildlife.animals where map.isExplored(animal.position) {
+            let d2 = distanceSquared(SettlementRenderer.point(animal.position, in: rect), location)
+            if d2 < bestDistance {
+                bestDistance = d2
+                best = .animal(animal.id)
+            }
+        }
+        for kept in settlement.tamed {
+            let d2 = distanceSquared(
+                SettlementRenderer.point(SettlementWildlife.tamedPosition(kept, index: 0, time: t),
+                                         in: rect), location)
+            if d2 < bestDistance {
+                bestDistance = d2
+                best = .animal(kept.animal.id)
+            }
+        }
+        if case .animal = best { return best }
 
         for building in SettlementRenderer.layout(settlement: settlement, registry: registry, rect: rect) {
             let d2 = distanceSquared(building.center, location)

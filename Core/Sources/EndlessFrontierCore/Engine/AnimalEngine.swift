@@ -254,10 +254,19 @@ public enum AnimalEngine {
                 }
             } else {
                 // Grazing: with the herd, but not on top of it.
+                //
+                // Each beast keeps its *own* place in the herd rather than
+                // walking at the centroid: a fresh random target every think
+                // pulls every animal toward the middle, so the whole herd piles
+                // onto one point and reads as one smeared deer. The standing
+                // is a function of the animal's id, so a herd is a spread of
+                // individuals that holds its shape as it drifts.
                 animal.activity = .grazing
-                let wander = 0.06
-                target = LocalPoint(x: centre.x + (rng.nextUnit() - 0.5) * wander * 2,
-                                    y: centre.y + (rng.nextUnit() - 0.5) * wander * 2)
+                let station = herdStation(animal.id)
+                let wander = 0.02
+                target = LocalPoint(
+                    x: centre.x + station.x + (rng.nextUnit() - 0.5) * wander,
+                    y: centre.y + station.y + (rng.nextUnit() - 0.5) * wander)
                 pace = stride
             }
             animal.position = step(from: animal.position, toward: target, by: pace)
@@ -267,6 +276,22 @@ public enum AnimalEngine {
         var updated = map
         updated.wildlife.animals = moved
         return updated
+    }
+
+    /// Where a given beast stands in its herd, relative to the herd's middle.
+    ///
+    /// Stable per animal, so the herd is a spread of individuals that keeps its
+    /// shape as it drifts rather than a knot that re-forms every think. Spread
+    /// wide enough that two deer never occupy the same few pixels.
+    static func herdStation(_ id: UUID) -> (x: Double, y: Double) {
+        var h: UInt64 = 0xCBF2_9CE4_8422_2325
+        let b = id.uuid
+        for byte in [b.0, b.1, b.2, b.3, b.4, b.5, b.6, b.7] {
+            h = (h ^ UInt64(byte)) &* 0x0100_0000_01B3
+        }
+        let angle = Double(h % 6283) / 1000
+        let radius = 0.020 + Double((h >> 21) % 1000) / 1000 * 0.055
+        return (cos(angle) * radius, sin(angle) * radius * 0.75)
     }
 
     /// The nearest of `points` within `within`, skipping the one at `ignoringSelf`.

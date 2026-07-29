@@ -45,18 +45,26 @@ enum SettlementWildlife {
     /// drawn the same way — and then marked, because the one thing you need to
     /// know at a glance is that this wolf is *yours*. It wanders its own small
     /// circuit of the town instead of the herd's lap of the valley.
+    /// Where a kept beast is walking its round of the yard right now.
+    ///
+    /// Shared with hit-testing, so a tap lands on the animal that is drawn
+    /// rather than on where it was a moment ago.
+    static func tamedPosition(_ kept: TamedAnimal, index: Int, time: Double) -> LocalPoint {
+        let heart = SettlementGeometry.heart
+        let phase = Double(hash(kept.animal.id) % 6199) / 6199 * 2 * .pi
+        let radius = 0.05 + Double(index % 3) * 0.022
+        let angle = time * 0.06 + phase
+        return LocalPoint(x: heart.x + cos(angle) * radius,
+                          y: heart.y + sin(angle) * radius * 0.7)
+    }
+
     static func drawTamed(
         _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement,
         map: LocalMap, time: Double, zoom: CGFloat
     ) {
-        let heart = SettlementGeometry.heart
         for (index, kept) in settlement.tamed.enumerated() {
-            // A slow round of the yard, each beast on its own arc.
             let phase = Double(hash(kept.animal.id) % 6199) / 6199 * 2 * .pi
-            let radius = 0.05 + Double(index % 3) * 0.022
-            let angle = time * 0.06 + phase
-            let position = LocalPoint(x: heart.x + cos(angle) * radius,
-                                      y: heart.y + sin(angle) * radius * 0.7)
+            let position = tamedPosition(kept, index: index, time: time)
             guard map.isExplored(position) else { continue }
             let at = SettlementRenderer.point(position, in: rect)
             let s = size(kept.animal.species) * zoom
@@ -135,13 +143,18 @@ enum SettlementWildlife {
             let at = SettlementRenderer.point(animal.position, in: rect)
             let ailing = !animal.conditions.isEmpty
                 || animal.health < animal.species.baseHealth * 0.55
-            // A running beast is drawn running: the gait clock speeds up, which
-            // is the cheapest way for "that herd has been startled" to read at
-            // a glance.
+            // A running beast is drawn running — but *not* by speeding the
+            // clock up. `time * urgency` looks right until the activity
+            // changes, at which point the phase jumps by (urgency − 1) × time,
+            // which after a few minutes of play is an enormous discontinuity:
+            // the beast snaps into a different pose every time it takes fright
+            // or calms down. That snap is the stutter. The clock runs at one
+            // rate for everybody and *how far* the legs swing carries the
+            // urgency instead.
             let urgency = animal.activity == .fleeing ? 3.4
                 : (animal.activity == .stalking ? 1.8 : 1.0)
-            let beat = time * urgency
-            let s = size(animal.species) * zoom
+            let beat = time
+            let s = size(animal.species) * zoom * (1 + (urgency - 1) * 0.06)
 
             switch animal.species {
             case .deer:
@@ -211,7 +224,7 @@ enum SettlementWildlife {
     }
 
     /// A stable number per beast, so its wander is its own and never jitters.
-    private static func hash(_ id: UUID) -> UInt64 {
+    static func hash(_ id: UUID) -> UInt64 {
         var h: UInt64 = 0xCBF2_9CE4_8422_2325
         let b = id.uuid
         for byte in [b.0, b.1, b.2, b.3, b.4, b.5, b.6, b.7] {

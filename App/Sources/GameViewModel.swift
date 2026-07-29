@@ -845,6 +845,18 @@ final class GameViewModel {
         viewedLocalMap?.pois.first { $0.id == poiID }
     }
 
+    /// The beast behind a tap — wild if the valley still has it, kept if the
+    /// colony does. Both are the same `Animal`; only one of them has a collar.
+    func animal(_ animalID: UUID) -> (animal: Animal, kept: TamedAnimal?)? {
+        if let wild = viewedLocalMap?.wildlife.animals.first(where: { $0.id == animalID }) {
+            return (wild, nil)
+        }
+        if let kept = selectedSettlement?.tamed.first(where: { $0.animal.id == animalID }) {
+            return (kept.animal, kept)
+        }
+        return nil
+    }
+
     /// The party out at a place, if one is.
     func expedition(forPOI poiID: Int) -> POIExpedition? {
         selectedSettlement?.expedition(forPOI: poiID)

@@ -169,6 +169,11 @@ struct SettlementScreen: View {
                         withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                     })
                 .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if case let .animal(id) = selection, let found = game.animal(id) {
+                AnimalInspectorCard(animal: found.animal, kept: found.kept) {
+                    withAnimation(.easeOut(duration: 0.15)) { selection = .none }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if case let .fog(point) = selection {
                 ScoutOrderCard(scouts: game.scoutCount) {
                     game.sendScouts(to: point)

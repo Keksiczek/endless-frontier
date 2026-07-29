@@ -44,8 +44,10 @@ struct PawnInspectorCard: View {
             }
             needs
             if !pawn.body.ailments.isEmpty || pawn.body.capacity < 0.99 { condition }
+            bodyParts
             if !moodFactors.isEmpty { moodBreakdown }
             if !bonds.isEmpty { bondRows }
+            skills
             genes
         }
         .padding(16)
@@ -122,6 +124,95 @@ struct PawnInspectorCard: View {
                 Text(cs ? "Nemůže chodit" : "Cannot walk")
                     .font(.caption).foregroundStyle(Theme.danger)
             }
+        }
+    }
+
+    /// The body itself, part by part — six rows, always, so you can see at a
+    /// glance which arm is the ruined one rather than only that something is.
+    ///
+    /// Animals have had this since they became pawns; this is the same page
+    /// asked of a person, and the reason a wound is a *thing that happened*
+    /// rather than a smaller number.
+    private var bodyParts: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            sectionTitle(cs ? "Tělo" : "Body")
+            ForEach(BodyPartKind.allCases, id: \.self) { kind in
+                let part = pawn.body.part(kind)
+                let condition = part?.missing == true ? 0 : (part?.condition ?? 1)
+                HStack(spacing: 6) {
+                    Text(kind.displayName.resolve(AppStrings.language))
+                        .font(.caption2)
+                        .foregroundStyle(condition < 0.99 ? Theme.text : Theme.textDim)
+                        .frame(width: 74, alignment: .leading)
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Theme.surfaceInset)
+                            Capsule()
+                                .fill(partTint(condition, missing: part?.missing == true))
+                                .frame(width: geo.size.width * CGFloat(condition))
+                        }
+                    }
+                    .frame(height: 4)
+                    Text(part?.missing == true
+                         ? (cs ? "pryč" : "gone")
+                         : "\(Int(condition * 100))")
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(condition < 0.99 ? Theme.danger : Theme.textDim)
+                        .frame(width: 32, alignment: .trailing)
+                }
+            }
+        }
+    }
+
+    private func partTint(_ condition: Double, missing: Bool) -> Color {
+        if missing { return Theme.danger }
+        if condition < 0.5 { return Theme.danger }
+        if condition < 0.99 { return Theme.accent }
+        return Theme.good.opacity(0.7)
+    }
+
+    /// What they are actually good at, and what they are on right now — the two
+    /// facts about a worker the card never carried.
+    private var skills: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            sectionTitle(cs ? "Řemeslo" : "Craft")
+            // The three they are best at. A full table of thirteen trades is a
+            // spreadsheet; the top of it is a person.
+            let best = pawn.skills.sorted { $0.value > $1.value }.prefix(3)
+                .filter { $0.value > 0 }
+            if best.isEmpty {
+                Text(cs ? "Zatím se nic nenaučil." : "Nothing learned yet.")
+                    .font(.caption).foregroundStyle(Theme.textDim)
+            } else {
+                ForEach(Array(best), id: \.key) { entry in
+                    HStack(spacing: 6) {
+                        Circle().fill(Theme.roleShade(entry.key)).frame(width: 6, height: 6)
+                        Text(AppStrings.roleName(entry.key))
+                            .font(.caption).foregroundStyle(Theme.text)
+                        Spacer(minLength: 6)
+                        Text("\(entry.value)")
+                            .font(.caption.monospacedDigit().weight(.semibold))
+                            .foregroundStyle(Theme.textDim)
+                    }
+                }
+            }
+            // Where they sleep, and what is in their hands — small facts, but
+            // they are what makes a colonist somebody rather than a worker.
+            HStack(spacing: 10) {
+                Label(housed ? (cs ? "má postel" : "has a bed")
+                             : (cs ? "spí venku" : "sleeps rough"),
+                      systemImage: housed ? "bed.double.fill" : "house.slash")
+                    .foregroundStyle(housed ? Theme.textDim : Theme.danger)
+                if let load = pawn.carrying {
+                    Label("\(load.amount)", systemImage: "shippingbox.fill")
+                        .foregroundStyle(Theme.accent)
+                }
+                if !pawn.equipment.isEmpty {
+                    Label("\(pawn.equipment.count)", systemImage: "shield.lefthalf.filled")
+                        .foregroundStyle(Theme.textDim)
+                }
+            }
+            .font(.caption2)
         }
     }
 
