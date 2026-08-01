@@ -15,6 +15,13 @@ public enum WorkKind: String, Codable, Sendable, CaseIterable, Equatable {
     case scouting   // reveals the fog of war (no resource)
     case priest     // tends faith (no resource)
     case garrison   // mans the walls and the barracks (no resource)
+    /// Makes **things** at a bench: tools, arms, cloth, bread.
+    ///
+    /// The one trade the colony did not have, and the reason crafting was a
+    /// menu button rather than part of the world — a recipe named a workshop
+    /// and required a workshop, and no colonist could ever be a person who
+    /// worked in one. See `CraftingEngine`.
+    case crafting
     case idle
 
     /// The resource this work contributes to, if any.
@@ -24,7 +31,10 @@ public enum WorkKind: String, Codable, Sendable, CaseIterable, Equatable {
         case .logging, .mining: return .materials
         case .research, .foraging: return .knowledge
         case .trade: return .influence
-        case .healing, .building, .scouting, .priest, .garrison, .idle: return nil
+        // Crafting makes *things*, which is exactly why it feeds no
+        // abstract pool: its output is an item on a shelf.
+        case .healing, .building, .scouting, .priest, .garrison, .crafting, .idle:
+            return nil
         }
     }
 

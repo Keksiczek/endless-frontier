@@ -928,6 +928,90 @@ final class GameViewModel {
         persist()
     }
 
+    // MARK: - The bench
+
+    /// What the viewed colony has been told to make, oldest first.
+    var craftOrders: [CraftOrder] {
+        (selectedSettlement?.craftOrders ?? []).sorted { $0.placedTick < $1.placedTick }
+    }
+
+    /// How many colonists are actually at the bench. Crafting is work now, and
+    /// an order with nobody on it is a bar that never moves — the panel says so
+    /// rather than letting the player wait on nothing.
+    var crafterCount: Int {
+        guard let settlement = selectedSettlement else { return 0 }
+        let adult = Pawn.adultAgeYears * registry.config.ticksPerYear
+        return settlement.pawns.count {
+            $0.assignedWork == .crafting && $0.age >= adult && !$0.isBroken && !$0.isAway
+        }
+    }
+
+    func recipe(_ id: String) -> RecipeDefinition? { registry.recipes[id] }
+
+    /// How far through the one currently on the bench, 0…1.
+    func craftFraction(_ order: CraftOrder) -> Double {
+        guard let recipe = registry.recipes[order.recipeID] else { return 0 }
+        return order.fraction(of: recipe.workPerUnit)
+    }
+
+    /// Why an order is not moving, when it is not — the shop is missing, the
+    /// knowledge is missing, or the shelf is bare.
+    func craftBlockedReason(_ order: CraftOrder) -> String? {
+        guard let settlement = selectedSettlement,
+              let recipe = registry.recipes[order.recipeID] else { return nil }
+        let cs = AppStrings.language == .cs
+        if order.paused { return nil }
+        if let building = recipe.requiresBuilding,
+           !settlement.buildings.contains(where: { $0.definitionID == building }) {
+            let name = registry.building(building)?.name.resolve(AppStrings.language) ?? building
+            return (cs ? "Chybí stavba: " : "Needs ") + name
+        }
+        if let tech = recipe.requiresTech, !world.researchedTechs.contains(tech) {
+            return cs ? "Chybí výzkum" : "Needs research"
+        }
+        if !CraftingEngine.hasMaterials(recipe, at: settlement) {
+            return cs ? "Chybí materiál" : "Short of materials"
+        }
+        return nil
+    }
+
+    /// Roughly how long one will take at the bench as it is staffed right now.
+    func craftTimeLabel(_ recipe: RecipeDefinition) -> String {
+        let cs = AppStrings.language == .cs
+        guard let settlement = selectedSettlement else { return "—" }
+        let adult = Pawn.adultAgeYears * registry.config.ticksPerYear
+        let hands = settlement.pawns
+            .filter { $0.assignedWork == .crafting && $0.age >= adult }
+            .reduce(0.0) { $0 + CraftingEngine.effort(of: $1) }
+        guard hands > 0 else {
+            return "\(Int(recipe.workPerUnit)) " + (cs ? "práce" : "work")
+        }
+        let ticks = Int((recipe.workPerUnit / hands).rounded(.up))
+        return "~\(ticks) " + (cs ? "tiků" : "ticks")
+    }
+
+    func placeCraftOrder(_ recipeID: String, count: Int?) {
+        guard let index = selectedSettlementIndex else { return }
+        world.settlements[index] = CraftingEngine.place(
+            world.settlements[index], recipeID: recipeID, count: count,
+            tick: world.tick, registry: registry)
+        persist()
+    }
+
+    func cancelCraftOrder(_ orderID: UUID) {
+        guard let index = selectedSettlementIndex else { return }
+        world.settlements[index] = CraftingEngine.cancel(
+            world.settlements[index], orderID: orderID)
+        persist()
+    }
+
+    func setCraftPaused(_ orderID: UUID, paused: Bool) {
+        guard let index = selectedSettlementIndex else { return }
+        world.settlements[index] = CraftingEngine.setPaused(
+            world.settlements[index], orderID: orderID, paused: paused)
+        persist()
+    }
+
     func setSpecialization(_ specialization: SettlementSpecialization) {
         guard let settlement = selectedSettlement else { return }
         world = GameEngine.setSpecialization(world, settlementID: settlement.id, specialization: specialization)

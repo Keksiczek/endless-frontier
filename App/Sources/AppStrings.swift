@@ -131,6 +131,7 @@ enum AppStrings {
         case .scouting: return s("Scout", "Zvěd")
         case .idle:     return s("Idle", "Bez práce")
         case .garrison: return s("Garrison", "Posádka")
+        case .crafting: return s("Crafter", "Řemeslník")
         }
     }
 

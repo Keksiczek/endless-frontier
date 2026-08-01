@@ -91,10 +91,10 @@ order to work and to make things.
 | 6.8 | Colonists **always faced right**, stiff-armed | **done** |
 | 6.9 | A **river crosses every map** whether the biome wants one or not | **done** — `RiverShape.flows`, biome-weighted |
 | 6.10 | **Buildings want to be bigger** — the town is not legible at a glance | **done** — span 0.52 → 0.58 and the camera opens on the town (1.7×), together ≈ +90 % per building |
-| 6.11 | **A raid you fight**, RimWorld-style: real time, on screen, not resolved in the background — and the player may **take colonists in hand** if they want to | todo — the big one, see below |
+| 6.11 | **A raid you fight**, RimWorld-style: real time, on screen, not resolved in the background — and the player may **take colonists in hand** if they want to | **done** — `Siege` + `SiegeEngine` + `SiegeCommandCard` |
 | 6.12 | **More animals, more flora** — the valley is thin | **done** — see 6.12 note |
 | 6.13 | **Flora is not tappable by kind** — a birch, an oak, a bed of flowers should each answer for themselves | **done** — trees by species, rock by kind, and every scenery prop by name |
-| 6.14 | **Crafting wants to be better** — what is made, where, out of what, and by whom | in progress — the supply half is fixed (below); the *making* half is next |
+| 6.14 | **Crafting wants to be better** — what is made, where, out of what, and by whom | **done** — `CraftOrder` + the `crafting` trade |
 
 ### 6.12 — what the valley was actually missing
 
@@ -158,6 +158,32 @@ What it has to become:
 4. **Leaving is allowed.** Backgrounding the app mid-fight must resolve the
    rest exactly as the current resolver would, so a battle is never a thing
    you must sit through.
+
+### 6.14 — the making half
+
+Crafting was instant, free of labour, and done by nobody: a recipe named a
+workshop, the colony had to *have* a workshop, and no colonist could ever be
+a person who worked in one — `WorkKind` had no `crafting`. The whole tree was
+a vending machine bolted to the side of a settlement.
+
+Now: `CraftOrder` is a queue on the settlement (make one, make five, or a
+standing "always be making these"), `WorkKind.crafting` is a real trade that
+`LaborEngine` staffs — but only while there is something on the bench, the
+same guard `.building` uses — and `CraftingEngine.advanceOneTick` sinks
+worker-ticks into the oldest order that can actually be worked. Skill and
+numbers both matter; a master is a little over twice a beginner.
+
+Things that had to be got right, each of which fails silently:
+
+- Materials are spent **when the piece is finished**, not when it is started,
+  or a half-made sword holds two ingots hostage across a save and a famine.
+- An order that cannot be worked is **skipped, not blocking** — a colony
+  waiting on iron still makes its arrows.
+- Work banked against a bare shelf is **capped at one piece**, or the moment
+  one ingot arrives the colony pops out the whole order at once.
+- Every one of the 29 shipped recipes states no work cost, because there was
+  none to state. `workPerUnit` derives one from what the thing is made of and
+  whether it needs a shop, so nothing is free and nothing is unreachable.
 
 ### 6.6 — what shipped, so the next pass builds on it rather than over it
 

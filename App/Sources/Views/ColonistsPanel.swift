@@ -216,6 +216,7 @@ struct ColonistsPanel: View {
         case .scouting: return "binoculars.fill"
         case .garrison: return "shield.lefthalf.filled"
         case .priest: return "sparkles"
+        case .crafting: return "hammer.circle.fill"
         case .idle: return "moon.zzz.fill"
         }
     }

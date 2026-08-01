@@ -633,7 +633,6 @@ enum AgentMotion {
         case .fighting: return cs ? "V linii" : "In the line"
         case .travelling: return cs ? "Na cestě mimo osadu" : "On the road, away from the settlement"
         case .expedition: return cs ? "Pracuje na výpravě" : "Working the site"
-        case .fighting: return cs ? "V řadě, brání osadu" : "In the line, defending the settlement"
         case .working:
             switch work {
             case .farming: return cs ? "Pracuje na poli" : "Working the field"
@@ -646,6 +645,7 @@ enum AgentMotion {
             case .healing: return cs ? "Obchází nemocné" : "Doing the healer's rounds"
             case .building: return cs ? "Staví na lešení" : "Up on the scaffolding"
             case .scouting: return cs ? "Na obchůzce po hranici" : "Walking the bounds"
+            case .crafting: return cs ? "Vyrábí u ponku" : "At the bench"
             case .priest: return cs ? "Slouží v chrámu" : "Serving at the temple"
             case .garrison: return cs ? "Drží hlídku" : "Standing watch"
             case .idle: return cs ? "Postává na návsi" : "Idling on the green"

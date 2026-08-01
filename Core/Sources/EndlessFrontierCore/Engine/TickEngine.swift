@@ -45,6 +45,9 @@ public enum TickEngine {
             let exploration = ExplorationEngine.advanceOneTick(s, registry: registry)
             s = exploration.state
             fired.append(contentsOf: exploration.fired)
+            // The benches. After the day's gathering, so what came in this tick
+            // is on the shelf for the crafters to reach for.
+            s = CraftingEngine.advanceOneTick(s, registry: registry)
             s = TechEngine.advanceResearch(s, registry: registry)
             s = EraEngine.checkAdvancement(s, registry: registry)
             s = QuestEngine.advance(s, registry: registry)

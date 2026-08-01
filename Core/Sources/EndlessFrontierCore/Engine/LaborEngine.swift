@@ -24,6 +24,10 @@ public enum LaborEngine {
     static let healingMinPopulation = 16
     /// A temple needs tending — but only once one stands.
     static let priestShare = 0.04
+    /// Hands at the bench — but only while the colony has actually been asked
+    /// to make something. Same shape as `.building`, and for the same reason:
+    /// a trade with no work in it is people standing in an empty room.
+    static let craftingShare = 0.08
     /// Walls and barracks need manning — but only once something is built to
     /// man. Until this existed, the four defensive buildings employed people on
     /// paper and no colonist could ever hold the post: their trade was
@@ -67,6 +71,8 @@ public enum LaborEngine {
         } ?? false
         // Builders are only a trade while something is actually being raised.
         let hasConstruction = !settlement.constructions.isEmpty
+        // …and crafters only while there is something on the bench to make.
+        let hasCraftWork = settlement.craftOrders.contains { !$0.paused }
         // Ground left to chart keeps one pair of boots on the job.
         let needsScouts = !(settlement.localMap?.isFullyCharted ?? true)
 
@@ -75,6 +81,7 @@ public enum LaborEngine {
                                     population: adultCount, hasTemple: hasTemple,
                                     hasConstruction: hasConstruction,
                                     needsScouts: needsScouts, hasWalls: hasWalls,
+                                    hasCraftWork: hasCraftWork,
                                     policy: settlement.policy)
             s.pawns[index].assignedWork = best
             counts[best, default: 0] += 1
@@ -120,7 +127,9 @@ public enum LaborEngine {
                 && (registry.building($0.definitionID)?.defense ?? 0) > 0
         } ?? false
         let hasConstruction = !settlement.constructions.isEmpty
-        let table = quotaTable(hasTemple: hasTemple, hasWalls: hasWalls, policy: policy)
+        let hasCraftWork = settlement.craftOrders.contains { !$0.paused }
+        let table = quotaTable(hasTemple: hasTemple, hasWalls: hasWalls,
+                               hasCraftWork: hasCraftWork, policy: policy)
 
         // The trade with the biggest surplus, and the one with the biggest gap.
         var overWork: WorkKind?, overBy = 0.0
@@ -128,6 +137,7 @@ public enum LaborEngine {
         for (work, share) in table {
             if work == .healing, adultCount < healingMinPopulation { continue }
             if work == .building, !hasConstruction { continue }
+            if work == .crafting, !hasCraftWork { continue }
             let current = Double(counts[work, default: 0]) / Double(adultCount)
             let gap = share - current
             if gap > underBy { underBy = gap; underWork = work }
@@ -264,18 +274,21 @@ public enum LaborEngine {
         counts: [WorkKind: Int], adultCount: Double, population: Int,
         hasTemple: Bool = false, hasConstruction: Bool = true,
         needsScouts: Bool = false, hasWalls: Bool = false,
+        hasCraftWork: Bool = false,
         policy: ColonyPolicy = ColonyPolicy()
     ) -> WorkKind {
         // Scouting's floor still applies — unless the orders say nobody scouts.
         if needsScouts, counts[.scouting, default: 0] == 0,
            policy.stance(.scouting) != .off { return .scouting }
 
-        let table = quotaTable(hasTemple: hasTemple, hasWalls: hasWalls, policy: policy)
+        let table = quotaTable(hasTemple: hasTemple, hasWalls: hasWalls,
+                               hasCraftWork: hasCraftWork, policy: policy)
         var best: WorkKind?
         var bestDeficit = -Double.infinity
         for (work, share) in table {
             if work == .healing, population < healingMinPopulation { continue }
             if work == .building, !hasConstruction { continue }
+            if work == .crafting, !hasCraftWork { continue }
             let current = Double(counts[work, default: 0]) / adultCount
             let deficit = share - current
             if deficit > bestDeficit {
@@ -299,11 +312,13 @@ public enum LaborEngine {
     /// original total means a priority trade takes a bigger slice of the same
     /// town rather than the whole town.
     static func quotaTable(
-        hasTemple: Bool, hasWalls: Bool, policy: ColonyPolicy
+        hasTemple: Bool, hasWalls: Bool, hasCraftWork: Bool = false,
+        policy: ColonyPolicy
     ) -> [(work: WorkKind, share: Double)] {
         var table = quotas
         if hasTemple { table.append((.priest, priestShare)) }
         if hasWalls { table.append((.garrison, garrisonShare)) }
+        if hasCraftWork { table.append((.crafting, craftingShare)) }
         guard !policy.trades.isEmpty else { return table }
 
         let total = table.reduce(0) { $0 + $1.share }

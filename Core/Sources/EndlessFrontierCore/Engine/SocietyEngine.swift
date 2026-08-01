@@ -15,6 +15,8 @@ public enum SocietyEngine {
     /// Yearly wage by trade — skilled work pays more.
     static func wage(for work: WorkKind) -> Double {
         switch work {
+        // A crafter's day ends in something you can hold, and is paid like it.
+        case .crafting: return 3.6
         case .mining, .healing: return 3.5
         case .research: return 3.2
         case .farming, .logging, .hunting, .building, .trade: return 3.0

@@ -394,6 +394,17 @@ enum SettlementFigures {
                 p.addLine(to: CGPoint(x: hand.x + 1.1 * scale, y: hand.y - 6.2 * scale))
                 p.closeSubpath()
             }, with: .color(iron))
+        case .crafting:
+            // A hammer, coming down on the beat of the work.
+            let blow = CGFloat(abs(sin(time * 4.5))) * 1.6 * scale
+            context.stroke(Path { p in
+                p.move(to: hand)
+                p.addLine(to: CGPoint(x: hand.x + 2.2 * scale, y: hand.y - 2.4 * scale + blow))
+            }, with: .color(wood), lineWidth: 0.9 * scale)
+            context.fill(Path(CGRect(x: hand.x + 1.9 * scale,
+                                     y: hand.y - 3.2 * scale + blow,
+                                     width: 1.9 * scale, height: 1.1 * scale)),
+                         with: .color(iron))
         case .priest:
             // A raised staff with a small flame.
             context.stroke(Path { p in

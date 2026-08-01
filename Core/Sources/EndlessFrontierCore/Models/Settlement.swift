@@ -138,6 +138,13 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     /// finished result — see `BattleLog`.
     public var lastBattle: BattleLog?
 
+    /// What the colony has been told to make, oldest first.
+    ///
+    /// Crafting used to be a button that produced an item out of the stockpile
+    /// instantly, made by nobody. These are things somebody has to walk to a
+    /// bench and work at — see `CraftingEngine`.
+    public var craftOrders: [CraftOrder] = []
+
     /// A fight that is **still going on** here, if one is.
     ///
     /// `lastBattle` is a recording; this is the thing itself, mid-swing, with
@@ -236,7 +243,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         case laws, leaderID, society, strikeTicksRemaining, faith
         case constructions, constructionSequence, journal, relationships, expeditions
         case tamed
-        case stockpile, rawProgress, lastBattle, policy, siege
+        case stockpile, rawProgress, lastBattle, policy, siege, craftOrders
     }
 
     public init(from decoder: Decoder) throws {
@@ -276,6 +283,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         rawProgress = try c.decodeIfPresent([String: Double].self, forKey: .rawProgress) ?? [:]
         lastBattle = try c.decodeIfPresent(BattleLog.self, forKey: .lastBattle)
         siege = try c.decodeIfPresent(Siege.self, forKey: .siege)
+        craftOrders = try c.decodeIfPresent([CraftOrder].self, forKey: .craftOrders) ?? []
         // Decode-if-present: a save from before standing orders loads as a
         // colony under none, and plays exactly as it did.
         policy = try c.decodeIfPresent(ColonyPolicy.self, forKey: .policy) ?? ColonyPolicy()

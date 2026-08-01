@@ -25,6 +25,15 @@ struct CraftingPanel: View {
                     SectionHeader(title: storesTitle)
                     stores(pile)
                 }
+                // What is on the bench comes before what could be: an order in
+                // progress is the thing the player is waiting on.
+                if !game.craftOrders.isEmpty {
+                    SectionHeader(title: cs ? "Na ponku" : "On the bench")
+                    ForEach(game.craftOrders) { order in
+                        orderRow(order)
+                    }
+                    crafterLine
+                }
                 if !recipes.isEmpty {
                     SectionHeader(title: cs ? "Výroba" : "Crafting")
                     ForEach(recipes) { recipe in
@@ -65,6 +74,85 @@ struct CraftingPanel: View {
         return cs ? "Sklad" : "Stores"
     }
 
+    // MARK: - The bench
+
+    /// One thing the colony is making, and how far it has got.
+    private func orderRow(_ order: CraftOrder) -> some View {
+        let recipe = game.recipe(order.recipeID)
+        let fraction = game.craftFraction(order)
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(recipe?.name.resolve(AppStrings.language) ?? order.recipeID)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(order.paused ? Theme.textDim : Theme.text)
+                    Text(countLine(order))
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(Theme.textDim)
+                }
+                Spacer(minLength: 0)
+                Button {
+                    game.setCraftPaused(order.id, paused: !order.paused)
+                } label: {
+                    Image(systemName: order.paused ? "play.fill" : "pause.fill")
+                        .font(.caption)
+                        .frame(width: 30, height: 26)
+                        .background(Theme.surfaceInset, in: Capsule())
+                        .foregroundStyle(Theme.textDim)
+                }
+                .buttonStyle(.plain)
+                Button {
+                    game.cancelCraftOrder(order.id)
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.caption)
+                        .frame(width: 30, height: 26)
+                        .background(Theme.surfaceInset, in: Capsule())
+                        .foregroundStyle(Theme.danger)
+                }
+                .buttonStyle(.plain)
+            }
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Theme.surfaceInset)
+                    Capsule().fill(order.paused ? Theme.textDim : Theme.accent)
+                        .frame(width: geo.size.width * fraction)
+                }
+            }
+            .frame(height: 4)
+            if let blocked = game.craftBlockedReason(order) {
+                Label(blocked, systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption2).foregroundStyle(Theme.danger)
+            }
+        }
+        .padding(.vertical, 8).padding(.horizontal, 10)
+        .background(Theme.surfaceInset.opacity(0.6),
+                    in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private func countLine(_ order: CraftOrder) -> String {
+        guard let wanted = order.wanted else {
+            return (cs ? "trvale · hotovo " : "standing order · made ") + "\(order.made)"
+        }
+        return "\(order.made)/\(wanted)"
+    }
+
+    /// Who is actually at the bench. Crafting is work now, and work with nobody
+    /// doing it goes nowhere — so the panel says so rather than showing a bar
+    /// that never moves.
+    @ViewBuilder
+    private var crafterLine: some View {
+        let hands = game.crafterCount
+        Label(
+            hands > 0
+                ? (cs ? "\(hands) u ponku" : "\(hands) at the bench")
+                : (cs ? "Nikdo u ponku — nic se nevyrábí"
+                      : "Nobody at the bench — nothing is being made"),
+            systemImage: hands > 0 ? "hammer.fill" : "exclamationmark.triangle.fill")
+            .font(.caption2)
+            .foregroundStyle(hands > 0 ? Theme.textDim : Theme.danger)
+    }
+
     // MARK: - Recipes
 
     private func row(_ recipe: RecipeDefinition) -> some View {
@@ -79,19 +167,32 @@ struct CraftingPanel: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(ready ? Theme.text : Theme.textDim)
                 ingredients(recipe)
+                Label(game.craftTimeLabel(recipe), systemImage: "hourglass")
+                    .font(.caption2).foregroundStyle(Theme.textDim)
             }
             Spacer(minLength: 0)
-            Button(cs ? "Vyrobit" : "Forge") { game.craft(recipe.id) }
-                .font(.caption.weight(.semibold))
-                .padding(.horizontal, 12).padding(.vertical, 6)
-                .background((ready ? Theme.accent : Theme.textDim).opacity(0.18), in: Capsule())
-                .foregroundStyle(ready ? Theme.accent : Theme.textDim)
-                .buttonStyle(.plain)
-                .disabled(!ready)
+            // Ordering, not conjuring. The old button made the thing appear out
+            // of the stockpile the instant it was pressed, made by nobody; this
+            // puts it on a bench for somebody to walk to and work at.
+            VStack(spacing: 4) {
+                orderButton(recipe, count: 1, label: "+1")
+                orderButton(recipe, count: nil,
+                            label: cs ? "trvale" : "keep")
+            }
         }
         .padding(.vertical, 8).padding(.horizontal, 10)
         .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .opacity(ready ? 1 : 0.75)
+    }
+
+    private func orderButton(_ recipe: RecipeDefinition, count: Int?, label: String) -> some View {
+        Button(label) { game.placeCraftOrder(recipe.id, count: count) }
+            .font(.caption2.weight(.semibold))
+            .padding(.horizontal, 10).padding(.vertical, 5)
+            .background(Theme.accent.opacity(0.18), in: Capsule())
+            .foregroundStyle(Theme.accent)
+            .buttonStyle(.plain)
+            .disabled(game.craftOrders.count >= CraftingEngine.maxOrders)
     }
 
     /// Each ingredient as held-of-needed, so a blocked recipe names what is
