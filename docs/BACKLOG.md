@@ -71,6 +71,104 @@ Last updated: 2026-07-29.
    set on a town of sixty actually reaches it instead of waiting for sixty
    people to fall idle.
 
+## 6. Asked for 2026-08-01 — "everything is blocks or pawns"
+
+The through-line Keks keeps coming back to: **the world is made of things,
+not of numbers with pictures**. Blocks and pawns, all the way down. Our
+buildings are the one deliberate exception — they are pre-made blocks that
+hold the items belonging to that trade, and a place colonists walk to in
+order to work and to make things.
+
+| # | Thing | State |
+|---|---|---|
+| 6.1 | The valley is lit in **vertical stripes** — relief noise never got rule 10 | **done** |
+| 6.2 | The land is **too restless** — 2.5-minute day, sweeping shadows, slab lots | **done** |
+| 6.3 | **Not everything is tappable** — buildings hit at a point, no trees/rock/piles | **done** |
+| 6.4 | The **colonist card is taller than the phone**, close button off-screen | **done** |
+| 6.5 | **Fights are invisible** — played at the tick's pace, one exchange per 7.5s | **done** |
+| 6.6 | Fights have **no readable order** — phases, pairings, blows on the beat | **done** |
+| 6.7 | The commonest fight (wolves turned back) wrote **no record at all** | **done** |
+| 6.8 | Colonists **always faced right**, stiff-armed | **done** |
+| 6.9 | A **river crosses every map** whether the biome wants one or not | **done** — `RiverShape.flows`, biome-weighted |
+| 6.10 | **Buildings want to be bigger** — the town is not legible at a glance | **done** — span 0.52 → 0.58 and the camera opens on the town (1.7×), together ≈ +90 % per building |
+| 6.11 | **A raid you fight**, RimWorld-style: real time, on screen, not resolved in the background — and the player may **take colonists in hand** if they want to | todo — the big one, see below |
+| 6.12 | **More animals, more flora** — the valley is thin | **done** — see 6.12 note |
+| 6.13 | **Flora is not tappable by kind** — a birch, an oak, a bed of flowers should each answer for themselves | **done** — trees by species, rock by kind, and every scenery prop by name |
+| 6.14 | **Crafting wants to be better** — what is made, where, out of what, and by whom | in progress — the supply half is fixed (below); the *making* half is next |
+
+### 6.12 — what the valley was actually missing
+
+Three things, and two of them were dead code rather than thin content:
+
+- **Predators were never seeded.** `isPredator` is honoured everywhere —
+  hunters skip them, prey flee them, they stalk the weak — and not one wolf,
+  fox or bear had ever been put on a map. The wild was a pressure number with
+  deer drawn next to it. `AnimalFactory.mix(for:)` is biome-weighted now and
+  `hazard` brings a pack, so a frontier valley really is worse than home.
+- **Trees only grew inside forest *deposits*.** A valley the generator gave no
+  forest node to had **not one tree on it** — which is the plains, the coast
+  and the tundra. There is a wild scatter now, and stands are mixed species
+  instead of one flat block of pine.
+- Scenery counts up by about half, and every prop answers when tapped.
+
+Cost control: the wild is 2.5× bigger, so `AnimalEngine.advanceOneTick` moved
+onto the think cadence with a `steps:` multiplier (rule 4). Everything in it
+is a rate; only the death roll is compounded rather than multiplied.
+
+### 6.14 — the supply half, which turned out to be broken
+
+Chasing a failing coast test found a real one, and it is the project's
+recurring shape: **quarried rock produced nothing at all**. Timber falls at
+the stump and hewn stone falls at the face, but the third and commonest
+working — a pick into an *outcrop* — took only `.map` back from
+`FloraEngine.quarry` and dropped the yield on the floor. On any valley with
+no massif (every coast, most plains) four miners ground nine clay banks to
+nothing over four hundred ticks and banked nothing. Clay is the **only**
+route to the kiln, so the whole ceramics branch of the crafting tree was
+unreachable by working for it.
+
+Fixed: `quarry` returns what broke and where, `ResourceLoop` drops it as
+piles, and part-units are banked in `LocalMap.quarryCredit` so hard rock is
+slow rather than free or impossible. Job posting also round-robins outcrops
+by kind — in id order every granite bank came before every clay bank and the
+assigner takes from the front, so clay sat behind a queue miners could not
+clear.
+
+### 6.11 — what "a raid you fight" has to mean
+
+This is the one that changes the shape of the game, so it is worth writing
+down before any of it is built. Today a raid is `BattleResolver.resolve` —
+eight rounds of arithmetic inside one tick, settled before the canvas is
+told anything, with the record replayed afterwards. That is why it can never
+be *fought*: by the time you can see it, it is over.
+
+What it has to become:
+
+1. **The battle owns real time.** A raid suspends the ordinary tick loop and
+   runs on the action-step clock at a pace a person can act at — a step every
+   second or two — rather than resolving eight steps between two frames.
+2. **Orders, not autopilot.** The default stays hands-off (the whole colony
+   is run by standing orders; a battle should not demand micromanagement).
+   But a tap on a colonist during a fight must be able to say *hold here*,
+   *fall back*, *take that one* — and the resolver has to read those orders
+   instead of picking the weakest defender by itself.
+3. **Determinism survives.** The outcome may depend on player orders, but
+   given the same seed *and the same orders* it must replay identically. The
+   orders become part of the recorded input, not a hole in it.
+4. **Leaving is allowed.** Backgrounding the app mid-fight must resolve the
+   rest exactly as the current resolver would, so a battle is never a thing
+   you must sit through.
+
+### 6.6 — what shipped, so the next pass builds on it rather than over it
+
+`SettlementBattle` now has named phases (`marching`, `volley`, `melee`,
+`breaking`), a caption naming the phase and the standing tally, raider ↔
+defender pairings, a rank that thins as the colony holds, per-defender harm
+bars read from the record's wounds, and blows that land on the beats the
+resolver actually wrote. The playback is 20 real seconds whatever tick the
+fight happened on, and `BattleReportCard` can replay it. All of that is
+presentation reading a `BattleLog`; 6.11 is the simulation half.
+
 ## 5. Housekeeping
 
 - Notifications — permission state is now **visible and settable** in Settings.
@@ -121,3 +219,16 @@ Every one of them has cost a session at least once:
    three times taller than it is wide, `subX` comes out as 1 and a dither that
    only borrows from an edge it is strictly on borrows vertically alone — which
    drew the valley as vertical stripes for as long as the ground has existed.
+10b. **The map is not square, and every field drawn over it has to know.**
+   Rule 10 was fixed for the ground *cover* and not for the **relief** the
+   light reads, so noise that is round in `(u, v)` came out four times
+   stretched in pixels and the valley went back to being striped the moment
+   it was lit. `SettlementLight.relief` and `slopeLight` take an `aspect`;
+   anything else sampling a normalised field across the whole map needs the
+   same. Guarded by "Hills come out round on a phone, not as vertical stripes".
+11. **Playback pace is not simulation pace.** A tick is a real minute and a
+   battle is eight rounds; played at the tick's own speed that is one
+   exchange every seven and a half seconds, which reads as nothing happening.
+   A *record* may be replayed at whatever speed makes it legible —
+   `SettlementBattle.playSeconds`. Do not confuse "how long it took" with
+   "how long to show it for".

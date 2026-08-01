@@ -177,19 +177,65 @@ public enum FloraFactory {
     ///
     /// Ids are assigned here in one sweep, so they stay stable and unique.
     public static func woods(
-        around forests: [LocalPoint], biomeID: String, rng: inout SeededRNG
+        around forests: [LocalPoint], biomeID: String,
+        shore: ShoreShape? = nil, river: RiverShape? = nil,
+        rng: inout SeededRNG
     ) -> [Tree] {
-        guard !forests.isEmpty else { return [] }
         let palette = species(for: biomeID)
         var trees: [Tree] = []
-        for centre in forests {
-            let kind = palette[Int(rng.nextUnit() * Double(palette.count)) % palette.count]
-            let count = 7 + Int(rng.nextUnit() * 7)
-            trees += stand(kind, count: count, around: centre, spread: 0.07, rng: &rng)
+
+        /// Nothing grows in the sea, and nothing grows in the channel.
+        func dry(_ p: LocalPoint) -> Bool {
+            if let shore, shore.isWater(p) { return false }
+            if let river, river.flows, abs(p.y - river.y(atX: p.x)) < 0.03 { return false }
+            return true
         }
+
+        for centre in forests {
+            // A stand is **mixed**. One species per stand meant a valley was
+            // three flat blocks of colour — all pine here, all oak there — and
+            // no wood anywhere in it looked like a wood.
+            let count = 11 + Int(rng.nextUnit() * 9)
+            for _ in 0..<count {
+                let kind = palette[Int(rng.nextUnit() * Double(palette.count)) % palette.count]
+                trees += stand(kind, count: 1, around: centre, spread: 0.075, rng: &rng)
+                    .filter { dry($0.position) }
+            }
+        }
+
+        // …and the trees that grow where nobody marked a deposit.
+        //
+        // Every tree in the game stood inside a forest *resource node*, so a
+        // valley the generator gave no forest to had **not one tree on it** —
+        // and the plains, the coast and the tundra are exactly those valleys.
+        // The wild wood is scattered over the whole map, thinner than a stand
+        // and thinnest where the country is hard.
+        let scatter = wildTreeCount(for: biomeID)
+        for _ in 0..<scatter {
+            let kind = palette[Int(rng.nextUnit() * Double(palette.count)) % palette.count]
+            let anywhere = LocalPoint(x: 0.04 + rng.nextUnit() * 0.92,
+                                      y: 0.04 + rng.nextUnit() * 0.92)
+            guard dry(anywhere) else { continue }
+            trees += stand(kind, count: 1, around: anywhere, spread: 0.02, rng: &rng)
+                .filter { dry($0.position) }
+        }
+
         return trees.enumerated().map { index, tree in
             Tree(id: index, species: tree.species, position: tree.position,
                  age: tree.age, chopped: tree.chopped)
+        }
+    }
+
+    /// How many loose trees a given country grows outside its marked woods.
+    public static func wildTreeCount(for biomeID: String) -> Int {
+        switch biomeID {
+        case "forest":    return 60
+        case "plains":    return 26
+        case "coast":     return 18
+        case "mountains": return 14
+        case "tundra":    return 12
+        case "desert":    return 4
+        default:          return 22
         }
     }
 

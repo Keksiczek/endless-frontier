@@ -313,13 +313,52 @@ public enum AnimalFactory {
         }
     }
 
-    /// The mixed wild that lives around a fresh settlement — a deer herd with a
-    /// few hares and a boar for variety. Predators arrive with pressure, they
-    /// are not seeded as residents. Deterministic from `rng`.
-    public static func wildPopulation(rng: inout SeededRNG) -> [Animal] {
-        var animals = herd(.deer, count: 6, rng: &rng)
-        animals += herd(.hare, count: 2, rng: &rng)
-        animals += herd(.boar, count: 1, rng: &rng)
+    /// The mixed wild that lives around a fresh settlement.
+    ///
+    /// Two things were wrong with the old nine-animal valley:
+    ///
+    /// 1. **It was the same nine everywhere.** Six deer, two hares and a boar,
+    ///    in a desert exactly as in a forest — so the wild said nothing about
+    ///    the country it lived in.
+    /// 2. **Predators were never seeded at all.** `isPredator` is honoured all
+    ///    over the engine — hunters skip them, prey flee them, they stalk the
+    ///    weak — and not one wolf, fox or bear had ever been put on a map, so
+    ///    every one of those paths was dead code. The wild was a pressure
+    ///    number with deer drawn next to it.
+    ///
+    /// `hazard` is the region's own danger, so a frontier valley six rings out
+    /// really does have more teeth in it than the homeland.
+    /// Deterministic from `rng`.
+    public static func wildPopulation(
+        biomeID: String = "plains", hazard: Int = 0, rng: inout SeededRNG
+    ) -> [Animal] {
+        var animals: [Animal] = []
+        for (species, fewest, most) in mix(for: biomeID) {
+            let count = fewest + Int(rng.nextUnit() * Double(max(1, most - fewest + 1)))
+            animals += herd(species, count: count, rng: &rng)
+        }
+        // Wilder country carries more of them, up to a pack.
+        if hazard > 0 {
+            animals += herd(.wolf, count: min(4, 1 + hazard / 2), rng: &rng)
+        }
         return animals
+    }
+
+    /// What lives in a given country, as `(species, fewest, most)`.
+    public static func mix(for biomeID: String) -> [(AnimalSpecies, Int, Int)] {
+        switch biomeID {
+        case "forest":
+            return [(.deer, 8, 12), (.hare, 5, 8), (.boar, 3, 5), (.fox, 2, 3), (.wolf, 1, 2)]
+        case "coast":
+            return [(.deer, 5, 8), (.hare, 5, 8), (.fox, 2, 3), (.boar, 1, 2)]
+        case "tundra":
+            return [(.deer, 6, 9), (.hare, 3, 5), (.wolf, 2, 4), (.fox, 1, 2)]
+        case "mountains":
+            return [(.deer, 4, 7), (.hare, 3, 5), (.boar, 2, 3), (.bear, 1, 2), (.wolf, 1, 2)]
+        case "desert":
+            return [(.hare, 4, 6), (.fox, 2, 3), (.boar, 1, 2), (.deer, 1, 3)]
+        default: // plains & homeland
+            return [(.deer, 10, 14), (.hare, 6, 9), (.boar, 2, 3), (.fox, 2, 3)]
+        }
     }
 }

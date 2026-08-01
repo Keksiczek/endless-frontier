@@ -27,28 +27,43 @@ public enum AnimalEngine {
     /// far too long for a deer, so this is deliberately short.
     static let lifespanTicks = 900
 
-    /// Advances every animal on a settlement's local map by one tick.
+    /// Advances every animal on a settlement's local map.
+    ///
+    /// `steps` is how many world ticks this pass stands for. Everything here is
+    /// a *rate* — ageing, exposure, healing, the progress of an illness — so a
+    /// pass covering ten ticks does ten ticks' worth, and the wild costs a
+    /// tenth as much to run (rule 4: the per-tick path is replayed tens of
+    /// thousands of times, and this one is O(animals) over a valley that now
+    /// holds two and a half times as many of them).
+    ///
+    /// Only the death roll is not a rate, and it is compounded properly rather
+    /// than multiplied: ten chances at 0.4% is not one chance at 4%.
     public static func advanceOneTick(
-        _ map: LocalMap, tick: Int, ticksPerYear: Int
+        _ map: LocalMap, tick: Int, ticksPerYear: Int, steps: Int = 1
     ) -> LocalMap {
         guard !map.wildlife.animals.isEmpty else { return map }
+        let n = Double(max(1, steps))
         var rng = SeededRNG(seed: map.terrainSeed &+ UInt64(bitPattern: Int64(tick)) &* 0x9E37_79B9)
         let season = Season(tick: tick, ticksPerYear: ticksPerYear)
         let outside = temperature(season)
+        // 1 − (1 − p)ⁿ: the chance of dying at least once across the window.
+        let oldAgeOdds = 1 - pow(1 - 0.004, n)
 
         var animals: [Animal] = []
         animals.reserveCapacity(map.wildlife.animals.count)
         for var animal in map.wildlife.animals {
-            animal.age += 1
+            animal.age += max(1, steps)
 
             // Cold and heat, when the season leaves the beast's comfort band.
             let cold = outside < animal.species.comfortLow
             let hot = outside > animal.species.comfortHigh
             if cold {
-                worsen(&animal, .frostbite, by: (animal.species.comfortLow - outside) * exposureRate,
+                worsen(&animal, .frostbite,
+                       by: (animal.species.comfortLow - outside) * exposureRate * n,
                        label: LocalizedText(values: [.en: "Frostbite", .cs: "Omrzliny"]))
             } else if hot {
-                worsen(&animal, .heatstroke, by: (outside - animal.species.comfortHigh) * exposureRate,
+                worsen(&animal, .heatstroke,
+                       by: (outside - animal.species.comfortHigh) * exposureRate * n,
                        label: LocalizedText(values: [.en: "Heatstroke", .cs: "Úpal"]))
             }
 
@@ -58,19 +73,19 @@ public enum AnimalEngine {
             for var condition in animal.conditions {
                 switch condition.kind {
                 case .injury:
-                    condition.severity -= healPerTick
+                    condition.severity -= healPerTick * n
                 case .frostbite:
                     // Frostbite does not mend in a blizzard. Healing an exposure
                     // the moment it was taken is why cold could never
                     // accumulate: each tick added a little and took it straight
                     // back off, leaving nothing above the keep-threshold.
-                    if !cold { condition.severity -= healPerTick }
+                    if !cold { condition.severity -= healPerTick * n }
                 case .heatstroke:
-                    if !hot { condition.severity -= healPerTick }
+                    if !hot { condition.severity -= healPerTick * n }
                 case .disease:
                     // An illness peaks and then breaks.
                     condition.severity += condition.severity < 0.5
-                        ? diseaseProgressPerTick : -diseaseProgressPerTick * 2
+                        ? diseaseProgressPerTick * n : -diseaseProgressPerTick * 2 * n
                 }
                 // Kept until it is actually healed away. A keep-threshold of
                 // 0.01 was higher than a mild exposure's per-tick increment
@@ -85,13 +100,13 @@ public enum AnimalEngine {
             animal.conditions = kept
 
             if suffering > 0 {
-                animal.health = max(0, animal.health - suffering * sufferingPerTick)
+                animal.health = max(0, animal.health - suffering * sufferingPerTick * n)
             } else if animal.health < animal.species.baseHealth {
-                animal.health = min(animal.species.baseHealth, animal.health + thrivePerTick)
+                animal.health = min(animal.species.baseHealth, animal.health + thrivePerTick * n)
             }
 
             // Old age comes for it in the end.
-            if animal.age > lifespanTicks, rng.nextUnit() < 0.004 {
+            if animal.age > lifespanTicks, rng.nextUnit() < oldAgeOdds {
                 animal.health = 0
             }
             if animal.isAlive { animals.append(animal) }

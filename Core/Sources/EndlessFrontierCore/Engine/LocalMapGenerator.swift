@@ -26,10 +26,16 @@ public enum LocalMapGenerator {
         } else {
             riverBase = rng.nextUnit() < 0.5 ? 0.16 : 0.82
         }
+        // …and not every valley has one at all. Six kinds of country that all
+        // came with the same blue ribbon across them read as one kind of
+        // country with six tints. The shape is still generated either way, so
+        // every `landPoint` call and the whole POI layout keep their geometry;
+        // only the water is decided here.
         let river = RiverShape(
             baseY: riverBase,
             amplitude: 0.025 + rng.nextUnit() * 0.06,
-            phase: rng.nextUnit() * 6.283185
+            phase: rng.nextUnit() * 6.283185,
+            flows: rng.nextUnit() < RiverShape.chance(biomeID: biomeID)
         )
 
         // A coast gets actual sea along one edge. Before this the one country
@@ -91,7 +97,7 @@ public enum LocalMapGenerator {
             // Reeds and ponds belong by the water; everything else keeps its feet dry.
             let wetLoving = (kind == .reeds || kind == .pond)
             let position = wetLoving
-                ? riversidePoint(river: river, rng: &rng)
+                ? riversidePoint(river: river, shore: shore, rng: &rng)
                 : landPoint(river: river, shore: shore, rng: &rng)
             return SceneryProp(id: index, kind: kind, position: position,
                                scale: 0.7 + rng.nextUnit() * 0.6)
@@ -147,7 +153,8 @@ public enum LocalMapGenerator {
         let pressure = 8 + rng.nextUnit() * 8 + Double(max(0, hazard)) * 2.5
         // Real `Animal` entities too — drawn last, so the rest of generation
         // (deposits, scenery, POIs) keeps its exact seeded outcome.
-        let residents = AnimalFactory.wildPopulation(rng: &rng)
+        let residents = AnimalFactory.wildPopulation(
+            biomeID: biomeID, hazard: hazard, rng: &rng)
         let wildlife = WildlifeState(
             deerHerd: herd, deerCapacity: capacity,
             predatorPressure: pressure, animals: residents, usesEntities: true)
@@ -157,7 +164,8 @@ public enum LocalMapGenerator {
         // everything else, so no earlier roll shifts and existing worlds keep
         // the exact valley they had.
         let woodCentres = nodes.filter { $0.kind == .forest }.map(\.position)
-        let trees = FloraFactory.woods(around: woodCentres, biomeID: biomeID, rng: &rng)
+        let trees = FloraFactory.woods(around: woodCentres, biomeID: biomeID,
+                                       shore: shore, river: river, rng: &rng)
         let outcropSites = nodes
             .filter { $0.kind == .stone || $0.kind == .ironOre || $0.kind == .clay }
             .map { (kind: $0.kind, position: $0.position, capacity: $0.capacity) }
@@ -174,11 +182,13 @@ public enum LocalMapGenerator {
             scenery: scenery, trees: trees, rocks: rocks,
             usesEntityLand: true, shore: shore, stone: stone)
         // The settlement sits at the centre; its surroundings start revealed.
-        // Wide enough to cover the whole build grid (`SettlementGeometry.span`
-        // reaches 0.26 from the heart, 0.37 to a corner) — a colony that can
-        // build on ground nobody has charted sends its people into the fog,
-        // where the canvas refuses to draw them and they vanish at work.
-        map.reveal(around: LocalPoint(x: 0.5, y: 0.5), radius: 0.38)
+        // Wide enough to cover the whole build grid — a colony that can build
+        // on ground nobody has charted sends its people into the fog, where the
+        // canvas refuses to draw them and they vanish at work. Derived from the
+        // span rather than written down again, so widening the town cannot
+        // leave its own corners uncharted.
+        map.reveal(around: LocalPoint(x: 0.5, y: 0.5),
+                   radius: SettlementGeometry.cornerReach + 0.02)
         return map
     }
 
@@ -320,7 +330,10 @@ public enum LocalMapGenerator {
             let y = 0.06 + rng.nextUnit() * 0.88
             let p = LocalPoint(x: x, y: y)
             // Nothing grows in the river, and nothing at all stands in the sea.
-            guard abs(y - river.y(atX: x)) > 0.09 else { continue }
+            // A dry valley has no channel to keep clear of, so it may use the
+            // whole of its ground — which is most of the point of not having
+            // a river in the first place.
+            if river.flows, abs(y - river.y(atX: x)) <= 0.09 { continue }
             if let shore, shore.distanceInland(p) < 0.04 { continue }
             return p
         }
@@ -331,11 +344,17 @@ public enum LocalMapGenerator {
         return LocalPoint(x: 0.5, y: 0.5)
     }
 
-    /// A point hugging the riverbank — where reeds grow and ponds gather.
-    private static func riversidePoint(river: RiverShape, rng: inout SeededRNG) -> LocalPoint {
+    /// A point hugging the riverbank — where reeds grow and ponds gather. In a
+    /// dry valley there is no bank, so the reeds simply do not grow: the caller
+    /// gets an ordinary land point and a desert stops sprouting bulrushes along
+    /// a channel that has no water in it.
+    private static func riversidePoint(
+        river: RiverShape, shore: ShoreShape? = nil, rng: inout SeededRNG
+    ) -> LocalPoint {
         let x = 0.06 + rng.nextUnit() * 0.88
         let side: Double = rng.nextUnit() < 0.5 ? -1 : 1
         let offset = (0.03 + rng.nextUnit() * 0.05) * side
+        guard river.flows else { return landPoint(river: river, shore: shore, rng: &rng) }
         let y = min(0.96, max(0.04, river.y(atX: x) + offset))
         return LocalPoint(x: x, y: y)
     }

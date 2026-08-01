@@ -202,6 +202,46 @@ struct ProductionChainTests {
         #expect((shore.stockpile["clay"] ?? 0) > 0, "but it has clay beds instead")
     }
 
+    /// The one that got away for a long time, and the reason the test above
+    /// could fail while the *land* was perfectly correct.
+    ///
+    /// Timber falls at the stump and hewn stone falls at the face, but the
+    /// third and commonest kind of working — a pick into an **outcrop** — took
+    /// only the map back from `FloraEngine.quarry` and dropped its yield on the
+    /// floor. Nothing anywhere turned a worked outcrop into goods. So on any
+    /// valley with no massif in it (every coast, most plains) four miners could
+    /// grind nine clay banks to nothing over four hundred ticks and bank not
+    /// one unit of anything.
+    ///
+    /// Named for the reachability, not the behaviour (rule 6): what must hold
+    /// is that rock which is consumed *arrives*.
+    @Test("Rock that is worked away comes back as goods")
+    func quarriedRockIsNotLost() throws {
+        let start = try colony(biome: "coast", workers: [.mining: 4])
+        let before = start.localMap?.rocks.reduce(0) { $0 + $1.amount } ?? 0
+        #expect(before > 0, "a coastal valley has outcrops to work")
+
+        let after = try work(start, ticks: 400)
+        let left = after.localMap?.rocks.reduce(0) { $0 + $1.amount } ?? 0
+        #expect(left < before, "four miners worked the rock for four hundred ticks")
+
+        let carried = after.stockpile.values.reduce(0, +)
+        let lying = after.localMap?.piles.reduce(0) { $0 + $1.amount } ?? 0
+        #expect(carried + lying > 0,
+                "the rock came out of the ground and nothing came of it")
+    }
+
+    /// Hard rock is *slow*, not free and not impossible. A tick at a granite
+    /// face yields less than half a unit; flooring that every tick pays
+    /// nothing for ever, and rounding it up pays four times over.
+    @Test("A part-broken outcrop is banked, not rounded away")
+    func partialTakesAccumulate() throws {
+        let hills = try work(colony(biome: "mountains", workers: [.mining: 1]), ticks: 400)
+        let carried = hills.stockpile.values.reduce(0, +)
+        let lying = hills.localMap?.piles.reduce(0) { $0 + $1.amount } ?? 0
+        #expect(carried + lying > 0, "one miner on hard rock still gets somewhere")
+    }
+
     // MARK: - Crafting from the pile
 
     @Test("A craft spends the stockpile and banks what it makes")

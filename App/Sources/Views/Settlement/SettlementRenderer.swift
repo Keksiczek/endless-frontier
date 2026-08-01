@@ -24,9 +24,22 @@ enum SettlementRenderer {
     /// larger rect re-strokes everything at the new size, so the line art stays
     /// sharp however far you push in.
     struct Camera: Equatable {
-        var scale: CGFloat = 1
+        var scale: CGFloat = Camera.opening
         var offset: CGSize = .zero
 
+        /// Where the camera opens: framed on the **town**, not on the whole
+        /// valley.
+        ///
+        /// The settlement screen used to open at 1 — the entire local map
+        /// across the width of a phone. The built span is a little over half of
+        /// that width and holds an 18×18 grid, so a one-tile house came out
+        /// about eleven points across: a colony read as a scatter of marks and
+        /// you had to pinch in before you could tell a granary from a hut.
+        ///
+        /// This puts the built ground across most of the screen the moment you
+        /// arrive, which is also where `showLabels` (1.6) starts naming roofs.
+        /// Pinching out to `minScale` still gives you the whole valley.
+        static let opening: CGFloat = 1.7
         static let minScale: CGFloat = 1
         static let maxScale: CGFloat = 4
     }
@@ -422,6 +435,10 @@ enum SettlementRenderer {
         _ context: inout GraphicsContext, rect: CGRect, river: RiverShape,
         season: Season, zoom: CGFloat = 1
     ) {
+        // A dry valley has no river to draw. Six kinds of country that all came
+        // with the same blue ribbon across them read as one kind of country in
+        // six tints — which is why the biome now decides whether water runs.
+        guard river.flows else { return }
         var path = Path()
         let steps = 48
         for i in 0...steps {
@@ -1199,9 +1216,15 @@ enum SettlementRenderer {
     /// Widened from 0.42 once buildings gained insides: an 18×18 grid squeezed
     /// into 0.42 gave each tile about nine pixels at rest, which is a room you
     /// cannot see into and a town whose people are drawn on top of one another.
+    /// Widened again to 0.58 when the complaint was that the town was not
+    /// legible at a glance. Two things move together for that: this, and
+    /// `Camera.opening` — a wider span gives each building more ground and the
+    /// opening zoom puts that ground across the screen.
+    ///
     /// Mirrored by `SettlementGeometry.span` in the Core — a colonist must be
-    /// sent to the building that is *drawn*, so the two must agree.
-    static let colonySpan: Double = 0.52
+    /// sent to the building that is *drawn*, so the two must agree. Guarded by
+    /// "The Core and the canvas agree about how wide the town is".
+    static let colonySpan: Double = 0.58
 
     /// Maps a grid tile to the point on the canvas it sits at, centred on the
     /// heart so the built colony always lands inside the cleared ground.

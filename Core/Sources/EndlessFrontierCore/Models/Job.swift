@@ -119,10 +119,30 @@ public enum JobBoard {
             jobs.append(Job(id: jobID("fell", tree.id), kind: .fellTree,
                             position: tree.position, treeID: tree.id))
         }
-        for rock in map.rocks.filter({ !$0.isSpent && charted($0.position) })
-            .sorted(by: { $0.id < $1.id }) {
-            jobs.append(Job(id: jobID("quarry", rock.id), kind: .quarryRock,
-                            position: rock.position, rockID: rock.id))
+        // Outcrops, **round-robined by what they are made of**.
+        //
+        // Posting them in plain id order put every granite bank ahead of every
+        // clay bank, and the assigner takes jobs off the front: a coastal
+        // colony with four miners and a dozen stone outcrops worked stone for
+        // four hundred ticks and never touched one of its three clay beds. The
+        // clay was not missing — it was behind a queue the miners could not
+        // clear. (Rule 6 again, in its supply form: a resource whose only route
+        // to the player is through an inexhaustible-enough backlog of another.)
+        //
+        // Interleaving by kind means the trade always has a face of each thing
+        // the valley holds open at once, and nearest-first inside a kind still
+        // eats a hillside from its near edge.
+        let workable = map.rocks.filter { !$0.isSpent && charted($0.position) }
+        let byKind = Dictionary(grouping: workable, by: \.kind)
+            .mapValues { $0.sorted { $0.id < $1.id } }
+        let rockKinds = byKind.keys.sorted { $0.rawValue < $1.rawValue }
+        for slot in 0..<(byKind.values.map(\.count).max() ?? 0) {
+            for kind in rockKinds {
+                guard let seam = byKind[kind], slot < seam.count else { continue }
+                let rock = seam[slot]
+                jobs.append(Job(id: jobID("quarry", rock.id), kind: .quarryRock,
+                                position: rock.position, rockID: rock.id))
+            }
         }
         // The rock face: only blocks with open ground beside them, nearest the
         // town first, so a colony eats into a hillside from its near edge and
@@ -252,10 +272,22 @@ public enum SettlementGeometry {
     /// The colony grid's centre on the local map, and how wide a slice of it the
     /// grid covers. Mirrored by `SettlementRenderer.colonyHeart` / `colonySpan`.
     public static let heart = LocalPoint(x: 0.5, y: 0.52)
-    /// Widened with the renderer's `colonySpan` when buildings gained insides.
+    /// Widened with the renderer's `colonySpan` when buildings gained insides,
+    /// and again when a town of sixty was still not legible at a glance.
     /// These two numbers are one number in two places: a colonist sent to a
-    /// scaffold at 0.42 while the scaffold is drawn at 0.52 stands in a field.
-    public static let span: Double = 0.52
+    /// scaffold at 0.42 while the scaffold is drawn at 0.58 stands in a field.
+    ///
+    /// Whatever this is, two other numbers must clear it: the ground a new map
+    /// reveals (`LocalMapGenerator`) and the rock kept off the build grid
+    /// (`StoneEngine.colonyClearance`). The grid's far **corner** is at
+    /// `span * √2 / 2` from the heart, which is what both have to reach.
+    public static let span: Double = 0.58
+
+    /// How far the grid's furthest corner lies from the heart. The one number
+    /// the reveal radius and the rock clearance are both derived from, so
+    /// widening the town cannot quietly leave its edges in the fog or under a
+    /// mountain.
+    public static var cornerReach: Double { span * 0.70710678 }
 
     public static func canvasPoint(for placement: BuildingPlacement, in colony: ColonyMap) -> LocalPoint {
         let w = Double(max(1, colony.width)), h = Double(max(1, colony.height))

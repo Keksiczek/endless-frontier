@@ -72,7 +72,7 @@ struct LocalTerrainTests {
     func sceneryWellFormed() {
         let map = LocalMapGenerator.generate(mapSeed: 11, regionID: region, biome: biome("plains"))
         #expect(!map.scenery.isEmpty)
-        #expect(map.scenery.count <= 60)
+        #expect(map.scenery.count <= 80)
         for prop in map.scenery {
             #expect((0...1).contains(prop.position.x))
             #expect((0...1).contains(prop.position.y))

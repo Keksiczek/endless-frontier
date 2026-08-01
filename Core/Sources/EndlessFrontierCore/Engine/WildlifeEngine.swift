@@ -200,7 +200,13 @@ public enum WildlifeEngine {
             map.wildlife.deerHerd = mirroredHerd(map.wildlife)
         }
         // Their own lives: ageing, wounds, illness, cold and heat, and death.
-        map = AnimalEngine.advanceOneTick(map, tick: tick, ticksPerYear: ticksPerYear)
+        // On the same cadence they think on, standing for the whole window —
+        // everything in there is a rate, and a valley now holds two and a half
+        // times as many beasts as it did (rule 4).
+        if tick % AnimalEngine.thinkInterval == 0 {
+            map = AnimalEngine.advanceOneTick(map, tick: tick, ticksPerYear: ticksPerYear,
+                                              steps: AnimalEngine.thinkInterval)
+        }
         map = AnimalEngine.breed(map, tick: tick, ticksPerYear: ticksPerYear)
         // And the wood grows while all this happens — in batches, since a tree
         // takes thousands of ticks to grow and ageing one every tick is a copy

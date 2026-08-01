@@ -73,14 +73,25 @@ public enum FloraEngine {
         return (updated, timber, downed.count, stumps)
     }
 
-    /// Puts `miners` to the rock for one tick and returns what they broke out.
+    /// Puts `miners` to the rock for one tick and returns what they broke out,
+    /// and **where it is lying**.
+    ///
     /// Harder stone gives up less for the same work, and a spent outcrop is
     /// left behind rather than removed — a worked-out quarry is a feature of
     /// the ground, not a hole in the save.
+    ///
+    /// `broken` is the half of this that was missing for as long as outcrops
+    /// have existed. The caller took `.map` and dropped `.yield` on the floor,
+    /// and nothing anywhere turned a worked outcrop into goods — so a valley
+    /// with no massif in it (every coast, most plains) had its miners grind
+    /// nine clay banks to nothing over four hundred ticks and bank *not one
+    /// unit of clay*. Wood falls at the stump and hewn stone falls at the face;
+    /// this is the same rule for the third and commonest kind of working.
     public static func quarry(
         _ map: LocalMap, miners: Int
-    ) -> (map: LocalMap, yield: [LocalResourceKind: Double]) {
-        guard miners > 0, !map.rocks.isEmpty else { return (map, [:]) }
+    ) -> (map: LocalMap, yield: [LocalResourceKind: Double],
+          broken: [(kind: LocalResourceKind, amount: Double, at: LocalPoint)]) {
+        guard miners > 0, !map.rocks.isEmpty else { return (map, [:], []) }
         let workable = map.rocks.indices
             .filter { !map.rocks[$0].isSpent }
             .sorted {
@@ -88,17 +99,19 @@ public enum FloraEngine {
                 if a.kind.hardness != b.kind.hardness { return a.kind.hardness < b.kind.hardness }
                 return a.id < b.id
             }
-        guard !workable.isEmpty else { return (map, [:]) }
+        guard !workable.isEmpty else { return (map, [:], []) }
 
         var updated = map
         var yield: [LocalResourceKind: Double] = [:]
+        var broken: [(kind: LocalResourceKind, amount: Double, at: LocalPoint)] = []
         for index in workable.prefix(miners) {
             let rock = updated.rocks[index]
             let taken = min(rock.amount, 1 / rock.kind.hardness)
             updated.rocks[index].amount = max(0, rock.amount - taken)
             yield[rock.kind.deposit, default: 0] += taken
+            broken.append((kind: rock.kind.deposit, amount: taken, at: rock.position))
         }
-        return (updated, yield)
+        return (updated, yield, broken)
     }
 
     /// How far from a deposit's centre the things standing on it count as

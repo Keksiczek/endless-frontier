@@ -40,6 +40,56 @@ public enum SceneryKind: String, Codable, Sendable, CaseIterable {
     case mushroom       // a cluster in the leaf litter
     case driftwood      // bleached wood above the tideline
     case hotSpring      // steaming water
+
+    /// What the land calls this, when you tap it.
+    ///
+    /// Scenery was the one layer of the valley with nothing to say. A bed of
+    /// flowers, a stand of reeds, a snag, a cactus — all drawn, none of them
+    /// able to answer for themselves, which is exactly the complaint that the
+    /// world should be *things* rather than decoration.
+    public var displayName: LocalizedText {
+        switch self {
+        case .tree:       return LocalizedText(values: [.en: "A tree", .cs: "Strom"])
+        case .pine:       return LocalizedText(values: [.en: "A pine", .cs: "Borovice"])
+        case .bush:       return LocalizedText(values: [.en: "A bush", .cs: "Keř"])
+        case .rock:       return LocalizedText(values: [.en: "A stone", .cs: "Kámen"])
+        case .boulder:    return LocalizedText(values: [.en: "A boulder", .cs: "Balvan"])
+        case .flowers:    return LocalizedText(values: [.en: "Wildflowers", .cs: "Polní květy"])
+        case .reeds:      return LocalizedText(values: [.en: "Reeds", .cs: "Rákosí"])
+        case .stump:      return LocalizedText(values: [.en: "A stump", .cs: "Pařez"])
+        case .pond:       return LocalizedText(values: [.en: "A pond", .cs: "Tůň"])
+        case .cactus:     return LocalizedText(values: [.en: "A cactus", .cs: "Kaktus"])
+        case .snowdrift:  return LocalizedText(values: [.en: "A snowdrift", .cs: "Závěj"])
+        case .ruinPillar: return LocalizedText(values: [.en: "A fallen pillar", .cs: "Padlý sloup"])
+        case .cliff:      return LocalizedText(values: [.en: "A rock face", .cs: "Skalní stěna"])
+        case .crag:       return LocalizedText(values: [.en: "A crag", .cs: "Skalisko"])
+        case .dune:       return LocalizedText(values: [.en: "A dune", .cs: "Duna"])
+        case .deadTree:   return LocalizedText(values: [.en: "A dead tree", .cs: "Suchý strom"])
+        case .tallGrass:  return LocalizedText(values: [.en: "Tall grass", .cs: "Vysoká tráva"])
+        case .mushroom:   return LocalizedText(values: [.en: "Mushrooms", .cs: "Houby"])
+        case .driftwood:  return LocalizedText(values: [.en: "Driftwood", .cs: "Naplavené dřevo"])
+        case .hotSpring:  return LocalizedText(values: [.en: "A hot spring", .cs: "Horký pramen"])
+        }
+    }
+
+    /// A line about what this is *for*, when there is one — the difference
+    /// between a label and a thing that belongs to the world.
+    public var note: LocalizedText? {
+        switch self {
+        case .flowers:   return LocalizedText(values: [.en: "bees and dye", .cs: "včely a barvivo"])
+        case .mushroom:  return LocalizedText(values: [.en: "food, if you know them",
+                                                       .cs: "jídlo, když je znáš"])
+        case .reeds:     return LocalizedText(values: [.en: "thatch", .cs: "došky"])
+        case .tallGrass: return LocalizedText(values: [.en: "fodder", .cs: "krmivo"])
+        case .driftwood: return LocalizedText(values: [.en: "firewood", .cs: "dříví na oheň"])
+        case .hotSpring: return LocalizedText(values: [.en: "warm all winter",
+                                                       .cs: "teplý celou zimu"])
+        case .pond:      return LocalizedText(values: [.en: "water", .cs: "voda"])
+        case .stump:     return LocalizedText(values: [.en: "somebody felled this",
+                                                       .cs: "tohle někdo pokácel"])
+        default:         return nil
+        }
+    }
 }
 
 public struct SceneryProp: Codable, Sendable, Equatable, Identifiable {
@@ -110,25 +160,31 @@ public enum LocalTerrain {
     /// The scenery mix a biome scatters, and how much of it.
     public static func sceneryMix(for biomeID: String) -> (kinds: [(SceneryKind, Double)], count: Int) {
         switch biomeID {
+        // Counts are up by roughly half across the board: a valley of forty
+        // props over a whole local map is one thing every fifty points, which
+        // reads as a bare field with ornaments on it rather than as country.
+        // Every kind here answers when it is tapped, so more of them is more
+        // world rather than more wallpaper.
         case "forest":
-            return ([(.pine, 0.32), (.tree, 0.22), (.bush, 0.14), (.stump, 0.08),
-                     (.mushroom, 0.10), (.deadTree, 0.06), (.tallGrass, 0.05),
-                     (.rock, 0.03)], 48)
+            return ([(.pine, 0.30), (.tree, 0.20), (.bush, 0.14), (.stump, 0.06),
+                     (.mushroom, 0.11), (.deadTree, 0.05), (.tallGrass, 0.07),
+                     (.flowers, 0.04), (.rock, 0.03)], 74)
         case "desert":
             return ([(.cactus, 0.30), (.dune, 0.24), (.rock, 0.18), (.boulder, 0.12),
-                     (.crag, 0.08), (.deadTree, 0.05), (.bush, 0.03)], 30)
+                     (.crag, 0.08), (.deadTree, 0.05), (.bush, 0.03)], 46)
         case "tundra":
-            return ([(.snowdrift, 0.30), (.rock, 0.18), (.pine, 0.14), (.crag, 0.12),
-                     (.deadTree, 0.10), (.hotSpring, 0.06), (.boulder, 0.10)], 32)
+            return ([(.snowdrift, 0.28), (.rock, 0.17), (.pine, 0.14), (.crag, 0.11),
+                     (.deadTree, 0.09), (.hotSpring, 0.06), (.boulder, 0.09),
+                     (.tallGrass, 0.06)], 50)
         case "mountains":
-            return ([(.cliff, 0.24), (.boulder, 0.24), (.crag, 0.20), (.rock, 0.18),
-                     (.pine, 0.09), (.hotSpring, 0.05)], 38)
+            return ([(.cliff, 0.22), (.boulder, 0.22), (.crag, 0.19), (.rock, 0.17),
+                     (.pine, 0.09), (.hotSpring, 0.05), (.flowers, 0.06)], 58)
         case "coast":
-            return ([(.reeds, 0.24), (.dune, 0.20), (.driftwood, 0.16), (.bush, 0.14),
-                     (.tree, 0.10), (.cliff, 0.09), (.rock, 0.07)], 36)
+            return ([(.reeds, 0.22), (.dune, 0.18), (.driftwood, 0.15), (.bush, 0.13),
+                     (.tree, 0.10), (.cliff, 0.08), (.rock, 0.07), (.flowers, 0.07)], 56)
         default: // plains & homeland
-            return ([(.tallGrass, 0.24), (.tree, 0.20), (.bush, 0.18), (.flowers, 0.18),
-                     (.rock, 0.10), (.pond, 0.06), (.deadTree, 0.04)], 40)
+            return ([(.tallGrass, 0.23), (.tree, 0.18), (.bush, 0.16), (.flowers, 0.19),
+                     (.rock, 0.09), (.pond, 0.05), (.mushroom, 0.06), (.deadTree, 0.04)], 62)
         }
     }
 

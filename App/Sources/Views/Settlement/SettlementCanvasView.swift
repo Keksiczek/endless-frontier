@@ -292,6 +292,13 @@ struct SettlementCanvasView: View {
             probe.offer(.landmark(rockLabel(rock)),
                         at: SettlementRenderer.point(rock.position, in: rect))
         }
+        // The land's own furniture: flowers, reeds, a snag, a cactus, the
+        // mushrooms under the wood. Drawn since the beginning and, until now,
+        // the one layer of the valley with nothing to say for itself.
+        for prop in map.scenery where map.isExplored(prop.position) {
+            probe.offer(.landmark(sceneryLabel(prop.kind)),
+                        at: SettlementRenderer.point(prop.position, in: rect))
+        }
         if let hit = probe.take() { return hit }
 
         // The land answers last: deposits with their fullness.
@@ -362,6 +369,12 @@ struct SettlementCanvasView: View {
         let felled = tree.chopped > 0.02
             ? " · \(cs ? "nařezáno" : "cut") \(Int(tree.chopped * 100)) %" : ""
         return "\(name) · \(Int(tree.timberYield.rounded())) \(cs ? "dřeva" : "timber")\(felled)"
+    }
+
+    private func sceneryLabel(_ kind: SceneryKind) -> String {
+        let name = kind.displayName.resolve(AppStrings.language)
+        guard let note = kind.note?.resolve(AppStrings.language) else { return name }
+        return "\(name) · \(note)"
     }
 
     private func rockLabel(_ rock: Rock) -> String {

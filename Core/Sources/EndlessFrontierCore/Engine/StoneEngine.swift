@@ -107,7 +107,10 @@ public enum StoneEngine {
     /// grown over the build grid would wall a colony into its own founding site
     /// — the recurring shape of bug where a threshold and the thing meant to
     /// cross it never meet.
-    static let colonyClearance: Double = 0.34
+    /// Derived from the build grid's own reach rather than written down again:
+    /// the town got wider twice, and a clearance left behind would have grown a
+    /// massif straight over the new outer quarters.
+    static var colonyClearance: Double { SettlementGeometry.cornerReach + 0.02 }
 
     /// Raises a massif against one edge of the map.
     ///
@@ -152,7 +155,7 @@ public enum StoneEngine {
                 // Never over the town, never in the water.
                 let dx = p.x - heart.x, dy = p.y - heart.y
                 guard (dx * dx + dy * dy).squareRoot() > colonyClearance else { continue }
-                guard abs(p.y - river.y(atX: p.x)) > 0.05 else { continue }
+                if river.flows, abs(p.y - river.y(atX: p.x)) <= 0.05 { continue }
                 if let shore, shore.distanceInland(p) < 0.03 { continue }
                 solid.insert(StoneField.index(column: col, row: row))
             }

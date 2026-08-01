@@ -401,16 +401,55 @@ public struct RiverShape: Codable, Sendable, Equatable {
     public var baseY: Double       // 0…1
     public var amplitude: Double   // 0…1
     public var phase: Double       // radians
+    /// Whether water actually runs here.
+    ///
+    /// Every valley in the game used to have a river across it, in every
+    /// biome, for ever — a tundra, a mountain and a plain all came with the
+    /// same blue ribbon, which is the fastest way to make six kinds of country
+    /// look like one. A dry valley is a valley; the shape stays (so the
+    /// generator's geometry and every `landPoint` call keep working) and only
+    /// the water is gone.
+    ///
+    /// Defaults to `true`, so every map ever saved keeps the river it was
+    /// generated with (rule 3).
+    public var flows: Bool
 
-    public init(baseY: Double, amplitude: Double, phase: Double) {
+    public init(baseY: Double, amplitude: Double, phase: Double, flows: Bool = true) {
         self.baseY = baseY
         self.amplitude = amplitude
         self.phase = phase
+        self.flows = flows
     }
 
     /// The river's y at a given x (both normalised 0…1).
     public func y(atX x: Double) -> Double {
         baseY + sin(x * 6.283185 + phase) * amplitude
+    }
+
+    private enum CodingKeys: String, CodingKey { case baseY, amplitude, phase, flows }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        baseY = try c.decode(Double.self, forKey: .baseY)
+        amplitude = try c.decode(Double.self, forKey: .amplitude)
+        phase = try c.decode(Double.self, forKey: .phase)
+        flows = try c.decodeIfPresent(Bool.self, forKey: .flows) ?? true
+    }
+
+    /// How likely a given country is to have water running through it.
+    ///
+    /// Not a die roll over a flat probability: a forest grows where the water
+    /// is and a desert is a desert because the water is not there.
+    public static func chance(biomeID: String) -> Double {
+        switch biomeID {
+        case "forest":    return 0.75
+        case "plains":    return 0.55
+        case "coast":     return 0.45   // it already has the sea
+        case "mountains": return 0.40   // a fast stream in a cut
+        case "tundra":    return 0.25
+        case "desert":    return 0.10   // and then it is a wash
+        default:          return 0.5
+        }
     }
 }
 
@@ -533,6 +572,14 @@ public struct LocalMap: Codable, Sendable, Equatable {
     public var stone: StoneField
     /// Goods lying where the work happened, waiting to be carried in.
     public var piles: [HaulPile]
+    /// Part-broken rock, banked until it is a whole unit somebody can carry.
+    ///
+    /// A tick at a granite face yields less than half a unit; rounding that to
+    /// a whole good every tick either pays the colony four times over or, if
+    /// floored, pays it nothing at all for ever. The remainder is kept against
+    /// the working instead, so hard rock is *slow* rather than free or
+    /// impossible. Old saves have none and start at zero (rule 3).
+    public var quarryCredit: [String: Double] = [:]
     /// Outsiders presently on this ground — traders, envoys, refugees.
     public var visitors: [Visitor]
     /// Scout-steps walked so far — one per scout per reveal step. How far the
@@ -592,7 +639,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case river, nodes, pois, wildlife, exploredCells, biomeID, terrainSeed, scenery
         case trees, rocks, shore, usesEntityLand, stone, piles, visitors
-        case scoutProgress, scoutFocus
+        case scoutProgress, scoutFocus, quarryCredit
     }
 
     public init(from decoder: Decoder) throws {
@@ -614,6 +661,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
         visitors = try c.decodeIfPresent([Visitor].self, forKey: .visitors) ?? []
         scoutProgress = try c.decodeIfPresent(Double.self, forKey: .scoutProgress) ?? 0
         scoutFocus = try c.decodeIfPresent(LocalPoint.self, forKey: .scoutFocus)
+        quarryCredit = try c.decodeIfPresent([String: Double].self, forKey: .quarryCredit) ?? [:]
     }
 
     /// Fraction of the map revealed (0…1).

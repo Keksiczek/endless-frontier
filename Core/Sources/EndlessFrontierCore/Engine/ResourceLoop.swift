@@ -750,7 +750,25 @@ public enum ResourceLoop {
         let stoneDemand = demand[.stone, default: 0]
             + demand[.ironOre, default: 0] + demand[.clay, default: 0]
         if stoneDemand > 0, !map.rocks.isEmpty {
-            map = FloraEngine.quarry(map, miners: max(1, Int(stoneDemand / harvestPerWorker))).map
+            let cut = FloraEngine.quarry(map, miners: max(1, Int(stoneDemand / harvestPerWorker)))
+            map = cut.map
+            // What the pick broke out is lying at the outcrop, exactly as
+            // timber lies at the stump. Taking only `.map` here — which is what
+            // this line did — consumed the rock and produced nothing, so the
+            // one route to clay in the game, and the only route to stone or ore
+            // on a map with no massif, went into the void.
+            for take in cut.broken {
+                guard let item = take.kind.rawMaterialID else { continue }
+                // A tick's work is a fraction of a unit for hard rock, so the
+                // partial takes are banked against the outcrop and dropped as
+                // whole goods once they add up to something carryable.
+                let owed = map.quarryCredit[item, default: 0] + take.amount
+                let whole = Int(owed)
+                map.quarryCredit[item] = owed - Double(whole)
+                if whole > 0 {
+                    dropped.append((itemID: item, amount: whole, at: take.at))
+                }
+            }
         }
         // And into the hillside itself. A mountain is worked at the face, block
         // by block, and what comes out of it is on top of what the outcrops
