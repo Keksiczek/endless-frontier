@@ -12,6 +12,10 @@ struct SettlementScreen: View {
     @State private var buildPlan: BuildPlan?
     /// Whether the "what to build" strip is showing.
     @State private var picking = false
+    /// The fight the player asked to see again, and when they asked. Held here
+    /// rather than in the view model because it is a *viewing* state: nothing
+    /// about the world changes when you rewatch a battle.
+    @State private var battleReplay: SettlementBattle.Replay?
 
     /// Which drawer is open, if any.
     ///
@@ -73,7 +77,7 @@ struct SettlementScreen: View {
                     settlement: settlement, map: map, registry: game.registry,
                     season: game.season, caravans: game.world.caravans,
                     clock: game.tickClock, selection: $selection,
-                    buildPlan: $buildPlan)
+                    buildPlan: $buildPlan, battleReplay: battleReplay)
                 .overlay(alignment: .topTrailing) {
                     MinimapView(map: map).padding(12)
                 }
@@ -143,9 +147,12 @@ struct SettlementScreen: View {
             } else if let battle = game.battleReport {
                 // A fight just happened here — show what it cost before idle
                 // curiosity about the scene.
-                BattleReportCard(battle: battle) {
-                    withAnimation(.easeOut(duration: 0.15)) { game.dismissBattleReport() }
-                }
+                BattleReportCard(
+                    battle: battle,
+                    onReplay: { battleReplay = SettlementBattle.Replay(log: battle) },
+                    onClose: {
+                        withAnimation(.easeOut(duration: 0.15)) { game.dismissBattleReport() }
+                    })
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if let pawn = selectedPawn {
                 PawnInspectorCard(pawn: pawn, ticksPerYear: game.ticksPerYear,

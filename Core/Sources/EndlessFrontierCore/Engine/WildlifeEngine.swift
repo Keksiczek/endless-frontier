@@ -11,6 +11,15 @@ import Foundation
 public enum WildlifeEngine {
     /// What the record calls the thing out of the trees.
     static let beastName = LocalizedText(values: [.en: "A beast", .cs: "Šelma"])
+    /// …and what it calls the several of them the watch turns back.
+    static let packName = LocalizedText(values: [.en: "Wolves", .cs: "Vlci"])
+
+    /// How many of them came at the herds. Purely for the canvas — the roll is
+    /// settled on pressure alone — but a pack has to *look* like a pack, and
+    /// like a bigger one in a bad year.
+    static func packSize(pressure: Double) -> Int {
+        min(6, max(2, Int((max(0, pressure) / 7).rounded(.down)) + 2))
+    }
 
     /// Per-tick logistic growth rate of the herd.
     static let herdGrowthRate: Double = 0.02
@@ -130,6 +139,38 @@ public enum WildlifeEngine {
             } else {
                 // Repelled: the hunt thins the predators a little.
                 map.wildlife.predatorPressure = max(0, map.wildlife.predatorPressure - 3)
+
+                // …and it is still a *fight*, which is the whole point.
+                //
+                // This branch is the commonest combat in the game by a wide
+                // margin — a raid is a once-a-year roll and wolves come at the
+                // herds all the time — and until now it left no `BattleLog`,
+                // so the one fight the colony has regularly was the one the
+                // canvas could never draw. A watch that turns the pack back is
+                // exactly as worth watching as a wall that holds.
+                //
+                // The two draws are at the end of this branch and nothing
+                // downstream reads `rng` again, so an existing world's rolls
+                // are untouched (rule 2).
+                let watch = s.pawns
+                    .filter { $0.health > 0 && !$0.isBroken }
+                    .sorted { $0.assignedWork == .garrison && $1.assignedWork != .garrison }
+                    .prefix(5).map(\.id)
+                if !watch.isEmpty {
+                    var record = CombatEngine.BattleRecorder()
+                    record.record(.charge, step: 0, amount: map.wildlife.predatorPressure)
+                    record.record(.volley, step: 1, amount: defense * 0.4)
+                    record.record(.clash, step: 3, amount: defense)
+                    record.record(.repelled, step: 5)
+                    let id = rng.nextUUID()
+                    let approach = rng.nextUnit() * 2 * .pi
+                    s.lastBattle = record.finish(
+                        id: id, tick: tick,
+                        attackerName: packName.resolve(.en), defenderName: s.name,
+                        repelled: true, attackerLabel: packName, approach: approach,
+                        attackers: packSize(pressure: map.wildlife.predatorPressure),
+                        line: Array(watch))
+                }
                 s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
                     .en: "Wolves tried the herds by night; the watch drove them off.",
                     .cs: "Vlci v noci zkusili stáda; hlídka je zahnala."]))

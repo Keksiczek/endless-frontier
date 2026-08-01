@@ -44,9 +44,12 @@ enum SettlementGround {
     // MARK: - The earth
 
     /// How many steps the sun's light is quantised into across the ground.
-    /// Five is enough to read as a lit landscape and cheap enough to be five
-    /// extra fills for the whole map.
-    static let lightBands = 5
+    ///
+    /// Five read as a lit landscape while it stood still, but the sun crosses
+    /// in minutes: with five steps a whole band of the valley changed shade at
+    /// once, over and over, and the land *pulsed*. Eight costs three more fills
+    /// for the whole map and the steps go under the eye.
+    static let lightBands = 8
 
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap,
@@ -75,6 +78,9 @@ enum SettlementGround {
         // Only autumn needs to know where the wood stands.
         let canopy = season == .autumn ? SettlementSeasons.canopy(map: map) : []
         let seed = map.terrainSeed
+        // The shape of the drawn valley, so the hills come out round on screen
+        // rather than four times taller than they are wide.
+        let aspect = SettlementLight.aspect(of: rect)
 
         for index in map.exploredCells {
             let col = index % cols, row = index / cols
@@ -94,11 +100,12 @@ enum SettlementGround {
                     // Where this tile sits in the world, 0…1, for the relief.
                     let u = (Double(col) + Double(sx) / Double(subX)) / Double(cols)
                     let v = (Double(row) + Double(sy) / Double(subY)) / Double(rows)
-                    let relief = SettlementLight.relief(u, v, seed: seed)
+                    let relief = SettlementLight.relief(u, v, seed: seed, aspect: aspect)
                     let skin = SettlementSeasons.skin(
                         cover: cover, season: season, coverage: coverage,
                         relief: relief, wood: wood, hash: h)
-                    let lit = SettlementLight.slopeLight(u, v, seed: seed, sun: sun)
+                    let lit = SettlementLight.slopeLight(u, v, seed: seed, sun: sun,
+                                                         aspect: aspect)
                     let band = min(lightBands - 1,
                                    max(0, Int((lit + 1) / 2 * Double(lightBands))))
                     // A quarter of the tiles are a shade darker, which is what

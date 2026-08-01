@@ -313,20 +313,19 @@ struct BattlePlaybackTests {
         #expect(late == l.moments.count)
     }
 
-    /// The playback window: on its tick and a little after, never before, and
-    /// never indefinitely — a finished raid must stop being drawn.
+    /// The playback window: on its tick, never before, and never indefinitely
+    /// — a finished raid must stop being drawn.
     @Test("The window opens on the tick and closes after it")
     func windowIsBounded() {
-        let l = log(tick: 10)
+        var settlement = Settlement(id: UUID(), name: "Home", regionID: UUID())
+        settlement.lastBattle = log(tick: 10)
         func showing(at continuousTick: Double) -> Bool {
-            let elapsed = continuousTick - Double(l.tick)
-            return elapsed >= 0 && elapsed <= 1 + SettlementBattle.lingerTicks
+            SettlementBattle.live(settlement, continuousTick: continuousTick) != nil
         }
         #expect(!showing(at: 9.99), "not before it happens")
         #expect(showing(at: 10.0))
-        #expect(showing(at: 10.5))
-        #expect(showing(at: 11.0))
-        #expect(!showing(at: 12.0), "a battle from last minute is over")
+        #expect(showing(at: 10.2))
+        #expect(!showing(at: 11.0), "a battle from last minute is over")
         #expect(!showing(at: 40.0), "and does not haunt the colony")
     }
 

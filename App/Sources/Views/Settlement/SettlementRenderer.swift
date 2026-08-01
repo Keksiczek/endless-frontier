@@ -56,6 +56,10 @@ enum SettlementRenderer {
         /// How far through its season the year has got, 0…1. Snow lies deeper
         /// at midwinter than on its first day, and spring's mud dries.
         seasonProgress: Double = 0.5,
+        /// A fight the player asked to see again. Overrides the live one while
+        /// it runs, so "watch it again" is the same choreography on its own
+        /// clock rather than a second, separate picture of a battle.
+        battleReplay: SettlementBattle.Replay? = nil,
         selectedPawnID: UUID?,
         selectedBuildingID: Int?
     ) {
@@ -118,12 +122,15 @@ enum SettlementRenderer {
             time: time, zoom: zoom)
 
         agents(&context, rect: rect, settlement: settlement, map: map, continuousTick: continuousTick,
-               registry: registry, time: time, zoom: zoom, selectedPawnID: selectedPawnID)
+               registry: registry, time: time, zoom: zoom, selectedPawnID: selectedPawnID,
+               battleReplay: battleReplay)
         SettlementFigures.birds(&context, rect: rect, season: season, time: time, zoom: zoom)
         // A raid plays out over the scene it happens to — above the people,
         // under the fog, so the dark still hides what the colony cannot see.
         SettlementBattle.draw(&context, rect: rect, settlement: settlement,
-                              continuousTick: continuousTick, time: time, zoom: zoom)
+                              continuousTick: continuousTick, time: time, zoom: zoom,
+                              secondsPerTick: registry.config.realSecondsPerTick,
+                              replay: battleReplay)
         fog(&context, rect: rect, map: map, time: time)
         // The seasonal wash is atmosphere over the lens, not part of the world,
         // so it stays in view space and doesn't slide when you pan.
@@ -1498,9 +1505,15 @@ enum SettlementRenderer {
             context.stroke(shape, with: .color(Theme.boneFaint.opacity(0.65)),
                            style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
         } else {
-            // Packed, cleared earth — warmer and darker than the wild grass, so
-            // the built ground reads as a place people made.
-            context.fill(shape, with: .color(Color(red: 0.20, green: 0.18, blue: 0.15).opacity(0.6)))
+            // Packed, cleared earth — warmer and a touch darker than the wild
+            // grass, so the built ground reads as a place people made.
+            //
+            // Opaque, and rule 9 is why: ground tiles overlap by a hair so no
+            // seam shows, and a *translucent* lot laid over them blends that
+            // overlap twice and rules a bright grid inside every yard in the
+            // town. At 0.6 alpha over dark grass it also came out as a near
+            // black slab — the thing that read as a hole in the map.
+            context.fill(shape, with: .color(Color(red: 0.27, green: 0.23, blue: 0.18)))
             context.stroke(shape, with: .color(Theme.boneFaint.opacity(0.4)), lineWidth: 0.8)
         }
     }
@@ -1525,10 +1538,11 @@ enum SettlementRenderer {
     private static func agents(
         _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement,
         map: LocalMap, continuousTick: Double, registry: GameDataRegistry,
-        time: Double, zoom: CGFloat, selectedPawnID: UUID?
+        time: Double, zoom: CGFloat, selectedPawnID: UUID?,
+        battleReplay: SettlementBattle.Replay? = nil
     ) {
         let scene = AgentMotion.Scene(settlement: settlement, registry: registry,
-                                      continuousTick: continuousTick)
+                                      continuousTick: continuousTick, replay: battleReplay)
         let ticksPerYear = registry.config.ticksPerYear
         let close = SettlementCrowd.showsIndividuals(zoom: zoom)
 

@@ -27,7 +27,24 @@ struct PawnInspectorCard: View {
     var housed: Bool = true
     var onClose: () -> Void
 
+    /// How far past the fold the card is opened.
+    ///
+    /// Everything used to be on screen at once — needs, six body parts, the
+    /// mood ledger, bonds, craft and four disposition bars — which on a phone
+    /// came to a card **taller than the phone**. It grew upward off the top of
+    /// the screen and took its own close button with it, so tapping a colonist
+    /// was a trap: you could not read the head of the card and you could not
+    /// shut it.
+    ///
+    /// What a card owes you at a glance is who this is, how they are and what
+    /// is wrong. The rest is a page you ask for.
+    @State private var expanded = false
+
     private var cs: Bool { AppStrings.language == .cs }
+
+    /// The most of the screen the opened card may take. Beyond this the detail
+    /// scrolls inside the card rather than pushing the header off the top.
+    private static let detailMaxHeight: CGFloat = 260
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -43,12 +60,11 @@ struct PawnInspectorCard: View {
                 }
             }
             needs
+            // What is *wrong* is never behind a fold: a colonist with a torn
+            // leg is the reason you tapped them.
             if !pawn.body.ailments.isEmpty || pawn.body.capacity < 0.99 { condition }
-            bodyParts
-            if !moodFactors.isEmpty { moodBreakdown }
-            if !bonds.isEmpty { bondRows }
-            skills
-            genes
+            moreToggle
+            if expanded { detail }
         }
         .padding(16)
         .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
@@ -57,6 +73,41 @@ struct PawnInspectorCard: View {
                 .strokeBorder(Theme.roleShade(pawn.assignedWork).opacity(0.35), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.4), radius: 18, y: 8)
+    }
+
+    /// The rest of the person, when you ask for it — and never taller than the
+    /// space it was given.
+    private var detail: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                bodyParts
+                if !moodFactors.isEmpty { moodBreakdown }
+                if !bonds.isEmpty { bondRows }
+                skills
+                genes
+            }
+            .padding(.bottom, 2)
+        }
+        .frame(maxHeight: Self.detailMaxHeight)
+        .scrollBounceBehavior(.basedOnSize)
+        .transition(.opacity)
+    }
+
+    private var moreToggle: some View {
+        Button {
+            withAnimation(.snappy(duration: 0.2)) { expanded.toggle() }
+        } label: {
+            HStack(spacing: 6) {
+                Text(expanded ? (cs ? "Méně" : "Less") : (cs ? "Celá karta" : "Full card"))
+                    .font(.caption.weight(.semibold))
+                Image(systemName: expanded ? "chevron.up" : "chevron.down")
+                    .font(.caption2.weight(.bold))
+                Spacer()
+            }
+            .foregroundStyle(Theme.accent)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     /// The four needs, with the ones that are biting marked.

@@ -67,14 +67,123 @@ struct BattleStagingTests {
         }
     }
 
-    @Test("A fight is live over its tick and a little after, and not before")
+    /// The record is *replayed*, not lived through: twenty seconds for the
+    /// whole fight whatever tick it happened on. At the tick's own pace eight
+    /// rounds came out as one exchange every seven and a half seconds, which is
+    /// a fight you can watch and see nothing happen in.
+    @Test("A fight is played back faster than the tick that carried it")
     func liveWindow() {
         var settlement = Settlement(id: UUID(), name: "Home", regionID: UUID())
         settlement.lastBattle = log(line: [], tick: 100)
-        #expect(SettlementBattle.live(settlement, continuousTick: 99.5) == nil)
-        #expect(SettlementBattle.live(settlement, continuousTick: 100.4) != nil)
-        #expect(SettlementBattle.live(settlement, continuousTick: 101.2) != nil)
-        #expect(SettlementBattle.live(settlement, continuousTick: 102) == nil)
+        // A minute-long tick played over twenty seconds runs at 3×, so the
+        // fight and its aftermath occupy a little over half a tick.
+        #expect(SettlementBattle.live(settlement, continuousTick: 99.5) == nil,
+                "not before it happens")
+        #expect(SettlementBattle.live(settlement, continuousTick: 100.0) != nil)
+        #expect(SettlementBattle.live(settlement, continuousTick: 100.3) != nil)
+        #expect(SettlementBattle.live(settlement, continuousTick: 100.9) == nil,
+                "over well inside its own tick")
+        #expect(SettlementBattle.live(settlement, continuousTick: 140) == nil,
+                "and does not haunt the colony")
+    }
+
+    /// Rule 6 in its combat form: the fight must actually *finish* inside the
+    /// window it is given, or the last thing the player sees is a rank of
+    /// raiders frozen mid-swing.
+    @Test("The whole record has played before the window closes")
+    func recordFinishesInsideTheWindow() {
+        var settlement = Settlement(id: UUID(), name: "Home", regionID: UUID())
+        settlement.lastBattle = log(line: [], tick: 100)
+        let speed = 60.0 / SettlementBattle.playSeconds
+        let lastTick = 100.0 + (1 + SettlementBattle.lingerFraction) / speed
+        // A hair inside the end of the window, the replay is at its finish.
+        let end = SettlementBattle.live(settlement, continuousTick: lastTick - 0.001)
+        #expect(end?.progress == 1)
+    }
+
+    @Test("A replay outranks the live fight and runs on its own clock")
+    func replayPlaysFromTheTop() {
+        var settlement = Settlement(id: UUID(), name: "Home", regionID: UUID())
+        settlement.lastBattle = log(line: [], tick: 100)
+        let started = Date()
+        let replay = SettlementBattle.Replay(log: log(line: [], tick: 7), startedAt: started)
+        // Long after the live fight is over, the replay is still playing.
+        let seen = SettlementBattle.live(
+            settlement, continuousTick: 900, replay: replay,
+            now: started.addingTimeInterval(SettlementBattle.playSeconds * 0.5))
+        #expect(seen?.log.tick == 7)
+        #expect(abs((seen?.progress ?? 0) - 0.5) < 0.02)
+
+        // …and when it has run out, it stops standing in the way.
+        let after = SettlementBattle.live(
+            settlement, continuousTick: 900, replay: replay,
+            now: started.addingTimeInterval(SettlementBattle.playSeconds * 4))
+        #expect(after == nil)
+    }
+
+    /// The fight has to *read* as a fight: named stages in order, a rank that
+    /// thins as the colony holds, and blows that land on the record's beats
+    /// rather than on a free-running sine.
+    @Test("The fight runs through its stages in order")
+    func phasesRunInOrder() {
+        #expect(SettlementBattle.phase(at: 0.0) == .marching)
+        #expect(SettlementBattle.phase(at: 0.30) == .volley)
+        #expect(SettlementBattle.phase(at: 0.60) == .melee)
+        #expect(SettlementBattle.phase(at: 0.95) == .breaking)
+    }
+
+    @Test("A rank that is being beaten visibly thins")
+    func attackersThin() {
+        let held = log(line: [UUID(), UUID()], repelled: true, attackers: 8)
+        #expect(SettlementBattle.attackersStanding(held, at: 0.1) == held.drawnAttackers)
+        #expect(SettlementBattle.attackersStanding(held, at: 0.6)
+                < SettlementBattle.attackersStanding(held, at: 0.45))
+        #expect(SettlementBattle.attackersStanding(held, at: 0.99) == 0,
+                "a broken assault leaves nobody standing")
+
+        // One that got through pays for it but walks away.
+        let through = log(line: [UUID()], repelled: false, attackers: 8)
+        #expect(SettlementBattle.attackersStanding(through, at: 0.99) > 0)
+        #expect(SettlementBattle.attackersStanding(through, at: 0.99) < through.drawnAttackers)
+    }
+
+    @Test("A blow lands on the beat the record wrote it on")
+    func blowsLandOnTheRecord() {
+        let battle = BattleLog(
+            id: UUID(), tick: 1, attackerName: "Raiders", defenderName: "Home",
+            moments: [BattleMoment(id: 0, at: 0.50, kind: .clash)],
+            repelled: false, approach: 0, attackers: 4, line: [UUID()])
+        #expect(SettlementBattle.strikeBeat(battle, at: 0.40) == 0, "before the blow")
+        #expect(SettlementBattle.strikeBeat(battle, at: 0.50) > 0.9, "on it")
+        #expect(SettlementBattle.strikeBeat(battle, at: 0.80) == 0, "and well after it")
+    }
+
+    @Test("A defender's bar empties as the wounds the record names land on them")
+    func harmFollowsTheRecord() {
+        let me = UUID()
+        let battle = BattleLog(
+            id: UUID(), tick: 1, attackerName: "Raiders", defenderName: "Home",
+            moments: [
+                BattleMoment(id: 0, at: 0.5, kind: .wound, pawnID: me, amount: 30),
+                BattleMoment(id: 1, at: 0.7, kind: .wound, pawnID: me, amount: 30),
+            ],
+            repelled: false, approach: 0, attackers: 3, line: [me])
+        #expect(SettlementBattle.harm(battle, pawn: me, at: 0.2) == 0)
+        #expect(abs(SettlementBattle.harm(battle, pawn: me, at: 0.6) - 0.3) < 0.001)
+        #expect(abs(SettlementBattle.harm(battle, pawn: me, at: 0.9) - 0.6) < 0.001)
+        #expect(SettlementBattle.harm(battle, pawn: UUID(), at: 0.9) == 0)
+    }
+
+    @Test("Someone the record killed reads as down, whatever else happened")
+    func deathIsTotal() {
+        let me = UUID()
+        let battle = BattleLog(
+            id: UUID(), tick: 1, attackerName: "Raiders", defenderName: "Home",
+            moments: [BattleMoment(id: 0, at: 0.4, kind: .death, pawnID: me, amount: 8)],
+            repelled: false, approach: 0, attackers: 3, line: [me, UUID()])
+        #expect(SettlementBattle.harm(battle, pawn: me, at: 0.5) == 1)
+        #expect(SettlementBattle.defendersStanding(battle, at: 0.3) == 2)
+        #expect(SettlementBattle.defendersStanding(battle, at: 0.5) == 1)
     }
 }
 

@@ -29,7 +29,7 @@ struct SettlementLightTests {
     func sunIsOverheadAtNoon() {
         let sun = SettlementLight.sun(time: AgentMotion.dayLength * 0.5)
         #expect(abs(sun.elevation - 1) < 0.0001)
-        #expect(sun.strength > 0.3)
+        #expect(sun.strength > 0.15)
     }
 
     /// The whole point of 2.10: a *low* sun. If dawn's shadow is not much
@@ -100,6 +100,39 @@ struct SettlementLightTests {
         }
         #expect(lightest - darkest > 0.8,
                 "the ground reads flat — no slope is meaningfully lit")
+    }
+
+    /// Rule 10, one layer up — and the reason the valley was drawn in vertical
+    /// stripes for as long as it was lit. The relief noise is round in `(u, v)`;
+    /// `(u, v)` is drawn into a rect three times taller than it is wide; so
+    /// without correction a hill comes out four times taller than it is broad,
+    /// over and over, all the way down the screen.
+    ///
+    /// Named for the shape of the bug rather than for the behaviour: what must
+    /// hold is that the land has *more* features down a long screen than across
+    /// a short one, in the same proportion as the screen itself.
+    @Test("Hills come out round on a phone, not as vertical stripes")
+    func reliefIsRoundOnScreen() {
+        let phone = CGRect(x: 0, y: 0, width: 400, height: 1200)
+        let aspect = SettlementLight.aspect(of: phone)
+        #expect(abs(aspect - 3) < 0.001)
+
+        let across = features { SettlementLight.relief($0, 0.5, seed: 99, aspect: aspect) }
+        let down = features { SettlementLight.relief(0.5, $0, seed: 99, aspect: aspect) }
+        #expect(Double(down) > Double(across) * 1.6,
+                "\(down) features down against \(across) across — still striped")
+
+        // …and the uncorrected field is the bug itself: fewer features down
+        // three times the ground.
+        let stretched = features { SettlementLight.relief(0.5, $0, seed: 99) }
+        #expect(stretched < down)
+    }
+
+    @Test("A freak layout cannot ask for a thousand octaves")
+    func aspectIsClamped() {
+        #expect(SettlementLight.aspect(of: CGRect(x: 0, y: 0, width: 1, height: 9_000)) == 5)
+        #expect(SettlementLight.aspect(of: CGRect(x: 0, y: 0, width: 9_000, height: 1)) == 0.25)
+        #expect(SettlementLight.aspect(of: .zero) == 1)
     }
 
     @Test("The land keeps its shape after dark")
@@ -241,6 +274,18 @@ struct SettlementLightTests {
     // MARK: - Helpers
 
     private func length(_ v: CGVector) -> CGFloat { sqrt(v.dx * v.dx + v.dy * v.dy) }
+
+    /// How many times a sampled line of ground crosses its own mean — a count
+    /// of hills and hollows along it, which is what "how big is a feature"
+    /// means when the field is noise rather than a shape.
+    private func features(_ height: (Double) -> Double) -> Int {
+        let samples = (0..<256).map { height(Double($0) / 256) }
+        let mean = samples.reduce(0, +) / Double(samples.count)
+        var crossings = 0
+        for i in 1..<samples.count
+        where (samples[i - 1] < mean) != (samples[i] < mean) { crossings += 1 }
+        return crossings
+    }
 
     /// What fraction of a sampled field of ground wears a skin the test wants.
     private func skinned(

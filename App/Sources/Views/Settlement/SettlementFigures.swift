@@ -19,11 +19,12 @@ enum SettlementFigures {
     static let bodyScale: CGFloat = 0.82
 
     static func draw(
-        pawn: Pawn, pose: AgentMotion.Pose, at p: CGPoint,
+        pawn: Pawn, pose: AgentMotion.Pose, at anchor: CGPoint,
         time: Double, ticksPerYear: Int, selected: Bool, zoom: CGFloat = 1,
         ranged: Bool = false,
         context: inout GraphicsContext
     ) {
+        var p = anchor
         let years = pawn.ageYears(ticksPerYear: ticksPerYear)
         let child = years < Pawn.adultAgeYears
         let elder = years >= 56
@@ -46,16 +47,30 @@ enum SettlementFigures {
         let gait = AgentMotion.gaitPhase(for: pawn, time: time)
         let swing = CGFloat(sin(gait) * pose.stride) * 1.7 * scale
 
+        // Which way they are going. Everything that hangs off one side of the
+        // body — the tool arm, the blade at the hip, an elder's stick — is
+        // mirrored by this, so a colonist walking west walks *forwards*.
+        let mirror: CGFloat = pose.facing < -0.2 ? -1 : 1
+        // A walker leans into the walk and rises on each step. Two strokes'
+        // worth of work, and the difference between someone walking and
+        // someone being slid across the ground.
+        let travelling = pose.stride > 0.5
+        let lean = travelling ? CGFloat(pose.facing) * scale * 0.55 : 0
+        if travelling {
+            p.y -= CGFloat(abs(sin(gait))) * scale * 0.42
+        }
+
         // The sick and the broken slouch; everyone else stands tall.
         let slouch: CGFloat = (pose.activity == .resting || pawn.isBroken) ? 1.1 : 0
         let headY = p.y - 4.9 * scale + slouch
         let shoulderY = p.y - 2.4 * scale + slouch * 0.6
         let hipY = p.y + 1.7 * scale
 
-        // Tunic — a small filled coat in the trade's colour.
+        // Tunic — a small filled coat in the trade's colour, leaning the way
+        // they are walking.
         var torso = Path()
-        torso.move(to: CGPoint(x: p.x - 1.5 * scale, y: shoulderY))
-        torso.addLine(to: CGPoint(x: p.x + 1.5 * scale, y: shoulderY))
+        torso.move(to: CGPoint(x: p.x - 1.5 * scale + lean, y: shoulderY))
+        torso.addLine(to: CGPoint(x: p.x + 1.5 * scale + lean, y: shoulderY))
         torso.addLine(to: CGPoint(x: p.x + 1.1 * scale, y: hipY))
         torso.addLine(to: CGPoint(x: p.x - 1.1 * scale, y: hipY))
         torso.closeSubpath()
@@ -70,29 +85,33 @@ enum SettlementFigures {
         context.stroke(legs, with: .color(tunic.opacity(alpha)),
                        style: StrokeStyle(lineWidth: 1.1 * scale, lineCap: .round))
 
-        // Arms: the tool arm works, the other hangs (or both hang).
+        // Arms: the tool arm works, and while walking both arms counter-swing
+        // against the legs. Stiff arms on a moving body is the tell that a
+        // figure is a picture rather than a person.
         let working = pose.activity == .working
         let toolSwing = working ? sin(time * 5 + Double(AgentMotion.hash(pawn.id) % 7)) * 0.35 : 0
+        let armSwing = travelling ? -swing * 0.55 : 0
         var arms = Path()
-        arms.move(to: CGPoint(x: p.x - 1.3 * scale, y: shoulderY + 0.3))
-        arms.addLine(to: CGPoint(x: p.x - 2.0 * scale, y: p.y + 0.8 * scale))
-        let handX = p.x + (2.1 + CGFloat(toolSwing)) * scale
+        arms.move(to: CGPoint(x: p.x - 1.3 * scale + lean * 0.6, y: shoulderY + 0.3))
+        arms.addLine(to: CGPoint(x: p.x - 2.0 * scale - armSwing, y: p.y + 0.8 * scale))
+        let handX = p.x + (2.1 + CGFloat(toolSwing)) * scale * mirror + armSwing
         let handY = p.y + (working ? -0.6 : 0.8) * scale
-        arms.move(to: CGPoint(x: p.x + 1.3 * scale, y: shoulderY + 0.3))
+        arms.move(to: CGPoint(x: p.x + 1.3 * scale + lean * 0.6, y: shoulderY + 0.3))
         arms.addLine(to: CGPoint(x: handX, y: handY))
         context.stroke(arms, with: .color(tunic.opacity(alpha)),
                        style: StrokeStyle(lineWidth: 1.0 * scale, lineCap: .round))
 
-        // Head — skin, not tunic: a face in the crowd.
+        // Head — skin, not tunic: a face in the crowd, carried by the lean.
+        let headX = p.x + lean
         context.fill(
-            Path(ellipseIn: CGRect(x: p.x - 1.7 * scale, y: headY - 1.7 * scale,
+            Path(ellipseIn: CGRect(x: headX - 1.7 * scale, y: headY - 1.7 * scale,
                                    width: 3.4 * scale, height: 3.4 * scale)),
             with: .color(skin.opacity(alpha)))
 
         // A helmet if they wear armor into the day.
         if pawn.equipment[.armor] != nil {
             context.stroke(Path { path in
-                path.addArc(center: CGPoint(x: p.x, y: headY),
+                path.addArc(center: CGPoint(x: headX, y: headY),
                             radius: 1.9 * scale,
                             startAngle: .degrees(180), endAngle: .degrees(360),
                             clockwise: false)
@@ -121,28 +140,38 @@ enum SettlementFigures {
         // day has been interrupted by something that wants killing.
         // A hunter at work is a hunter fighting something: the bow comes up the
         // same way whether the thing in front of them is a raider or a deer.
+        // Every one of these is drawn reaching to the *right* of the hand, so
+        // a figure facing left has its context mirrored about the hand rather
+        // than each shape rewritten. A hoe that crosses its owner's chest is
+        // the second half of the "everyone faces right" problem.
+        let hand = CGPoint(x: handX, y: handY)
         if pose.activity == .fighting || (working && pawn.assignedWork == .hunting) {
-            fightingArms(ranged: ranged, at: CGPoint(x: handX, y: handY),
-                         scale: scale, alpha: alpha, time: time, context: &context)
+            mirrored(&context, about: handX, by: mirror) { ctx in
+                fightingArms(ranged: ranged, at: hand,
+                             scale: scale, alpha: alpha, time: time, context: &ctx)
+            }
         } else if working {
-            tool(for: pawn.assignedWork, at: CGPoint(x: handX, y: handY),
-                 scale: scale, alpha: alpha, time: time, context: &context)
+            mirrored(&context, about: handX, by: mirror) { ctx in
+                tool(for: pawn.assignedWork, at: hand,
+                     scale: scale, alpha: alpha, time: time, context: &ctx)
+            }
         }
 
-        // A blade at the hip — equipment you can *see*.
+        // A blade at the hip — equipment you can *see*, on the hip away from
+        // the tool hand.
         if pawn.equipment[.weapon] != nil {
             context.stroke(Path { path in
-                path.move(to: CGPoint(x: p.x - 1.2 * scale, y: hipY + 0.2))
-                path.addLine(to: CGPoint(x: p.x - 2.6 * scale, y: hipY + 2.2 * scale))
+                path.move(to: CGPoint(x: p.x - 1.2 * scale * mirror, y: hipY + 0.2))
+                path.addLine(to: CGPoint(x: p.x - 2.6 * scale * mirror, y: hipY + 2.2 * scale))
             }, with: .color(Color(red: 0.78, green: 0.80, blue: 0.86).opacity(alpha)),
             lineWidth: 0.9 * scale)
         }
 
-        // An elder's walking stick.
+        // An elder's walking stick, planted ahead of them.
         if elder {
             context.stroke(Path { path in
-                path.move(to: CGPoint(x: p.x + 2.4 * scale, y: shoulderY + 1))
-                path.addLine(to: CGPoint(x: p.x + 2.9 * scale, y: p.y + 6 * scale))
+                path.move(to: CGPoint(x: p.x + 2.4 * scale * mirror, y: shoulderY + 1))
+                path.addLine(to: CGPoint(x: p.x + 2.9 * scale * mirror, y: p.y + 6 * scale))
             }, with: .color(Color(red: 0.55, green: 0.46, blue: 0.35).opacity(alpha)),
             lineWidth: 0.8 * scale)
         }
@@ -166,6 +195,27 @@ enum SettlementFigures {
                 .foregroundStyle(Theme.bone)
             context.draw(context.resolve(name), at: CGPoint(x: p.x, y: headY - 8))
         }
+    }
+
+    /// Draws `content` flipped left-to-right about `x` when `by` is negative.
+    ///
+    /// Everything a colonist holds is written reaching to the right of the
+    /// hand. Rather than give every hoe, bow and pick a signed variant, the
+    /// context is mirrored about the hand for anyone facing the other way —
+    /// one place to get right, and the tools cannot drift apart.
+    private static func mirrored(
+        _ context: inout GraphicsContext, about x: CGFloat, by direction: CGFloat,
+        content: (inout GraphicsContext) -> Void
+    ) {
+        guard direction < 0 else {
+            content(&context)
+            return
+        }
+        var flipped = context
+        flipped.translateBy(x: x, y: 0)
+        flipped.scaleBy(x: -1, y: 1)
+        flipped.translateBy(x: -x, y: 0)
+        content(&flipped)
     }
 
     /// What a colonist does with their hands when there is fighting to do.

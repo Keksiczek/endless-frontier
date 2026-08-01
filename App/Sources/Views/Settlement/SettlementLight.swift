@@ -59,7 +59,12 @@ enum SettlementLight {
     /// The longest a shadow may get, in multiples of its caster's height. A
     /// real sun on the horizon throws an infinite shadow; a drawn one that does
     /// smears the whole map into stripes.
-    static let maxShadow: CGFloat = 3.4
+    ///
+    /// Held down to a little over twice the caster's height. At 3.4 a granary
+    /// at dusk threw a wedge a quarter of the valley long, and because the sun
+    /// crosses in minutes that wedge *swept* — the single most restless thing
+    /// on the screen, and read as a bug rather than as evening.
+    static let maxShadow: CGFloat = 2.1
 
     /// Where the sun stands at a given moment of the shared day.
     ///
@@ -92,7 +97,11 @@ enum SettlementLight {
             elevation: elevation,
             daylight: daylight,
             shadow: CGVector(dx: across * length, dy: length * 0.42),
-            strength: 0.34 * daylight,
+            // Shade, not a hole. At 0.34 over the dark grass of this palette a
+            // hut's shadow read as a black slab three times the hut — the
+            // second half of why the valley looked like it had rectangles
+            // punched out of it.
+            strength: 0.21 * daylight,
             // Raking light picks out relief; noon flattens it.
             relief: 0.10 + 0.26 * daylight * (0.35 + 0.65 * sunlow),
             tint: lightTint(elevation: elevation, low: sunlow))
@@ -106,14 +115,33 @@ enum SettlementLight {
 
     // MARK: - Relief
 
+    /// How many times taller than wide the valley is drawn on screen.
+    ///
+    /// This is rule 10 again, one layer up. The ground *cover* was taught that
+    /// the map is three times taller than it is wide; the **relief** never was,
+    /// so its noise stayed round in `(u, v)` and came out four times stretched
+    /// in pixels — hills a phone-width across and four phone-widths tall. Which
+    /// is to say: the valley was lit in vertical stripes, and it had been since
+    /// the light went in.
+    ///
+    /// Clamped, so a freak layout cannot ask for a thousand octaves.
+    static func aspect(of rect: CGRect) -> Double {
+        guard rect.width > 0.5, rect.height > 0.5 else { return 1 }
+        return max(0.25, min(5, Double(rect.height / rect.width)))
+    }
+
     /// The height of the land at a normalised point — pure decoration, and the
-    /// same for a given `(seed, u, v)` for ever, so the hills do not crawl.
+    /// same for a given `(seed, u, v, aspect)` for ever, so the hills do not
+    /// crawl.
     ///
     /// Two octaves: broad swells that a whole quarter of the map sits on, and a
-    /// finer roll that gives a single field its shape.
-    static func relief(_ u: Double, _ v: Double, seed: UInt64) -> Double {
-        let broad = lattice(u * 3.1, v * 2.3, seed: seed)
-        let fine = lattice(u * 8.3, v * 6.1, seed: seed &+ 0x5BF0_3635)
+    /// finer roll that gives a single field its shape. `aspect` stretches the
+    /// vertical frequency to match the shape of the drawn rect, so a swell is
+    /// as broad as it is long *on screen* rather than in normalised space.
+    static func relief(_ u: Double, _ v: Double, seed: UInt64, aspect: Double = 1) -> Double {
+        let a = max(0.25, min(5, aspect))
+        let broad = lattice(u * 3.1, v * 2.3 * a, seed: seed)
+        let fine = lattice(u * 8.3, v * 6.1 * a, seed: seed &+ 0x5BF0_3635)
         return broad * 0.68 + fine * 0.32
     }
 
@@ -127,16 +155,23 @@ enum SettlementLight {
     /// of the same ridge goes dark, and that flips as the sun crosses. On its
     /// own the slope term was too fine-grained to see; almost every tile landed
     /// in the middle band and the map came out exactly as flat as before.
-    static func slopeLight(_ u: Double, _ v: Double, seed: UInt64, sun: Sun) -> Double {
-        let height = (relief(u, v, seed: seed) - 0.5) * 1.7
+    static func slopeLight(_ u: Double, _ v: Double, seed: UInt64, sun: Sun,
+                           aspect: Double = 1) -> Double {
+        let a = max(0.25, min(5, aspect))
+        let height = (relief(u, v, seed: seed, aspect: a) - 0.5) * 1.7
         guard sun.daylight > 0.001 else {
             // Under a flat sky the hollows are still darker than the tops; the
             // land keeps its shape at night rather than going out entirely.
             return max(-1, min(1, height))
         }
+        // The two samples have to be the same distance apart *on screen*, or
+        // the gradient is dominated by whichever axis the rect squashes — and
+        // then it is dotted with a pixel-space sun bearing, which is how a
+        // slope term ends up pointing somewhere the light is not.
         let e = 0.020
-        let dx = relief(u + e, v, seed: seed) - relief(u - e, v, seed: seed)
-        let dy = relief(u, v + e, seed: seed) - relief(u, v - e, seed: seed)
+        let ev = e / a
+        let dx = relief(u + e, v, seed: seed, aspect: a) - relief(u - e, v, seed: seed, aspect: a)
+        let dy = relief(u, v + ev, seed: seed, aspect: a) - relief(u, v - ev, seed: seed, aspect: a)
         // The sun's horizontal bearing, normalised. `shadow` points *away* from
         // the sun, so a slope facing the sun is one leaning against it.
         let len = max(0.0001, sqrt(sun.shadow.dx * sun.shadow.dx + sun.shadow.dy * sun.shadow.dy))

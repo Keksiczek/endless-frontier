@@ -22,9 +22,15 @@ struct StatusStrip: View {
                     Text(AppStrings.eraTitle(game.world.era))
                         .font(.system(.headline, design: .serif).weight(.semibold))
                         .foregroundStyle(Theme.text)
-                    Text("\(AppStrings.year) \(game.year) · \(seasonLabel)")
-                        .font(.caption)
-                        .foregroundStyle(Theme.textDim)
+                    HStack(spacing: 4) {
+                        Text("\(AppStrings.year) \(game.year) ·")
+                        Image(systemName: seasonSymbol)
+                            .font(.caption2)
+                        Text(AppStrings.seasonName(game.season))
+                    }
+                    .font(.caption)
+                    .foregroundStyle(Theme.textDim)
+                    .accessibilityElement(children: .combine)
                 }
                 Spacer()
                 Button {
@@ -65,16 +71,19 @@ struct StatusStrip: View {
         }
     }
 
-    private var seasonLabel: String {
-        "\(seasonGlyph) \(AppStrings.seasonName(game.season))"
-    }
-
-    private var seasonGlyph: String {
+    /// The season, as a symbol that is actually in the font.
+    ///
+    /// Three of the four seasons were typographic ornaments (`❀ ❦ ❄`) and
+    /// summer was `☀`, which the system's text face does not carry — so half
+    /// the year the header read "Year 121 · ⍰ Summer". A symbol the platform
+    /// guarantees beats a pretty character that renders on the machine it was
+    /// written on.
+    private var seasonSymbol: String {
         switch game.season {
-        case .spring: return "❀"
-        case .summer: return "☀"
-        case .autumn: return "❦"
-        case .winter: return "❄"
+        case .spring: return "camera.macro"
+        case .summer: return "sun.max.fill"
+        case .autumn: return "leaf.fill"
+        case .winter: return "snowflake"
         }
     }
 

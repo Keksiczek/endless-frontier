@@ -47,6 +47,10 @@ struct SettlementCanvasView: View {
     /// set the canvas becomes the build surface: the grid and a full-size ghost
     /// are drawn over the colony, and a tap aims instead of selecting.
     @Binding var buildPlan: BuildPlan?
+    /// A fight the player asked to see again. A raid is over in half a minute
+    /// of an hour-long colony year; looking away used to mean missing it for
+    /// good.
+    var battleReplay: SettlementBattle.Replay?
 
     /// A fixed, *absolute* epoch so the animation clock is stable across
     /// redraws — and so anyone else (the pawn inspector's "right now" line)
@@ -69,6 +73,7 @@ struct SettlementCanvasView: View {
                         camera: camera, continuousTick: now,
                         caravans: caravans,
                         seasonProgress: seasonProgress(at: now),
+                        battleReplay: battleReplay,
                         selectedPawnID: selectedPawnID,
                         selectedBuildingID: selectedBuildingID)
                     if let plan = buildPlan {
@@ -208,90 +213,172 @@ struct SettlementCanvasView: View {
 
     // MARK: - Hit testing
 
-    /// Nearest thing to a tap: a walking colonist wins over a building when
-    /// both are in reach, since they're what the eye was following.
+    /// Nearest thing to a tap, taken in layers.
+    ///
+    /// It used to answer for five kinds of thing and measure all of them the
+    /// same way — the distance to a *point*. Two things were wrong with that,
+    /// and between them they are the whole of "not everything is clickable":
+    ///
+    /// 1. **A building is a lot, not a dot.** Buildings own multi-tile
+    ///    footprints now, and a granary four tiles across was tappable only
+    ///    within 22pt of its centre — so the half of it you were actually
+    ///    looking at answered nothing. Buildings are hit against their
+    ///    *footprint*, and a tap inside one is a hit at zero distance.
+    /// 2. **Half the world was not in the list.** Trees, rock, and the heaps of
+    ///    timber lying at the stump are drawn, walked to, and worked — and
+    ///    tapping any of them did nothing at all.
+    ///
+    /// The layers run people → beasts → built → the things on the ground →
+    /// the land → the dark, and the first layer with anything in reach wins:
+    /// a colonist walking past a wall is what the eye was following.
     private func hitTest(_ location: CGPoint, size: CGSize) -> CanvasSelection {
         let viewRect = CGRect(origin: .zero, size: size)
         let rect = SettlementRenderer.worldRect(viewRect: viewRect, camera: camera)
         let t = Date().timeIntervalSince(start)
         let scene = AgentMotion.Scene(settlement: settlement, registry: registry,
-                                      continuousTick: clock.continuous(at: Date()))
+                                      continuousTick: clock.continuous(at: Date()),
+                                      replay: battleReplay)
         let ticksPerYear = registry.config.ticksPerYear
+        var probe = Probe(location: location, limit: touchRadius)
 
-        var best: CanvasSelection = .none
-        var bestDistance = touchRadius * touchRadius
         for pawn in SettlementRenderer.visibleAgents(settlement) {
             let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
                                         time: t, ticksPerYear: ticksPerYear)
             guard map.isExplored(pose.position) else { continue }
-            let p = SettlementRenderer.point(pose.position, in: rect)
-            let d2 = distanceSquared(p, location)
-            if d2 < bestDistance {
-                bestDistance = d2
-                best = .pawn(pawn.id)
-            }
+            probe.offer(.pawn(pawn.id),
+                        at: SettlementRenderer.point(pose.position, in: rect))
         }
-        if case .pawn = best { return best }
+        if let hit = probe.take() { return hit }
 
         // The beasts, wild and kept. They are pawns with bodies, wounds and a
         // mind — the only living things on the map you could not tap.
         for animal in map.wildlife.animals where map.isExplored(animal.position) {
-            let d2 = distanceSquared(SettlementRenderer.point(animal.position, in: rect), location)
-            if d2 < bestDistance {
-                bestDistance = d2
-                best = .animal(animal.id)
-            }
+            probe.offer(.animal(animal.id),
+                        at: SettlementRenderer.point(animal.position, in: rect))
         }
         for kept in settlement.tamed {
-            let d2 = distanceSquared(
-                SettlementRenderer.point(SettlementWildlife.tamedPosition(kept, index: 0, time: t),
-                                         in: rect), location)
-            if d2 < bestDistance {
-                bestDistance = d2
-                best = .animal(kept.animal.id)
-            }
+            probe.offer(.animal(kept.animal.id),
+                        at: SettlementRenderer.point(
+                            SettlementWildlife.tamedPosition(kept, index: 0, time: t), in: rect))
         }
-        if case .animal = best { return best }
+        if let hit = probe.take() { return hit }
 
         for building in SettlementRenderer.layout(settlement: settlement, registry: registry, rect: rect) {
-            let d2 = distanceSquared(building.center, location)
-            if d2 < bestDistance {
-                bestDistance = d2
-                best = .building(index: building.id, definitionID: building.definitionID)
-            }
-        }
-        if case .building = best { return best }
-
-        // The land answers last: deposits with their fullness, landmarks with
-        // their name.
-        for node in settlement.localMap?.nodes ?? [] where map.isExplored(node.position) {
-            let d2 = distanceSquared(SettlementRenderer.point(node.position, in: rect), location)
-            if d2 < bestDistance {
-                bestDistance = d2
-                let fullness = node.capacity > 0 ? Int(node.amount / node.capacity * 100) : 100
-                best = .landmark("\(node.kind.displayLabel) · \(fullness) %")
-            }
+            // The whole lot answers, not the pin in the middle of it. Widened a
+            // touch so a thumb on the eaves still counts.
+            let lot = CGRect(
+                x: building.center.x - building.footprint.width / 2 - 4,
+                y: building.center.y - building.footprint.height / 2 - 4,
+                width: building.footprint.width + 8, height: building.footprint.height + 8)
+            probe.offer(.building(index: building.id, definitionID: building.definitionID),
+                        within: lot)
         }
         for poi in map.pois where poi.discovered && map.isExplored(poi.position) {
-            let d2 = distanceSquared(SettlementRenderer.point(poi.position, in: rect), location)
-            if d2 < bestDistance {
-                bestDistance = d2
-                best = .poi(poi.id)
-            }
+            probe.offer(.poi(poi.id), at: SettlementRenderer.point(poi.position, in: rect))
         }
-        if case .none = best {
-            // Nothing known is near the tap. If the player reached into the
-            // dark, that's an instruction waiting to be given.
-            let world = SettlementRenderer.normalised(location, in: rect)
-            if !map.isExplored(world) { return .fog(world) }
+        if let hit = probe.take() { return hit }
+
+        // The things lying about: a heap of timber at the stump that is on its
+        // way in, the wood it came out of, the rock somebody is cutting into.
+        for pile in map.piles where map.isExplored(pile.position) {
+            probe.offer(.landmark(pileLabel(pile)),
+                        at: SettlementRenderer.point(pile.position, in: rect))
         }
-        return best
+        for tree in map.trees where map.isExplored(tree.position) {
+            probe.offer(.landmark(treeLabel(tree)),
+                        at: SettlementRenderer.point(tree.position, in: rect))
+        }
+        for rock in map.rocks where map.isExplored(rock.position) {
+            probe.offer(.landmark(rockLabel(rock)),
+                        at: SettlementRenderer.point(rock.position, in: rect))
+        }
+        if let hit = probe.take() { return hit }
+
+        // The land answers last: deposits with their fullness.
+        for node in settlement.localMap?.nodes ?? [] where map.isExplored(node.position) {
+            let fullness = node.capacity > 0 ? Int(node.amount / node.capacity * 100) : 100
+            probe.offer(.landmark("\(node.kind.displayLabel) · \(fullness) %"),
+                        at: SettlementRenderer.point(node.position, in: rect))
+        }
+        if let hit = probe.take() { return hit }
+
+        // Nothing known is near the tap. If the player reached into the dark,
+        // that's an instruction waiting to be given.
+        let world = SettlementRenderer.normalised(location, in: rect)
+        return map.isExplored(world) ? .none : .fog(world)
     }
 
-    private func distanceSquared(_ a: CGPoint, _ b: CGPoint) -> CGFloat {
-        let dx = a.x - b.x, dy = a.y - b.y
-        return dx * dx + dy * dy
+    /// Keeps the nearest candidate offered so far, within a reach.
+    ///
+    /// One layer's worth at a time: `take()` returns whatever the layer found
+    /// and clears the slate, so a colonist in reach ends the search before a
+    /// wall behind them is ever measured.
+    private struct Probe {
+        let location: CGPoint
+        let limit: CGFloat
+        private var best: CanvasSelection?
+        private var bestDistance: CGFloat = .greatestFiniteMagnitude
+
+        init(location: CGPoint, limit: CGFloat) {
+            self.location = location
+            self.limit = limit
+        }
+
+        mutating func offer(_ candidate: CanvasSelection, at point: CGPoint) {
+            let dx = point.x - location.x, dy = point.y - location.y
+            consider(candidate, distanceSquared: dx * dx + dy * dy, reach: limit * limit)
+        }
+
+        /// A thing with a footprint: inside it is a hit at zero distance, and
+        /// near it is the distance to its edge.
+        mutating func offer(_ candidate: CanvasSelection, within rect: CGRect) {
+            let dx = max(rect.minX - location.x, 0, location.x - rect.maxX)
+            let dy = max(rect.minY - location.y, 0, location.y - rect.maxY)
+            consider(candidate, distanceSquared: dx * dx + dy * dy, reach: limit * limit)
+        }
+
+        private mutating func consider(
+            _ candidate: CanvasSelection, distanceSquared d2: CGFloat, reach: CGFloat
+        ) {
+            guard d2 <= reach, d2 < bestDistance else { return }
+            bestDistance = d2
+            best = candidate
+        }
+
+        mutating func take() -> CanvasSelection? {
+            defer { best = nil; bestDistance = .greatestFiniteMagnitude }
+            return best
+        }
     }
 
+    // MARK: - What the land says when you tap it
+
+    private func treeLabel(_ tree: Tree) -> String {
+        let cs = AppStrings.language == .cs
+        let name = tree.species.displayName.resolve(AppStrings.language)
+        if tree.growth < SettlementFlora.saplingGrowth {
+            return "\(name) · \(cs ? "semenáček" : "sapling")"
+        }
+        let felled = tree.chopped > 0.02
+            ? " · \(cs ? "nařezáno" : "cut") \(Int(tree.chopped * 100)) %" : ""
+        return "\(name) · \(Int(tree.timberYield.rounded())) \(cs ? "dřeva" : "timber")\(felled)"
+    }
+
+    private func rockLabel(_ rock: Rock) -> String {
+        let name = rock.kind.displayName.resolve(AppStrings.language)
+        return "\(name) · \(Int(rock.remaining * 100)) %"
+    }
+
+    private func pileLabel(_ pile: HaulPile) -> String {
+        let cs = AppStrings.language == .cs
+        let name = registry.item(pile.itemID)?.name.resolve(AppStrings.language) ?? pile.itemID
+        let claimed = pile.claimedBy != nil
+            ? " · \(cs ? "někdo pro to jde" : "someone is coming")"
+            : " · \(cs ? "leží tu" : "lying here")"
+        return "\(name) ×\(pile.amount)\(claimed)"
+    }
+
+    /// How far from a tap something may be and still be what was meant. In view
+    /// points, so it is a thumb's width whatever the camera is doing.
     private var touchRadius: CGFloat { 22 }
 }

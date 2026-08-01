@@ -11,6 +11,13 @@ import EndlessFrontierCore
 /// fell. Strictly a view of `settlement.lastBattle`; it writes nothing back.
 struct BattleReportCard: View {
     let battle: BattleLog
+    /// Play the fight again, from the top, on a clock of its own.
+    ///
+    /// A raid takes half a minute out of an hour of colony time, and looking
+    /// away for that half minute used to mean the fight was gone for good —
+    /// the report told you what it cost and the thing itself had happened
+    /// somewhere you weren't. This is the same record, replayed.
+    var onReplay: (() -> Void)?
     let onClose: () -> Void
 
     private var cs: Bool { AppStrings.language == .cs }
@@ -21,15 +28,31 @@ struct BattleReportCard: View {
             engagementLine
             if !beats.isEmpty { beatStrip }
             if !fallen.isEmpty { fallenLine }
-            Button(action: onClose) {
-                Text(cs ? "Zavřít" : "Close")
-                    .font(.subheadline.weight(.semibold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 9)
-                    .background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .foregroundStyle(tint)
+            HStack(spacing: 8) {
+                if let onReplay {
+                    Button(action: onReplay) {
+                        Label(cs ? "Přehrát" : "Watch", systemImage: "play.fill")
+                            .font(.subheadline.weight(.semibold))
+                            .lineLimit(1)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 9)
+                            .background(Theme.accent.opacity(0.18),
+                                        in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .foregroundStyle(Theme.accent)
+                    }
+                    .buttonStyle(.plain)
+                }
+                Button(action: onClose) {
+                    Text(cs ? "Zavřít" : "Close")
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 9)
+                        .background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .foregroundStyle(tint)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
             .padding(.top, 2)
         }
         .padding(16)

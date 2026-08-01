@@ -38,7 +38,15 @@ struct TickClock: Equatable {
 
 enum AgentMotion {
     /// Seconds of real time one settlement day takes on screen.
-    static let dayLength: Double = 150
+    ///
+    /// Two and a half minutes was the wrong number, and every complaint about
+    /// the valley being *restless* came back to it: the sun crossed the sky in
+    /// the time it takes to read a card, so shadows swung visibly while you
+    /// looked at them and the ground changed shade under your thumb. Five
+    /// minutes is still a day you can watch happen — the town wakes, works,
+    /// gathers at midday and goes to bed inside a sitting — without the light
+    /// being the fastest-moving thing on the screen.
+    static let dayLength: Double = 300
 
     /// How far apart two points on the map are — the walk a colonist has ahead
     /// of them.
@@ -79,6 +87,30 @@ enum AgentMotion {
         let activity: Activity
         /// 0…1 walk-cycle weight — legs swing only when actually under way.
         let stride: Double
+        /// Which way they are looking, as the x-component of where they are
+        /// going: −1 hard left, +1 hard right, 0 facing the viewer.
+        ///
+        /// Everyone used to face right for ever. A colonist walking west
+        /// crossed the valley backwards with the hoe in their leading hand,
+        /// which is the single thing that most made the figures read as
+        /// sprites being slid about rather than as people going somewhere.
+        let facing: Double
+
+        init(position: LocalPoint, activity: Activity, stride: Double, facing: Double = 0) {
+            self.position = position
+            self.activity = activity
+            self.stride = stride
+            self.facing = max(-1, min(1, facing))
+        }
+    }
+
+    /// The x-component of a heading from `a` to `b`, normalised — what `Pose`
+    /// carries as `facing`. Zero for two points on top of each other, so a
+    /// colonist who has arrived does not spin.
+    static func facing(from a: LocalPoint, to b: LocalPoint) -> Double {
+        let dx = b.x - a.x, dy = b.y - a.y
+        let len = (dx * dx + dy * dy).squareRoot()
+        return len < 1e-6 ? 0 : dx / len
     }
 
     /// A building a colonist works *at*, and the ground it covers — so several
@@ -160,7 +192,8 @@ enum AgentMotion {
         /// One bed per colonist, taken in roster order.
         let beds: [UUID: LocalPoint]
 
-        init(settlement: Settlement, registry: GameDataRegistry, continuousTick: Double = 0) {
+        init(settlement: Settlement, registry: GameDataRegistry, continuousTick: Double = 0,
+             replay: SettlementBattle.Replay? = nil) {
             let layout = SettlementRenderer.normalizedLayout(settlement: settlement, registry: registry)
             self.layout = layout
             var homes: [LocalPoint] = []
@@ -206,7 +239,12 @@ enum AgentMotion {
             }
             self.expeditions = settlement.expeditions
             self.continuousTick = continuousTick
-            self.battle = SettlementBattle.live(settlement, continuousTick: continuousTick)
+            // The same question the canvas asks, so the line the colonists run
+            // to is the line the raiders are drawn breaking on — including
+            // when the player is watching a replay rather than the live fight.
+            self.battle = SettlementBattle.live(
+                settlement, continuousTick: continuousTick,
+                secondsPerTick: registry.config.realSecondsPerTick, replay: replay)
             self.bedsByHome = bedsByHome
             // A bed each, taken in the settlement's own roster order, so two
             // people who share a house do not share a mattress.
@@ -264,9 +302,13 @@ enum AgentMotion {
         // has to be picked up somewhere and put down somewhere else, and both
         // ends are real. Hauling outranks the day and yields only to a fight.
         if let carried = pawn.haulPosition, scene.battle == nil {
+            // A hauler faces the store they are walking the load to; someone
+            // on their way out faces the heap they are going to fetch.
+            let target = pawn.carrying?.destination ?? pawn.currentJob?.position
             return Pose(position: carried,
                         activity: pawn.carrying == nil ? .walking : .hauling,
-                        stride: 1)
+                        stride: 1,
+                        facing: target.map { facing(from: carried, to: $0) } ?? 0)
         }
         let base = dailyPose(for: pawn, map: map, scene: scene,
                              time: time, ticksPerYear: ticksPerYear)
@@ -274,8 +316,12 @@ enum AgentMotion {
               let post = SettlementBattle.station(
                 for: pawn.id, log: battle.log, progress: battle.progress,
                 from: base.position) else { return base }
+        // Running out, they face the line; standing in it, they face the enemy.
+        let field = SettlementBattle.Field(battle.log)
         return Pose(position: post.position, activity: .fighting,
-                    stride: post.arrived ? 0.3 : 1)
+                    stride: post.arrived ? 0.3 : 1,
+                    facing: post.arrived ? field.axis.x
+                                         : facing(from: base.position, to: post.position))
     }
 
     /// Where a colonist would be if nothing were happening — the ordinary day.
@@ -330,7 +376,8 @@ enum AgentMotion {
             // A touch of path wobble so walkers don't ride rails.
             let wobble = sin(u * .pi * 3 + unit(seed) * 6) * 0.006
             return Pose(position: clampPoint(LocalPoint(x: x + wobble, y: y + wobble * 0.6)),
-                        activity: .walking, stride: 1)
+                        activity: .walking, stride: 1,
+                        facing: facing(from: previous.place, to: current.place))
         }
 
         // Arrived: hold with a personal drift.
@@ -376,7 +423,8 @@ enum AgentMotion {
             let x = from.x + (to.x - from.x) * u + lane + bow * (to.y - from.y)
             let y = from.y + (to.y - from.y) * u + laneCross - bow * (to.x - from.x)
             return Pose(position: clampPoint(LocalPoint(x: x, y: y)),
-                        activity: .travelling, stride: 1)
+                        activity: .travelling, stride: 1,
+                        facing: facing(from: from, to: to))
         case .working:
             let drift = drift(seed: seed, time: time, amplitude: 0.012)
             return Pose(position: clampPoint(LocalPoint(x: target.x + lane + drift.x,
