@@ -46,7 +46,7 @@ Last updated: 2026-07-29.
 |---|---|---|
 | 3.1 | **Trade** you can watch — traders with mules walking in | **done** |
 | 3.2 | **Diplomacy** arriving as envoys rather than as a panel | **done** |
-| 3.3 | Refugees from a neighbour's bad winter | **done** (they arrive; taking them in is still todo) |
+| 3.3 | Refugees from a neighbour's bad winter | **done** — and taking them in works: `visitors_refugees`, "take them in" costs 40 food and applies `add_pawn` twice |
 | 3.4 | **Supply** between your own settlements — a caravan you can see leave | **done** |
 | 3.5 | A visit the player can **answer** — accept the refugees, refuse the envoy | **done** |
 | 3.6 | More **events**, each happening *somewhere* to *someone* | part done (3 disasters, 3 visits) |
