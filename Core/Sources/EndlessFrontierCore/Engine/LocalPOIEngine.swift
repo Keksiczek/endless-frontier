@@ -48,9 +48,15 @@ public struct LocalPOIOutcome: Sendable, Equatable {
 public enum LocalPOIEngine {
     /// Where the party forms up and returns to.
     public static let heart = LocalPoint(x: 0.5, y: 0.5)
-    /// Ticks of walking per unit of normalised map distance. The valley is one
-    /// unit across, so the far corner is roughly a season's march each way.
-    static let travelTicksPerDistance: Double = 26
+    /// Ticks of walking per unit of normalised map distance.
+    ///
+    /// This was 26, which read as "roughly a season's march each way" — but the
+    /// map it crosses is the settlement's *own valley*, the ground its farmers
+    /// walk to work every morning. A party took months of game time and half an
+    /// hour of real time to reach a cave the colony can see from its doorstep.
+    /// A tick is a real minute and a sixtieth of a year, so this is about as
+    /// short as the trip can be and still be a trip.
+    static let travelTicksPerDistance: Double = 8
 
     // MARK: - Ordering a visit
 
@@ -108,10 +114,18 @@ public enum LocalPOIEngine {
     public static func chooseParty(
         _ settlement: Settlement, for kind: LocalPOIKind, ticksPerYear: Int
     ) -> [UUID] {
+        // The colony's standing roster comes first: a town that has said nobody
+        // leaves sends nobody, whatever is out there.
+        guard settlement.policy.roster != .nobody else { return [] }
         let wanted = kind.wantedSkill
+        // "Spare hands only" means the trades the orders marked as priority
+        // keep their people — the mines stay manned while the ruins call.
+        let protected = settlement.policy.roster == .spareHands
+            ? settlement.policy.protectedTrades : []
         let eligible = settlement.pawns
             .filter { $0.isAdult(ticksPerYear: ticksPerYear) && !$0.isBroken
-                      && !$0.isAway && $0.health >= 40 }
+                      && !$0.isAway && $0.health >= 40
+                      && !protected.contains($0.assignedWork) }
             .sorted {
                 let a = $0.skill(wanted), b = $1.skill(wanted)
                 if a != b { return a > b }
@@ -201,7 +215,7 @@ public enum LocalPOIEngine {
         mapSeed: UInt64, registry: GameDataRegistry
     ) -> Settlement {
         var s = settlement
-        guard var map = s.localMap,
+        guard let map = s.localMap,
               let poiIndex = map.pois.firstIndex(where: { $0.id == expedition.poiID })
         else { return freeMembers(s, of: expedition) }
 
@@ -213,7 +227,11 @@ public enum LocalPOIEngine {
 
         let casualtyName = expedition.casualtyID
             .flatMap { id in s.pawns.first { $0.id == id }?.name }
-        var outcome = work(&s, poi: poi, depletion: depletion, registry: registry, rng: &rng)
+        // Who actually walked there, for the places that reward the *party*
+        // rather than the colony — a hermit teaches the people in front of him.
+        let party = s.pawns.filter { $0.expeditionID == expedition.id }.map(\.id)
+        var outcome = work(&s, poi: poi, depletion: depletion, party: party,
+                           registry: registry, rng: &rng)
         outcome = outcome.with(casualtyName: casualtyName, died: expedition.casualtyDied)
 
         // The dead do not come home.
@@ -224,9 +242,14 @@ public enum LocalPOIEngine {
             s.stats.morale = max(0, s.stats.morale - 8)
         }
 
-        map.pois[poiIndex].visits = poi.visits + 1
-        map.pois[poiIndex].lastVisitTick = tick
-        s.localMap = map
+        // Read the map back rather than writing the stale copy taken above: a
+        // watchtower charts ground *during* `work`, and assigning the old value
+        // would put the fog straight back.
+        if var worked = s.localMap, worked.pois.indices.contains(poiIndex) {
+            worked.pois[poiIndex].visits = poi.visits + 1
+            worked.pois[poiIndex].lastVisitTick = tick
+            s.localMap = worked
+        }
         s.journal.append(tick: tick, kind: journalKind(poi.kind), text: outcome.narrative)
         return freeMembers(s, of: expedition)
     }
@@ -242,7 +265,7 @@ public enum LocalPOIEngine {
 
     /// Dispatches to what this kind of place actually does to the colony.
     static func work(
-        _ s: inout Settlement, poi: LocalPOI, depletion: Double,
+        _ s: inout Settlement, poi: LocalPOI, depletion: Double, party: [UUID] = [],
         registry: GameDataRegistry, rng: inout SeededRNG
     ) -> LocalPOIOutcome {
         switch poi.kind {
@@ -252,6 +275,12 @@ public enum LocalPOIEngine {
         case .wreck:    return stripWreck(&s, poi: poi, depletion: depletion)
         case .spring:   return drinkSpring(&s)
         case .shrine:   return keepVigil(&s)
+        case .orchard:  return pickOrchard(&s, depletion: depletion)
+        case .hermit:   return learnFromHermit(&s, party: party, rng: &rng)
+        case .watchtower: return climbTower(&s, poi: poi)
+        case .saltPan:  return rakeSalt(&s, poi: poi, depletion: depletion)
+        case .barrow:   return openBarrow(&s, registry: registry, rng: &rng)
+        case .starfall: return quarryStar(&s, registry: registry, rng: &rng)
         }
     }
 
@@ -360,6 +389,135 @@ public enum LocalPOIEngine {
                 .cs: "Poutníci se vrátili od staré svatyně s lehčím srdcem."]))
     }
 
+    // MARK: - The places (added because six of them was an evening's worth)
+
+    /// Somebody's farm, a long time ago. It has not stopped fruiting because
+    /// they stopped coming.
+    private static func pickOrchard(
+        _ s: inout Settlement, depletion: Double
+    ) -> LocalPOIOutcome {
+        let rewards = Resources([.food: (46 * depletion).rounded()])
+        grant(&s, rewards)
+        s.stats.morale = min(100, s.stats.morale + 2)
+        return LocalPOIOutcome(
+            kind: .orchard, rewards: rewards, visitsRemaining: nil,
+            narrative: LocalizedText(values: [
+                .en: "The pickers came home under \(haul(rewards)) of fruit. It bears again next year.",
+                .cs: "Česáči se vrátili obtěžkaní — \(haul(rewards)). Za rok to obrodí znovu."]))
+    }
+
+    /// The one place that pays the *party* and not the colony: he teaches what
+    /// he knows to the people standing in front of him, and they carry it home
+    /// in their hands rather than in a sack.
+    ///
+    /// Deliberately the trade each of them is already best at — a hermit who
+    /// turned a farmer into a mediocre scholar would be a worse teacher than
+    /// one who made a good farmer better.
+    private static func learnFromHermit(
+        _ s: inout Settlement, party: [UUID], rng: inout SeededRNG
+    ) -> LocalPOIOutcome {
+        var taught: [String] = []
+        for id in party {
+            guard let i = s.pawns.firstIndex(where: { $0.id == id }) else { continue }
+            let best = WorkKind.allCases
+                .filter { $0 != .idle }
+                .max(by: { s.pawns[i].skill($0) < s.pawns[i].skill($1) }) ?? .farming
+            s.pawns[i].skills[best] = min(20, s.pawns[i].skill(best) + 1)
+            s.pawns[i].needs.recreation = min(100, s.pawns[i].needs.recreation + 10)
+            taught.append(s.pawns[i].name)
+        }
+        let rewards = Resources([.knowledge: rng.nextUnit() < 0.5 ? 10 : 14])
+        grant(&s, rewards)
+        let names = taught.isEmpty ? nil : taught.joined(separator: ", ")
+        return LocalPOIOutcome(
+            kind: .hermit, rewards: rewards, visitsRemaining: nil,
+            narrative: LocalizedText(values: [
+                .en: "The hermit talked for three days and sent them back better at their trades."
+                    + (names.map { " (\($0))" } ?? ""),
+                .cs: "Poustevník mluvil tři dny a poslal je zpátky lepší ve svém řemesle."
+                    + (names.map { " (\($0))" } ?? "")]))
+    }
+
+    /// Four hundred years of stair, and at the top of it the country lays
+    /// itself out. The only place that pays in *map*.
+    private static func climbTower(_ s: inout Settlement, poi: LocalPOI) -> LocalPOIOutcome {
+        let before = s.localMap?.exploredCells.count ?? 0
+        if var map = s.localMap {
+            // A wide sweep from a high place — worth several seasons of walking.
+            map.reveal(around: poi.position, radius: 0.34)
+            s.localMap = map
+        }
+        let charted = (s.localMap?.exploredCells.count ?? 0) - before
+        let rewards = Resources([.influence: 12])
+        grant(&s, rewards)
+        return LocalPOIOutcome(
+            kind: .watchtower, rewards: rewards,
+            visitsRemaining: poi.kind.maxVisits - poi.visits - 1,
+            narrative: LocalizedText(values: [
+                .en: "From the tower's head they drew the country: \(charted) fresh stretches of it.",
+                .cs: "Z hlavy věže obkreslili kraj — \(charted) nových kusů země."]))
+    }
+
+    /// Salt is the difference between meat and meat that keeps. It arrives as
+    /// food because that is what it *does*: a winter's worth of it survives.
+    private static func rakeSalt(
+        _ s: inout Settlement, poi: LocalPOI, depletion: Double
+    ) -> LocalPOIOutcome {
+        let rewards = Resources([
+            .food: (30 * depletion).rounded(),
+            .influence: (10 * depletion).rounded()
+        ])
+        grant(&s, rewards)
+        return LocalPOIOutcome(
+            kind: .saltPan, rewards: rewards,
+            visitsRemaining: poi.kind.maxVisits - poi.visits - 1,
+            narrative: LocalizedText(values: [
+                .en: "They raked the pan white-handed and carried back \(haul(rewards)).",
+                .cs: "Shrabali solisko do bíla a přinesli \(haul(rewards))."]))
+    }
+
+    /// Grave goods, and the price of taking them. The richest single item drop
+    /// in the game, and the colony is not glad about it.
+    private static func openBarrow(
+        _ s: inout Settlement, registry: GameDataRegistry, rng: inout SeededRNG
+    ) -> LocalPOIOutcome {
+        let rewards = Resources([.influence: 24, .materials: 12])
+        grant(&s, rewards)
+        let item = dropItem(&s, registry: registry, rarityBias: 4, chance: 0.75, rng: &rng)
+        // Robbing the dead is not free, and a colony with a faith minds more.
+        let cost = s.faith.cultID != nil ? 9.0 : 5.0
+        s.stats.morale = max(0, s.stats.morale - cost)
+        if s.faith.cultID != nil {
+            s.faith.faith = max(0, s.faith.faith - 6)
+        }
+        return LocalPOIOutcome(
+            kind: .barrow, rewards: rewards, itemFound: item, visitsRemaining: 0,
+            narrative: LocalizedText(values: [
+                .en: "They opened the mound and took \(haul(rewards)) from it."
+                    + (item.map { " On the breastbone: \($0.resolve(.en))." } ?? "")
+                    + " Nobody spoke on the walk home.",
+                .cs: "Otevřeli mohylu a odnesli si \(haul(rewards))."
+                    + (item.map { " Na hrudní kosti: \($0.resolve(.cs))." } ?? "")
+                    + " Cestou domů nikdo nepromluvil."]))
+    }
+
+    /// Whatever it is, it is not stone, and it is worth every day of the walk.
+    private static func quarryStar(
+        _ s: inout Settlement, registry: GameDataRegistry, rng: inout SeededRNG
+    ) -> LocalPOIOutcome {
+        let rewards = Resources([.materials: 40, .knowledge: 34])
+        grant(&s, rewards)
+        let item = dropItem(&s, registry: registry, rarityBias: 5, chance: 0.85, rng: &rng)
+        s.stats.morale = min(100, s.stats.morale + 5)
+        return LocalPOIOutcome(
+            kind: .starfall, rewards: rewards, itemFound: item, visitsRemaining: 0,
+            narrative: LocalizedText(values: [
+                .en: "They cut the star out of its crater: \(haul(rewards))."
+                    + (item.map { " The smiths made of it: \($0.resolve(.en))." } ?? ""),
+                .cs: "Vysekali hvězdu z kráteru — \(haul(rewards))."
+                    + (item.map { " Kováři z ní udělali: \($0.resolve(.cs))." } ?? "")]))
+    }
+
     // MARK: - Helpers
 
     /// The journal's line for a party setting out.
@@ -393,9 +551,10 @@ public enum LocalPOIEngine {
     /// display name. Local finds are humbler than a dungeon's: most trips home
     /// carry nothing but the goods.
     private static func dropItem(
-        _ s: inout Settlement, registry: GameDataRegistry, rarityBias: Double, rng: inout SeededRNG
+        _ s: inout Settlement, registry: GameDataRegistry, rarityBias: Double,
+        chance: Double = 0.35, rng: inout SeededRNG
     ) -> LocalizedText? {
-        guard rng.nextUnit() < 0.35 else { return nil }
+        guard rng.nextUnit() < chance else { return nil }
         let defs = SiteEngine.lootPool(registry: registry)
         guard !defs.isEmpty else { return nil }
         let weights = defs.map { SiteEngine.rarityWeight($0.rarity, rarityBias) }
@@ -411,8 +570,8 @@ public enum LocalPOIEngine {
     /// Which diary voice the moment belongs to.
     private static func journalKind(_ kind: LocalPOIKind) -> ColonyLogEntry.Kind {
         switch kind {
-        case .shrine: return .faith
-        case .cave: return .work
+        case .shrine, .barrow: return .faith
+        case .cave, .saltPan, .orchard: return .work
         default: return .discovery
         }
     }

@@ -99,6 +99,63 @@ public enum ResourceLoop {
     ///
     /// The hand-authored `consumption` field stays separate: that's the
     /// building's *operating* draw (a factory's energy), not its maintenance.
+    ///
+    /// (Defined below `staffingFactors` — see `upkeep(for:config:)`.)
+
+    /// What an unmanned building still yields. Not zero: a mill with no miller
+    /// still turns for a while, and a hard floor would make one bad winter of
+    /// deaths collapse a colony outright rather than merely set it back.
+    public static let unstaffedFloor: Double = 0.4
+
+    /// How well each kind of building is actually manned, as a production
+    /// multiplier in `unstaffedFloor…1`.
+    ///
+    /// `LaborEngine.staffBuildings` keeps the rosters honest; this is what makes
+    /// them *matter*. Output came from building counts alone, so an empty
+    /// workshop produced exactly as much as a full one and the entire labour
+    /// economy was decoration — you could lose half the colony and the ledger
+    /// would not notice.
+    ///
+    /// A settlement with no grid laid out is taken as fully manned, so outposts
+    /// and anything predating the colony layer are unaffected. Buildings that
+    /// employ nobody (huts, granaries) never appear here and keep a factor of 1.
+    public static func staffingFactors(
+        _ settlement: Settlement, registry: GameDataRegistry
+    ) -> [String: Double] {
+        guard let colony = settlement.colony, !colony.placements.isEmpty else { return [:] }
+        var seats: [String: (filled: Int, total: Int)] = [:]
+        // How sound the buildings of each kind are, alongside how well manned.
+        // A workshop with the roof off produces less than one with it on, and a
+        // derelict one produces nothing — which is what makes keeping a town up
+        // a claim on the colony rather than a cosmetic number.
+        var soundness: [String: (sum: Double, count: Double)] = [:]
+        for placement in colony.placements where !placement.underConstruction {
+            guard let def = registry.building(placement.definitionID) else { continue }
+            var state = soundness[placement.definitionID] ?? (sum: 0, count: 0)
+            state.sum += BuildingEngine.output(placement.condition)
+            state.count += 1
+            soundness[placement.definitionID] = state
+            guard def.workers > 0 else { continue }
+            var entry = seats[placement.definitionID] ?? (filled: 0, total: 0)
+            // Nobody is at a bench in a building that has fallen in.
+            entry.filled += BuildingEngine.isWorking(placement)
+                ? min(def.workers, placement.assignedPawnIDs.count) : 0
+            entry.total += def.workers
+            seats[placement.definitionID] = entry
+        }
+        var factors = seats.mapValues { entry -> Double in
+            guard entry.total > 0 else { return 1 }
+            let manned = Double(entry.filled) / Double(entry.total)
+            return unstaffedFloor + (1 - unstaffedFloor) * manned
+        }
+        // …and how sound they are, which applies to every building, including
+        // the ones nobody works in.
+        for (id, state) in soundness where state.count > 0 {
+            factors[id] = (factors[id] ?? 1) * (state.sum / state.count)
+        }
+        return factors
+    }
+
     public static func upkeep(for def: BuildingDefinition, config: WorldConfig) -> Resources {
         if let explicit = def.upkeep { return explicit }
         var derived = Resources()
@@ -144,15 +201,20 @@ public enum ResourceLoop {
         //    Upkeep is charged alongside operating consumption: a standing
         //    colony costs materials to keep standing, which is what stops the
         //    stores from simply filling and pinning at the cap forever.
+        //    And it matters who is standing at the bench: a workshop with
+        //    nobody posted to it runs at `unstaffedFloor`, not at full tilt.
+        let staffing = staffingFactors(s, registry: registry)
         var net = Resources()
         for instance in s.buildings {
             guard let def = registry.building(instance.definitionID) else { continue }
             let count = Double(instance.count)
             let maintenance = upkeep(for: def, config: config)
+            let manned = staffing[instance.definitionID] ?? 1
             for resource in ResourceType.allCases {
                 let produced = def.production[resource]
                     * profile.productionMultiplier(resource)
                     * config.seasonYieldMultiplier(for: resource, tick: tick)
+                    * manned
                 let consumed = def.consumption[resource] + maintenance[resource]
                 net[resource] = net[resource] + (produced - consumed) * count
             }
@@ -244,8 +306,11 @@ public enum ResourceLoop {
         let buildingDefense = s.buildings.reduce(0.0) { acc, instance in
             acc + (registry.building(instance.definitionID)?.defense ?? 0) * Double(instance.count)
         }
+        // …and whatever is chained at the gate. A wolf that stayed is worth
+        // several spears, which is why gentling one is worth a season.
+        let kennel = TamingEngine.bonuses(s)
         let defenseTarget = buildingDefense + ItemEngine.colonyDefenseBonus(s, registry: registry)
-            + profile.defenseFlat + laws.defenseFlat
+            + profile.defenseFlat + laws.defenseFlat + kennel.defense
         s.stats.defense += (defenseTarget - s.stats.defense) * 0.15
 
         // 7. Pollution drifts toward what industry emits; heavy pollution hurts
@@ -260,8 +325,39 @@ public enum ResourceLoop {
         }
         s.stats = s.stats.clamped()
 
-        // 8. Put any idle adults (new arrivals, those who came of age) to work.
+        // 8. Put any idle adults (new arrivals, those who came of age) to work,
+        //    then seat them at a building that wants their trade — a trade
+        //    without an address is how workshops came to stand empty.
         s = LaborEngine.assignIdleAdults(s, registry: registry)
+        // Seating people is done on a cadence, not every tick. A post changing
+        // within ten minutes of game time is imperceptible, and the pass copies
+        // the colony's placements — on the widened 18×18 grid, paying that
+        // every tick made offline catch-up superlinear as a colony filled up.
+        if tick % BuildingEngine.interval == 0 {
+            // The town weathers, and the masons put it back. A building that
+            // nobody keeps up stops working and stops sheltering anyone, which
+            // is what makes the mason's trade outlive the building of the
+            // thing.
+            s = BuildingEngine.weather(s, registry: registry, tick: tick)
+            s = BuildingEngine.repair(s, registry: registry)
+        }
+        if tick % LaborEngine.staffingInterval == 0 {
+            // The colony's standing orders, moving one person at a time. Before
+            // this, a policy set on a town of sixty changed nothing until sixty
+            // people happened to fall idle — which is never.
+            s = LaborEngine.rebalance(s, registry: registry)
+            s = LaborEngine.staffBuildings(s, registry: registry)
+            // And a roof over their head, held until it comes down. A colonist
+            // with no bed sleeps badly and shows it — which is how a colony
+            // that has outgrown its houses asks for another one.
+            s = HouseholdEngine.assignHomes(s, registry: registry)
+        }
+        // …and each of them a concrete piece of work: which tree, which
+        // outcrop, which scaffold. A trade says what a colonist does; a job
+        // says what they are doing.
+        if tick % JobBoard.interval == 0 {
+            s = JobBoard.assign(s, registry: registry)
+        }
 
         // 8b. Raise what's being built: sites draft hands, progress accrues,
         //     and a finished roof joins the economy ledger above.
@@ -278,11 +374,25 @@ public enum ResourceLoop {
         }
         s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick,
                                       gatheringFactors: factors, laws: laws)
+        // 9b. Bleeding, mending, and the healers doing the mending. After the
+        //     pawns' own tick so a wound taken this minute is bleeding by the
+        //     next one — and so the healer's trade finally has something to do.
+        s = MedicineEngine.advanceOneTick(s, registry: registry, tick: tick)
+        // 9c. The farmyard: hunters gentle what they can, and the beasts the
+        //     colony already keeps eat, work and occasionally leave.
+        s = TamingEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: mapSeed)
+        s = TamingEngine.keepAnimals(s, registry: registry, tick: tick, mapSeed: mapSeed)
 
         // 10. Deposits deplete under the harvest and regrow with the seasons —
         //     faster where the woods are protected by law.
         s = evolveDeposits(s, registry: registry, tick: tick, config: config,
+                           mapSeed: mapSeed,
                            regrowthMultiplier: laws.depositRegrowthMultiplier)
+        // 10a. And somebody carries it in. A felled trunk and a broken block
+        //      are heaps on the ground until they are; this walks the haulers
+        //      every tick, because a load has to *move* rather than jump
+        //      between job-board cycles.
+        s = HaulEngine.advanceOneTick(s, registry: registry, tick: tick)
 
         // 10b. Scouts chart the valley.
         s = chartGround(s, tick: tick, mapSeed: mapSeed, config: config)
@@ -316,6 +426,8 @@ public enum ResourceLoop {
     static let depositFloorFactor: Double = 0.35
     /// Harvest a single assigned worker pulls from a deposit each tick.
     static let harvestPerWorker: Double = 0.45
+    /// How many whole units of timber a felled trunk leaves at the stump.
+    static let timberPerTree = 4
     /// Fraction of a node's capacity it regrows each tick (before seasonality).
     static let depositRegrowthFraction: Double = 0.0009
 
@@ -486,10 +598,14 @@ public enum ResourceLoop {
                 earned[hideItemID, default: 0] += effort
                 continue
             }
-            // Split across the kinds of ground this trade works that this
-            // valley actually has — an ore-less map yields no ore — weighted by
-            // how much of each is down there.
-            let worked = work.harvestedDeposits.filter(present.contains)
+            // Timber and stone are not earned by the week any more: they are
+            // *carried in*. A felled trunk leaves wood at the stump and a
+            // broken block leaves stone at the face, and `HaulEngine` banks
+            // them when somebody walks them home — so granting them here as
+            // well would pay the colony twice for the same tree.
+            let worked = work.harvestedDeposits
+                .filter(present.contains)
+                .filter { !HaulEngine.isHauled($0) }
             guard !worked.isEmpty else { continue }
             let total = worked.reduce(0.0) { $0 + (capacityByKind[$1] ?? 0) }
             guard total > 0 else { continue }
@@ -551,6 +667,21 @@ public enum ResourceLoop {
             }
         case .wreck:
             deposit(.materials, 30)
+        case .orchard:
+            deposit(.food, 20)
+        case .hermit:
+            // He gives nothing on the doorstep. Come back and sit down.
+            deposit(.knowledge, 6)
+        case .watchtower:
+            deposit(.influence, 8)
+        case .saltPan:
+            deposit(.food, 14)
+        case .barrow:
+            // Finding a grave is not the same as opening one.
+            deposit(.influence, 6)
+        case .starfall:
+            deposit(.knowledge, 20)
+            s.stats.morale = min(100, s.stats.morale + 3)
         }
         s.journal.append(tick: tick, kind: .discovery, text: poi.kind.discoveryText)
         return s
@@ -574,6 +705,7 @@ public enum ResourceLoop {
         registry: GameDataRegistry,
         tick: Int,
         config: WorldConfig,
+        mapSeed: UInt64 = 0,
         regrowthMultiplier: Double = 1
     ) -> Settlement {
         guard var map = settlement.localMap, !map.nodes.isEmpty else { return settlement }
@@ -598,8 +730,53 @@ public enum ResourceLoop {
             }
         }
 
+        // The wood and the rock are worked as *things*: the axe goes into real
+        // trees and the pick into real outcrops, and the deposit's number is
+        // recomputed from what is left standing. Everything else (fields, herb
+        // patches) keeps the old proportional arithmetic.
+        //
+        // `harvestPerWorker` is a deposit-units-per-tick demand, so it converts
+        // to whole workers at the face by the same measure.
+        // Where the work leaves goods on the ground for somebody to carry in.
+        var dropped: [(itemID: String, amount: Int, at: LocalPoint)] = []
+        let timberDemand = demand[.forest, default: 0]
+        if timberDemand > 0, !map.trees.isEmpty {
+            let cut = FloraEngine.fell(map, loggers: max(1, Int(timberDemand / harvestPerWorker)))
+            map = cut.map
+            for stump in cut.stumps {
+                dropped.append((itemID: "wood", amount: timberPerTree, at: stump))
+            }
+        }
+        let stoneDemand = demand[.stone, default: 0]
+            + demand[.ironOre, default: 0] + demand[.clay, default: 0]
+        if stoneDemand > 0, !map.rocks.isEmpty {
+            map = FloraEngine.quarry(map, miners: max(1, Int(stoneDemand / harvestPerWorker))).map
+        }
+        // And into the hillside itself. A mountain is worked at the face, block
+        // by block, and what comes out of it is on top of what the outcrops
+        // give — going *into* rock is the reason to settle under a mountain.
+        var hewn: [LocalResourceKind: Double] = [:]
+        if stoneDemand > 0, map.stone.usesBlocks, !map.stone.isEmpty {
+            let miners = max(1, Int(stoneDemand / harvestPerWorker))
+            let dug = StoneEngine.mine(map.stone, miners: miners)
+            map.stone = dug.field
+            // The hole a block leaves is ground the colony can now see through,
+            // and a heap of stone at the face for somebody to carry in.
+            for index in dug.broken {
+                map.exploredCells.insert(index)
+                if let item = map.stone.kind(of: index).deposit.rawMaterialID {
+                    dropped.append((itemID: item, amount: StoneEngine.itemsPerBlock,
+                                    at: StoneField.centre(of: index)))
+                }
+            }
+            hewn = dug.yield
+        }
+
         // Deplete proportionally across the nodes of each kind.
         for kind in Set(map.nodes.map(\.kind)) {
+            // A kind backed by real things is depleted by working those things,
+            // not by subtracting from the number that describes them.
+            guard !FloraEngine.isEntityBacked(kind, in: map) else { continue }
             let want = demand[kind, default: 0]
             guard want > 0 else { continue }
             let indices = map.nodes.indices.filter { map.nodes[$0].kind == kind }
@@ -612,16 +789,40 @@ public enum ResourceLoop {
             }
         }
 
-        // Regrow toward capacity, faster in the growing seasons.
-        for i in map.nodes.indices {
+        // Regrow toward capacity, faster in the growing seasons. A wood regrows
+        // by its trees ageing and a quarry does not regrow at all, so neither
+        // gets the blanket creep-back that used to refill everything.
+        for i in map.nodes.indices where !FloraEngine.isEntityBacked(map.nodes[i].kind, in: map) {
             let resource: ResourceType = map.nodes[i].kind == .field ? .food : .materials
             let season = config.seasonYieldMultiplier(for: resource, tick: tick)
             let regrow = map.nodes[i].capacity * depositRegrowthFraction * season * regrowthMultiplier
             map.nodes[i].amount = min(map.nodes[i].capacity, map.nodes[i].amount + regrow)
         }
 
+        // And the deposits now read what is standing on them.
+        map = FloraEngine.syncDeposits(map)
+
         var s = settlement
         s.localMap = map
+        // What came out of the mountain, as materials. The *goods* it also
+        // yielded are lying at the face in `dropped`, waiting to be carried.
+        for (_, amount) in hewn {
+            s.storage[.materials] = min(s.storageCapacity, s.storage[.materials] + amount)
+        }
+        // And the heaps themselves. A felled trunk and a broken block are
+        // things on the ground now: the timber is at the stump and the stone at
+        // the face until somebody walks out and brings them in.
+        if !dropped.isEmpty {
+            var rng = SeededRNG(seed: societyLikeSeed(mapSeed: mapSeed, settlementID: s.id,
+                                                      tick: tick) ^ 0x48_41_55_4C)
+            var withPiles = s.localMap ?? map
+            for drop in dropped {
+                withPiles = HaulEngine.drop(withPiles, itemID: drop.itemID,
+                                            amount: drop.amount, at: drop.at,
+                                            tick: tick, rng: &rng)
+            }
+            s.localMap = withPiles
+        }
         return s
     }
 

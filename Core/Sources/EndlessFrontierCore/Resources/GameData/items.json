@@ -1091,5 +1091,284 @@
       "en": "Clay fired hard. It will outlast the people who laid it.",
       "cs": "Vypálený jíl. Přežije ty, kdo ji kladli."
     }
+  },
+  {
+    "id": "grafting_knife",
+    "name": {
+      "en": "Grafting Knife",
+      "cs": "Roubovací nůž"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A thin curved blade for joining one tree to another. Whoever left it in the orchard knew the trade.",
+      "cs": "Tenká zahnutá čepel na spojení jednoho stromu s druhým. Kdo ji v sadu nechal, řemeslo uměl."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 2
+    }
+  },
+  {
+    "id": "salt_crock",
+    "name": {
+      "en": "Crock of Salt",
+      "cs": "Džbán soli"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "The difference between meat and meat that keeps until spring.",
+      "cs": "Rozdíl mezi masem a masem, které vydrží do jara."
+    }
+  },
+  {
+    "id": "preserving_jar",
+    "name": {
+      "en": "Preserving Jars",
+      "cs": "Zavařovací nádoby"
+    },
+    "rarity": "uncommon",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "food",
+        "perTick": 3
+      }
+    ],
+    "description": {
+      "en": "Sealed clay. What goes in whole comes out whole a year later.",
+      "cs": "Zapečená hlína. Co do ní přijde celé, celé z ní za rok vyjde."
+    }
+  },
+  {
+    "id": "hermits_journal",
+    "name": {
+      "en": "The Hermit's Journal",
+      "cs": "Poustevníkův deník"
+    },
+    "rarity": "rare",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "knowledge",
+        "perTick": 4
+      }
+    ],
+    "description": {
+      "en": "Forty years of one man watching the same valley, written small to save paper.",
+      "cs": "Čtyřicet let, co jeden člověk pozoroval jedno údolí. Psáno drobně, aby vystačil papír."
+    }
+  },
+  {
+    "id": "whittled_charm",
+    "name": {
+      "en": "Whittled Charm",
+      "cs": "Vyřezávaný amulet"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "He gave it away without being asked. It fits the hand as if it were measured.",
+      "cs": "Dal ho, aniž by o to někdo řekl. Do dlaně padne, jako by na ni byl měřený."
+    }
+  },
+  {
+    "id": "grave_torc",
+    "name": {
+      "en": "Grave Torc",
+      "cs": "Náhrdelník z mohyly"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 6
+      },
+      {
+        "type": "colony_morale",
+        "amount": -2
+      }
+    ],
+    "description": {
+      "en": "Twisted gold, still bright. Whoever wore it was somebody, and everyone who sees it knows it was taken.",
+      "cs": "Kroucené zlato, pořád jasné. Kdo ho nosil, byl někdo — a každý, kdo ho vidí, ví, že byl vzat."
+    }
+  },
+  {
+    "id": "barrow_blade",
+    "name": {
+      "en": "Barrow Blade",
+      "cs": "Meč z mohyly"
+    },
+    "rarity": "epic",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 6
+      }
+    ],
+    "description": {
+      "en": "Laid on a chest four hundred years and not a spot of rust on it. Nobody asks why.",
+      "cs": "Čtyři sta let ležel na hrudi a nemá skvrnu rzi. Nikdo se neptá proč."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 11
+    }
+  },
+  {
+    "id": "mourning_mask",
+    "name": {
+      "en": "Mourning Mask",
+      "cs": "Smuteční maska"
+    },
+    "rarity": "rare",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "colony_morale",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "Beaten copper, in the shape of a face nobody living has seen. Hung in the hall, it quiets an argument.",
+      "cs": "Tepaná měď ve tvaru tváře, kterou nikdo živý neviděl. Pověšená v síni utiší hádku."
+    }
+  },
+  {
+    "id": "star_iron",
+    "name": {
+      "en": "Star Iron",
+      "cs": "Hvězdné železo"
+    },
+    "rarity": "rare",
+    "slot": "material",
+    "description": {
+      "en": "Heavier than it looks and warm in the hand long after the crater cooled.",
+      "cs": "Těžší, než vypadá, a v dlani hřeje dlouho poté, co kráter vychladl."
+    }
+  },
+  {
+    "id": "skyfall_blade",
+    "name": {
+      "en": "Skyfall Blade",
+      "cs": "Čepel z nebe"
+    },
+    "rarity": "legendary",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 9
+      },
+      {
+        "type": "mood_bonus",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "Forged from the star itself. It holds an edge no whetstone in the colony can explain.",
+      "cs": "Ukovaná z hvězdy samotné. Drží ostří, které si žádný brus v osadě neumí vysvětlit."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 16
+    }
+  },
+  {
+    "id": "crater_glass",
+    "name": {
+      "en": "Crater Glass",
+      "cs": "Kráterové sklo"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "description": {
+      "en": "Sand the heat turned to glass in a single afternoon. Sharper than anything anyone can knap.",
+      "cs": "Písek, který žár za jedno odpoledne proměnil ve sklo. Ostřejší, než kdo dokáže otlouct."
+    }
+  },
+  {
+    "id": "survey_glass",
+    "name": {
+      "en": "Surveyor's Glass",
+      "cs": "Měřičské sklo"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "Two lenses in a brass tube. The far hills come to the eye like they were a field away.",
+      "cs": "Dvě čočky v mosazné trubce. Dálné kopce přijdou k oku, jako by byly za mezí."
+    }
+  },
+  {
+    "id": "march_map",
+    "name": {
+      "en": "March Map",
+      "cs": "Mapa pomezí"
+    },
+    "rarity": "uncommon",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "influence",
+        "perTick": 2
+      }
+    ],
+    "description": {
+      "en": "Drawn by a garrison that no longer exists, of a border that has moved twice since.",
+      "cs": "Kreslila ji posádka, která už neexistuje, a hranici, co se od té doby dvakrát posunula."
+    }
+  },
+  {
+    "id": "watchmans_horn",
+    "name": {
+      "en": "Watchman's Horn",
+      "cs": "Roh hlásného"
+    },
+    "rarity": "uncommon",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "It still carries. Blown from the wall, everyone in the fields hears it and knows what it means.",
+      "cs": "Pořád nese. Zatroubený z hradby ho slyší každý na poli a ví, co znamená."
+    }
   }
 ]

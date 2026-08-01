@@ -75,8 +75,36 @@ public enum EffectApplier {
             }
         case let .raid(strength):
             resolveRaid(&s, strength: strength, registry: registry)
+        case let .damageBuildings(kind, severity):
+            resolveDamage(&s, kind: kind, severity: severity)
         }
         return s
+    }
+
+    /// Breaks things. What authored disasters use, so a storm or a fire leaves
+    /// the town looking like it happened rather than merely costing goods.
+    static func resolveDamage(
+        _ s: inout WorldState, kind: BuildingEngine.DamageKind, severity: Double
+    ) {
+        guard let capital = s.settlements.indices.first else { return }
+        var rng = SeededRNG(
+            seed: s.mapSeed &+ UInt64(bitPattern: Int64(s.tick)) &+ 0x0D_A0_9A_6E)
+        let result = BuildingEngine.damage(s.settlements[capital], kind: kind,
+                                           severity: severity, rng: &rng)
+        guard result.hit > 0 else { return }
+        s.settlements[capital] = result.settlement
+        let what = kind.displayName
+        let entry: LocalizedText
+        if result.ruined.isEmpty {
+            entry = LocalizedText(values: [
+                .en: "\(result.hit) buildings were knocked about by \(what.resolve(.en)).",
+                .cs: "\(result.hit) staveb poničila \(what.resolve(.cs))."])
+        } else {
+            entry = LocalizedText(values: [
+                .en: "\(what.resolve(.en).capitalized) left \(result.ruined.count) buildings in ruins.",
+                .cs: "\(what.resolve(.cs).capitalized) nechala \(result.ruined.count) staveb v troskách."])
+        }
+        s.settlements[capital].journal.append(tick: s.tick, kind: .danger, text: entry)
     }
 
     /// Resolves a raid against the capital's defense. If defended, it's
@@ -108,11 +136,22 @@ public enum EffectApplier {
         record.record(.charge, step: 0, amount: strength)
         record.record(.clash, step: 1, amount: effectiveDefense)
 
+        // Who turns out to meet them, garrison first — the same line the canvas
+        // sends running to the wall.
+        let muster = s.settlements[capital].pawns
+            .filter { $0.health > 0 && !$0.isBroken && !$0.isAway }
+            .sorted { ($0.assignedWork == .garrison ? 0 : 1) < ($1.assignedWork == .garrison ? 0 : 1) }
+            .prefix(12).map(\.id)
+
         if effectiveDefense >= softened {
             record.record(.repelled, step: 2)
+            let id = rng.nextUUID()
+            let approach = rng.nextUnit() * 2 * .pi
             s.settlements[capital].lastBattle = record.finish(
-                id: rng.nextUUID(), tick: s.tick,
-                attackerName: raiderName, defenderName: defenderName, repelled: true)
+                id: id, tick: s.tick,
+                attackerName: raiderName, defenderName: defenderName, repelled: true,
+                approach: approach, attackers: BattleResolver.drawnStrength(strength),
+                line: Array(muster))
             s.settlements[capital].stats = s.settlements[capital].stats.applying(delta: 6, to: "morale")
             s.globalStats = s.globalStats.applying(delta: -8, to: "threatLevel")
             s.settlements[capital].journal.append(tick: s.tick, kind: .danger, text: LocalizedText(values: [
@@ -124,6 +163,20 @@ public enum EffectApplier {
         let deficit = softened - effectiveDefense
         applyResourceDelta(&s, resource: .materials, delta: -deficit * 4, scope: .global)
         applyResourceDelta(&s, resource: .food, delta: -deficit * 2, scope: .global)
+        // And they break the place while they are in it. A raid used to cost
+        // goods and people and leave the town itself untouched, so the morning
+        // after looked exactly like the morning before.
+        let broken = BuildingEngine.damage(
+            s.settlements[capital], kind: .raid,
+            severity: min(1, deficit / 40), rng: &rng)
+        s.settlements[capital] = broken.settlement
+        if !broken.ruined.isEmpty {
+            let count = broken.ruined.count
+            s.settlements[capital].journal.append(
+                tick: s.tick, kind: .danger, text: LocalizedText(values: [
+                    .en: "\(count) of the colony's buildings were left in ruins.",
+                    .cs: "\(count) staveb v osadě zůstalo v troskách."]))
+        }
         record.record(.plunder, step: 5, amount: deficit * 6)
         s.settlements[capital].stats = s.settlements[capital].stats
             .applying(delta: -deficit * 0.5, to: "stability")
@@ -142,7 +195,9 @@ public enum EffectApplier {
             var pawn = s.settlements[capital].pawns[pawnIndex]
             // Armor, not a weapon, is what blunts the blow you receive.
             let dealt = deficit * 1.5 * CombatEngine.woundMultiplier(pawn)
-            pawn.health = max(0, pawn.health - dealt)
+            // The blow lands on a part of them, so a raid leaves the colony
+            // carrying wounds rather than merely lighter.
+            pawn = MedicineEngine.wound(pawn, amount: dealt, tick: s.tick, rng: &rng)
             let killed = pawn.health <= 0
             record.record(killed ? .death : .wound, step: min(4, woundStep),
                           pawnID: pawn.id, pawnName: pawn.name, amount: dealt)
@@ -156,9 +211,13 @@ public enum EffectApplier {
             s.settlements[capital].stats = s.settlements[capital].stats.applying(delta: -10 * Double(deaths), to: "morale")
         }
 
+        let id = rng.nextUUID()
+        let approach = rng.nextUnit() * 2 * .pi
         s.settlements[capital].lastBattle = record.finish(
-            id: rng.nextUUID(), tick: s.tick,
-            attackerName: raiderName, defenderName: defenderName, repelled: false)
+            id: id, tick: s.tick,
+            attackerName: raiderName, defenderName: defenderName, repelled: false,
+            approach: approach, attackers: BattleResolver.drawnStrength(strength),
+            line: Array(muster))
         // The day, on the record — a raid resolved off-screen still tells you.
         let entry: LocalizedText
         if deaths > 0 {

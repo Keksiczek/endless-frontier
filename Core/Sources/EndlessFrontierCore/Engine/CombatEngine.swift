@@ -112,7 +112,9 @@ public enum CombatEngine {
         /// slice in the order they were recorded, so simultaneous things stay
         /// distinguishable without pretending to be sequential.
         public func finish(
-            id: UUID, tick: Int, attackerName: String, defenderName: String, repelled: Bool
+            id: UUID, tick: Int, attackerName: String, defenderName: String, repelled: Bool,
+            attackerLabel: LocalizedText? = nil, approach: Double = 0,
+            attackers: Int = 0, line: [UUID] = []
         ) -> BattleLog {
             let slice = 1.0 / Double(WorldClock.actionStepsPerTick)
             var seenInStep: [Int: Int] = [:]
@@ -131,7 +133,9 @@ public enum CombatEngine {
                     pawnName: beat.pawnName, amount: beat.amount)
             }
             return BattleLog(id: id, tick: tick, attackerName: attackerName,
-                             defenderName: defenderName, moments: moments, repelled: repelled)
+                             defenderName: defenderName, moments: moments, repelled: repelled,
+                             attackerLabel: attackerLabel, approach: approach,
+                             attackers: attackers, line: line)
         }
 
         public var isEmpty: Bool { pending.isEmpty }

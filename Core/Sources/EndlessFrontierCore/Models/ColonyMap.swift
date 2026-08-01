@@ -32,10 +32,21 @@ public struct BuildingPlacement: Codable, Sendable, Identifiable, Equatable {
     /// reserved and the scaffolding is drawn, but the economy doesn't count it
     /// until `ConstructionEngine` finishes the roof.
     public var underConstruction: Bool
+    /// How sound the building is, 0…1.
+    ///
+    /// Buildings were immortal: you raised one and it stood for ever, whatever
+    /// happened to it. A raid that burned half the town cost you goods and
+    /// people and left the town itself untouched, and the mason's trade ended
+    /// the day the roof went on. A building is a thing that weathers, takes
+    /// damage of particular *kinds*, and has to be kept up.
+    ///
+    /// At 1 it is sound; below `BuildingEngine.derelictBelow` it stops working
+    /// and stops sheltering anyone; at 0 it is a ruin.
+    public var condition: Double
 
     public init(id: UUID, definitionID: String, coord: TileCoord,
                 width: Int = 1, height: Int = 1, assignedPawnIDs: [UUID] = [],
-                underConstruction: Bool = false) {
+                underConstruction: Bool = false, condition: Double = 1) {
         self.id = id
         self.definitionID = definitionID
         self.coord = coord
@@ -43,6 +54,7 @@ public struct BuildingPlacement: Codable, Sendable, Identifiable, Equatable {
         self.height = max(1, height)
         self.assignedPawnIDs = assignedPawnIDs
         self.underConstruction = underConstruction
+        self.condition = min(1, max(0, condition))
     }
 
     /// Every tile this building covers.
@@ -66,6 +78,7 @@ public struct BuildingPlacement: Codable, Sendable, Identifiable, Equatable {
     // to a 1×1 footprint rather than failing the whole settlement load.
     private enum CodingKeys: String, CodingKey {
         case id, definitionID, coord, width, height, assignedPawnIDs, underConstruction
+        case condition
     }
 
     public init(from decoder: Decoder) throws {
@@ -78,6 +91,8 @@ public struct BuildingPlacement: Codable, Sendable, Identifiable, Equatable {
         assignedPawnIDs = try c.decodeIfPresent([UUID].self, forKey: .assignedPawnIDs) ?? []
         // Older saves predate construction-over-time: what stands is built.
         underConstruction = try c.decodeIfPresent(Bool.self, forKey: .underConstruction) ?? false
+        // Older saves predate wear: what stands is sound.
+        condition = min(1, max(0, try c.decodeIfPresent(Double.self, forKey: .condition) ?? 1))
     }
 }
 

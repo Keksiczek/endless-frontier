@@ -49,6 +49,8 @@ enum Theme {
         case .building: return Color(red: 0.78, green: 0.78, blue: 0.76) // stone
         case .scouting: return Color(red: 0.88, green: 0.88, blue: 0.82) // pale
         case .idle:     return boneDim
+        case .garrison: return boneDim
+            
         }
     }
 

@@ -132,12 +132,23 @@ struct ProductionChainTests {
         return s
     }
 
+    /// The whole route from work to storehouse.
+    ///
+    /// Timber and stone stopped being earned by the week when hauling arrived:
+    /// a felled trunk leaves wood at the stump and a broken block leaves stone
+    /// at the face, and it is only in the colony's hands once somebody has
+    /// carried it in. So the test walks the same three steps the game does —
+    /// work the ground, drop what it yields, carry it home — instead of asking
+    /// one of them in isolation and believing its answer.
     private func work(_ settlement: Settlement, ticks: Int) throws -> Settlement {
         let reg = try registry()
         var s = settlement
         let factors = ResourceLoop.gatheringFactors(s.localMap, registry: reg)
         for tick in 0..<ticks {
             s = ResourceLoop.extractRawMaterials(s, tick: tick, config: reg.config, factors: factors)
+            s = ResourceLoop.evolveDeposits(s, registry: reg, tick: tick, config: reg.config,
+                                            mapSeed: 5)
+            s = HaulEngine.advanceOneTick(s, registry: reg, tick: tick)
         }
         return s
     }
@@ -163,24 +174,28 @@ struct ProductionChainTests {
         #expect(after.stockpile.isEmpty, "people out at the ruins are not also down the mine")
     }
 
-    /// Slow work must still arrive. A single worker earns a fraction of a unit
-    /// per tick; rounding that away each tick would mean a small colony banked
-    /// nothing, ever.
-    @Test("A lone worker eventually banks a whole unit")
-    func partialWorkAccumulates() throws {
-        let one = try work(colony(biome: "forest", workers: [.logging: 1]), ticks: 3)
-        #expect((one.stockpile["wood"] ?? 0) == 0, "not yet — but the effort is banked")
-        #expect((one.rawProgress["wood"] ?? 0) > 0)
-        let later = try work(colony(biome: "forest", workers: [.logging: 1]), ticks: 80)
-        #expect((later.stockpile["wood"] ?? 0) > 0)
+    /// Slow work must still arrive. One logger takes many ticks to bring a
+    /// trunk down and more to walk it home — but it has to get there, or a
+    /// small colony would bank nothing, ever.
+    @Test("A lone logger's timber lies at the stump before it reaches the store")
+    func timberIsCarriedNotConjured() throws {
+        let early = try work(colony(biome: "forest", workers: [.logging: 1]), ticks: 3)
+        #expect((early.stockpile["wood"] ?? 0) == 0, "nobody has carried anything yet")
+
+        let later = try work(colony(biome: "forest", workers: [.logging: 1]), ticks: 200)
+        let carried = later.stockpile["wood"] ?? 0
+        let lying = later.localMap?.piles.filter { $0.itemID == "wood" }
+            .reduce(0) { $0 + $1.amount } ?? 0
+        #expect(carried + lying > 0, "a logger worked for two hundred ticks and felled nothing")
+        #expect(carried > 0, "and somebody should have walked at least one load home")
     }
 
     // MARK: - The land decides what you can make
 
     @Test("Ore country yields ore; the coast does not")
     func oreIsBiomeGated() throws {
-        let hills = try work(colony(biome: "mountains", workers: [.mining: 4]), ticks: 200)
-        let shore = try work(colony(biome: "coast", workers: [.mining: 4]), ticks: 200)
+        let hills = try work(colony(biome: "mountains", workers: [.mining: 4]), ticks: 400)
+        let shore = try work(colony(biome: "coast", workers: [.mining: 4]), ticks: 400)
         #expect((hills.stockpile["iron_ore"] ?? 0) > 0)
         #expect((shore.stockpile["iron_ore"] ?? 0) == 0,
                 "a coastal colony has to trade or expand for its iron")

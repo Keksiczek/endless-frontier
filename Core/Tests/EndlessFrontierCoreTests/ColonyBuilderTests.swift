@@ -146,7 +146,8 @@ struct ColonyBuilderTests {
                                     definitionID: "keep", at: TileCoord(0, 0), registry: reg)
         #expect(s.colony?.placements.count == 1)
         #expect(s.colony?.placement(at: TileCoord(1, 1))?.definitionID == "keep")  // covers far corner
-        #expect(s.colony?.freeTiles == 12 * 12 - 4)
+        #expect(s.colony?.freeTiles
+                == ColonyBuilder.defaultWidth * ColonyBuilder.defaultHeight - 4)
     }
 
     @Test("A footprint can't overlap another building; demolishing any tile removes it")
@@ -199,9 +200,13 @@ struct CenteredPlacementTests {
         let map = ColonyBuilder.seededLayout(
             for: [BuildingInstance(definitionID: "hut", count: 3)], registry: reg)
         #expect(!map.placements.isEmpty)
+        // Derived from the default grid, so widening it doesn't break the test
+        // that only cares about landing near the middle.
+        let heartX = (Double(ColonyBuilder.defaultWidth) - 1) / 2
+        let heartY = (Double(ColonyBuilder.defaultHeight) - 1) / 2
         for placement in map.placements {
-            let dx = abs(Double(placement.coord.x) - 5.5)
-            let dy = abs(Double(placement.coord.y) - 5.5)
+            let dx = abs(Double(placement.coord.x) - heartX)
+            let dy = abs(Double(placement.coord.y) - heartY)
             #expect(dx <= 2 && dy <= 2, "hut at \(placement.coord) is far from the heart")
         }
     }
@@ -216,7 +221,9 @@ struct CenteredPlacementTests {
             settlement, definitionID: "hut", registry: reg)
         #expect(id != nil)
         let coord = sited.colony?.placements.first?.coord
-        #expect(coord.map { abs($0.x - 5) <= 1 && abs($0.y - 5) <= 1 } == true)
+        let heartX = (ColonyBuilder.defaultWidth - 1) / 2
+        let heartY = (ColonyBuilder.defaultHeight - 1) / 2
+        #expect(coord.map { abs($0.x - heartX) <= 1 && abs($0.y - heartY) <= 1 } == true)
     }
 
     @Test("Big buildings really take ground: university is 3×3 and blocks overlap")

@@ -5,6 +5,67 @@ import EndlessFrontierCore
 /// scaffolding of what's still being raised. Split from `SettlementRenderer`
 /// so the world stays one readable file and the architecture another.
 enum SettlementStructures {
+    /// What time and trouble have done to a building.
+    ///
+    /// Buildings used to be immortal, so nothing in the art ever had to say
+    /// otherwise. Now a raid, a storm or a hard winter leaves a mark, and the
+    /// mark has to be legible from across the valley or the whole layer is a
+    /// number in an inspector: first cracks, then a hole in the roof and a
+    /// prop holding what is left, then a ruin with the walls down.
+    static func wear(
+        _ context: inout GraphicsContext, at c: CGPoint, footprint: CGSize,
+        condition: Double, seed: UInt64
+    ) {
+        guard condition < 0.92 else { return }
+        let w = max(6, footprint.width), h = max(6, footprint.height)
+        let ruin = condition < 0.25
+        var roll = seed | 1
+        func next() -> CGFloat {
+            roll ^= roll >> 33; roll = roll &* 0xFF51_AFD7_ED55_8CCD; roll ^= roll >> 29
+            return CGFloat(Double((roll >> 40) & 0xFFFF) / 65535)
+        }
+
+        // Cracks: more of them, and longer, the worse it is.
+        let cracks = ruin ? 5 : Int((1 - condition) * 6)
+        var lines = Path()
+        for _ in 0..<max(1, cracks) {
+            let x = c.x - w / 2 + next() * w
+            let y = c.y - h / 2 + next() * h
+            let run = (0.18 + next() * 0.3) * min(w, h)
+            lines.move(to: CGPoint(x: x, y: y))
+            lines.addLine(to: CGPoint(x: x + (next() - 0.5) * run, y: y + run * 0.6))
+        }
+        context.stroke(lines, with: .color(Theme.ink.opacity(ruin ? 0.75 : 0.45)),
+                       lineWidth: ruin ? 1.1 : 0.7)
+
+        guard condition < 0.6 else { return }
+        // A hole where the roof gave: dark, and it does not move.
+        let hole = min(w, h) * CGFloat(0.18 + (0.6 - condition) * 0.5)
+        context.fill(Path(ellipseIn: CGRect(x: c.x - hole / 2 + (next() - 0.5) * w * 0.3,
+                                            y: c.y - hole / 2 - h * 0.1,
+                                            width: hole, height: hole * 0.7)),
+                     with: .color(Theme.ink.opacity(0.7)))
+
+        guard ruin else {
+            // Not a ruin yet: a prop under the sagging side.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x + w * 0.34, y: c.y + h * 0.42))
+                p.addLine(to: CGPoint(x: c.x + w * 0.22, y: c.y - h * 0.18))
+            }, with: .color(Color(red: 0.52, green: 0.42, blue: 0.30)), lineWidth: 1.2)
+            return
+        }
+        // A ruin: the wall line broken, and rubble at its foot.
+        for i in 0..<4 {
+            let r = min(w, h) * (0.10 + next() * 0.08)
+            let p = CGPoint(x: c.x - w * 0.4 + CGFloat(i) * w * 0.27 + (next() - 0.5) * w * 0.1,
+                            y: c.y + h * (0.30 + next() * 0.2))
+            context.fill(Path(roundedRect: CGRect(x: p.x - r / 2, y: p.y - r / 2,
+                                                  width: r, height: r * 0.8),
+                              cornerRadius: r * 0.2),
+                         with: .color(Color(red: 0.36, green: 0.34, blue: 0.32)))
+        }
+    }
+
     /// A construction site: staked ground, rising scaffold, a timber pile and
     /// a thin progress mark — the colony visibly *making* something.
     static func site(
@@ -219,6 +280,108 @@ enum SettlementStructures {
                          radius: s * 0.35, startAngle: .degrees(200),
                          endAngle: .degrees(30), clockwise: false)
             }, with: .color(wood.opacity(0.7)), lineWidth: 0.9)
+
+        case .orchard:
+            // Three trees in a row that used to be a row.
+            let bark = Color(red: 0.44, green: 0.34, blue: 0.24)
+            let leaf = Color(red: 0.32, green: 0.46, blue: 0.28)
+            for k in 0..<3 {
+                let x = c.x + CGFloat(k - 1) * s * 0.72
+                let lift = s * (k == 1 ? 0.18 : 0)
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: x, y: c.y + s * 0.7))
+                    p.addLine(to: CGPoint(x: x, y: c.y - s * 0.1 - lift))
+                }, with: .color(bark), lineWidth: 1)
+                context.fill(
+                    Path(ellipseIn: CGRect(x: x - s * 0.34, y: c.y - s * 0.7 - lift,
+                                           width: s * 0.68, height: s * 0.66)),
+                    with: .color(leaf))
+                // The fruit is the point.
+                context.fill(
+                    Path(ellipseIn: CGRect(x: x + s * 0.10, y: c.y - s * 0.34 - lift,
+                                           width: 1.8, height: 1.8)),
+                    with: .color(Theme.accent.opacity(0.85)))
+            }
+
+        case .hermit:
+            // A lean-to against nothing, and a fire that is always lit.
+            let wood = Color(red: 0.46, green: 0.36, blue: 0.26)
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.85, y: c.y + s * 0.6))
+                p.addLine(to: CGPoint(x: c.x + s * 0.15, y: c.y - s * 0.8))
+                p.addLine(to: CGPoint(x: c.x + s * 0.85, y: c.y + s * 0.6))
+                p.closeSubpath()
+            }, with: .color(wood), lineWidth: 1.1)
+            let fire = 0.55 + 0.35 * sin(time * 4.2)
+            context.fill(
+                Path(ellipseIn: CGRect(x: c.x - s * 0.14, y: c.y + s * 0.16,
+                                       width: s * 0.28, height: s * 0.34)),
+                with: .color(Theme.accent.opacity(fire)))
+
+        case .watchtower:
+            // A broken shaft with the top gone and a stair still showing.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.42, y: c.y + s * 0.75))
+                p.addLine(to: CGPoint(x: c.x - s * 0.30, y: c.y - s * 1.05))
+                p.addLine(to: CGPoint(x: c.x + s * 0.34, y: c.y - s * 0.72))
+                p.addLine(to: CGPoint(x: c.x + s * 0.46, y: c.y + s * 0.75))
+            }, with: .color(stone), lineWidth: 1.1)
+            for k in 0..<3 {
+                let y = c.y + s * (0.42 - CGFloat(k) * 0.46)
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: c.x - s * 0.36, y: y))
+                    p.addLine(to: CGPoint(x: c.x + s * 0.40, y: y))
+                }, with: .color(stone.opacity(0.55)), lineWidth: 0.7)
+            }
+
+        case .saltPan:
+            // Flat crusted plates with a rake's furrows across them.
+            let crust = Color(red: 0.82, green: 0.84, blue: 0.86)
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.95, y: c.y - s * 0.42,
+                                                width: s * 1.9, height: s * 0.84)),
+                         with: .color(crust.opacity(0.42)))
+            context.stroke(Path(ellipseIn: CGRect(x: c.x - s * 0.95, y: c.y - s * 0.42,
+                                                  width: s * 1.9, height: s * 0.84)),
+                           with: .color(crust.opacity(0.85)), lineWidth: 0.9)
+            for k in 0..<3 {
+                let y = c.y + s * (CGFloat(k) - 1) * 0.24
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: c.x - s * 0.62, y: y))
+                    p.addLine(to: CGPoint(x: c.x + s * 0.62, y: y))
+                }, with: .color(crust.opacity(0.55)), lineWidth: 0.6)
+            }
+
+        case .barrow:
+            // A long low mound with a stone door let into its end.
+            let earth = Color(red: 0.30, green: 0.30, blue: 0.26)
+            context.fill(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 1.0, y: c.y + s * 0.6))
+                p.addQuadCurve(to: CGPoint(x: c.x + s * 1.0, y: c.y + s * 0.6),
+                               control: CGPoint(x: c.x, y: c.y - s * 0.95))
+                p.closeSubpath()
+            }, with: .color(earth))
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 1.0, y: c.y + s * 0.6))
+                p.addQuadCurve(to: CGPoint(x: c.x + s * 1.0, y: c.y + s * 0.6),
+                               control: CGPoint(x: c.x, y: c.y - s * 0.95))
+            }, with: .color(stone), lineWidth: 1)
+            context.fill(Path(CGRect(x: c.x - s * 0.20, y: c.y + s * 0.06,
+                                     width: s * 0.40, height: s * 0.54)),
+                         with: .color(Theme.ink))
+
+        case .starfall:
+            // A crater lip, and something in the bottom of it that still glows.
+            context.stroke(Path(ellipseIn: CGRect(x: c.x - s * 1.0, y: c.y - s * 0.5,
+                                                  width: s * 2.0, height: s * 1.0)),
+                           with: .color(stone), lineWidth: 1)
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.5, y: c.y - s * 0.25,
+                                                width: s * 1.0, height: s * 0.5)),
+                         with: .color(Theme.ink))
+            let heat = 0.45 + 0.4 * abs(sin(time * 1.1))
+            context.fill(
+                Path(ellipseIn: CGRect(x: c.x - s * 0.20, y: c.y - s * 0.11,
+                                       width: s * 0.40, height: s * 0.22)),
+                with: .color(Color(red: 1.0, green: 0.62, blue: 0.34).opacity(heat)))
         }
     }
 
@@ -229,6 +392,28 @@ enum SettlementStructures {
     private static let baseWall = (0.20, 0.18, 0.16)
     private static let baseRoof = (0.12, 0.11, 0.11)
     private static let baseStone = (0.24, 0.24, 0.26)
+
+    /// What an era builds *out of*. A colony that has reached fusion should not
+    /// still be drawn in wattle and thatch: timber warms into brick, brick cools
+    /// into concrete, and concrete pales into panel and glass. Read straight off
+    /// the building's own era, so this ages with the content and not with a
+    /// switch someone has to remember to update.
+    static func materials(_ era: Era) -> (wall: (Double, Double, Double),
+                                                  roof: (Double, Double, Double),
+                                                  stone: (Double, Double, Double)) {
+        switch era {
+        case .earlySettlement, .ancient:
+            return (baseWall, baseRoof, baseStone)               // timber, thatch
+        case .medieval:
+            return ((0.21, 0.19, 0.17), (0.13, 0.12, 0.12), (0.26, 0.26, 0.27))
+        case .earlyIndustrial:
+            return ((0.25, 0.17, 0.14), (0.13, 0.12, 0.13), (0.23, 0.22, 0.23))  // brick, soot
+        case .modern:
+            return ((0.22, 0.23, 0.24), (0.15, 0.16, 0.17), (0.26, 0.27, 0.29))  // concrete
+        case .nearFuture:
+            return ((0.20, 0.24, 0.27), (0.14, 0.18, 0.20), (0.24, 0.28, 0.31))  // panel, glass
+        }
+    }
 
     /// A base tone shifted a little — lighter/darker and warmer/cooler — from a
     /// per-building seed, so a row of houses isn't a row of identical stamps.
@@ -256,21 +441,28 @@ enum SettlementStructures {
 
     static func building(
         _ glyph: SettlementRenderer.BuildingGlyph, at c: CGPoint, s s0: CGFloat,
-        time: Double = 0, night: Double = 0, seed: UInt64 = 0, context: inout GraphicsContext
+        time: Double = 0, night: Double = 0, seed: UInt64 = 0,
+        era: Era = .earlySettlement, footprint: CGSize = .zero,
+        context: inout GraphicsContext
     ) {
         // Per-building variation so same-type structures aren't clones: a nudge
         // to overall size, and to each material's tone.
         let sizeJ = Double((seed &* 0x9E37_79B9_7F4A_7C15) >> 40 & 0xFFFF) / 65535
         let s = s0 * CGFloat(0.9 + sizeJ * 0.2)
-        let wall = tone(baseWall, seed)
-        let roof = tone(baseRoof, seed &* 3, spread: 0.035)
-        let stone = tone(baseStone, seed &* 5)
+        // How the ground it owns is shaped: a 3×2 lot wants a long building, a
+        // 2×2 a square one. Clamped so nothing becomes a ribbon.
+        let aspect: CGFloat = footprint.height > 0
+            ? min(1.7, max(0.6, footprint.width / footprint.height)) : 1
+        let base = materials(era)
+        let wall = tone(base.wall, seed)
+        let roof = tone(base.roof, seed &* 3, spread: 0.035)
+        let stone = tone(base.stone, seed &* 5)
         let ink = Theme.bone.opacity(0.85)
         let bright = Theme.bone.opacity(0.96)
         let lit = Theme.accent.opacity(0.32 + night * 0.55)   // a lamp lit after dark
         switch glyph {
         case .house:
-            let w = s * 1.6, h = s * 1.1
+            let w = s * 1.6 * aspect, h = s * 1.1
             let body = CGRect(x: c.x - w / 2, y: c.y - h / 2, width: w, height: h)
             groundShadow(at: c, halfWidth: w / 2, footY: body.maxY + s * 0.08, context: &context)
             // Walls, then a filled roof over them — a solid gabled house.
@@ -333,20 +525,25 @@ enum SettlementStructures {
             context.fill(cap, with: .color(roof))
             context.stroke(cap, with: .color(bright), lineWidth: 1)
         case .workshop:
-            let body = CGRect(x: c.x - s * 0.9, y: c.y - s * 0.5, width: s * 1.8, height: s)
+            let hw = s * 0.9 * aspect
+            let body = CGRect(x: c.x - hw, y: c.y - s * 0.5, width: hw * 2, height: s)
             groundShadow(at: c, halfWidth: s * 0.9, footY: body.maxY + s * 0.06, context: &context)
             context.fill(Path(body), with: .color(wall))
-            // A sawtooth roof — the workshop skylight.
+            // A sawtooth roof — the workshop skylight, one tooth per quarter so
+            // a wider shed grows more of them rather than stretching four.
+            let teeth = max(2, Int((body.width / (s * 0.9)).rounded()))
             let saw = Path { p in
                 p.move(to: CGPoint(x: body.minX, y: body.minY))
-                p.addLine(to: CGPoint(x: body.minX + s * 0.45, y: body.minY - s * 0.5))
-                p.addLine(to: CGPoint(x: body.minX + s * 0.9, y: body.minY))
-                p.addLine(to: CGPoint(x: body.minX + s * 1.35, y: body.minY - s * 0.5))
-                p.addLine(to: CGPoint(x: body.maxX, y: body.minY))
+                for k in 0..<teeth {
+                    let x0 = body.minX + body.width * CGFloat(k) / CGFloat(teeth)
+                    let x1 = body.minX + body.width * CGFloat(k + 1) / CGFloat(teeth)
+                    p.addLine(to: CGPoint(x: (x0 + x1) / 2, y: body.minY - s * 0.5))
+                    p.addLine(to: CGPoint(x: x1, y: body.minY))
+                }
             }
             context.stroke(Path(body), with: .color(ink), lineWidth: 1)
             context.stroke(saw, with: .color(bright), lineWidth: 1)
-            // A lit forge-mouth and a working chimney with a wisp of smoke.
+            // A lit forge-mouth and a working chimney.
             context.fill(Path(CGRect(x: c.x - s * 0.2, y: c.y - s * 0.05,
                                      width: s * 0.4, height: s * 0.4)),
                          with: .color(Theme.accent.opacity(0.45 + 0.2 * sin(time * 4))))
@@ -487,6 +684,173 @@ enum SettlementStructures {
                 p.addLine(to: CGPoint(x: c.x + s * 0.1, y: c.y + s * 0.1))
                 p.addLine(to: CGPoint(x: c.x - s * 0.15, y: c.y + s * 0.5))
             }, with: .color(Theme.accent.opacity(hum)), lineWidth: 1.2)
+
+        case .hall:
+            // Learning: a long hall with a clerestory over a colonnade. Reads as
+            // civic without borrowing the monument's pediment.
+            let hw = s * 1.05 * aspect
+            let body = CGRect(x: c.x - hw, y: c.y - s * 0.45, width: hw * 2, height: s * 1.0)
+            groundShadow(at: c, halfWidth: hw, footY: body.maxY + s * 0.06, context: &context)
+            context.fill(Path(body), with: .color(wall))
+            context.stroke(Path(body), with: .color(ink), lineWidth: 1)
+            // A raised clerestory — the reading light.
+            let clere = CGRect(x: body.minX + hw * 0.25, y: body.minY - s * 0.42,
+                               width: hw * 1.5, height: s * 0.42)
+            context.fill(Path(clere), with: .color(roof))
+            context.stroke(Path(clere), with: .color(bright), lineWidth: 1)
+            let panes = max(3, Int(hw / (s * 0.42)))
+            for k in 0..<panes {
+                let x = clere.minX + clere.width * (CGFloat(k) + 0.5) / CGFloat(panes)
+                context.fill(Path(CGRect(x: x - s * 0.07, y: clere.minY + s * 0.09,
+                                         width: s * 0.14, height: s * 0.24)),
+                             with: .color(lit))
+            }
+            // The colonnade along the front.
+            let posts = max(3, Int(hw / (s * 0.34)))
+            for k in 0..<posts {
+                let x = body.minX + body.width * (CGFloat(k) + 0.5) / CGFloat(posts)
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: x, y: body.minY + s * 0.14))
+                    p.addLine(to: CGPoint(x: x, y: body.maxY - s * 0.06))
+                }, with: .color(Theme.boneDim.opacity(0.55)), lineWidth: 0.7)
+            }
+
+        case .market:
+            // Exchange: open stalls under awnings, with goods stacked beneath.
+            let hw = s * 1.0 * aspect
+            groundShadow(at: c, halfWidth: hw, footY: c.y + s * 0.55, context: &context)
+            let stalls = max(2, Int(hw / (s * 0.55)))
+            for k in 0..<stalls {
+                let x = c.x - hw + (hw * 2) * (CGFloat(k) + 0.5) / CGFloat(stalls)
+                let top = c.y - s * 0.45
+                // A striped awning, sagging a little between its poles.
+                let awning = Path { p in
+                    p.move(to: CGPoint(x: x - s * 0.42, y: top))
+                    p.addQuadCurve(to: CGPoint(x: x + s * 0.42, y: top),
+                                   control: CGPoint(x: x, y: top + s * 0.18))
+                    p.addLine(to: CGPoint(x: x + s * 0.34, y: top - s * 0.2))
+                    p.addLine(to: CGPoint(x: x - s * 0.34, y: top - s * 0.2))
+                    p.closeSubpath()
+                }
+                context.fill(awning, with: .color(k % 2 == 0 ? roof : Theme.accent.opacity(0.34)))
+                context.stroke(awning, with: .color(bright), lineWidth: 0.8)
+                // Poles down to the ground, and a crate of goods between them.
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: x - s * 0.38, y: top))
+                    p.addLine(to: CGPoint(x: x - s * 0.38, y: c.y + s * 0.5))
+                    p.move(to: CGPoint(x: x + s * 0.38, y: top))
+                    p.addLine(to: CGPoint(x: x + s * 0.38, y: c.y + s * 0.5))
+                }, with: .color(ink), lineWidth: 0.8)
+                context.fill(Path(CGRect(x: x - s * 0.24, y: c.y + s * 0.12,
+                                         width: s * 0.48, height: s * 0.34)),
+                             with: .color(wall))
+            }
+
+        case .plant:
+            // Heavy industry: a blunt block, stacks, and smoke that keeps coming.
+            let hw = s * 1.0 * aspect
+            let body = CGRect(x: c.x - hw, y: c.y - s * 0.55, width: hw * 2, height: s * 1.2)
+            groundShadow(at: c, halfWidth: hw, footY: body.maxY + s * 0.05, context: &context)
+            context.fill(Path(body), with: .color(stone))
+            context.stroke(Path(body), with: .color(ink), lineWidth: 1)
+            // A band of lit windows — the night shift.
+            let bays = max(3, Int(hw / (s * 0.3)))
+            for k in 0..<bays {
+                let x = body.minX + body.width * (CGFloat(k) + 0.5) / CGFloat(bays)
+                context.fill(Path(CGRect(x: x - s * 0.08, y: c.y - s * 0.18,
+                                         width: s * 0.16, height: s * 0.3)),
+                             with: .color(lit.opacity(0.7)))
+            }
+            // Two stacks, the taller one drawing.
+            for (i, dx) in [(-0.55 as CGFloat), (0.3 as CGFloat)].enumerated() {
+                let h = s * (i == 0 ? 1.5 : 1.05)
+                let stack = CGRect(x: c.x + hw * dx, y: body.minY - h, width: s * 0.26, height: h)
+                context.fill(Path(stack), with: .color(roof))
+                context.stroke(Path(stack), with: .color(ink), lineWidth: 0.8)
+                for k in 0..<3 {
+                    let t = (time * 0.22 + Double(k) * 0.33 + Double(i) * 0.17)
+                        .truncatingRemainder(dividingBy: 1)
+                    let r = s * (0.16 + CGFloat(t) * 0.4)
+                    let y = stack.minY - CGFloat(t) * s * 1.5
+                    let x = stack.midX + CGFloat(sin(t * 4 + Double(i))) * s * 0.24
+                    context.fill(Path(ellipseIn: CGRect(x: x - r / 2, y: y - r / 2,
+                                                        width: r, height: r)),
+                                 with: .color(Theme.boneDim.opacity((1 - t) * 0.26)))
+                }
+            }
+
+        case .array:
+            // A field of collectors: rows of tilted panels lying over the ground,
+            // low and wide — nothing like a building, which is the point.
+            let hw = s * 1.15 * aspect
+            groundShadow(at: c, halfWidth: hw, footY: c.y + s * 0.5, context: &context)
+            let rows = 2, perRow = max(3, Int(hw / (s * 0.42)))
+            for r in 0..<rows {
+                let y = c.y - s * 0.1 + CGFloat(r) * s * 0.46
+                for k in 0..<perRow {
+                    let x = c.x - hw + (hw * 2) * (CGFloat(k) + 0.5) / CGFloat(perRow)
+                    // A parallelogram reads as a panel tilted to the sun.
+                    let panel = Path { p in
+                        p.move(to: CGPoint(x: x - s * 0.3, y: y + s * 0.16))
+                        p.addLine(to: CGPoint(x: x - s * 0.14, y: y - s * 0.16))
+                        p.addLine(to: CGPoint(x: x + s * 0.32, y: y - s * 0.16))
+                        p.addLine(to: CGPoint(x: x + s * 0.16, y: y + s * 0.16))
+                        p.closeSubpath()
+                    }
+                    context.fill(panel, with: .color(stone))
+                    context.stroke(panel, with: .color(bright.opacity(0.75)), lineWidth: 0.6)
+                    // A slow glint travelling along the rows.
+                    let glint = sin(time * 0.8 + Double(k) * 0.7 + Double(r))
+                    if glint > 0.86 {
+                        context.fill(panel, with: .color(Theme.accent.opacity(0.28)))
+                    }
+                }
+            }
+
+        case .pad:
+            // A launch complex: an apron, a gantry, and a vehicle standing on it.
+            let hw = s * 1.0 * aspect
+            let apron = CGRect(x: c.x - hw, y: c.y + s * 0.15, width: hw * 2, height: s * 0.5)
+            groundShadow(at: c, halfWidth: hw, footY: apron.maxY + s * 0.04, context: &context)
+            context.fill(Path(ellipseIn: apron), with: .color(stone))
+            context.stroke(Path(ellipseIn: apron), with: .color(ink), lineWidth: 1)
+            // The vehicle: a slim body under a nose cone, on fins.
+            let bodyW = s * 0.42, bodyH = s * 1.5
+            let rocket = CGRect(x: c.x - bodyW / 2, y: c.y - s * 1.15, width: bodyW, height: bodyH)
+            context.fill(Path(rocket), with: .color(wall))
+            context.stroke(Path(rocket), with: .color(bright), lineWidth: 1)
+            let nose = Path { p in
+                p.move(to: CGPoint(x: rocket.minX, y: rocket.minY))
+                p.addLine(to: CGPoint(x: c.x, y: rocket.minY - s * 0.62))
+                p.addLine(to: CGPoint(x: rocket.maxX, y: rocket.minY))
+                p.closeSubpath()
+            }
+            context.fill(nose, with: .color(roof))
+            context.stroke(nose, with: .color(bright), lineWidth: 1)
+            context.fill(Path { p in
+                p.move(to: CGPoint(x: rocket.minX, y: rocket.maxY))
+                p.addLine(to: CGPoint(x: rocket.minX - s * 0.26, y: rocket.maxY + s * 0.3))
+                p.addLine(to: CGPoint(x: rocket.minX, y: rocket.maxY - s * 0.3))
+                p.closeSubpath()
+                p.move(to: CGPoint(x: rocket.maxX, y: rocket.maxY))
+                p.addLine(to: CGPoint(x: rocket.maxX + s * 0.26, y: rocket.maxY + s * 0.3))
+                p.addLine(to: CGPoint(x: rocket.maxX, y: rocket.maxY - s * 0.3))
+                p.closeSubpath()
+            }, with: .color(roof))
+            // The gantry alongside, and a beacon that keeps its own time.
+            let mast = CGRect(x: c.x + hw * 0.5, y: c.y - s * 1.0, width: s * 0.12, height: s * 1.5)
+            context.fill(Path(mast), with: .color(stone))
+            for k in 0..<4 {
+                let y = mast.minY + mast.height * CGFloat(k) / 4
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: mast.minX, y: y))
+                    p.addLine(to: CGPoint(x: rocket.maxX, y: y + s * 0.08))
+                }, with: .color(Theme.boneDim.opacity(0.5)), lineWidth: 0.6)
+            }
+            let beacon = 0.35 + 0.5 * max(0, sin(time * 2.2))
+            context.fill(Path(ellipseIn: CGRect(x: mast.midX - s * 0.1, y: mast.minY - s * 0.2,
+                                                width: s * 0.2, height: s * 0.2)),
+                         with: .color(Theme.accent.opacity(beacon)))
         }
     }
 }

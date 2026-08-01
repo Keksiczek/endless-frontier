@@ -93,7 +93,8 @@ destination); still open — connector lines / graph layout for the tech tree
 ## Tier 4 — product polish
 
 11. Onboarding/tutorial, settings (tick rate, reset, toggles).
-12. Local notifications for the "while you were away" summary.
+12. Local notifications for the "while you were away" summary — scoped out in
+    **Local notifications** below.
 13. Accessibility (VoiceOver, Dynamic Type) and Czech/English localization.
 14. Multiple saves + optional iCloud sync; audio & haptics.
 
@@ -142,6 +143,167 @@ backward-compatible (new fields decode-if-present, defaulting to 1×1 / no zones
 surface it lands on — separate PR); tuning the synergy/zone/footprint numbers
 from the balance trace; optional room detection (enclosed areas) for further
 bonuses.
+
+## The RimWorld layer (2026-07-22, commit `7782249`)
+
+Buildings became **ground they own** and wildlife became **entities**. Full
+write-up: **[`docs/RIMWORLD_LAYER.md`](RIMWORLD_LAYER.md)**. In short:
+
+- **Real footprint lots** — every building draws a cleared, framed earth plot
+  the size of what it covers, in a pass *before* any structure so a later lot
+  never paints over an earlier roof; construction sites reserve ground with a
+  dashed outline.
+- **Bigger, varied footprints** — 43 of 47 buildings are multi-tile, sized to
+  what they are (fields 3×2, workshops 2×2, spaceport/arcology 3×3), capped at
+  3×3. Grid stays 12×12; placement, seeding and balance hold.
+- **Colonists spread across their lot** — `AgentMotion.WorkSite` carries the
+  footprint, so a staffed building reads as people working across its floor
+  instead of stacked on a pin.
+- **Buildings vary** — a stable per-placement seed nudges size and the tone of
+  wall/roof/stone, so a row of houses is a neighbourhood, not one stencil.
+- **Animals are pawn-like entities** — `Animal` with species (health, a °C
+  comfort band, a predator flag), sex, age, a body of parts that can be wounded
+  and lost, and conditions (injury/disease/frostbite/heatstroke). Seeded into
+  `WildlifeState.animals` at map generation, drawn **last** so nothing else's
+  determinism moves.
+
+**The colonists' day is seasonal** (2026-07-27): `AgentMotion.DayShape` derives
+the day's shape from the season — roughly 10 working hours over 8 of sleep at
+the equinox, stretching to 13 and 6 at midsummer, closing to 7 and 11 in deep
+winter. Children keep longer nights and never work; the sick keep to their bed.
+
+This also fixed a real bug in `AgentMotion.pose`: a waypoint's activity was read
+from the *next* waypoint, so what a colonist appeared to be doing was always one
+leg ahead of the schedule — the reason the village looked like it spent its
+afternoons socializing. A waypoint now means "from this hour, do this here".
+The walk at the head of each leg was also cut (0.06 → 0.025 of a day), because
+the midday gathering was so short that it was entirely walking.
+
+Still presentation only — `ResourceLoop` produces the same at midnight as at
+noon. Making the hours count is the job layer below. Covered by
+`App/Tests/AgentMotionTests.swift`.
+
+**The land became things** (2026-07-27): `AnimalEngine` runs the wild per tick
+(ageing, exposure, illness, death, spring breeding, hunting that takes the
+weakest first), and `Flora`/`FloraEngine` make the wood into `Tree`s that grow
+from age and bank their own axe-work, and the stone into `Rock` outcrops that do
+not grow back. Both generated last, both decode-if-present. See
+`docs/RIMWORLD_LAYER.md` §3b and §3.3 — including two bugs of the same shape
+worth remembering: a threshold higher than the rate that had to cross it, and a
+comfort band no season ever reached.
+
+**Building scale fixed**: structures were sized `0.021 × max(w, h)`, unrelated to
+the lot, so a 3×2 drew twice as wide as its own plot and the colony read as a
+heap of overlapping glyphs (found from a screenshot, not a test). Size now comes
+from the footprint; `structuresFitTheirFootprint` and `neighboursKeepTheirDistance`
+pin it.
+
+**The land got drawn, and got more of it** (2026-07-27, second pass):
+
+- Trees, rocks and animals are **rendered** (`SettlementFlora`, rewritten
+  `SettlementWildlife`) — species-specific, growth-sized, with a chop wedge that
+  deepens and a worked face on a quarried rock. Ailing beasts show it.
+- **Build grid 12×12 → 18×18.** It was sized for one-tile buildings; with 43 of
+  47 owning up to nine tiles, a dozen works filled three quarters of the old one.
+- **Building moved onto the settlement canvas** (`SettlementBuildOverlay`,
+  `BuildBar`): grid overlay, taken ground shaded, a full-size ghost you aim with
+  a tap and then commit. Two steps on purpose.
+- **Staffing pays**: `ResourceLoop.staffingFactors` scales output by who is at
+  the bench, floored at `unstaffedFloor` (0.4). Reconciling posts runs on a
+  ten-tick cadence — every tick was superlinear on the wider grid.
+- **`WorkKind.garrison`**: palisade, watchtower, barracks and stone walls
+  employed people and produced nothing countable, so nobody could ever be seated
+  at them. Opens as a role once walls stand.
+- **Map variety**: `depositMix` was a fixed tuple per biome, so every forest
+  valley held exactly six woods and one seam and only positions moved. Now
+  jittered per map (½…1½×, floor of one for anything the biome claims).
+- **Geography**: `ShoreShape` gives coastal maps a real **sea** along one edge —
+  wandering waterline, shallows, surf, winter ice — instead of the same river
+  every biome got. Eight new scenery kinds (cliff, crag, dune, dead tree, tall
+  grass, mushroom, driftwood, hot spring) and per-biome palettes rebuilt around
+  them. Nothing generates in the water.
+- **A find is a place**: the `.alert("Site Explored")` became `SiteOutcomeCard`
+  over the region's living survey, bilingual, showing the haul and the cost.
+
+**Still open here**: hunting still goes through `deerHerd` with the entities
+following it, rather than the animals being the source of truth; felling and
+quarrying are engine functions the economy does not call yet (`ResourceLoop`
+still harvests the abstract nodes); elevation is faked by scenery rather than
+being real terrain; building interiors + pathing/LOS; and the big one — a real
+**job/think layer** so colonists visibly *do* things rather than standing at the
+right building.
+
+## Real terrain elevation — its own phase (requested 2026-07-27)
+
+Cliffs and crags are currently **scenery**: props drawn on flat ground. They read
+as height and are not height. Making elevation real is the single change left
+that would alter the maps most, and it is big enough to plan as its own phase
+rather than fold into a rendering pass.
+
+**What it means:**
+
+- A **height field** per local map (a coarse grid, generated from the same seed
+  and biome — a mountain map is a ridge and a valley, a plain is gently rolling).
+- **Slope decides what ground is**: shallow ground is buildable and walkable,
+  steep ground is neither. `ColonyBuilder.canPlace` gains a flatness check, and
+  the build overlay shades unbuildable tiles the way it already shades taken
+  ones.
+- **Cliffs become the boundary** between two height bands rather than a prop —
+  drawn from the field, so they run in lines across the map instead of being
+  scattered.
+- **Rendering gains a third dimension**: things higher up are drawn smaller and
+  further "back", shadows fall down-slope, and the sea meets the land where the
+  height field crosses zero (which also gives real beaches and headlands).
+- **Pathing** has to respect it once colonists genuinely walk (see the job
+  layer): a route around a bluff rather than through it.
+
+**Why it is a phase and not a task:** it touches generation, placement
+validation, the renderer's whole coordinate story, the shore, and eventually
+pathfinding. Each of those is individually fine; together they want their own
+plan, and doing half of it (a height field nothing reads) would be worse than
+none.
+
+**Cheap first slice, if it should be started before the whole thing:** generate
+and store the height field, draw ground shading from it, and gate building on
+slope. That alone makes mountains feel like mountains and costs nothing in
+pathing.
+
+## Local notifications (requested 2026-07-27)
+
+The game runs while the player is away — catch-up ticks up to 30 days on open —
+but nothing ever reaches them in the meantime. It should.
+
+**What to notify on** (each should be individually toggleable in settings):
+
+- **"While you were away"** summary — the one that already exists as a concept
+  in Tier 4 below. Population, resources, era progress, what the chronicle
+  recorded since the last session.
+- **Something needs a decision** — a storyteller event with choices, an assembly
+  law awaiting ratification, a quest stage that stalled. These are the ones the
+  player actually loses progress by missing.
+- **Something went wrong** — a raid incoming or resolved, famine, an uprising or
+  strike, a death that mattered.
+- **Something finished** — construction completed, research unlocked, an era
+  reached, an expedition or caravan home.
+
+**Constraints:**
+
+- Notification scheduling is **app-side**, never in `Core`. The engine stays
+  offline-first and platform-agnostic; the app reads state and schedules.
+- Local only (`UNUserNotificationCenter`) — no server, no push, consistent with
+  offline-first.
+- Content ships **CZ+EN** through `AppStrings`/`LocalizedText` like everything
+  else.
+- Permission is requested at a moment that makes sense (after the first real
+  session, not on cold launch), and the game must stay fully playable if it's
+  denied.
+- Rate-limit hard. A civilization sim generates events constantly; a
+  notification per event would be unusable. Coalesce into at most a small number
+  per day, and prefer one digest over many pings.
+
+Open question: whether the "while you were away" numbers are computed at
+schedule time (predicting forward) or the notification just prompts a return
+and the summary is generated on open. The second is simpler and can't be wrong.
 
 ## Known debt
 

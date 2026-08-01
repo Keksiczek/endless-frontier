@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 import EndlessFrontierCore
 
 /// The settings sheet. Small on purpose: this is a game you mostly watch, so
@@ -9,6 +10,8 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var confirmingNewGame = false
     @State private var language: GameLanguage? = AppStrings.languageOverride
+    /// What iOS currently thinks about letting the colony reach you.
+    @State private var notifications: UNAuthorizationStatus = .notDetermined
 
     private var cs: Bool { AppStrings.language == .cs }
 
@@ -33,11 +36,107 @@ struct SettingsView: View {
         .frontierCard()
     }
 
+    /// Whether the colony can reach the player, and what to do about it.
+    ///
+    /// Notifications were "arranged for" invisibly: the permission was asked
+    /// for at a moment the player never saw, and if iOS had ever recorded a
+    /// refusal — which it does silently and for ever — nothing would arrive and
+    /// there was no way to find that out from inside the game. A permission you
+    /// cannot see the state of is a permission you cannot debug.
+    private var notificationCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: cs ? "Zprávy z osady" : "Word from the colony")
+            HStack(spacing: 8) {
+                Image(systemName: notificationIcon)
+                    .foregroundStyle(notificationTint)
+                Text(notificationStatus)
+                    .font(.callout)
+                    .foregroundStyle(Theme.text)
+            }
+            Text(notificationBlurb)
+                .font(.caption).foregroundStyle(Theme.textDim)
+                .fixedSize(horizontal: false, vertical: true)
+
+            switch notifications {
+            case .notDetermined:
+                Button(cs ? "Povolit zprávy" : "Allow messages") {
+                    Task {
+                        _ = try? await UNUserNotificationCenter.current()
+                            .requestAuthorization(options: [.alert, .sound, .badge])
+                        await refreshNotificationStatus()
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Theme.accent)
+            case .denied:
+                Button(cs ? "Otevřít Nastavení" : "Open Settings") {
+                    guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                    UIApplication.shared.open(url)
+                }
+                .buttonStyle(.bordered)
+            default:
+                EmptyView()
+            }
+        }
+        .frontierCard()
+        .task { await refreshNotificationStatus() }
+    }
+
+    private func refreshNotificationStatus() async {
+        notifications = await UNUserNotificationCenter.current()
+            .notificationSettings().authorizationStatus
+    }
+
+    private var notificationStatus: String {
+        switch notifications {
+        case .authorized, .provisional, .ephemeral:
+            return cs ? "Zapnuté" : "On"
+        case .denied:
+            return cs ? "Zakázané v Nastavení" : "Refused in Settings"
+        default:
+            return cs ? "Zatím nepovolené" : "Not asked yet"
+        }
+    }
+
+    private var notificationIcon: String {
+        switch notifications {
+        case .authorized, .provisional, .ephemeral: return "bell.fill"
+        case .denied: return "bell.slash.fill"
+        default: return "bell.badge"
+        }
+    }
+
+    private var notificationTint: Color {
+        switch notifications {
+        case .authorized, .provisional, .ephemeral: return Theme.good
+        case .denied: return Theme.danger
+        default: return Theme.accent
+        }
+    }
+
+    private var notificationBlurb: String {
+        switch notifications {
+        case .authorized, .provisional, .ephemeral:
+            return cs
+                ? "Osada ti dá vědět, když bude na tobě rozhodnutí nebo když půjde do tuhého. Nanejvýš třikrát za jednu nepřítomnost."
+                : "The colony will tell you when a decision is waiting or something is going wrong. At most three times per absence."
+        case .denied:
+            return cs
+                ? "iOS to má zakázané. Zapnout to jde jen v Nastavení — hra se znovu zeptat nesmí."
+                : "iOS has this refused. Only Settings can turn it back on — the game is not allowed to ask again."
+        default:
+            return cs
+                ? "Hra se ještě neptala. Bez povolení nepřijde nic."
+                : "The game has not asked yet. Nothing arrives without it."
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     languageCard
+                    notificationCard
                     thisWorld
                     newGameCard
                 }

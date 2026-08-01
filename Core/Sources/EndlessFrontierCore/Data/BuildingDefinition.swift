@@ -82,6 +82,25 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
     public let upkeep: Resources?
     public let pollution: Double
     public let footprint: TileSize
+    /// The work this building is a place for, when its production doesn't say.
+    ///
+    /// Most buildings answer this themselves — a foundry produces materials, so
+    /// it is a place of mining-work. Some don't produce anything and are still
+    /// somewhere a colonist works: a hospital's trade is healing, and its output
+    /// is a resource the ledger has no column for. Left `nil`, the work is
+    /// derived from production (see `ColonyBuilder.workKind(for:)`), which is
+    /// the right answer for all but a handful.
+    public let work: WorkKind?
+    /// An opaque archetype tag for whoever draws this building, set only where
+    /// the shape cannot be read off the numbers.
+    ///
+    /// A lumberyard, a quarry and a workshop all just "produce materials", so
+    /// nothing in the data tells a mill from a mine from a craftsman's shed —
+    /// which is how every one of them came to be drawn as the same waterwheel.
+    /// The Core stays presentation-agnostic: this is a name it never
+    /// interprets, and the renderer maps it (falling back to deriving the shape
+    /// from what the building does).
+    public let look: String?
     public let adjacency: [AdjacencyRule]
     /// Player-facing flavour. `LocalizedText` decodes from a bare string too,
     /// so half-translated content files always load.
@@ -103,6 +122,8 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         upkeep: Resources? = nil,
         pollution: Double = 0,
         footprint: TileSize = TileSize(),
+        work: WorkKind? = nil,
+        look: String? = nil,
         adjacency: [AdjacencyRule] = [],
         description: LocalizedText = LocalizedText("")
     ) {
@@ -121,6 +142,8 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         self.upkeep = upkeep
         self.pollution = pollution
         self.footprint = footprint
+        self.work = work
+        self.look = look
         self.adjacency = adjacency
         self.description = description
     }
@@ -129,7 +152,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         case id, era, name, cost, workers, production, consumption
         case materialCost = "material_cost"
         case moraleEffect = "morale_effect"
-        case defense, housing, storage, upkeep, pollution, footprint, adjacency
+        case defense, housing, storage, upkeep, pollution, footprint, work, look, adjacency
         case description
     }
 
@@ -150,6 +173,8 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         upkeep = try c.decodeIfPresent(Resources.self, forKey: .upkeep)
         pollution = try c.decodeIfPresent(Double.self, forKey: .pollution) ?? 0
         footprint = try c.decodeIfPresent(TileSize.self, forKey: .footprint) ?? TileSize()
+        work = try c.decodeIfPresent(WorkKind.self, forKey: .work)
+        look = try c.decodeIfPresent(String.self, forKey: .look)
         adjacency = try c.decodeIfPresent([AdjacencyRule].self, forKey: .adjacency) ?? []
         description = try c.decodeIfPresent(LocalizedText.self, forKey: .description) ?? LocalizedText("")
     }

@@ -11,6 +11,13 @@ import EndlessFrontierCore
 /// scaffolding, the temple — gather on the green at midday, work the
 /// afternoon, and drift home for the night. What you see is what the colony
 /// is genuinely doing.
+///
+/// The day is **seasonal** (`DayShape`): people rise with the light and stop
+/// when it goes, so midsummer is a long working day over a short night and
+/// deep winter is the reverse. Note this is still the *look* of work — the
+/// simulation has no clock of its own, and `ResourceLoop` produces the same
+/// amount at midnight as at noon. Making the hours count is the job layer,
+/// see `docs/RIMWORLD_LAYER.md`.
 /// Places the simulation's clock on the frame clock.
 ///
 /// A tick is a real minute, so anything driven by whole ticks moves once a
@@ -33,6 +40,23 @@ enum AgentMotion {
     /// Seconds of real time one settlement day takes on screen.
     static let dayLength: Double = 150
 
+    /// How far apart two points on the map are — the walk a colonist has ahead
+    /// of them.
+    static func distance(_ a: LocalPoint, _ b: LocalPoint) -> Double {
+        let dx = a.x - b.x, dy = a.y - b.y
+        return (dx * dx + dy * dy).squareRoot()
+    }
+
+    /// How much ground a colonist covers in a day of walking, in map widths.
+    ///
+    /// Travel used to take a **fixed slice of the day whatever the distance**,
+    /// so someone whose field was next door crept across it while someone whose
+    /// field was clear across the valley crossed twenty times as much ground in
+    /// the same moment — a village of ploddders with the odd sprinter shooting
+    /// past them. Everyone now keeps the same pace and a long walk simply takes
+    /// longer, which is also why the far side of the map now feels far.
+    static let walkSpeed: Double = 4.5
+
     /// What a colonist is visibly doing right now — drives posture, tools and
     /// the inspector's "right now" line.
     enum Activity {
@@ -45,6 +69,8 @@ enum AgentMotion {
         case resting       // broken/sick — home all day
         case travelling    // out on the road to a landmark, or coming back
         case expedition    // at the landmark, working it
+        case fighting      // called out of the day and into the line
+        case hauling       // carrying a load home
     }
 
     /// A colonist's place and doing at an instant.
@@ -57,14 +83,41 @@ enum AgentMotion {
 
     /// A building a colonist works *at*, and the ground it covers — so several
     /// workers spread across the lot instead of stacking on one point.
+    ///
+    /// It also carries the room's own furniture plan: a building is a room now
+    /// (`SettlementInterior`), and a worker belongs at a *station* in it — the
+    /// anvil, the desk, the counter — not somewhere on its roof. `stations`
+    /// holds those places in the same normalised space the rest of the motion
+    /// speaks, computed from exactly the seed and footprint the fittings are
+    /// drawn from, so the smith stands at the anvil that is on the screen.
     struct WorkSite {
         let center: LocalPoint
         let halfW: Double
         let halfH: Double
+        let stations: [LocalPoint]
+        /// Which station each colonist on the roster holds.
+        ///
+        /// Picking a station by hashing the colonist put two of them on the
+        /// same stool about half the time in a two-seat room — a hash spreads
+        /// things *on average*, which is no use at all when there are two of
+        /// them. The roster is an order, so it is the seating plan: the first
+        /// name on the building's books takes the first station.
+        let byPawn: [UUID: LocalPoint]
+
         init(_ b: SettlementRenderer.NormalizedBuilding) {
             center = b.center
             halfW = b.footprintW / 2
             halfH = b.footprintH / 2
+            let places = SettlementInterior
+                .stationSlots(for: b.glyph, seed: b.seed, stations: b.assignedPawnIDs.count)
+                .map { LocalPoint(x: b.center.x + $0.dx * b.footprintW,
+                                  y: b.center.y + $0.dy * b.footprintH) }
+            stations = places
+            var seating: [UUID: LocalPoint] = [:]
+            for (index, id) in b.assignedPawnIDs.enumerated() where !places.isEmpty {
+                seating[id] = places[index % places.count]
+            }
+            byPawn = seating
         }
     }
 
@@ -75,9 +128,13 @@ enum AgentMotion {
     struct Scene {
         let layout: [SettlementRenderer.NormalizedBuilding]
         let homes: [LocalPoint]
-        let civic: WorkSite?        // temple/library — scholars and priests
-        let workshop: WorkSite?
-        let granary: WorkSite?
+        /// The post the simulation gave each colonist: pawn id → the lot of the
+        /// building they are actually on the roster of. This is the truth the
+        /// canvas prefers over any guess made from their trade.
+        let posts: [UUID: WorkSite]
+        /// Places a trade is plied, for colonists the engine has not seated
+        /// anywhere — the fallback, keyed by the work the building is for.
+        let byTrade: [WorkKind: [WorkSite]]
         let sites: [WorkSite]       // active scaffolding
         let heart: LocalPoint
         /// A paved plaza the player laid out, if any — the midday crowd
@@ -92,32 +149,53 @@ enum AgentMotion {
         /// A tick is a real minute; without the fraction a walking party would
         /// cross the valley in half a dozen jumps.
         let continuousTick: Double
+        /// The fight going on right now, if one is. Everyone in its line is
+        /// pulled out of their day and sent to it.
+        let battle: (log: BattleLog, progress: Double)?
+        /// Where each household's beds are: dwelling id → the spots inside it
+        /// that its residents sleep at. Built from the same room plan the
+        /// interiors are drawn from, so a colonist asleep is asleep in a bed
+        /// that is on the screen.
+        let bedsByHome: [UUID: [LocalPoint]]
+        /// One bed per colonist, taken in roster order.
+        let beds: [UUID: LocalPoint]
 
         init(settlement: Settlement, registry: GameDataRegistry, continuousTick: Double = 0) {
             let layout = SettlementRenderer.normalizedLayout(settlement: settlement, registry: registry)
             self.layout = layout
             var homes: [LocalPoint] = []
-            var civic: WorkSite?
-            var workshop: WorkSite?
-            var granary: WorkSite?
+            var posts: [UUID: WorkSite] = [:]
+            var byTrade: [WorkKind: [WorkSite]] = [:]
             var sites: [WorkSite] = []
+            var bedsByHome: [UUID: [LocalPoint]] = [:]
             for building in layout {
                 if building.underConstruction {
                     sites.append(WorkSite(building))
                     continue
                 }
-                switch building.glyph {
-                case .house: homes.append(building.center)
-                case .temple: civic = civic ?? WorkSite(building)
-                case .workshop, .mill, .generator: workshop = workshop ?? WorkSite(building)
-                case .granary: granary = granary ?? WorkSite(building)
-                default: break
+                let site = WorkSite(building)
+                let def = registry.building(building.definitionID)
+                if (def?.housing ?? 0) > 0 {
+                    homes.append(building.center)
+                    // Where this household actually sleeps: the beds in the
+                    // room, from the same plan the interior is drawn from.
+                    if let placementID = building.placementID {
+                        bedsByHome[placementID] = SettlementInterior
+                            .bedSlots(seed: building.seed, sleepers: HouseholdEngine.maxPerDwelling)
+                            .map { LocalPoint(x: building.center.x + $0.dx * building.footprintW,
+                                              y: building.center.y + $0.dy * building.footprintH) }
+                    }
+                }
+                // Everyone the engine posted here stands here.
+                for pawnID in building.assignedPawnIDs { posts[pawnID] = site }
+                if let def, def.workers > 0 {
+                    let kind = ColonyBuilder.workKind(for: def)
+                    if kind != .idle { byTrade[kind, default: []].append(site) }
                 }
             }
             self.homes = homes
-            self.civic = civic
-            self.workshop = workshop
-            self.granary = granary
+            self.posts = posts
+            self.byTrade = byTrade
             self.sites = sites
             self.heart = SettlementRenderer.colonyHeart
             if let colony = settlement.colony,
@@ -128,6 +206,20 @@ enum AgentMotion {
             }
             self.expeditions = settlement.expeditions
             self.continuousTick = continuousTick
+            self.battle = SettlementBattle.live(settlement, continuousTick: continuousTick)
+            self.bedsByHome = bedsByHome
+            // A bed each, taken in the settlement's own roster order, so two
+            // people who share a house do not share a mattress.
+            var beds: [UUID: LocalPoint] = [:]
+            var takenPerHome: [UUID: Int] = [:]
+            for pawn in settlement.pawns {
+                guard let homeID = pawn.homeID, let places = bedsByHome[homeID],
+                      !places.isEmpty else { continue }
+                let index = takenPerHome[homeID, default: 0]
+                beds[pawn.id] = places[index % places.count]
+                takenPerHome[homeID] = index + 1
+            }
+            self.beds = beds
             var positions: [Int: LocalPoint] = [:]
             for poi in settlement.localMap?.pois ?? [] {
                 positions[poi.id] = poi.position
@@ -157,8 +249,38 @@ enum AgentMotion {
     }
 
     /// Where a colonist is (and what they're doing) at `time`.
+    ///
+    /// A fight outranks everything. While one is running, anyone the engine
+    /// mustered into the line stops living their day and runs to their post —
+    /// from wherever they happened to be, which is why the farmer arrives from
+    /// the field and the smith from the bench. This is the whole of "the
+    /// garrison converges": the colonist is not drawn a second time as a
+    /// combat marker, they simply go where the fighting is.
     static func pose(for pawn: Pawn, map: LocalMap, scene: Scene,
                      time: Double, ticksPerYear: Int) -> Pose {
+        // Somebody carrying a load, or walking out to fetch one, is where the
+        // engine has walked them to. This is the one case where a colonist's
+        // position is *simulation* rather than a function of the clock: a load
+        // has to be picked up somewhere and put down somewhere else, and both
+        // ends are real. Hauling outranks the day and yields only to a fight.
+        if let carried = pawn.haulPosition, scene.battle == nil {
+            return Pose(position: carried,
+                        activity: pawn.carrying == nil ? .walking : .hauling,
+                        stride: 1)
+        }
+        let base = dailyPose(for: pawn, map: map, scene: scene,
+                             time: time, ticksPerYear: ticksPerYear)
+        guard let battle = scene.battle,
+              let post = SettlementBattle.station(
+                for: pawn.id, log: battle.log, progress: battle.progress,
+                from: base.position) else { return base }
+        return Pose(position: post.position, activity: .fighting,
+                    stride: post.arrived ? 0.3 : 1)
+    }
+
+    /// Where a colonist would be if nothing were happening — the ordinary day.
+    private static func dailyPose(for pawn: Pawn, map: LocalMap, scene: Scene,
+                                  time: Double, ticksPerYear: Int) -> Pose {
         let seed = hash(pawn.id)
         // Someone out at the ruins is not living the village day at all. The
         // road outranks the schedule.
@@ -178,40 +300,45 @@ enum AgentMotion {
                                 home: home, seed: seed, ticksPerYear: ticksPerYear,
                                 time: time)
 
-        // Find the current leg of the day.
-        var from = schedule[schedule.count - 1]
-        var to = schedule[0]
+        // Find the leg of the day that has come: the last waypoint whose hour
+        // has passed. A waypoint means "from now, do this here" — so the leg a
+        // colonist is living is `current`, not the one they are heading for.
+        var index = schedule.count - 1
         for i in 0..<schedule.count {
             let next = schedule[(i + 1) % schedule.count]
             if t >= schedule[i].at, i + 1 == schedule.count || t < next.at {
-                from = schedule[i]
-                to = next
+                index = i
                 break
             }
         }
+        let current = schedule[index]
+        let previous = schedule[(index + schedule.count - 1) % schedule.count]
+        let nextAt = schedule[(index + 1) % schedule.count].at
 
-        // Travel takes a fixed slice at the start of each leg; the rest of the
-        // leg is spent *at* the destination, drifting gently.
-        let legStart = from.at
-        let legEnd = to.at <= legStart ? to.at + 1 : to.at
-        let travelSlice = min(0.06, (legEnd - legStart) * 0.6)
+        // Travel takes however long the walk *is*, at a pace everyone keeps.
+        // Capped at most of the leg so a colonist with a very long way to go
+        // still arrives and does some work rather than walking all day.
+        let legStart = current.at
+        let legEnd = nextAt <= legStart ? nextAt + 1 : nextAt
+        let walk = distance(previous.place, current.place) / walkSpeed
+        let travelSlice = min(max(0.004, walk), (legEnd - legStart) * 0.8)
         let progress = t - legStart
-        if from.place != to.place, progress < travelSlice {
+        if previous.place != current.place, progress < travelSlice {
             let u = smoothstep(progress / travelSlice)
-            let x = from.place.x + (to.place.x - from.place.x) * u
-            let y = from.place.y + (to.place.y - from.place.y) * u
+            let x = previous.place.x + (current.place.x - previous.place.x) * u
+            let y = previous.place.y + (current.place.y - previous.place.y) * u
             // A touch of path wobble so walkers don't ride rails.
             let wobble = sin(u * .pi * 3 + unit(seed) * 6) * 0.006
             return Pose(position: clampPoint(LocalPoint(x: x + wobble, y: y + wobble * 0.6)),
                         activity: .walking, stride: 1)
         }
 
-        // Settled at the destination: hold with a personal drift.
+        // Arrived: hold with a personal drift.
         let drift = drift(seed: seed, time: time,
-                          amplitude: driftAmplitude(for: to.doing))
-        let p = clampPoint(LocalPoint(x: to.place.x + drift.x, y: to.place.y + drift.y))
-        let stride: Double = to.doing == .working ? 0.35 : (to.doing == .playing ? 0.8 : 0)
-        return Pose(position: p, activity: to.doing, stride: stride)
+                          amplitude: driftAmplitude(for: current.doing))
+        let p = clampPoint(LocalPoint(x: current.place.x + drift.x, y: current.place.y + drift.y))
+        let stride: Double = current.doing == .working ? 0.35 : (current.doing == .playing ? 0.8 : 0)
+        return Pose(position: p, activity: current.doing, stride: stride)
     }
 
     /// A colonist out with a party: walking the road to a landmark, working it,
@@ -262,6 +389,55 @@ enum AgentMotion {
         }
     }
 
+    /// The shape of one day, as fractions of it.
+    ///
+    /// A colony is not a factory floor. People rise with the light, break at
+    /// midday, and stop when the light goes — so the working day is long in
+    /// summer, short in winter, and the night takes back whatever the day gives
+    /// up. (Before this, everyone worked a flat fifteen hours and slept three
+    /// and a half, all year round.)
+    struct DayShape: Equatable {
+        let wake: Double         // out of bed, still indoors
+        let workStart: Double
+        let middayStart: Double  // the gathering on the green
+        let middayEnd: Double
+        let workEnd: Double
+        let bed: Double
+
+        /// Hours actually spent at the workplace.
+        var workingHours: Double {
+            ((middayStart - workStart) + (workEnd - middayEnd)) * 24
+        }
+        /// Hours asleep — the night wraps past midnight, hence the two pieces.
+        var sleepingHours: Double { ((1 - bed) + wake) * 24 }
+    }
+
+    /// How much daylight a season lends the working day, as a fraction of the
+    /// day added to *each* end. Spring and autumn are the mean.
+    static func daylight(_ season: Season) -> Double {
+        switch season {
+        case .summer: return 0.06
+        case .spring, .autumn: return 0
+        case .winter: return -0.07
+        }
+    }
+
+    /// The day's shape in a given season — roughly 10 working hours and 8 of
+    /// sleep at the equinox, stretching to 13 and 6 at midsummer and closing to
+    /// 7 and 11 in deep winter.
+    static func dayShape(_ season: Season) -> DayShape {
+        let light = daylight(season)
+        return DayShape(
+            wake: 0.22 - light,
+            workStart: 0.28 - light,
+            middayStart: 0.48,
+            middayEnd: 0.58,
+            workEnd: 0.80 + light,
+            // The night closes in faster than the morning opens, so bed moves
+            // only half as far as the working day's ends.
+            bed: 0.88 + light * 0.5)
+    }
+
     /// The colonist's daily round.
     private static func schedule(
         for pawn: Pawn, map: LocalMap, scene: Scene,
@@ -271,15 +447,22 @@ enum AgentMotion {
         if pawn.isBroken || pawn.health < 35 {
             return [Waypoint(at: 0, place: home, doing: .resting)]
         }
-        // Children play on the green while the adults work.
+        // The same season the canvas is painting — derived, never stored.
+        let season = Season(tick: Int(scene.continuousTick), ticksPerYear: ticksPerYear)
+        let shape = dayShape(season)
+
+        // Children play on the green while the adults work, and keep longer
+        // nights than their parents.
         if pawn.age < Pawn.adultAgeYears * ticksPerYear {
             let green = jitter(scene.green, seed: seed, radius: 0.05)
             return [
                 Waypoint(at: 0.0, place: home, doing: .sleeping),
-                Waypoint(at: 0.12, place: green, doing: .playing),
-                Waypoint(at: 0.5, place: jitter(scene.green, seed: seed &>> 5, radius: 0.06), doing: .playing),
-                Waypoint(at: 0.88, place: home, doing: .atHome),
-                Waypoint(at: 0.94, place: home, doing: .sleeping),
+                Waypoint(at: shape.wake + 0.04, place: green, doing: .playing),
+                Waypoint(at: shape.middayEnd,
+                         place: jitter(scene.green, seed: seed &>> 5, radius: 0.06),
+                         doing: .playing),
+                Waypoint(at: shape.workEnd - 0.02, place: home, doing: .atHome),
+                Waypoint(at: shape.bed - 0.06, place: home, doing: .sleeping),
             ]
         }
 
@@ -287,12 +470,12 @@ enum AgentMotion {
         let social = jitter(scene.green, seed: seed &>> 9, radius: 0.045)
         return [
             Waypoint(at: 0.0, place: home, doing: .sleeping),
-            Waypoint(at: 0.07, place: home, doing: .atHome),
-            Waypoint(at: 0.11, place: work, doing: .working),
-            Waypoint(at: 0.46, place: social, doing: .socializing),
-            Waypoint(at: 0.56, place: work, doing: .working),
-            Waypoint(at: 0.84, place: home, doing: .atHome),
-            Waypoint(at: 0.93, place: home, doing: .sleeping),
+            Waypoint(at: shape.wake, place: home, doing: .atHome),
+            Waypoint(at: shape.workStart, place: work, doing: .working),
+            Waypoint(at: shape.middayStart, place: social, doing: .socializing),
+            Waypoint(at: shape.middayEnd, place: work, doing: .working),
+            Waypoint(at: shape.workEnd, place: home, doing: .atHome),
+            Waypoint(at: shape.bed, place: home, doing: .sleeping),
         ]
     }
 
@@ -310,6 +493,22 @@ enum AgentMotion {
             let any = map.nodes.filter { worked.contains($0.kind) }
             if !any.isEmpty { return any[Int(seed % UInt64(any.count))].position }
         }
+        // The job the engine actually gave them: *this* tree, *this* outcrop,
+        // this scaffold. It outranks the post, because a logger's bench at the
+        // lumberyard is not where the logging happens.
+        if let job = pawn.currentJob {
+            return jitter(job.position, seed: seed, radius: 0.012)
+        }
+
+        // The post the engine actually gave them. `LaborEngine.staffBuildings`
+        // keeps this roster in step with each colonist's trade, so a smith on
+        // the workshop's books is drawn standing in the workshop — the canvas
+        // is showing the simulation's own answer, not guessing one.
+        if let post = scene.posts[pawn.id] {
+            // Their own seat if the roster gave them one, else somewhere on the lot.
+            return post.byPawn[pawn.id] ?? spot(in: post, seed: seed)
+        }
+
         switch pawn.assignedWork {
         case .hunting:
             // Hunters trail the same herd the canvas draws grazing.
@@ -319,17 +518,15 @@ enum AgentMotion {
             if !scene.sites.isEmpty {
                 return spot(in: scene.sites[Int(seed % UInt64(scene.sites.count))], seed: seed)
             }
-            return scene.workshop.map { spot(in: $0, seed: seed) } ?? scene.heart
-        case .research:
-            return (scene.civic ?? scene.workshop).map { spot(in: $0, seed: seed) }
-                ?? jitter(scene.heart, seed: seed, radius: 0.03)
+            return trade(.mining, scene: scene, seed: seed)
+                ?? jitter(scene.heart, seed: seed, radius: 0.05)
         case .priest:
-            return scene.civic.map { spot(in: $0, seed: seed) } ?? scene.heart
-        case .trade:
-            return (scene.granary ?? scene.workshop).map { spot(in: $0, seed: seed) }
-                ?? jitter(scene.heart, seed: seed, radius: 0.04)
+            // No building produces priesthood, so the priest keeps the civic
+            // house — the library or hall the colony gathers its learning in.
+            return trade(.research, scene: scene, seed: seed) ?? scene.heart
         case .healing:
-            // The healer does the rounds of the houses.
+            // Unposted — no infirmary stands yet, so the healer does the rounds
+            // of the houses.
             if !scene.homes.isEmpty {
                 return scene.homes[Int(seed % UInt64(scene.homes.count))]
             }
@@ -340,12 +537,30 @@ enum AgentMotion {
             return clampPoint(LocalPoint(x: 0.5 + cos(angle) * 0.30,
                                          y: 0.52 + sin(angle) * 0.26))
         default:
-            return jitter(scene.heart, seed: seed, radius: 0.07)
+            // Any building this colony keeps for the trade, even if the engine
+            // has not seated this particular colonist at it.
+            return trade(pawn.assignedWork, scene: scene, seed: seed)
+                ?? jitter(scene.heart, seed: seed, radius: 0.07)
         }
     }
 
-    /// The house a colonist calls home — stable per colonist.
+    /// A spot inside some building this colony keeps for a given trade.
+    private static func trade(_ kind: WorkKind, scene: Scene, seed: UInt64) -> LocalPoint? {
+        guard let sites = scene.byTrade[kind], !sites.isEmpty else { return nil }
+        return spot(in: sites[Int(seed % UInt64(sites.count))], seed: seed)
+    }
+
+    /// The house a colonist calls home.
+    ///
+    /// Their *own* house, where the engine has given them one: a colonist holds
+    /// a dwelling now (`Pawn.homeID`) and sleeps in a bed inside it. Picking a
+    /// house out of a list by hashing the colonist is what put a dozen people
+    /// on one doorstep while three huts stood empty beside them — the same
+    /// mistake, in the same shape, as seating workers by hash.
     static func home(for pawn: Pawn, scene: Scene, seed: UInt64) -> LocalPoint {
+        if let homeID = pawn.homeID, let bed = scene.beds[homeID] {
+            return bed
+        }
         if !scene.homes.isEmpty {
             let base = scene.homes[Int(seed % UInt64(scene.homes.count))]
             return jitter(base, seed: seed &>> 3, radius: 0.012)
@@ -366,8 +581,11 @@ enum AgentMotion {
         case .socializing: return cs ? "Na návsi mezi lidmi" : "On the green with the others"
         case .playing: return cs ? "Hraje si" : "Playing"
         case .resting: return cs ? "Stůně doma" : "Laid up at home"
+        case .hauling: return cs ? "Nese náklad do skladu" : "Carrying a load to the store"
+        case .fighting: return cs ? "V linii" : "In the line"
         case .travelling: return cs ? "Na cestě mimo osadu" : "On the road, away from the settlement"
         case .expedition: return cs ? "Pracuje na výpravě" : "Working the site"
+        case .fighting: return cs ? "V řadě, brání osadu" : "In the line, defending the settlement"
         case .working:
             switch work {
             case .farming: return cs ? "Pracuje na poli" : "Working the field"
@@ -381,6 +599,7 @@ enum AgentMotion {
             case .building: return cs ? "Staví na lešení" : "Up on the scaffolding"
             case .scouting: return cs ? "Na obchůzce po hranici" : "Walking the bounds"
             case .priest: return cs ? "Slouží v chrámu" : "Serving at the temple"
+            case .garrison: return cs ? "Drží hlídku" : "Standing watch"
             case .idle: return cs ? "Postává na návsi" : "Idling on the green"
             }
         }
@@ -404,6 +623,12 @@ enum AgentMotion {
         case .playing: return 0.022
         case .walking, .travelling: return 0
         case .expedition: return 0.012
+        // Holding a line is not standing still — but the drift is small, or
+        // the rank dissolves while it is supposed to be holding.
+        case .fighting: return 0.004
+        // A hauler's position is the engine's own; drifting it would take them
+        // off the path they are actually walking.
+        case .hauling: return 0
         }
     }
 
@@ -426,6 +651,17 @@ enum AgentMotion {
     /// their seed so several workers spread across the floor instead of stacking
     /// on its centre. Kept just inside the footprint so nobody stands on a wall.
     private static func spot(in site: WorkSite, seed: UInt64) -> LocalPoint {
+        // A station if the room has one: standing at the bench beats standing
+        // somewhere on the lot, and it is the same bench the renderer drew.
+        // Nudged per colonist, because this path is for people the roster did
+        // *not* seat — two of them picking the same bench should still read as
+        // two people at a bench rather than as one.
+        if !site.stations.isEmpty {
+            let station = site.stations[Int(seed % UInt64(site.stations.count))]
+            return clampPoint(LocalPoint(
+                x: station.x + (unit(seed &* 7) - 0.5) * site.halfW * 0.5,
+                y: station.y + (unit(seed &* 13) - 0.5) * site.halfH * 0.5))
+        }
         let ox = (unit(seed &* 7) - 0.5) * 1.6 * site.halfW
         let oy = (unit(seed &* 13) - 0.5) * 1.6 * site.halfH
         return clampPoint(LocalPoint(x: site.center.x + ox, y: site.center.y + oy))

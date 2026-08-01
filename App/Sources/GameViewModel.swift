@@ -316,6 +316,12 @@ final class GameViewModel {
 
     func dismissSiteOutcome() { lastSiteOutcome = nil }
 
+    /// The region a find came from, so the outcome can be shown over the ground
+    /// it happened on rather than in a bare dialog.
+    func region(named name: String) -> Region? {
+        world.regions.first { $0.name == name }
+    }
+
     /// Player-facing label for the site action available in a region, if any.
     func siteActionLabel(for region: Region) -> String? {
         guard region.hasActiveSite else { return nil }
@@ -352,6 +358,53 @@ final class GameViewModel {
     }
 
     func selectSettlement(_ id: UUID) { selectedSettlementID = id }
+
+    // MARK: - Standing orders
+
+    /// The viewed colony's standing orders, or the default ones if there is no
+    /// colony to have any.
+    var policy: ColonyPolicy { selectedSettlement?.policy ?? ColonyPolicy() }
+
+    /// Writes the viewed colony's standing orders. This is the *one* place the
+    /// player sets how a town of sixty is run, and the engine keeps it from
+    /// there — no per-colonist clicking, and nothing here reaches past the
+    /// policy into anybody's assignment.
+    func setPolicy(_ policy: ColonyPolicy) {
+        guard let id = selectedSettlement?.id,
+              let index = world.settlements.firstIndex(where: { $0.id == id }),
+              world.settlements[index].policy != policy else { return }
+        world.settlements[index].policy = policy
+        persist()
+    }
+
+    func setTrade(_ work: WorkKind, to stance: ColonyPolicy.TradeStance) {
+        setPolicy(policy.setting(work, to: stance))
+    }
+
+    func setRation(_ ration: ColonyPolicy.Ration) {
+        var updated = policy
+        updated.ration = ration
+        setPolicy(updated)
+    }
+
+    func setRoster(_ roster: ColonyPolicy.Roster) {
+        var updated = policy
+        updated.roster = roster
+        setPolicy(updated)
+    }
+
+    /// How many days of food the granary holds at the current ration, so the
+    /// ration picker can say what the choice is actually worth.
+    func foodDaysRemaining(_ settlement: Settlement) -> Int {
+        let mouths = Double(settlement.pawns.count)
+        guard mouths > 0 else { return 0 }
+        // Steady-state upkeep: decay/hungerPerMeal meals a tick, each costing
+        // a ration's share of a full meal.
+        let perTick = mouths * 0.1 * settlement.policy.ration.foodPerMeal
+            / max(0.01, settlement.policy.ration.hungerPerMeal)
+        guard perTick > 0 else { return 0 }
+        return Int(settlement.storage[.food] / perTick)
+    }
 
     var viewedPawns: [Pawn] { selectedSettlement?.pawns ?? [] }
 
@@ -837,6 +890,18 @@ final class GameViewModel {
     /// card never offers an action the world has since spent.
     func poi(_ poiID: Int) -> LocalPOI? {
         viewedLocalMap?.pois.first { $0.id == poiID }
+    }
+
+    /// The beast behind a tap — wild if the valley still has it, kept if the
+    /// colony does. Both are the same `Animal`; only one of them has a collar.
+    func animal(_ animalID: UUID) -> (animal: Animal, kept: TamedAnimal?)? {
+        if let wild = viewedLocalMap?.wildlife.animals.first(where: { $0.id == animalID }) {
+            return (wild, nil)
+        }
+        if let kept = selectedSettlement?.tamed.first(where: { $0.animal.id == animalID }) {
+            return (kept.animal, kept)
+        }
+        return nil
     }
 
     /// The party out at a place, if one is.

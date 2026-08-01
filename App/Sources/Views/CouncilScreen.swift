@@ -21,6 +21,10 @@ struct CouncilScreen: View {
                     if let settlement = game.selectedSettlement, !settlement.pawns.isEmpty {
                         leaderCard(settlement)
                         lawsCard(settlement)
+                        // How the town is run day to day, above the reports on
+                        // how it turned out: the assembly's laws are what the
+                        // colony votes for, this is what the Leader decides.
+                        StandingOrdersPanel(game: game, settlement: settlement)
                         inequalityCard(settlement)
                         roleDistribution(settlement)
                     } else {

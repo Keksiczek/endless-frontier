@@ -93,6 +93,7 @@
   },
   {
     "id": "lumberyard",
+    "look": "mill",
     "era": "early_settlement",
     "name": {
       "en": "Lumberyard",
@@ -118,6 +119,7 @@
   },
   {
     "id": "hunters_lodge",
+    "look": "workshop",
     "era": "early_settlement",
     "name": {
       "en": "Hunter's Lodge",
@@ -146,6 +148,7 @@
   },
   {
     "id": "quarry",
+    "look": "mine",
     "era": "early_settlement",
     "name": {
       "en": "Stone Quarry",
@@ -246,6 +249,7 @@
   },
   {
     "id": "windmill",
+    "look": "mill",
     "era": "ancient",
     "name": {
       "en": "Windmill",
@@ -344,6 +348,7 @@
   },
   {
     "id": "palisade",
+    "work": "garrison",
     "era": "early_settlement",
     "name": {
       "en": "Wooden Palisade",
@@ -365,6 +370,7 @@
   },
   {
     "id": "watchtower",
+    "work": "garrison",
     "era": "ancient",
     "name": {
       "en": "Watchtower",
@@ -387,6 +393,7 @@
   },
   {
     "id": "barracks",
+    "work": "garrison",
     "era": "medieval",
     "name": {
       "en": "Barracks",
@@ -445,6 +452,7 @@
   },
   {
     "id": "well",
+    "look": "granary",
     "era": "early_settlement",
     "name": {
       "en": "Well",
@@ -486,6 +494,7 @@
   },
   {
     "id": "stone_walls",
+    "work": "garrison",
     "era": "ancient",
     "name": {
       "en": "Stone Walls",
@@ -511,6 +520,7 @@
   },
   {
     "id": "aqueduct",
+    "look": "hall",
     "era": "ancient",
     "name": {
       "en": "Aqueduct",
@@ -811,6 +821,7 @@
   },
   {
     "id": "railyard",
+    "look": "plant",
     "era": "early_industrial",
     "name": {
       "en": "Railyard",
@@ -869,6 +880,7 @@
   },
   {
     "id": "hospital",
+    "look": "hall",
     "era": "early_industrial",
     "name": {
       "en": "Hospital",
@@ -879,6 +891,7 @@
       "knowledge": 40
     },
     "workers": 4,
+    "work": "healing",
     "consumption": {
       "energy": 2
     },
@@ -1029,6 +1042,7 @@
   },
   {
     "id": "clinic",
+    "look": "hall",
     "era": "modern",
     "name": {
       "en": "Medical Clinic",
@@ -1043,6 +1057,7 @@
       "leather": 2
     },
     "workers": 3,
+    "work": "healing",
     "consumption": {
       "energy": 2
     },
@@ -1236,6 +1251,7 @@
   },
   {
     "id": "fusion_reactor",
+    "look": "generator",
     "era": "near_future",
     "name": {
       "en": "Fusion Reactor",
@@ -1346,6 +1362,7 @@
   },
   {
     "id": "arcology",
+    "look": "pad",
     "era": "near_future",
     "name": {
       "en": "Arcology",

@@ -18,14 +18,17 @@ endless-frontier/
 ├── docs/
 │   ├── DESIGN.md             Full game design document
 │   ├── ROADMAP.md            Phased implementation plan
+│   ├── NEXT_STEPS.md         Prioritised backlog — what to build next
+│   ├── RIMWORLD_LAYER.md     Building footprints + pawn-like animals
 │   ├── architecture/         Architecture diagrams
 │   ├── data-schemas/         JSON schemas for game data
 │   └── events/               Authored event content (reference)
 ├── Core/                     Swift Package — EndlessFrontierCore
 │   ├── Package.swift
 │   ├── Sources/EndlessFrontierCore/
-│   │   ├── Models/           WorldState, Settlement, Pawn (+Genes), Season,
-│   │   │                     LocalMap/LocalTerrain, Society, Diplomacy, Region, Era
+│   │   ├── Models/           WorldState, Settlement, Pawn (+Genes), Animal, Season,
+│   │   │                     LocalMap/LocalTerrain, ColonyMap, Society, Diplomacy,
+│   │   │                     Region, Era
 │   │   ├── Engine/           SeededRNG, TickEngine, ResourceLoop, PawnEngine,
 │   │   │                     PopulationEngine, LaborEngine, WildlifeEngine,
 │   │   │                     SocietyEngine, FaithEngine, DiplomacyEngine,
@@ -66,7 +69,8 @@ endless-frontier/
 
 Endless Frontier **V2** merges the original deterministic colony sim with the
 living-world and social systems of a Czech HTML civilisation sim. All V2 phases
-(A–F) are complete: **297 tests green**, iOS build green.
+(A–F) are complete. Current: **536 Core tests green** (`cd Core && swift test`),
+iOS build green.
 
 What the game is now:
 
@@ -78,6 +82,10 @@ What the game is now:
   `TimelineView`+`Canvas` line-art world with seeded ground tiles, biome-driven
   scenery and deposits, fog of war, seasons, and colonists who walk their day.
   Movement is *presentation-only* (`AgentMotion`) and never touches the sim.
+- **Buildings own ground, wildlife are entities** — multi-tile footprint lots,
+  per-building visual variation, workers spread across their building's floor,
+  and pawn-like `Animal`s with bodies, wounds and illnesses. See
+  `docs/RIMWORLD_LAYER.md`.
 - **Society**: yearly wages → wealth classes (40th/85th percentiles) → Gini →
   uprisings and strikes; elections every 12 years; an assembly every 6 that
   votes on a data-driven law and puts it before **the player** to ratify or
@@ -141,8 +149,9 @@ The JSON schemas live in `docs/data-schemas/`. Validate new data files against t
 ## Where to look for context
 
 - Game systems and formulas → `docs/DESIGN.md`
-- What to build next → `docs/ROADMAP.md`
+- What to build next → `docs/ROADMAP.md`, `docs/NEXT_STEPS.md`
 - Architecture rules → `docs/architecture/LAYERS.md`
+- Building footprints, lots, pawn-like animals → `docs/RIMWORLD_LAYER.md`
 - Event template schema → `docs/data-schemas/events.json`
 - Tech tree schema → `docs/data-schemas/techs.json`
 - Starter event examples → `docs/events/starter-events.json`

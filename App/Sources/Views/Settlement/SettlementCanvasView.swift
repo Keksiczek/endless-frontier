@@ -22,6 +22,9 @@ enum CanvasSelection: Equatable {
     case poi(Int)
     /// A tapped patch of fog — the offer to send the scouts there.
     case fog(LocalPoint)
+    /// A tapped beast, wild or kept. The wild are pawns with bodies and lives;
+    /// until now they were the only thing on the canvas you could not ask about.
+    case animal(UUID)
 }
 
 /// The living settlement: a `TimelineView`-driven `Canvas` where colonists walk
@@ -33,10 +36,17 @@ struct SettlementCanvasView: View {
     let map: LocalMap
     let registry: GameDataRegistry
     let season: Season
+    /// Shipments on the road right now. The legs that cross this valley are
+    /// drawn; the rest of the journey is out in country this map does not show.
+    var caravans: [Caravan] = []
     /// The simulation clock, so an expedition walks smoothly rather than
     /// jumping once a minute.
     let clock: TickClock
     @Binding var selection: CanvasSelection
+    /// What the player is placing, if they are placing anything. When this is
+    /// set the canvas becomes the build surface: the grid and a full-size ghost
+    /// are drawn over the colony, and a tap aims instead of selecting.
+    @Binding var buildPlan: BuildPlan?
 
     /// A fixed, *absolute* epoch so the animation clock is stable across
     /// redraws — and so anyone else (the pawn inspector's "right now" line)
@@ -57,8 +67,19 @@ struct SettlementCanvasView: View {
                         &context, size: size, settlement: settlement, map: map,
                         registry: registry, time: t, season: season,
                         camera: camera, continuousTick: now,
+                        caravans: caravans,
+                        seasonProgress: seasonProgress(at: now),
                         selectedPawnID: selectedPawnID,
                         selectedBuildingID: selectedBuildingID)
+                    if let plan = buildPlan {
+                        // Over everything, including the fog: you are laying
+                        // out your own ground, not discovering it.
+                        let rect = SettlementRenderer.worldRect(
+                            viewRect: CGRect(origin: .zero, size: size), camera: camera)
+                        SettlementBuildOverlay.draw(
+                            &context, rect: rect, settlement: settlement,
+                            registry: registry, plan: plan)
+                    }
                 }
             }
             .background(Theme.ink)
@@ -70,6 +91,21 @@ struct SettlementCanvasView: View {
                                 ? "Živá osada. Přiblížení \(Int(camera.scale * 100)) procent."
                                 : "The living settlement. Zoom \(Int(camera.scale * 100)) percent.")
         }
+    }
+
+    /// How far through the current season the year has got, 0…1.
+    ///
+    /// The renderer needs this and not just the season itself: snow that lies
+    /// the same depth on the first day of winter as at its heart is a tint with
+    /// extra steps. Derived from the simulation clock, so a long absence
+    /// caught up on opening lands you in exactly the winter the ledger says.
+    private func seasonProgress(at tick: Double) -> Double {
+        let perYear = Double(registry.config.ticksPerYear)
+        guard perYear >= 4 else { return 0.5 }
+        let perSeason = perYear / 4
+        let ofYear = tick.truncatingRemainder(dividingBy: perYear)
+        let year = ofYear < 0 ? ofYear + perYear : ofYear
+        return (year.truncatingRemainder(dividingBy: perSeason)) / perSeason
     }
 
     private var selectedPawnID: UUID? {
@@ -86,11 +122,32 @@ struct SettlementCanvasView: View {
 
     private func tap(in size: CGSize) -> some Gesture {
         SpatialTapGesture().onEnded { value in
+            // While placing, a tap aims the ghost rather than selecting what is
+            // under it — otherwise you'd inspect the building you are trying to
+            // build beside.
+            if let plan = buildPlan {
+                aim(plan, at: value.location, size: size)
+                return
+            }
             let hit = hitTest(value.location, size: size)
             withAnimation(.easeOut(duration: 0.15)) {
                 selection = (hit == selection) ? .none : hit
             }
         }
+    }
+
+    /// Points the ghost at the tapped ground.
+    private func aim(_ plan: BuildPlan, at location: CGPoint, size: CGSize) {
+        guard let colony = settlement.colony else { return }
+        let rect = SettlementRenderer.worldRect(
+            viewRect: CGRect(origin: .zero, size: size), camera: camera)
+        let world = SettlementRenderer.normalised(location, in: rect)
+        let footprint = registry.building(plan.definitionID)?.footprint ?? TileSize()
+        guard let coord = SettlementBuildOverlay.aim(
+            at: world, colony: colony, footprint: footprint) else { return }
+        var updated = plan
+        updated.coord = coord
+        withAnimation(.easeOut(duration: 0.12)) { buildPlan = updated }
     }
 
     private func pan(in size: CGSize) -> some Gesture {
@@ -175,6 +232,26 @@ struct SettlementCanvasView: View {
             }
         }
         if case .pawn = best { return best }
+
+        // The beasts, wild and kept. They are pawns with bodies, wounds and a
+        // mind — the only living things on the map you could not tap.
+        for animal in map.wildlife.animals where map.isExplored(animal.position) {
+            let d2 = distanceSquared(SettlementRenderer.point(animal.position, in: rect), location)
+            if d2 < bestDistance {
+                bestDistance = d2
+                best = .animal(animal.id)
+            }
+        }
+        for kept in settlement.tamed {
+            let d2 = distanceSquared(
+                SettlementRenderer.point(SettlementWildlife.tamedPosition(kept, index: 0, time: t),
+                                         in: rect), location)
+            if d2 < bestDistance {
+                bestDistance = d2
+                best = .animal(kept.animal.id)
+            }
+        }
+        if case .animal = best { return best }
 
         for building in SettlementRenderer.layout(settlement: settlement, registry: registry, rect: rect) {
             let d2 = distanceSquared(building.center, location)

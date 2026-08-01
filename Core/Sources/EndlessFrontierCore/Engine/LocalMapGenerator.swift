@@ -32,10 +32,23 @@ public enum LocalMapGenerator {
             phase: rng.nextUnit() * 6.283185
         )
 
+        // A coast gets actual sea along one edge. Before this the one country
+        // whose whole character is the water was a field with a stream through
+        // it, exactly like the plains.
+        let shore: ShoreShape? = biomeID == "coast"
+            ? ShoreShape(
+                side: ShoreShape.Side.allCases[
+                    Int(rng.nextUnit() * Double(ShoreShape.Side.allCases.count))
+                        % ShoreShape.Side.allCases.count],
+                depth: 0.14 + rng.nextUnit() * 0.16,
+                amplitude: 0.03 + rng.nextUnit() * 0.05,
+                phase: rng.nextUnit() * 6.283185)
+            : nil
+
         var nodeID = 0
         func makeNodes(_ kind: LocalResourceKind, count: Int) -> [ResourceNode] {
             (0..<max(0, count)).map { _ in
-                let position = landPoint(river: river, rng: &rng)
+                let position = landPoint(river: river, shore: shore, rng: &rng)
                 // The land's own character decides how much is actually in the
                 // ground. `resource_affinity` sat in `biomes.json` being decoded
                 // and read by nothing at all, so a mountain's `materials: 1.5`
@@ -48,8 +61,11 @@ public enum LocalMapGenerator {
             }
         }
 
-        // Biome shapes what the land actually offers.
-        let mix = depositMix(for: biomeID)
+        // Biome shapes what the land actually offers — but not to the last
+        // deposit. A fixed mix per biome meant every forest valley held exactly
+        // six woods, two fields and one seam: the *positions* moved and nothing
+        // else did, which is why one map felt like the last one.
+        let mix = jittered(depositMix(for: biomeID), rng: &rng)
         var nodes: [ResourceNode] = []
         nodes += makeNodes(.field, count: mix.fields)
         nodes += makeNodes(.forest, count: mix.forests)
@@ -66,7 +82,7 @@ public enum LocalMapGenerator {
         // map ever lacked anything and no map ever had anything the last one
         // didn't. Now a desert rarely hides a spring, mountains are riddled
         // with caves, and finding a shrine means something.
-        var pois = pickPOIs(for: biomeID, river: river, rng: &rng)
+        var pois = pickPOIs(for: biomeID, river: river, shore: shore, rng: &rng)
 
         // Scenery: the landscape's furniture, biome-appropriate and seeded.
         let (kinds, count) = LocalTerrain.sceneryMix(for: biomeID)
@@ -76,7 +92,7 @@ public enum LocalMapGenerator {
             let wetLoving = (kind == .reeds || kind == .pond)
             let position = wetLoving
                 ? riversidePoint(river: river, rng: &rng)
-                : landPoint(river: river, rng: &rng)
+                : landPoint(river: river, shore: shore, rng: &rng)
             return SceneryProp(id: index, kind: kind, position: position,
                                scale: 0.7 + rng.nextUnit() * 0.6)
         }
@@ -100,23 +116,23 @@ public enum LocalMapGenerator {
         }
         switch flavor {
         case .lostCity:
-            let heart = landPoint(river: river, rng: &rng)
+            let heart = landPoint(river: river, shore: shore, rng: &rng)
             addProps(.ruinPillar, 9, around: heart, spread: 0.16)
             pois.append(LocalPOI(id: poiID, kind: .treasure, position: heart)); poiID += 1
             pois.append(LocalPOI(id: poiID, kind: .ruins,
-                                 position: landPoint(river: river, rng: &rng))); poiID += 1
+                                 position: landPoint(river: river, shore: shore, rng: &rng))); poiID += 1
             nodes.append(ResourceNode(id: nodeID, kind: .stone,
-                                      position: landPoint(river: river, rng: &rng),
+                                      position: landPoint(river: river, shore: shore, rng: &rng),
                                       amount: 260, capacity: 260)); nodeID += 1
         case .sanctuary:
-            let hallow = landPoint(river: river, rng: &rng)
+            let hallow = landPoint(river: river, shore: shore, rng: &rng)
             addProps(.flowers, 6, around: hallow, spread: 0.10)
             pois.append(LocalPOI(id: poiID, kind: .shrine, position: hallow)); poiID += 1
         case .ruins:
-            addProps(.ruinPillar, 4, around: landPoint(river: river, rng: &rng), spread: 0.2)
+            addProps(.ruinPillar, 4, around: landPoint(river: river, shore: shore, rng: &rng), spread: 0.2)
         case .dungeon:
             pois.append(LocalPOI(id: poiID, kind: .cave,
-                                 position: landPoint(river: river, rng: &rng))); poiID += 1
+                                 position: landPoint(river: river, shore: shore, rng: &rng))); poiID += 1
         default:
             break
         }
@@ -134,15 +150,35 @@ public enum LocalMapGenerator {
         let residents = AnimalFactory.wildPopulation(rng: &rng)
         let wildlife = WildlifeState(
             deerHerd: herd, deerCapacity: capacity,
-            predatorPressure: pressure, animals: residents)
+            predatorPressure: pressure, animals: residents, usesEntities: true)
+
+        // The land as standing things: trees on the ground the forests claim,
+        // outcrops on the stone, iron and clay. Drawn *after* the wildlife and
+        // everything else, so no earlier roll shifts and existing worlds keep
+        // the exact valley they had.
+        let woodCentres = nodes.filter { $0.kind == .forest }.map(\.position)
+        let trees = FloraFactory.woods(around: woodCentres, biomeID: biomeID, rng: &rng)
+        let outcropSites = nodes
+            .filter { $0.kind == .stone || $0.kind == .ironOre || $0.kind == .clay }
+            .map { (kind: $0.kind, position: $0.position, capacity: $0.capacity) }
+        let rocks = FloraFactory.outcrops(at: outcropSites, rng: &rng)
+
+        // The mountain, last of all — a new draw inserted anywhere earlier would
+        // shift every roll after it and every existing valley with it.
+        let stone = StoneEngine.raise(biomeID: biomeID, river: river, shore: shore, rng: &rng)
 
         var map = LocalMap(
             river: river, nodes: nodes, pois: pois, wildlife: wildlife,
             biomeID: biomeID,
             terrainSeed: seed(mapSeed: mapSeed, regionID: regionID) ^ 0x7E_44_A1_04_5E_ED,
-            scenery: scenery)
+            scenery: scenery, trees: trees, rocks: rocks,
+            usesEntityLand: true, shore: shore, stone: stone)
         // The settlement sits at the centre; its surroundings start revealed.
-        map.reveal(around: LocalPoint(x: 0.5, y: 0.5), radius: 0.28)
+        // Wide enough to cover the whole build grid (`SettlementGeometry.span`
+        // reaches 0.26 from the heart, 0.37 to a corner) — a colony that can
+        // build on ground nobody has charted sends its people into the fog,
+        // where the canvas refuses to draw them and they vanish at work.
+        map.reveal(around: LocalPoint(x: 0.5, y: 0.5), radius: 0.38)
         return map
     }
 
@@ -167,34 +203,48 @@ public enum LocalMapGenerator {
         switch biomeID {
         case "forest":
             return [(.ruins, 0.9), (.shrine, 1.0), (.cave, 0.5), (.spring, 0.9),
-                    (.treasure, 0.6), (.wreck, 0.5)]
+                    (.treasure, 0.6), (.wreck, 0.5),
+                    (.orchard, 1.1), (.hermit, 1.0), (.barrow, 0.8),
+                    (.watchtower, 0.5), (.saltPan, 0), (.starfall, 0.15)]
         case "desert":
-            // Water is the whole story here: a spring is rare and worth a lot.
+            // Water is the whole story here: a spring is rare and worth a lot,
+            // and salt is everywhere the water used to be.
             return [(.ruins, 1.2), (.treasure, 1.0), (.wreck, 1.0), (.cave, 0.6),
-                    (.spring, 0.2), (.shrine, 0.5)]
+                    (.spring, 0.2), (.shrine, 0.5),
+                    (.saltPan, 1.6), (.barrow, 1.0), (.hermit, 0.8),
+                    (.watchtower, 0.7), (.orchard, 0.15), (.starfall, 0.3)]
         case "tundra":
             return [(.cave, 0.9), (.ruins, 1.0), (.wreck, 0.8), (.shrine, 0.5),
-                    (.treasure, 0.5), (.spring, 0.3)]
+                    (.treasure, 0.5), (.spring, 0.3),
+                    (.barrow, 0.9), (.hermit, 0.7), (.watchtower, 0.6),
+                    (.starfall, 0.35), (.saltPan, 0.2), (.orchard, 0)]
         case "mountains":
             return [(.cave, 1.6), (.ruins, 0.8), (.shrine, 0.7), (.treasure, 0.6),
-                    (.spring, 0.5), (.wreck, 0.2)]
+                    (.spring, 0.5), (.wreck, 0.2),
+                    (.watchtower, 1.2), (.hermit, 1.1), (.starfall, 0.3),
+                    (.barrow, 0.5), (.orchard, 0.2), (.saltPan, 0.2)]
         case "coast":
             return [(.wreck, 1.5), (.spring, 0.9), (.shrine, 0.8), (.treasure, 0.8),
-                    (.ruins, 0.6), (.cave, 0.4)]
+                    (.ruins, 0.6), (.cave, 0.4),
+                    (.saltPan, 1.3), (.watchtower, 1.0), (.orchard, 0.7),
+                    (.hermit, 0.5), (.barrow, 0.5), (.starfall, 0.15)]
         default: // plains & homeland
             return [(.spring, 1.0), (.shrine, 0.9), (.ruins, 0.9), (.treasure, 0.8),
-                    (.wreck, 0.7), (.cave, 0.5)]
+                    (.wreck, 0.7), (.cave, 0.5),
+                    (.orchard, 1.2), (.barrow, 1.0), (.watchtower, 0.8),
+                    (.hermit, 0.7), (.saltPan, 0.4), (.starfall, 0.2)]
         }
     }
 
-    /// How many landmarks a map gets — three to five, so the count itself is
-    /// part of what makes one valley unlike another.
-    static let poiCountRange = 3...5
+    /// How many landmarks a map gets. Four to seven now there are twelve kinds
+    /// to draw from: the count is part of what makes one valley unlike another,
+    /// and with six kinds a map that took five of them was most of the set.
+    static let poiCountRange = 4...7
 
     /// Draws this map's landmarks: distinct kinds, weighted by the biome,
     /// scattered on dry land.
     static func pickPOIs(
-        for biomeID: String, river: RiverShape, rng: inout SeededRNG
+        for biomeID: String, river: RiverShape, shore: ShoreShape?, rng: inout SeededRNG
     ) -> [LocalPOI] {
         var pool = poiMix(for: biomeID).filter { $0.1 > 0 }
         let span = poiCountRange.upperBound - poiCountRange.lowerBound + 1
@@ -205,7 +255,7 @@ public enum LocalMapGenerator {
             guard let index = rng.weightedIndex(pool.map(\.1)) else { break }
             let kind = pool.remove(at: index).0
             picked.append(LocalPOI(id: id, kind: kind,
-                                   position: landPoint(river: river, rng: &rng)))
+                                   position: landPoint(river: river, shore: shore, rng: &rng)))
         }
         return picked
     }
@@ -229,6 +279,23 @@ public enum LocalMapGenerator {
         }
     }
 
+    /// The biome's mix, varied per map.
+    ///
+    /// Each count lands between roughly half and one and a half times the
+    /// biome's character, so two valleys of the same country genuinely differ:
+    /// one is thick with timber where the next has the ore. Anything the biome
+    /// says it holds keeps at least one, so a forest is never woodless — the
+    /// point is variety, not a map that can't be played.
+    static func jittered(_ mix: DepositMix, rng: inout SeededRNG) -> DepositMix {
+        func vary(_ n: Int) -> Int {
+            guard n > 0 else { return 0 }
+            return max(1, Int((Double(n) * (0.5 + rng.nextUnit())).rounded()))
+        }
+        return (fields: vary(mix.fields), forests: vary(mix.forests),
+                stone: vary(mix.stone), herbs: vary(mix.herbs),
+                ironOre: vary(mix.ironOre), clay: vary(mix.clay))
+    }
+
     /// The land's carrying capacity for game.
     static func herdCapacity(for biomeID: String, rng: inout SeededRNG) -> Double {
         let base: Double
@@ -245,16 +312,23 @@ public enum LocalMapGenerator {
     }
 
     /// A point on dry land (away from the river), biased toward the interior.
-    private static func landPoint(river: RiverShape, rng: inout SeededRNG) -> LocalPoint {
+    private static func landPoint(
+        river: RiverShape, shore: ShoreShape? = nil, rng: inout SeededRNG
+    ) -> LocalPoint {
         for _ in 0..<24 {
             let x = 0.06 + rng.nextUnit() * 0.88
             let y = 0.06 + rng.nextUnit() * 0.88
-            if abs(y - river.y(atX: x)) > 0.09 {
-                return LocalPoint(x: x, y: y)
-            }
+            let p = LocalPoint(x: x, y: y)
+            // Nothing grows in the river, and nothing at all stands in the sea.
+            guard abs(y - river.y(atX: x)) > 0.09 else { continue }
+            if let shore, shore.distanceInland(p) < 0.04 { continue }
+            return p
         }
         let y = river.baseY < 0.5 ? 0.7 : 0.3
-        return LocalPoint(x: 0.2 + rng.nextUnit() * 0.6, y: y)
+        let fallback = LocalPoint(x: 0.2 + rng.nextUnit() * 0.6, y: y)
+        // Even the fallback must be dry land.
+        guard let shore, shore.isWater(fallback) else { return fallback }
+        return LocalPoint(x: 0.5, y: 0.5)
     }
 
     /// A point hugging the riverbank — where reeds grow and ponds gather.

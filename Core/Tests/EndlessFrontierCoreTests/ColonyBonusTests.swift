@@ -51,8 +51,13 @@ struct ColonyBonusTests {
 
         var world = WorldState(settlements: [s])
         world = TickEngine.advance(world, ticks: 1, registry: reg).state
-        // farm base food 10 + adjacency 2, no population upkeep, no events.
-        #expect(world.settlements[0].storage[.food] == 12)
+        // Farm base food 10 + adjacency 2, no population upkeep, no events.
+        // The colony has no colonists, so the farm runs at `unstaffedFloor` —
+        // production now depends on who is actually at the bench. Adjacency is
+        // a flat bonus on top and is *not* scaled, which is the thing this test
+        // is really about: the +2 survives an empty farm.
+        let expected = 10 * ResourceLoop.unstaffedFloor + 2
+        #expect(world.settlements[0].storage[.food] == expected)
     }
 
     @Test("A settlement with no colony grid gets no synergies")

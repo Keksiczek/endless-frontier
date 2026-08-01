@@ -140,14 +140,33 @@ public enum BattleResolver {
         let repelled = strength <= 0
         if repelled { record.record(.repelled, step: max(0, rounds - 1)) }
 
+        // The staging, so the fight can be *watched* rather than reported: how
+        // many came, who met them, and from which side of the valley.
+        //
+        // Both draws come after every roll the fight itself made — a new draw
+        // inserted earlier would change the outcome of every battle in every
+        // existing world.
+        let id = rng.nextUUID()
+        let approach = rng.nextUnit() * 2 * .pi
         return BattleOutcome(
             attackerRemaining: strength,
             damageByPawn: damage,
             repelled: repelled,
             rounds: rounds,
-            log: record.finish(id: rng.nextUUID(), tick: tick,
+            log: record.finish(id: id, tick: tick,
                                attackerName: attackerName, defenderName: defenderName,
-                               repelled: repelled))
+                               repelled: repelled,
+                               approach: approach,
+                               attackers: drawnStrength(attackerStrength),
+                               line: defenders.filter { $0.health > 0 }.prefix(12).map(\.id)))
+    }
+
+    /// How many raiders a given strength puts on the field. Purely for the
+    /// canvas — the fight is settled on `attackerStrength` alone — but it has
+    /// to be a *function* of the strength, or a warband of forty would arrive
+    /// looking exactly like a scouting party of three.
+    public static func drawnStrength(_ strength: Double) -> Int {
+        min(14, max(1, Int((max(0, strength) / 8).rounded(.up))))
     }
 
     /// Builds the defending line from a settlement's colonists.

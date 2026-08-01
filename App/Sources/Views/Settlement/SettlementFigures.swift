@@ -15,9 +15,13 @@ enum SettlementFigures {
 
     // MARK: - One colonist
 
+    /// How big a grown colonist is drawn, against the buildings they live in.
+    static let bodyScale: CGFloat = 0.82
+
     static func draw(
         pawn: Pawn, pose: AgentMotion.Pose, at p: CGPoint,
         time: Double, ticksPerYear: Int, selected: Bool, zoom: CGFloat = 1,
+        ranged: Bool = false,
         context: inout GraphicsContext
     ) {
         let years = pawn.ageYears(ticksPerYear: ticksPerYear)
@@ -26,7 +30,12 @@ enum SettlementFigures {
         // Every stroke of the figure is `scale`-relative, so folding the
         // camera in here scales the whole person — zooming in no longer grows
         // the town around doll-sized colonists.
-        let scale: CGFloat = (child ? 0.7 : (elder ? 0.94 : 1.0)) * zoom
+        //
+        // `bodyScale` shrank people a notch once buildings gained insides: at
+        // full size a colonist stood as tall as the hut they came out of, and
+        // a household at its hearth was one blob. Small enough now to fit in a
+        // room with the furniture, big enough to still read as a person.
+        let scale: CGFloat = (child ? 0.7 : (elder ? 0.94 : 1.0)) * zoom * bodyScale
 
         let tunic = Theme.roleShade(pawn.assignedWork)
         var alpha = max(0.45, pawn.health / 100)
@@ -91,8 +100,31 @@ enum SettlementFigures {
             lineWidth: 1.1 * scale)
         }
 
-        // The tool of the trade, in the working hand.
-        if working {
+        // What they are carrying, on their back — the visible half of hauling.
+        // A colonist walking home under a load of timber is the whole point of
+        // the piles being on the ground in the first place.
+        if let load = pawn.carrying {
+            let w = 2.4 * scale, h = 1.9 * scale
+            let bundle = CGRect(x: p.x - w / 2, y: shoulderY - h * 0.35, width: w, height: h)
+            context.fill(Path(roundedRect: bundle, cornerRadius: 0.5 * scale),
+                         with: .color(SettlementPiles.goodsColour(load.itemID).opacity(alpha)))
+            context.stroke(Path(roundedRect: bundle, cornerRadius: 0.5 * scale),
+                           with: .color(Theme.ink.opacity(0.45)), lineWidth: 0.5)
+            // A strap over the shoulder, so it reads as carried and not worn.
+            context.stroke(Path { path in
+                path.move(to: CGPoint(x: p.x - 1.2 * scale, y: shoulderY + 0.4 * scale))
+                path.addLine(to: CGPoint(x: p.x + 1.2 * scale, y: shoulderY - 0.2 * scale))
+            }, with: .color(Theme.boneDim.opacity(alpha * 0.8)), lineWidth: 0.6 * scale)
+        }
+
+        // The tool of the trade, in the working hand — or the weapon, when the
+        // day has been interrupted by something that wants killing.
+        // A hunter at work is a hunter fighting something: the bow comes up the
+        // same way whether the thing in front of them is a raider or a deer.
+        if pose.activity == .fighting || (working && pawn.assignedWork == .hunting) {
+            fightingArms(ranged: ranged, at: CGPoint(x: handX, y: handY),
+                         scale: scale, alpha: alpha, time: time, context: &context)
+        } else if working {
             tool(for: pawn.assignedWork, at: CGPoint(x: handX, y: handY),
                  scale: scale, alpha: alpha, time: time, context: &context)
         }
@@ -133,6 +165,77 @@ enum SettlementFigures {
                 .font(.system(size: 6, weight: .semibold))
                 .foregroundStyle(Theme.bone)
             context.draw(context.resolve(name), at: CGPoint(x: p.x, y: headY - 8))
+        }
+    }
+
+    /// What a colonist does with their hands when there is fighting to do.
+    ///
+    /// The same distinction the simulation already draws — `CombatEngine`
+    /// splits a colony's strength into what it looses and what it swings —
+    /// finally visible on the person doing it. Someone with a bow is drawn
+    /// nocking, drawing and loosing on a cycle; someone without is drawn
+    /// swinging. It is also what a hunter does, because a hunt is the same
+    /// question asked of a deer: reach it from over there, or walk up to it.
+    private static func fightingArms(
+        ranged: Bool, at hand: CGPoint, scale: CGFloat, alpha: Double,
+        time: Double, context: inout GraphicsContext
+    ) {
+        let wood = Color(red: 0.60, green: 0.48, blue: 0.34).opacity(alpha)
+        let iron = Color(red: 0.80, green: 0.83, blue: 0.88).opacity(alpha)
+
+        guard ranged else {
+            // A blade, swung: back over the shoulder, then down and through.
+            let swing = sin(time * 7)
+            let angle = -2.3 + swing * 1.5
+            let reach = 4.2 * scale
+            context.stroke(Path { p in
+                p.move(to: hand)
+                p.addLine(to: CGPoint(x: hand.x + CGFloat(cos(angle)) * reach,
+                                      y: hand.y + CGFloat(sin(angle)) * reach))
+            }, with: .color(iron), style: StrokeStyle(lineWidth: 1.1 * scale, lineCap: .round))
+            // The arc it cuts, faint, so the swing reads at a glance.
+            context.stroke(Path { p in
+                p.addArc(center: hand, radius: reach,
+                         startAngle: .radians(angle - 0.5), endAngle: .radians(angle),
+                         clockwise: false)
+            }, with: .color(Theme.bone.opacity(alpha * 0.22)), lineWidth: 0.8 * scale)
+            return
+        }
+
+        // A bow, on a cycle: nock, draw, loose, and the arrow away.
+        let cycle = (time * 1.6).truncatingRemainder(dividingBy: 1)
+        let draw = cycle < 0.7 ? cycle / 0.7 : 0            // pulled back…
+        let loosed = cycle >= 0.7 ? (cycle - 0.7) / 0.3 : 0 // …then gone
+        let limb = 2.8 * scale
+
+        context.stroke(Path { p in
+            p.addArc(center: hand, radius: limb,
+                     startAngle: .degrees(-58), endAngle: .degrees(58), clockwise: false)
+        }, with: .color(wood), lineWidth: 0.9 * scale)
+        // The string, bent back as far as the draw has come.
+        let pull = CGFloat(draw) * 1.7 * scale
+        let limbAngle = 58.0 * Double.pi / 180
+        let top = CGPoint(x: hand.x + limb * CGFloat(cos(-limbAngle)),
+                          y: hand.y + limb * CGFloat(sin(-limbAngle)))
+        let bottom = CGPoint(x: hand.x + limb * CGFloat(cos(limbAngle)),
+                             y: hand.y + limb * CGFloat(sin(limbAngle)))
+        context.stroke(Path { p in
+            p.move(to: top)
+            p.addQuadCurve(to: bottom, control: CGPoint(x: hand.x - pull, y: hand.y))
+        }, with: .color(Theme.boneDim.opacity(alpha)), lineWidth: 0.5)
+        // The arrow: on the string while drawing, in the air after.
+        if loosed > 0 {
+            let flight = CGFloat(loosed) * 9 * scale
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x + limb + flight, y: hand.y))
+                p.addLine(to: CGPoint(x: hand.x + limb + flight + 2.2 * scale, y: hand.y))
+            }, with: .color(Theme.bone.opacity(alpha * (1 - Double(loosed) * 0.5))),
+               style: StrokeStyle(lineWidth: 0.6 * scale, lineCap: .round))
+        } else {
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x - pull, y: hand.y))
+                p.addLine(to: CGPoint(x: hand.x + limb * 1.1, y: hand.y))
+            }, with: .color(Theme.bone.opacity(alpha * 0.8)), lineWidth: 0.5 * scale)
         }
     }
 
@@ -252,6 +355,24 @@ enum SettlementFigures {
                          with: .color(Theme.accent.opacity(0.8)))
         case .idle:
             break
+        case .garrison:
+            // A grounded spear and a shield on the arm — a watch stands, where
+            // a scout's spear is carried. The butt rests on the ground.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x + 0.9 * scale, y: hand.y + 5.2 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 0.9 * scale, y: hand.y - 5.8 * scale))
+            }, with: .color(wood), lineWidth: 0.8 * scale)
+            context.fill(Path { p in
+                p.move(to: CGPoint(x: hand.x + 0.9 * scale, y: hand.y - 7.0 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 0.4 * scale, y: hand.y - 5.6 * scale))
+                p.addLine(to: CGPoint(x: hand.x + 1.4 * scale, y: hand.y - 5.6 * scale))
+                p.closeSubpath()
+            }, with: .color(iron))
+            let shield = CGRect(x: hand.x - 2.6 * scale, y: hand.y - 1.4 * scale,
+                                width: 2.4 * scale, height: 3.2 * scale)
+            context.fill(Path(ellipseIn: shield), with: .color(iron.opacity(0.85)))
+            context.stroke(Path(ellipseIn: shield),
+                           with: .color(Theme.bone.opacity(alpha)), lineWidth: 0.5)
         }
     }
 

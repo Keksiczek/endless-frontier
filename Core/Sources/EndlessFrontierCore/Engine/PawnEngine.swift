@@ -57,24 +57,45 @@ public enum PawnEngine {
         for resource in ResourceType.allCases {
             seasonByResource[resource] = registry.config.seasonYieldMultiplier(for: resource, tick: tick)
         }
+        // So is the weather, and what the colony's walls and fires keep out.
+        let season = Season(tick: tick, ticksPerYear: max(1, registry.config.ticksPerYear))
+        let shelterWarmth = ComfortEngine.shelter(s, registry: registry)
+        // And what the colony has decided a meal is this year.
+        let ration = s.policy.ration
 
         // Mutate pawns in place (index loop) to avoid rebuilding the array and
         // copying every pawn's dictionaries each tick — this runs up to 43,200
         // times on offline catch-up, so allocation churn matters.
         for i in s.pawns.indices {
-            // Needs decay.
+            // Needs decay. A colonist with a bed of their own sleeps it off;
+            // one without gets a fraction of the night back, which is what
+            // makes a colony that has outgrown its roofs *feel* crowded rather
+            // than merely reporting a number.
+            let housed = s.pawns[i].homeID != nil
             s.pawns[i].needs.hunger -= hungerDecay
-            s.pawns[i].needs.rest = s.pawns[i].needs.rest - restDecay + restRecovery
+            s.pawns[i].needs.rest = s.pawns[i].needs.rest - restDecay
+                + restRecovery * (housed ? 1 : HouseholdEngine.roughSleepFactor)
             s.pawns[i].needs.recreation = s.pawns[i].needs.recreation - recreationDecay + recreationRecovery
+            // And what the weather is doing to them: winter bites whoever has
+            // no roof, no coat and no fire, and costs them health until it
+            // stops. The wild has had comfort bands since animals got bodies;
+            // this is the same question asked of a person.
+            s.pawns[i] = ComfortEngine.advanceOneTick(
+                s.pawns[i], season: season, shelter: shelterWarmth)
 
-            // Eat if hungry and food is available. Rationing stretches a meal.
-            let meal = foodPerMeal * laws.foodUpkeepMultiplier
+            // Eat if hungry and food is available. Rationing stretches a meal —
+            // both by law and by the colony's own standing order, which is the
+            // one lever a player can pull the moment a winter turns bad.
+            let meal = foodPerMeal * laws.foodUpkeepMultiplier * ration.foodPerMeal
             if food >= meal, s.pawns[i].needs.hunger < mealHungerThreshold {
                 food -= meal
-                s.pawns[i].needs.hunger += hungerPerMeal
+                s.pawns[i].needs.hunger += hungerPerMeal * ration.hungerPerMeal
             }
             s.pawns[i].needs = s.pawns[i].needs.clamped()
 
+            // Bleeding, mending, and whoever is seeing to it — before the
+            // ordinary recovery below, so a bleeding colonist does not quietly
+            // heal at the same time as they bleed out.
             // Health: starvation hurts, otherwise the body slowly recovers.
             let hasEquipment = !s.pawns[i].equipment.isEmpty
             if s.pawns[i].needs.hunger <= 0 {
@@ -85,9 +106,15 @@ public enum PawnEngine {
             }
             s.pawns[i].health = max(0, s.pawns[i].health)
 
-            // Mood from needs + trait + equipment, clamped.
+            // Mood from needs + trait + equipment, clamped — less whatever it
+            // costs to have slept on the ground again.
             let moodBonus = hasEquipment ? ItemEngine.moodBonus(s.pawns[i], registry: registry) : 0
-            s.pawns[i].mood = min(max(s.pawns[i].needs.average + s.pawns[i].trait.moodModifier + moodBonus, 0), 100)
+            let roofless = housed ? 0 : HouseholdEngine.roughSleepMood
+            // People notice what is on the table. Short rations are a decision
+            // the colony can feel, which is what makes them a real choice
+            // rather than a free saving.
+            s.pawns[i].mood = min(max(s.pawns[i].needs.average + s.pawns[i].trait.moodModifier
+                                      + moodBonus - roofless + ration.moodEffect, 0), 100)
 
             // Mental break with hysteresis.
             if s.pawns[i].mood < breakEnterMood {
@@ -100,7 +127,13 @@ public enum PawnEngine {
             // actually here: someone cutting stone out at the cave is not also
             // at the plough, and an expedition that costs the colony nothing
             // is not a decision.
+            // What is left of them to work with. A man with a ruined arm is not
+            // a man at full output, and one too badly hurt to stand is not at
+            // work at all — which is what makes a raid cost you a season rather
+            // than a line in the journal.
+            let ableness = MedicineEngine.workCapacity(s.pawns[i])
             if !s.pawns[i].isBroken, !s.pawns[i].isAway, s.pawns[i].age >= adultAgeTicks,
+               ableness > 0,
                let resource = s.pawns[i].assignedWork.resource {
                 let work = s.pawns[i].assignedWork
                 let moodFactor = 0.5 + 0.5 * (s.pawns[i].mood / 100)   // 0.5…1.0
@@ -112,7 +145,7 @@ public enum PawnEngine {
                 let lawFactor = resource == .knowledge ? laws.knowledgeMultiplier : 1
                 output[resource] = output[resource]
                     + Double(effectiveSkill) * outputPerSkill * moodFactor
-                    * seasonFactor * gatherFactor * lawFactor
+                    * seasonFactor * gatherFactor * lawFactor * ableness
 
                 var xp = (s.pawns[i].skillXP[work] ?? 0) + xpPerTickWorking
                 let level = s.pawns[i].skill(work)

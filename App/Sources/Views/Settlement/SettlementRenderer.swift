@@ -52,12 +52,19 @@ enum SettlementRenderer {
         season: Season,
         camera: Camera,
         continuousTick: Double = 0,
+        caravans: [Caravan] = [],
+        /// How far through its season the year has got, 0…1. Snow lies deeper
+        /// at midwinter than on its first day, and spring's mud dries.
+        seasonProgress: Double = 0.5,
         selectedPawnID: UUID?,
         selectedBuildingID: Int?
     ) {
         let viewRect = CGRect(origin: .zero, size: size)
         let rect = worldRect(viewRect: viewRect, camera: camera)
         let night = nightness(time: time)
+        // Where the sun is standing. Everything that casts, shades or warms
+        // reads this one value, so the whole valley is lit from one place.
+        let sun = SettlementLight.sun(time: time)
         // One world scale for everything drawn in absolute pixels. Geometry
         // derived from `rect` grows with the camera by construction; the
         // fixed-pixel art (figures, river body, deposit furniture, smoke) has
@@ -65,23 +72,46 @@ enum SettlementRenderer {
         // doll-sized.
         let zoom = camera.scale
         let showLabels = zoom >= 1.6
-        ground(&context, rect: rect, map: map, season: season)
+        SettlementGround.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
+                              sun: sun, seasonProgress: seasonProgress)
         zones(&context, rect: rect, settlement: settlement, season: season)
         paths(&context, rect: rect, settlement: settlement, registry: registry,
               map: map, zoom: zoom)
         heartGlow(&context, rect: rect)
+        // The sea, before the river and the landscape: everything else stands
+        // on the land it leaves.
+        sea(&context, rect: rect, shore: map.shore, season: season, time: time)
         river(&context, rect: rect, river: map.river, season: season, zoom: zoom)
         scenery(&context, rect: rect, map: map, season: season)
+        // The real wood and rock, over the decorative landscape but under
+        // anything built — a tree stands in front of the grass and behind the
+        // roof it shades.
+        // The mountain, before the wood: a tree at the foot of a cliff stands in
+        // front of it, and nothing stands on top of solid rock.
+        SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
+        SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time, sun: sun)
+        // What has been cut and not yet carried in.
+        SettlementPiles.draw(&context, rect: rect, map: map, zoom: zoom)
+        // And whoever has come in over the edge to trade or to talk.
+        SettlementVisitors.draw(&context, rect: rect, map: map, time: time,
+                                zoom: zoom, showLabels: showLabels)
+        // Your own carts, on the leg of the road that crosses this valley.
+        SettlementConvoys.draw(&context, rect: rect, settlement: settlement,
+                               caravans: caravans, map: map, time: time, zoom: zoom)
+        // And the beasts that stopped running and stayed.
+        SettlementWildlife.drawTamed(&context, rect: rect, settlement: settlement,
+                                     map: map, time: time, zoom: zoom)
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels)
-        SettlementWildlife.draw(&context, rect: rect, map: map, time: time)
+        SettlementWildlife.draw(&context, rect: rect, map: map, time: time, zoom: zoom)
 
         let placed = layout(settlement: settlement, registry: registry, rect: rect)
         // Pushed in close, every structure says what it is — the answer to
         // "which roof is the library?" without a single tap.
         buildings(&context, placed: placed, time: time, night: night,
-                  showLabels: showLabels, selectedBuildingID: selectedBuildingID)
+                  showLabels: showLabels, zoom: zoom, sun: sun,
+                  selectedBuildingID: selectedBuildingID)
         SettlementFigures.smoke(
             &context,
             houses: placed.filter { $0.glyph == .house && !$0.underConstruction },
@@ -98,6 +128,7 @@ enum SettlementRenderer {
         // The seasonal wash is atmosphere over the lens, not part of the world,
         // so it stays in view space and doesn't slide when you pan.
         seasonWash(&context, rect: viewRect, size: size, season: season, time: time)
+        SettlementLight.wash(&context, rect: viewRect, sun: sun)
         nightWash(&context, rect: viewRect, night: night)
     }
 
@@ -153,20 +184,38 @@ enum SettlementRenderer {
         time: Double,
         camera: Camera,
         regionKind: RegionKind,
-        tribe: Tribe?
+        tribe: Tribe?,
+        seasonProgress: Double = 0.5
     ) {
         let viewRect = CGRect(origin: .zero, size: size)
         let rect = worldRect(viewRect: viewRect, camera: camera)
         let night = nightness(time: time)
+        let sun = SettlementLight.sun(time: time)
         let zoom = camera.scale
         let showLabels = zoom >= 1.6
-        ground(&context, rect: rect, map: map, season: season)
+        SettlementGround.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
+                              sun: sun, seasonProgress: seasonProgress)
+        // The sea, before the river and the landscape: everything else stands
+        // on the land it leaves.
+        sea(&context, rect: rect, shore: map.shore, season: season, time: time)
         river(&context, rect: rect, river: map.river, season: season, zoom: zoom)
         scenery(&context, rect: rect, map: map, season: season)
+        // The real wood and rock, over the decorative landscape but under
+        // anything built — a tree stands in front of the grass and behind the
+        // roof it shades.
+        // The mountain, before the wood: a tree at the foot of a cliff stands in
+        // front of it, and nothing stands on top of solid rock.
+        SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
+        SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time, sun: sun)
+        // What has been cut and not yet carried in.
+        SettlementPiles.draw(&context, rect: rect, map: map, zoom: zoom)
+        // And whoever has come in over the edge to trade or to talk.
+        SettlementVisitors.draw(&context, rect: rect, map: map, time: time,
+                                zoom: zoom, showLabels: showLabels)
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels)
-        SettlementWildlife.draw(&context, rect: rect, map: map, time: time)
+        SettlementWildlife.draw(&context, rect: rect, map: map, time: time, zoom: zoom)
         if regionKind == .anomaly {
             anomalyGlow(&context, rect: rect, time: time)
         }
@@ -177,6 +226,7 @@ enum SettlementRenderer {
                 seed: map.terrainSeed, night: night, zoom: zoom)
         }
         seasonWash(&context, rect: viewRect, size: size, season: season, time: time)
+        SettlementLight.wash(&context, rect: viewRect, sun: sun)
         nightWash(&context, rect: viewRect, night: night)
     }
 
@@ -213,59 +263,11 @@ enum SettlementRenderer {
 
     // MARK: - Ground tiles
 
-    /// The tiled earth: every revealed cell painted with its seeded ground
-    /// cover in the current season's colours. Batched into one path per cover
-    /// so a full map is a handful of fills, not a thousand.
-    private static func ground(
-        _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, season: Season
-    ) {
-        let cols = LocalMap.gridColumns, rows = LocalMap.gridRows
-        let cw = rect.width / CGFloat(cols), ch = rect.height / CGFloat(rows)
-        var batches: [GroundCover: Path] = [:]
-        for index in map.exploredCells {
-            let col = index % cols, row = index / cols
-            guard row < rows else { continue }
-            let cover = map.cover(column: col, row: row)
-            batches[cover, default: Path()].addRect(
-                CGRect(x: rect.minX + CGFloat(col) * cw, y: rect.minY + CGFloat(row) * ch,
-                       width: cw + 0.6, height: ch + 0.6))
-        }
-        for (cover, path) in batches {
-            context.fill(path, with: .color(coverColor(cover, season: season)))
-        }
-    }
-
-    /// The raw earth tones, before the season passes over them. Lifted from
-    /// the original near-black palette — the map read as permanently dusk.
-    private static func baseCover(_ cover: GroundCover) -> (r: Double, g: Double, b: Double) {
-        switch cover {
-        case .grass:  return (0.15, 0.22, 0.15)
-        case .meadow: return (0.19, 0.26, 0.16)
-        case .dirt:   return (0.23, 0.19, 0.14)
-        case .sand:   return (0.29, 0.26, 0.17)
-        case .rock:   return (0.19, 0.20, 0.23)
-        case .snow:   return (0.30, 0.33, 0.39)
-        case .marsh:  return (0.15, 0.23, 0.20)
-        }
-    }
-
-    /// The ground as the season paints it: fresh in spring, warm in summer,
-    /// rusted in autumn, and pale under winter snow.
+    /// The earth, drawn by `SettlementGround` — a square grain over the fog
+    /// grid rather than the fog grid itself, which on a phone is three times
+    /// taller than it is wide and made every meadow a green column.
     static func coverColor(_ cover: GroundCover, season: Season) -> Color {
-        var (r, g, b) = baseCover(cover)
-        switch season {
-        case .spring:
-            g *= 1.22; r *= 0.96
-        case .summer:
-            r *= 1.12; g *= 1.10; b *= 0.94
-        case .autumn:
-            r *= 1.38; g *= 1.02; b *= 0.82
-        case .winter:
-            // Everything cools and lightens toward snow, but keeps a trace of
-            // what lies underneath.
-            r = r * 0.45 + 0.26; g = g * 0.45 + 0.28; b = b * 0.45 + 0.34
-        }
-        return Color(red: min(1, r), green: min(1, g), blue: min(1, b))
+        SettlementGround.coverColor(cover, season: season)
     }
 
     // MARK: - Zones
@@ -455,12 +457,17 @@ enum SettlementRenderer {
             var size = s
             if kind == .tree || kind == .pine {
                 if let fraction = nearestNodeFraction(map: map, kind: .forest, to: prop.position) {
+                    // A wood that has real trees in it draws those instead —
+                    // otherwise the same copse is drawn twice, once as standing
+                    // stock and once as furniture that only pretends to be cut.
+                    if !map.trees.isEmpty { continue }
                     let threshold = propRoll(prop.id)
                     if fraction < threshold * 0.5 { continue }        // felled and hauled
                     if fraction < threshold * 0.9 { kind = .stump }   // fresh-cut
                 }
             } else if kind == .rock || kind == .boulder {
                 if let fraction = nearestNodeFraction(map: map, kind: .stone, to: prop.position) {
+                    if !map.rocks.isEmpty { continue }
                     let threshold = propRoll(prop.id)
                     if fraction < threshold * 0.4 { continue }        // quarried away
                     size *= CGFloat(0.6 + fraction * 0.4)             // being cut down
@@ -701,6 +708,207 @@ enum SettlementRenderer {
             context.stroke(Path(CGRect(x: c.x - s * 0.25, y: c.y - s * 1.1,
                                        width: s * 0.5, height: s * 1.5)),
                            with: .color(Theme.boneDim), lineWidth: 1)
+
+        case .cliff:
+            // A face with a lit top edge and a deep shadow at its foot, so it
+            // reads as ground you could not walk up.
+            let face = Path { p in
+                p.move(to: CGPoint(x: c.x - s * 1.3, y: c.y + s * 0.7))
+                p.addLine(to: CGPoint(x: c.x - s * 0.9, y: c.y - s * 0.9))
+                p.addLine(to: CGPoint(x: c.x + s * 0.3, y: c.y - s * 1.1))
+                p.addLine(to: CGPoint(x: c.x + s * 1.3, y: c.y - s * 0.3))
+                p.addLine(to: CGPoint(x: c.x + s * 1.1, y: c.y + s * 0.7))
+                p.closeSubpath()
+            }
+            context.fill(face, with: .color(Color(red: 0.30, green: 0.29, blue: 0.31)))
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.9, y: c.y - s * 0.9))
+                p.addLine(to: CGPoint(x: c.x + s * 0.3, y: c.y - s * 1.1))
+                p.addLine(to: CGPoint(x: c.x + s * 1.3, y: c.y - s * 0.3))
+            }, with: .color(Theme.bone.opacity(0.5)), lineWidth: 1)
+            // Strata, and the dark at the base.
+            for band in 1...2 {
+                let y = c.y - s * 0.6 + CGFloat(band) * s * 0.45
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: c.x - s * 1.1, y: y))
+                    p.addLine(to: CGPoint(x: c.x + s * 1.1, y: y))
+                }, with: .color(.black.opacity(0.22)), lineWidth: 0.7)
+            }
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 1.2, y: c.y + s * 0.5,
+                                                width: s * 2.4, height: s * 0.45)),
+                         with: .color(.black.opacity(0.25)))
+
+        case .crag:
+            // A spire — two jagged teeth, the taller one lit down one side.
+            let spire = Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.8, y: c.y + s * 0.7))
+                p.addLine(to: CGPoint(x: c.x - s * 0.2, y: c.y - s * 1.4))
+                p.addLine(to: CGPoint(x: c.x + s * 0.25, y: c.y - s * 0.2))
+                p.addLine(to: CGPoint(x: c.x + s * 0.6, y: c.y - s * 0.95))
+                p.addLine(to: CGPoint(x: c.x + s * 0.95, y: c.y + s * 0.7))
+                p.closeSubpath()
+            }
+            context.fill(spire, with: .color(Color(red: 0.33, green: 0.32, blue: 0.35)))
+            context.stroke(spire, with: .color(Theme.bone.opacity(0.42)), lineWidth: 0.8)
+
+        case .dune:
+            // A long low ridge with a bright windward face.
+            let ridge = Path { p in
+                p.move(to: CGPoint(x: c.x - s * 1.5, y: c.y + s * 0.45))
+                p.addQuadCurve(to: CGPoint(x: c.x + s * 1.5, y: c.y + s * 0.45),
+                               control: CGPoint(x: c.x + s * 0.3, y: c.y - s * 0.85))
+                p.closeSubpath()
+            }
+            context.fill(ridge, with: .color(Color(red: 0.66, green: 0.57, blue: 0.38).opacity(0.5)))
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 1.5, y: c.y + s * 0.45))
+                p.addQuadCurve(to: CGPoint(x: c.x + s * 1.5, y: c.y + s * 0.45),
+                               control: CGPoint(x: c.x + s * 0.3, y: c.y - s * 0.85))
+            }, with: .color(Theme.bone.opacity(0.3)), lineWidth: 0.7)
+
+        case .deadTree:
+            // A bare snag: a pale forked trunk, no crown at all.
+            let bone = Color(red: 0.62, green: 0.58, blue: 0.50)
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x, y: c.y + s * 0.7))
+                p.addLine(to: CGPoint(x: c.x - s * 0.1, y: c.y - s * 1.2))
+                p.move(to: CGPoint(x: c.x - s * 0.08, y: c.y - s * 0.5))
+                p.addLine(to: CGPoint(x: c.x + s * 0.7, y: c.y - s * 1.0))
+                p.move(to: CGPoint(x: c.x - s * 0.09, y: c.y - s * 0.85))
+                p.addLine(to: CGPoint(x: c.x - s * 0.75, y: c.y - s * 1.25))
+            }, with: .color(bone), lineWidth: max(0.7, s * 0.16))
+
+        case .tallGrass:
+            // Tufts leaning one way, so a meadow has a wind in it.
+            for blade in 0..<5 {
+                let dx = (CGFloat(blade) - 2) * s * 0.32
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: c.x + dx, y: c.y + s * 0.5))
+                    p.addQuadCurve(to: CGPoint(x: c.x + dx + s * 0.42, y: c.y - s * 0.75),
+                                   control: CGPoint(x: c.x + dx, y: c.y - s * 0.2))
+                }, with: .color(Color(red: 0.44, green: 0.52, blue: 0.30).opacity(0.75)),
+                   lineWidth: 0.8)
+            }
+
+        case .mushroom:
+            // A little cluster in the leaf litter.
+            for (dx, scale) in [(-0.45, 0.8), (0.0, 1.0), (0.4, 0.65)] {
+                let m = CGPoint(x: c.x + CGFloat(dx) * s, y: c.y + s * 0.35)
+                let r = s * 0.42 * CGFloat(scale)
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: m.x, y: m.y))
+                    p.addLine(to: CGPoint(x: m.x, y: m.y - r * 0.9))
+                }, with: .color(Theme.bone.opacity(0.55)), lineWidth: 0.7)
+                context.fill(Path { p in
+                    p.move(to: CGPoint(x: m.x - r, y: m.y - r * 0.85))
+                    p.addQuadCurve(to: CGPoint(x: m.x + r, y: m.y - r * 0.85),
+                                   control: CGPoint(x: m.x, y: m.y - r * 2.1))
+                    p.closeSubpath()
+                }, with: .color(Color(red: 0.60, green: 0.34, blue: 0.28)))
+            }
+
+        case .driftwood:
+            // Bleached wood above the tideline, lying down.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 1.1, y: c.y + s * 0.3))
+                p.addQuadCurve(to: CGPoint(x: c.x + s * 1.1, y: c.y + s * 0.05),
+                               control: CGPoint(x: c.x, y: c.y - s * 0.3))
+            }, with: .color(Color(red: 0.68, green: 0.64, blue: 0.57)),
+               style: StrokeStyle(lineWidth: max(1, s * 0.28), lineCap: .round))
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x + s * 0.3, y: c.y + s * 0.1))
+                p.addLine(to: CGPoint(x: c.x + s * 0.8, y: c.y - s * 0.5))
+            }, with: .color(Color(red: 0.68, green: 0.64, blue: 0.57)), lineWidth: max(0.7, s * 0.16))
+
+        case .hotSpring:
+            // Steaming water in a rim of mineral stone.
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.9, y: c.y - s * 0.4,
+                                                width: s * 1.8, height: s * 0.9)),
+                         with: .color(Color(red: 0.76, green: 0.72, blue: 0.60).opacity(0.5)))
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.62, y: c.y - s * 0.26,
+                                                width: s * 1.24, height: s * 0.6)),
+                         with: .color(Color(red: 0.34, green: 0.62, blue: 0.66).opacity(0.8)))
+            for wisp in 0..<2 {
+                let dx = CGFloat(wisp) * s * 0.4 - s * 0.2
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: c.x + dx, y: c.y - s * 0.35))
+                    p.addQuadCurve(to: CGPoint(x: c.x + dx + s * 0.2, y: c.y - s * 1.2),
+                                   control: CGPoint(x: c.x + dx - s * 0.3, y: c.y - s * 0.8))
+                }, with: .color(Theme.bone.opacity(0.22)), lineWidth: 0.8)
+            }
+        }
+    }
+
+    /// Open water along one edge of a coastal map, with a beach fading into it
+    /// and a surf line that breathes.
+    ///
+    /// A coast used to be a field with a stream through it, exactly like the
+    /// plains — the one country whose whole character is the water had none.
+    private static func sea(
+        _ context: inout GraphicsContext, rect: CGRect, shore: ShoreShape?,
+        season: Season, time: Double
+    ) {
+        guard let shore else { return }
+        // Walk the coast in steps, so the waterline wanders rather than ruling
+        // a straight edge across the map.
+        let steps = 64
+        func waterPoint(_ t: Double, reach: Double) -> CGPoint {
+            let p: LocalPoint
+            switch shore.side {
+            case .north: p = LocalPoint(x: t, y: reach)
+            case .south: p = LocalPoint(x: t, y: 1 - reach)
+            case .west:  p = LocalPoint(x: reach, y: t)
+            case .east:  p = LocalPoint(x: 1 - reach, y: t)
+            }
+            return point(p, in: rect)
+        }
+        func edgePoint(_ t: Double) -> CGPoint { waterPoint(t, reach: 0) }
+
+        // The tide breathes: the whole waterline creeps in and out a little.
+        let tide = sin(time * 0.09) * 0.006
+
+        var water = Path()
+        water.move(to: edgePoint(0))
+        for step in 0...steps {
+            let t = Double(step) / Double(steps)
+            water.addLine(to: waterPoint(t, reach: shore.reach(at: t) + tide))
+        }
+        water.addLine(to: edgePoint(1))
+        water.closeSubpath()
+
+        let deep = season == .winter
+            ? Color(red: 0.13, green: 0.22, blue: 0.30)
+            : Color(red: 0.12, green: 0.26, blue: 0.36)
+        context.fill(water, with: .color(deep))
+
+        // The shallows: a paler band just inside the waterline.
+        var shallow = Path()
+        shallow.move(to: waterPoint(0, reach: shore.reach(at: 0) + tide))
+        for step in 0...steps {
+            let t = Double(step) / Double(steps)
+            shallow.addLine(to: waterPoint(t, reach: shore.reach(at: t) + tide))
+        }
+        for step in stride(from: steps, through: 0, by: -1) {
+            let t = Double(step) / Double(steps)
+            shallow.addLine(to: waterPoint(t, reach: shore.reach(at: t) + tide - 0.035))
+        }
+        shallow.closeSubpath()
+        context.fill(shallow, with: .color(Color(red: 0.22, green: 0.44, blue: 0.52).opacity(0.55)))
+
+        // Surf, running along the coast rather than sitting still.
+        var surf = Path()
+        for step in 0...steps {
+            let t = Double(step) / Double(steps)
+            let foam = shore.reach(at: t) + tide + sin(t * 26 + time * 0.9) * 0.004
+            let p = waterPoint(t, reach: foam)
+            step == 0 ? surf.move(to: p) : surf.addLine(to: p)
+        }
+        context.stroke(surf, with: .color(Theme.bone.opacity(0.42)), lineWidth: 1.1)
+
+        if season == .winter {
+            // Ice hugging the shore.
+            context.stroke(surf, with: .color(Color(red: 0.80, green: 0.86, blue: 0.92).opacity(0.3)),
+                           lineWidth: 3)
         }
     }
 
@@ -835,21 +1043,72 @@ enum SettlementRenderer {
 
     /// What a structure looks like on the map. Derived from what the building
     /// actually *does*, so new content picks up a sensible silhouette for free.
+    /// The silhouettes a structure can be drawn as.
+    ///
+    /// Eight of these used to carry all forty-seven buildings, which is why a
+    /// spaceport and a workshop were the same shed and every library, school,
+    /// bank and market was the same Greek temple. A colony reads as a place
+    /// when its skyline has more than one idea in it.
     enum BuildingGlyph {
-        case house, granary, workshop, tower, temple, mine, mill, generator
+        case house      // anything anyone lives in
+        case hall       // learning: library, school, university, observatory
+        case market     // exchange: market, bank, trade post
+        case granary    // food and stores
+        case workshop   // light craft
+        case plant      // heavy industry — the smoking block
+        case tower      // walls, towers, barracks
+        case temple     // civic monument
+        case mine
+        case mill
+        case generator  // a machine that makes power
+        case array      // fields of panels and turbines
+        case pad        // spaceport, orbital array
     }
 
+    /// The archetype names `buildings.json` may state outright via `look`.
+    static func glyph(named name: String) -> BuildingGlyph? {
+        switch name {
+        case "house": return .house
+        case "hall": return .hall
+        case "market": return .market
+        case "granary": return .granary
+        case "workshop": return .workshop
+        case "plant": return .plant
+        case "tower": return .tower
+        case "temple": return .temple
+        case "mine": return .mine
+        case "mill": return .mill
+        case "generator": return .generator
+        case "array": return .array
+        case "pad": return .pad
+        default: return nil
+        }
+    }
+
+    /// What a building looks like: what the content says, else what the numbers
+    /// imply. Order matters — the strongest signal is asked first.
+    ///
+    /// Deriving alone was never enough. Every materials producer answers
+    /// `workKind` the same way, so lumberyard, quarry, workshop, foundry and
+    /// factory were all drawn as one waterwheel; `look` is how the handful the
+    /// numbers cannot separate say what they are.
     static func glyph(for def: BuildingDefinition) -> BuildingGlyph {
+        if let stated = def.look, let g = glyph(named: stated) { return g }
         if def.housing > 0 { return .house }
         if def.defense > 0 { return .tower }
-        if def.production[.knowledge] > 0 || def.production[.influence] > 0 { return .temple }
-        if def.production[.energy] > 0 { return .generator }
-        if def.production[.food] > 0 { return .granary }
-        switch ColonyBuilder.workKind(for: def) {
-        case .mining: return .mine
-        case .logging: return .mill
-        default: return .workshop
+        // Anything that smokes is heavy industry, whatever else it does.
+        if def.pollution >= 10 { return .plant }
+        // The furthest-out civic works read as nothing else.
+        if def.era == .nearFuture, def.production[.influence] > 0 { return .pad }
+        if def.production[.energy] > 0 {
+            // Panels and turbines lie flat over the ground; everything earlier
+            // that makes power is a machine in a shed.
+            return def.era == .nearFuture ? .array : .generator
         }
+        if def.production[.knowledge] > 0 { return .hall }
+        if def.production[.influence] > 0 { return .market }
+        if def.production[.food] > 0 || def.storage > 0 { return .granary }
+        return .workshop
     }
 
     /// One structure in the settlement, in normalised (0…1) space — the shared
@@ -873,6 +1132,19 @@ enum SettlementRenderer {
         let progress: Double
         /// A stable per-building seed for cosmetic variation (tone, size).
         let seed: UInt64
+        /// The era that raised it — timber and thatch give way to brick, then
+        /// to panel and glass, so a data centre is not a wattle hut in a hat.
+        let era: Era
+        /// The colonists the *simulation* has posted here
+        /// (`BuildingPlacement.assignedPawnIDs`). The canvas stands them on
+        /// this lot rather than guessing a workplace from their trade, so what
+        /// the player watches is the roster the engine actually keeps.
+        let assignedPawnIDs: [UUID]
+        /// The placement this came from, where there is one. How a colonist's
+        /// `homeID` finds the house it names.
+        let placementID: UUID?
+        /// How sound the building is, 0…1.
+        let condition: Double
     }
 
     /// The same structure mapped to pixels for one frame.
@@ -888,6 +1160,14 @@ enum SettlementRenderer {
         let underConstruction: Bool
         let progress: Double
         let seed: UInt64
+        let era: Era
+        /// How many colonists the engine posted here — the room is furnished
+        /// with a station apiece, and they are drawn standing at them.
+        let workers: Int
+        /// …and how many live here, for a dwelling: a bed apiece.
+        let residents: Int
+        /// How sound it is, 0…1 — cracks, then a hole in the roof, then a ruin.
+        let condition: Double
     }
 
     /// A stable per-building seed for cosmetic variation — from a placement's
@@ -908,7 +1188,13 @@ enum SettlementRenderer {
     /// seen.
     static let colonyHeart = LocalPoint(x: 0.5, y: 0.52)
     /// How wide a slice of the canvas the whole build grid covers.
-    static let colonySpan: Double = 0.42
+    ///
+    /// Widened from 0.42 once buildings gained insides: an 18×18 grid squeezed
+    /// into 0.42 gave each tile about nine pixels at rest, which is a room you
+    /// cannot see into and a town whose people are drawn on top of one another.
+    /// Mirrored by `SettlementGeometry.span` in the Core — a colonist must be
+    /// sent to the building that is *drawn*, so the two must agree.
+    static let colonySpan: Double = 0.52
 
     /// Maps a grid tile to the point on the canvas it sits at, centred on the
     /// heart so the built colony always lands inside the cleared ground.
@@ -918,6 +1204,19 @@ enum SettlementRenderer {
         return LocalPoint(
             x: colonyHeart.x + fx * colonySpan,
             y: colonyHeart.y + fy * colonySpan)
+    }
+
+    /// The inverse of `canvasPoint`: which build tile a point on the canvas
+    /// falls on, or nil when it lies off the colony's ground. This is what lets
+    /// the player place a building by pointing at the settlement itself rather
+    /// than at an abstract grid on another screen.
+    static func tile(at p: LocalPoint, in colony: ColonyMap) -> TileCoord? {
+        guard colony.width > 0, colony.height > 0, colonySpan > 0 else { return nil }
+        let fx = (p.x - colonyHeart.x) / colonySpan + 0.5
+        let fy = (p.y - colonyHeart.y) / colonySpan + 0.5
+        guard fx >= 0, fx < 1, fy >= 0, fy < 1 else { return nil }
+        return TileCoord(min(colony.width - 1, Int(fx * Double(colony.width))),
+                         min(colony.height - 1, Int(fy * Double(colony.height))))
     }
 
     /// Where the settlement's structures stand, in normalised space. The grid
@@ -937,11 +1236,20 @@ enum SettlementRenderer {
         settlement: Settlement, registry: GameDataRegistry, rect: CGRect
     ) -> [PlacedBuilding] {
         let unit = min(rect.width, rect.height)
+        // Who sleeps where, counted once for the whole frame.
+        var household: [UUID: Int] = [:]
+        for pawn in settlement.pawns {
+            guard let home = pawn.homeID else { continue }
+            household[home, default: 0] += 1
+        }
         return normalizedLayout(settlement: settlement, registry: registry).map { b in
             PlacedBuilding(id: b.id, definitionID: b.definitionID, name: b.name, glyph: b.glyph,
                            center: point(b.center, in: rect), size: unit * b.size,
                            footprint: CGSize(width: b.footprintW * unit, height: b.footprintH * unit),
-                           underConstruction: b.underConstruction, progress: b.progress, seed: b.seed)
+                           underConstruction: b.underConstruction, progress: b.progress,
+                           seed: b.seed, era: b.era, workers: b.assignedPawnIDs.count,
+                           residents: b.placementID.map { household[$0] ?? 0 } ?? 0,
+                           condition: b.condition)
         }
     }
 
@@ -973,12 +1281,23 @@ enum SettlementRenderer {
                 name: label,
                 glyph: glyph,
                 center: p,
-                size: 0.021 * Double(max(placement.width, placement.height)),
+                // Sized to the ground it owns, not to a bare tile count. The
+                // old `0.021 × max(w, h)` was unrelated to the lot: a 3×2 came
+                // out twice as wide as its own plot, so neighbouring buildings
+                // grew into each other and the colony read as a heap of glyphs.
+                // A body runs about 2.2 × `size` across, so this keeps it
+                // inside the parcel while roofs still rise above it.
+                size: min(Double(max(1, placement.width)) * tileW,
+                          Double(max(1, placement.height)) * tileH) / 2.2,
                 footprintW: Double(max(1, placement.width)) * tileW,
                 footprintH: Double(max(1, placement.height)) * tileH,
                 underConstruction: placement.underConstruction,
                 progress: placement.underConstruction ? (progress ?? 0) : 1,
-                seed: buildingSeed(placement.id))
+                seed: buildingSeed(placement.id),
+                era: def?.era ?? .earlySettlement,
+                assignedPawnIDs: placement.assignedPawnIDs,
+                placementID: placement.id,
+                condition: placement.condition)
         }
     }
 
@@ -988,13 +1307,14 @@ enum SettlementRenderer {
     private static func ringLayout(
         settlement: Settlement, registry: GameDataRegistry
     ) -> [NormalizedBuilding] {
-        var expanded: [(id: String, name: String, glyph: BuildingGlyph)] = []
+        var expanded: [(id: String, name: String, glyph: BuildingGlyph, era: Era)] = []
         for instance in settlement.buildings {
             let def = registry.building(instance.definitionID)
             let g = def.map(glyph(for:)) ?? .house
             for _ in 0..<instance.count where expanded.count < maxVisibleBuildings {
                 expanded.append((instance.definitionID,
-                                 def?.name.resolve(AppStrings.language) ?? instance.definitionID, g))
+                                 def?.name.resolve(AppStrings.language) ?? instance.definitionID,
+                                 g, def?.era ?? .earlySettlement))
             }
         }
         guard !expanded.isEmpty else { return [] }
@@ -1017,7 +1337,9 @@ enum SettlementRenderer {
                     name: expanded[drawn].name, glyph: expanded[drawn].glyph,
                     center: c, size: 0.021, footprintW: 0.05, footprintH: 0.05,
                     underConstruction: false, progress: 1,
-                    seed: buildingSeed(expanded[drawn].id, drawn)))
+                    seed: buildingSeed(expanded[drawn].id, drawn),
+                    era: expanded[drawn].era,
+                    assignedPawnIDs: [], placementID: nil, condition: 1))
                 drawn += 1
             }
             ringIndex += 1
@@ -1029,19 +1351,25 @@ enum SettlementRenderer {
     private static func rank(_ g: BuildingGlyph) -> Int {
         switch g {
         case .temple: return 0
-        case .granary: return 1
-        case .workshop: return 2
-        case .mill: return 3
-        case .generator: return 4
-        case .mine: return 5
-        case .tower: return 6
-        case .house: return 7
+        case .hall: return 1
+        case .market: return 2
+        case .granary: return 3
+        case .workshop: return 4
+        case .mill: return 5
+        case .plant: return 6
+        case .generator: return 7
+        case .array: return 8
+        case .pad: return 9
+        case .mine: return 10
+        case .tower: return 11
+        case .house: return 12
         }
     }
 
     private static func buildings(
         _ context: inout GraphicsContext, placed: [PlacedBuilding],
         time: Double, night: Double = 0, showLabels: Bool = false,
+        zoom: CGFloat = 1, sun: SettlementLight.Sun = SettlementLight.sun(time: 0),
         selectedBuildingID: Int?
     ) {
         // Foundations first — every building's plot, drawn before any structure,
@@ -1051,14 +1379,42 @@ enum SettlementRenderer {
             floorPlot(&context, at: building.center, footprint: building.footprint,
                       underConstruction: building.underConstruction)
         }
+        // Then what the town throws across its own ground. Every shadow in one
+        // path, filled once: a shadow must never fall on the *building* next
+        // door, only on the earth between them.
+        castShadows(&context, placed: placed, sun: sun)
+        // Then the insides: floor, fittings, walls. Drawn under the roofs, so
+        // pushing the camera in lifts the roof off a room that is already there
+        // rather than swapping one drawing for another.
+        let roof = SettlementInterior.roofFade(zoom: zoom)
+        if roof < 0.999 {
+            for building in placed where !building.underConstruction {
+                SettlementInterior.draw(
+                    &context, glyph: building.glyph, at: building.center,
+                    footprint: building.footprint, seed: building.seed, era: building.era,
+                    workers: building.workers, residents: building.residents,
+                    night: night, time: time)
+            }
+        }
         for building in placed {
             if building.underConstruction {
                 SettlementStructures.site(at: building.center, s: building.size,
                                           progress: building.progress, time: time, context: &context)
-            } else {
+            } else if roof > 0.001 {
+                // The roof, as solid as the distance warrants.
+                var roofContext = context
+                roofContext.opacity = roof
                 SettlementStructures.building(building.glyph, at: building.center,
                                               s: building.size, time: time, night: night,
-                                              seed: building.seed, context: &context)
+                                              seed: building.seed, era: building.era,
+                                              footprint: building.footprint, context: &roofContext)
+            }
+            // What time and trouble have done to it, over whatever is drawn —
+            // a ruin has to read as one whether its roof is on or off.
+            if !building.underConstruction, building.condition < 0.92 {
+                SettlementStructures.wear(&context, at: building.center,
+                                          footprint: building.footprint,
+                                          condition: building.condition, seed: building.seed)
             }
             if building.id == selectedBuildingID {
                 let r = building.size * 2.6
@@ -1079,6 +1435,47 @@ enum SettlementRenderer {
                                          y: building.center.y + building.size * 2.5))
             }
         }
+    }
+
+    /// How tall a structure stands, as a multiple of its glyph size — what
+    /// decides how far it throws a shadow. A tower reaches across the square at
+    /// evening; a field of panels barely lifts off the ground.
+    static func height(of glyph: BuildingGlyph) -> CGFloat {
+        switch glyph {
+        case .tower:     return 3.4
+        case .temple:    return 2.8
+        case .plant:     return 2.6
+        case .hall:      return 2.2
+        case .mill:      return 2.2
+        case .pad:       return 2.4
+        case .granary:   return 1.9
+        case .house:     return 1.7
+        case .market:    return 1.6
+        case .workshop:  return 1.5
+        case .generator: return 1.4
+        case .mine:      return 1.2
+        case .array:     return 0.6
+        }
+    }
+
+    /// Everything the town throws on the ground, as one silhouette.
+    private static func castShadows(
+        _ context: inout GraphicsContext, placed: [PlacedBuilding],
+        sun: SettlementLight.Sun
+    ) {
+        guard sun.strength > 0.01 else { return }
+        var shadows = Path()
+        for building in placed where !building.underConstruction {
+            let tall = building.size * height(of: building.glyph)
+            // A shadow starts at the foot of the wall, not at the roof line.
+            let foot = CGPoint(x: building.center.x, y: building.center.y + building.size * 0.3)
+            let base = CGSize(width: max(4, building.footprint.width * 0.78),
+                              height: max(3, building.footprint.height * 0.52))
+            shadows.addPath(SettlementLight.boxShadow(
+                at: foot, footprint: base, height: tall, sun: sun))
+        }
+        guard !shadows.isEmpty else { return }
+        context.fill(shadows, with: .color(SettlementLight.shadowColour(sun)))
     }
 
     /// The plot a structure stands on — cleared, framed ground the size of the
@@ -1133,14 +1530,56 @@ enum SettlementRenderer {
         let scene = AgentMotion.Scene(settlement: settlement, registry: registry,
                                       continuousTick: continuousTick)
         let ticksPerYear = registry.config.ticksPerYear
+        let close = SettlementCrowd.showsIndividuals(zoom: zoom)
+
+        // Pushed in, people are people. Pulled back, a town of sixty drawn as
+        // sixty eleven-pixel figures is a smear — so they gather into group
+        // marks that say how many and at what, and resolve back into people as
+        // the camera comes in.
+        guard close else {
+            let standing = visibleAgents(settlement).compactMap {
+                pawn -> (id: UUID, position: LocalPoint, trade: WorkKind, hurt: Bool)? in
+                let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
+                                            time: time, ticksPerYear: ticksPerYear)
+                guard map.isExplored(pose.position) else { return nil }
+                return (pawn.id, pose.position, pawn.assignedWork,
+                        pawn.body.needsTending || pawn.isBroken)
+            }
+            for cluster in SettlementCrowd.cluster(standing) {
+                guard cluster.count >= SettlementCrowd.minimumGroup else {
+                    // Two people read better as two people than as a mark
+                    // saying "2".
+                    for id in cluster.members {
+                        guard let pawn = settlement.pawns.first(where: { $0.id == id }) else { continue }
+                        let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
+                                                    time: time, ticksPerYear: ticksPerYear)
+                        SettlementFigures.draw(
+                            pawn: pawn, pose: pose, at: point(pose.position, in: rect),
+                            time: time, ticksPerYear: ticksPerYear,
+                            selected: pawn.id == selectedPawnID, zoom: zoom,
+                            context: &context)
+                    }
+                    continue
+                }
+                SettlementCrowd.draw(&context, cluster: cluster,
+                                     at: point(cluster.position, in: rect),
+                                     time: time, zoom: zoom)
+            }
+            return
+        }
+
         for pawn in visibleAgents(settlement) {
             let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
                                         time: time, ticksPerYear: ticksPerYear)
             guard map.isExplored(pose.position) else { continue }
+            // What they would do with what they are carrying — the same split
+            // the simulation fights on, so a bow is drawn being drawn.
+            let ranged = CombatEngine.weaponProfile(pawn, registry: registry)?.kind == .ranged
             SettlementFigures.draw(
                 pawn: pawn, pose: pose, at: point(pose.position, in: rect),
                 time: time, ticksPerYear: ticksPerYear,
-                selected: pawn.id == selectedPawnID, zoom: zoom, context: &context)
+                selected: pawn.id == selectedPawnID, zoom: zoom, ranged: ranged,
+                context: &context)
         }
     }
 
@@ -1149,17 +1588,7 @@ enum SettlementRenderer {
     private static func fog(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double
     ) {
-        let cols = LocalMap.gridColumns, rows = LocalMap.gridRows
-        let cw = rect.width / CGFloat(cols), ch = rect.height / CGFloat(rows)
-        var covered = Path()
-        for row in 0..<rows {
-            for col in 0..<cols where !map.exploredCells.contains(row * cols + col) {
-                covered.addRect(CGRect(x: rect.minX + CGFloat(col) * cw,
-                                       y: rect.minY + CGFloat(row) * ch,
-                                       width: cw + 0.5, height: ch + 0.5))
-            }
-        }
-        context.fill(covered, with: .color(Theme.ink.opacity(0.86)))
+        SettlementGround.fog(&context, rect: rect, map: map)
         scoutOrder(&context, rect: rect, map: map, time: time)
     }
 

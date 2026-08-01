@@ -71,6 +71,59 @@ public struct ResourceNode: Codable, Sendable, Equatable, Identifiable {
     }
 }
 
+/// The sea's edge on a coastal map.
+///
+/// A coast used to be a field with a stream through it like everywhere else —
+/// the same `RiverShape` every biome got — so the one country whose whole
+/// character is *the water* read exactly like the plains. This is an edge of
+/// open sea along one side of the map, with a coastline that wanders.
+public struct ShoreShape: Codable, Sendable, Equatable {
+    public enum Side: String, Codable, Sendable, CaseIterable {
+        case north, south, east, west
+    }
+    public var side: Side
+    /// How far in from that edge the water reaches on average, 0…1.
+    public var depth: Double
+    /// How much the coastline wanders in and out.
+    public var amplitude: Double
+    public var phase: Double
+
+    public init(side: Side, depth: Double, amplitude: Double, phase: Double) {
+        self.side = side
+        self.depth = depth
+        self.amplitude = amplitude
+        self.phase = phase
+    }
+
+    /// How far the water reaches in from its edge at a position `t` (0…1)
+    /// along the coast.
+    public func reach(at t: Double) -> Double {
+        max(0.02, depth + sin(t * 6.283185 + phase) * amplitude
+                        + sin(t * 15.5 + phase * 1.7) * amplitude * 0.35)
+    }
+
+    /// Whether a point is out in the water.
+    public func isWater(_ p: LocalPoint) -> Bool {
+        switch side {
+        case .north: return p.y < reach(at: p.x)
+        case .south: return p.y > 1 - reach(at: p.x)
+        case .west:  return p.x < reach(at: p.y)
+        case .east:  return p.x > 1 - reach(at: p.y)
+        }
+    }
+
+    /// How far inland a point is from the waterline — negative out at sea.
+    /// Lets the shore fade into the beach instead of stopping at a hard line.
+    public func distanceInland(_ p: LocalPoint) -> Double {
+        switch side {
+        case .north: return p.y - reach(at: p.x)
+        case .south: return (1 - reach(at: p.x)) - p.y
+        case .west:  return p.x - reach(at: p.y)
+        case .east:  return (1 - reach(at: p.y)) - p.x
+        }
+    }
+}
+
 /// A point of interest discovered by exploring the fog of war — ruins, a cave,
 /// a spring, buried treasure, a forgotten shrine or a wrecked caravan.
 /// Discovery grants a one-off reward and a journal line (see
@@ -87,6 +140,16 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
     case treasure   // a cache of goods
     case shrine     // the old gods still listen
     case wreck      // a caravan that never arrived
+    // Six place kinds was thin after an evening: by the second valley you had
+    // seen all of them and a landmark stopped being news. These six each give a
+    // *different* reason to send people out — food, a teacher, a map, salt,
+    // grave goods, and something that fell out of the sky.
+    case orchard    // a farm gone feral — food, year after year
+    case hermit     // somebody living out there who will teach
+    case watchtower // climb it and the country draws itself
+    case saltPan    // salt: the difference between meat and meat that keeps
+    case barrow     // a burial mound, and what was buried with them
+    case starfall   // a fallen star, still warm
 
     /// The journal's line for the moment of discovery.
     public var discoveryText: LocalizedText {
@@ -109,15 +172,35 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
         case .wreck: return LocalizedText(values: [
             .en: "Scouts found a wrecked caravan, its timber still good.",
             .cs: "Zvědové našli vrak karavany — dřevo je pořád dobré."])
+        case .orchard: return LocalizedText(values: [
+            .en: "Scouts walked into an old orchard gone wild — and still bearing.",
+            .cs: "Zvědové vešli do starého sadu, co zplaněl — a pořád rodí."])
+        case .hermit: return LocalizedText(values: [
+            .en: "Scouts found a hermit's hut. Somebody has been out here a long time.",
+            .cs: "Zvědové našli poustevnu. Někdo tu žije už hodně dlouho."])
+        case .watchtower: return LocalizedText(values: [
+            .en: "Scouts found a ruined watchtower. From its top you would see the whole country.",
+            .cs: "Zvědové našli rozbořenou strážní věž. Z jejího vrcholu je vidět celý kraj."])
+        case .saltPan: return LocalizedText(values: [
+            .en: "Scouts found a salt pan — white crust as far as the eye goes.",
+            .cs: "Zvědové našli solisko — bílá kůra, kam oko dohlédne."])
+        case .barrow: return LocalizedText(values: [
+            .en: "Scouts found a burial mound. Whoever lies there was buried rich.",
+            .cs: "Zvědové našli mohylu. Ať v ní leží kdokoli, pohřbili ho bohatě."])
+        case .starfall: return LocalizedText(values: [
+            .en: "Scouts found a crater with something at the bottom of it that fell from the sky.",
+            .cs: "Zvědové našli kráter a na jeho dně něco, co spadlo z nebe."])
         }
     }
 
-    /// A spring does not run dry and the old gods do not stop listening: these
-    /// two recover with time instead of being used up.
+    /// A spring does not run dry, the old gods do not stop listening, an orchard
+    /// bears again next year and a hermit is still there when you go back: these
+    /// recover with time instead of being used up.
     public var isRenewable: Bool {
         switch self {
-        case .spring, .shrine: return true
-        case .ruins, .cave, .treasure, .wreck: return false
+        case .spring, .shrine, .orchard, .hermit: return true
+        case .ruins, .cave, .treasure, .wreck, .watchtower, .saltPan,
+             .barrow, .starfall: return false
         }
     }
 
@@ -125,10 +208,10 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
     /// Ignored for renewable kinds.
     public var maxVisits: Int {
         switch self {
-        case .treasure: return 1   // a cache is a cache: you empty it once
-        case .ruins, .wreck: return 2
-        case .cave: return 3       // a seam of stone outlasts a rummage
-        case .spring, .shrine: return .max
+        case .treasure, .barrow, .starfall: return 1  // you empty it once
+        case .ruins, .wreck, .watchtower: return 2
+        case .cave, .saltPan: return 3                // a seam outlasts a rummage
+        case .spring, .shrine, .orchard, .hermit: return .max
         }
     }
 
@@ -138,6 +221,8 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
         switch self {
         case .spring: return 3
         case .shrine: return 4
+        case .orchard: return 1     // it fruits every year, like anything else
+        case .hermit: return 5      // he has only so much to teach
         default: return 0
         }
     }
@@ -152,6 +237,10 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
         case .ruins, .treasure: return 2
         case .shrine, .wreck: return 3
         case .cave: return 3
+        case .hermit, .watchtower: return 2
+        case .orchard, .barrow: return 3
+        case .saltPan: return 3
+        case .starfall: return 4   // whatever it is, you do not go alone
         }
     }
 
@@ -161,10 +250,16 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
         switch self {
         case .spring: return 3
         case .shrine: return 4
+        case .watchtower: return 4
+        case .orchard: return 5
         case .treasure: return 5
+        case .hermit: return 6
         case .wreck: return 6
+        case .barrow: return 7
+        case .saltPan: return 8
         case .ruins: return 8
         case .cave: return 10
+        case .starfall: return 12
         }
     }
 
@@ -172,10 +267,13 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
     public var wantedSkill: WorkKind {
         switch self {
         case .ruins: return .research
-        case .cave: return .mining
+        case .cave, .saltPan, .starfall: return .mining
         case .wreck, .treasure: return .logging
         case .spring: return .healing
-        case .shrine: return .priest
+        case .shrine, .barrow: return .priest
+        case .orchard: return .farming
+        case .hermit: return .research
+        case .watchtower: return .scouting
         }
     }
 
@@ -183,6 +281,9 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
     public var hazardChance: Double {
         switch self {
         case .cave: return 0.22
+        case .starfall: return 0.26   // it is still hot, and it is not stone
+        case .barrow: return 0.16     // a mound is a hole that wants to close
+        case .watchtower: return 0.12 // the stair is four hundred years old
         case .ruins: return 0.08
         default: return 0
         }
@@ -190,7 +291,10 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
 
     public var hazardDamage: Double {
         switch self {
+        case .starfall: return 24
         case .cave: return 18
+        case .watchtower: return 16
+        case .barrow: return 14
         case .ruins: return 10
         default: return 0
         }
@@ -205,6 +309,12 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
         case .treasure: return LocalizedText(values: [.en: "buried cache", .cs: "skrýš"])
         case .shrine: return LocalizedText(values: [.en: "old shrine", .cs: "svatyně"])
         case .wreck: return LocalizedText(values: [.en: "wrecked caravan", .cs: "vrak"])
+        case .orchard: return LocalizedText(values: [.en: "wild orchard", .cs: "zplanělý sad"])
+        case .hermit: return LocalizedText(values: [.en: "hermit's hut", .cs: "poustevna"])
+        case .watchtower: return LocalizedText(values: [.en: "watchtower", .cs: "strážní věž"])
+        case .saltPan: return LocalizedText(values: [.en: "salt pan", .cs: "solisko"])
+        case .barrow: return LocalizedText(values: [.en: "burial mound", .cs: "mohyla"])
+        case .starfall: return LocalizedText(values: [.en: "fallen star", .cs: "spadlá hvězda"])
         }
     }
 
@@ -218,6 +328,12 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
         case .treasure: return "skrýši"
         case .shrine: return "svatyni"
         case .wreck: return "vraku"
+        case .orchard: return "zplanělému sadu"
+        case .hermit: return "poustevně"
+        case .watchtower: return "strážní věži"
+        case .saltPan: return "solisku"
+        case .barrow: return "mohyle"
+        case .starfall: return "spadlé hvězdě"
         }
     }
 }
@@ -311,13 +427,20 @@ public struct WildlifeState: Codable, Sendable, Equatable {
     /// conditions). The emerging layer that will take over from the abstract
     /// `deerHerd` count above. Old saves have none; they decode to empty.
     public var animals: [Animal]
+    /// Whether this wild is made of animals. Not the same question as
+    /// `animals.isEmpty`: a valley whose every beast has died is empty too, and
+    /// falling back to the abstract herd there let a dead valley go on feeding
+    /// its hunters exactly as before.
+    public var usesEntities: Bool
 
     public init(deerHerd: Double = 40, deerCapacity: Double = 80,
-                predatorPressure: Double = 10, animals: [Animal] = []) {
+                predatorPressure: Double = 10, animals: [Animal] = [],
+                usesEntities: Bool = false) {
         self.deerHerd = deerHerd
         self.deerCapacity = deerCapacity
         self.predatorPressure = predatorPressure
         self.animals = animals
+        self.usesEntities = usesEntities || !animals.isEmpty
     }
 
     // Resilient decode: `animals` postdates the abstract herd, so older saves
@@ -328,10 +451,34 @@ public struct WildlifeState: Codable, Sendable, Equatable {
         deerCapacity = try c.decodeIfPresent(Double.self, forKey: .deerCapacity) ?? 80
         predatorPressure = try c.decodeIfPresent(Double.self, forKey: .predatorPressure) ?? 10
         animals = try c.decodeIfPresent([Animal].self, forKey: .animals) ?? []
+        usesEntities = try c.decodeIfPresent(Bool.self, forKey: .usesEntities) ?? !animals.isEmpty
     }
 
-    /// How well-stocked the herd is (0…1) — hunting yield scales with this.
+    /// Prey the land can carry, as a head count — the entity counterpart of
+    /// `deerCapacity`, which is measured in the older abstract units.
+    public var preyCapacity: Int { Int(max(0, deerCapacity / 4)) }
+
+    /// The game actually alive on this map right now.
+    public var preyCount: Int { animals.count { !$0.species.isPredator } }
+
+    /// How well-stocked the wild is (0…1) — hunting yield scales with this.
+    ///
+    /// Reads the **real animals** wherever there are any. That is the whole
+    /// point of them: a valley whose deer froze to death over a hard winter
+    /// should stop feeding its hunters, and while this was only
+    /// `deerHerd / deerCapacity` it went on feeding them exactly as before —
+    /// the beasts could all die and the larder would never notice. Saves that
+    /// predate the entities fall back to the abstract number.
     public var herdFraction: Double {
+        if usesEntities, preyCapacity > 0 {
+            return min(1, Double(preyCount) / Double(preyCapacity))
+        }
+        return abstractHerdFraction
+    }
+
+    /// The old number on its own, without the animals. Used where the two must
+    /// not chase each other — the cull that keeps the entities in step with it.
+    public var abstractHerdFraction: Double {
         deerCapacity > 0 ? min(1, deerHerd / deerCapacity) : 0
     }
 }
@@ -361,6 +508,33 @@ public struct LocalMap: Codable, Sendable, Equatable {
     public var terrainSeed: UInt64
     /// Decorative landscape features, placed by the seed.
     public var scenery: [SceneryProp]
+    /// The wood as *trees* — individual things that grow for years and are gone
+    /// when felled, standing on the ground the forest deposits claim. The
+    /// abstract nodes still drive the economy; these are the layer taking it
+    /// over. Old saves have none and decode to empty.
+    public var trees: [Tree]
+    /// The stone as *outcrops* — bodies with ore in them that do not grow back.
+    public var rocks: [Rock]
+    /// Whether this map's wood and stone are made of *things*.
+    ///
+    /// `!trees.isEmpty` looked like the same question and is not: a map whose
+    /// last tree has just been felled has no trees either, and treating that as
+    /// "no entity layer" made the forest deposit keep the value it held before
+    /// the final trunk came down — a wood logged flat that still read as
+    /// half-full. Maps generated before the entity layer decode this as false
+    /// and keep the old arithmetic for ever.
+    public var usesEntityLand: Bool
+    /// The sea, on the maps that have one. Nil inland — most country has none,
+    /// and a save written before coasts existed decodes to nil.
+    public var shore: ShoreShape?
+    /// The mountain, where there is one: solid rock in blocks, dug into at the
+    /// face. Empty on most country, and on every map made before there were
+    /// mountains to dig.
+    public var stone: StoneField
+    /// Goods lying where the work happened, waiting to be carried in.
+    public var piles: [HaulPile]
+    /// Outsiders presently on this ground — traders, envoys, refugees.
+    public var visitors: [Visitor]
     /// Scout-steps walked so far — one per scout per reveal step. How far the
     /// frontier has moved is a function of *work done*, never of the world
     /// clock: a colony founded in year 200 charts its own valley from scratch
@@ -384,9 +558,19 @@ public struct LocalMap: Codable, Sendable, Equatable {
         biomeID: String = "plains",
         terrainSeed: UInt64 = 0,
         scenery: [SceneryProp] = [],
+        trees: [Tree] = [],
+        rocks: [Rock] = [],
+        usesEntityLand: Bool = false,
+        shore: ShoreShape? = nil,
+        stone: StoneField = StoneField(),
+        piles: [HaulPile] = [],
+        visitors: [Visitor] = [],
         scoutProgress: Double = 0,
         scoutFocus: LocalPoint? = nil
     ) {
+        self.stone = stone
+        self.piles = piles
+        self.visitors = visitors
         self.river = river
         self.nodes = nodes
         self.pois = pois
@@ -395,6 +579,10 @@ public struct LocalMap: Codable, Sendable, Equatable {
         self.biomeID = biomeID
         self.terrainSeed = terrainSeed
         self.scenery = scenery
+        self.trees = trees
+        self.rocks = rocks
+        self.usesEntityLand = usesEntityLand
+        self.shore = shore
         self.scoutProgress = scoutProgress
         self.scoutFocus = scoutFocus
     }
@@ -403,6 +591,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case river, nodes, pois, wildlife, exploredCells, biomeID, terrainSeed, scenery
+        case trees, rocks, shore, usesEntityLand, stone, piles, visitors
         case scoutProgress, scoutFocus
     }
 
@@ -416,6 +605,13 @@ public struct LocalMap: Codable, Sendable, Equatable {
         biomeID = try c.decodeIfPresent(String.self, forKey: .biomeID) ?? "plains"
         terrainSeed = try c.decodeIfPresent(UInt64.self, forKey: .terrainSeed) ?? 0
         scenery = try c.decodeIfPresent([SceneryProp].self, forKey: .scenery) ?? []
+        trees = try c.decodeIfPresent([Tree].self, forKey: .trees) ?? []
+        rocks = try c.decodeIfPresent([Rock].self, forKey: .rocks) ?? []
+        usesEntityLand = try c.decodeIfPresent(Bool.self, forKey: .usesEntityLand) ?? false
+        shore = try c.decodeIfPresent(ShoreShape.self, forKey: .shore)
+        stone = try c.decodeIfPresent(StoneField.self, forKey: .stone) ?? StoneField()
+        piles = try c.decodeIfPresent([HaulPile].self, forKey: .piles) ?? []
+        visitors = try c.decodeIfPresent([Visitor].self, forKey: .visitors) ?? []
         scoutProgress = try c.decodeIfPresent(Double.self, forKey: .scoutProgress) ?? 0
         scoutFocus = try c.decodeIfPresent(LocalPoint.self, forKey: .scoutFocus)
     }

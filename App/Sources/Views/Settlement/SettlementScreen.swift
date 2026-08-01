@@ -7,6 +7,11 @@ import EndlessFrontierCore
 struct SettlementScreen: View {
     @Bindable var game: GameViewModel
     @State private var selection: CanvasSelection = .none
+    /// What the player is placing, if anything. Set from the picker; the canvas
+    /// turns into the build surface while it holds a value.
+    @State private var buildPlan: BuildPlan?
+    /// Whether the "what to build" strip is showing.
+    @State private var picking = false
 
     /// Which drawer is open, if any.
     ///
@@ -66,7 +71,9 @@ struct SettlementScreen: View {
             if let map = game.viewedLocalMap, let settlement = game.selectedSettlement {
                 SettlementCanvasView(
                     settlement: settlement, map: map, registry: game.registry,
-                    season: game.season, clock: game.tickClock, selection: $selection)
+                    season: game.season, caravans: game.world.caravans,
+                    clock: game.tickClock, selection: $selection,
+                    buildPlan: $buildPlan)
                 .overlay(alignment: .topTrailing) {
                     MinimapView(map: map).padding(12)
                 }
@@ -119,8 +126,17 @@ struct SettlementScreen: View {
     @ViewBuilder
     private var bottomLayer: some View {
         VStack(spacing: 10) {
-            // A decision outranks idle curiosity about the scene.
-            if let decision = game.currentDecision {
+            // Laying a building out owns the screen while it is happening: the
+            // ghost on the canvas and this bar are one interaction.
+            if buildPlan != nil {
+                BuildPlacementBar(game: game, plan: $buildPlan)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if picking {
+                BuildPickerBar(game: game, plan: $buildPlan) {
+                    withAnimation(.easeOut(duration: 0.15)) { picking = false }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if let decision = game.currentDecision {
                 EventDecisionCard(game: game, template: decision,
                                   queued: max(0, game.pendingEvents.count - 1))
                     .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -134,7 +150,10 @@ struct SettlementScreen: View {
             } else if let pawn = selectedPawn {
                 PawnInspectorCard(pawn: pawn, ticksPerYear: game.ticksPerYear,
                                   activity: activityLine(for: pawn),
-                                  bonds: bondLines(for: pawn)) {
+                                  bonds: bondLines(for: pawn),
+                                  moodFactors: MoodLedger.factors(for: pawn,
+                                                                  registry: game.registry),
+                                  housed: pawn.homeID != nil) {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -149,6 +168,11 @@ struct SettlementScreen: View {
                     onClose: {
                         withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                     })
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if case let .animal(id) = selection, let found = game.animal(id) {
+                AnimalInspectorCard(animal: found.animal, kept: found.kept) {
+                    withAnimation(.easeOut(duration: 0.15)) { selection = .none }
+                }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if case let .fog(point) = selection {
                 ScoutOrderCard(scouts: game.scoutCount) {
@@ -195,37 +219,74 @@ struct SettlementScreen: View {
         .animation(.easeOut(duration: 0.25), value: game.battleReport?.id)
     }
 
+    /// A button label that will not wrap: one line, allowed to shrink, and on a
+    /// genuinely narrow screen the word drops away and the icon carries it.
+    private func compactLabel(_ text: String, icon: String) -> some View {
+        ViewThatFits(in: .horizontal) {
+            Label(text, systemImage: icon)
+                .font(.subheadline.weight(.semibold))
+                .lineLimit(1)
+                .fixedSize()
+            Image(systemName: icon)
+                .font(.subheadline.weight(.semibold))
+                .accessibilityLabel(text)
+        }
+    }
+
     private var controlBar: some View {
-        HStack(spacing: 12) {
+        // Four controls in one capsule is more than a phone's width holds with
+        // words on all of them: on a real device this wrapped into "St av ět"
+        // and "De tail y". Everything here now refuses to wrap and shrinks
+        // instead, and the two secondary actions keep only their icon on the
+        // narrowest screens.
+        HStack(spacing: 8) {
             if let settlement = game.selectedSettlement {
                 Label("\(settlement.pawns.count)/\(game.housingCapacity(settlement))",
                       systemImage: "person.2.fill")
                     .font(.subheadline.weight(.semibold).monospacedDigit())
                     .foregroundStyle(Theme.text)
+                    .lineLimit(1)
+                    .fixedSize()
             }
-            Spacer()
+            Spacer(minLength: 4)
             // The build grid was written, tested and then never reachable —
             // nothing anywhere constructed ColonyMapScreen, so the layout, its
             // zones and every adjacency synergy the loop computes each tick
             // were invisible.
+            // Building happens *here*, on the colony you are looking at — the
+            // abstract grid screen is still one tap further in for the fiddly
+            // work (zones, per-building staffing), but choosing where a roof
+            // goes should never have needed a second picture of the town.
+            Button {
+                withAnimation(.easeOut(duration: 0.15)) {
+                    if buildPlan != nil { buildPlan = nil } else { picking.toggle() }
+                }
+            } label: {
+                compactLabel(AppStrings.language == .cs ? "Stavět" : "Build",
+                             icon: "hammer.fill")
+            }
+            .buttonStyle(.bordered)
+            .tint(picking || buildPlan != nil ? Theme.accent : Theme.text)
             Button {
                 drawer = .layout
             } label: {
-                Label(AppStrings.layout, systemImage: "square.grid.3x3.fill")
+                // The layout screen is the least-reached of the four, so it is
+                // the one that gives up its word first.
+                Image(systemName: "square.grid.3x3.fill")
                     .font(.subheadline.weight(.semibold))
+                    .accessibilityLabel(AppStrings.layout)
             }
             .buttonStyle(.bordered)
             .tint(Theme.text)
             Button {
                 drawer = .details
             } label: {
-                Label(AppStrings.details, systemImage: "slider.horizontal.3")
-                    .font(.subheadline.weight(.semibold))
+                compactLabel(AppStrings.details, icon: "slider.horizontal.3")
             }
             .buttonStyle(.borderedProminent)
             .tint(Theme.accent)
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .background(.ultraThinMaterial, in: Capsule())
         .overlay(Capsule().strokeBorder(Theme.boneFaint.opacity(0.4), lineWidth: 1))

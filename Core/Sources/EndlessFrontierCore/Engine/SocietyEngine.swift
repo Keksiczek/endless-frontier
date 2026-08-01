@@ -18,6 +18,8 @@ public enum SocietyEngine {
         case .mining, .healing: return 3.5
         case .research: return 3.2
         case .farming, .logging, .hunting, .building, .trade: return 3.0
+        // Standing a watch is paid work, a little under a trade.
+        case .garrison: return 2.8
         case .foraging, .scouting: return 2.5
         case .priest: return 2.0
         case .idle: return 1.0
