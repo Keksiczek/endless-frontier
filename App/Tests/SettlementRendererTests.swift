@@ -142,11 +142,30 @@ struct CameraTests {
     /// Zoom works by scaling the rect the world maps into rather than by a
     /// `scaleEffect`, because a layer transform resamples the finished bitmap
     /// and turns the hairlines to mush.
-    @Test("At rest the world fills the view exactly")
+    @Test("At full extent the world fills the view exactly")
     func identityCamera() {
-        let world = SettlementRenderer.worldRect(
-            viewRect: rect, camera: SettlementRenderer.Camera())
-        #expect(world == rect)
+        var camera = SettlementRenderer.Camera()
+        camera.scale = SettlementRenderer.Camera.minScale
+        #expect(SettlementRenderer.worldRect(viewRect: rect, camera: camera) == rect)
+    }
+
+    /// The screen opens framed on the **town**, not on the whole valley: at 1
+    /// the built span is a little over half a phone's width holding an 18×18
+    /// grid, so a one-tile house came out about eleven points across and a
+    /// colony read as a scatter of marks.
+    @Test("The camera opens on the town and can still pull back to the valley")
+    func openingFramesTheColony() {
+        let opening = SettlementRenderer.Camera()
+        #expect(opening.scale == SettlementRenderer.Camera.opening)
+        #expect(opening.scale > SettlementRenderer.Camera.minScale,
+                "opening on the whole map is what made the town illegible")
+        #expect(opening.scale <= SettlementRenderer.Camera.maxScale)
+        // Far enough in that roofs are named the moment you arrive.
+        #expect(opening.scale >= 1.6)
+        // …and the built span really does end up across most of the screen.
+        let world = SettlementRenderer.worldRect(viewRect: rect, camera: opening)
+        let town = world.width * SettlementRenderer.colonySpan
+        #expect(town > rect.width * 0.75, "the town still does not fill the screen")
     }
 
     @Test("Zooming in grows the world about the view's centre")

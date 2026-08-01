@@ -68,6 +68,14 @@ struct SettlementScreen: View {
                 game.dismissSessionSummary()
             }
         }
+        // A raid runs on its own, much faster clock while somebody is here to
+        // answer it. Starting the driver is *all* this does — the fight itself
+        // is the simulation's, and it happens whether or not this screen is up.
+        .onChange(of: game.siege?.id) { _, id in
+            if id != nil { game.startSiegeLoop() } else { game.stopSiegeLoop() }
+        }
+        .onAppear { if game.siege != nil { game.startSiegeLoop() } }
+        .onDisappear { game.stopSiegeLoop() }
     }
 
     private var canvasArea: some View {
@@ -132,7 +140,16 @@ struct SettlementScreen: View {
         VStack(spacing: 10) {
             // Laying a building out owns the screen while it is happening: the
             // ghost on the canvas and this bar are one interaction.
-            if buildPlan != nil {
+            // A raid outranks everything. It is happening now, it is happening
+            // to you, and it is the one thing on this screen with a clock on
+            // it — laying out a granary can wait.
+            if let siege = game.siege {
+                SiegeCommandCard(
+                    siege: siege, defenders: siegeDefenders(siege),
+                    onPosture: { game.order(posture: $0) },
+                    onToggle: { game.setInLine($0, holding: $1) })
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if buildPlan != nil {
                 BuildPlacementBar(game: game, plan: $buildPlan)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if picking {
@@ -309,6 +326,18 @@ struct SettlementScreen: View {
                  : "The world is being born — life is moments away.")
         }
         .foregroundStyle(Theme.textDim)
+    }
+
+    /// The line, resolved to people the card can name and show the state of.
+    private func siegeDefenders(_ siege: Siege) -> [SiegeCommandCard.Defender] {
+        guard let settlement = game.selectedSettlement else { return [] }
+        return siege.line.compactMap { id in
+            guard let pawn = settlement.pawns.first(where: { $0.id == id }) else { return nil }
+            return SiegeCommandCard.Defender(
+                id: id, name: pawn.name,
+                condition: max(0, min(1, pawn.health / 100)),
+                holding: !siege.withdrawn.contains(id))
+        }
     }
 
     private var selectedPawn: Pawn? {

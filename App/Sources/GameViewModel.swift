@@ -127,6 +127,8 @@ final class GameViewModel {
     private var acknowledgedBattleIDs: Set<UUID> = []
 
     private var liveLoop: Task<Void, Never>?
+    /// The separate, much faster heartbeat a live raid runs on.
+    private var siegeLoop: Task<Void, Never>?
     /// How often the loop checks whether a tick has come due.
     private let livePollSeconds: Double = 5
     /// Live advances stay small; anything bigger goes the catch-up path.
@@ -147,6 +149,73 @@ final class GameViewModel {
     func stopLiveLoop() {
         liveLoop?.cancel()
         liveLoop = nil
+        stopSiegeLoop()
+    }
+
+    // MARK: - A raid, while it is happening
+
+    /// The fight going on at the settlement you are looking at, if one is.
+    var siege: Siege? { selectedSettlement?.siege }
+
+    /// Real seconds between two exchanges while the player is watching.
+    ///
+    /// The whole point of `Siege`: the world clock would carry the fight at
+    /// one step every seven and a half seconds, which is a battle you can
+    /// stare straight at and see nothing happen in. Driven from here it runs
+    /// at a pace a person can read *and* answer — and because a step is fought
+    /// once by whoever reaches it first, running ahead of the world clock does
+    /// not change the fight, only who got to steer it.
+    private let siegeStepSeconds: Double = 1.4
+
+    /// Starts stepping a live raid. Idempotent; stops itself when the fighting
+    /// does.
+    func startSiegeLoop() {
+        guard siegeLoop == nil, siege != nil else { return }
+        siegeLoop = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(self?.siegeStepSeconds ?? 1.4))
+                guard let self, self.advanceSiegeStep() else { break }
+            }
+            self?.siegeLoop = nil
+        }
+    }
+
+    func stopSiegeLoop() {
+        siegeLoop?.cancel()
+        siegeLoop = nil
+    }
+
+    /// Fights one more exchange. Returns whether the raid is still going.
+    @discardableResult
+    func advanceSiegeStep() -> Bool {
+        guard let index = selectedSettlementIndex,
+              let running = world.settlements[index].siege else { return false }
+        let fought = SiegeEngine.fight(
+            world.settlements[index], to: running.advancedTo + 1, registry: registry)
+        world.settlements[index] = fought.settlement
+        if let finished = fought.concluded {
+            // The neighbours are charged for what the attempt actually cost
+            // them, exactly as `ActionLoop` would have done it.
+            world = SiegeEngine.chargeAttacker(world, for: finished)
+            persist()
+            return false
+        }
+        return true
+    }
+
+    /// Tells the line what to do. Recorded on the siege, so it is part of the
+    /// world rather than a thing that happened outside it.
+    func order(posture: Siege.Posture) {
+        guard let index = selectedSettlementIndex else { return }
+        world.settlements[index] = SiegeEngine.order(
+            world.settlements[index], posture: posture)
+    }
+
+    /// Pulls a colonist out of the line, or sends them back to it.
+    func setInLine(_ pawnID: UUID, holding: Bool) {
+        guard let index = selectedSettlementIndex else { return }
+        world.settlements[index] = SiegeEngine.withdraw(
+            world.settlements[index], pawnID: pawnID, out: !holding)
     }
 
     /// Advances any ticks that have come due while the app sits open, and
@@ -358,6 +427,14 @@ final class GameViewModel {
     }
 
     func selectSettlement(_ id: UUID) { selectedSettlementID = id }
+
+    /// Where the viewed settlement sits in the world's array — needed wherever
+    /// it has to be written back rather than read.
+    var selectedSettlementIndex: Int? {
+        if let id = selectedSettlementID,
+           let index = world.settlements.firstIndex(where: { $0.id == id }) { return index }
+        return world.settlements.isEmpty ? nil : 0
+    }
 
     // MARK: - Standing orders
 

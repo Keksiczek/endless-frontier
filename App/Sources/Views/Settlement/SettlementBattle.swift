@@ -218,7 +218,13 @@ enum SettlementBattle {
         _ settlement: Settlement, continuousTick: Double,
         secondsPerTick: Double = 60, replay: Replay? = nil, now: Date = Date()
     ) -> (log: BattleLog, progress: Double)? {
-        // A replay outranks the live fight: the player asked for this one.
+        // A fight that is **still going on** outranks everything: this is not a
+        // recording being played back, it is the thing itself, and the record
+        // grows a beat at a time as the simulation writes it.
+        if let siege = settlement.siege {
+            return (log(of: siege, defender: settlement.name), siege.progress)
+        }
+        // A replay outranks the finished fight: the player asked for this one.
         if let replay {
             let elapsed = now.timeIntervalSince(replay.startedAt) / playSeconds
             if elapsed >= 0, elapsed <= 1 + lingerFraction {
@@ -230,6 +236,24 @@ enum SettlementBattle {
         let elapsed = (continuousTick - Double(log.tick)) * speed
         guard elapsed >= 0, elapsed <= 1 + lingerFraction else { return nil }
         return (log, min(1, elapsed))
+    }
+
+    /// A live siege, read as the record the drawing already speaks.
+    ///
+    /// The choreography does not need to know whether a fight has finished —
+    /// it needs to know who came, from where, who is holding the line and what
+    /// has happened so far. A siege has all of that, mid-swing, so the same
+    /// code draws a fight in progress and a fight being replayed.
+    static func log(of siege: Siege, defender: String) -> BattleLog {
+        BattleLog(
+            id: siege.id, tick: siege.startTick,
+            attackerName: siege.attackerName, defenderName: defender,
+            moments: siege.moments, repelled: siege.repelled,
+            attackerLabel: siege.attackerLabel, approach: siege.approach,
+            attackers: siege.attackers,
+            // Anyone the player pulled out has left the wall, so the line the
+            // canvas draws is the line that is actually standing in it.
+            line: siege.standing)
     }
 
     /// Where a colonist called to the line should be at `progress`, and whether
