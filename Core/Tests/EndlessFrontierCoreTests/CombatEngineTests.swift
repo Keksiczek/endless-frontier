@@ -67,8 +67,11 @@ struct CombatEngineTests {
                 genes: Genes(industry: 0.5, fertility: 0.5, sociability: 0.2, courage: 0.9),
                 standing: -80)]
             var rng = SeededRNG(seed: 99)
-            let after = DiplomacyEngine.raid(world, tribeIndex: 0, capitalIndex: 0,
-                                             registry: reg, rng: &rng)
+            let opened = DiplomacyEngine.raid(world, tribeIndex: 0, capitalIndex: 0,
+                                              registry: reg, rng: &rng)
+            // The raid opens a siege now; it is decided once the action clock
+            // has carried it to the end.
+            let after = SiegeTestSupport.fightItOut(opened, registry: reg)
             let line = after.settlements[0].journal.entries.last?.text.resolve(.en) ?? ""
             return (after.settlements[0].storage[.food], line)
         }
@@ -92,8 +95,11 @@ struct CombatEngineTests {
             name: "Raiders", foundedTick: 0, originStory: LocalizedText("They left."),
             population: 40, genes: Genes(), standing: -80)]
         var rng = SeededRNG(seed: 5)
-        let after = DiplomacyEngine.raid(world, tribeIndex: 0, capitalIndex: 0,
-                                         registry: reg, rng: &rng)
+        let opened = DiplomacyEngine.raid(world, tribeIndex: 0, capitalIndex: 0,
+                                          registry: reg, rng: &rng)
+        // What the attempt cost them is known when the fighting stops, not
+        // when it was declared.
+        let after = SiegeTestSupport.fightItOut(opened, registry: reg)
         #expect(after.tribes[0].population < 40)
     }
 

@@ -138,6 +138,13 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     /// finished result — see `BattleLog`.
     public var lastBattle: BattleLog?
 
+    /// A fight that is **still going on** here, if one is.
+    ///
+    /// `lastBattle` is a recording; this is the thing itself, mid-swing, with
+    /// the player's orders on it. While it is set the raid has not been decided
+    /// — see `SiegeEngine`.
+    public var siege: Siege?
+
     /// The colony's standing orders — trades, rations and who parties may take.
     /// At sixty souls the pawn screen is for looking at somebody; this is how
     /// the town is actually run. See `ColonyPolicy`.
@@ -229,7 +236,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         case laws, leaderID, society, strikeTicksRemaining, faith
         case constructions, constructionSequence, journal, relationships, expeditions
         case tamed
-        case stockpile, rawProgress, lastBattle, policy
+        case stockpile, rawProgress, lastBattle, policy, siege
     }
 
     public init(from decoder: Decoder) throws {
@@ -268,6 +275,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         stockpile = try c.decodeIfPresent([String: Int].self, forKey: .stockpile) ?? [:]
         rawProgress = try c.decodeIfPresent([String: Double].self, forKey: .rawProgress) ?? [:]
         lastBattle = try c.decodeIfPresent(BattleLog.self, forKey: .lastBattle)
+        siege = try c.decodeIfPresent(Siege.self, forKey: .siege)
         // Decode-if-present: a save from before standing orders loads as a
         // colony under none, and plays exactly as it did.
         policy = try c.decodeIfPresent(ColonyPolicy.self, forKey: .policy) ?? ColonyPolicy()

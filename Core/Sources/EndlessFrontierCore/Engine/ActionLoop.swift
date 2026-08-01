@@ -23,9 +23,31 @@ public enum ActionLoop {
         _ state: WorldState, clock: WorldClock, registry: GameDataRegistry
     ) -> WorldState {
         var s = state
+        var concluded: [Siege] = []
         s.settlements = s.settlements.map { settlement in
-            LocalPOIEngine.advanceStep(settlement, clock: clock,
-                                       mapSeed: s.mapSeed, registry: registry)
+            var next = LocalPOIEngine.advanceStep(settlement, clock: clock,
+                                                  mapSeed: s.mapSeed, registry: registry)
+            // A raid the player is in the middle of fighting.
+            //
+            // The app drives a live siege *ahead* of the world clock, at a pace
+            // a person can give an order at. This is the other half of that
+            // contract: when the world clock arrives at a step the player never
+            // reached — because they closed the app, or never opened it — the
+            // fighting happens anyway, exactly as it would have. A step is
+            // fought once, by whoever gets there first, so backgrounding an app
+            // mid-raid is neither a tactic nor a punishment.
+            guard next.siege != nil else { return next }
+            // The siege *as it finished*, not as it stood before the last step
+            // — the tribe is charged for what the fight actually cost it.
+            let fought = SiegeEngine.fight(next, to: clock.absoluteStep, registry: registry)
+            if let finished = fought.concluded { concluded.append(finished) }
+            return fought.settlement
+        }
+        // What the attempt cost the people who made it is only known once the
+        // fighting stops — the player's own orders decide how much of the
+        // warband walks home. Charged here, where the tribes are reachable.
+        for siege in concluded {
+            s = SiegeEngine.chargeAttacker(s, for: siege)
         }
         return s
     }

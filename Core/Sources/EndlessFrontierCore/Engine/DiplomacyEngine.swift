@@ -345,69 +345,37 @@ public enum DiplomacyEngine {
     ) -> WorldState {
         var s = state
         let raiderName = s.tribes[tribeIndex].name
-        var strength = s.tribes[tribeIndex].population * 0.5
+        let strength = s.tribes[tribeIndex].population * 0.5
             + s.tribes[tribeIndex].genes.courage * 20
-        // The raid is fought out round by round inside this tick — the walls
-        // absorb, the line answers, and whoever is most exposed takes the hit
-        // that gets past. The outcome comes out of the fighting rather than out
-        // of a formula, and the record carries the clock it happened on.
-        let outcome = BattleResolver.resolve(
+
+        // The raid **opens** rather than resolving.
+        //
+        // It used to be settled here, inside this one tick: eight rounds of
+        // arithmetic between two frames, and the `BattleLog` the canvas played
+        // afterwards was a recording of something already over. That is the
+        // whole reason a raid could be watched and never fought.
+        //
+        // A siege is the same fight with its middle left open, so the player
+        // can stand in it and give orders. Nobody has to: if the app is shut,
+        // `ActionLoop` walks the world clock over the top of the siege and the
+        // rest is fought exactly as it would have been — see `SiegeEngine`.
+        s.settlements[capitalIndex] = SiegeEngine.begin(
+            s.settlements[capitalIndex],
             attackerStrength: strength,
             attackerName: raiderName,
-            defenders: BattleResolver.defenders(
-                s.settlements[capitalIndex].pawns, registry: registry),
-            defenderName: s.settlements[capitalIndex].name,
+            attackerTribeID: s.tribes[tribeIndex].id,
             fortification: s.settlements[capitalIndex].stats.defense,
             tick: s.tick,
+            registry: registry,
             seed: rng.next())
-        let repelled = outcome.repelled
 
-        // Apply what the fighting did to the people who did it.
-        var deaths = 0
-        for (pawnID, hurt) in outcome.damageByPawn.sorted(by: { $0.key.uuidString < $1.key.uuidString }) {
-            guard let i = s.settlements[capitalIndex].pawns.firstIndex(where: { $0.id == pawnID })
-            else { continue }
-            s.settlements[capitalIndex].pawns[i].health = max(
-                0, s.settlements[capitalIndex].pawns[i].health - hurt)
-            if s.settlements[capitalIndex].pawns[i].health <= 0 { deaths += 1 }
-        }
-        if deaths > 0 {
-            s.settlements[capitalIndex].pawns.removeAll { $0.health <= 0 }
-            s.settlements[capitalIndex].deathTallies[
-                PawnDeathCause.battle.rawValue, default: 0] += deaths
-        }
-
-        // A raid turned back carries nothing home; one that got through takes
-        // what its surviving strength could carry.
-        let lootFraction = repelled ? 0 : min(0.35, 0.08 + outcome.attackerRemaining / 200)
-        let loot = s.settlements[capitalIndex].storage[.food] * lootFraction
-        s.settlements[capitalIndex].storage[.food] -= loot
-        s.tribes[tribeIndex].stores += loot
-
-        // The raiders pay for the attempt: every round on the wall bit.
-        let raiderLosses = max(0, strength - outcome.attackerRemaining) * 0.12
-            + Double(outcome.rounds)
-        s.tribes[tribeIndex].population = max(
-            4, s.tribes[tribeIndex].population - raiderLosses)
-
-        s.settlements[capitalIndex].lastBattle = outcome.log
-
-        // The day, on the record.
-        let entry: LocalizedText
-        if repelled {
-            entry = LocalizedText(values: [
-                .en: "\(raiderName) raided — turned back at the walls before they reached a single door.",
-                .cs: "Nájezd: \(raiderName) — obránci je odrazili dřív, než došli k první chalupě."])
-        } else if deaths > 0 {
-            entry = LocalizedText(values: [
-                .en: "\(raiderName) broke through — \(deaths) of ours fell, and the granary is lighter.",
-                .cs: "\(raiderName) prolomili obranu — \(deaths) našich padlo a sýpka je lehčí."])
-        } else {
-            entry = LocalizedText(values: [
-                .en: "\(raiderName) raided the granary and slipped away with part of the stores.",
-                .cs: "\(raiderName) vyloupili sýpku a zmizeli s částí zásob."])
-        }
-        s.settlements[capitalIndex].journal.append(tick: s.tick, kind: .danger, text: entry)
+        // What the attempt costs the raiders is known when it ends, not now,
+        // so only the standing consequences of *declaring* it land here.
+        s.settlements[capitalIndex].journal.append(
+            tick: s.tick, kind: .danger,
+            text: LocalizedText(values: [
+                .en: "\(raiderName) are coming over the ground — to arms.",
+                .cs: "\(raiderName) táhnou přes pláň — do zbraně."]))
 
         s.settlements[capitalIndex].stats.morale = max(
             0, s.settlements[capitalIndex].stats.morale - 6)

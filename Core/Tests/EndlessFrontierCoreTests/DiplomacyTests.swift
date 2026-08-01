@@ -146,6 +146,10 @@ struct DiplomacyTests {
                                           registry: reg, rng: &r1)
         fortified = DiplomacyEngine.raid(fortified, tribeIndex: 0, capitalIndex: 0,
                                          registry: reg, rng: &r2)
+        // A raid is a siege now — fought out over the action clock, by the
+        // player if they are there and by the world if they are not.
+        undefended = SiegeTestSupport.fightItOut(undefended, registry: reg)
+        fortified = SiegeTestSupport.fightItOut(fortified, registry: reg)
 
         #expect(undefended.settlements[0].storage[.food] < 400)          // grain carried off
         #expect(fortified.settlements[0].storage[.food]
