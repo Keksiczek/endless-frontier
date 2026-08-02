@@ -1,7 +1,10 @@
 [
   {
     "id": "plains",
-    "name": "Plains",
+    "name": {
+      "en": "Plains",
+      "cs": "Pláně"
+    },
     "base_hazard": 1,
     "resource_affinity": {
       "food": 1.2,
@@ -12,7 +15,10 @@
   },
   {
     "id": "forest",
-    "name": "Forest",
+    "name": {
+      "en": "Forest",
+      "cs": "Les"
+    },
     "base_hazard": 2,
     "resource_affinity": {
       "materials": 1.3,
@@ -23,7 +29,10 @@
   },
   {
     "id": "desert",
-    "name": "Desert",
+    "name": {
+      "en": "Desert",
+      "cs": "Poušť"
+    },
     "base_hazard": 4,
     "resource_affinity": {
       "energy": 1.2,
@@ -34,7 +43,10 @@
   },
   {
     "id": "tundra",
-    "name": "Tundra",
+    "name": {
+      "en": "Tundra",
+      "cs": "Tundra"
+    },
     "base_hazard": 5,
     "resource_affinity": {
       "food": 0.6,
@@ -45,7 +57,10 @@
   },
   {
     "id": "mountains",
-    "name": "Mountains",
+    "name": {
+      "en": "Mountains",
+      "cs": "Hory"
+    },
     "base_hazard": 6,
     "resource_affinity": {
       "materials": 1.5,
@@ -57,7 +72,10 @@
   },
   {
     "id": "coast",
-    "name": "Coast",
+    "name": {
+      "en": "Coast",
+      "cs": "Pobřeží"
+    },
     "base_hazard": 3,
     "resource_affinity": {
       "food": 1.1,

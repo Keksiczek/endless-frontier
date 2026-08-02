@@ -21,7 +21,7 @@ import EndlessFrontierCore
 enum SettlementSeasons {
 
     /// The second cover a tile wears this season.
-    enum Skin: Hashable {
+    enum Skin: Hashable, CaseIterable {
         case bare        // the ground's own cover, showing through
         case snow
         case drift       // snow the wind has heaped, brighter and scalloped

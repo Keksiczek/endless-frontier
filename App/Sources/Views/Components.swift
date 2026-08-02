@@ -11,7 +11,28 @@ extension ResourceType {
         case .influence: return "crown.fill"
         }
     }
-    var displayName: String { rawValue.capitalized }
+    /// The resource's name in the player's language.
+    ///
+    /// This was `rawValue.capitalized` — so a Czech game said "Food",
+    /// "Materials", "Knowledge" in the middle of otherwise Czech sentences, in
+    /// every panel that named a resource. The five most-repeated words in the
+    /// game were the five that were never translated.
+    var displayName: String {
+        let cs = AppStrings.language == .cs
+        switch self {
+        case .food:      return cs ? "jídlo" : "food"
+        case .materials: return cs ? "materiál" : "materials"
+        case .energy:    return cs ? "energie" : "energy"
+        case .knowledge: return cs ? "vědění" : "knowledge"
+        case .influence: return cs ? "vliv" : "influence"
+        }
+    }
+
+    /// The same, capitalised for the head of a line or a column.
+    var displayTitle: String {
+        let name = displayName
+        return name.prefix(1).uppercased() + name.dropFirst()
+    }
 }
 
 /// A labelled 0–100 indicator bar with a semantic colour.

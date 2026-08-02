@@ -33,16 +33,19 @@ struct QuestsPanel: View {
     }
 
     private func row(_ definition: QuestDefinition, _ progress: QuestProgress) -> some View {
+        let cs = AppStrings.language == .cs
         let stageText = progress.stage < definition.stages.count
-            ? definition.stages[progress.stage].description : "Complete"
+            ? definition.stages[progress.stage].description.resolve(AppStrings.language)
+            : (cs ? "Hotovo" : "Complete")
         return HStack(alignment: .top, spacing: 12) {
             Image(systemName: "scroll.fill")
                 .foregroundStyle(Theme.accent).frame(width: 24)
             VStack(alignment: .leading, spacing: 3) {
                 HStack {
-                    Text(definition.name).font(.subheadline.weight(.semibold))
+                    Text(definition.name.resolve(AppStrings.language))
+                        .font(.subheadline.weight(.semibold))
                     Spacer()
-                    Text("Stage \(min(progress.stage + 1, definition.stages.count))/\(definition.stages.count)")
+                    Text("\(cs ? "Fáze" : "Stage") \(min(progress.stage + 1, definition.stages.count))/\(definition.stages.count)")
                         .font(.caption2.monospacedDigit()).foregroundStyle(Theme.textDim)
                 }
                 Text(stageText).font(.caption).foregroundStyle(Theme.textDim)

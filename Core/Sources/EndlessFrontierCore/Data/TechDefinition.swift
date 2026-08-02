@@ -60,7 +60,7 @@ public struct TechDefinition: Codable, Sendable, Identifiable, Equatable {
     /// what gives knowledge a sink that outlives the 29-tech tree, in a game
     /// whose whole premise is one endless world with no "you finished it" wall.
     public let repeatable: Bool
-    public let description: String?
+    public let description: LocalizedText?
 
     public init(
         id: String,
@@ -70,7 +70,7 @@ public struct TechDefinition: Codable, Sendable, Identifiable, Equatable {
         cost: Resources,
         effects: [TechEffect] = [],
         repeatable: Bool = false,
-        description: String? = nil
+        description: LocalizedText? = nil
     ) {
         self.id = id
         self.name = name
@@ -95,7 +95,7 @@ public struct TechDefinition: Codable, Sendable, Identifiable, Equatable {
         cost = try c.decode(Resources.self, forKey: .cost)
         effects = try c.decodeIfPresent([TechEffect].self, forKey: .effects) ?? []
         repeatable = try c.decodeIfPresent(Bool.self, forKey: .repeatable) ?? false
-        description = try c.decodeIfPresent(String.self, forKey: .description)
+        description = try c.decodeIfPresent(LocalizedText.self, forKey: .description)
     }
 
     /// Knowledge cost (the primary research currency).

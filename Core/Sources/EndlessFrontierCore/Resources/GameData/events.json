@@ -2,7 +2,10 @@
   {
     "id": "drought",
     "type": "disaster",
-    "name": "Drought",
+    "name": {
+      "en": "Drought",
+      "cs": "Sucho"
+    },
     "era": [
       "early_settlement",
       "ancient",
@@ -33,8 +36,14 @@
     "choices": [
       {
         "id": "pray",
-        "label": "Hold a prayer ceremony",
-        "description": "Boost morale at the cost of influence.",
+        "label": {
+          "en": "Hold a prayer ceremony",
+          "cs": "Uspořádat prosebné obřady"
+        },
+        "description": {
+          "en": "Boost morale at the cost of influence.",
+          "cs": "Zvedne náladu, stojí vliv."
+        },
         "cost": {
           "influence": 10
         },
@@ -48,8 +57,14 @@
       },
       {
         "id": "ration",
-        "label": "Implement food rationing",
-        "description": "Recover some food but hurt morale further.",
+        "label": {
+          "en": "Implement food rationing",
+          "cs": "Zavést příděly"
+        },
+        "description": {
+          "en": "Recover some food but hurt morale further.",
+          "cs": "Něco jídla se ušetří, nálada klesne ještě víc."
+        },
         "cost": {},
         "effects": [
           {
@@ -67,8 +82,14 @@
       },
       {
         "id": "ignore",
-        "label": "Trust the season will turn",
-        "description": "Do nothing.",
+        "label": {
+          "en": "Trust the season will turn",
+          "cs": "Věřit, že se počasí obrátí"
+        },
+        "description": {
+          "en": "Do nothing.",
+          "cs": "Neudělat nic."
+        },
         "cost": {},
         "effects": []
       }
@@ -78,7 +99,10 @@
   {
     "id": "good_harvest",
     "type": "opportunity",
-    "name": "Bountiful Harvest",
+    "name": {
+      "en": "Bountiful Harvest",
+      "cs": "Bohatá sklizeň"
+    },
     "era": [
       "early_settlement",
       "ancient",
@@ -108,8 +132,14 @@
     "choices": [
       {
         "id": "feast",
-        "label": "Hold a feast",
-        "description": "Spend food to greatly boost morale.",
+        "label": {
+          "en": "Hold a feast",
+          "cs": "Uspořádat hostinu"
+        },
+        "description": {
+          "en": "Spend food to greatly boost morale.",
+          "cs": "Za jídlo se výrazně zvedne nálada."
+        },
         "cost": {
           "food": 80
         },
@@ -128,8 +158,14 @@
       },
       {
         "id": "store",
-        "label": "Store the surplus",
-        "description": "Save it for harder times.",
+        "label": {
+          "en": "Store the surplus",
+          "cs": "Uložit přebytek"
+        },
+        "description": {
+          "en": "Save it for harder times.",
+          "cs": "Nechat si ho na horší časy."
+        },
         "cost": {},
         "effects": []
       }
@@ -139,7 +175,10 @@
   {
     "id": "bandit_raid",
     "type": "threat",
-    "name": "Bandit Raid",
+    "name": {
+      "en": "Bandit Raid",
+      "cs": "Nájezd lupičů"
+    },
     "era": [
       "early_settlement",
       "ancient",
@@ -173,8 +212,14 @@
     "choices": [
       {
         "id": "fight",
-        "label": "Send militia to repel the raiders",
-        "description": "Costs materials but ends the threat decisively.",
+        "label": {
+          "en": "Send militia to repel the raiders",
+          "cs": "Poslat na ně domobranu"
+        },
+        "description": {
+          "en": "Costs materials but ends the threat decisively.",
+          "cs": "Stojí materiál, ale hrozbu to ukončí nadobro."
+        },
         "cost": {
           "materials": 40
         },
@@ -193,8 +238,14 @@
       },
       {
         "id": "bribe",
-        "label": "Pay them off",
-        "description": "Costs influence but keeps people safe.",
+        "label": {
+          "en": "Pay them off",
+          "cs": "Vyplatit je"
+        },
+        "description": {
+          "en": "Costs influence but keeps people safe.",
+          "cs": "Stojí vliv, ale lidé zůstanou v bezpečí."
+        },
         "cost": {
           "influence": 30
         },
@@ -208,8 +259,14 @@
       },
       {
         "id": "endure",
-        "label": "Shelter and endure",
-        "description": "No further cost.",
+        "label": {
+          "en": "Shelter and endure",
+          "cs": "Schovat se a přečkat"
+        },
+        "description": {
+          "en": "No further cost.",
+          "cs": "Bez dalších nákladů."
+        },
         "cost": {},
         "effects": []
       }
@@ -219,7 +276,10 @@
   {
     "id": "traveling_scholar",
     "type": "opportunity",
-    "name": "Traveling Scholar",
+    "name": {
+      "en": "Traveling Scholar",
+      "cs": "Potulný učenec"
+    },
     "era": [
       "early_settlement",
       "ancient",
@@ -237,8 +297,14 @@
     "choices": [
       {
         "id": "invite",
-        "label": "Invite them to stay and teach",
-        "description": "Spend food and influence; gain a burst of knowledge.",
+        "label": {
+          "en": "Invite them to stay and teach",
+          "cs": "Pozvat ho, ať zůstane a učí"
+        },
+        "description": {
+          "en": "Spend food and influence; gain a burst of knowledge.",
+          "cs": "Za jídlo a vliv velký příliv vědění."
+        },
         "cost": {
           "food": 30,
           "influence": 20
@@ -254,8 +320,14 @@
       },
       {
         "id": "trade_info",
-        "label": "Trade maps for their manuscripts",
-        "description": "Give up some influence, gain knowledge.",
+        "label": {
+          "en": "Trade maps for their manuscripts",
+          "cs": "Vyměnit mapy za jeho rukopisy"
+        },
+        "description": {
+          "en": "Give up some influence, gain knowledge.",
+          "cs": "Něco vlivu za vědění."
+        },
         "cost": {
           "influence": 15
         },
@@ -275,8 +347,14 @@
       },
       {
         "id": "decline",
-        "label": "Politely decline",
-        "description": "The scholar moves on.",
+        "label": {
+          "en": "Politely decline",
+          "cs": "Zdvořile odmítnout"
+        },
+        "description": {
+          "en": "The scholar moves on.",
+          "cs": "Učenec táhne dál."
+        },
         "cost": {},
         "effects": []
       }
@@ -286,7 +364,10 @@
   {
     "id": "wildfire",
     "type": "disaster",
-    "name": "Wildfire",
+    "name": {
+      "en": "Wildfire",
+      "cs": "Požár"
+    },
     "era": [
       "early_settlement",
       "ancient"
@@ -321,8 +402,14 @@
     "choices": [
       {
         "id": "fight_fire",
-        "label": "Organize a firefighting brigade",
-        "description": "Costs energy, saves materials.",
+        "label": {
+          "en": "Organize a firefighting brigade",
+          "cs": "Sestavit hasičské čety"
+        },
+        "description": {
+          "en": "Costs energy, saves materials.",
+          "cs": "Stojí energii, zachrání materiál."
+        },
         "cost": {
           "energy": 20
         },
@@ -337,8 +424,14 @@
       },
       {
         "id": "evacuate",
-        "label": "Evacuate outlying farms",
-        "description": "Save the people but lose the crops.",
+        "label": {
+          "en": "Evacuate outlying farms",
+          "cs": "Vyklidit okrajové statky"
+        },
+        "description": {
+          "en": "Save the people but lose the crops.",
+          "cs": "Lidi zachráníš, úrodu ne."
+        },
         "cost": {},
         "effects": [
           {
@@ -354,7 +447,10 @@
   {
     "id": "trade_caravan",
     "type": "opportunity",
-    "name": "Merchant Caravan",
+    "name": {
+      "en": "Merchant Caravan",
+      "cs": "Kupecká karavana"
+    },
     "era": [
       "ancient",
       "medieval",
@@ -373,8 +469,14 @@
     "choices": [
       {
         "id": "buy_food",
-        "label": "Buy food stores",
-        "description": "Spend influence to acquire food.",
+        "label": {
+          "en": "Buy food stores",
+          "cs": "Koupit zásoby jídla"
+        },
+        "description": {
+          "en": "Spend influence to acquire food.",
+          "cs": "Za vliv pořídit jídlo."
+        },
         "cost": {
           "influence": 25
         },
@@ -389,8 +491,14 @@
       },
       {
         "id": "buy_materials",
-        "label": "Buy construction materials",
-        "description": "Spend influence to acquire materials.",
+        "label": {
+          "en": "Buy construction materials",
+          "cs": "Koupit stavební materiál"
+        },
+        "description": {
+          "en": "Spend influence to acquire materials.",
+          "cs": "Za vliv pořídit materiál."
+        },
         "cost": {
           "influence": 25
         },
@@ -405,8 +513,14 @@
       },
       {
         "id": "sell_surplus",
-        "label": "Sell surplus food",
-        "description": "Convert food into influence.",
+        "label": {
+          "en": "Sell surplus food",
+          "cs": "Prodat přebytečné jídlo"
+        },
+        "description": {
+          "en": "Convert food into influence.",
+          "cs": "Proměnit jídlo ve vliv."
+        },
         "cost": {
           "food": 80
         },
@@ -425,7 +539,10 @@
   {
     "id": "pioneers_set_out",
     "type": "flavor",
-    "name": "Pioneers Set Out",
+    "name": {
+      "en": "Pioneers Set Out",
+      "cs": "Průkopníci vyrazili"
+    },
     "era": [],
     "weight": 6,
     "cooldown_ticks": 200,
@@ -448,7 +565,10 @@
   {
     "id": "calm_season",
     "type": "flavor",
-    "name": "A Calm Season",
+    "name": {
+      "en": "A Calm Season",
+      "cs": "Klidné období"
+    },
     "era": [],
     "weight": 10,
     "cooldown_ticks": 30,
@@ -466,7 +586,10 @@
   {
     "id": "colonist_illness",
     "type": "disaster",
-    "name": "A Colonist Falls Ill",
+    "name": {
+      "en": "A Colonist Falls Ill",
+      "cs": "Osadník onemocněl"
+    },
     "era": [],
     "weight": 9,
     "cooldown_ticks": 90,
@@ -481,8 +604,14 @@
     "choices": [
       {
         "id": "treat",
-        "label": "Devote knowledge to a cure",
-        "description": "Spend knowledge to heal the sick colonist.",
+        "label": {
+          "en": "Devote knowledge to a cure",
+          "cs": "Vrhnout na léčbu vědění"
+        },
+        "description": {
+          "en": "Spend knowledge to heal the sick colonist.",
+          "cs": "Za vědění nemocného vyléčit."
+        },
         "cost": {
           "knowledge": 30
         },
@@ -496,8 +625,14 @@
       },
       {
         "id": "rest",
-        "label": "Let them rest and recover",
-        "description": "Trust their constitution. No cost.",
+        "label": {
+          "en": "Let them rest and recover",
+          "cs": "Nechat ho vyležet"
+        },
+        "description": {
+          "en": "Trust their constitution. No cost.",
+          "cs": "Spolehnout se na jeho sílu. Zdarma."
+        },
         "cost": {},
         "effects": []
       }
@@ -507,7 +642,10 @@
   {
     "id": "wanderer_joins",
     "type": "opportunity",
-    "name": "A Wanderer Arrives",
+    "name": {
+      "en": "A Wanderer Arrives",
+      "cs": "Přišel poutník"
+    },
     "era": [],
     "weight": 10,
     "cooldown_ticks": 120,
@@ -521,8 +659,14 @@
     "choices": [
       {
         "id": "welcome",
-        "label": "Welcome them to the colony",
-        "description": "A new colonist joins your settlement.",
+        "label": {
+          "en": "Welcome them to the colony",
+          "cs": "Přijmout ho do osady"
+        },
+        "description": {
+          "en": "A new colonist joins your settlement.",
+          "cs": "Přibude nový osadník."
+        },
         "cost": {
           "food": 20
         },
@@ -534,8 +678,14 @@
       },
       {
         "id": "turn_away",
-        "label": "Turn them away",
-        "description": "One fewer mouth to feed.",
+        "label": {
+          "en": "Turn them away",
+          "cs": "Poslat ho pryč"
+        },
+        "description": {
+          "en": "One fewer mouth to feed.",
+          "cs": "O jedna ústa míň."
+        },
         "cost": {},
         "effects": []
       }
@@ -545,7 +695,10 @@
   {
     "id": "shared_feast",
     "type": "opportunity",
-    "name": "A Shared Feast",
+    "name": {
+      "en": "A Shared Feast",
+      "cs": "Společná hostina"
+    },
     "era": [],
     "weight": 8,
     "cooldown_ticks": 70,
@@ -574,7 +727,10 @@
   {
     "id": "creeping_blight",
     "type": "threat",
-    "name": "Creeping Blight",
+    "name": {
+      "en": "Creeping Blight",
+      "cs": "Plíživá sněť"
+    },
     "era": [],
     "weight": 7,
     "cooldown_ticks": 140,
@@ -599,8 +755,14 @@
     "choices": [
       {
         "id": "purge",
-        "label": "Send workers to cleanse the land",
-        "description": "Spend materials to push the blight back.",
+        "label": {
+          "en": "Send workers to cleanse the land",
+          "cs": "Poslat lidi vyčistit půdu"
+        },
+        "description": {
+          "en": "Spend materials to push the blight back.",
+          "cs": "Za materiál sněť zatlačit."
+        },
         "cost": {
           "materials": 50
         },
@@ -614,8 +776,14 @@
       },
       {
         "id": "abandon",
-        "label": "Let the wilds reclaim it",
-        "description": "Do nothing.",
+        "label": {
+          "en": "Let the wilds reclaim it",
+          "cs": "Nechat to divočině"
+        },
+        "description": {
+          "en": "Do nothing.",
+          "cs": "Neudělat nic."
+        },
         "cost": {},
         "effects": []
       }
@@ -625,7 +793,10 @@
   {
     "id": "ruins_surface",
     "type": "opportunity",
-    "name": "Ancient Ruins Surface",
+    "name": {
+      "en": "Ancient Ruins Surface",
+      "cs": "Vynořily se zříceniny"
+    },
     "era": [],
     "weight": 6,
     "cooldown_ticks": 200,
@@ -643,7 +814,10 @@
   {
     "id": "raider_warband",
     "type": "threat",
-    "name": "Raider Warband",
+    "name": {
+      "en": "Raider Warband",
+      "cs": "Loupežná horda"
+    },
     "era": [],
     "weight": 11,
     "cooldown_ticks": 90,
@@ -662,8 +836,14 @@
     "choices": [
       {
         "id": "muster",
-        "label": "Muster every able hand",
-        "description": "Spend materials to reinforce the defense for this attack.",
+        "label": {
+          "en": "Muster every able hand",
+          "cs": "Svolat každou schopnou ruku"
+        },
+        "description": {
+          "en": "Spend materials to reinforce the defense for this attack.",
+          "cs": "Za materiál posílit obranu na tenhle útok."
+        },
         "cost": {
           "materials": 40
         },
@@ -682,8 +862,14 @@
       },
       {
         "id": "pay_tribute",
-        "label": "Pay tribute to be left alone",
-        "description": "Buy them off with influence.",
+        "label": {
+          "en": "Pay tribute to be left alone",
+          "cs": "Zaplatit výpalné"
+        },
+        "description": {
+          "en": "Buy them off with influence.",
+          "cs": "Vykoupit se vlivem."
+        },
         "cost": {
           "influence": 35
         },
@@ -701,7 +887,10 @@
   {
     "id": "plague",
     "type": "disaster",
-    "name": "Plague",
+    "name": {
+      "en": "Plague",
+      "cs": "Mor"
+    },
     "era": [],
     "weight": 7,
     "cooldown_ticks": 180,
@@ -726,8 +915,14 @@
     "choices": [
       {
         "id": "quarantine",
-        "label": "Quarantine the sick",
-        "description": "Spend knowledge to contain the outbreak.",
+        "label": {
+          "en": "Quarantine the sick",
+          "cs": "Oddělit nemocné"
+        },
+        "description": {
+          "en": "Spend knowledge to contain the outbreak.",
+          "cs": "Za vědění nákazu udržet v mezích."
+        },
         "cost": {
           "knowledge": 40
         },
@@ -741,8 +936,14 @@
       },
       {
         "id": "endure_plague",
-        "label": "Endure and pray",
-        "description": "No cost; the sickness runs its course.",
+        "label": {
+          "en": "Endure and pray",
+          "cs": "Přečkat a modlit se"
+        },
+        "description": {
+          "en": "No cost; the sickness runs its course.",
+          "cs": "Zdarma; nemoc si dojde svou cestou."
+        },
         "cost": {},
         "effects": []
       }
@@ -752,7 +953,10 @@
   {
     "id": "migration_wave",
     "type": "opportunity",
-    "name": "Wave of Migrants",
+    "name": {
+      "en": "Wave of Migrants",
+      "cs": "Vlna přistěhovalců"
+    },
     "era": [],
     "weight": 9,
     "cooldown_ticks": 110,
@@ -766,8 +970,14 @@
     "choices": [
       {
         "id": "welcome_all",
-        "label": "Welcome the newcomers",
-        "description": "Two new colonists join — if you can feed them.",
+        "label": {
+          "en": "Welcome the newcomers",
+          "cs": "Přivítat příchozí"
+        },
+        "description": {
+          "en": "Two new colonists join — if you can feed them.",
+          "cs": "Přibudou dva osadníci — pokud je uživíš."
+        },
         "cost": {
           "food": 60
         },
@@ -782,8 +992,14 @@
       },
       {
         "id": "welcome_some",
-        "label": "Take in a single family",
-        "description": "One new colonist joins.",
+        "label": {
+          "en": "Take in a single family",
+          "cs": "Vzít jednu rodinu"
+        },
+        "description": {
+          "en": "One new colonist joins.",
+          "cs": "Přibude jeden osadník."
+        },
         "cost": {
           "food": 25
         },
@@ -795,8 +1011,14 @@
       },
       {
         "id": "turn_away_migrants",
-        "label": "Close the gates",
-        "description": "Spare the stores, but lose the goodwill.",
+        "label": {
+          "en": "Close the gates",
+          "cs": "Zavřít brány"
+        },
+        "description": {
+          "en": "Spare the stores, but lose the goodwill.",
+          "cs": "Zásoby zůstanou, dobré jméno ne."
+        },
         "cost": {},
         "effects": [
           {
@@ -812,7 +1034,10 @@
   {
     "id": "harvest_festival",
     "type": "flavor",
-    "name": "Harvest Festival",
+    "name": {
+      "en": "Harvest Festival",
+      "cs": "Dožínky"
+    },
     "era": [],
     "weight": 9,
     "cooldown_ticks": 60,
@@ -835,7 +1060,10 @@
   {
     "id": "golden_age",
     "type": "opportunity",
-    "name": "A Golden Age",
+    "name": {
+      "en": "A Golden Age",
+      "cs": "Zlatý věk"
+    },
     "era": [],
     "weight": 5,
     "cooldown_ticks": 250,
@@ -870,7 +1098,10 @@
   {
     "id": "earthquake",
     "type": "disaster",
-    "name": "Earthquake",
+    "name": {
+      "en": "Earthquake",
+      "cs": "Zemětřesení"
+    },
     "era": [],
     "weight": 6,
     "cooldown_ticks": 170,
@@ -901,8 +1132,14 @@
     "choices": [
       {
         "id": "rebuild",
-        "label": "Rebuild at once",
-        "description": "Spend materials to restore stability quickly.",
+        "label": {
+          "en": "Rebuild at once",
+          "cs": "Okamžitě stavět znovu"
+        },
+        "description": {
+          "en": "Spend materials to restore stability quickly.",
+          "cs": "Za materiál rychle obnovit pořádek."
+        },
         "cost": {
           "materials": 40
         },
@@ -916,8 +1153,14 @@
       },
       {
         "id": "make_do",
-        "label": "Make do with what stands",
-        "description": "No cost.",
+        "label": {
+          "en": "Make do with what stands",
+          "cs": "Vystačit s tím, co stojí"
+        },
+        "description": {
+          "en": "No cost.",
+          "cs": "Zdarma."
+        },
         "cost": {},
         "effects": []
       }
@@ -927,7 +1170,10 @@
   {
     "id": "market_day",
     "type": "opportunity",
-    "name": "Great Market Day",
+    "name": {
+      "en": "Great Market Day",
+      "cs": "Velký trh"
+    },
     "era": [],
     "weight": 12,
     "cooldown_ticks": 55,
@@ -940,8 +1186,14 @@
     "choices": [
       {
         "id": "sell_goods",
-        "label": "Sell surplus materials",
-        "description": "Trade materials for influence.",
+        "label": {
+          "en": "Sell surplus materials",
+          "cs": "Prodat přebytek materiálu"
+        },
+        "description": {
+          "en": "Trade materials for influence.",
+          "cs": "Vyměnit materiál za vliv."
+        },
         "cost": {
           "materials": 80
         },
@@ -956,8 +1208,14 @@
       },
       {
         "id": "buy_food_market",
-        "label": "Buy in bulk",
-        "description": "Spend influence on a haul of food.",
+        "label": {
+          "en": "Buy in bulk",
+          "cs": "Nakoupit ve velkém"
+        },
+        "description": {
+          "en": "Spend influence on a haul of food.",
+          "cs": "Za vliv pořídit velkou zásobu jídla."
+        },
         "cost": {
           "influence": 30
         },
@@ -976,7 +1234,10 @@
   {
     "id": "industrial_accident",
     "type": "disaster",
-    "name": "Industrial Accident",
+    "name": {
+      "en": "Industrial Accident",
+      "cs": "Nehoda v továrně"
+    },
     "era": [
       "early_industrial",
       "modern"
@@ -1009,8 +1270,14 @@
     "choices": [
       {
         "id": "safety_review",
-        "label": "Order a full safety review",
-        "description": "Spend knowledge to prevent the next disaster and steady nerves.",
+        "label": {
+          "en": "Order a full safety review",
+          "cs": "Nařídit důkladnou revizi"
+        },
+        "description": {
+          "en": "Spend knowledge to prevent the next disaster and steady nerves.",
+          "cs": "Za vědění předejít další nehodě a uklidnit lidi."
+        },
         "cost": {
           "knowledge": 40
         },
@@ -1029,8 +1296,14 @@
       },
       {
         "id": "press_on",
-        "label": "Keep the line running",
-        "description": "Output matters more than caution — for now.",
+        "label": {
+          "en": "Keep the line running",
+          "cs": "Nechat linku běžet"
+        },
+        "description": {
+          "en": "Output matters more than caution — for now.",
+          "cs": "Výkon je teď důležitější než opatrnost."
+        },
         "cost": {},
         "effects": [
           {
@@ -1046,7 +1319,10 @@
   {
     "id": "labor_strike",
     "type": "threat",
-    "name": "Labor Strike",
+    "name": {
+      "en": "Labor Strike",
+      "cs": "Stávka"
+    },
     "era": [
       "early_industrial",
       "modern"
@@ -1075,8 +1351,14 @@
     "choices": [
       {
         "id": "concede",
-        "label": "Meet the workers' demands",
-        "description": "Spend influence to restore morale and goodwill.",
+        "label": {
+          "en": "Meet the workers' demands",
+          "cs": "Vyhovět dělníkům"
+        },
+        "description": {
+          "en": "Spend influence to restore morale and goodwill.",
+          "cs": "Za vliv obnovit náladu i důvěru."
+        },
         "cost": {
           "influence": 40
         },
@@ -1095,8 +1377,14 @@
       },
       {
         "id": "hold_firm",
-        "label": "Hold firm and wait them out",
-        "description": "Save the coin, but the resentment lingers.",
+        "label": {
+          "en": "Hold firm and wait them out",
+          "cs": "Vydržet a vysedět to"
+        },
+        "description": {
+          "en": "Save the coin, but the resentment lingers.",
+          "cs": "Peníze zůstanou, zášť taky."
+        },
         "cost": {},
         "effects": [
           {
@@ -1112,7 +1400,10 @@
   {
     "id": "smog_crisis",
     "type": "disaster",
-    "name": "Choking Smog",
+    "name": {
+      "en": "Choking Smog",
+      "cs": "Dusivý smog"
+    },
     "era": [
       "early_industrial",
       "modern"
@@ -1143,8 +1434,14 @@
     "choices": [
       {
         "id": "clean_air",
-        "label": "Fund clean-air measures",
-        "description": "Spend materials and knowledge to clear the worst of it.",
+        "label": {
+          "en": "Fund clean-air measures",
+          "cs": "Zaplatit opatření na čistý vzduch"
+        },
+        "description": {
+          "en": "Spend materials and knowledge to clear the worst of it.",
+          "cs": "Za materiál a vědění to nejhorší odstranit."
+        },
         "cost": {
           "materials": 60,
           "knowledge": 30
@@ -1164,8 +1461,14 @@
       },
       {
         "id": "endure_smog",
-        "label": "Endure it",
-        "description": "Progress has a price. No cost.",
+        "label": {
+          "en": "Endure it",
+          "cs": "Přečkat to"
+        },
+        "description": {
+          "en": "Progress has a price. No cost.",
+          "cs": "Pokrok něco stojí. Zdarma."
+        },
         "cost": {},
         "effects": []
       }
@@ -1175,7 +1478,10 @@
   {
     "id": "energy_crisis",
     "type": "disaster",
-    "name": "Energy Crisis",
+    "name": {
+      "en": "Energy Crisis",
+      "cs": "Energetická krize"
+    },
     "era": [
       "modern",
       "near_future"
@@ -1204,8 +1510,14 @@
     "choices": [
       {
         "id": "ration_power",
-        "label": "Ration power across the grid",
-        "description": "Spend influence to keep essentials running.",
+        "label": {
+          "en": "Ration power across the grid",
+          "cs": "Zavést příděly proudu"
+        },
+        "description": {
+          "en": "Spend influence to keep essentials running.",
+          "cs": "Za vliv udržet v chodu to nejnutnější."
+        },
         "cost": {
           "influence": 25
         },
@@ -1220,8 +1532,14 @@
       },
       {
         "id": "emergency_generators",
-        "label": "Fire up emergency generators",
-        "description": "Burn materials to bridge the shortfall.",
+        "label": {
+          "en": "Fire up emergency generators",
+          "cs": "Nahodit záložní generátory"
+        },
+        "description": {
+          "en": "Burn materials to bridge the shortfall.",
+          "cs": "Spálit materiál a překlenout výpadek."
+        },
         "cost": {
           "materials": 70
         },
@@ -1245,7 +1563,10 @@
   {
     "id": "medical_breakthrough",
     "type": "opportunity",
-    "name": "Medical Breakthrough",
+    "name": {
+      "en": "Medical Breakthrough",
+      "cs": "Lékařský průlom"
+    },
     "era": [
       "modern",
       "near_future"
@@ -1272,8 +1593,14 @@
     "choices": [
       {
         "id": "share_cure",
-        "label": "Share the cure with neighbouring regions",
-        "description": "Spend knowledge to win lasting influence.",
+        "label": {
+          "en": "Share the cure with neighbouring regions",
+          "cs": "Sdílet lék se sousedy"
+        },
+        "description": {
+          "en": "Spend knowledge to win lasting influence.",
+          "cs": "Za vědění získat trvalý vliv."
+        },
         "cost": {
           "knowledge": 40
         },
@@ -1293,8 +1620,14 @@
       },
       {
         "id": "keep_it",
-        "label": "Keep it for our own people",
-        "description": "No cost; the colony alone benefits.",
+        "label": {
+          "en": "Keep it for our own people",
+          "cs": "Nechat si ho pro sebe"
+        },
+        "description": {
+          "en": "No cost; the colony alone benefits.",
+          "cs": "Zdarma; prospěje jen osadě."
+        },
         "cost": {},
         "effects": []
       }
@@ -1304,7 +1637,10 @@
   {
     "id": "economic_boom",
     "type": "opportunity",
-    "name": "Economic Boom",
+    "name": {
+      "en": "Economic Boom",
+      "cs": "Hospodářský rozmach"
+    },
     "era": [
       "modern",
       "near_future"
@@ -1333,8 +1669,14 @@
     "choices": [
       {
         "id": "reinvest",
-        "label": "Reinvest the windfall",
-        "description": "Spend influence now for a surge of materials.",
+        "label": {
+          "en": "Reinvest the windfall",
+          "cs": "Vložit zisk zpátky"
+        },
+        "description": {
+          "en": "Spend influence now for a surge of materials.",
+          "cs": "Za vliv teď získat příval materiálu."
+        },
         "cost": {
           "influence": 50
         },
@@ -1349,8 +1691,14 @@
       },
       {
         "id": "bank_it",
-        "label": "Bank the gains",
-        "description": "Keep the influence in reserve.",
+        "label": {
+          "en": "Bank the gains",
+          "cs": "Uložit výnos"
+        },
+        "description": {
+          "en": "Keep the influence in reserve.",
+          "cs": "Nechat si vliv v záloze."
+        },
         "cost": {},
         "effects": []
       }
@@ -1360,7 +1708,10 @@
   {
     "id": "tech_expo",
     "type": "opportunity",
-    "name": "Technology Expo",
+    "name": {
+      "en": "Technology Expo",
+      "cs": "Technická výstava"
+    },
     "era": [
       "modern",
       "near_future"
@@ -1383,8 +1734,14 @@
     "choices": [
       {
         "id": "host_grandly",
-        "label": "Host the expo grandly",
-        "description": "Spend influence to draw the brightest minds — and more knowledge.",
+        "label": {
+          "en": "Host the expo grandly",
+          "cs": "Uspořádat výstavu ve velkém"
+        },
+        "description": {
+          "en": "Spend influence to draw the brightest minds — and more knowledge.",
+          "cs": "Za vliv přilákat nejbystřejší hlavy — a víc vědění."
+        },
         "cost": {
           "influence": 40
         },
@@ -1404,8 +1761,14 @@
       },
       {
         "id": "modest_expo",
-        "label": "Keep it modest",
-        "description": "No extra cost.",
+        "label": {
+          "en": "Keep it modest",
+          "cs": "Držet to skromně"
+        },
+        "description": {
+          "en": "No extra cost.",
+          "cs": "Bez dalších nákladů."
+        },
         "cost": {},
         "effects": []
       }
@@ -1415,7 +1778,10 @@
   {
     "id": "automation_unrest",
     "type": "threat",
-    "name": "Automation Unrest",
+    "name": {
+      "en": "Automation Unrest",
+      "cs": "Nepokoje kvůli strojům"
+    },
     "era": [
       "near_future"
     ],
@@ -1441,8 +1807,14 @@
     "choices": [
       {
         "id": "retrain",
-        "label": "Fund retraining programs",
-        "description": "Spend influence and knowledge to give displaced workers a future.",
+        "label": {
+          "en": "Fund retraining programs",
+          "cs": "Zaplatit rekvalifikace"
+        },
+        "description": {
+          "en": "Spend influence and knowledge to give displaced workers a future.",
+          "cs": "Za vliv a vědění dát propuštěným budoucnost."
+        },
         "cost": {
           "influence": 30,
           "knowledge": 30
@@ -1462,8 +1834,14 @@
       },
       {
         "id": "let_market_decide",
-        "label": "Let the market sort it out",
-        "description": "No cost, but the resentment festers.",
+        "label": {
+          "en": "Let the market sort it out",
+          "cs": "Nechat to na trhu"
+        },
+        "description": {
+          "en": "No cost, but the resentment festers.",
+          "cs": "Zdarma, ale zášť hnisá dál."
+        },
         "cost": {},
         "effects": [
           {
@@ -1479,7 +1857,10 @@
   {
     "id": "ai_awakening",
     "type": "opportunity",
-    "name": "The Awakening",
+    "name": {
+      "en": "The Awakening",
+      "cs": "Probuzení"
+    },
     "era": [
       "near_future"
     ],
@@ -1494,8 +1875,14 @@
     "choices": [
       {
         "id": "embrace_ai",
-        "label": "Embrace the new mind as a partner",
-        "description": "Grant it freedom; reap a flood of knowledge and energy.",
+        "label": {
+          "en": "Embrace the new mind as a partner",
+          "cs": "Přijmout novou mysl za partnera"
+        },
+        "description": {
+          "en": "Grant it freedom; reap a flood of knowledge and energy.",
+          "cs": "Dát jí svobodu; sklidit příval vědění a energie."
+        },
         "cost": {
           "energy": 40
         },
@@ -1520,8 +1907,14 @@
       },
       {
         "id": "restrict_ai",
-        "label": "Keep it boxed and obedient",
-        "description": "Safer, but its gifts come slower.",
+        "label": {
+          "en": "Keep it boxed and obedient",
+          "cs": "Držet ji zavřenou a poslušnou"
+        },
+        "description": {
+          "en": "Safer, but its gifts come slower.",
+          "cs": "Bezpečnější, ale její dary přicházejí pomaleji."
+        },
         "cost": {},
         "effects": [
           {
@@ -1543,7 +1936,10 @@
   {
     "id": "orbital_discovery",
     "type": "opportunity",
-    "name": "Signal From Orbit",
+    "name": {
+      "en": "Signal From Orbit",
+      "cs": "Signál z oběžné dráhy"
+    },
     "era": [
       "near_future"
     ],
@@ -1579,7 +1975,10 @@
   {
     "id": "climate_shift",
     "type": "disaster",
-    "name": "Climate Shift",
+    "name": {
+      "en": "Climate Shift",
+      "cs": "Změna podnebí"
+    },
     "era": [
       "modern",
       "near_future"
@@ -1609,8 +2008,14 @@
     "choices": [
       {
         "id": "adapt_crops",
-        "label": "Engineer hardier crops",
-        "description": "Spend knowledge to blunt the worst of the loss.",
+        "label": {
+          "en": "Engineer hardier crops",
+          "cs": "Vyšlechtit odolnější plodiny"
+        },
+        "description": {
+          "en": "Spend knowledge to blunt the worst of the loss.",
+          "cs": "Za vědění zmírnit nejhorší ztráty."
+        },
         "cost": {
           "knowledge": 60
         },
@@ -1625,8 +2030,14 @@
       },
       {
         "id": "weather_it",
-        "label": "Weather the lean years",
-        "description": "No cost; tighten the belt.",
+        "label": {
+          "en": "Weather the lean years",
+          "cs": "Přečkat hubená léta"
+        },
+        "description": {
+          "en": "No cost; tighten the belt.",
+          "cs": "Zdarma; utáhnout opasky."
+        },
         "cost": {},
         "effects": [
           {
@@ -1642,7 +2053,10 @@
   {
     "id": "space_elevator_festival",
     "type": "flavor",
-    "name": "Launch Day",
+    "name": {
+      "en": "Launch Day",
+      "cs": "Den startu"
+    },
     "era": [
       "near_future"
     ],
@@ -1671,7 +2085,10 @@
   {
     "id": "cold_snap",
     "type": "disaster",
-    "name": "Cold Snap",
+    "name": {
+      "en": "Cold Snap",
+      "cs": "Náhlé mrazy"
+    },
     "era": [],
     "weight": 8,
     "cooldown_ticks": 130,
@@ -1698,8 +2115,14 @@
     "choices": [
       {
         "id": "stockpile_fuel",
-        "label": "Stockpile fuel and bundle up",
-        "description": "Spend materials to keep everyone warm and fed.",
+        "label": {
+          "en": "Stockpile fuel and bundle up",
+          "cs": "Nashromáždit palivo a zatopit"
+        },
+        "description": {
+          "en": "Spend materials to keep everyone warm and fed.",
+          "cs": "Za materiál udržet všechny v teple a najedené."
+        },
         "cost": {
           "materials": 40
         },
@@ -1719,8 +2142,14 @@
       },
       {
         "id": "endure_cold",
-        "label": "Huddle together and endure",
-        "description": "No cost; wait for the thaw.",
+        "label": {
+          "en": "Huddle together and endure",
+          "cs": "Schoulit se a přečkat"
+        },
+        "description": {
+          "en": "No cost; wait for the thaw.",
+          "cs": "Zdarma; počkat na oblevu."
+        },
         "cost": {},
         "effects": []
       }
@@ -1730,7 +2159,10 @@
   {
     "id": "heat_wave",
     "type": "disaster",
-    "name": "Heat Wave",
+    "name": {
+      "en": "Heat Wave",
+      "cs": "Vlna veder"
+    },
     "era": [],
     "weight": 8,
     "cooldown_ticks": 130,
@@ -1761,8 +2193,14 @@
     "choices": [
       {
         "id": "dig_wells",
-        "label": "Dig deeper wells",
-        "description": "Spend materials to keep water flowing.",
+        "label": {
+          "en": "Dig deeper wells",
+          "cs": "Vykopat hlubší studny"
+        },
+        "description": {
+          "en": "Spend materials to keep water flowing.",
+          "cs": "Za materiál udržet vodu."
+        },
         "cost": {
           "materials": 35
         },
@@ -1781,8 +2219,14 @@
       },
       {
         "id": "ration_water",
-        "label": "Ration water carefully",
-        "description": "No cost; tighten every tap.",
+        "label": {
+          "en": "Ration water carefully",
+          "cs": "Pečlivě šetřit vodou"
+        },
+        "description": {
+          "en": "No cost; tighten every tap.",
+          "cs": "Zdarma; hlídat každý kohoutek."
+        },
         "cost": {},
         "effects": []
       }
@@ -1792,7 +2236,10 @@
   {
     "id": "solar_flare",
     "type": "disaster",
-    "name": "Solar Flare",
+    "name": {
+      "en": "Solar Flare",
+      "cs": "Sluneční erupce"
+    },
     "era": [
       "early_industrial",
       "modern",
@@ -1821,8 +2268,14 @@
     "choices": [
       {
         "id": "manual_override",
-        "label": "Run everything by hand",
-        "description": "Spend influence to keep the essentials going.",
+        "label": {
+          "en": "Run everything by hand",
+          "cs": "Dělat všechno ručně"
+        },
+        "description": {
+          "en": "Spend influence to keep the essentials going.",
+          "cs": "Za vliv udržet to nejnutnější v chodu."
+        },
         "cost": {
           "influence": 20
         },
@@ -1837,8 +2290,14 @@
       },
       {
         "id": "wait_out_flare",
-        "label": "Wait for the skies to settle",
-        "description": "No cost; the machines sleep until it passes.",
+        "label": {
+          "en": "Wait for the skies to settle",
+          "cs": "Počkat, až se nebe uklidní"
+        },
+        "description": {
+          "en": "No cost; the machines sleep until it passes.",
+          "cs": "Zdarma; stroje spí, dokud to nepřejde."
+        },
         "cost": {},
         "effects": []
       }
@@ -1848,7 +2307,10 @@
   {
     "id": "eclipse",
     "type": "flavor",
-    "name": "Eclipse",
+    "name": {
+      "en": "Eclipse",
+      "cs": "Zatmění"
+    },
     "era": [],
     "weight": 6,
     "cooldown_ticks": 90,
@@ -1866,7 +2328,10 @@
   {
     "id": "infestation",
     "type": "threat",
-    "name": "Infestation",
+    "name": {
+      "en": "Infestation",
+      "cs": "Zamoření"
+    },
     "era": [],
     "weight": 8,
     "cooldown_ticks": 140,
@@ -1897,8 +2362,14 @@
     "choices": [
       {
         "id": "smoke_them_out",
-        "label": "Smoke the nest out",
-        "description": "Spend materials to destroy the infestation.",
+        "label": {
+          "en": "Smoke the nest out",
+          "cs": "Vykouřit hnízdo"
+        },
+        "description": {
+          "en": "Spend materials to destroy the infestation.",
+          "cs": "Za materiál zamoření zničit."
+        },
         "cost": {
           "materials": 45
         },
@@ -1917,8 +2388,14 @@
       },
       {
         "id": "seal_tunnels",
-        "label": "Seal the tunnels and hope",
-        "description": "No cost, but they may return.",
+        "label": {
+          "en": "Seal the tunnels and hope",
+          "cs": "Zasypat chodby a doufat"
+        },
+        "description": {
+          "en": "No cost, but they may return.",
+          "cs": "Zdarma, ale mohou se vrátit."
+        },
         "cost": {},
         "effects": [
           {
@@ -1934,7 +2411,10 @@
   {
     "id": "toxic_fallout",
     "type": "disaster",
-    "name": "Toxic Fallout",
+    "name": {
+      "en": "Toxic Fallout",
+      "cs": "Jedovatý spad"
+    },
     "era": [],
     "weight": 6,
     "cooldown_ticks": 180,
@@ -1965,8 +2445,14 @@
     "choices": [
       {
         "id": "shelter_indoors",
-        "label": "Keep everyone sheltered",
-        "description": "Spend materials to seal the buildings.",
+        "label": {
+          "en": "Keep everyone sheltered",
+          "cs": "Držet všechny pod střechou"
+        },
+        "description": {
+          "en": "Spend materials to seal the buildings.",
+          "cs": "Za materiál utěsnit budovy."
+        },
         "cost": {
           "materials": 50
         },
@@ -1980,8 +2466,14 @@
       },
       {
         "id": "endure_fallout",
-        "label": "Press on through it",
-        "description": "No cost; the work cannot stop.",
+        "label": {
+          "en": "Press on through it",
+          "cs": "Pracovat dál"
+        },
+        "description": {
+          "en": "No cost; the work cannot stop.",
+          "cs": "Zdarma; práce stát nemůže."
+        },
         "cost": {},
         "effects": [
           {
@@ -1997,7 +2489,10 @@
   {
     "id": "crop_blight",
     "type": "disaster",
-    "name": "Crop Blight",
+    "name": {
+      "en": "Crop Blight",
+      "cs": "Sněť na poli"
+    },
     "era": [],
     "weight": 9,
     "cooldown_ticks": 110,
@@ -2019,8 +2514,14 @@
     "choices": [
       {
         "id": "burn_fields",
-        "label": "Burn the infected fields",
-        "description": "Spend materials to stop the spread and salvage the rest.",
+        "label": {
+          "en": "Burn the infected fields",
+          "cs": "Vypálit napadená pole"
+        },
+        "description": {
+          "en": "Spend materials to stop the spread and salvage the rest.",
+          "cs": "Za materiál zastavit šíření a zachránit zbytek."
+        },
         "cost": {
           "materials": 30
         },
@@ -2035,8 +2536,14 @@
       },
       {
         "id": "salvage_crop",
-        "label": "Salvage what you can",
-        "description": "No cost; take the loss.",
+        "label": {
+          "en": "Salvage what you can",
+          "cs": "Zachránit, co půjde"
+        },
+        "description": {
+          "en": "No cost; take the loss.",
+          "cs": "Zdarma; ztrátu unést."
+        },
         "cost": {},
         "effects": []
       }
@@ -2046,7 +2553,10 @@
   {
     "id": "cargo_pod",
     "type": "opportunity",
-    "name": "Fallen Cargo",
+    "name": {
+      "en": "Fallen Cargo",
+      "cs": "Spadlý náklad"
+    },
     "era": [],
     "weight": 10,
     "cooldown_ticks": 90,
@@ -2062,8 +2572,14 @@
     "choices": [
       {
         "id": "share_find",
-        "label": "Share the find with neighbours",
-        "description": "Give up some materials to earn lasting goodwill.",
+        "label": {
+          "en": "Share the find with neighbours",
+          "cs": "Rozdělit se se sousedy"
+        },
+        "description": {
+          "en": "Give up some materials to earn lasting goodwill.",
+          "cs": "Vzdát se části materiálu za trvalou dobrou vůli."
+        },
         "cost": {
           "materials": 40
         },
@@ -2078,8 +2594,14 @@
       },
       {
         "id": "keep_cargo",
-        "label": "Keep it all",
-        "description": "Finders keepers.",
+        "label": {
+          "en": "Keep it all",
+          "cs": "Nechat si všechno"
+        },
+        "description": {
+          "en": "Finders keepers.",
+          "cs": "Co kdo najde, to je jeho."
+        },
         "cost": {},
         "effects": []
       }
@@ -2089,7 +2611,10 @@
   {
     "id": "transport_survivor",
     "type": "opportunity",
-    "name": "A Lone Survivor",
+    "name": {
+      "en": "A Lone Survivor",
+      "cs": "Osamělý přeživší"
+    },
     "era": [],
     "weight": 9,
     "cooldown_ticks": 120,
@@ -2098,8 +2623,14 @@
     "choices": [
       {
         "id": "nurse_to_health",
-        "label": "Nurse them back to health",
-        "description": "Spend food and knowledge; gain a grateful new colonist.",
+        "label": {
+          "en": "Nurse them back to health",
+          "cs": "Vyléčit ho"
+        },
+        "description": {
+          "en": "Spend food and knowledge; gain a grateful new colonist.",
+          "cs": "Za jídlo a vědění získat vděčného osadníka."
+        },
         "cost": {
           "food": 25,
           "knowledge": 15
@@ -2117,8 +2648,14 @@
       },
       {
         "id": "leave_survivor",
-        "label": "Leave them to their fate",
-        "description": "One fewer mouth to feed.",
+        "label": {
+          "en": "Leave them to their fate",
+          "cs": "Nechat ho osudu"
+        },
+        "description": {
+          "en": "One fewer mouth to feed.",
+          "cs": "O jedna ústa míň."
+        },
         "cost": {},
         "effects": []
       }
@@ -2128,7 +2665,10 @@
   {
     "id": "refugees_pursued",
     "type": "threat",
-    "name": "Refugees in Flight",
+    "name": {
+      "en": "Refugees in Flight",
+      "cs": "Uprchlíci na útěku"
+    },
     "era": [],
     "weight": 8,
     "cooldown_ticks": 140,
@@ -2142,8 +2682,14 @@
     "choices": [
       {
         "id": "shelter_refugees",
-        "label": "Take them in",
-        "description": "Two join your colony — but their pursuers are not far behind.",
+        "label": {
+          "en": "Take them in",
+          "cs": "Vzít je dovnitř"
+        },
+        "description": {
+          "en": "Two join your colony — but their pursuers are not far behind.",
+          "cs": "Dva se přidají — ale pronásledovatelé nejsou daleko."
+        },
         "cost": {
           "food": 50
         },
@@ -2163,8 +2709,14 @@
       },
       {
         "id": "turn_refugees_away",
-        "label": "Send them onward",
-        "description": "Spare yourself the danger, and the guilt.",
+        "label": {
+          "en": "Send them onward",
+          "cs": "Poslat je dál"
+        },
+        "description": {
+          "en": "Spare yourself the danger, and the guilt.",
+          "cs": "Ušetříš si nebezpečí i výčitky."
+        },
         "cost": {},
         "effects": [
           {
@@ -2180,7 +2732,10 @@
   {
     "id": "mad_animal",
     "type": "threat",
-    "name": "Maddened Beast",
+    "name": {
+      "en": "Maddened Beast",
+      "cs": "Vzteklá šelma"
+    },
     "era": [],
     "weight": 9,
     "cooldown_ticks": 100,
@@ -2205,8 +2760,14 @@
     "choices": [
       {
         "id": "hunt_beast",
-        "label": "Hunt it down",
-        "description": "Spend materials; the kill yields meat and hide.",
+        "label": {
+          "en": "Hunt it down",
+          "cs": "Ulovit ji"
+        },
+        "description": {
+          "en": "Spend materials; the kill yields meat and hide.",
+          "cs": "Za materiál; kořist dá maso a kůži."
+        },
         "cost": {
           "materials": 20
         },
@@ -2226,8 +2787,14 @@
       },
       {
         "id": "drive_off_beast",
-        "label": "Drive it off",
-        "description": "No cost; chase it back into the trees.",
+        "label": {
+          "en": "Drive it off",
+          "cs": "Zahnat ji"
+        },
+        "description": {
+          "en": "No cost; chase it back into the trees.",
+          "cs": "Zdarma; vyhnat ji zpátky do lesa."
+        },
         "cost": {},
         "effects": []
       }
@@ -2237,7 +2804,10 @@
   {
     "id": "wild_herd",
     "type": "opportunity",
-    "name": "Migrating Herd",
+    "name": {
+      "en": "Migrating Herd",
+      "cs": "Táhnoucí stádo"
+    },
     "era": [],
     "weight": 11,
     "cooldown_ticks": 70,
@@ -2251,8 +2821,14 @@
     "choices": [
       {
         "id": "organize_hunt",
-        "label": "Organize a great hunt",
-        "description": "Bring in a windfall of meat for the stores.",
+        "label": {
+          "en": "Organize a great hunt",
+          "cs": "Uspořádat velký lov"
+        },
+        "description": {
+          "en": "Bring in a windfall of meat for the stores.",
+          "cs": "Přinese to do skladu spoustu masa."
+        },
         "cost": {},
         "effects": [
           {
@@ -2270,8 +2846,14 @@
       },
       {
         "id": "let_herd_pass",
-        "label": "Let them pass in peace",
-        "description": "No cost; admire them from afar.",
+        "label": {
+          "en": "Let them pass in peace",
+          "cs": "Nechat je v klidu projít"
+        },
+        "description": {
+          "en": "No cost; admire them from afar.",
+          "cs": "Zdarma; jen se dívat."
+        },
         "cost": {},
         "effects": [
           {
@@ -2287,7 +2869,10 @@
   {
     "id": "inspiration_insight",
     "type": "opportunity",
-    "name": "A Flash of Insight",
+    "name": {
+      "en": "A Flash of Insight",
+      "cs": "Záblesk nápadu"
+    },
     "era": [],
     "weight": 9,
     "cooldown_ticks": 90,
@@ -2315,7 +2900,10 @@
   {
     "id": "psychic_drone",
     "type": "threat",
-    "name": "Psychic Drone",
+    "name": {
+      "en": "Psychic Drone",
+      "cs": "Psychický hukot"
+    },
     "era": [
       "modern",
       "near_future"
@@ -2343,8 +2931,14 @@
     "choices": [
       {
         "id": "psychic_shielding",
-        "label": "Build psychic shielding",
-        "description": "Spend energy and knowledge to dampen the signal.",
+        "label": {
+          "en": "Build psychic shielding",
+          "cs": "Postavit psychické stínění"
+        },
+        "description": {
+          "en": "Spend energy and knowledge to dampen the signal.",
+          "cs": "Za energii a vědění signál utlumit."
+        },
         "cost": {
           "energy": 30,
           "knowledge": 30
@@ -2364,8 +2958,14 @@
       },
       {
         "id": "endure_drone",
-        "label": "Grit your teeth and bear it",
-        "description": "No cost; the headache will pass. Eventually.",
+        "label": {
+          "en": "Grit your teeth and bear it",
+          "cs": "Zatnout zuby a vydržet"
+        },
+        "description": {
+          "en": "No cost; the headache will pass. Eventually.",
+          "cs": "Zdarma; bolest hlavy přejde. Jednou."
+        },
         "cost": {},
         "effects": []
       }
@@ -2375,7 +2975,10 @@
   {
     "id": "volcanic_winter",
     "type": "disaster",
-    "name": "Volcanic Winter",
+    "name": {
+      "en": "Volcanic Winter",
+      "cs": "Sopečná zima"
+    },
     "era": [],
     "weight": 5,
     "cooldown_ticks": 200,
@@ -2402,8 +3005,14 @@
     "choices": [
       {
         "id": "trade_for_food",
-        "label": "Trade abroad for food",
-        "description": "Spend influence to import grain through the long dark.",
+        "label": {
+          "en": "Trade abroad for food",
+          "cs": "Dovézt jídlo zvenčí"
+        },
+        "description": {
+          "en": "Spend influence to import grain through the long dark.",
+          "cs": "Za vliv dovážet obilí přes dlouhou tmu."
+        },
         "cost": {
           "influence": 40
         },
@@ -2418,8 +3027,14 @@
       },
       {
         "id": "ration_winter",
-        "label": "Ration through the dark",
-        "description": "No cost; survive on what you have.",
+        "label": {
+          "en": "Ration through the dark",
+          "cs": "Šetřit přes tmu"
+        },
+        "description": {
+          "en": "No cost; survive on what you have.",
+          "cs": "Zdarma; vyjít s tím, co je."
+        },
         "cost": {},
         "effects": [
           {
@@ -2435,7 +3050,10 @@
   {
     "id": "flu_season",
     "type": "disaster",
-    "name": "Flu Season",
+    "name": {
+      "en": "Flu Season",
+      "cs": "Chřipkové období"
+    },
     "era": [],
     "weight": 9,
     "cooldown_ticks": 100,
@@ -2450,8 +3068,14 @@
     "choices": [
       {
         "id": "herbal_remedies",
-        "label": "Brew herbal remedies",
-        "description": "Spend knowledge to ease the worst of it.",
+        "label": {
+          "en": "Brew herbal remedies",
+          "cs": "Uvařit bylinné odvary"
+        },
+        "description": {
+          "en": "Spend knowledge to ease the worst of it.",
+          "cs": "Za vědění zmírnit to nejhorší."
+        },
         "cost": {
           "knowledge": 20
         },
@@ -2465,8 +3089,14 @@
       },
       {
         "id": "bed_rest",
-        "label": "Order bed rest",
-        "description": "No cost; let it run its course.",
+        "label": {
+          "en": "Order bed rest",
+          "cs": "Nařídit klid na lůžku"
+        },
+        "description": {
+          "en": "No cost; let it run its course.",
+          "cs": "Zdarma; nechat to proběhnout."
+        },
         "cost": {},
         "effects": []
       }

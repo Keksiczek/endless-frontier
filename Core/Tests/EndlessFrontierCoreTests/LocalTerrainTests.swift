@@ -6,7 +6,7 @@ import Testing
 struct LocalTerrainTests {
     private let region = UUID(uuidString: "00000000-0000-0000-0F0F-000000000001")!
     private func biome(_ id: String) -> BiomeDefinition {
-        BiomeDefinition(id: id, name: id.capitalized)
+        BiomeDefinition(id: id, name: LocalizedText(id.capitalized))
     }
 
     @Test("Ground cover is deterministic for a seed and cell")

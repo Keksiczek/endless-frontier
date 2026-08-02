@@ -732,7 +732,9 @@ final class GameViewModel {
 
     var regions: [Region] { world.regions }
 
-    func biomeName(_ id: String) -> String { registry.biome(id)?.name ?? id }
+    func biomeName(_ id: String) -> String {
+        registry.biome(id)?.name.resolve(AppStrings.language) ?? id
+    }
 
     /// Whether an expedition to this region can be *reached* — adjacent, and
     /// nothing else under way. Says nothing about whether it can be paid for.

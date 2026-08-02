@@ -94,8 +94,31 @@ enum SettlementGround {
                                          sx: sx, sy: sy, subX: subX, subY: subY, hash: h)
                     let x = rect.minX + CGFloat(col) * cw + CGFloat(sx) * tw
                     let y = rect.minY + CGFloat(row) * ch + CGFloat(sy) * th
-                    // A hair of overlap, so no seam shows between tiles.
-                    let tile = CGRect(x: x, y: y, width: tw + 0.7, height: th + 0.7)
+                    // A hair of overlap, so no seam shows between tiles — plus
+                    // a per-tile bite of extra reach on two of its sides.
+                    //
+                    // The cover dither already breaks up the *colour* blocks,
+                    // but the light band and the grain-dim flag are per-tile
+                    // and axis-aligned, so the valley kept a ruled lattice
+                    // drawn across it in shading. Growing each tile by a random
+                    // fraction of itself makes neighbours dovetail instead of
+                    // meeting on a line.
+                    //
+                    // Only ever *grows*: a tile that shrank would open a hole
+                    // its neighbour has no reason to fill, and rule 9 means
+                    // nothing translucent can be laid over the gap to hide it.
+                    // Free — the fills are batched by tone either way.
+                    // Grown on all four sides independently, so the dovetailing
+                    // has no direction — growing only up and left would shift
+                    // the whole valley up and left.
+                    let bite = min(tw, th) * 0.3
+                    let left = CGFloat(unit(h >> 28)) * bite
+                    let top = CGFloat(unit(h >> 32)) * bite
+                    let right = CGFloat(unit(h >> 36)) * bite
+                    let bottom = CGFloat(unit(h >> 40)) * bite
+                    let tile = CGRect(x: x - left, y: y - top,
+                                      width: tw + 0.7 + left + right,
+                                      height: th + 0.7 + top + bottom)
 
                     // Where this tile sits in the world, 0…1, for the relief.
                     let u = (Double(col) + Double(sx) / Double(subX)) / Double(cols)
@@ -131,7 +154,13 @@ enum SettlementGround {
             }
         }
 
-        for (tone, path) in batches {
+        // **In a fixed order.** A dictionary's iteration order is not stable in
+        // Swift, and now that tiles overlap by a third of themselves rather
+        // than by a hair, which tone is drawn last decides what the ground
+        // looks like. Unsorted, the valley would reshuffle its own edges every
+        // frame — a shimmer with no cause anywhere in the world.
+        for tone in batches.keys.sorted(by: { $0.order < $1.order }) {
+            guard let path = batches[tone] else { continue }
             context.fill(path, with: .color(colour(tone, season: season, sun: sun)))
         }
         let stroke = StrokeStyle(lineWidth: max(0.4, min(tw, th) * 0.10), lineCap: .round)
@@ -151,6 +180,16 @@ enum SettlementGround {
         let band: Int
         /// The one-in-four tiles drawn a shade darker for grain.
         let dim: Bool
+
+        /// A total order over tones, so the buckets are always filled in the
+        /// same sequence. Darkest band first, so a lit tile's overgrown edge
+        /// falls *over* the shade beside it rather than under it — light reads
+        /// as the thing on top.
+        var order: Int {
+            let coverIndex = GroundCover.allCases.firstIndex(of: cover) ?? 0
+            let skinIndex = SettlementSeasons.Skin.allCases.firstIndex(of: skin) ?? 0
+            return (band * 256) + (coverIndex * 16) + (skinIndex * 2) + (dim ? 0 : 1)
+        }
     }
 
     /// The earth, the season lying on it and the sun falling on it, resolved

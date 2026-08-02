@@ -16,7 +16,10 @@
         "buildingId": "quarry"
       }
     ],
-    "description": "Stone and bone tools make every task a little easier."
+    "description": {
+      "en": "Stone and bone tools make every task a little easier.",
+      "cs": "Nástroje z kamene a kosti — každá práce je o něco snazší."
+    }
   },
   {
     "id": "agriculture",
@@ -37,7 +40,10 @@
         "buildingId": "farm_advanced"
       }
     ],
-    "description": "Deliberate cultivation frees hands for other work."
+    "description": {
+      "en": "Deliberate cultivation frees hands for other work.",
+      "cs": "Když se seje záměrně, uvolní se ruce na jinou práci."
+    }
   },
   {
     "id": "writing",
@@ -64,7 +70,10 @@
         "mode": "additive"
       }
     ],
-    "description": "Recording knowledge unlocks civilization's memory."
+    "description": {
+      "en": "Recording knowledge unlocks civilization's memory.",
+      "cs": "Zapsané vědění je paměť, kterou civilizace neztratí."
+    }
   },
   {
     "id": "bronze_tools",
@@ -89,7 +98,10 @@
         "buildingId": "watchtower"
       }
     ],
-    "description": "Bronze tools and weapons mark a new age of capability."
+    "description": {
+      "en": "Bronze tools and weapons mark a new age of capability.",
+      "cs": "Bronzové nářadí a zbraně otevírají nový věk dovednosti."
+    }
   },
   {
     "id": "currency",
@@ -114,7 +126,10 @@
         "eventCategory": "trade"
       }
     ],
-    "description": "Coinage lubricates trade across the whole region."
+    "description": {
+      "en": "Coinage lubricates trade across the whole region.",
+      "cs": "Mince promazává obchod napříč celým krajem."
+    }
   },
   {
     "id": "scholarship",
@@ -144,7 +159,10 @@
         "buildingId": "university"
       }
     ],
-    "description": "Formal education compounds knowledge across generations."
+    "description": {
+      "en": "Formal education compounds knowledge across generations.",
+      "cs": "Školy skládají vědění jedné generace na druhou."
+    }
   },
   {
     "id": "pottery",
@@ -165,7 +183,10 @@
         "buildingId": "granary"
       }
     ],
-    "description": "Fired clay stores grain and water against hard times."
+    "description": {
+      "en": "Fired clay stores grain and water against hard times.",
+      "cs": "Pálená hlína uchová obilí i vodu na horší časy."
+    }
   },
   {
     "id": "masonry",
@@ -190,7 +211,10 @@
         "buildingId": "aqueduct"
       }
     ],
-    "description": "Cut stone raises walls and carries water across the land."
+    "description": {
+      "en": "Cut stone raises walls and carries water across the land.",
+      "cs": "Tesaný kámen zvedne hradby a donese vodu přes celou krajinu."
+    }
   },
   {
     "id": "mathematics",
@@ -217,7 +241,10 @@
         "mode": "additive"
       }
     ],
-    "description": "Number and proof unlock the deeper patterns of the world."
+    "description": {
+      "en": "Number and proof unlock the deeper patterns of the world.",
+      "cs": "Číslo a důkaz odhalují hlubší řád světa."
+    }
   },
   {
     "id": "engineering",
@@ -239,7 +266,10 @@
         "buildingId": "workshop"
       }
     ],
-    "description": "Gears, levers and mills turn ingenuity into output."
+    "description": {
+      "en": "Gears, levers and mills turn ingenuity into output.",
+      "cs": "Ozubená kola, páky a mlýny mění důvtip ve výkon."
+    }
   },
   {
     "id": "banking",
@@ -260,7 +290,10 @@
         "buildingId": "bank"
       }
     ],
-    "description": "Credit lets influence flow faster than coin alone."
+    "description": {
+      "en": "Credit lets influence flow faster than coin alone.",
+      "cs": "Úvěr posílá vliv rychleji, než dokáže samotná mince."
+    }
   },
   {
     "id": "guilds",
@@ -285,7 +318,10 @@
         "eventCategory": "commerce"
       }
     ],
-    "description": "Organised trades raise standards and bind the region in commerce."
+    "description": {
+      "en": "Organised trades raise standards and bind the region in commerce.",
+      "cs": "Uspořádaná řemesla zvednou laťku a sváží kraj obchodem."
+    }
   },
   {
     "id": "steam_power",
@@ -310,7 +346,10 @@
         "buildingId": "power_plant"
       }
     ],
-    "description": "Harnessed steam drives the engines of an industrial age."
+    "description": {
+      "en": "Harnessed steam drives the engines of an industrial age.",
+      "cs": "Zkrocená pára roztáčí stroje průmyslového věku."
+    }
   },
   {
     "id": "machining",
@@ -331,7 +370,10 @@
         "buildingId": "foundry"
       }
     ],
-    "description": "Precise tools make precise tools — industry compounds itself."
+    "description": {
+      "en": "Precise tools make precise tools — industry compounds itself.",
+      "cs": "Přesné nástroje dělají přesné nástroje — průmysl si přisluhuje sám."
+    }
   },
   {
     "id": "railways",
@@ -358,7 +400,10 @@
         "mode": "additive"
       }
     ],
-    "description": "Iron roads bind distant settlements into one swift economy."
+    "description": {
+      "en": "Iron roads bind distant settlements into one swift economy.",
+      "cs": "Železné cesty svážou vzdálené osady do jediného rychlého hospodářství."
+    }
   },
   {
     "id": "chemistry",
@@ -385,7 +430,10 @@
         "mode": "additive"
       }
     ],
-    "description": "Understanding matter itself unlocks fertilisers, fuels and medicines."
+    "description": {
+      "en": "Understanding matter itself unlocks fertilisers, fuels and medicines.",
+      "cs": "Porozumět hmotě znamená hnojiva, paliva a léky."
+    }
   },
   {
     "id": "sanitation",
@@ -406,7 +454,10 @@
         "buildingId": "hospital"
       }
     ],
-    "description": "Clean water and sewers end the plagues that once thinned every city."
+    "description": {
+      "en": "Clean water and sewers end the plagues that once thinned every city.",
+      "cs": "Čistá voda a stoky ukončí mory, které dřív prořídly každé město."
+    }
   },
   {
     "id": "electricity",
@@ -433,7 +484,10 @@
         "mode": "additive"
       }
     ],
-    "description": "Tamed lightning lights the night and powers a new age of machines."
+    "description": {
+      "en": "Tamed lightning lights the night and powers a new age of machines.",
+      "cs": "Zkrocený blesk osvítí noc a pohání nový věk strojů."
+    }
   },
   {
     "id": "combustion",
@@ -458,7 +512,10 @@
         "buildingId": "vehicle_works"
       }
     ],
-    "description": "Burning fuel in a cylinder gives industry legs and wheels of its own."
+    "description": {
+      "en": "Burning fuel in a cylinder gives industry legs and wheels of its own.",
+      "cs": "Palivo hořící ve válci dá průmyslu vlastní nohy a kola."
+    }
   },
   {
     "id": "mass_production",
@@ -484,7 +541,10 @@
         "buildingId": "apartment_block"
       }
     ],
-    "description": "The assembly line turns scarce goods into everyday abundance."
+    "description": {
+      "en": "The assembly line turns scarce goods into everyday abundance.",
+      "cs": "Pás promění vzácné zboží v každodenní samozřejmost."
+    }
   },
   {
     "id": "medicine",
@@ -510,7 +570,10 @@
         "eventCategory": "medicine"
       }
     ],
-    "description": "Antiseptics and vaccines turn once-fatal ailments into minor setbacks."
+    "description": {
+      "en": "Antiseptics and vaccines turn once-fatal ailments into minor setbacks.",
+      "cs": "Antiseptika a očkování dělají z kdysi smrtelných nemocí drobnou nepříjemnost."
+    }
   },
   {
     "id": "electronics",
@@ -537,7 +600,10 @@
         "mode": "additive"
       }
     ],
-    "description": "Vacuum tubes and transistors begin to think faster than any clerk."
+    "description": {
+      "en": "Vacuum tubes and transistors begin to think faster than any clerk.",
+      "cs": "Elektronky a tranzistory začínají myslet rychleji než kterýkoli písař."
+    }
   },
   {
     "id": "computing",
@@ -569,7 +635,10 @@
         "mode": "additive"
       }
     ],
-    "description": "Machines that compute let knowledge compound at the speed of thought."
+    "description": {
+      "en": "Machines that compute let knowledge compound at the speed of thought.",
+      "cs": "Počítající stroje nechají vědění růst rychlostí myšlenky."
+    }
   },
   {
     "id": "renewables",
@@ -594,7 +663,10 @@
         "buildingId": "wind_farm"
       }
     ],
-    "description": "Sun and wind give limitless power without the soot of the old plants."
+    "description": {
+      "en": "Sun and wind give limitless power without the soot of the old plants.",
+      "cs": "Slunce a vítr dávají energii bez sazí starých elektráren."
+    }
   },
   {
     "id": "robotics",
@@ -616,7 +688,10 @@
         "buildingId": "automated_factory"
       }
     ],
-    "description": "Tireless machines take over the line, freeing every hand for greater work."
+    "description": {
+      "en": "Tireless machines take over the line, freeing every hand for greater work.",
+      "cs": "Neúnavné stroje převezmou linku a uvolní každou ruku pro větší práci."
+    }
   },
   {
     "id": "fusion_power",
@@ -638,7 +713,10 @@
         "buildingId": "fusion_reactor"
       }
     ],
-    "description": "A captive star in a bottle — energy beyond anything the world has known."
+    "description": {
+      "en": "A captive star in a bottle — energy beyond anything the world has known.",
+      "cs": "Hvězda v láhvi — energie nad vše, co svět dosud znal."
+    }
   },
   {
     "id": "artificial_intelligence",
@@ -670,7 +748,10 @@
         "mode": "additive"
       }
     ],
-    "description": "Minds of our own making advise, design and dream alongside us."
+    "description": {
+      "en": "Minds of our own making advise, design and dream alongside us.",
+      "cs": "Mysli, které jsme sami stvořili, radí, navrhují a sní vedle nás."
+    }
   },
   {
     "id": "space_program",
@@ -700,7 +781,10 @@
         "eventCategory": "orbital"
       }
     ],
-    "description": "The frontier turns upward: orbit, the moons, and everything beyond."
+    "description": {
+      "en": "The frontier turns upward: orbit, the moons, and everything beyond.",
+      "cs": "Hranice se obrací vzhůru: oběžná dráha, měsíce a všechno za nimi."
+    }
   },
   {
     "id": "megastructures",
@@ -721,7 +805,10 @@
         "buildingId": "arcology"
       }
     ],
-    "description": "Single buildings the size of cities house millions in comfort."
+    "description": {
+      "en": "Single buildings the size of cities house millions in comfort.",
+      "cs": "Jediná stavba velká jako město ubytuje milion lidí v pohodlí."
+    }
   },
   {
     "id": "continued_inquiry",
@@ -745,7 +832,10 @@
         "mode": "additive"
       }
     ],
-    "description": "There is always another question. Each answer costs more than the last."
+    "description": {
+      "en": "There is always another question. Each answer costs more than the last.",
+      "cs": "Vždycky zbývá další otázka. Každá odpověď stojí víc než ta minulá."
+    }
   },
   {
     "id": "statecraft",
@@ -769,6 +859,9 @@
         "mode": "additive"
       }
     ],
-    "description": "The study of holding a realm together — never finished, and never cheap."
+    "description": {
+      "en": "The study of holding a realm together — never finished, and never cheap.",
+      "cs": "Nauka o tom, jak držet říši pohromadě — nikdy hotová a nikdy laciná."
+    }
   }
 ]

@@ -276,6 +276,20 @@ struct SettlementCanvasView: View {
         for poi in map.pois where poi.discovered && map.isExplored(poi.position) {
             probe.offer(.poi(poi.id), at: SettlementRenderer.point(poi.position, in: rect))
         }
+        // Outsiders on your ground: a trader's party, an envoy under a
+        // standard, a family the winter turned out. They are drawn walking in
+        // and were the one kind of *person* on the map that answered nothing.
+        for visitor in map.visitors where map.isExplored(visitor.position) {
+            probe.offer(.landmark(visitorLabel(visitor)),
+                        at: SettlementRenderer.point(visitor.position, in: rect))
+        }
+        // …and your own carts, on the road between your towns.
+        for caravan in caravans {
+            guard let leg = SettlementConvoys.position(
+                of: caravan, for: settlement.id) else { continue }
+            probe.offer(.landmark(caravanLabel(caravan, outbound: leg.outbound)),
+                        at: SettlementRenderer.point(leg.position, in: rect))
+        }
         if let hit = probe.take() { return hit }
 
         // The things lying about: a heap of timber at the stump that is on its
@@ -369,6 +383,25 @@ struct SettlementCanvasView: View {
         let felled = tree.chopped > 0.02
             ? " · \(cs ? "nařezáno" : "cut") \(Int(tree.chopped * 100)) %" : ""
         return "\(name) · \(Int(tree.timberYield.rounded())) \(cs ? "dřeva" : "timber")\(felled)"
+    }
+
+    private func visitorLabel(_ visitor: Visitor) -> String {
+        let cs = AppStrings.language == .cs
+        let name = visitor.kind.displayName.resolve(AppStrings.language)
+        let doing: String
+        switch visitor.phase {
+        case .arriving: doing = cs ? "přichází" : "on their way in"
+        case .visiting: doing = cs ? "je ve městě" : "here"
+        case .leaving:  doing = cs ? "odchází" : "on their way out"
+        }
+        return "\(name) · \(doing)"
+    }
+
+    private func caravanLabel(_ caravan: Caravan, outbound: Bool) -> String {
+        let cs = AppStrings.language == .cs
+        let what = caravan.resource.displayName
+        let way = outbound ? (cs ? "odváží" : "carrying out") : (cs ? "veze" : "bringing in")
+        return "\(way) \(Int(caravan.cargo)) \(what)"
     }
 
     private func sceneryLabel(_ kind: SceneryKind) -> String {

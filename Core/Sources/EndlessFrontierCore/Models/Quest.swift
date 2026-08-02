@@ -23,11 +23,11 @@ public struct QuestReward: Codable, Sendable, Equatable {
 /// One step of a quest. Its `goals` (reused `EventCondition`s) must all be
 /// satisfied to complete the stage and earn its `reward`.
 public struct QuestStage: Codable, Sendable, Equatable {
-    public let description: String
+    public let description: LocalizedText
     public let goals: [EventCondition]
     public let reward: QuestReward
 
-    public init(description: String, goals: [EventCondition] = [], reward: QuestReward = QuestReward()) {
+    public init(description: LocalizedText, goals: [EventCondition] = [], reward: QuestReward = QuestReward()) {
         self.description = description
         self.goals = goals
         self.reward = reward
@@ -37,7 +37,7 @@ public struct QuestStage: Codable, Sendable, Equatable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        description = try c.decode(String.self, forKey: .description)
+        description = try c.decode(LocalizedText.self, forKey: .description)
         goals = try c.decodeIfPresent([EventCondition].self, forKey: .goals) ?? []
         reward = try c.decodeIfPresent(QuestReward.self, forKey: .reward) ?? QuestReward()
     }
@@ -47,12 +47,12 @@ public struct QuestStage: Codable, Sendable, Equatable {
 /// when its `trigger` conditions are met, then advances stage by stage.
 public struct QuestDefinition: Codable, Sendable, Identifiable, Equatable {
     public let id: String
-    public let name: String
-    public let description: String
+    public let name: LocalizedText
+    public let description: LocalizedText
     public let trigger: [EventCondition]
     public let stages: [QuestStage]
 
-    public init(id: String, name: String, description: String = "",
+    public init(id: String, name: LocalizedText, description: LocalizedText = "",
                 trigger: [EventCondition] = [], stages: [QuestStage] = []) {
         self.id = id
         self.name = name
@@ -66,8 +66,8 @@ public struct QuestDefinition: Codable, Sendable, Identifiable, Equatable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
-        name = try c.decode(String.self, forKey: .name)
-        description = try c.decodeIfPresent(String.self, forKey: .description) ?? ""
+        name = try c.decode(LocalizedText.self, forKey: .name)
+        description = try c.decodeIfPresent(LocalizedText.self, forKey: .description) ?? ""
         trigger = try c.decodeIfPresent([EventCondition].self, forKey: .trigger) ?? []
         stages = try c.decodeIfPresent([QuestStage].self, forKey: .stages) ?? []
     }

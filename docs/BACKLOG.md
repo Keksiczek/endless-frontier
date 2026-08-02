@@ -203,6 +203,27 @@ reaches the fight — a masterwork blade really does hit harder and a masterwork
 harness turns more aside — and armour still never makes anybody invulnerable.
 Nobody is ever guaranteed a masterwork; that is what makes it one.
 
+### 6.16 — the tail end (2026-08-02)
+
+| # | Thing | State |
+|---|---|---|
+| 6.16.1 | Autumn went **purple every dusk** | **done** — the night wash was the most saturated layer in the stack |
+| 6.16.2 | The ground still read as a **ruled lattice** | **done** — tiles dovetail instead of meeting on a line |
+| 6.16.3 | Events, techs, quests, biomes and the five resource words were **English only** | **done** — 196 strings, CZ+EN |
+| 6.16.4 | **Caravans and visitors** answered nothing when tapped | **done** |
+
+Two things worth remembering from it:
+
+- The night wash was `(0.03, 0.05, 0.12)` at 0.30 alpha — the strongest *and*
+  most saturated layer over the ground, so every dusk dragged the valley
+  toward blue. Over autumn, which is the one season whose earth is genuinely
+  brown, brown plus that much blue is purple. Night should **darken**, not
+  paint.
+- Overlapping tiles by a third of themselves means **which tone is drawn last
+  decides what the ground looks like** — and Swift dictionary iteration order
+  is not stable, so the buckets had to be sorted or the valley would reshuffle
+  its own edges every frame. See `SettlementGround.Tone.order`.
+
 ### 6.6 — what shipped, so the next pass builds on it rather than over it
 
 `SettlementBattle` now has named phases (`marching`, `volley`, `melee`,

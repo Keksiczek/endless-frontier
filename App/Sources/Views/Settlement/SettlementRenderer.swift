@@ -171,8 +171,18 @@ enum SettlementRenderer {
         _ context: inout GraphicsContext, rect: CGRect, night: Double
     ) {
         guard night > 0.01 else { return }
+        // Night **darkens**; it does not paint the valley blue.
+        //
+        // At 0.30 alpha of (0.03, 0.05, 0.12) this was the strongest single
+        // wash in the whole stack and by far the most saturated, so every dusk
+        // dragged the ground toward its own colour. Over autumn — which is the
+        // one season whose earth is genuinely brown — brown plus that much blue
+        // is *purple*, and the whole valley went violet every evening.
+        //
+        // A near-neutral slate at two thirds the strength reads as the light
+        // going out, which is what it is.
         context.fill(Path(rect),
-                     with: .color(Color(red: 0.03, green: 0.05, blue: 0.12).opacity(night * 0.30)))
+                     with: .color(Color(red: 0.06, green: 0.07, blue: 0.10).opacity(night * 0.20)))
     }
 
     /// Maps a normalised model point to a pixel point in `rect`.

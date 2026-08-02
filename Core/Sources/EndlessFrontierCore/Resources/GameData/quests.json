@@ -1,20 +1,57 @@
 [
   {
     "id": "founding_a_home",
-    "name": "Founding a Home",
-    "description": "Turn a fragile camp into a settlement that will endure.",
+    "name": {
+      "en": "Founding a Home",
+      "cs": "Založit domov"
+    },
+    "description": {
+      "en": "Turn a fragile camp into a settlement that will endure.",
+      "cs": "Udělat z křehkého tábořiště osadu, která vydrží."
+    },
     "trigger": [],
     "stages": [
       {
-        "description": "Grow the colony to 70 souls.",
-        "goals": [ { "stat": "global.population", "min": 70 } ],
-        "reward": { "effects": [ { "type": "resource_delta", "resource": "materials", "delta": 60, "scope": "global" } ] }
+        "description": {
+          "en": "Grow the colony to 70 souls.",
+          "cs": "Rozrůst kolonii na 70 duší."
+        },
+        "goals": [
+          {
+            "stat": "global.population",
+            "min": 70
+          }
+        ],
+        "reward": {
+          "effects": [
+            {
+              "type": "resource_delta",
+              "resource": "materials",
+              "delta": 60,
+              "scope": "global"
+            }
+          ]
+        }
       },
       {
-        "description": "Record your laws — research Writing.",
-        "goals": [ { "techResearched": "writing" } ],
+        "description": {
+          "en": "Record your laws — research Writing.",
+          "cs": "Sepsat své zákony — vyzkoumat písmo."
+        },
+        "goals": [
+          {
+            "techResearched": "writing"
+          }
+        ],
         "reward": {
-          "effects": [ { "type": "resource_delta", "resource": "knowledge", "delta": 40, "scope": "global" } ],
+          "effects": [
+            {
+              "type": "resource_delta",
+              "resource": "knowledge",
+              "delta": 40,
+              "scope": "global"
+            }
+          ],
           "itemID": "leather_garb"
         }
       }
@@ -22,20 +59,63 @@
   },
   {
     "id": "reach_outward",
-    "name": "Reach Outward",
-    "description": "One settlement is a start. An empire needs more.",
-    "trigger": [ { "stat": "global.population", "min": 60 } ],
+    "name": {
+      "en": "Reach Outward",
+      "cs": "Sáhnout dál"
+    },
+    "description": {
+      "en": "One settlement is a start. An empire needs more.",
+      "cs": "Jedna osada je začátek. Říše potřebuje víc."
+    },
+    "trigger": [
+      {
+        "stat": "global.population",
+        "min": 60
+      }
+    ],
     "stages": [
       {
-        "description": "Found a second settlement.",
-        "goals": [ { "settlementCount": true, "min": 2 } ],
-        "reward": { "effects": [ { "type": "resource_delta", "resource": "influence", "delta": 40, "scope": "global" } ] }
+        "description": {
+          "en": "Found a second settlement.",
+          "cs": "Založit druhou osadu."
+        },
+        "goals": [
+          {
+            "settlementCount": true,
+            "min": 2
+          }
+        ],
+        "reward": {
+          "effects": [
+            {
+              "type": "resource_delta",
+              "resource": "influence",
+              "delta": 40,
+              "scope": "global"
+            }
+          ]
+        }
       },
       {
-        "description": "Establish a third settlement.",
-        "goals": [ { "settlementCount": true, "min": 3 } ],
+        "description": {
+          "en": "Establish a third settlement.",
+          "cs": "Postavit třetí osadu."
+        },
+        "goals": [
+          {
+            "settlementCount": true,
+            "min": 3
+          }
+        ],
         "reward": {
-          "effects": [ { "type": "resource_delta", "resource": "materials", "delta": 100, "scope": "global" } ],
+          "effects": [
+            {
+              "type": "resource_delta",
+              "resource": "materials",
+              "delta": 100,
+              "scope": "global"
+            }
+          ],
           "itemID": "beacon_stone"
         }
       }
@@ -43,23 +123,64 @@
   },
   {
     "id": "into_the_depths",
-    "name": "Into the Depths",
-    "description": "The map's dark places hold danger — and reward.",
-    "trigger": [ { "stat": "global.threatLevel", "min": 20 } ],
+    "name": {
+      "en": "Into the Depths",
+      "cs": "Do hlubin"
+    },
+    "description": {
+      "en": "The map's dark places hold danger — and reward.",
+      "cs": "Temná místa na mapě skrývají nebezpečí — a odměnu."
+    },
+    "trigger": [
+      {
+        "stat": "global.threatLevel",
+        "min": 20
+      }
+    ],
     "stages": [
       {
-        "description": "Clear a dungeon on the world map.",
-        "goals": [ { "worldFlag": "cleared:dungeon", "present": true } ],
+        "description": {
+          "en": "Clear a dungeon on the world map.",
+          "cs": "Vyčistit kobku na mapě světa."
+        },
+        "goals": [
+          {
+            "worldFlag": "cleared:dungeon",
+            "present": true
+          }
+        ],
         "reward": {
-          "effects": [ { "type": "resource_delta", "resource": "materials", "delta": 80, "scope": "global" } ],
+          "effects": [
+            {
+              "type": "resource_delta",
+              "resource": "materials",
+              "delta": 80,
+              "scope": "global"
+            }
+          ],
           "itemID": "iron_ingot"
         }
       },
       {
-        "description": "Probe an anomaly and survive its secrets.",
-        "goals": [ { "worldFlag": "cleared:anomaly", "present": true } ],
+        "description": {
+          "en": "Probe an anomaly and survive its secrets.",
+          "cs": "Prozkoumat anomálii a přežít, co skrývá."
+        },
+        "goals": [
+          {
+            "worldFlag": "cleared:anomaly",
+            "present": true
+          }
+        ],
         "reward": {
-          "effects": [ { "type": "resource_delta", "resource": "knowledge", "delta": 80, "scope": "global" } ],
+          "effects": [
+            {
+              "type": "resource_delta",
+              "resource": "knowledge",
+              "delta": 80,
+              "scope": "global"
+            }
+          ],
           "itemID": "ancient_alloy"
         }
       }
@@ -67,20 +188,60 @@
   },
   {
     "id": "age_of_industry",
-    "name": "An Age of Industry",
-    "description": "Lead your people from coin and craft into the machine age.",
-    "trigger": [ { "techResearched": "currency" } ],
+    "name": {
+      "en": "An Age of Industry",
+      "cs": "Věk průmyslu"
+    },
+    "description": {
+      "en": "Lead your people from coin and craft into the machine age.",
+      "cs": "Dovést svůj lid od mince a řemesla do věku strojů."
+    },
+    "trigger": [
+      {
+        "techResearched": "currency"
+      }
+    ],
     "stages": [
       {
-        "description": "Raise prosperity to 55.",
-        "goals": [ { "stat": "global.prosperity", "min": 55 } ],
-        "reward": { "effects": [ { "type": "resource_delta", "resource": "influence", "delta": 60, "scope": "global" } ] }
+        "description": {
+          "en": "Raise prosperity to 55.",
+          "cs": "Zvednout blahobyt na 55."
+        },
+        "goals": [
+          {
+            "stat": "global.prosperity",
+            "min": 55
+          }
+        ],
+        "reward": {
+          "effects": [
+            {
+              "type": "resource_delta",
+              "resource": "influence",
+              "delta": 60,
+              "scope": "global"
+            }
+          ]
+        }
       },
       {
-        "description": "Harness Steam Power.",
-        "goals": [ { "techResearched": "steam_power" } ],
+        "description": {
+          "en": "Harness Steam Power.",
+          "cs": "Zkrotit parní stroj."
+        },
+        "goals": [
+          {
+            "techResearched": "steam_power"
+          }
+        ],
         "reward": {
-          "effects": [ { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 10 } ],
+          "effects": [
+            {
+              "type": "stat_delta",
+              "stat": "settlement:all.morale",
+              "delta": 10
+            }
+          ],
           "itemID": "eternal_engine"
         }
       }
@@ -88,28 +249,83 @@
   },
   {
     "id": "the_electric_age",
-    "name": "The Electric Age",
-    "description": "Steam was only the beginning. Light the world with tamed lightning.",
-    "trigger": [ { "techResearched": "steam_power" } ],
+    "name": {
+      "en": "The Electric Age",
+      "cs": "Věk elektřiny"
+    },
+    "description": {
+      "en": "Steam was only the beginning. Light the world with tamed lightning.",
+      "cs": "Pára byla jen začátek. Rozsviť svět zkroceným bleskem."
+    },
+    "trigger": [
+      {
+        "techResearched": "steam_power"
+      }
+    ],
     "stages": [
       {
-        "description": "Harness Electricity.",
-        "goals": [ { "techResearched": "electricity" } ],
+        "description": {
+          "en": "Harness Electricity.",
+          "cs": "Zkrotit elektřinu."
+        },
+        "goals": [
+          {
+            "techResearched": "electricity"
+          }
+        ],
         "reward": {
-          "effects": [ { "type": "resource_delta", "resource": "influence", "delta": 80, "scope": "global" } ],
+          "effects": [
+            {
+              "type": "resource_delta",
+              "resource": "influence",
+              "delta": 80,
+              "scope": "global"
+            }
+          ],
           "itemID": "research_terminal"
         }
       },
       {
-        "description": "Raise prosperity to 65 — a truly modern society.",
-        "goals": [ { "stat": "global.prosperity", "min": 65 } ],
-        "reward": { "effects": [ { "type": "resource_delta", "resource": "materials", "delta": 200, "scope": "global" } ] }
+        "description": {
+          "en": "Raise prosperity to 65 — a truly modern society.",
+          "cs": "Zvednout blahobyt na 65 — opravdu moderní společnost."
+        },
+        "goals": [
+          {
+            "stat": "global.prosperity",
+            "min": 65
+          }
+        ],
+        "reward": {
+          "effects": [
+            {
+              "type": "resource_delta",
+              "resource": "materials",
+              "delta": 200,
+              "scope": "global"
+            }
+          ]
+        }
       },
       {
-        "description": "Master Computing.",
-        "goals": [ { "techResearched": "computing" } ],
+        "description": {
+          "en": "Master Computing.",
+          "cs": "Zvládnout výpočetní techniku."
+        },
+        "goals": [
+          {
+            "techResearched": "computing"
+          }
+        ],
         "reward": {
-          "effects": [ { "type": "resource_delta", "resource": "knowledge", "delta": 200, "scope": "global" } ],
+          "effects": [
+            {
+              "type": "resource_delta",
+              "resource": "knowledge",
+              "delta": 200,
+              "scope": "global"
+            }
+          ],
           "itemID": "automation_hub"
         }
       }
@@ -117,33 +333,86 @@
   },
   {
     "id": "dawn_of_tomorrow",
-    "name": "Dawn of Tomorrow",
-    "description": "Robots, fusion, and the road to the stars. Lead your people into the future.",
-    "trigger": [ { "techResearched": "computing" } ],
+    "name": {
+      "en": "Dawn of Tomorrow",
+      "cs": "Úsvit zítřka"
+    },
+    "description": {
+      "en": "Robots, fusion, and the road to the stars. Lead your people into the future.",
+      "cs": "Roboti, fúze a cesta ke hvězdám. Doveď svůj lid do budoucnosti."
+    },
+    "trigger": [
+      {
+        "techResearched": "computing"
+      }
+    ],
     "stages": [
       {
-        "description": "Develop Robotics.",
-        "goals": [ { "techResearched": "robotics" } ],
+        "description": {
+          "en": "Develop Robotics.",
+          "cs": "Vyvinout robotiku."
+        },
+        "goals": [
+          {
+            "techResearched": "robotics"
+          }
+        ],
         "reward": {
-          "effects": [ { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 8 } ],
+          "effects": [
+            {
+              "type": "stat_delta",
+              "stat": "settlement:all.morale",
+              "delta": 8
+            }
+          ],
           "itemID": "exosuit"
         }
       },
       {
-        "description": "Achieve Fusion Power.",
-        "goals": [ { "techResearched": "fusion_power" } ],
+        "description": {
+          "en": "Achieve Fusion Power.",
+          "cs": "Dosáhnout fúzní energie."
+        },
+        "goals": [
+          {
+            "techResearched": "fusion_power"
+          }
+        ],
         "reward": {
-          "effects": [ { "type": "resource_delta", "resource": "energy", "delta": 300, "scope": "global" } ],
+          "effects": [
+            {
+              "type": "resource_delta",
+              "resource": "energy",
+              "delta": 300,
+              "scope": "global"
+            }
+          ],
           "itemID": "fusion_core_relic"
         }
       },
       {
-        "description": "Launch a Space Program.",
-        "goals": [ { "techResearched": "space_program" } ],
+        "description": {
+          "en": "Launch a Space Program.",
+          "cs": "Zahájit kosmický program."
+        },
+        "goals": [
+          {
+            "techResearched": "space_program"
+          }
+        ],
         "reward": {
           "effects": [
-            { "type": "resource_delta", "resource": "influence", "delta": 250, "scope": "global" },
-            { "type": "stat_delta", "stat": "global.prosperity", "delta": 8 }
+            {
+              "type": "resource_delta",
+              "resource": "influence",
+              "delta": 250,
+              "scope": "global"
+            },
+            {
+              "type": "stat_delta",
+              "stat": "global.prosperity",
+              "delta": 8
+            }
           ],
           "itemID": "orbital_uplink"
         }
@@ -152,20 +421,62 @@
   },
   {
     "id": "a_thriving_world",
-    "name": "A Thriving World",
-    "description": "A single town was the seed. Grow it into a civilisation that spans the map.",
-    "trigger": [ { "stat": "global.population", "min": 1000 } ],
+    "name": {
+      "en": "A Thriving World",
+      "cs": "Kvetoucí svět"
+    },
+    "description": {
+      "en": "A single town was the seed. Grow it into a civilisation that spans the map.",
+      "cs": "Jedno město bylo semínko. Vypěstuj z něj civilizaci přes celou mapu."
+    },
+    "trigger": [
+      {
+        "stat": "global.population",
+        "min": 1000
+      }
+    ],
     "stages": [
       {
-        "description": "Govern five settlements at once.",
-        "goals": [ { "settlementCount": true, "min": 5 } ],
-        "reward": { "effects": [ { "type": "resource_delta", "resource": "influence", "delta": 150, "scope": "global" } ] }
+        "description": {
+          "en": "Govern five settlements at once.",
+          "cs": "Spravovat pět osad naráz."
+        },
+        "goals": [
+          {
+            "settlementCount": true,
+            "min": 5
+          }
+        ],
+        "reward": {
+          "effects": [
+            {
+              "type": "resource_delta",
+              "resource": "influence",
+              "delta": 150,
+              "scope": "global"
+            }
+          ]
+        }
       },
       {
-        "description": "Shelter a population of 4,000 souls.",
-        "goals": [ { "stat": "global.population", "min": 4000 } ],
+        "description": {
+          "en": "Shelter a population of 4,000 souls.",
+          "cs": "Uživit 4 000 duší."
+        },
+        "goals": [
+          {
+            "stat": "global.population",
+            "min": 4000
+          }
+        ],
         "reward": {
-          "effects": [ { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 12 } ],
+          "effects": [
+            {
+              "type": "stat_delta",
+              "stat": "settlement:all.morale",
+              "delta": 12
+            }
+          ],
           "itemID": "planetary_shield"
         }
       }

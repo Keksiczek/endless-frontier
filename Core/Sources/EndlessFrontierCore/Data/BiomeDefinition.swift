@@ -5,7 +5,7 @@ import Foundation
 /// (e.g. `biome:plains_present`).
 public struct BiomeDefinition: Codable, Sendable, Identifiable, Equatable {
     public let id: String
-    public let name: String
+    public let name: LocalizedText
     public let baseHazard: Int
     public let resourceAffinity: Resources
     public let worldFlag: String?
@@ -17,7 +17,7 @@ public struct BiomeDefinition: Codable, Sendable, Identifiable, Equatable {
 
     public init(
         id: String,
-        name: String,
+        name: LocalizedText,
         baseHazard: Int = 0,
         resourceAffinity: Resources = Resources(),
         worldFlag: String? = nil,
@@ -42,7 +42,7 @@ public struct BiomeDefinition: Codable, Sendable, Identifiable, Equatable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
-        name = try c.decode(String.self, forKey: .name)
+        name = try c.decode(LocalizedText.self, forKey: .name)
         baseHazard = try c.decodeIfPresent(Int.self, forKey: .baseHazard) ?? 0
         resourceAffinity = try c.decodeIfPresent(Resources.self, forKey: .resourceAffinity) ?? Resources()
         worldFlag = try c.decodeIfPresent(String.self, forKey: .worldFlag)
