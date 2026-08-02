@@ -70,7 +70,7 @@ struct SettlementScopeTests {
 
         #expect(CraftingEngine.canCraft(r.recipes["craft_chainmail"]!, in: world,
                                         settlementID: outpostID, registry: r))
-        let after = GameEngine.craft(world, recipeID: "craft_chainmail",
+        let after = BenchTestSupport.craft(world, recipeID: "craft_chainmail",
                                      settlementID: outpostID, registry: r)
 
         #expect(after.settlements[1].inventory.contains { $0.definitionID == "chainmail" })
@@ -107,8 +107,8 @@ struct SettlementScopeTests {
         let capitalID = world.settlements[0].id
         let outpostID = world.settlements[1].id
 
-        let a = GameEngine.craft(world, recipeID: "craft_chainmail", settlementID: capitalID, registry: r)
-        let b = GameEngine.craft(world, recipeID: "craft_chainmail", settlementID: outpostID, registry: r)
+        let a = BenchTestSupport.craft(world, recipeID: "craft_chainmail", settlementID: capitalID, registry: r)
+        let b = BenchTestSupport.craft(world, recipeID: "craft_chainmail", settlementID: outpostID, registry: r)
         let aID = a.settlements[0].inventory.first { $0.definitionID == "chainmail" }?.id
         let bID = b.settlements[1].inventory.first { $0.definitionID == "chainmail" }?.id
         #expect(aID != nil && bID != nil)

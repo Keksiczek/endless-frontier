@@ -54,6 +54,18 @@ enum Theme {
         }
     }
 
+    /// How well a piece was made, as a colour. Deliberately *not* the rarity
+    /// palette: rarity is what kind of thing it is, quality is whose hands it
+    /// came out of, and a shoddy legendary should read as both.
+    static func qualityTint(_ quality: ItemQuality) -> Color {
+        switch quality {
+        case .shoddy: return Color(red: 0.72, green: 0.52, blue: 0.46)
+        case .plain: return textDim
+        case .fine: return Color(red: 0.62, green: 0.80, blue: 0.72)
+        case .masterwork: return Color(red: 0.92, green: 0.78, blue: 0.44)
+        }
+    }
+
     /// A resource deposit's line colour on the canvas.
     static func depositShade(_ kind: LocalResourceKind) -> Color {
         switch kind {

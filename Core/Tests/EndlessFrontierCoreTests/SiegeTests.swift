@@ -333,6 +333,56 @@ struct SiegeTests {
         #expect(s.siege == nil)
     }
 
+    // MARK: - The wolves too
+
+    /// The commonest fight in the game. A raid is a once-a-year roll; wolves
+    /// come at the herds all the time — and that one was still three lines of
+    /// arithmetic, so the fight a colony actually has regularly was the one you
+    /// could never stand in.
+    @Test("A pack at the herds opens a fight you can stand in")
+    func wolvesOpenASiege() throws {
+        let reg = try registry()
+        var s = colony(pawns: 10, defense: 5)
+        var map = LocalMapGenerator.generate(
+            mapSeed: 21, regionID: s.id, biome: reg.biome("forest"))
+        // A bad year: pressure high enough that the roll lands.
+        map.wildlife.predatorPressure = 100
+        s.localMap = map
+
+        // Walk ticks until the roll comes up; the chance is per tick.
+        var opened: Siege?
+        for tick in 0..<4000 {
+            s = WildlifeEngine.advanceOneTick(
+                s, registry: reg, tick: tick, era: .earlySettlement, mapSeed: 21)
+            if let siege = s.siege { opened = siege; break }
+            s.localMap?.wildlife.predatorPressure = 100
+        }
+        let siege = try #require(opened, "no pack ever came in four thousand ticks")
+        #expect(siege.attackerLabel?.resolve(.cs) == "Vlci")
+        #expect(!siege.line.isEmpty, "the watch turned out")
+        #expect(s.lastBattle == nil, "it has not been decided yet")
+    }
+
+    @Test("A colony already fighting is not jumped by wolves as well")
+    func onlyOneFightAtATime() throws {
+        let reg = try registry()
+        var s = try besieged(colony(), strength: 40)
+        var map = LocalMapGenerator.generate(
+            mapSeed: 22, regionID: s.id, biome: reg.biome("forest"))
+        map.wildlife.predatorPressure = 100
+        s.localMap = map
+        let id = try #require(s.siege).id
+
+        for tick in 0..<200 {
+            s = WildlifeEngine.advanceOneTick(
+                s, registry: reg, tick: tick, era: .earlySettlement, mapSeed: 22)
+            s.localMap?.wildlife.predatorPressure = 100
+        }
+        // Either the raid is still running, or it finished — but the wolves
+        // never replaced it mid-fight.
+        if let running = s.siege { #expect(running.id == id) }
+    }
+
     // MARK: - The neighbours pay for it too
 
     @Test("What the attempt cost the raiders is charged when it ends")

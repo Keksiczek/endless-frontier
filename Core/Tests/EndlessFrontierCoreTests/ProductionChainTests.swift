@@ -253,7 +253,7 @@ struct ProductionChainTests {
         s.stockpile["wood"] = 6
         var world = WorldState(tick: 0, settlements: [s])
 
-        world = CraftingEngine.craft(world, recipeID: "saw_timber",
+        world = BenchTestSupport.craft(world, recipeID: "saw_timber",
                                      settlementID: s.id, registry: reg)
         #expect(world.settlements[0].stockpile["wood"] == 3, "three logs went into the saw")
         #expect(world.settlements[0].stockpile["timber_bundle"] == 1)
@@ -269,7 +269,7 @@ struct ProductionChainTests {
                            storage: [.materials: 500], storageCapacity: 2000)
         s.stockpile["iron_ingot"] = 2
         var world = WorldState(tick: 0, settlements: [s])
-        world = CraftingEngine.craft(world, recipeID: "craft_iron_sword",
+        world = BenchTestSupport.craft(world, recipeID: "craft_iron_sword",
                                      settlementID: s.id, registry: reg)
         #expect(world.settlements[0].inventory.contains { $0.definitionID == "iron_sword" })
         #expect((world.settlements[0].stockpile["iron_ingot"] ?? 0) == 0)
@@ -289,7 +289,7 @@ struct ProductionChainTests {
         var world = WorldState(tick: 0, settlements: [s])
         #expect(CraftingEngine.canCraft(reg.recipes["craft_iron_sword"]!, in: world,
                                         settlementID: s.id, registry: reg))
-        world = CraftingEngine.craft(world, recipeID: "craft_iron_sword",
+        world = BenchTestSupport.craft(world, recipeID: "craft_iron_sword",
                                      settlementID: s.id, registry: reg)
         #expect(!world.settlements[0].inventory.contains { $0.definitionID == "iron_ingot" })
         #expect(world.settlements[0].inventory.contains { $0.definitionID == "iron_sword" })

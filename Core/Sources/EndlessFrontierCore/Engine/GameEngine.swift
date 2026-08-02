@@ -281,17 +281,6 @@ public enum GameEngine {
         return s
     }
 
-    /// Crafts a recipe at a settlement (consumes its materials + resources).
-    /// When `settlementID` is `nil` the capital crafts, as before.
-    public static func craft(
-        _ state: WorldState,
-        recipeID: String,
-        settlementID: UUID? = nil,
-        registry: GameDataRegistry
-    ) -> WorldState {
-        CraftingEngine.craft(state, recipeID: recipeID, settlementID: settlementID, registry: registry)
-    }
-
     /// Interacts with the special site (ruins/dungeon/anomaly) in a region.
     /// Returns the new state and the outcome, or unchanged state + `nil`.
     public static func interactWithSite(

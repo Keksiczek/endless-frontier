@@ -24,7 +24,7 @@ struct CraftingTests {
         let r = try reg()
         let world = capital(materials: ["iron_ingot", "iron_ingot"])   // chainmail needs 2 iron + 25 materials
         #expect(CraftingEngine.canCraft(r.recipes["craft_chainmail"]!, in: world, registry: r))
-        let after = GameEngine.craft(world, recipeID: "craft_chainmail", registry: r)
+        let after = BenchTestSupport.craft(world, recipeID: "craft_chainmail", registry: r)
         // Materials consumed, output added.
         #expect(!after.settlements[0].inventory.contains { $0.definitionID == "iron_ingot" })
         #expect(after.settlements[0].inventory.contains { $0.definitionID == "chainmail" })
@@ -36,8 +36,14 @@ struct CraftingTests {
         let r = try reg()
         let world = capital(materials: ["iron_ingot"])   // only 1, needs 2
         #expect(!CraftingEngine.canCraft(r.recipes["craft_chainmail"]!, in: world, registry: r))
-        let after = GameEngine.craft(world, recipeID: "craft_chainmail", registry: r)
-        #expect(after == world)   // unchanged
+        let after = BenchTestSupport.craft(world, recipeID: "craft_chainmail", registry: r)
+        // Nothing is made, and nothing is spent. The whole state is no longer
+        // identical — an order *does* go on the bench, and stays there waiting
+        // for the second ingot, which is the point of a queue.
+        #expect(after.settlements[0].inventory == world.settlements[0].inventory)
+        #expect(after.settlements[0].storage == world.settlements[0].storage)
+        #expect(after.settlements[0].craftOrders.count == 1,
+                "the order waits for the iron rather than vanishing")
     }
 
     @Test("A workshop recipe needs the workshop building")
@@ -48,7 +54,7 @@ struct CraftingTests {
 
         let with = capital(materials: ["iron_ingot", "iron_ingot", "timber_bundle"], buildings: ["workshop"])
         #expect(CraftingEngine.canCraft(r.recipes["craft_iron_scythe"]!, in: with, registry: r))
-        let after = GameEngine.craft(with, recipeID: "craft_iron_scythe", registry: r)
+        let after = BenchTestSupport.craft(with, recipeID: "craft_iron_scythe", registry: r)
         #expect(after.settlements[0].inventory.contains { $0.definitionID == "iron_scythe" })
     }
 
@@ -66,8 +72,8 @@ struct CraftingTests {
     func deterministic() throws {
         let r = try reg()
         let world = capital(materials: ["iron_ingot", "iron_ingot"])
-        let a = GameEngine.craft(world, recipeID: "craft_chainmail", registry: r)
-        let b = GameEngine.craft(world, recipeID: "craft_chainmail", registry: r)
+        let a = BenchTestSupport.craft(world, recipeID: "craft_chainmail", registry: r)
+        let b = BenchTestSupport.craft(world, recipeID: "craft_chainmail", registry: r)
         #expect(a == b)
     }
 

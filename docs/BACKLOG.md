@@ -185,6 +185,24 @@ Things that had to be got right, each of which fails silently:
   none to state. `workPerUnit` derives one from what the thing is made of and
   whether it needs a shop, so nothing is free and nothing is unreachable.
 
+### 6.15 — the bench, finished (2026-08-02)
+
+The five loose ends from 6.14 and 6.11, closed:
+
+| # | Thing | State |
+|---|---|---|
+| 6.15.1 | Crafters were never drawn **at the shop** — a trade is not a place | **done** — `JobKind.craftItem`, posted at a shop with an unpaused order |
+| 6.15.2 | **One bench per settlement** — a second forge bought nothing | **done** — one bench per *kind* of shop, worked in parallel |
+| 6.15.3 | Skill made a smith **faster and nothing else** | **done** — `ItemQuality` on the piece, rolled from the best hand in the shop |
+| 6.15.4 | Beasts still resolved **instantly** — the commonest fight was the one you could not stand in | **done** — a pack opens a `Siege` like a raid |
+| 6.15.5 | `GameEngine.craft` still **bypassed the bench** | **done** — deleted, and the tests moved onto the real path |
+
+Quality is a property of the **piece**, not the definition: `ItemRarity` says
+what kind of thing this is, `ItemQuality` says whose hands it came out of. It
+reaches the fight — a masterwork blade really does hit harder and a masterwork
+harness turns more aside — and armour still never makes anybody invulnerable.
+Nobody is ever guaranteed a masterwork; that is what makes it one.
+
 ### 6.6 — what shipped, so the next pass builds on it rather than over it
 
 `SettlementBattle` now has named phases (`marching`, `volley`, `melee`,

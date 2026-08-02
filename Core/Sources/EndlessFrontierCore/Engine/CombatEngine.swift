@@ -28,10 +28,26 @@ public enum CombatEngine {
     }
 
     /// The weapon a colonist actually holds, resolved to its fighting profile.
+    ///
+    /// Scaled by how well the piece was made: two iron swords off the same
+    /// bench are the same sword only if the same hands made them. Without this
+    /// a master smith's work was indistinguishable from an apprentice's the
+    /// moment it left the workshop, and training anybody was purely about
+    /// throughput.
     public static func weaponProfile(_ pawn: Pawn, registry: GameDataRegistry) -> CombatProfile? {
         guard let item = pawn.equipment[.weapon],
-              let def = registry.item(item.definitionID) else { return nil }
-        return def.combat
+              let def = registry.item(item.definitionID),
+              let combat = def.combat else { return nil }
+        return CombatProfile(damage: combat.damage * item.quality.multiplier, kind: combat.kind)
+    }
+
+    /// How hard a wound lands on a colonist, given the armour they are wearing
+    /// and how well it was made.
+    public static func woundMultiplier(_ pawn: Pawn) -> Double {
+        guard let armor = pawn.equipment[.armor] else { return 1 }
+        // Plain armour halves a blow; a masterwork harness turns more aside,
+        // and a shoddy one rather less.
+        return min(0.9, max(0.2, 0.5 / armor.quality.multiplier))
     }
 
     /// Everyone able to stand on the wall, weighed by health, heart and arms.
@@ -61,10 +77,6 @@ public enum CombatEngine {
     }
 
     /// How hard a wound lands on a colonist: armor takes half of it.
-    public static func woundMultiplier(_ pawn: Pawn) -> Double {
-        pawn.equipment[.armor] != nil ? 0.5 : 1.0
-    }
-
     /// How many hunters in a crowd carry ranged arms — they thin the predators
     /// and soften a raid before it arrives.
     public static func rangedCount(_ pawns: [Pawn], registry: GameDataRegistry) -> Int {

@@ -62,6 +62,16 @@ struct ItemsPanel: View {
                     Text(def.rarity.rawValue.capitalized)
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(def.rarity.color)
+                    // How well *this one* was made. Rarity says what kind of
+                    // thing it is; quality says whose hands it came out of.
+                    if instance.quality != .plain {
+                        Text(instance.quality.label.resolve(AppStrings.language))
+                            .font(.caption2.weight(.bold))
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(Theme.qualityTint(instance.quality).opacity(0.18),
+                                        in: Capsule())
+                            .foregroundStyle(Theme.qualityTint(instance.quality))
+                    }
                 }
                 Text(ItemFormatting.summary(def)).font(.caption).foregroundStyle(Theme.textDim)
             }

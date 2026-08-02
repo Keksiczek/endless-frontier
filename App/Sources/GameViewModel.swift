@@ -923,11 +923,6 @@ final class GameViewModel {
                                 settlementID: selectedSettlement?.id, registry: registry)
     }
 
-    func craft(_ recipeID: String) {
-        world = GameEngine.craft(world, recipeID: recipeID, settlementID: selectedSettlement?.id, registry: registry)
-        persist()
-    }
-
     // MARK: - The bench
 
     /// What the viewed colony has been told to make, oldest first.

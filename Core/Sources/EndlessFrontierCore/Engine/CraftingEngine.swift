@@ -64,51 +64,94 @@ public enum CraftingEngine {
         s.craftOrders.removeAll { $0.isComplete || registry.recipes[$0.recipeID] == nil }
         guard !s.craftOrders.isEmpty else { return s }
 
-        let hands = s.pawns
-            .filter { $0.assignedWork == .crafting && $0.isAdult(ticksPerYear: registry.config.ticksPerYear) }
-            .reduce(0.0) { $0 + effort(of: $1) }
+        let crafters = s.pawns.filter {
+            $0.assignedWork == .crafting
+                && $0.isAdult(ticksPerYear: registry.config.ticksPerYear)
+        }
+        let hands = crafters.reduce(0.0) { $0 + effort(of: $1) }
         guard hands > 0 else { return s }
 
-        // Oldest first, and skip what cannot be worked right now.
-        let queue = s.craftOrders.enumerated()
-            .sorted { $0.element.placedTick == $1.element.placedTick
-                      ? $0.offset < $1.offset
-                      : $0.element.placedTick < $1.element.placedTick }
-        guard let slot = queue.first(where: { entry in
-            guard !entry.element.paused,
-                  let recipe = registry.recipes[entry.element.recipeID] else { return false }
-            return isWorkable(recipe, at: s, researched: researched)
-        }) else { return s }
+        // **One bench per shop.** A colony with a workshop and a foundry has
+        // two benches and works two things at once; one with three workshops
+        // still has one workshop's worth of queue, because the shops are the
+        // same shop. Before this the whole settlement advanced a single order a
+        // tick however much it had built, so raising a second forge bought
+        // nothing at all.
+        let benches = workableBenches(at: s, researched: researched, registry: registry)
+        guard !benches.isEmpty else { return s }
+        // The hands are split between the benches that have work. Somebody has
+        // to be standing at each of them.
+        let share = hands / Double(benches.count)
+        let masters = bestSkill(among: crafters)
 
-        let position = slot.offset
-        guard let recipe = registry.recipes[s.craftOrders[position].recipeID] else { return s }
-        let cost = recipe.workPerUnit
-        s.craftOrders[position].progress += hands
+        // Worked back to front so removing a finished order cannot shift the
+        // index of one not yet reached.
+        for position in benches.sorted(by: >) {
+            guard let recipe = registry.recipes[s.craftOrders[position].recipeID] else { continue }
+            let cost = recipe.workPerUnit
+            s.craftOrders[position].progress += share
 
-        // However many the day's work finished — a colony of ten crafters on a
-        // cheap recipe genuinely makes several, rather than one and a wasted
-        // afternoon.
-        while s.craftOrders[position].progress >= cost,
-              !s.craftOrders[position].isComplete,
-              hasMaterials(recipe, at: s) {
-            s.craftOrders[position].progress -= cost
-            s = take(recipe, from: s)
-            s = bank(recipe, into: s, tick: tick, made: s.craftOrders[position].made,
-                     registry: registry)
-            s.craftOrders[position].made += 1
-        }
-        // Nothing on the shelf to make the next one out of: hold the part-done
-        // work rather than spinning progress up for ever.
-        if !hasMaterials(recipe, at: s) {
-            s.craftOrders[position].progress = min(s.craftOrders[position].progress, cost)
-        }
-        if s.craftOrders[position].isComplete {
-            s.journal.append(tick: tick, kind: .work, text: LocalizedText(values: [
-                .en: "The bench finished the last of the \(recipe.name.resolve(.en)).",
-                .cs: "Na ponku dodělali poslední kus: \(recipe.name.resolve(.cs))."]))
-            s.craftOrders.remove(at: position)
+            // However many this bench's day of work finished — several crafters
+            // on a cheap recipe genuinely make several, rather than one and a
+            // wasted afternoon.
+            while s.craftOrders[position].progress >= cost,
+                  !s.craftOrders[position].isComplete,
+                  hasMaterials(recipe, at: s) {
+                s.craftOrders[position].progress -= cost
+                s = take(recipe, from: s)
+                s = bank(recipe, into: s, tick: tick, made: s.craftOrders[position].made,
+                         skill: masters, registry: registry)
+                s.craftOrders[position].made += 1
+            }
+            // Nothing on the shelf to make the next one out of: hold the
+            // part-done work rather than spinning progress up for ever.
+            if !hasMaterials(recipe, at: s) {
+                s.craftOrders[position].progress = min(s.craftOrders[position].progress, cost)
+            }
+            if s.craftOrders[position].isComplete {
+                s.journal.append(tick: tick, kind: .work, text: LocalizedText(values: [
+                    .en: "The bench finished the last of the \(recipe.name.resolve(.en)).",
+                    .cs: "Na ponku dodělali poslední kus: \(recipe.name.resolve(.cs))."]))
+                s.craftOrders.remove(at: position)
+            }
         }
         return s
+    }
+
+    /// The orders being worked *right now* — one per distinct shop, oldest
+    /// first within each.
+    ///
+    /// Returns positions into `settlement.craftOrders` so the caller can write
+    /// back. An order whose shop is missing, whose research is missing or whose
+    /// shelf is bare is skipped rather than blocking the ones behind it: a
+    /// colony waiting on iron still makes its arrows.
+    static func workableBenches(
+        at settlement: Settlement, researched: Set<String>, registry: GameDataRegistry
+    ) -> [Int] {
+        var taken: Set<String> = []
+        var picked: [Int] = []
+        for entry in settlement.craftOrders.enumerated()
+            .sorted(by: { $0.element.placedTick == $1.element.placedTick
+                          ? $0.offset < $1.offset
+                          : $0.element.placedTick < $1.element.placedTick }) {
+            guard !entry.element.paused,
+                  let recipe = registry.recipes[entry.element.recipeID],
+                  isWorkable(recipe, at: settlement, researched: researched) else { continue }
+            // Recipes needing no shop share one imaginary bench — a colony
+            // stitching leather in its yard is not two colonies.
+            let bench = recipe.requiresBuilding ?? ""
+            guard !taken.contains(bench) else { continue }
+            taken.insert(bench)
+            picked.append(entry.offset)
+        }
+        return picked
+    }
+
+    /// The best hand in the shop. Quality follows whoever is actually good at
+    /// this, not the average of everyone standing near the anvil — an
+    /// apprentice fetching and carrying does not spoil a master's work.
+    static func bestSkill(among crafters: [Pawn]) -> Int {
+        crafters.filter { effort(of: $0) > 0 }.map { $0.skill(.crafting) }.max() ?? 0
     }
 
     /// Whether an order could be worked at all here: the shop stands, the
@@ -166,11 +209,12 @@ public enum CraftingEngine {
     /// piece of gear on the shelf as a thing somebody can pick up.
     private static func bank(
         _ recipe: RecipeDefinition, into settlement: Settlement, tick: Int, made: Int,
-        registry: GameDataRegistry
+        skill: Int, registry: GameDataRegistry
     ) -> Settlement {
         var s = settlement
         // A material is a count on the pile; a piece of gear or an artifact is
-        // a thing, with an id, that somebody can pick up and wear.
+        // a thing, with an id, that somebody can pick up and wear. A count has
+        // nowhere to carry *how well it was made* — an ingot is an ingot.
         if registry.item(recipe.outputItemID)?.slot == .material {
             s.stockpile[recipe.outputItemID, default: 0] += 1
             return s
@@ -180,7 +224,17 @@ public enum CraftingEngine {
         // never reaches for an unseeded `UUID()` (rule 2).
         var rng = SeededRNG(seed: benchSeed(settlementID: s.id, recipeID: recipe.id,
                                             tick: tick, made: made))
-        s.inventory.append(ItemInstance(id: rng.nextUUID(), definitionID: recipe.outputItemID))
+        let id = rng.nextUUID()
+        let quality = ItemQuality.rolled(skill: skill, roll: rng.nextUnit())
+        s.inventory.append(ItemInstance(
+            id: id, definitionID: recipe.outputItemID, quality: quality))
+        // Something worth talking about gets talked about.
+        if quality == .masterwork {
+            let thing = registry.item(recipe.outputItemID)?.name ?? recipe.name
+            s.journal.append(tick: tick, kind: .work, text: LocalizedText(values: [
+                .en: "A masterwork came off the bench: \(thing.resolve(.en)).",
+                .cs: "Z ponku sešel mistrovský kus: \(thing.resolve(.cs))."]))
+        }
         return s
     }
 
@@ -269,57 +323,6 @@ public enum CraftingEngine {
             return false
         }
         return true
-    }
-
-    /// Crafts a recipe at the given settlement: consumes its materials +
-    /// resources, adds the output item to its inventory. Returns unchanged
-    /// state if it can't be crafted there.
-    public static func craft(
-        _ state: WorldState,
-        recipeID: String,
-        settlementID: UUID? = nil,
-        registry: GameDataRegistry
-    ) -> WorldState {
-        guard let recipe = registry.recipes[recipeID],
-              let index = targetIndex(state, settlementID),
-              canCraft(recipe, in: state, settlementID: settlementID, registry: registry) else {
-            return state
-        }
-        var s = state
-
-        // Consume materials: the counted stockpile first, then whatever is
-        // still held as loose instances from loot or an older save.
-        for (materialID, needed) in recipe.materials {
-            var remaining = needed
-            let stocked = s.settlements[index].stockpile[materialID] ?? 0
-            let fromStock = min(stocked, remaining)
-            if fromStock > 0 {
-                s.settlements[index].stockpile[materialID] = stocked - fromStock
-                remaining -= fromStock
-            }
-            guard remaining > 0 else { continue }
-            var removed = 0
-            s.settlements[index].inventory.removeAll { instance in
-                guard removed < remaining, instance.definitionID == materialID else { return false }
-                removed += 1
-                return true
-            }
-        }
-        // Consume resources.
-        for resource in ResourceType.allCases where recipe.resourceCost[resource] > 0 {
-            s.settlements[index].storage[resource] =
-                s.settlements[index].storage[resource] - recipe.resourceCost[resource]
-        }
-        // Produce the output. A material is a count on the pile; a piece of
-        // gear or an artifact is a thing, with an id, that someone can carry.
-        if registry.item(recipe.outputItemID)?.slot == .material {
-            s.settlements[index].stockpile[recipe.outputItemID, default: 0] += 1
-        } else {
-            var rng = SeededRNG(seed: craftSeed(state: s, recipeID: recipeID, settlementIndex: index))
-            s.settlements[index].inventory.append(
-                ItemInstance(id: rng.nextUUID(), definitionID: recipe.outputItemID))
-        }
-        return s
     }
 
     /// Materials on hand: the counted stockpile plus anything still sitting in

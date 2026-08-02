@@ -9,8 +9,6 @@ import Foundation
 /// `huntingFactor`; here the herd itself grows, is culled, and predators
 /// occasionally wound a colonist unless the settlement's defenses hold.
 public enum WildlifeEngine {
-    /// What the record calls the thing out of the trees.
-    static let beastName = LocalizedText(values: [.en: "A beast", .cs: "Šelma"])
     /// …and what it calls the several of them the watch turns back.
     static let packName = LocalizedText(values: [.en: "Wolves", .cs: "Vlci"])
 
@@ -31,10 +29,6 @@ public enum WildlifeEngine {
     static let predatorPressureDrift: Double = 0.01
     /// …and an attack roll each tick scales with it.
     static let attackChancePerPressure: Double = 0.00025
-    /// Defense (walls, militia) that fully wards off a predator attack.
-    static let defenseToRepel: Double = 25
-    /// Wound dealt to the least-healthy colonist by a successful attack.
-    static let attackWound: Double = 45
 
     /// Hunting-work efficiency: a thin herd yields less meat, never zero.
     static let huntFloorFactor: Double = 0.3
@@ -84,96 +78,33 @@ public enum WildlifeEngine {
                 0, map.wildlife.predatorPressure - Double(armedHunters) * rangedHunterSuppression)
         }
 
-        // Attack roll: a wounded (possibly killed) colonist unless defense holds.
+        // A pack comes at the herds. It **opens a fight**, exactly as a raid
+        // does, so the one combat a colony has regularly is one you can stand
+        // in and give orders to. It used to be settled here in three lines of
+        // arithmetic: whoever was weakest took a bite and the journal said so.
+        //
+        // A siege already running is left alone — the colony has enough on.
         let attackChance = map.wildlife.predatorPressure * attackChancePerPressure
-        if rng.nextUnit() < attackChance {
-            let defense = s.stats.defense
-                + CombatEngine.defensePower(s.pawns, registry: registry) * 0.5
-            if defense < defenseToRepel,
-               let victim = s.pawns.indices
-                .filter({ s.pawns[$0].health > 0 })
-                .min(by: { s.pawns[$0].health < s.pawns[$1].health }) {
-                // Armor blunts the mauling; a weapon doesn't stop teeth.
-                let name = s.pawns[victim].name
-                let pawnID = s.pawns[victim].id
-                let mult = CombatEngine.woundMultiplier(s.pawns[victim])
-                // Teeth land *somewhere*: the mauling leaves a mauled arm or a
-                // torn leg, not a smaller number.
-                s.pawns[victim] = MedicineEngine.wound(
-                    s.pawns[victim], amount: attackWound * mult, tick: tick, rng: &rng)
-                // The attack, beat by beat, so the canvas can play it out
-                // instead of the journal being the only trace it happened.
-                var record = CombatEngine.BattleRecorder()
-                record.record(.charge, step: 0, amount: map.wildlife.predatorPressure)
-                record.record(.clash, step: 1, amount: defense)
-                let killed = s.pawns[victim].health <= 0
-                record.record(killed ? .death : .wound, step: 2, pawnID: pawnID,
-                              pawnName: name, amount: attackWound * mult)
-                // Whoever is standing watch runs at it, with the victim at the
-                // front — the mauling happens where the line is, not off in the
-                // journal. Everything the canvas needs is settled here so the
-                // renderer never has to guess at a fight it did not see.
-                let watch = s.pawns
-                    .filter { $0.health > 0 && !$0.isBroken && $0.id != pawnID }
-                    .sorted { $0.assignedWork == .garrison && $1.assignedWork != .garrison }
-                    .prefix(4).map(\.id)
-                let id = rng.nextUUID()
-                let approach = rng.nextUnit() * 2 * .pi
-                s.lastBattle = record.finish(
-                    id: id, tick: tick,
-                    attackerName: beastName.resolve(.en), defenderName: s.name, repelled: false,
-                    attackerLabel: beastName, approach: approach,
-                    attackers: 1, line: [pawnID] + watch)
-                if killed {
-                    s.pawns.remove(at: victim)
-                    s.deathTallies[PawnDeathCause.beast.rawValue, default: 0] += 1
-                    s.stats.morale = max(0, s.stats.morale - 6)
-                    s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
-                        .en: "A beast took \(name) at the edge of the woods.",
-                        .cs: "Šelma na kraji lesa strhla \(name)."]))
-                } else {
-                    s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
-                        .en: "A beast mauled \(name) — dragged back bleeding, but alive.",
-                        .cs: "Šelma potrhala \(name) — dovlekli ho zpět zkrvaveného, ale žije."]))
-                }
-            } else {
-                // Repelled: the hunt thins the predators a little.
-                map.wildlife.predatorPressure = max(0, map.wildlife.predatorPressure - 3)
-
-                // …and it is still a *fight*, which is the whole point.
-                //
-                // This branch is the commonest combat in the game by a wide
-                // margin — a raid is a once-a-year roll and wolves come at the
-                // herds all the time — and until now it left no `BattleLog`,
-                // so the one fight the colony has regularly was the one the
-                // canvas could never draw. A watch that turns the pack back is
-                // exactly as worth watching as a wall that holds.
-                //
-                // The two draws are at the end of this branch and nothing
-                // downstream reads `rng` again, so an existing world's rolls
-                // are untouched (rule 2).
-                let watch = s.pawns
-                    .filter { $0.health > 0 && !$0.isBroken }
-                    .sorted { $0.assignedWork == .garrison && $1.assignedWork != .garrison }
-                    .prefix(5).map(\.id)
-                if !watch.isEmpty {
-                    var record = CombatEngine.BattleRecorder()
-                    record.record(.charge, step: 0, amount: map.wildlife.predatorPressure)
-                    record.record(.volley, step: 1, amount: defense * 0.4)
-                    record.record(.clash, step: 3, amount: defense)
-                    record.record(.repelled, step: 5)
-                    let id = rng.nextUUID()
-                    let approach = rng.nextUnit() * 2 * .pi
-                    s.lastBattle = record.finish(
-                        id: id, tick: tick,
-                        attackerName: packName.resolve(.en), defenderName: s.name,
-                        repelled: true, attackerLabel: packName, approach: approach,
-                        attackers: packSize(pressure: map.wildlife.predatorPressure),
-                        line: Array(watch))
-                }
+        if s.siege == nil, rng.nextUnit() < attackChance {
+            let watch = s.pawns
+                .filter { $0.health > 0 && !$0.isBroken && !$0.isAway }
+                .sorted { $0.assignedWork == .garrison && $1.assignedWork != .garrison }
+                .prefix(6).map(\.id)
+            if !watch.isEmpty {
+                // The pack's weight is its pressure, so a bad year really does
+                // send something worse out of the trees.
+                let strength = max(6, map.wildlife.predatorPressure * 0.9)
+                s = SiegeEngine.begin(
+                    s, attackerStrength: strength,
+                    attackerName: packName.resolve(.en),
+                    attackerLabel: packName,
+                    fortification: s.stats.defense,
+                    tick: tick, registry: registry, seed: rng.next())
                 s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
-                    .en: "Wolves tried the herds by night; the watch drove them off.",
-                    .cs: "Vlci v noci zkusili stáda; hlídka je zahnala."]))
+                    .en: "Wolves are at the herds — the watch is turning out.",
+                    .cs: "Vlci jsou u stád — hlídka vybíhá."]))
+                // The hunt that answers them thins the wood either way.
+                map.wildlife.predatorPressure = max(0, map.wildlife.predatorPressure - 3)
             }
         }
 

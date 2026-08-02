@@ -19,6 +19,7 @@ public enum JobKind: String, Codable, Sendable, CaseIterable {
     case standWatch
     case stalkAnimal     // *this* deer, standing over there
     case cutStone        // *this* block of the hillside, at the face
+    case craftItem       // *this* bench, with an order standing on it
 
     /// The trade that does this work.
     public var work: WorkKind {
@@ -29,6 +30,7 @@ public enum JobKind: String, Codable, Sendable, CaseIterable {
         case .tendDeposit: return .farming
         case .standWatch: return .garrison
         case .stalkAnimal: return .hunting
+        case .craftItem: return .crafting
         }
     }
 }
@@ -167,15 +169,31 @@ public enum JobBoard {
             jobs.append(Job(id: jobID("tend", node.id), kind: .tendDeposit,
                             position: node.position))
         }
-        // Scaffolding, and the walls that want a watch.
+        // Scaffolding, the walls that want a watch, and the benches with an
+        // order standing on them.
+        //
+        // The bench is why a crafter is drawn *in the workshop*: a trade is not
+        // a place, and until a shop with work in it posted a job, a smith stood
+        // wherever the day's schedule guessed. `workplace` prefers the job the
+        // engine actually gave somebody over anything it could infer.
+        let benchesWanted = Set(settlement.craftOrders
+            .filter { !$0.paused }
+            .compactMap { registry.recipes[$0.recipeID]?.requiresBuilding })
         if let colony = settlement.colony {
             for placement in colony.placements {
                 let position = SettlementGeometry.canvasPoint(for: placement, in: colony)
                 if placement.underConstruction {
                     jobs.append(Job(id: placement.id, kind: .raiseBuilding,
                                     position: position, placementID: placement.id))
-                } else if (registry.building(placement.definitionID)?.defense ?? 0) > 0 {
+                    continue
+                }
+                if (registry.building(placement.definitionID)?.defense ?? 0) > 0 {
                     jobs.append(Job(id: placement.id, kind: .standWatch,
+                                    position: position, placementID: placement.id))
+                }
+                if benchesWanted.contains(placement.definitionID) {
+                    jobs.append(Job(id: jobID("bench", placement.id),
+                                    kind: .craftItem,
                                     position: position, placementID: placement.id))
                 }
             }

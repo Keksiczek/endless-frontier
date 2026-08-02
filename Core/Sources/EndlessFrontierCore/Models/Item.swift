@@ -176,12 +176,84 @@ public struct ItemDefinition: Codable, Sendable, Identifiable, Equatable {
 }
 
 /// A specific held item, referencing its definition by id.
+/// How well a particular thing was made.
+///
+/// `ItemRarity` is a property of the *definition* — what kind of thing this is,
+/// and how often the world gives one up. Quality is a property of the **piece**:
+/// two iron swords off the same bench are the same rarity and not the same
+/// sword, because one of them was made by somebody who had been doing it for
+/// thirty years.
+///
+/// This is what makes a skilled crafter worth having. Before it, skill made a
+/// smith *faster* and nothing else, so a master and an apprentice turned out
+/// identical goods and the only reason to train anybody was throughput.
+public enum ItemQuality: String, Codable, Sendable, CaseIterable, Comparable {
+    case shoddy
+    case plain
+    case fine
+    case masterwork
+
+    public var index: Int { ItemQuality.allCases.firstIndex(of: self) ?? 0 }
+
+    public static func < (a: ItemQuality, b: ItemQuality) -> Bool { a.index < b.index }
+
+    /// What a piece of this quality is worth against a plain one — its damage
+    /// if it is a weapon, its protection if it is armour, its price always.
+    public var multiplier: Double {
+        switch self {
+        case .shoddy: return 0.75
+        case .plain: return 1
+        case .fine: return 1.25
+        case .masterwork: return 1.6
+        }
+    }
+
+    public var label: LocalizedText {
+        switch self {
+        case .shoddy: return LocalizedText(values: [.en: "Shoddy", .cs: "Odbytý"])
+        case .plain: return LocalizedText(values: [.en: "Plain", .cs: "Prostý"])
+        case .fine: return LocalizedText(values: [.en: "Fine", .cs: "Povedený"])
+        case .masterwork: return LocalizedText(values: [.en: "Masterwork", .cs: "Mistrovský"])
+        }
+    }
+
+    /// What a crafter of a given skill turns out, from one roll in 0…1.
+    ///
+    /// Skill is 0…20. A beginner mostly makes plain work and botches some of
+    /// it; a master rarely botches anything and now and then makes something
+    /// people talk about. Nobody is ever *guaranteed* a masterwork — that is
+    /// the point of a masterwork.
+    public static func rolled(skill: Int, roll: Double) -> ItemQuality {
+        let hand = min(1, max(0, Double(skill) / 20))
+        let botch = 0.28 * (1 - hand)              // 28% green → 0% master
+        let master = 0.02 + 0.20 * hand * hand     // 2% green → 22% master
+        let fine = 0.15 + 0.35 * hand              // 15% green → 50% master
+        if roll < botch { return .shoddy }
+        if roll > 1 - master { return .masterwork }
+        if roll > 1 - master - fine { return .fine }
+        return .plain
+    }
+}
+
 public struct ItemInstance: Codable, Sendable, Identifiable, Equatable {
     public let id: UUID
     public let definitionID: String
+    /// How well *this one* was made. Old saves and everything the world hands
+    /// out rather than makes are plain (rule 3).
+    public var quality: ItemQuality
 
-    public init(id: UUID = UUID(), definitionID: String) {
+    public init(id: UUID = UUID(), definitionID: String, quality: ItemQuality = .plain) {
         self.id = id
         self.definitionID = definitionID
+        self.quality = quality
+    }
+
+    private enum CodingKeys: String, CodingKey { case id, definitionID, quality }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        definitionID = try c.decode(String.self, forKey: .definitionID)
+        quality = try c.decodeIfPresent(ItemQuality.self, forKey: .quality) ?? .plain
     }
 }

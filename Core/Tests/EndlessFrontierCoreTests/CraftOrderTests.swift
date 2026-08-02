@@ -264,6 +264,152 @@ struct CraftOrderTests {
                 "people standing in an empty workshop")
     }
 
+    // MARK: - One bench per shop
+
+    /// Raising a second, *different* shop has to buy the colony something. The
+    /// settlement used to advance a single order a tick however much it had
+    /// built, so a foundry next to a workshop was decoration.
+    @Test("A colony with two kinds of shop works two things at once")
+    func shopsWorkInParallel() throws {
+        let reg = try registry()
+        var s = try workshop(crafters: 6)
+        s.buildings.append(BuildingInstance(
+            id: UUID(uuidString: "C4AF7000-1111-0000-0000-000000000002")!,
+            definitionID: "foundry"))
+        // One for the workshop, one for the foundry.
+        s = CraftingEngine.place(s, recipeID: "craft_iron_scythe", count: 4,
+                                 tick: 0, registry: reg)
+        s = CraftingEngine.place(s, recipeID: "smelt_steel", count: 4,
+                                 tick: 1, registry: reg)
+        s.storage[.energy] = 500
+        let after = try work(s, ticks: 30, researched: ["machining"])
+        #expect(after.craftOrders.allSatisfy { $0.progress > 0 || $0.made > 0 },
+                "the second shop stood idle while the first worked")
+    }
+
+    /// …and two of the *same* shop do not, because the queue is the shop's.
+    @Test("Two of the same shop is still one queue")
+    func sameShopIsOneBench() throws {
+        let reg = try registry()
+        var s = try workshop(crafters: 6)
+        s.buildings.append(BuildingInstance(
+            id: UUID(uuidString: "C4AF7000-1111-0000-0000-000000000003")!,
+            definitionID: "workshop"))
+        s = CraftingEngine.place(s, recipeID: "craft_iron_scythe", count: 4,
+                                 tick: 0, registry: reg)
+        s = CraftingEngine.place(s, recipeID: "craft_plate_armor", count: 4,
+                                 tick: 1, registry: reg)
+        let benches = CraftingEngine.workableBenches(
+            at: s, researched: [], registry: reg)
+        #expect(benches.count == 1)
+    }
+
+    // MARK: - How well it was made
+
+    /// The reason to train a smith. Before quality, skill made somebody faster
+    /// and nothing else, so a master and an apprentice turned out identical
+    /// goods and training was purely about throughput.
+    @Test("A master's work is better than an apprentice's")
+    func skillShowsInTheWork() throws {
+        func made(skill: Int) throws -> [ItemQuality] {
+            var s = try workshop(crafters: 2, skill: skill, iron: 200, timber: 200)
+            s = CraftingEngine.place(s, recipeID: "craft_iron_scythe", count: 30,
+                                     tick: 0, registry: try registry())
+            return try work(s, ticks: 900).inventory
+                .filter { $0.definitionID == "iron_scythe" }.map(\.quality)
+        }
+        let green = try made(skill: 0), master = try made(skill: 20)
+        #expect(!green.isEmpty && !master.isEmpty)
+
+        func mean(_ q: [ItemQuality]) -> Double {
+            Double(q.reduce(0) { $0 + $1.index }) / Double(q.count)
+        }
+        #expect(mean(master) > mean(green),
+                "twenty scythes from a master were no better than a beginner's")
+        #expect(green.contains(.shoddy), "a beginner botches some of it")
+        #expect(master.contains { $0 >= .fine })
+    }
+
+    /// Nobody is ever *guaranteed* a masterwork — that is what makes it one.
+    @Test("Even a master is not promised a masterwork")
+    func masteryIsNotACertainty() throws {
+        for roll in stride(from: 0.0, through: 0.99, by: 0.05) {
+            let q = ItemQuality.rolled(skill: 20, roll: roll)
+            #expect(ItemQuality.allCases.contains(q))
+        }
+        #expect(ItemQuality.rolled(skill: 20, roll: 0.5) != .masterwork)
+        #expect(ItemQuality.rolled(skill: 0, roll: 0.01) == .shoddy)
+        #expect(ItemQuality.rolled(skill: 20, roll: 0.01) != .shoddy,
+                "a master does not botch")
+    }
+
+    @Test("A better-made weapon hits harder, and better armour turns more aside")
+    func qualityReachesTheFight() throws {
+        let reg = try registry()
+        func fighter(weapon: ItemQuality) -> Pawn {
+            var p = Pawn(id: UUID(uuidString: "C4AF7000-4444-0000-0000-000000000001")!,
+                         name: "Arm")
+            p.age = 30 * reg.config.ticksPerYear
+            p.equipment[.weapon] = ItemInstance(
+                id: UUID(uuidString: "C4AF7000-5555-0000-0000-000000000001")!,
+                definitionID: "iron_sword", quality: weapon)
+            return p
+        }
+        let plain = CombatEngine.militia([fighter(weapon: .plain)], registry: reg).total
+        let fine = CombatEngine.militia([fighter(weapon: .masterwork)], registry: reg).total
+        #expect(fine > plain, "a masterwork blade is the same as any other")
+
+        var armoured = Pawn(id: UUID(uuidString: "C4AF7000-6666-0000-0000-000000000001")!,
+                            name: "Shield")
+        armoured.equipment[.armor] = ItemInstance(
+            id: UUID(uuidString: "C4AF7000-7777-0000-0000-000000000001")!,
+            definitionID: "chainmail", quality: .masterwork)
+        var shoddy = armoured
+        shoddy.equipment[.armor] = ItemInstance(
+            id: UUID(uuidString: "C4AF7000-7777-0000-0000-000000000002")!,
+            definitionID: "chainmail", quality: .shoddy)
+        #expect(CombatEngine.woundMultiplier(armoured)
+                < CombatEngine.woundMultiplier(shoddy))
+        // …and armour never makes anybody invulnerable.
+        #expect(CombatEngine.woundMultiplier(armoured) > 0)
+    }
+
+    @Test("A gift from the world is plain, and old saves stay plain")
+    func unmadeThingsArePlain() throws {
+        #expect(ItemInstance(definitionID: "iron_sword").quality == .plain)
+        let json = #"{"id":"C4AF7000-8888-0000-0000-000000000001","definitionID":"iron_sword"}"#
+        let back = try JSONDecoder().decode(
+            ItemInstance.self, from: try #require(json.data(using: .utf8)))
+        #expect(back.quality == .plain)
+    }
+
+    // MARK: - Somebody walks to the shop
+
+    /// A trade is not a place. Until a shop with work in it posted a job, a
+    /// crafter stood wherever the day's schedule guessed — which is why they
+    /// were never drawn in the workshop.
+    @Test("A shop with an order on it posts a job at the shop")
+    func benchPostsAJob() throws {
+        let reg = try registry()
+        var s = try workshop()
+        s = ColonyBuilder.ensureMap(s)
+        s = ColonyBuilder.place(s, definitionID: "workshop",
+                                at: TileCoord(4, 4), registry: reg) ?? s
+        s.localMap = LocalMapGenerator.generate(
+            mapSeed: 3, regionID: s.id, biome: reg.biome("plains"))
+
+        let idle = JobBoard.post(for: s, registry: reg)
+        #expect(!idle.contains { $0.kind == .craftItem },
+                "an empty bench is not work")
+
+        s = CraftingEngine.place(s, recipeID: "craft_iron_scythe", count: 1,
+                                 tick: 0, registry: reg)
+        let busy = JobBoard.post(for: s, registry: reg)
+        #expect(busy.contains { $0.kind == .craftItem },
+                "the colony was asked for a scythe and no bench was posted")
+        #expect(busy.first { $0.kind == .craftItem }?.work == .crafting)
+    }
+
     // MARK: - Determinism and saves
 
     @Test("The same bench with the same orders makes the same things")
