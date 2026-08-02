@@ -61,11 +61,26 @@ struct BuildPickerBar: View {
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(affordable ? Theme.text : Theme.textDim)
                     .lineLimit(1)
-                // The footprint up front: how much ground this will cost you is
-                // the thing you most need to know before choosing where.
-                Text("\(def.footprint.width)×\(def.footprint.height)")
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(Theme.accent.opacity(affordable ? 0.9 : 0.4))
+                // **What it is for.** The picker offered a name and a footprint
+                // and nothing else, so choosing between eleven buildings meant
+                // already knowing what all eleven did. Every building in the
+                // data carries a line; it was simply never shown.
+                Text(Self.summary(of: def))
+                    .font(.system(size: 9))
+                    .foregroundStyle(Theme.textDim)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: 128, alignment: .leading)
+                HStack(spacing: 6) {
+                    // The footprint: how much ground this will cost you is the
+                    // thing you most need to know before choosing where.
+                    Text("\(def.footprint.width)×\(def.footprint.height)")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(Theme.accent.opacity(affordable ? 0.9 : 0.4))
+                    Text(Self.priceLine(of: def, naming: game.itemName))
+                        .font(.system(size: 9, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(affordable ? Theme.textDim : Theme.danger)
+                }
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
@@ -75,6 +90,48 @@ struct BuildPickerBar: View {
         }
         .buttonStyle(.plain)
         .opacity(affordable ? 1 : 0.55)
+    }
+
+    /// What a building is *for*, in a few words.
+    ///
+    /// Prefers the numbers that actually change the game — beds, store, what it
+    /// produces — over the flavour line, because "stores grain against the lean
+    /// months" does not tell you it lifts the cap on every resource by 250.
+    /// Falls back to the flavour when a building has no numbers to show.
+    static func summary(of def: BuildingDefinition) -> String {
+        let cs = AppStrings.language == .cs
+        var parts: [String] = []
+        if def.housing > 0 {
+            parts.append("+\(Int(def.housing)) \(cs ? "lůžek" : "beds")")
+        }
+        if def.storage > 0 {
+            parts.append("+\(Int(def.storage)) \(cs ? "skladu" : "store")")
+        }
+        for resource in ResourceType.allCases where def.production[resource] > 0 {
+            parts.append("+\(Int(def.production[resource])) \(resource.displayName)")
+        }
+        if def.defense > 0 {
+            parts.append("+\(Int(def.defense)) \(cs ? "obrany" : "defence")")
+        }
+        if def.workers > 0 {
+            parts.append("\(def.workers) \(cs ? "prac." : "workers")")
+        }
+        guard parts.isEmpty else { return parts.joined(separator: " · ") }
+        return def.description.resolve(AppStrings.language)
+    }
+
+    /// What it costs, with anything the colony is short of named.
+    static func priceLine(
+        of def: BuildingDefinition, naming itemName: (String) -> String
+    ) -> String {
+        var parts: [String] = []
+        for resource in ResourceType.allCases where def.cost[resource] > 0 {
+            parts.append("\(Int(def.cost[resource])) \(resource.displayName)")
+        }
+        for (materialID, count) in def.materialCost.sorted(by: { $0.key < $1.key }) {
+            parts.append("\(count)× \(itemName(materialID))")
+        }
+        return parts.joined(separator: ", ")
     }
 }
 

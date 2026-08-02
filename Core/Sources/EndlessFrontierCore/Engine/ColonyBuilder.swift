@@ -107,7 +107,10 @@ public enum ColonyBuilder {
         if let i = s.buildings.firstIndex(where: { $0.definitionID == definitionID }) {
             s.buildings[i].count += 1
         } else {
-            s.buildings.append(BuildingInstance(definitionID: definitionID, count: 1))
+            // Derived, not random: this runs inside the tick path, and two
+            // identical worlds must come out with identical ids.
+            s.buildings.append(BuildingInstance.founding(
+                definitionID, at: s.id, slot: s.buildings.count))
         }
         return s
     }

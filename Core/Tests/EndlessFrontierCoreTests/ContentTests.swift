@@ -84,6 +84,7 @@ struct PollutionTests {
     func accumulates() throws {
         let reg = try GameDataRegistry.bundled()
         var world = WorldState(settlements: [settlement(factories: 1)])
+        world.stewardEnabled = false
         world = TickEngine.advance(world, ticks: 60, registry: reg).state
         #expect(world.settlements[0].stats.pollution > 5)
     }
@@ -91,8 +92,12 @@ struct PollutionTests {
     @Test("Heavy pollution drags morale below a clean settlement's")
     func pollutionHurtsMorale() throws {
         let reg = try GameDataRegistry.bundled()
+        // The council off: this is a test about smoke, and a colony that
+        // builds itself a library halfway through is measuring something else.
         var dirty = WorldState(settlements: [settlement(factories: 2)])   // pollution → 60
         var clean = WorldState(settlements: [settlement(factories: 0)])
+        dirty.stewardEnabled = false
+        clean.stewardEnabled = false
         dirty = TickEngine.advance(dirty, ticks: 120, registry: reg).state
         clean = TickEngine.advance(clean, ticks: 120, registry: reg).state
         #expect(dirty.settlements[0].stats.morale < clean.settlements[0].stats.morale)

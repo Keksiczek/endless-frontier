@@ -120,6 +120,14 @@ public struct WorldState: Codable, Sendable, Equatable {
     public var lastRealTimestamp: Date
     public var rngSeed: UInt64
     public var mapSeed: UInt64      // stable seed for per-hex map generation (never mutated)
+    /// Whether the council runs the town when nobody is telling it what to do.
+    ///
+    /// On by default, and it never overrules an explicit choice — see
+    /// `StewardEngine`. Off is for a player who wants every roof and every
+    /// study to be theirs; the world then behaves exactly as it did before the
+    /// steward existed, which is to say it stops advancing on its own.
+    public var stewardEnabled: Bool = true
+
     public var era: Era
     /// The language this world was founded in. Everything *generated* — a
     /// newborn's name, an outpost, a seceded people, a freshly charted region
@@ -253,7 +261,7 @@ public struct WorldState: Codable, Sendable, Equatable {
              unlockedBuildings, worldFlags, settlements, regions, tradeRoutes,
              caravans, activeExpedition, eventHistory, eventCooldowns,
              scheduledEffects, activeQuests, completedQuests, pendingLawProposal, records, tribes, pendingEvents
-        case actionStep
+        case actionStep, stewardEnabled
     }
 
     public init(from decoder: Decoder) throws {
@@ -266,6 +274,9 @@ public struct WorldState: Codable, Sendable, Equatable {
         schemaVersion = value(.schemaVersion, 1)
         tick = value(.tick, 0)
         actionStep = value(.actionStep, 0)
+        // Worlds saved before the council ran the town get it switched on:
+        // they are exactly the saves that have been standing still.
+        stewardEnabled = value(.stewardEnabled, true)
         lastRealTimestamp = value(.lastRealTimestamp, Date(timeIntervalSince1970: 0))
         rngSeed = value(.rngSeed, 0x5EED_F00D)
         mapSeed = value(.mapSeed, 0x5EED_F00D)

@@ -224,6 +224,62 @@ Two things worth remembering from it:
   is not stable, so the buckets had to be sorted or the valley would reshuffle
   its own edges every frame. See `SettlementGround.Tone.order`.
 
+## 7. The frozen world (2026-08-02) — the biggest thing found so far
+
+Measured on a fresh world, twelve thousand ticks, nobody touching it:
+
+```
+t=1000   pop=27  beds=30  cap=500  buildings=3  building=0  techs=0  era=earlySettlement
+t=12000  pop=26  beds=30  cap=500  buildings=3  building=0  techs=0  era=earlySettlement
+```
+
+Two hundred in-game years: three buildings, no construction ever started, no
+tech ever researched, still in the first era, every store pinned at the cap,
+deaths only from old age. The colony was not dying — it was **frozen**.
+
+Every link of the chain was reachable only from the UI:
+
+- `activeResearch` is set nowhere but the tech screen → no tech → no era → no
+  building unlocked.
+- `GameEngine.build` is called nowhere but the build bar → not even the
+  *unlocked* buildings were raised, including the hut that lifts the housing
+  ceiling and the granary that lifts the storage cap.
+- `CraftingEngine.place` is called nowhere but the crafting panel → the
+  `timber_bundle` half the early buildings ask for was never made.
+
+`StewardEngine` closes it: the council studies the cheapest thing it can
+reach, keeps a standing order for building materials, and raises whatever the
+colony is most short of — beds, then store, then food, then breadth. It acts
+**only in the gaps**, so an explicit choice by the player is never touched,
+and `WorldState.stewardEnabled` switches it off entirely.
+
+After: pop 5 → 80, two eras, 31 techs, ~48 buildings by t=5000, then a
+plateau where materials become the binding constraint.
+
+### Two traps found while balancing it
+
+1. **A reserve as a share of capacity is a trap.** Keeping 35 % of the
+   warehouse back looks reasonable — but granaries multiply the cap, the
+   reserve grows with it, and a colony whose income never changed can suddenly
+   never afford anything again. Measured: capacity 500 → 2750 and the town
+   stopped building for ten thousand ticks. The reserve is a multiple of the
+   **cost** now.
+2. **Founding buildings had random UUIDs.** `ConstructionEngine` already
+   derived the id of a building it finished; `GameWorldFactory`,
+   `ExpansionEngine` and `ColonyBuilder.place` used the `UUID()` default, so
+   two worlds from the same seed came out with the same buildings under
+   different ids. Caught by a determinism test on the steward, not by anything
+   aimed at it.
+
+### Still open after this
+
+- **Births do not keep pace with old age.** With beds and food no longer
+  binding, population peaks near 80 and drifts back to 40 while the only
+  deaths are old age. That was always true; it was simply unreachable behind
+  the frozen ceiling.
+- Era stops at `ancient` with the whole tech tree researched — the later era
+  milestones want population or settlement counts the colony does not reach.
+
 ### 6.6 — what shipped, so the next pass builds on it rather than over it
 
 `SettlementBattle` now has named phases (`marching`, `volley`, `melee`,

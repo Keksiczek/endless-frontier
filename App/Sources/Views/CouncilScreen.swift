@@ -19,6 +19,11 @@ struct CouncilScreen: View {
                         MotionCard(game: game, proposal: proposal)
                     }
                     if let settlement = game.selectedSettlement, !settlement.pawns.isEmpty {
+                        // What the colony is doing and what it is waiting on.
+                        // Nothing in the game answered "what should I be doing?"
+                        // — the quest list is long arcs and the diagnostics
+                        // screen is a wall of measurements.
+                        counselCard(settlement)
                         leaderCard(settlement)
                         lawsCard(settlement)
                         // How the town is run day to day, above the reports on
@@ -51,6 +56,49 @@ struct CouncilScreen: View {
     }
 
     // MARK: - Leader
+
+    /// The council's own reasoning, said out loud.
+    private func counselCard(_ settlement: Settlement) -> some View {
+        let items = StewardEngine.counsel(
+            for: settlement, in: game.world, registry: game.registry)
+        return VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: cs ? "Kde osada stojí" : "Where things stand")
+            ForEach(items) { item in
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: icon(for: item.weight))
+                        .font(.caption)
+                        .foregroundStyle(tint(for: item.weight))
+                        .frame(width: 18)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.headline.resolve(AppStrings.language))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.text)
+                        Text(item.detail.resolve(AppStrings.language))
+                            .font(.caption)
+                            .foregroundStyle(Theme.textDim)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+        }
+        .frontierCard()
+    }
+
+    private func icon(for weight: StewardEngine.Counsel.Weight) -> String {
+        switch weight {
+        case .doing: return "hammer.fill"
+        case .wanting: return "exclamationmark.triangle.fill"
+        case .idle: return "checkmark.seal.fill"
+        }
+    }
+
+    private func tint(for weight: StewardEngine.Counsel.Weight) -> Color {
+        switch weight {
+        case .doing: return Theme.accent
+        case .wanting: return Theme.danger
+        case .idle: return Theme.good
+        }
+    }
 
     private func leaderCard(_ settlement: Settlement) -> some View {
         let leader = SocietyEngine.leader(of: settlement)

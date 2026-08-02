@@ -16,16 +16,20 @@ public enum GameWorldFactory {
 
         // Starter buildings, only those that actually exist in the data.
         let starterBuildingIDs = ["farm_basic", "lumberyard", "hut"]
-        let buildings = starterBuildingIDs
-            .filter { registry.building($0) != nil }
-            .map { BuildingInstance(definitionID: $0, count: 1) }
 
         // The capital's identity must come from the seed: engines derive
         // per-settlement RNG streams from the settlement id, so a random id
-        // would leak nondeterminism into every replay.
+        // would leak nondeterminism into every replay. Drawn *before* the
+        // buildings, because their ids are derived from it too.
         var idRNG = SeededRNG(seed: seed ^ 0x5E77_1E1D)
+        let capitalID = idRNG.nextUUID()
+        let buildings = starterBuildingIDs
+            .filter { registry.building($0) != nil }
+            .enumerated()
+            .map { BuildingInstance.founding($0.element, at: capitalID, slot: $0.offset) }
+
         var settlement = Settlement(
-            id: idRNG.nextUUID(),
+            id: capitalID,
             name: NameForge.capitalName(language: language),
             kind: .capital,
             regionID: homeland.id,

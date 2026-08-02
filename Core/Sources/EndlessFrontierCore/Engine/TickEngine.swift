@@ -48,6 +48,11 @@ public enum TickEngine {
             // The benches. After the day's gathering, so what came in this tick
             // is on the shelf for the crafters to reach for.
             s = CraftingEngine.advanceOneTick(s, registry: registry)
+            // …and the council, deciding what to study, stock and raise when
+            // nobody is telling it. Without this the world does not advance at
+            // all on its own: research, construction and the bench were every
+            // one of them reachable only from the UI.
+            s = StewardEngine.advanceOneTick(s, registry: registry)
             s = TechEngine.advanceResearch(s, registry: registry)
             s = EraEngine.checkAdvancement(s, registry: registry)
             s = QuestEngine.advance(s, registry: registry)

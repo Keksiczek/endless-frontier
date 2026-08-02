@@ -61,6 +61,28 @@ public struct BuildingInstance: Codable, Sendable, Identifiable, Equatable {
         self.definitionID = definitionID
         self.count = count
     }
+
+    /// A building a settlement simply *starts with*, with an id derived from
+    /// what it is and where it stands.
+    ///
+    /// `UUID()` is the wrong default for anything the world creates. Two worlds
+    /// built from the same seed came out with the same buildings under
+    /// different ids, which is a determinism leak the whole project is built to
+    /// avoid — `ConstructionEngine` already derives the id of a building it
+    /// finishes, and the ones a colony is founded with were the gap.
+    public static func founding(
+        _ definitionID: String, at settlementID: UUID, slot: Int
+    ) -> BuildingInstance {
+        var h: UInt64 = 0x9E37_79B9_7F4A_7C15
+        for byte in definitionID.utf8 { h = (h ^ UInt64(byte)) &* 0x0100_0000_01B3 }
+        let bytes = settlementID.uuid
+        h = (h ^ UInt64(bytes.0)) &* 0x0100_0000_01B3
+        h = (h ^ UInt64(bytes.8)) &* 0x0100_0000_01B3
+        h = (h ^ UInt64(bytes.15)) &* 0x0100_0000_01B3
+        h = (h ^ UInt64(bitPattern: Int64(slot))) &* 0x0100_0000_01B3
+        var rng = SeededRNG(seed: h ^ (h >> 31))
+        return BuildingInstance(id: rng.nextUUID(), definitionID: definitionID, count: 1)
+    }
 }
 
 /// The role of a settlement. Outposts are small and can be upgraded to cities

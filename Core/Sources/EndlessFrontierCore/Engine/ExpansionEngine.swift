@@ -29,11 +29,9 @@ public enum ExpansionEngine {
         // buildings (only those the data actually defines), laid out on its own
         // colony grid, with its settlers put to work.
         let starterBuildingIDs = ["farm_basic", "hut"]
-        let buildings = starterBuildingIDs
-            .filter { registry.building($0) != nil }
-            .map { BuildingInstance(definitionID: $0, count: 1) }
 
-        // Deterministic identity: per-settlement RNG streams key off the id.
+        // Deterministic identity: per-settlement RNG streams key off the id,
+        // and the founding buildings key off it in turn.
         let seedBase = settlerSeed(state: s, region: state.regions[regionIndex])
         var idRNG = SeededRNG(seed: seedBase ^ 0x0072_1D0F)
         // A founded hearth deserves a real name, not "Outpost 3" — callers
@@ -42,8 +40,13 @@ public enum ExpansionEngine {
         let outpostName = name.isEmpty
             ? NameForge.settlementName(language: s.language, using: &nameRNG)
             : name
+        let outpostID = idRNG.nextUUID()
+        let buildings = starterBuildingIDs
+            .filter { registry.building($0) != nil }
+            .enumerated()
+            .map { BuildingInstance.founding($0.element, at: outpostID, slot: $0.offset) }
         var outpost = Settlement(
-            id: idRNG.nextUUID(),
+            id: outpostID,
             name: outpostName,
             kind: .outpost,
             regionID: regionID,
