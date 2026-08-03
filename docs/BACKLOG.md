@@ -224,6 +224,62 @@ Two things worth remembering from it:
   is not stable, so the buckets had to be sorted or the valley would reshuffle
   its own edges every frame. See `SettlementGround.Tone.order`.
 
+## 8. Played it — 2026-08-02 feedback
+
+Keks played the build. Three things, and the third is a design pivot:
+
+| # | Thing | State |
+|---|---|---|
+| 8.1 | **No challenge.** Nothing kills, nothing is scarce | todo — measured below |
+| 8.2 | **Combat does not aim well; the rounds feel strange** | todo — see 8.3 |
+| 8.3 | **Real-time walking, not rounds** — "I go somewhere and do something. The enemy comes, we prepare, then we kill him if we can" | todo — the pivot |
+
+### 8.1 — the measurement
+
+Fresh world, 12 000 ticks (200 years), untouched:
+
+```
+battles = 26     live-siege ticks = 26     tribes = 6
+deaths  = { old_age: 106 }        ← every single one
+food 2500/2500 · colonists hurt at the end = 0 · broken = 0
+```
+
+Twenty-six fights in two centuries and not one death from anything but old
+age, with nobody even carrying a wound. Four separate causes:
+
+1. Nothing kills — no battle, starvation, cold or beast deaths at all.
+2. A fight ends inside roughly **one world tick**: a forty-strong militia
+   vastly outmatches a wolf pack of strength ~10, so it is over before it can
+   be watched.
+3. Food is pinned at the cap for two hundred years.
+4. `SiegeEngine.wallShare` caps at 0.85 and a modest palisade already turns
+   most of a raid aside.
+
+Levers: `SiegeEngine` (`linePerStep`, `attackerDamagePerStrength`,
+`fortificationHalfPoint`, `fortificationCeiling`),
+`WildlifeEngine.attackChancePerPressure`, `DiplomacyEngine.warChance` /
+`warStanding`, and `MedicineEngine` for how fast wounds close. **Do not just
+multiply them** — the fix is that a fight should be survivable but expensive,
+and the wound/body-part system already exists with nothing to do.
+
+### 8.3 — what the pivot costs
+
+What survives unchanged: the siege as live saved state, orders as recorded
+inputs, a step fought once by whoever reaches it first, and offline
+resolution identical to watched resolution.
+
+What changes: the *unit*. Positions per combatant advancing per step, contact
+by proximity rather than by round index.
+
+The line it crosses: fighters' positions must move **into the Core**.
+`AgentMotion` is presentation only (rule 5, load-bearing). The precedent to
+follow is `Pawn.currentJob.position` and `HaulEngine`'s `haulPosition` — both
+Core-owned positions that already exist. Make it deliberately; do not let the
+renderer start writing state.
+
+Order: positions into the Core → move/target orders on tap → *then* retune
+difficulty. Balancing the old shape first is work thrown away.
+
 ## 7. The frozen world (2026-08-02) — the biggest thing found so far
 
 Measured on a fresh world, twelve thousand ticks, nobody touching it:
