@@ -101,10 +101,37 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
     /// interprets, and the renderer maps it (falling back to deriving the shape
     /// from what the building does).
     public let look: String?
+    /// How many storeys a dwelling stacks onto its footprint. One for anything
+    /// you can walk into off the street; more for a tenement or an arcology,
+    /// which is the only honest way a building can hold more people than its
+    /// ground would allow.
+    public let floors: Int
     public let adjacency: [AdjacencyRule]
     /// Player-facing flavour. `LocalizedText` decodes from a bare string too,
     /// so half-translated content files always load.
     public let description: LocalizedText
+
+    // MARK: - How many people actually live here
+
+    /// How many sleepers one tile of a dwelling takes. Three, so a two-by-two
+    /// cabin is a household of a dozen rather than a bunkhouse.
+    public static let sleepersPerTile = 3
+
+    /// How many people this building **houses** — derived from the ground it
+    /// covers and the storeys it stacks on it.
+    ///
+    /// `housing` in the data used to be an economic number of its own, and it
+    /// disagreed with the building: a hut was one tile with four beds in it
+    /// and the ledger credited it with thirty, so a colony's population cap
+    /// was a village in a shed and everybody past the fourth slept rough. Two
+    /// numbers for one thing (CLAUDE.md rule 8). `housing` is a **flag** now —
+    /// non-zero means people live here — and this is the number, read by both
+    /// the ledger (`ResourceLoop.housingCapacity`) and the beds
+    /// (`HouseholdEngine.beds`).
+    public var sleepers: Int {
+        guard housing > 0 else { return 0 }
+        return footprint.width * footprint.height * Self.sleepersPerTile * max(1, floors)
+    }
 
     public init(
         id: String,
@@ -124,6 +151,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         footprint: TileSize = TileSize(),
         work: WorkKind? = nil,
         look: String? = nil,
+        floors: Int = 1,
         adjacency: [AdjacencyRule] = [],
         description: LocalizedText = LocalizedText("")
     ) {
@@ -144,6 +172,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         self.footprint = footprint
         self.work = work
         self.look = look
+        self.floors = max(1, floors)
         self.adjacency = adjacency
         self.description = description
     }
@@ -152,7 +181,8 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         case id, era, name, cost, workers, production, consumption
         case materialCost = "material_cost"
         case moraleEffect = "morale_effect"
-        case defense, housing, storage, upkeep, pollution, footprint, work, look, adjacency
+        case defense, housing, storage, upkeep, pollution, footprint, work, look, floors
+        case adjacency
         case description
     }
 
@@ -175,6 +205,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         footprint = try c.decodeIfPresent(TileSize.self, forKey: .footprint) ?? TileSize()
         work = try c.decodeIfPresent(WorkKind.self, forKey: .work)
         look = try c.decodeIfPresent(String.self, forKey: .look)
+        floors = max(1, try c.decodeIfPresent(Int.self, forKey: .floors) ?? 1)
         adjacency = try c.decodeIfPresent([AdjacencyRule].self, forKey: .adjacency) ?? []
         description = try c.decodeIfPresent(LocalizedText.self, forKey: .description) ?? LocalizedText("")
     }

@@ -29,7 +29,10 @@ public enum ResourceLoop {
     /// How many colonists a settlement can house (base + housing buildings).
     public static func housingCapacity(_ settlement: Settlement, registry: GameDataRegistry) -> Double {
         baseHousing + settlement.buildings.reduce(0.0) { acc, instance in
-            acc + (registry.building(instance.definitionID)?.housing ?? 0) * Double(instance.count)
+            // `sleepers`, not `housing`: the ledger and the beds are one number
+            // now. See `BuildingDefinition.sleepers`.
+            acc + Double(registry.building(instance.definitionID)?.sleepers ?? 0)
+                * Double(instance.count)
         }
     }
 

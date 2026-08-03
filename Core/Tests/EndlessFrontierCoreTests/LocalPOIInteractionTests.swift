@@ -185,7 +185,10 @@ struct LocalPOIInteractionTests {
         let rested = home.settlements[0].pawns.first!.needs.recreation
             > state.settlements[0].pawns.first!.needs.recreation
         #expect(gained || healed || rested, "working a place must be worth the walk")
-        #expect(home.settlements[0].journal.entries.count == 2, "setting out, and coming back")
+        // Setting out, what they found in there, and coming back. The middle
+        // line is the point of the place having anything in it at all.
+        #expect(home.settlements[0].journal.entries.count >= 2,
+                "setting out, and coming back")
     }
 
     @Test("A finite place is picked clean and then refuses more parties", arguments: [

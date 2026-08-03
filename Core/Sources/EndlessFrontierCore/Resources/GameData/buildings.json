@@ -7,13 +7,13 @@
       "cs": "Chatrč"
     },
     "cost": {
-      "materials": 10
+      "materials": 4
     },
     "workers": 0,
     "production": {},
     "consumption": {},
     "morale_effect": 2,
-    "housing": 30,
+    "housing": 12,
     "adjacency": [
       {
         "neighbor": "well",
@@ -23,7 +23,12 @@
     "description": {
       "en": "Simple shelter that keeps the community content and housed.",
       "cs": "Prosté přístřeší, které dá lidem střechu nad hlavou a klid."
-    }
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
+    },
+    "look": "house"
   },
   {
     "id": "longhouse",
@@ -33,22 +38,23 @@
       "cs": "Dlouhý dům"
     },
     "cost": {
-      "materials": 35
+      "materials": 14
     },
     "material_cost": {
-      "timber_bundle": 2
+      "timber_bundle": 1
     },
     "workers": 0,
     "morale_effect": 1,
-    "housing": 70,
+    "housing": 27,
     "description": {
       "en": "Communal housing that shelters many families under one roof.",
       "cs": "Společné bydlení — mnoho rodin pod jednou střechou."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
-    }
+      "w": 3,
+      "h": 3
+    },
+    "look": "house"
   },
   {
     "id": "farm_basic",
@@ -87,13 +93,14 @@
       "cs": "Prosté políčko, které uživí malou osadu."
     },
     "footprint": {
-      "w": 3,
-      "h": 2
-    }
+      "w": 4,
+      "h": 3
+    },
+    "look": "farm"
   },
   {
     "id": "lumberyard",
-    "look": "mill",
+    "look": "sawmill",
     "era": "early_settlement",
     "name": {
       "en": "Lumberyard",
@@ -113,13 +120,13 @@
       "cs": "Těží dřevo z okolních lesů."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     }
   },
   {
     "id": "hunters_lodge",
-    "look": "workshop",
+    "look": "lodge",
     "era": "early_settlement",
     "name": {
       "en": "Hunter's Lodge",
@@ -142,8 +149,8 @@
       "cs": "Lovci nosí zvěřinu, když pole nestačí."
     },
     "footprint": {
-      "w": 2,
-      "h": 1
+      "w": 3,
+      "h": 2
     }
   },
   {
@@ -171,8 +178,8 @@
       "cs": "Dřina k zlomení hřbetu — ale kámen žene stavby kupředu."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     }
   },
   {
@@ -197,9 +204,10 @@
       "cs": "Zavlažování znásobí úrodu každého pole."
     },
     "footprint": {
-      "w": 3,
-      "h": 2
-    }
+      "w": 4,
+      "h": 3
+    },
+    "look": "farm"
   },
   {
     "id": "library",
@@ -243,9 +251,10 @@
       "cs": "Zapsané vědění zrychluje bádání."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
-    }
+      "w": 3,
+      "h": 3
+    },
+    "look": "hall"
   },
   {
     "id": "windmill",
@@ -272,8 +281,8 @@
       "cs": "Vítr mele obilí a pohání dílny."
     },
     "footprint": {
-      "w": 2,
-      "h": 1
+      "w": 3,
+      "h": 2
     }
   },
   {
@@ -303,9 +312,10 @@
       "cs": "Karavany a kupci prodlužují dosah osady."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
-    }
+      "w": 3,
+      "h": 3
+    },
+    "look": "market"
   },
   {
     "id": "school",
@@ -342,9 +352,10 @@
       "cs": "Vychovává další pokolení myslitelů."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
-    }
+      "w": 3,
+      "h": 3
+    },
+    "look": "hall"
   },
   {
     "id": "palisade",
@@ -366,7 +377,12 @@
     "description": {
       "en": "A timber wall and ditch — the first line against raiders.",
       "cs": "Dřevěná hradba s příkopem — první obrana proti nájezdníkům."
-    }
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
+    },
+    "look": "wall"
   },
   {
     "id": "watchtower",
@@ -389,7 +405,12 @@
     "description": {
       "en": "Spotters give the colony time to muster against attack.",
       "cs": "Hlídky dají osadě čas sešikovat se k obraně."
-    }
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
+    },
+    "look": "tower"
   },
   {
     "id": "barracks",
@@ -418,9 +439,10 @@
       "cs": "Vycvičení vojáci stojí připraveni bránit osadu."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
-    }
+      "w": 3,
+      "h": 3
+    },
+    "look": "barracks"
   },
   {
     "id": "granary",
@@ -446,13 +468,14 @@
       "cs": "Uchovává obilí na hubená léta."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
-    }
+      "w": 3,
+      "h": 3
+    },
+    "look": "granary"
   },
   {
     "id": "well",
-    "look": "granary",
+    "look": "well",
     "era": "early_settlement",
     "name": {
       "en": "Well",
@@ -465,6 +488,10 @@
     "description": {
       "en": "Clean water raises spirits and health.",
       "cs": "Čistá voda zvedá náladu i zdraví."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
     }
   },
   {
@@ -488,9 +515,10 @@
       "cs": "Mapování nebes posouvá vědy kupředu."
     },
     "footprint": {
-      "w": 2,
-      "h": 1
-    }
+      "w": 3,
+      "h": 2
+    },
+    "look": "dish"
   },
   {
     "id": "stone_walls",
@@ -514,13 +542,14 @@
       "cs": "Zděné hradby odrazí všechny krom největších vojsk."
     },
     "footprint": {
-      "w": 2,
-      "h": 1
-    }
+      "w": 3,
+      "h": 2
+    },
+    "look": "wall"
   },
   {
     "id": "aqueduct",
-    "look": "hall",
+    "look": "aqueduct",
     "era": "ancient",
     "name": {
       "en": "Aqueduct",
@@ -535,14 +564,14 @@
     },
     "workers": 1,
     "morale_effect": 3,
-    "housing": 20,
+    "housing": 0,
     "description": {
       "en": "Fresh water carried for miles lets the city grow and thrive.",
       "cs": "Čerstvá voda vedená z dálky nechá město růst a vzkvétat."
     },
     "footprint": {
-      "w": 2,
-      "h": 1
+      "w": 3,
+      "h": 2
     }
   },
   {
@@ -577,13 +606,14 @@
       }
     ],
     "footprint": {
-      "w": 3,
-      "h": 3
+      "w": 4,
+      "h": 4
     },
     "description": {
       "en": "A seat of higher learning that compounds discovery.",
       "cs": "Stánek vyššího učení, kde se objevy násobí."
-    }
+    },
+    "look": "hall"
   },
   {
     "id": "market",
@@ -624,9 +654,10 @@
       "cs": "Rušné stánky svazují kraj obchodem."
     },
     "footprint": {
-      "w": 3,
-      "h": 2
-    }
+      "w": 4,
+      "h": 3
+    },
+    "look": "market"
   },
   {
     "id": "bank",
@@ -655,9 +686,10 @@
       "cs": "Úvěr a mince prodlužují dosah kolonie přes celou mapu."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
-    }
+      "w": 3,
+      "h": 3
+    },
+    "look": "vault"
   },
   {
     "id": "workshop",
@@ -698,9 +730,10 @@
       "cs": "Zruční řemeslníci znásobí, co zmůže hrubá práce."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
-    }
+      "w": 3,
+      "h": 3
+    },
+    "look": "workshop"
   },
   {
     "id": "factory",
@@ -738,13 +771,14 @@
       }
     ],
     "footprint": {
-      "w": 3,
-      "h": 3
+      "w": 4,
+      "h": 4
     },
     "description": {
       "en": "Mass production on a scale never before seen — at a cost to the air.",
       "cs": "Masová výroba v nevídaném měřítku — za cenu vzduchu."
-    }
+    },
+    "look": "plant"
   },
   {
     "id": "foundry",
@@ -782,13 +816,14 @@
       }
     ],
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     },
     "description": {
       "en": "Roaring furnaces smelt metal for the industrial age.",
       "cs": "Hučící pece taví kov pro průmyslový věk."
-    }
+    },
+    "look": "forge"
   },
   {
     "id": "power_plant",
@@ -811,17 +846,18 @@
     },
     "pollution": 25,
     "footprint": {
-      "w": 3,
-      "h": 2
+      "w": 4,
+      "h": 3
     },
     "description": {
       "en": "Burns coal to power the machines of a modern colony.",
       "cs": "Spaluje uhlí a pohání stroje moderní kolonie."
-    }
+    },
+    "look": "generator"
   },
   {
     "id": "railyard",
-    "look": "plant",
+    "look": "rail",
     "era": "early_industrial",
     "name": {
       "en": "Railyard",
@@ -846,8 +882,8 @@
       "cs": "Náklad se valí dnem i nocí a svazuje říši dohromady."
     },
     "footprint": {
-      "w": 3,
-      "h": 2
+      "w": 4,
+      "h": 3
     }
   },
   {
@@ -874,13 +910,14 @@
       "cs": "Z kádí tečou hnojiva, barvy i paliva — a s nimi smog."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
-    }
+      "w": 3,
+      "h": 3
+    },
+    "look": "tanks"
   },
   {
     "id": "hospital",
-    "look": "hall",
+    "look": "clinic",
     "era": "early_industrial",
     "name": {
       "en": "Hospital",
@@ -896,14 +933,14 @@
       "energy": 2
     },
     "morale_effect": 5,
-    "housing": 20,
+    "housing": 48,
     "description": {
       "en": "Wards and surgeons keep the colony hale through plague and injury.",
       "cs": "Sály a ranhojiči drží osadu při síle skrz mor i zranění."
     },
     "footprint": {
-      "w": 3,
-      "h": 3
+      "w": 4,
+      "h": 4
     }
   },
   {
@@ -927,9 +964,10 @@
       "cs": "Betonová stěna mění váhu řeky v čistou, stálou energii."
     },
     "footprint": {
-      "w": 3,
-      "h": 2
-    }
+      "w": 4,
+      "h": 3
+    },
+    "look": "dam"
   },
   {
     "id": "oil_refinery",
@@ -953,9 +991,10 @@
       "cs": "Z ropy se stává palivo — krev věku motorů."
     },
     "footprint": {
-      "w": 3,
-      "h": 2
-    }
+      "w": 4,
+      "h": 3
+    },
+    "look": "tanks"
   },
   {
     "id": "vehicle_works",
@@ -982,9 +1021,10 @@
       "cs": "Auta, traktory a náklaďáky sjíždějí z linky do světa."
     },
     "footprint": {
-      "w": 3,
-      "h": 2
-    }
+      "w": 4,
+      "h": 3
+    },
+    "look": "plant"
   },
   {
     "id": "assembly_plant",
@@ -1006,13 +1046,14 @@
     },
     "pollution": 25,
     "footprint": {
-      "w": 3,
-      "h": 2
+      "w": 4,
+      "h": 3
     },
     "description": {
       "en": "The assembly line at full roar — output on a scale the founders never dreamed.",
       "cs": "Montážní linka v plném běhu — výroba, o jaké se zakladatelům nesnilo."
-    }
+    },
+    "look": "plant"
   },
   {
     "id": "apartment_block",
@@ -1022,27 +1063,29 @@
       "cs": "Činžovní dům"
     },
     "cost": {
-      "materials": 160
+      "materials": 115
     },
     "material_cost": {
-      "timber_bundle": 4,
-      "brick": 6
+      "timber_bundle": 3,
+      "brick": 4
     },
     "workers": 0,
     "morale_effect": 1,
-    "housing": 250,
+    "housing": 180,
     "description": {
       "en": "Stacked dwellings house a whole district on a single plot.",
       "cs": "Patra bytů ubytují celou čtvrť na jediné parcele."
     },
     "footprint": {
-      "w": 3,
-      "h": 2
-    }
+      "w": 4,
+      "h": 3
+    },
+    "floors": 5,
+    "look": "tenement"
   },
   {
     "id": "clinic",
-    "look": "hall",
+    "look": "clinic",
     "era": "modern",
     "name": {
       "en": "Medical Clinic",
@@ -1067,8 +1110,8 @@
       "cs": "Moderní medicína na každém rohu — nemoc ztrácí hrůzu."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     }
   },
   {
@@ -1094,9 +1137,10 @@
       "cs": "Obvody a signály — dílny, kde se rodí věk informací."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
-    }
+      "w": 3,
+      "h": 3
+    },
+    "look": "lab"
   },
   {
     "id": "data_center",
@@ -1130,13 +1174,14 @@
       }
     ],
     "footprint": {
-      "w": 2,
-      "h": 2
+      "w": 3,
+      "h": 3
     },
     "description": {
       "en": "Halls of humming machines remember and reason for the whole civilisation.",
       "cs": "Sály hučících strojů pamatují a počítají za celou civilizaci."
-    }
+    },
+    "look": "lab"
   },
   {
     "id": "research_campus",
@@ -1165,13 +1210,14 @@
       }
     ],
     "footprint": {
-      "w": 3,
-      "h": 3
+      "w": 4,
+      "h": 4
     },
     "description": {
       "en": "A city of laboratories where the next era is invented.",
       "cs": "Město laboratoří, kde se vynalézá příští éra."
-    }
+    },
+    "look": "lab"
   },
   {
     "id": "solar_array",
@@ -1193,9 +1239,10 @@
       "cs": "Pole panelů pijí slunce a vracejí čistou energii bez konce."
     },
     "footprint": {
-      "w": 3,
-      "h": 2
-    }
+      "w": 4,
+      "h": 3
+    },
+    "look": "array"
   },
   {
     "id": "wind_farm",
@@ -1217,9 +1264,10 @@
       "cs": "Řady turbín mění otevřené nebe v elektrárnu."
     },
     "footprint": {
-      "w": 3,
-      "h": 2
-    }
+      "w": 4,
+      "h": 3
+    },
+    "look": "turbine"
   },
   {
     "id": "automated_factory",
@@ -1245,9 +1293,10 @@
       "cs": "Roboti vedou celý provoz; stačí hrstka dohlížitelů."
     },
     "footprint": {
-      "w": 3,
-      "h": 3
-    }
+      "w": 4,
+      "h": 4
+    },
+    "look": "plant"
   },
   {
     "id": "fusion_reactor",
@@ -1267,8 +1316,8 @@
     },
     "morale_effect": 1,
     "footprint": {
-      "w": 3,
-      "h": 3
+      "w": 4,
+      "h": 4
     },
     "description": {
       "en": "A miniature star held in magnetic chains — power without limit or smoke.",
@@ -1298,9 +1347,10 @@
       "cs": "Myslící stroj, který bádá, plánuje a sní rychleji než kterákoli akademie."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
-    }
+      "w": 3,
+      "h": 3
+    },
+    "look": "lab"
   },
   {
     "id": "spaceport",
@@ -1324,13 +1374,14 @@
     "morale_effect": 3,
     "storage": 800,
     "footprint": {
-      "w": 3,
-      "h": 3
+      "w": 4,
+      "h": 4
     },
     "description": {
       "en": "Rockets climb the sky from here — the colony's reach leaves the ground entirely.",
       "cs": "Odsud stoupají rakety k nebi — dosah kolonie opouští zem."
-    }
+    },
+    "look": "pad"
   },
   {
     "id": "orbital_array",
@@ -1356,13 +1407,14 @@
       "cs": "Družice hlídají, přenášejí a měří — vědění a vliv prší z oběžné dráhy."
     },
     "footprint": {
-      "w": 2,
-      "h": 2
-    }
+      "w": 3,
+      "h": 3
+    },
+    "look": "dish"
   },
   {
     "id": "arcology",
-    "look": "pad",
+    "look": "tenement",
     "era": "near_future",
     "name": {
       "en": "Arcology",
@@ -1377,15 +1429,16 @@
       "energy": 8
     },
     "morale_effect": 5,
-    "housing": 600,
+    "housing": 576,
     "footprint": {
-      "w": 3,
-      "h": 3
+      "w": 4,
+      "h": 4
     },
     "description": {
       "en": "A self-contained city in a single structure — a million live, work and thrive within.",
       "cs": "Soběstačné město v jediné stavbě — milion lidí žije, pracuje a sní uvnitř."
-    }
+    },
+    "floors": 12
   },
   {
     "id": "bloomery",
@@ -1413,12 +1466,13 @@
       }
     ],
     "footprint": {
-      "w": 2,
-      "h": 1
+      "w": 3,
+      "h": 2
     },
     "description": {
       "en": "A clay stack and a pair of bellows. Slow, hungry for charcoal, and the only way to win iron before the great furnaces.",
       "cs": "Hliněná pec a měchy. Pomalá, hltá dřevěné uhlí — a do příchodu velkých pecí jediná cesta k železu."
-    }
+    },
+    "look": "forge"
   }
 ]

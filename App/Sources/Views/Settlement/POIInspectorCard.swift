@@ -98,11 +98,77 @@ struct POIInspectorCard: View {
                     .foregroundStyle(Theme.textDim)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            if let site = expedition.site { insideThePlace(site) }
             Text(cs
                  ? "Zatím nepracují v osadě — jejich ruce chybí."
                  : "They are not working the colony while they are gone.")
                 .font(.caption2)
                 .foregroundStyle(Theme.textDim)
+        }
+    }
+
+    /// What is in there, and what has happened to them so far.
+    ///
+    /// The one thing a visit never used to have: a *middle*. The party walked
+    /// out, a number was rolled somewhere off screen, and they walked back —
+    /// so there was nothing to look at and nothing to worry about. These are
+    /// the beats the simulation is writing as they happen.
+    @ViewBuilder
+    private func insideThePlace(_ site: SiteEncounter) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                tally("shippingbox.fill",
+                      site.things.count { $0.kind == .cache && !$0.done },
+                      Theme.accent)
+                tally("hare.fill", site.things.count { $0.kind == .guardian && !$0.done },
+                      Theme.danger)
+                tally("exclamationmark.triangle.fill",
+                      site.things.count { $0.kind == .trap && !$0.done }, Theme.textDim)
+                Spacer()
+                Text("\(Int(site.progress * 100)) %")
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(Theme.textDim)
+            }
+            ForEach(site.beats.suffix(3)) { beat in
+                Text(line(for: beat))
+                    .font(.caption2)
+                    .foregroundStyle(Theme.text.opacity(0.85))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(.top, 2)
+    }
+
+    @ViewBuilder
+    private func tally(_ symbol: String, _ count: Int, _ tint: Color) -> some View {
+        if count > 0 {
+            Label("\(count)", systemImage: symbol)
+                .font(.caption2.weight(.semibold).monospacedDigit())
+                .foregroundStyle(tint)
+        }
+    }
+
+    private func line(for beat: SiteEncounter.Beat) -> String {
+        let who = beat.pawnName ?? (cs ? "Výprava" : "The party")
+        let what = beat.thingLabel?.resolve(AppStrings.language) ?? ""
+        switch beat.kind {
+        case .arrived:
+            return cs ? "Došli na místo — \(Int(beat.amount)) věcí k prohledání."
+                      : "They are there — \(Int(beat.amount)) things to deal with."
+        case .opened:  return cs ? "\(who) otevřel(a): \(what)." : "\(who) got into \(what)."
+        case .sprung:
+            guard beat.amount > 0 else {
+                return cs ? "\(who) si všiml(a) včas: \(what)." : "\(who) spotted \(what) in time."
+            }
+            return cs ? "\(what) — a \(who) do toho spadl(a)."
+                      : "\(what), and \(who) went into it."
+        case .fought:  return cs ? "\(who) se pere s tím, co tam je." : "\(who) is fighting \(what)."
+        case .killed:  return cs ? "\(who) to dostal(a): \(what)." : "\(who) put down \(what)."
+        case .driven:  return cs ? "Vyhnali je ven." : "They were driven out."
+        case .cleared: return cs ? "Místo je prohledané." : "The place is picked clean."
+        case .left:
+            return cs ? "Odešli — \(Int(beat.amount)) nechali být."
+                      : "They left \(Int(beat.amount)) behind."
         }
     }
 

@@ -366,6 +366,86 @@ renderer start writing state.
 Order: positions into the Core → move/target orders on tap → *then* retune
 difficulty. Balancing the old shape first is work thrown away.
 
+## 9. Asked for 2026-08-03 — scale, charm, and a journey with a middle
+
+| # | Thing | State |
+|---|---|---|
+| 9.1 | **Expeditions are instant** — you send them and a number comes back | **done** for the valley's places — see 9.4 |
+| 9.2 | **Houses are too small**; the hut is comically full of colonists | **done** — 9.5 |
+| 9.3 | **Buildings are all alike**, outside and in | **done** — 47 buildings, 29 shapes |
+| 9.4 | Cannot quickly find a colonist, or equip one from their own card | todo |
+
+### 9.5 — the hut that held thirty people
+
+The joke Keks saw had a cause, and it is CLAUDE.md rule 8 again: **two numbers
+for one thing**. `BuildingDefinition.housing` said a hut held thirty and fed the
+population cap; the RimWorld layer gave that same hut *one tile* and
+`sleepersPerTile` beds. So the ledger counted twenty-six people the building had
+nowhere to put, and every one of them slept rough for ever at −8 mood.
+
+`housing` is a **flag** now — non-zero means people live here — and
+`BuildingDefinition.sleepers` is the number, derived from the ground the
+building covers times `floors`. Both the ledger (`ResourceLoop.housingCapacity`)
+and the beds (`HouseholdEngine.beds`) read it. An apartment block holds a
+hundred and eighty because it is four by three and **five storeys**, which is a
+thing you can point at.
+
+Scale, all of a piece:
+
+- Colony grid **18×18 → 24×24** (576 tiles).
+- Every footprint up a tile in each direction: hut 1×1 → **2×2**, a works 3×3 →
+  **4×4**. All forty-seven at the new sizes use 83 % of the grid, and no real
+  colony builds one of each.
+- The span on screen is *unchanged*, so a tile is smaller and a **building** —
+  two to four tiles across instead of one to three — comes out larger. The hut
+  gains half its size again; the camera opens at 2× instead of 1.7×.
+- Dwelling costs fell with their capacity (hut 10 → 4 materials). Beds per
+  material are roughly what they were: the fix was about geometry, not about
+  making housing three times dearer. Without this the colony missed the first
+  era milestone — caught by `StewardTests`, not by anything aimed at it.
+
+### 9.6 — forty-seven buildings, eleven shapes
+
+Thirty-six of the forty-seven stated no `look` at all, so the renderer *derived*
+the shape from the numbers — and the numbers cannot tell a farm from a granary
+from a well, because all three are "food or storage". Thirteen came out as the
+same lecture hall and nine as the same smoking block.
+
+Every building names its own archetype now, and there are **twenty-nine** of
+them (was thirteen), no bucket above four. Seventeen are new and live in
+`SettlementTrades`: farm, lodge, sawmill, forge, well, wall, barracks, clinic,
+aqueduct, tenement, dish, rail, tanks, dam, lab, turbine, vault. Interiors are
+furnished per archetype, so the inside of a forge is an anvil and a hearth and
+the inside of a clinic is beds and a shelf.
+
+Guarded by *"Every shipped building says what it looks like"* — deriving is the
+fallback for content that has not caught up, and shipping content should never
+need it.
+
+### 9.7 — a place with something in it
+
+A visit used to be: walk out for a few ticks, roll once against `hazardChance`,
+add resources from a table, walk home. The walk was simulated at eight steps a
+tick and the **destination was a number** — which is the whole of "you send them
+and it is instant". Nothing was found, nobody could fail, and it happened to no
+one.
+
+`SiteEncounter` is a handful of **things** in places: caches worth prising open,
+traps waiting to be sprung, and something living in there. `SiteVisitEngine`
+walks the party between them on the action clock exactly as `SiegeEngine` fights
+a raid — nearest thing first, anything alive before anything locked — and what
+comes home is what they actually got the lid off. A party driven out comes back
+with less. Scouting finally does something: a wary hand spots the floor before
+standing on it.
+
+The card shows the beats as they happen and the canvas draws the chests, the
+snares and the thing breathing in the dark.
+
+> **Still instant: the world map's own sites.** `SiteEngine.interact` (ruins,
+> dungeons, anomalies, lost cities on the hex map) resolves in one call with no
+> party and no journey. That is the other half of 9.1 and it needs travel
+> between *regions*, which does not exist yet.
+
 ## 7. The frozen world (2026-08-02) — the biggest thing found so far
 
 Measured on a fresh world, twelve thousand ticks, nobody touching it:

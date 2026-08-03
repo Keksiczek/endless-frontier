@@ -226,17 +226,17 @@ struct CenteredPlacementTests {
         #expect(coord.map { abs($0.x - heartX) <= 1 && abs($0.y - heartY) <= 1 } == true)
     }
 
-    @Test("Big buildings really take ground: university is 3×3 and blocks overlap")
+    @Test("Big buildings really take ground: university is 4×4 and blocks overlap")
     func footprintsBite() throws {
         let reg = try GameDataRegistry.bundled()
         let uni = try #require(reg.building("university"))
-        #expect(uni.footprint.width == 3 && uni.footprint.height == 3)
-        #expect(reg.building("longhouse")?.footprint.width == 2)
+        #expect(uni.footprint.width == 4 && uni.footprint.height == 4)
+        #expect(reg.building("longhouse")?.footprint.width == 3)
 
         var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-9fdb5f227968")!, name: "C", kind: .capital)
         s = ColonyBuilder.placeSite(s, definitionID: "university",
                                     at: TileCoord(4, 4), registry: reg)
-        #expect(s.colony?.placement(at: TileCoord(6, 6)) != nil)   // covers 9 tiles
+        #expect(s.colony?.placement(at: TileCoord(7, 7)) != nil)   // covers 16 tiles
         #expect(!ColonyBuilder.canPlace(s, definitionID: "hut",
                                         at: TileCoord(5, 4), registry: reg))
     }

@@ -277,6 +277,96 @@ public enum LocalPOIKind: String, Codable, Sendable, CaseIterable {
         }
     }
 
+    // MARK: - What is actually in there
+    //
+    // A place used to be a `hazardChance` and a table of rewards, which is why
+    // a visit felt instant however long the walk took: nothing was *in* the
+    // ruin. These say what a party finds when it gets there — how many caches
+    // are worth prising open, what guards them, and what to call the thing that
+    // just bit somebody. Read by `SiteVisitEngine.lay(out:)`.
+
+    /// How many caches this kind of place may hold, over and above the one it
+    /// always has. Nobody walks a day for a locked room with nothing in it.
+    public var cacheCount: Int {
+        switch self {
+        case .treasure, .starfall: return 3
+        case .ruins, .wreck, .barrow: return 2
+        case .cave, .saltPan, .hermit: return 1
+        case .orchard, .spring, .shrine, .watchtower: return 0
+        }
+    }
+
+    /// What a cache here holds, by item id — nil where the place gives its
+    /// worth in bulk rather than in things.
+    public var cacheItemID: String? {
+        switch self {
+        case .ruins: return "prosperity_relic"
+        case .treasure: return "beacon_stone"
+        case .wreck: return "iron_ingot"
+        case .barrow: return "prosperity_relic"
+        case .cave, .saltPan: return "rough_stone"
+        case .starfall: return "star_iron"
+        case .hermit: return "herb_bundle"
+        default: return nil
+        }
+    }
+
+    public var cacheLabel: LocalizedText {
+        switch self {
+        case .treasure: return LocalizedText(values: [.en: "a buried cache", .cs: "zakopaná skrýš"])
+        case .barrow: return LocalizedText(values: [.en: "a grave niche", .cs: "hrobový výklenek"])
+        case .wreck: return LocalizedText(values: [.en: "a split hold", .cs: "rozlomený podpalubí"])
+        case .starfall: return LocalizedText(values: [.en: "a hot fragment", .cs: "žhavý úlomek"])
+        case .cave, .saltPan: return LocalizedText(values: [.en: "a rich seam", .cs: "bohatá žíla"])
+        case .hermit: return LocalizedText(values: [.en: "a herb press", .cs: "lis na byliny"])
+        default: return LocalizedText(values: [.en: "a sealed chest", .cs: "zapečetěná truhla"])
+        }
+    }
+
+    public var trapLabel: LocalizedText {
+        switch self {
+        case .cave: return LocalizedText(values: [.en: "a shaft in the dark", .cs: "šachta ve tmě"])
+        case .barrow: return LocalizedText(values: [.en: "a roof that gives", .cs: "propadlý strop"])
+        case .watchtower: return LocalizedText(values: [.en: "four centuries of stair",
+                                                        .cs: "čtyři století staré schody"])
+        case .starfall: return LocalizedText(values: [.en: "ground still burning",
+                                                      .cs: "země, co ještě pálí"])
+        default: return LocalizedText(values: [.en: "a floor that gives", .cs: "propadlá podlaha"])
+        }
+    }
+
+    /// How many things are living in here, and how hard each of them is.
+    public var guardianCount: Int {
+        switch self {
+        case .barrow: return 2
+        case .ruins, .cave, .starfall: return 1
+        default: return 0
+        }
+    }
+
+    public var guardianStrength: Double {
+        switch self {
+        case .starfall: return 26
+        case .barrow: return 20
+        case .cave: return 16
+        case .ruins: return 12
+        default: return 0
+        }
+    }
+
+    public var guardianLabel: LocalizedText {
+        switch self {
+        case .barrow: return LocalizedText(values: [.en: "something that was buried here",
+                                                    .cs: "cosi, co tu bylo pohřbeno"])
+        case .cave: return LocalizedText(values: [.en: "what lives in the deep cave",
+                                                  .cs: "to, co žije v hluboké jeskyni"])
+        case .starfall: return LocalizedText(values: [.en: "whatever came down with it",
+                                                      .cs: "to, co spadlo s tím"])
+        default: return LocalizedText(values: [.en: "a beast denning in the ruins",
+                                               .cs: "šelma, co si udělala doupě ve zříceninách"])
+        }
+    }
+
     /// Odds that working here hurts one of the party, and how hard.
     public var hazardChance: Double {
         switch self {

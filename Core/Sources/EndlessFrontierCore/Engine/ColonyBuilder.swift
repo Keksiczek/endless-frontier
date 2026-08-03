@@ -20,8 +20,14 @@ public enum ColonyBuilder {
     ///
     /// Existing saves keep whatever grid they were created with — `ColonyMap`
     /// stores its own width and height — so this only widens new colonies.
-    public static let defaultWidth = 18
-    public static let defaultHeight = 18
+    /// Widened again to 24×24 when every footprint grew a tile in each
+    /// direction (a hut is 2×2 now, a works 4×4): 576 tiles, so a mature town
+    /// of fifty buildings still uses only about two thirds of its ground and
+    /// there is room left for squares and gardens. The span on screen is
+    /// unchanged, so a tile is smaller and a *building* — which is now two to
+    /// four tiles across instead of one to three — comes out larger.
+    public static let defaultWidth = 24
+    public static let defaultHeight = 24
 
     /// Ensures the settlement has a colony grid, creating an empty one if needed.
     public static func ensureMap(

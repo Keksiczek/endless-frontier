@@ -153,10 +153,17 @@ public enum LocalPOIEngine {
         var s = settlement
 
         for index in s.expeditions.indices {
-            // The roof comes down on the step the work starts, on one of the
-            // people who actually went.
+            // They walk up to the place: what is in it is laid out here, once.
             if s.expeditions[index].arrivesAtSite(clock) {
+                s = openTheSite(s, expeditionIndex: index, mapSeed: mapSeed)
                 s = rollHazard(s, expeditionIndex: index, tick: clock.tick, mapSeed: mapSeed)
+            }
+            // …and then they work it, a step at a time, exactly as a raid is
+            // fought. This is the whole of "an expedition with a goal": there
+            // is something in there, it takes time, and it can go badly.
+            if s.expeditions[index].phase(at: clock) == .working {
+                s = SiteVisitEngine.advanceStep(
+                    s, expeditionIndex: index, step: clock.absoluteStep, registry: registry)
             }
         }
 
@@ -179,6 +186,27 @@ public enum LocalPOIEngine {
             s = advanceStep(s, clock: WorldClock(tick: tick, step: step),
                             mapSeed: mapSeed, registry: registry)
         }
+        return s
+    }
+
+    /// Lays out what is actually in the place, the moment the party reaches it.
+    ///
+    /// Seeded from `(mapSeed, poi, departure)` rather than from the tick, so a
+    /// party sent twice to the same ruin in the same year meets the same room —
+    /// and one sent a decade later does not.
+    private static func openTheSite(
+        _ settlement: Settlement, expeditionIndex index: Int, mapSeed: UInt64
+    ) -> Settlement {
+        var s = settlement
+        let expedition = s.expeditions[index]
+        guard expedition.site == nil,
+              let poi = s.localMap?.pois.first(where: { $0.id == expedition.poiID })
+        else { return s }
+        let seed = poiSeed(mapSeed: mapSeed, settlementID: s.id,
+                           poiID: poi.id, tick: expedition.departedTick) ^ 0x51_7E
+        let site = SiteVisitEngine.lay(out: poi, party: expedition.memberIDs, seed: seed)
+        guard !site.things.isEmpty else { return s }
+        s.expeditions[index].site = site
         return s
     }
 
@@ -233,6 +261,10 @@ public enum LocalPOIEngine {
         var outcome = work(&s, poi: poi, depletion: depletion, party: party,
                            registry: registry, rng: &rng)
         outcome = outcome.with(casualtyName: casualtyName, died: expedition.casualtyDied)
+        // What they actually got the lid off. A place's table says what it is
+        // *worth*; this is what came home in somebody's hands, and a party
+        // driven back out by whatever was living in there comes home with less.
+        s = carryHome(s, expedition: expedition, registry: registry, rng: &rng)
 
         // The dead do not come home.
         if expedition.casualtyDied, let id = expedition.casualtyID,
@@ -565,6 +597,43 @@ public enum LocalPOIEngine {
         return LocalizedText(values: [
             .en: "\(def.name.resolve(.en)) (\(def.rarity.rawValue))",
             .cs: "\(def.name.resolve(.cs)) (\(def.rarity.rawValue))"])
+    }
+
+    /// Puts the contents of every cache the party actually opened into the
+    /// stores, and writes what happened in there into the journal.
+    private static func carryHome(
+        _ settlement: Settlement, expedition: POIExpedition,
+        registry: GameDataRegistry, rng: inout SeededRNG
+    ) -> Settlement {
+        var s = settlement
+        guard let site = expedition.site else { return s }
+        for (itemID, count) in site.loot.sorted(by: { $0.key < $1.key }) {
+            guard registry.item(itemID) != nil else { continue }
+            for _ in 0..<count {
+                s.inventory.append(ItemInstance(id: rng.nextUUID(), definitionID: itemID))
+            }
+        }
+        // One line, not a feed: the shape of the visit, and what it left.
+        let opened = site.things.count { $0.kind == .cache && $0.done }
+        let killed = site.beats.count { $0.kind == .killed }
+        let left = site.unopenedCaches
+        guard opened + killed + left > 0 else { return s }
+        var en = "The party opened \(opened) of what was sealed there"
+        var cs = "Výprava otevřela \(opened) z toho, co tam bylo zapečetěné"
+        if killed > 0 {
+            en += ", and had to kill \(killed) to do it"
+            cs += " — a musela pro to \(killed)krát zabíjet"
+        }
+        if left > 0 {
+            en += ". \(left) they could not reach."
+            cs += ". \(left) nedosáhli."
+        } else {
+            en += "."
+            cs += "."
+        }
+        s.journal.append(tick: expedition.departedTick, kind: .work,
+                         text: LocalizedText(values: [.en: en, .cs: cs]))
+        return s
     }
 
     /// Which diary voice the moment belongs to.

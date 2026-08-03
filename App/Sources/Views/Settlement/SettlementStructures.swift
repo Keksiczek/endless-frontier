@@ -417,7 +417,7 @@ enum SettlementStructures {
 
     /// A base tone shifted a little — lighter/darker and warmer/cooler — from a
     /// per-building seed, so a row of houses isn't a row of identical stamps.
-    private static func tone(_ rgb: (Double, Double, Double), _ seed: UInt64,
+    static func tone(_ rgb: (Double, Double, Double), _ seed: UInt64,
                              spread: Double = 0.05) -> Color {
         let u: (UInt64) -> Double = { Double(($0 &* 0x2545_F491_4F6C_DD1D) >> 40 & 0xFFFF) / 65535 - 0.5 }
         let l = u(seed) * 2 * spread          // lighter or darker
@@ -429,7 +429,7 @@ enum SettlementStructures {
 
     /// The soft pool of shade a structure casts on the ground — the cheapest,
     /// strongest cue that it *sits* somewhere rather than floating.
-    private static func groundShadow(at c: CGPoint, halfWidth w: CGFloat, footY: CGFloat,
+    static func groundShadow(at c: CGPoint, halfWidth w: CGFloat, footY: CGFloat,
                                      context: inout GraphicsContext) {
         let sw = w * 2.3, sh = w * 0.7
         context.fill(
@@ -851,6 +851,20 @@ enum SettlementStructures {
             context.fill(Path(ellipseIn: CGRect(x: mast.midX - s * 0.1, y: mast.minY - s * 0.2,
                                                 width: s * 0.2, height: s * 0.2)),
                          with: .color(Theme.accent.opacity(beacon)))
+
+        // The trades: the seventeen archetypes added when forty-seven buildings
+        // turned out to be sharing eleven shapes. In `SettlementTrades`, purely
+        // because this file was already at the size limit.
+        case .tenement, .farm, .lodge, .sawmill, .well, .forge, .tanks, .rail,
+             .lab, .dish, .vault, .clinic, .aqueduct, .wall, .barracks,
+             .turbine, .dam:
+            SettlementTrades.draw(
+                glyph, at: c, s: s, aspect: aspect, time: time, night: night,
+                seed: seed, era: era,
+                surfaces: SettlementTrades.Surfaces(
+                    wall: wall, roof: roof, stone: stone,
+                    ink: ink, bright: bright, lit: lit),
+                context: &context)
         }
     }
 }

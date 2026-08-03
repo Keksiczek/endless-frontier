@@ -23,16 +23,19 @@ public enum HouseholdEngine {
 
     /// How many people one tile of dwelling actually sleeps.
     ///
-    /// Deliberately *not* `BuildingDefinition.housing`, which is an economic
-    /// capacity — a hut says 30, which is a village in a shed. A house is a
-    /// household: a one-tile hut sleeps a family, a two-by-two longhouse sleeps
-    /// three of them. The ledger keeps its own number and the population cap is
-    /// untouched; this is about where people are, and how well they sleep.
-    public static let sleepersPerTile = 4
+    /// The ledger and the beds are **one number** now:
+    /// `BuildingDefinition.sleepers`, derived from the ground a dwelling covers
+    /// and the storeys it stacks on it. This used to be deliberately *not*
+    /// `housing` — a hut said thirty, which is a village in a shed — so the
+    /// population cap counted people the building had nowhere to put, and
+    /// everybody past the fourth slept rough for ever. Kept as an alias
+    /// because the room-planning code reads it.
+    public static var sleepersPerTile: Int { BuildingDefinition.sleepersPerTile }
 
-    /// The most one dwelling will ever take, however large it is — past this
-    /// the room is a dormitory and the point of a home is lost.
-    public static let maxPerDwelling = 24
+    /// The most one dwelling will ever take, whatever its data says. A ceiling
+    /// on absurdity rather than a design number: a tenement really does hold
+    /// two hundred, and it says so with `floors`.
+    public static let maxPerDwelling = 640
 
     /// How much of a colonist's nightly rest a real bed is worth. Sleeping
     /// rough recovers this share of it and no more.
@@ -50,10 +53,11 @@ public enum HouseholdEngine {
         // Nobody sleeps in a house with the roof off.
         guard BuildingEngine.isWorking(placement) else { return 0 }
         guard let def = registry.building(placement.definitionID), def.housing > 0 else { return 0 }
+        // The ground the *placement* actually covers, which is the definition's
+        // footprint unless a save predates a resize.
         let tiles = max(1, placement.width * placement.height)
-        // A dwelling never sleeps more than its own ledger capacity claims it
-        // can hold, so a bunkhouse-by-data stays a bunkhouse.
-        return min(maxPerDwelling, min(Int(def.housing), tiles * sleepersPerTile))
+        let perTile = BuildingDefinition.sleepersPerTile * max(1, def.floors)
+        return min(def.sleepers, tiles * perTile)
     }
 
     /// Gives everyone who can have a home a home, and leaves the rest without

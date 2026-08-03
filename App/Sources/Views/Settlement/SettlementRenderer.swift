@@ -39,7 +39,12 @@ enum SettlementRenderer {
         /// This puts the built ground across most of the screen the moment you
         /// arrive, which is also where `showLabels` (1.6) starts naming roofs.
         /// Pinching out to `minScale` still gives you the whole valley.
-        static let opening: CGFloat = 1.7
+        ///
+        /// Raised to 2 when the grid went to 24×24 and every footprint grew: a
+        /// building is two to four tiles across now instead of one to three, so
+        /// there is genuinely more to look *at*, and the point of the settlement
+        /// screen is seeing what people are doing rather than counting roofs.
+        static let opening: CGFloat = 2.0
         static let minScale: CGFloat = 1
         static let maxScale: CGFloat = 4
     }
@@ -120,7 +125,8 @@ enum SettlementRenderer {
                                      map: map, time: time, zoom: zoom)
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
-        pois(&context, rect: rect, map: map, time: time, showLabels: showLabels)
+        pois(&context, rect: rect, map: map, time: time, showLabels: showLabels,
+             expeditions: settlement.expeditions)
         SettlementWildlife.draw(&context, rect: rect, map: map, time: time, zoom: zoom)
 
         let placed = layout(settlement: settlement, registry: registry, rect: rect)
@@ -357,7 +363,7 @@ enum SettlementRenderer {
     /// Discovered landmarks — what the scouts' walking actually found.
     private static func pois(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double,
-        showLabels: Bool = false
+        showLabels: Bool = false, expeditions: [POIExpedition] = []
     ) {
         let unit = min(rect.width, rect.height)
         for poi in map.pois where poi.discovered && map.isExplored(poi.position) {
@@ -377,6 +383,11 @@ enum SettlementRenderer {
                            lineWidth: 0.7)
             SettlementStructures.poi(poi.kind, at: c,
                                      s: unit * 0.014, time: time, context: &context)
+            // If a party is in there right now, draw what they are dealing
+            // with. A visit used to be a party standing on a dot for six ticks.
+            if let site = expeditions.first(where: { $0.poiID == poi.id })?.site {
+                SettlementSites.draw(site, in: rect, time: time, context: &context)
+            }
             if showLabels {
                 let caption = Text(poi.kind.displayLabel)
                     .font(.system(size: 5.5))
@@ -1083,37 +1094,86 @@ enum SettlementRenderer {
     /// spaceport and a workshop were the same shed and every library, school,
     /// bank and market was the same Greek temple. A colony reads as a place
     /// when its skyline has more than one idea in it.
+    /// What a building looks like.
+    ///
+    /// Twenty-nine of these for forty-seven buildings, because thirteen was not
+    /// enough to tell them apart: thirty-six of the forty-seven stated no
+    /// `look` at all and had their shape *derived* from their numbers, which
+    /// put thirteen of them on `hall` and nine on `plant`. A farm, a granary
+    /// and a well were the same barrel. Every building names its own archetype
+    /// now, and no archetype carries more than four.
     enum BuildingGlyph {
-        case house      // anything anyone lives in
-        case hall       // learning: library, school, university, observatory
-        case market     // exchange: market, bank, trade post
-        case granary    // food and stores
+        // Where people live
+        case house      // hut, longhouse
+        case tenement   // apartment block, arcology — stacked storeys
+        // Ground and wood
+        case farm       // furrows and a low barn
+        case lodge      // the hunters', with the racks outside
+        case sawmill    // a timber stack and a saw frame
+        case mine       // a cut into the rock
+        case well       // a ring of stones and a windlass
+        // Fire and craft
         case workshop   // light craft
-        case plant      // heavy industry — the smoking block
-        case tower      // walls, towers, barracks
+        case forge      // bloomery, foundry — the hearth that glows
+        case plant      // heavy industry, the smoking block
+        case tanks      // refinery, chemical works
+        case rail       // a shed, a water tower and track
+        // Knowing
+        case hall       // library, school, university
+        case lab        // the clean block, glass and rooftop plant
+        case dish       // observatory, orbital array
+        // Trade and rule
+        case market     // stalls under awnings
+        case vault      // the bank: a squat stone strongbox
         case temple     // civic monument
-        case mine
-        case mill
+        case clinic     // hospital, clinic
+        case granary    // food and stores
+        case aqueduct   // a run of arches
+        // Holding the line
+        case wall       // a run of palisade or masonry
+        case tower      // the watchtower
+        case barracks   // a long low block under a banner
+        // Power
+        case mill       // the wheel and the sails
         case generator  // a machine that makes power
-        case array      // fields of panels and turbines
-        case pad        // spaceport, orbital array
+        case turbine    // the tall three-bladed kind
+        case array      // fields of panels
+        case dam        // a curved wall holding water
+        case pad        // spaceport
     }
 
     /// The archetype names `buildings.json` may state outright via `look`.
     static func glyph(named name: String) -> BuildingGlyph? {
         switch name {
         case "house": return .house
-        case "hall": return .hall
-        case "market": return .market
-        case "granary": return .granary
-        case "workshop": return .workshop
-        case "plant": return .plant
-        case "tower": return .tower
-        case "temple": return .temple
+        case "tenement": return .tenement
+        case "farm": return .farm
+        case "lodge": return .lodge
+        case "sawmill": return .sawmill
         case "mine": return .mine
+        case "well": return .well
+        case "workshop": return .workshop
+        case "forge": return .forge
+        case "plant": return .plant
+        case "tanks": return .tanks
+        case "rail": return .rail
+        case "hall": return .hall
+        case "lab": return .lab
+        case "dish": return .dish
+        case "market": return .market
+        case "vault": return .vault
+        case "temple": return .temple
+        case "clinic": return .clinic
+        case "granary": return .granary
+        case "aqueduct": return .aqueduct
+        case "wall": return .wall
+        case "tower": return .tower
+        case "barracks": return .barracks
         case "mill": return .mill
         case "generator": return .generator
+        case "turbine": return .turbine
         case "array": return .array
+        case "dam": return .dam
         case "pad": return .pad
         default: return nil
         }
@@ -1401,8 +1461,25 @@ enum SettlementRenderer {
         case .array: return 8
         case .pad: return 9
         case .mine: return 10
+        case .sawmill: return 10
+        case .forge: return 6
+        case .tanks: return 7
+        case .rail: return 7
+        case .lab: return 2
+        case .dish: return 8
+        case .vault: return 2
+        case .clinic: return 3
+        case .aqueduct: return 3
+        case .turbine: return 8
+        case .dam: return 9
+        case .wall: return 13
+        case .barracks: return 11
+        case .well: return 3
+        case .lodge: return 11
+        case .farm: return 14
         case .tower: return 11
         case .house: return 12
+        case .tenement: return 12
         }
     }
 
@@ -1495,6 +1572,24 @@ enum SettlementRenderer {
         case .generator: return 1.4
         case .mine:      return 1.2
         case .array:     return 0.6
+        // The trades.
+        case .tenement:  return 3.6
+        case .turbine:   return 3.4
+        case .dish:      return 2.6
+        case .tanks:     return 2.4
+        case .forge:     return 2.2
+        case .vault:     return 2.0
+        case .rail:      return 1.9
+        case .dam:       return 1.8
+        case .aqueduct:  return 1.8
+        case .lab:       return 1.7
+        case .clinic:    return 1.6
+        case .barracks:  return 1.5
+        case .lodge:     return 1.6
+        case .sawmill:   return 1.3
+        case .wall:      return 1.2
+        case .well:      return 0.9
+        case .farm:      return 1.1
         }
     }
 

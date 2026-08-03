@@ -58,12 +58,29 @@ struct HouseholdTests {
                 > HouseholdEngine.beds(small, registry: reg))
     }
 
-    @Test("A dwelling never sleeps more than its own ledger claims")
-    func theLedgerIsACeiling() {
-        let reg = registry(housing: 2)
+    /// The ledger *is* the beds now. This used to assert the opposite — that a
+    /// definition claiming two could stand on nine tiles and still sleep two —
+    /// which was the two-numbers-for-one-thing that let a 1×1 hut be credited
+    /// with thirty people it had nowhere to put.
+    @Test("The ledger and the beds are the same number")
+    func theLedgerIsTheBeds() throws {
+        let reg = registry(housing: 1, footprint: TileSize(width: 2, height: 2))
+        let def = try #require(reg.building("hut"))
         let placement = BuildingPlacement(id: UUID(), definitionID: "hut",
-                                          coord: TileCoord(0, 0), width: 3, height: 3)
-        #expect(HouseholdEngine.beds(placement, registry: reg) == 2)
+                                          coord: TileCoord(0, 0), width: 2, height: 2)
+        #expect(HouseholdEngine.beds(placement, registry: reg) == def.sleepers)
+        #expect(def.sleepers == 2 * 2 * BuildingDefinition.sleepersPerTile)
+    }
+
+    /// …and a placement smaller than its definition (an old save from before a
+    /// resize) sleeps what it actually covers, not what the definition wishes.
+    @Test("A dwelling sleeps the ground it actually stands on")
+    func groundIsTheCeiling() {
+        let reg = registry(housing: 1, footprint: TileSize(width: 3, height: 3))
+        let cramped = BuildingPlacement(id: UUID(), definitionID: "hut",
+                                        coord: TileCoord(0, 0), width: 1, height: 1)
+        #expect(HouseholdEngine.beds(cramped, registry: reg)
+                == BuildingDefinition.sleepersPerTile)
     }
 
     @Test("Everyone who can have a home gets one, and no house is overfilled")

@@ -182,6 +182,45 @@ enum SettlementInterior {
             return ([.panel], [.crate], 1, 4)
         case .pad:
             return ([.console, .panel], [.crate, .rack], 1, 5)
+
+        // The trades. Every one of these used to fall through to whatever glyph
+        // its numbers implied, so a farm, a well and a granary were the same
+        // room of sacks. What a place is furnished with is most of what tells
+        // you what happens in it.
+        case .tenement:
+            return ([.bed, .table], [.bed, .crate, .hearth], 3, 8)
+        case .farm:
+            return ([.table, .cart], [.sack, .sack, .barrel], 1, 4)
+        case .lodge:
+            return ([.bench, .rack], [.hearth, .weapons, .crate], 1, 3)
+        case .sawmill:
+            return ([.bench, .millstone], [.rack, .rack, .crate], 1, 4)
+        case .well:
+            return ([.barrel], [.crate], 1, 1)
+        case .forge:
+            return ([.anvil, .bench], [.hearth, .rack, .crate], 1, 4)
+        case .tanks:
+            return ([.machine, .console], [.barrel, .barrel, .crate], 1, 4)
+        case .rail:
+            return ([.cart, .bench], [.crate, .crate, .rack], 1, 5)
+        case .lab:
+            return ([.console, .desk], [.shelf, .panel, .crate], 2, 6)
+        case .dish:
+            return ([.console], [.panel, .desk], 1, 3)
+        case .vault:
+            return ([.counter, .desk], [.crate, .crate], 1, 3)
+        case .clinic:
+            return ([.bed, .desk], [.bed, .shelf, .crate], 2, 5)
+        case .aqueduct:
+            return ([.barrel], [.crate], 1, 2)
+        case .wall:
+            return ([.watchpost], [.weapons], 1, 2)
+        case .barracks:
+            return ([.bed, .table], [.bed, .weapons, .rack], 2, 6)
+        case .turbine:
+            return ([.machine], [.crate], 1, 2)
+        case .dam:
+            return ([.machine, .console], [.rack, .crate], 1, 3)
         }
     }
 

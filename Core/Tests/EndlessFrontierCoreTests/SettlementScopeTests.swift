@@ -36,12 +36,15 @@ struct SettlementScopeTests {
         let world = twoSettlements(capitalMaterials: 0, outpostMaterials: 100)
         let outpostID = world.settlements[1].id
 
-        // hut is an early-settlement building costing 10 materials. Paying
-        // opens a construction site in the outpost; the roof comes later.
+        // Paying opens a construction site in the outpost; the roof comes
+        // later. The price is read from the content rather than written down
+        // here — a dwelling's cost moved when its capacity stopped being a
+        // number of its own and became the ground it covers.
+        let price = try #require(r.building("hut")).cost[.materials]
         let after = GameEngine.build(world, settlementID: outpostID, buildingID: "hut", registry: r)
 
         #expect(after.settlements[1].constructions.contains { $0.definitionID == "hut" })
-        #expect(after.settlements[1].storage[.materials] == 90)   // 100 - 10
+        #expect(after.settlements[1].storage[.materials] == 100 - price)
         #expect(after.settlements[0].storage[.materials] == 0)    // capital untouched
         #expect(after.settlements[0].constructions.isEmpty)
     }
@@ -49,11 +52,12 @@ struct SettlementScopeTests {
     @Test("Building fails when the target settlement can't afford it, even if the capital can")
     func buildBlockedByPoorOutpost() throws {
         let r = try reg()
-        let world = twoSettlements(capitalMaterials: 1000, outpostMaterials: 5)
+        let price = try #require(r.building("hut")).cost[.materials]
+        let world = twoSettlements(capitalMaterials: 1000, outpostMaterials: price - 1)
         let outpostID = world.settlements[1].id
 
         let after = GameEngine.build(world, settlementID: outpostID, buildingID: "hut", registry: r)
-        #expect(after == world)   // unchanged: outpost has only 5 of the 10 needed
+        #expect(after == world)   // unchanged: the outpost is a coin short
     }
 
     // MARK: - Craft

@@ -218,8 +218,12 @@ enum AgentMotion {
                     // Where this household actually sleeps: the beds in the
                     // room, from the same plan the interior is drawn from.
                     if let placementID = building.placementID {
+                        // As many beds as this dwelling actually sleeps —
+                        // `maxPerDwelling` is a ceiling on absurdity, not a
+                        // room plan, and a tenement would have laid out two
+                        // hundred mattresses in one hut.
                         bedsByHome[placementID] = SettlementInterior
-                            .bedSlots(seed: building.seed, sleepers: HouseholdEngine.maxPerDwelling)
+                            .bedSlots(seed: building.seed, sleepers: def?.sleepers ?? 4)
                             .map { LocalPoint(x: building.center.x + $0.dx * building.footprintW,
                                               y: building.center.y + $0.dy * building.footprintH) }
                     }

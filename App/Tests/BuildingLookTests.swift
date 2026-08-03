@@ -24,21 +24,41 @@ struct BuildingLookTests {
     func landmarkBuildingsGetTheirOwnShape() throws {
         let defs = try allBuildings()
         #expect(glyph("hut", defs) == .house)
-        #expect(glyph("apartment_block", defs) == .house)
+        #expect(glyph("apartment_block", defs) == .tenement)
         #expect(glyph("library", defs) == .hall)
         #expect(glyph("university", defs) == .hall)
         #expect(glyph("market", defs) == .market)
-        #expect(glyph("bank", defs) == .market)
+        #expect(glyph("bank", defs) == .vault)
+        #expect(glyph("palisade", defs) == .wall)
         #expect(glyph("watchtower", defs) == .tower)
         #expect(glyph("solar_array", defs) == .array)
-        #expect(glyph("wind_farm", defs) == .array)
+        #expect(glyph("wind_farm", defs) == .turbine)
         #expect(glyph("spaceport", defs) == .pad)
         // A craftsman's shed and a heavy plant are not the same building.
         #expect(glyph("workshop", defs) == .workshop)
         #expect(glyph("factory", defs) == .plant)
         // The three the numbers cannot tell apart — all just "make materials".
-        #expect(glyph("lumberyard", defs) == .mill)
+        #expect(glyph("lumberyard", defs) == .sawmill)
         #expect(glyph("quarry", defs) == .mine)
+        #expect(glyph("foundry", defs) == .forge)
+        // …and the four that all just "produce food or store it".
+        #expect(glyph("farm_basic", defs) == .farm)
+        #expect(glyph("granary", defs) == .granary)
+        #expect(glyph("well", defs) == .well)
+        #expect(glyph("hunters_lodge", defs) == .lodge)
+    }
+
+    /// The point of the whole pass: nothing may be left to the *derivation*.
+    ///
+    /// Thirty-six of the forty-seven stated no `look` at all, and the numbers
+    /// cannot tell a farm from a granary from a well — so thirteen buildings
+    /// came out as the same lecture hall and nine as the same smoking block.
+    /// Deriving is the fallback for content that has not caught up; shipping
+    /// content should never need it.
+    @Test("Every shipped building says what it looks like")
+    func nothingIsLeftToTheDerivation() throws {
+        let unnamed = try allBuildings().filter { $0.look == nil }.map(\.id).sorted()
+        #expect(unnamed.isEmpty, "these fall back to a guessed shape: \(unnamed)")
     }
 
     /// The bug a screenshot found and the tests had not: `size` came from
@@ -113,8 +133,8 @@ struct BuildingLookTests {
         for def in defs { counts["\(SettlementRenderer.glyph(for: def))", default: 0] += 1 }
         let biggest = counts.values.max() ?? 0
         // Before this change the temple alone took 12 of 47.
-        #expect(counts.count >= 8, "only \(counts.count) distinct silhouettes: \(counts)")
-        #expect(Double(biggest) / Double(defs.count) < 0.35,
+        #expect(counts.count >= 24, "only \(counts.count) distinct silhouettes: \(counts)")
+        #expect(Double(biggest) / Double(defs.count) < 0.12,
                 "one silhouette takes \(biggest) of \(defs.count): \(counts)")
     }
 

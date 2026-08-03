@@ -34,10 +34,18 @@ public struct POIExpedition: Codable, Sendable, Equatable, Identifiable {
     /// carries the news home rather than the injury landing out of nowhere.
     public var casualtyID: UUID?
     public var casualtyDied: Bool
+    /// The place itself, once they get there: what is guarding it, what is
+    /// waiting to be sprung, and what is worth carrying home.
+    ///
+    /// Nil until the party arrives, and nil for the places that hold nothing to
+    /// be dealt with. Optional on decode like every new field (rule 3), so a
+    /// save written mid-journey still loads and simply finds an empty room.
+    public var site: SiteEncounter?
 
     public init(id: UUID, poiID: Int, memberIDs: [UUID], departedTick: Int,
                 travelTicks: Int, workTicks: Int,
-                casualtyID: UUID? = nil, casualtyDied: Bool = false) {
+                casualtyID: UUID? = nil, casualtyDied: Bool = false,
+                site: SiteEncounter? = nil) {
         self.id = id
         self.poiID = poiID
         self.memberIDs = memberIDs
@@ -46,6 +54,7 @@ public struct POIExpedition: Codable, Sendable, Equatable, Identifiable {
         self.workTicks = max(1, workTicks)
         self.casualtyID = casualtyID
         self.casualtyDied = casualtyDied
+        self.site = site
     }
 
     // MARK: - Where the party is

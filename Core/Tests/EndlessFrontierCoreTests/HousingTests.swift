@@ -26,7 +26,10 @@ struct HousingTests {
     func capacity() throws {
         let reg = try GameDataRegistry.bundled()
         let cap = ResourceLoop.housingCapacity(settlement(pop: 0, huts: 2), registry: reg)
-        #expect(cap == ResourceLoop.baseHousing + 60)   // 2 huts * 30
+        // A hut's capacity is its ground, not a number of its own: 2×2 tiles at
+        // `sleepersPerTile`. The ledger and the beds are one figure now.
+        let perHut = try #require(reg.building("hut")).sleepers
+        #expect(cap == ResourceLoop.baseHousing + Double(perHut * 2))
     }
 
     @Test("Population grows through births when there is housing headroom")
