@@ -186,6 +186,16 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
     /// …and the ones the player has pulled out of it. They stop being a target
     /// and stop counting toward the line's weight.
     public var withdrawn: Set<UUID>
+    /// How much of the stores this attacker can actually carry off, as a
+    /// multiple of the usual share.
+    ///
+    /// A warband comes with sacks and mules; a wolf pack takes a sheep. Both
+    /// used to take the same eight-to-thirty-five per cent of the granary, and
+    /// with a pack arriving every few years that quietly emptied the colony —
+    /// measured, 388 starved over two centuries in a town that was never short
+    /// of hands. What an attacker *is* has to decide what it can steal.
+    public var carriesOff: Double
+
     /// What the player has told the line to do, right now.
     public var posture: Posture
     /// Everyone on the field, with a place on it. Colonists first, in the order
@@ -209,7 +219,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         attackerTribeID: UUID? = nil,
         approach: Double, attackers: Int,
         openingStrength: Double, fortification: Double, seed: UInt64,
-        line: [UUID], posture: Posture = .hold
+        line: [UUID], posture: Posture = .hold, carriesOff: Double = 1
     ) {
         self.id = id
         self.startTick = startTick
@@ -227,6 +237,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         self.line = line
         self.withdrawn = []
         self.posture = posture
+        self.carriesOff = carriesOff
         self.fighters = []
         self.orders = [:]
         self.damage = [:]
@@ -283,7 +294,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         case id, startTick, advancedTo, openedAt, attackerName, attackerLabel
         case attackerTribeID
         case approach, attackers, openingStrength, strength, fortification, seed
-        case line, withdrawn, posture, damage, moments, plundered
+        case line, withdrawn, posture, damage, moments, plundered, carriesOff
         case fighters, orders
     }
 
@@ -305,6 +316,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         line = try c.decodeIfPresent([UUID].self, forKey: .line) ?? []
         withdrawn = try c.decodeIfPresent(Set<UUID>.self, forKey: .withdrawn) ?? []
         posture = try c.decodeIfPresent(Posture.self, forKey: .posture) ?? .hold
+        carriesOff = try c.decodeIfPresent(Double.self, forKey: .carriesOff) ?? 1
         // A raid saved before anybody had a position on the field: the engine
         // stages the roster on the next step it fights (rule 3 — every new
         // field optional, with a default that the code can actually work from).

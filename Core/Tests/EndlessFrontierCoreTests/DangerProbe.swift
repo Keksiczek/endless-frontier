@@ -29,6 +29,7 @@ struct DangerProbe {
         var fought = Set<UUID>()
         var repelled = 0
         var everHurt = Set<UUID>()
+        var plagues = Set<UUID>()
 
         for _ in 0..<240 {
             state = BalanceHarness.autoPlay(state, registry: registry)
@@ -37,6 +38,7 @@ struct DangerProbe {
             if let log = capital.lastBattle, fought.insert(log.id).inserted, log.repelled {
                 repelled += 1
             }
+            if let outbreak = capital.outbreak { plagues.insert(outbreak.id) }
             for pawn in capital.pawns where pawn.health < 100 { everHurt.insert(pawn.id) }
         }
 
@@ -49,6 +51,7 @@ struct DangerProbe {
         population    \(capital.pawns.count)   morale \(Int(capital.stats.morale))
         food          \(Int(capital.storage[.food]))/\(Int(capital.storageCapacity))
         fights        \(fought.count)  (\(repelled) turned back)
+        sicknesses    \(plagues.count)
         tribes        \(state.tribes.count)  standings \
         \(state.tribes.map { Int($0.standing) }.sorted())
         threat        \(Int(state.globalStats.threatLevel))  \

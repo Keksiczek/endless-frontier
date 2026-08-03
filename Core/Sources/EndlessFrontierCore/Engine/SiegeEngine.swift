@@ -115,7 +115,8 @@ public enum SiegeEngine {
         fortification: Double,
         tick: Int,
         registry: GameDataRegistry,
-        seed: UInt64
+        seed: UInt64,
+        carriesOff: Double = 1
     ) -> Settlement {
         var rng = SeededRNG(seed: seed)
         var s = settlement
@@ -130,7 +131,7 @@ public enum SiegeEngine {
             attackerTribeID: attackerTribeID, approach: approach,
             attackers: BattleResolver.drawnStrength(attackerStrength),
             openingStrength: attackerStrength, fortification: fortification,
-            seed: rng.next(), line: Array(line))
+            seed: rng.next(), line: Array(line), carriesOff: carriesOff)
         stageIfNeeded(&siege)
         s.siege = siege
         return s
@@ -655,7 +656,11 @@ public enum SiegeEngine {
         // what its surviving strength could carry, on top of anything it
         // helped itself to while the colony was giving ground.
         if !siege.repelled {
-            let share = min(0.35, 0.08 + siege.strength / 200)
+            // What they can actually carry. A warband brought sacks; a pack
+            // of wolves took a sheep and the same eight-to-thirty-five per cent
+            // of the granary, which is what emptied colonies that were never
+            // short of hands.
+            let share = min(0.35, 0.08 + siege.strength / 200) * max(0, siege.carriesOff)
             let loot = s.storage[.food] * share
             s.storage[.food] -= loot
         }

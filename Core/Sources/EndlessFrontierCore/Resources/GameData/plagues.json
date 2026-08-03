@@ -1,0 +1,61 @@
+[
+  {
+    "id": "camp_fever",
+    "name": { "en": "Camp fever", "cs": "Táborová horečka" },
+    "description": {
+      "en": "It gets into a place where too many sleep too close, and it does not leave until it has been through everybody.",
+      "cs": "Uchytí se tam, kde spí moc lidí moc blízko u sebe, a neodejde, dokud si neprojde všechny."
+    },
+    "era_from": "early_settlement",
+    "contagion": 0.055,
+    "virulence": 0.55,
+    "winter_bias": 1.4
+  },
+  {
+    "id": "bloody_flux",
+    "name": { "en": "The bloody flux", "cs": "Úplavice" },
+    "description": {
+      "en": "Bad water, and a colony that drew it from one place.",
+      "cs": "Špatná voda — a osada, co ji brala z jednoho místa."
+    },
+    "era_from": "early_settlement",
+    "contagion": 0.075,
+    "virulence": 0.45,
+    "summer_bias": 1.5
+  },
+  {
+    "id": "grey_cough",
+    "name": { "en": "The grey cough", "cs": "Šedý kašel" },
+    "description": {
+      "en": "It starts in one house and is in the next street by the time anyone says the word.",
+      "cs": "Začne v jednom domě a než to někdo pojmenuje, je o ulici dál."
+    },
+    "era_from": "ancient",
+    "contagion": 0.095,
+    "virulence": 0.62,
+    "winter_bias": 1.5
+  },
+  {
+    "id": "the_great_dying",
+    "name": { "en": "The great dying", "cs": "Velké umírání" },
+    "description": {
+      "en": "The one every chronicle has a chapter for. It does not care how many spears you own.",
+      "cs": "Ta, na kterou má každá kronika kapitolu. Je jí jedno, kolik máš kopí."
+    },
+    "era_from": "medieval",
+    "contagion": 0.11,
+    "virulence": 0.85,
+    "winter_bias": 1.2
+  },
+  {
+    "id": "mill_lung",
+    "name": { "en": "Mill lung", "cs": "Mlýnské plíce" },
+    "description": {
+      "en": "Not caught from anybody — breathed in, day after day, in a shed nobody opens a window in.",
+      "cs": "Nechytíš to od nikoho — vdechuješ to den za dnem v hale, kde nikdo neotevře okno."
+    },
+    "era_from": "early_industrial",
+    "contagion": 0.06,
+    "virulence": 0.70
+  }
+]

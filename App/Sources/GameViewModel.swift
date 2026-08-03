@@ -203,6 +203,33 @@ final class GameViewModel {
         return true
     }
 
+    // MARK: - A sickness, while it is happening
+
+    /// The outbreak at the settlement you are looking at, if there is one.
+    var outbreak: Outbreak? { selectedSettlement?.outbreak }
+
+    var outbreakPlague: PlagueDefinition? {
+        outbreak.flatMap { registry.plague($0.plagueID) }
+    }
+
+    /// The carriers who are furthest gone, by name — so a sickness is a list of
+    /// people rather than a number.
+    var worstAfflicted: [String] {
+        guard let outbreak, let settlement = selectedSettlement else { return [] }
+        return settlement.pawns
+            .filter { outbreak.infected.contains($0.id) }
+            .sorted { $0.health < $1.health }
+            .prefix(4)
+            .map(\.name)
+    }
+
+    /// Shuts the gates, or opens them again.
+    func setQuarantine(_ on: Bool) {
+        guard let index = selectedSettlementIndex else { return }
+        world.settlements[index] = PlagueEngine.setQuarantine(world.settlements[index], on)
+        persist()
+    }
+
     /// Tells the line what to do. Recorded on the siege, so it is part of the
     /// world rather than a thing that happened outside it.
     func order(posture: Siege.Posture) {

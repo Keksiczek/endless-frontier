@@ -174,6 +174,22 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     /// — see `SiegeEngine`.
     public var siege: Siege?
 
+    /// A sickness running through the colony, if one is.
+    ///
+    /// The threat that scales the *wrong* way on purpose — a big, crowded,
+    /// well-traded town is the one that gets it, and no wall keeps it out. See
+    /// `PlagueEngine`.
+    public var outbreak: Outbreak?
+    /// When the last sickness burned itself out.
+    ///
+    /// A colony that has just been through one is not ready for another: the
+    /// people who survived it are the people who survive things, and the town
+    /// has just learned where the bad water was. Without this the odds scale
+    /// with population and a big colony is simply *always* ill — measured, a
+    /// town of 350 caught something every five years and spent two centuries
+    /// too sick to farm.
+    public var lastOutbreakTick: Int?
+
     /// The colony's standing orders — trades, rations and who parties may take.
     /// At sixty souls the pawn screen is for looking at somebody; this is how
     /// the town is actually run. See `ColonyPolicy`.
@@ -266,6 +282,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         case constructions, constructionSequence, journal, relationships, expeditions
         case tamed
         case stockpile, rawProgress, lastBattle, policy, siege, craftOrders
+        case outbreak, lastOutbreakTick
     }
 
     public init(from decoder: Decoder) throws {
@@ -305,6 +322,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         rawProgress = try c.decodeIfPresent([String: Double].self, forKey: .rawProgress) ?? [:]
         lastBattle = try c.decodeIfPresent(BattleLog.self, forKey: .lastBattle)
         siege = try c.decodeIfPresent(Siege.self, forKey: .siege)
+        outbreak = try c.decodeIfPresent(Outbreak.self, forKey: .outbreak)
+        lastOutbreakTick = try c.decodeIfPresent(Int.self, forKey: .lastOutbreakTick)
         craftOrders = try c.decodeIfPresent([CraftOrder].self, forKey: .craftOrders) ?? []
         // Decode-if-present: a save from before standing orders loads as a
         // colony under none, and plays exactly as it did.

@@ -115,7 +115,10 @@ public enum WildlifeEngine {
                     attackerName: packName.resolve(.en),
                     attackerLabel: packName,
                     fortification: s.stats.defense,
-                    tick: tick, registry: registry, seed: rng.next())
+                    tick: tick, registry: registry, seed: rng.next(),
+                    // Wolves eat; they do not loot a granary. Carrying the same
+                    // share a warband does is how a colony starves.
+                    carriesOff: 0.12)
                 s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
                     .en: "Wolves are at the herds — the watch is turning out.",
                     .cs: "Vlci jsou u stád — hlídka vybíhá."]))

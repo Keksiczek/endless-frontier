@@ -375,12 +375,29 @@ public enum ResourceLoop {
                 factors[work] = 0
             }
         }
+        // Shutting the gates against a sickness costs the work of everybody
+        // staying in. That is the decision — it is not a free save, and it is
+        // the reason the quarantine order is worth putting in front of a player
+        // rather than doing for them.
+        let shut = PlagueEngine.workFactor(s)
+        if shut < 1 {
+            for work in WorkKind.allCases { factors[work] = (factors[work] ?? 1) * shut }
+        }
         s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick,
                                       gatheringFactors: factors, laws: laws)
         // 9b. Bleeding, mending, and the healers doing the mending. After the
         //     pawns' own tick so a wound taken this minute is bleeding by the
         //     next one — and so the healer's trade finally has something to do.
         s = MedicineEngine.advanceOneTick(s, registry: registry, tick: tick)
+        // 9b-ii. And the one threat that gets worse as the colony gets better.
+        //        After the healers, so a sickness tended this minute is a
+        //        sickness passing rather than one deepening.
+        s = PlagueEngine.advanceOneTick(
+            s, registry: registry, tick: tick, era: era,
+            season: Season(tick: tick, ticksPerYear: config.ticksPerYear), mapSeed: mapSeed)
+        // 9b-iii. …and the people a full granary attracts who belong to nobody.
+        s = BanditEngine.advanceOneTick(
+            s, registry: registry, tick: tick, era: era, mapSeed: mapSeed)
         // 9c. The farmyard: hunters gentle what they can, and the beasts the
         //     colony already keeps eat, work and occasionally leave.
         s = TamingEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: mapSeed)

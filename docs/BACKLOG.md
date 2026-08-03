@@ -375,6 +375,50 @@ difficulty. Balancing the old shape first is work thrown away.
 | 9.3 | **Buildings are all alike**, outside and in | **done** — 47 buildings, 29 shapes |
 | 9.4 | Cannot quickly find a colonist, or equip one from their own card | **done** — 9.8 |
 
+### 9.9 — three kinds of danger, and the one that gets worse as you get better
+
+The last of §8.1: after everything, a long run still killed nobody but old age.
+Not because the fighting was weak — a warband kills twelve bare-handed
+colonists — but because **every threat scaled with the colony's own strength**.
+Four hundred people with walls and iron turn back a hundred and forty raiders
+and they *should*; a bigger warband is the same answer written larger.
+
+Three things added, each a different shape:
+
+- **Sickness** (`PlagueEngine`, `plagues.json`, five strains CZ+EN) runs the
+  other way. It comes for a town *because* the town is big, crowded, fed by
+  trade and sleeping four to a room. No wall keeps it out. What helps is what a
+  prosperous colony puts off: healers, herbs, a clinic — and the willingness to
+  shut the gates and lose half a season of work, which is the one order the
+  player has (`OutbreakCard`). It stands on `AilmentKind.sickness` and
+  `MedicineEngine`, which existed with nearly nothing to do.
+- **Bandits** (`BanditEngine`) are the raid that belongs to nobody. Every fight
+  came from a *relationship* — a people who hated you, or a wood you had not
+  hunted — and both can be mended, so a colony with good neighbours and a quiet
+  forest had no enemies however rich it got. Outlaws are drawn by a full granary
+  and cannot be negotiated with: there is no standing to mend and no tribe to
+  charge. Spears and a wall make you a poor target, never an impossible one.
+- **Wolves stopped looting like a warband.** `Siege.carriesOff`: a warband came
+  with sacks and a pack took a sheep, and both walked off with eight to
+  thirty-five per cent of the granary. With a pack every three years that
+  quietly emptied colonies that were never short of hands.
+
+Measured, same seed, 200 years — and this is the first run in the project's
+history where the tally is not one line long:
+
+```
+before   deaths { old_age: 274 }                                  pop 463
+after    deaths { old_age 219, starvation 132, sickness 10,       pop 476
+                  battle 1 }        4 epidemics · 91 fights
+```
+
+Two tuning notes worth keeping. The first cut of the sickness let the odds grow
+with population without a ceiling: a town of 350 caught something every five
+years, 782 people took sick across two centuries, and the place starved because
+it was never well enough to farm. `sizeCeiling` and a four-year respite fixed
+it. And starvation only came down to something survivable once the wolves
+stopped robbing the granary — the two looked like one problem and were not.
+
 ### 9.5 — the hut that held thirty people
 
 The joke Keks saw had a cause, and it is CLAUDE.md rule 8 again: **two numbers

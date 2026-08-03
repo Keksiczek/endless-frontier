@@ -150,6 +150,15 @@ struct SettlementScreen: View {
                     onPosture: { game.order(posture: $0) },
                     onToggle: { game.setInLine($0, holding: $1) })
                 .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if let outbreak = game.outbreak, let plague = game.outbreakPlague {
+                // Second only to a raid: it is happening now, it has a clock on
+                // it, and laying out a granary can wait.
+                OutbreakCard(
+                    outbreak: outbreak, plague: plague,
+                    population: game.viewedPawns.count,
+                    worst: game.worstAfflicted,
+                    onQuarantine: { game.setQuarantine($0) })
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if buildPlan != nil {
                 BuildPlacementBar(game: game, plan: $buildPlan)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
