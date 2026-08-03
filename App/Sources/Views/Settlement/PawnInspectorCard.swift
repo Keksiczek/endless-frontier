@@ -25,6 +25,13 @@ struct PawnInspectorCard: View {
     var moodFactors: [MoodFactor] = []
     /// Whether the engine has given them a roof.
     var housed: Bool = true
+    /// What the settlement has spare, and how to hand it over. Left empty the
+    /// card simply does not offer a kit — a card that can *see* a colonist and
+    /// not arm them is the thing this fixes.
+    var store: [(instance: ItemInstance, definition: ItemDefinition)] = []
+    var definitionOf: (ItemInstance) -> ItemDefinition? = { _ in nil }
+    var onEquip: (UUID) -> Void = { _ in }
+    var onUnequip: (EquipmentSlot) -> Void = { _ in }
     var onClose: () -> Void
 
     /// How far past the fold the card is opened.
@@ -63,6 +70,12 @@ struct PawnInspectorCard: View {
             // What is *wrong* is never behind a fold: a colonist with a torn
             // leg is the reason you tapped them.
             if !pawn.body.ailments.isEmpty || pawn.body.capacity < 0.99 { condition }
+            // Above the fold, deliberately: what somebody is carrying is a
+            // decision you make *about them*, on the card you opened to look
+            // at them, and not a trip to a warehouse screen.
+            EquipmentStrip(pawn: pawn, store: store,
+                           onEquip: onEquip, onUnequip: onUnequip,
+                           definitionOf: definitionOf)
             moreToggle
             if expanded { detail }
         }

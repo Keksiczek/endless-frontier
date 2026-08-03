@@ -12,6 +12,40 @@ import EndlessFrontierCore
 struct ColonistsPanel: View {
     @Bindable var game: GameViewModel
     @State private var expanded: Set<WorkKind> = []
+    /// Typing a name, because at a hundred and twenty people the way you find
+    /// somebody is by knowing who you are looking for. Everything below reads
+    /// this: with a search running the trades collapse into one flat answer,
+    /// because grouping is for browsing and this is not browsing.
+    @State private var query = ""
+    @State private var lens: Lens = .everyone
+
+    /// What to cut the colony down to. Not a filter menu for its own sake —
+    /// each of these is a question the player actually turns up with.
+    enum Lens: String, CaseIterable, Identifiable {
+        case everyone, hurt, unhappy, unarmed, idle
+        var id: String { rawValue }
+
+        var label: String {
+            let cs = AppStrings.language == .cs
+            switch self {
+            case .everyone: return cs ? "Všichni" : "Everyone"
+            case .hurt:     return cs ? "Zranění" : "Hurt"
+            case .unhappy:  return cs ? "Nespokojení" : "Unhappy"
+            case .unarmed:  return cs ? "Bez zbraně" : "Unarmed"
+            case .idle:     return cs ? "Nečinní" : "Idle"
+            }
+        }
+
+        var symbol: String {
+            switch self {
+            case .everyone: return "person.3.fill"
+            case .hurt:     return "cross.case.fill"
+            case .unhappy:  return "cloud.rain.fill"
+            case .unarmed:  return "figure.stand"
+            case .idle:     return "zzz"
+            }
+        }
+    }
 
     var body: some View {
         if game.viewedPawns.isEmpty {
@@ -25,12 +59,120 @@ struct ColonistsPanel: View {
                         .font(.caption.monospacedDigit().weight(.semibold))
                         .foregroundStyle(Theme.textDim)
                 }
-                needsAttention
-                ForEach(game.workforce, id: \.work) { group in
-                    tradeSection(group)
+                finder
+                if isSearching {
+                    matches
+                } else {
+                    needsAttention
+                    ForEach(game.workforce, id: \.work) { group in
+                        tradeSection(group)
+                    }
                 }
             }
             .frontierCard()
+        }
+    }
+
+    /// Whether the list is answering a question rather than showing the town.
+    private var isSearching: Bool {
+        !query.trimmingCharacters(in: .whitespaces).isEmpty || lens != .everyone
+    }
+
+    /// A name to type and five questions to ask. This is the whole of "I cannot
+    /// find a colonist": the panel grouped by trade, which is right for reading
+    /// the shape of a workforce and useless for finding the one person who is
+    /// bleeding.
+    private var finder: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "magnifyingglass")
+                    .font(.caption).foregroundStyle(Theme.textDim)
+                TextField(AppStrings.language == .cs ? "Hledat jméno" : "Find a name",
+                          text: $query)
+                    .font(.caption)
+                    .textFieldStyle(.plain)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                if !query.isEmpty {
+                    Button { query = "" } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.caption).foregroundStyle(Theme.textDim)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 10).padding(.vertical, 7)
+            .background(Theme.surfaceInset, in: Capsule())
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(Lens.allCases) { option in
+                        Button {
+                            withAnimation(.snappy(duration: 0.15)) {
+                                lens = lens == option ? .everyone : option
+                            }
+                        } label: {
+                            Label(option.label, systemImage: option.symbol)
+                                .font(.caption2.weight(.semibold))
+                                .padding(.horizontal, 9).padding(.vertical, 6)
+                                .background(lens == option ? Theme.accent.opacity(0.2)
+                                                           : Theme.surfaceInset,
+                                            in: Capsule())
+                                .foregroundStyle(lens == option ? Theme.accent : Theme.textDim)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 1)
+            }
+        }
+    }
+
+    /// Everyone the question turns up, worst off first — the order you want
+    /// when the question was "who needs me".
+    private var found: [Pawn] {
+        let needle = query.trimmingCharacters(in: .whitespaces).lowercased()
+        return game.viewedPawns
+            .filter { pawn in
+                guard needle.isEmpty || pawn.name.lowercased().contains(needle) else { return false }
+                switch lens {
+                case .everyone: return true
+                case .hurt:     return pawn.health < 100 || pawn.isBroken
+                case .unhappy:  return pawn.mood < 45
+                case .unarmed:  return pawn.equipment[.weapon] == nil
+                case .idle:     return pawn.assignedWork == .idle
+                        && pawn.isAdult(ticksPerYear: game.ticksPerYear)
+                }
+            }
+            .sorted {
+                $0.health != $1.health ? $0.health < $1.health
+                                       : $0.name.localizedCompare($1.name) == .orderedAscending
+            }
+    }
+
+    @ViewBuilder
+    private var matches: some View {
+        let people = found
+        if people.isEmpty {
+            Text(AppStrings.language == .cs ? "Nikdo takový tu není."
+                                            : "Nobody here answers to that.")
+                .font(.caption).foregroundStyle(Theme.textDim)
+                .padding(.vertical, 6)
+        } else {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("\(people.count)")
+                    .font(.caption2.monospacedDigit().weight(.semibold))
+                    .foregroundStyle(Theme.textDim)
+                // Capped: a search that matches everybody should not render the
+                // whole town into one scroll view.
+                ForEach(people.prefix(30)) { pawn in pawnRow(pawn) }
+                if people.count > 30 {
+                    Text(AppStrings.language == .cs
+                         ? "…a dalších \(people.count - 30). Zkus přesnější jméno."
+                         : "…and \(people.count - 30) more. Try a narrower name.")
+                        .font(.caption2).foregroundStyle(Theme.textDim)
+                }
+            }
         }
     }
 
@@ -130,22 +272,17 @@ struct ColonistsPanel: View {
                 }
             }
             moodBar(pawn.mood)
-            ForEach(EquipmentSlot.allCases, id: \.self) { slot in
-                if let instance = pawn.equipment[slot], let def = game.itemDefinition(instance) {
-                    Button {
-                        game.unequip(pawn.id, slot: slot)
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: slotIcon(slot))
-                            Text(def.name.resolve(AppStrings.language)).font(.caption2.weight(.medium))
-                            Spacer()
-                            Text("Unequip").font(.caption2)
-                        }
-                        .foregroundStyle(def.rarity.color)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
+            // Three slots you can fill from here. It used to be three lines
+            // that could only ever take something *off*: to put something on
+            // you went to the Items panel, found the sword, and picked this
+            // person out of a menu of everyone in the town.
+            EquipmentStrip(
+                pawn: pawn,
+                store: game.equippableStore,
+                onEquip: { game.equip($0, toPawn: pawn.id) },
+                onUnequip: { game.unequip(pawn.id, slot: $0) },
+                compact: true,
+                definitionOf: { game.itemDefinition($0) })
         }
         .padding(.vertical, 10).padding(.horizontal, 12)
         .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))

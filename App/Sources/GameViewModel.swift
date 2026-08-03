@@ -795,6 +795,27 @@ final class GameViewModel {
         registry.item(instance.definitionID)
     }
 
+    /// What is on the shelf, resolved to definitions, for the equipment strip.
+    ///
+    /// Only what is *spare*: an item on somebody's back is not in the stores,
+    /// and offering it to a second person would be offering the same sword
+    /// twice.
+    var equippableStore: [(instance: ItemInstance, definition: ItemDefinition)] {
+        guard let settlement = selectedSettlement else { return [] }
+        return settlement.inventory.compactMap { instance in
+            guard let def = registry.item(instance.definitionID),
+                  def.slot == .equipment, def.equipSlot != nil else { return nil }
+            return (instance, def)
+        }
+        // Best first: you are looking for the good one, not the first one.
+        .sorted {
+            $0.instance.quality != $1.instance.quality
+                ? $0.instance.quality > $1.instance.quality
+                : $0.definition.name.resolve(AppStrings.language)
+                    < $1.definition.name.resolve(AppStrings.language)
+        }
+    }
+
     func equip(_ itemID: UUID, toPawn pawnID: UUID) {
         guard let settlement = selectedSettlement else { return }
         world = GameEngine.equipItem(world, settlementID: settlement.id, pawnID: pawnID,

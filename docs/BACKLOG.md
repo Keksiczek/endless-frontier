@@ -373,7 +373,7 @@ difficulty. Balancing the old shape first is work thrown away.
 | 9.1 | **Expeditions are instant** — you send them and a number comes back | **done** for the valley's places — see 9.4 |
 | 9.2 | **Houses are too small**; the hut is comically full of colonists | **done** — 9.5 |
 | 9.3 | **Buildings are all alike**, outside and in | **done** — 47 buildings, 29 shapes |
-| 9.4 | Cannot quickly find a colonist, or equip one from their own card | todo |
+| 9.4 | Cannot quickly find a colonist, or equip one from their own card | **done** — 9.8 |
 
 ### 9.5 — the hut that held thirty people
 
@@ -440,6 +440,22 @@ standing on it.
 
 The card shows the beats as they happen and the canvas draws the chests, the
 snares and the thing breathing in the dark.
+
+### 9.8 — finding one person, and arming them
+
+The colonists panel reads as a *workforce* — grouped by trade, which is right
+for seeing the shape of a town and useless for finding the one person who is
+bleeding. It has a name field and five lenses now (hurt, unhappy, unarmed,
+idle), and while either is in use the trades collapse into one flat list, worst
+off first, because grouping is for browsing and a search is not browsing.
+
+Equipping was **item-first**: open Items, find the sword, pick a name out of a
+menu listing everyone in the town. At sixty people that menu is a wall, and it
+is the wrong way round — you decide about a person, not about a sword. There was
+no way at all to arm somebody from their own card; the only thing the card could
+do was take a thing off. `EquipmentStrip` is three slots you tap, on both the
+colonist row and the canvas inspector, offering only what actually fits and best
+quality first.
 
 > **Still instant: the world map's own sites.** `SiteEngine.interact` (ruins,
 > dungeons, anomalies, lost cities on the hex map) resolves in one call with no

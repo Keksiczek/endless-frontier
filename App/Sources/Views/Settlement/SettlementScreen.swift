@@ -178,7 +178,11 @@ struct SettlementScreen: View {
                                   bonds: bondLines(for: pawn),
                                   moodFactors: MoodLedger.factors(for: pawn,
                                                                   registry: game.registry),
-                                  housed: pawn.homeID != nil) {
+                                  housed: pawn.homeID != nil,
+                                  store: game.equippableStore,
+                                  definitionOf: { game.itemDefinition($0) },
+                                  onEquip: { game.equip($0, toPawn: pawn.id) },
+                                  onUnequip: { game.unequip(pawn.id, slot: $0) }) {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
