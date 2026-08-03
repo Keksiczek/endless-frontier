@@ -1,254 +1,175 @@
-# Handoff — 2026-08-02
+# Handoff — 2026-08-03
 
-Branch **`main`**, working tree clean, everything pushed.
+Branch **`main`**.
 
-Tests: **836 Core**, **93 app**, both green.
-`swift test --package-path Core` takes ~250 s cold, ~50 s warm. App suite ~3 s once built.
-
----
-
-## 0. Read this first — the next chat's actual job
-
-Keks played it and gave three pieces of feedback. They are the brief:
-
-1. **It is too easy. There is almost no challenge.**
-2. **Combat does not aim/handle well, and the rounds feel strange.**
-3. **Real-time walking would be better** — and it would fit the rest of the
-   game: *I go somewhere and do something. The enemy comes, we go and get
-   ready, and then we kill him if we can.*
-
-Point 3 is a **design pivot on the combat layer that was built this session**.
-§4 says what that costs honestly, and what of the current work survives it.
-Do not treat the round-based siege as settled — it is one iteration old and
-the player has already said the shape is wrong.
+Tests: **Core**, **93 app**. `swift test --package-path Core` takes ~250 s cold.
 
 ---
 
-## 1. Where to look
+## 0. What this session was for
 
-| For | Read |
+The previous handoff put Keks's three pieces of feedback at the top as the
+brief: *no challenge*, *combat does not aim well and the rounds feel strange*,
+and *real-time walking would be better*. It also gave an order to do them in —
+positions into the Core, then orders on tap, then difficulty — because
+balancing the round-based shape first would be work thrown away.
+
+All three are done, in that order. §1 is the pivot, §2 is what measuring the
+difficulty actually turned up, and it was not what the numbers suggested.
+
+---
+
+## 1. The pivot: a fight with a ground to stand on
+
+Fighters have positions the **Core** owns.
+
+- `Siege.Combatant` — side, `at`, strength, target, down. Staged by
+  `SiegeEngine.stageIfNeeded`: the watch among the houses, the warband at the
+  edge of the map, abreast and facing each other down the line of the attack.
+- `SiegeField` — the battlefield geometry, moved out of the app. Rule 8: the
+  line the raiders break on and the line the colonists run to are one number
+  now, not two.
+- `AgentMotion` **reads** a colonist's position instead of interpolating one.
+  Rule 5 is untouched and load-bearing; the precedent followed is
+  `Pawn.currentJob.position` and `HaulEngine.haulPosition`.
+
+Everything that was a step index is a distance:
+
+| Was | Is |
 |---|---|
-| Everything ever asked for, and its state | `docs/BACKLOG.md` |
-| The rules that keep getting broken | `docs/BACKLOG.md` §"Rules" (now 11) |
-| The RimWorld-leaning layer | `docs/RIMWORLD_LAYER.md` |
-| Layer separation | `docs/architecture/LAYERS.md`, `CLAUDE.md` |
+| `step >= approachSteps` | nobody within `SiegeEngine.reach` yet |
+| raider *i* fights colonist *i* | each picks the nearest enemy and walks to them |
+| `Posture.cover` = 0.35 / 1 / 1.2 | `SiegeField.cover(at:)` — cover is a place you stand |
+| `posture == .giveGround` spends grain | a raider inside `wallReach` is in the stores |
+| all damage on the single weakest | every raider hits the person in front of them |
+
+`Posture` no longer says how much of the wall counts. It says **how far out the
+line will go** (`Posture.reach`), and the wall is read off the ground people are
+standing on — so pressing them costs the wall because it walks out from behind
+it, and giving ground keeps it because it puts you back inside.
+
+**Orders.** Tap a colonist, then tap the ground or an enemy:
+`Siege.Order.moveTo` / `.engage`, recorded on the siege exactly as the posture
+is. Same seed plus same orders still replays to the same dead, and the order
+survives the disk. `SiegeCommandCard` says so in one line, CZ+EN, because
+nothing else on screen would.
+
+Everything that made a live battle safe survives unchanged: a step is fought
+once by whoever reaches it first, the app may run ahead of the world clock, and
+`ActionLoop` finishes a raid nobody watched identically.
 
 ---
 
-## 2. What shipped this session
+## 2. Difficulty — the numbers were the smaller half
 
-Eight commits, `44063fb` … `2a6b7db`.
+`DangerProbe` (Core tests, off unless `EF_PROBE=1`) is the instrument. Run it:
 
-**The valley stopped being wrong to look at.** Rule 10 was fixed for the ground
-*cover* and never for the **relief the light reads**, so the noise stayed round
-in `(u, v)`, came out four times stretched in pixels, and the whole map was lit
-in vertical stripes — for as long as it had been lit at all. Also: the day was
-2.5 real minutes so shadows swung while you watched them; a hut threw a shadow
-three times its height; building lots were 0.6-alpha slabs that read as holes
-punched in the map *and* ruled a grid inside every yard (rule 9); and the night
-wash was the most saturated layer in the stack, which turned autumn purple
-every single dusk.
-
-**A raid became a fight you stand in.** `Siege` + `SiegeEngine`: live state on
-the settlement, the player's posture and withdrawals recorded *on it* so they
-are inputs rather than a hole in determinism, and a step fought once by whoever
-reaches it first — so the app can drive it fast while somebody watches, and
-`ActionLoop` finishes it identically if nobody does. Wolves open one too.
-
-**Making things became work.** `WorkKind.crafting` did not exist: a recipe named
-a workshop, the colony had to *have* a workshop, and no colonist could ever be a
-person who worked in one. Now `CraftOrder` is a queue, crafters are a staffed
-trade, one bench per kind of shop, and `ItemQuality` means a master's sword is
-not an apprentice's.
-
-**The world started advancing on its own** — see §3, it is the big one.
-
-**Czech.** 196 strings: 48 events with their choices, every tech description,
-seven quests with stages, six biomes, and the five resource words that were
-`rawValue.capitalized` (so a Czech game said "Food" and "Materials" mid-sentence
-in every panel).
-
-Real bugs found in passing, each of them the project's recurring shape — *a
-mechanic nothing can reach*:
-
-- **Quarried rock produced nothing.** Wood falls at the stump and hewn stone at
-  the face, but a pick into an *outcrop* took only `.map` back from
-  `FloraEngine.quarry` and dropped the yield. On any valley with no massif —
-  every coast, most plains — four miners ground nine clay banks to nothing over
-  four hundred ticks and banked not one unit. Clay is the only route to the
-  kiln, so that whole branch was unreachable by working for it.
-- **Predators were never seeded.** `isPredator` is honoured everywhere and not
-  one wolf, fox or bear had ever been put on a map.
-- **Trees only grew inside forest *deposits*** — so plains, coast and tundra had
-  literally no trees.
-- **Founding buildings had random UUIDs**, so two worlds from one seed differed.
-
----
-
-## 3. The frozen world — what was found, and what fixed it
-
-Measured, fresh world, twelve thousand ticks (200 in-game years), untouched:
-
-```
-t=1000    pop=27  beds=30  cap=500  buildings=3  building=0  techs=0  era=earlySettlement
-t=12000   pop=26  beds=30  cap=500  buildings=3  building=0  techs=0  era=earlySettlement
+```bash
+EF_PROBE=1 swift test --package-path Core --filter DangerProbe
 ```
 
-Three buildings, no construction ever started, no tech ever researched, still in
-the first era, all four stores pinned at the cap the entire time. The colony was
-not dying — it was **frozen**, and every link of the chain was reachable only
-from the UI:
+### 2.1 What one raid costs, after the retune
 
-- `activeResearch` is set nowhere but the tech screen → no tech → no era → no
-  building unlocked.
-- `GameEngine.build` is called nowhere but the build bar → not even the
-  *unlocked* buildings were raised, including the hut that lifts the housing
-  ceiling and the granary that lifts the storage cap.
-- `CraftingEngine.place` is called nowhere but the crafting panel → the
-  `timber_bundle` that half the early buildings ask for was never made.
-
-`StewardEngine` closes it. The council studies the cheapest reachable tech,
-keeps a standing order for building materials, and raises what the colony is
-short of — beds, then store, then food, then breadth out of real surplus. It
-acts **only in the gaps**, so an explicit player choice is never touched, and
-`WorldState.stewardEnabled` switches it off entirely.
-
-After: pop 5 → 80, two eras, 31 techs, ~48 buildings by t=5000, then a plateau
-where materials become the binding constraint.
-
-**Answered while doing it:** a granary raises the cap for **every** resource,
-not just food (`storage: 250`, summed by `ResourceLoop.storageCapacity`, which
-rewrites `settlement.storageCapacity` every tick). The mechanism was always
-correct — a granary just never got built.
-
----
-
-## 4. The brief: challenge, and real-time combat
-
-### 4.1 Why there is no challenge — measured, not guessed
-
-Same 12,000-tick run, counting everything dangerous:
+Twelve bare-handed colonists, whole fight, measured end to end:
 
 ```
-battles = 26        live-siege ticks = 26        tribes = 6
-deaths  = { old_age: 106 }          ← every single one
-population 42 · food 2500/2500 · morale 74
-colonists hurt at the end = 0 · broken = 0
+str  30  wall  0  →  hurt 2  worst −33     str  30  wall 50  →  hurt 2  worst −13
+str  60  wall  0  →  hurt 4  worst −93     str  60  wall 50  →  hurt 4  worst −37
+str 120  wall  0  →  2 dead, hurt 8        str 120  wall 50  →  hurt 8  worst −43
 ```
 
-Twenty-six fights across two centuries and **not one person died of anything but
-old age**, with nobody even carrying a wound at the end. Food sat at the cap the
-whole time. That is the whole of "no challenge", and it is four separate things:
+Four changes got there, none of them a blanket multiplier:
 
-1. **Nothing kills.** No battle deaths, no starvation, no cold, no beast.
-   Wounds heal faster than they land.
-2. **Fights are over instantly.** 26 battles produced 26 tick-samples with a
-   siege live — each fight ends inside roughly *one world tick*, because a
-   forty-person militia vastly outmatches a wolf pack of strength ~10. Even at
-   1.4 s a step you will miss it unless you happen to be looking.
-3. **Food is never scarce.** It is pinned at the cap for two hundred years, so
-   the one resource that has ever been a real sink in this game is not one.
-4. **The wall is nearly free.** `SiegeEngine.wallShare` caps at 0.85 and a
-   modest palisade already turns most of a raid aside.
+- `attackerDamagePerStrength` 0.14 → 0.24. Spreading blows across a line made
+  them slacker than the old single-target arithmetic; this puts the cost back.
+- Raiders **work on whoever is already hurt**, mildly
+  (`nearest(preferringWeak:)`). This is the mechanism that produces a casualty
+  instead of twelve people evenly and harmlessly bruised.
+- A held line **closes the last two steps** (`closingPoint`). Before it, a
+  raider fighting your neighbour was a hand's breadth away and a third of the
+  line never swung, because the enemy was "outside the muster ring".
+- **Nothing knits while a wound is open** (`PawnEngine`). The flat 0.3-a-tick
+  recovery ran unconditionally on top of the bleeding, so an untreated wound
+  closed as fast as a tended one and the whole healer's trade bought nothing.
 
-Levers, all in one place each: `SiegeEngine` (`linePerStep`,
-`attackerDamagePerStrength`, `fortificationHalfPoint`, `fortificationCeiling`),
-`WildlifeEngine.attackChancePerPressure`, `DiplomacyEngine.warChance` /
-`warStanding` (a yearly roll needing standing < −30), and
-`MedicineEngine` for how fast wounds close.
+### 2.2 …and then the two that actually mattered
 
-**Do not just multiply the numbers.** The honest fix is that a fight has to be
-*survivable but expensive* — people should come out of it hurt, and being hurt
-should cost the colony work. The wound and body-part system already exists and
-currently has nothing to do.
+Measuring the *rate* rather than the fight found two things worse than any
+combat number, both the project's recurring shape:
 
-### 4.2 What "real-time walking" costs, honestly
+**No tribe had ever raided anybody.** Two hundred measured years, six peoples,
+final standings `0 / 0 / 0 / +75 / +80 / +82`. Every one of the 26 fights in the
+run was wolves. Grudge had exactly one source — a quarrel over hunting grounds —
+gated on standing already being below −15, while standing drifts toward a
+compatibility of 62 or better at 12 % a year. **Every term of the loop was
+inside the loop**, so it never started. `DiplomacyEngine.crowding` feeds it from
+outside: a colony that outgrows its neighbours is taking somebody's share of
+finite land, game and water. Trade and marriage work it off.
 
-The current fight is **round-based on the action-step grid**: `Siege.stepsTotal`
-= 24 steps, four named phases, each raider abstractly paired with the colonist
-opposite. `SettlementBattle` draws that pairing; the figures do not really walk
-to each other, which is exactly why "the rounds feel strange".
+**The wild never answered the colony.** Predator pressure is capped by the era,
+so a pack was ten strong whether the settlement was five people or four hundred.
+The first thirty years of a real world: four fights, worst wound *nothing at
+all*. The pack's weight now scales with how much there is to come for
+(`WildlifeEngine.packPerColonist`), the watch scales with the colony, and
+`attackChancePerPressure` went 0.00025 → 0.0004.
 
-The pivot is smaller than it sounds, but it crosses one hard line:
+Same seed, 200 years, after:
 
-- **Keep:** the siege as live saved state; orders as recorded inputs; a step
-  fought once by whoever reaches it first; offline resolution identical to
-  watched resolution. All four of those are what make a live battle safe in a
-  deterministic offline-first game, and they survive the pivot unchanged.
-- **Change:** the *unit*. Instead of 24 exchanges, every combatant needs a
-  **position that advances per step**, and contact becomes proximity rather than
-  a round index. Steps get finer and faster (the app already drives them).
-- **The line it crosses:** colonists' positions today live in `AgentMotion`,
-  which is **presentation only** — CLAUDE.md rule 5, and it is load-bearing.
-  Real-time combat means fighters' positions must move **into the Core**. That
-  is a real architectural change and it should be made deliberately, not by
-  letting the renderer start writing state.
+```
+before   fights 26   standings [0, 0, 0, 75, 80, 82]    ever hurt 6
+after    fights 58   standings [−51, −6, −1, 0, 0, 0]   ever hurt 13
+```
 
-  The precedent already exists and should be followed: `Pawn.currentJob` carries
-  a `position`, and `HaulEngine` gives a hauler a real `haulPosition` the Core
-  owns. A `Siege` fighter with a Core-owned position is the same shape.
-
-- **What that buys, in the player's words:** the enemy appears at the edge of
-  the map and *walks in*, so there is time to prepare. You can send people to
-  meet them or pull them back behind the wall. Positions make aiming mean
-  something, which is the other half of the complaint.
-
-Suggested order for the next chat:
-
-1. Move fighter positions into the Core (`Siege.Combatant` with a `LocalPoint`
-   advanced per action step). Keep the existing phases as *emergent* — approach
-   is "not in contact yet" rather than "step < 4".
-2. Let a tap during a siege give a colonist a **move order** and a **target**.
-   Recorded on the siege, exactly as posture is, so determinism holds.
-3. Only then retune difficulty (§4.1). Balancing the old shape would be work
-   thrown away.
+Both are guarded by tests named for the reachability, not the behaviour:
+*"A people can come to hate you without hating you first"* and *"The wild
+answers a colony that has grown"*.
 
 ---
 
-## 5. Rules this codebase has sprung, newest first
+## 3. Still open
 
-Full list in `BACKLOG.md` §"Rules". The ones added this session:
-
-11. **Playback pace is not simulation pace.** A tick is a real minute and a
-    battle was eight rounds; played at the tick's own speed that is one exchange
-    every 7.5 s, which reads as nothing happening. A *record* may be replayed at
-    whatever speed makes it legible (`SettlementBattle.playSeconds`).
-10b. **The map is not square, and every field drawn over it has to know.** Rule
-    10 was fixed for ground cover and not for the relief, so the valley went
-    back to stripes the moment it was lit.
-
-And two traps found while balancing the steward, both now guarded by tests:
-
-- **A reserve as a share of capacity is a trap.** Keeping 35 % of the warehouse
-  back looks reasonable — but granaries multiply the cap, the reserve grows with
-  it, and a colony whose income never changed can suddenly never afford anything
-  again. Measured: capacity 500 → 2750 and the town stopped building for ten
-  thousand ticks. Tie a reserve to the **cost**, never to the warehouse.
-- **Overlapping tiles make draw *order* load-bearing.** Once ground tiles grow
-  into each other by a third rather than a hair, whichever tone is filled last
-  decides what the ground looks like — and Swift dictionary iteration order is
-  not stable, so the map would reshuffle its own edges every frame. Sorted by
-  `SettlementGround.Tone.order`.
-
----
-
-## 6. Still open, beyond the brief
-
-- **Births do not keep pace with old age.** With beds and food no longer
-  binding, population peaks near 80 and drifts back to 40 while the only deaths
-  are old age. Always true; simply unreachable behind the frozen ceiling.
-- **Era stops at `ancient`** with the whole tech tree researched — the later era
-  milestones want population or settlement counts the colony never reaches.
+- **Nothing has yet killed anybody but old age** in a long run. A colony of four
+  hundred shrugging off a warband of a hundred and forty is *correct*, so the
+  honest next step is what threatens a **late** colony — not another multiplier
+  on the early game. A raid you cannot simply out-number is the missing kind.
+- **Food is not scarce.** It is no longer pinned at the cap in every run, but it
+  is not a constraint either. §8.1 cause 3, untouched.
+- **Births do not keep pace with old age** past the peak.
+- **Era stops at `ancient`** with the whole tech tree researched.
 - **`BACKLOG` 3.6** — 40 of 71 events never name a building, a place or a
-  colonist. All the hooks exist now.
-- **Quests read as empty** to the player. They are long arcs buried in a detail
-  sheet; the new *Where things stand* card on the Council screen is the
-  short-horizon answer, and quests probably want the same treatment.
+  colonist. All the hooks exist.
 - Battle has no sound and no haptics.
+- Old English content (events, buildings, techs) is still untranslated.
+
+### Notifications
+
+Keks reported getting one notification and then nothing. There was a real bug:
+`minimumGap` was measured from the moment the player left rather than from the
+previous message, so the one that is actually urgent — the council waiting on a
+decision, due at two hours — was silently pushed out to six, every time. Fixed.
+
+What is still true **by design**: the earliest message is two hours out, so a
+short absence is meant to be silent, and a day with no pending decision and no
+trouble produces only the 22-hour digest. If that reads as "nothing", the fix is
+*more to say* — the world is deterministic, so a notification could genuinely
+predict what will have happened by then — not a shorter timer.
 
 ---
 
-## 7. Commands
+## 4. Rules the codebase has sprung, newest first
+
+Full list in `BACKLOG.md` §"Rules". Added this session:
+
+13. **A feedback loop needs an input from outside itself.** Grudge could only be
+    made by a quarrel, a quarrel needed hostility, and hostility only came from
+    grudge. Anything that is supposed to build up has to be fed by something
+    true whether or not it has already started.
+12. **A threat that does not scale with what it threatens is scenery.** Rule 6
+    in the danger direction, hiding behind numbers that looked fine.
+
+---
+
+## 5. Commands
 
 ```bash
 swift test --package-path Core
@@ -262,11 +183,10 @@ xcodebuild -project App/EndlessFrontier.xcodeproj -scheme EndlessFrontier -desti
 cd App && xcodegen generate
 ```
 
-Regenerate the Xcode project after adding any file under `App/Sources` —
-a new file that is not in the target fails as `cannot find type … in scope`.
+Regenerate the Xcode project after adding any file under `App/Sources` — a new
+file that is not in the target fails as `cannot find type … in scope`.
 
-Simulator installed: **iPhone 17** (not 16). Keks's Mac is an 8 GB Intel
-machine: `actool`, `ibtool` and `momc` were SIGKILLed for about an hour under
-memory pressure mid-session and then recovered on their own. If a build fails
-with `terminated with uncaught signal 9` in the asset-catalog step, that is the
-host, not the repo — free memory or reboot.
+Simulator installed: **iPhone 17**. Keks's Mac is an 8 GB Intel machine;
+`actool`, `ibtool` and `momc` have been SIGKILLed under memory pressure before.
+If a build fails with `terminated with uncaught signal 9` in the asset-catalog
+step, that is the host, not the repo.

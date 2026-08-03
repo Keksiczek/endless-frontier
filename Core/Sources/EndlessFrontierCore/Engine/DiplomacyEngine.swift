@@ -217,6 +217,39 @@ public enum DiplomacyEngine {
 
     // MARK: - How well you get on
 
+    /// How much a grudge can ever weigh, so a hated colony is at war rather
+    /// than at war with arithmetic.
+    static let grudgeCeiling = 110.0
+    /// How many times the tribe's own numbers the colony may reach before the
+    /// people who were here first start to mind.
+    static let crowdingRatio = 1.6
+    /// …and what each further multiple of them costs, per year.
+    static let crowdingGrudgePerYear = 4.0
+
+    /// The friction of being the bigger neighbour.
+    ///
+    /// Grudge used to have exactly one source — a quarrel over hunting grounds,
+    /// gated on standing already being below −15 — while standing drifts toward
+    /// a compatibility of 62 or better. So the only thing that could make a
+    /// people angry required them to be angry already, and a measured two
+    /// hundred years came out as six tribes parked at 0/0/0/+75/+80/+82 and
+    /// **not one raid in the whole run**. Every fight in the game was wolves.
+    ///
+    /// That is rule 6 wearing a diplomat's coat: a threshold no rate aimed at
+    /// it can reach. The fix is a source of friction that does not require
+    /// hostility to exist, and the honest one is already in the world — land,
+    /// game and water are finite, and a colony that outgrows its neighbours is
+    /// taking somebody's share of them. Trade and marriage still work it off
+    /// (`resolveRelations`), so this is a pressure to manage rather than a
+    /// countdown to a war you cannot avoid.
+    static func crowding(_ state: WorldState, tribeIndex: Int) -> Double {
+        let theirs = max(4, state.tribes[tribeIndex].population)
+        let ours = Double(state.settlements.reduce(0) { $0 + $1.pawns.count })
+        let times = ours / theirs
+        guard times > crowdingRatio else { return 0 }
+        return min(crowdingGrudgePerYear * 2, (times - crowdingRatio) * crowdingGrudgePerYear)
+    }
+
     /// Relations drift toward how compatible the two peoples actually are:
     /// alike in character, alike in faith, and not treading on each other.
     static func drift(
@@ -225,6 +258,12 @@ public enum DiplomacyEngine {
     ) -> WorldState {
         var s = state
         guard let capital = s.settlements.first, !capital.pawns.isEmpty else { return s }
+
+        // What being a big, growing neighbour costs you, banked before anything
+        // else is weighed. See `crowding`.
+        s.tribes[tribeIndex].grudge = min(
+            grudgeCeiling,
+            s.tribes[tribeIndex].grudge + crowding(s, tribeIndex: tribeIndex))
 
         let ours = meanGenes(capital.pawns)
         let theirs = s.tribes[tribeIndex].genes
@@ -263,6 +302,9 @@ public enum DiplomacyEngine {
             deposit(&s, capitalIndex, .food, traded)
             deposit(&s, capitalIndex, .influence, 4)
             s.tribes[tribeIndex].standing = clamp(standing + 3)
+            // Trading with the people you are crowding is how you live with
+            // them. Grudge is a pressure to manage, not a countdown.
+            s.tribes[tribeIndex].grudge = max(0, s.tribes[tribeIndex].grudge - 3)
         }
 
         // Scholars trade what they know.
@@ -276,6 +318,7 @@ public enum DiplomacyEngine {
            s.settlements[capitalIndex].leaderID != nil, rng.nextUnit() < marriageChance {
             s.tribes[tribeIndex].married = true
             s.tribes[tribeIndex].standing = clamp(standing + 15)
+            s.tribes[tribeIndex].grudge *= 0.4
             for i in s.settlements[capitalIndex].pawns.indices {
                 s.settlements[capitalIndex].pawns[i].mood = min(
                     100, s.settlements[capitalIndex].pawns[i].mood + 6)

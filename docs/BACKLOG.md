@@ -230,9 +230,95 @@ Keks played the build. Three things, and the third is a design pivot:
 
 | # | Thing | State |
 |---|---|---|
-| 8.1 | **No challenge.** Nothing kills, nothing is scarce | todo — measured below |
-| 8.2 | **Combat does not aim well; the rounds feel strange** | todo — see 8.3 |
-| 8.3 | **Real-time walking, not rounds** — "I go somewhere and do something. The enemy comes, we prepare, then we kill him if we can" | todo — the pivot |
+| 8.1 | **No challenge.** Nothing kills, nothing is scarce | part done — see 8.4 |
+| 8.2 | **Combat does not aim well; the rounds feel strange** | **done** — you pick who and they go |
+| 8.3 | **Real-time walking, not rounds** — "I go somewhere and do something. The enemy comes, we prepare, then we kill him if we can" | **done** — the pivot, 8.4 |
+
+### 8.4 — the pivot, as built (2026-08-03)
+
+Fighters have positions the **Core** owns: `Siege.Combatant` (side, `at`,
+strength, target, down) and `SiegeField`, which is the battlefield geometry
+moved out of the app. `AgentMotion` stays presentation-only (rule 5) — it now
+*reads* a colonist's position instead of interpolating one, which is the whole
+difference. The precedent followed was `Pawn.currentJob.position` and
+`HaulEngine.haulPosition`, exactly as §8.3 said.
+
+Everything that used to be a step index is a distance now:
+
+| Was | Is |
+|---|---|
+| `step >= approachSteps` | nobody is within `SiegeEngine.reach` yet |
+| raider *i* fights colonist *i* | each picks the nearest enemy and walks to them |
+| `Posture.cover` = 0.35 / 1 / 1.2 | `SiegeField.cover(at:)` — **cover is a place you stand** |
+| `posture == .giveGround` spends grain | a raider inside `wallReach` is standing in the stores |
+| all damage on the single weakest | every raider hits the person in front of them |
+
+`Posture` no longer says how much of the wall counts; it says **how far out the
+line will go** (`Posture.reach`), and the wall is read off the ground people are
+standing on. Pressing costs the wall because it walks out from behind it.
+
+Orders: a tap picks a colonist, the next tap sends them — `Siege.Order.moveTo`
+or `.engage`, recorded on the siege exactly as the posture is, so the same seed
+plus the same orders still replays to the same dead.
+
+**What the retune actually changed** (measured, `DangerProbe`, not guessed):
+
+- `attackerDamagePerStrength` 0.14 → 0.24. Spreading blows across a line made
+  them slacker, so this is what puts the cost back.
+- Raiders **work on whoever is already hurt** (`nearest(preferringWeak:)`),
+  mildly. This is the mechanism that produces a casualty instead of twelve
+  people evenly and harmlessly bruised.
+- A held line **closes the last two steps** (`closingPoint`). Before it, a
+  raider fighting your neighbour was a hand's breadth away and a third of the
+  line never swung at all, because "the enemy is outside the muster ring".
+- **Nothing knits while a wound is open** (`PawnEngine`). The flat 0.3-a-tick
+  recovery ran unconditionally *on top of* the bleeding, so an untreated wound
+  closed as fast as a tended one and the healer's trade bought nothing. Same
+  recurring shape as rule 6: a system whose bite is cancelled by a number
+  nothing gates.
+
+One raid, twelve bare-handed colonists, measured end to end:
+
+```
+str  30  wall  0  →  hurt 2  worst −33        str  30  wall 50  →  hurt 2  worst −13
+str  60  wall  0  →  hurt 4  worst −93        str  60  wall 50  →  hurt 4  worst −37
+str 120  wall  0  →  2 dead, hurt 8           str 120  wall 50  →  hurt 8  worst −43
+```
+
+Survivable, expensive, and the wall is worth building.
+
+### 8.5 — why there were no fights to be dangerous (2026-08-03)
+
+Measuring the *rate* rather than the fights found two more of the project's
+recurring shape, both worse than the combat numbers were:
+
+**No tribe had ever raided anybody.** Two hundred measured years, six peoples,
+final standings `0 / 0 / 0 / +75 / +80 / +82`, and every one of the 26 fights in
+the run was wolves. Grudge had exactly one source — a quarrel over hunting
+grounds — gated on standing already being **below −15**, while standing drifts
+toward a compatibility of 62 or better at 12 % a year. Nothing could make a
+people angry that was not angry already. `DiplomacyEngine.crowding` gives
+friction a source that does not require hostility: a colony that outgrows its
+neighbours is taking somebody's share of finite land, game and water. Trade and
+marriage work it off, so it is a pressure to manage rather than a countdown.
+
+**The wild never answered the colony.** Predator pressure is capped by the era
+(8, +5 an era), so a pack was ten strong whether the settlement was five people
+or four hundred — the first thirty years of a real world produced four fights
+and a worst wound of *nothing at all*. The pack's weight now scales with how
+much there is to come for (`WildlifeEngine.packPerColonist`), the watch that
+turns out scales with the colony, and `attackChancePerPressure` went 0.00025 →
+0.0004: a pack roughly every three and a half years.
+
+Measured after, same seed, 200 years: **58 fights** (was 26), a genuine enemy on
+the map (standings `−51 / −6 / −1 / …`), and wounds landing in the first thirty
+years instead of never.
+
+Still open under 8.1: **nothing has yet killed anybody but old age** in a long
+run. A colony of four hundred shrugging off a warband of a hundred and forty is
+correct, so the honest next step is scale — what a *late* colony is threatened
+by — not another multiplier on the early game. Food is no longer pinned at the
+cap in every run, but it is not scarce either.
 
 ### 8.1 — the measurement
 
@@ -350,6 +436,16 @@ presentation reading a `BattleLog`; 6.11 is the simulation half.
 
 - Notifications — permission state is now **visible and settable** in Settings.
   If it says *Refused*, that is an iOS record only the user can undo.
+- **The rate limit ate the first message** (found 2026-08-03, from Keks
+  reporting one notification and then nothing). `minimumGap` was measured from
+  the moment the player left rather than from the previous message, so the one
+  that is actually urgent — the council waiting on a decision, due at two hours
+  — was silently pushed out to six, every single time. Fixed. What is still
+  true by design: the earliest message is two hours out, so a short absence is
+  meant to be silent, and a day with no pending decision and no trouble produces
+  only the 22-hour digest. If that reads as "nothing", the fix is *more to say*
+  (the world is deterministic — it could predict what will have happened), not a
+  shorter timer.
 - Animals: stutter, stacking and un-tappability all fixed 2026-07-29.
 - The old English content (events, buildings, techs) is still untranslated;
   everything new ships CZ+EN in the same change.
@@ -403,6 +499,17 @@ Every one of them has cost a session at least once:
    it was lit. `SettlementLight.relief` and `slopeLight` take an `aspect`;
    anything else sampling a normalised field across the whole map needs the
    same. Guarded by "Hills come out round on a phone, not as vertical stripes".
+12. **A threat that does not scale with what it threatens is scenery.** Rule 6
+   in the danger direction, and it hid behind "the numbers look fine": predator
+   pressure is capped by the era, so the same ten-strong pack came at a colony
+   of five and a colony of four hundred. Guarded by "The wild answers a colony
+   that has grown".
+13. **A feedback loop needs an input from outside itself.** Grudge could only be
+   made by a quarrel, a quarrel needed standing below −15, and standing drifts
+   toward +62. Every term inside the loop, so the loop never started: six
+   peoples at +75…+82 and not one war in two hundred years. Anything that is
+   supposed to *build up* has to be fed by something that is true whether or not
+   it has already started — here, the colony being the bigger neighbour.
 11. **Playback pace is not simulation pace.** A tick is a real minute and a
    battle is eight rounds; played at the tick's own speed that is one
    exchange every seven and a half seconds, which reads as nothing happening.

@@ -184,6 +184,11 @@ enum AgentMotion {
         /// The fight going on right now, if one is. Everyone in its line is
         /// pulled out of their day and sent to it.
         let battle: (log: BattleLog, progress: Double)?
+        /// …and the fight itself, when it is one that is actually happening.
+        /// A live siege owns its fighters' positions, so a colonist in the line
+        /// is drawn where the *simulation* has walked them rather than where a
+        /// replay would have staged them.
+        let siege: Siege?
         /// Where each household's beds are: dwelling id → the spots inside it
         /// that its residents sleep at. Built from the same room plan the
         /// interiors are drawn from, so a colonist asleep is asleep in a bed
@@ -245,6 +250,7 @@ enum AgentMotion {
             self.battle = SettlementBattle.live(
                 settlement, continuousTick: continuousTick,
                 secondsPerTick: registry.config.realSecondsPerTick, replay: replay)
+            self.siege = settlement.siege
             self.bedsByHome = bedsByHome
             // A bed each, taken in the settlement's own roster order, so two
             // people who share a house do not share a mattress.
@@ -312,15 +318,24 @@ enum AgentMotion {
         }
         let base = dailyPose(for: pawn, map: map, scene: scene,
                              time: time, ticksPerYear: ticksPerYear)
+        // A fight that is happening knows where this colonist is standing: the
+        // Core walked them there, one action step at a time. Nothing is
+        // interpolated and nothing is guessed.
+        if let siege = scene.siege,
+           let there = SettlementBattle.post(for: pawn.id, siege: siege) {
+            let moving = SiegeField.distance(there.position, base.position) > SiegeEngine.pace
+            return Pose(position: there.position, activity: .fighting,
+                        stride: moving ? 1 : 0.3, facing: there.facing)
+        }
         guard let battle = scene.battle,
               let post = SettlementBattle.station(
                 for: pawn.id, log: battle.log, progress: battle.progress,
                 from: base.position) else { return base }
         // Running out, they face the line; standing in it, they face the enemy.
-        let field = SettlementBattle.Field(battle.log)
+        let field = SettlementBattle.ground(battle.log)
         return Pose(position: post.position, activity: .fighting,
                     stride: post.arrived ? 0.3 : 1,
-                    facing: post.arrived ? field.axis.x
+                    facing: post.arrived ? field.axisX
                                          : facing(from: base.position, to: post.position))
     }
 

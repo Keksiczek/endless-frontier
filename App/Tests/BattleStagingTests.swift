@@ -46,23 +46,22 @@ struct BattleStagingTests {
     @Test("The line stands between the town and where the attack came from")
     func lineFacesTheAttack() {
         // An attack from due east: the line must form east of the heart.
-        let field = SettlementBattle.Field(log(line: [], approach: 0))
-        #expect(field.front.x > field.heart.x)
-        #expect(field.origin.x > field.front.x)
+        let field = SettlementBattle.ground(log(line: [], approach: 0))
+        #expect(field.muster.x > field.heart.x)
+        #expect(field.origin.x > field.muster.x)
         // …and from due west, the other way.
-        let west = SettlementBattle.Field(log(line: [], approach: .pi))
-        #expect(west.front.x < west.heart.x)
+        let west = SettlementBattle.ground(log(line: [], approach: .pi))
+        #expect(west.muster.x < west.heart.x)
     }
 
     @Test("Defenders stand shoulder to shoulder, not on one another")
     func lineIsSpreadOut() {
         let ids = (0..<6).map { _ in UUID() }
-        let field = SettlementBattle.Field(log(line: ids))
+        let field = SettlementBattle.ground(log(line: ids))
         let posts = ids.indices.map { field.defenderPost(index: $0, of: ids.count) }
         for i in posts.indices {
             for j in posts.indices where j > i {
-                let dx = posts[i].x - posts[j].x, dy = posts[i].y - posts[j].y
-                #expect((dx * dx + dy * dy).squareRoot() > 0.01)
+                #expect(SiegeField.distance(posts[i], posts[j]) > 0.01)
             }
         }
     }

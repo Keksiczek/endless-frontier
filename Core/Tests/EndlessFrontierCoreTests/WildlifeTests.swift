@@ -78,6 +78,33 @@ struct WildlifeTests {
         #expect(s.deathTallies[PawnDeathCause.beast.rawValue, default: 0] == 0)
     }
 
+    /// Rule 12, named for the reachability. Predator pressure is capped by the
+    /// era, so the same ten-strong pack came at a colony of five and a colony
+    /// of four hundred — and a threat that does not answer the thing it
+    /// threatens is scenery. Measured before this: the first thirty years of a
+    /// real world gave four fights and a worst wound of nothing at all.
+    @Test("The wild answers a colony that has grown")
+    func packScalesWithTheColony() {
+        func packStrength(colonists: Int) -> Double {
+            var s = settlement(wildlife: WildlifeState(predatorPressure: 100),
+                               pawns: (0..<colonists).map { i in
+                Pawn(id: UUID(uuidString: String(
+                    format: "00000000-0000-0000-0E0F-%012d", i + 1))!, name: "Hand \(i)")
+            })
+            for tick in 0..<3000 {
+                s = WildlifeEngine.advanceOneTick(s, registry: registry, tick: tick,
+                                                  era: .earlySettlement, mapSeed: 31)
+                if let siege = s.siege { return siege.openingStrength }
+                s.localMap?.wildlife.predatorPressure = 100
+            }
+            return 0
+        }
+        let small = packStrength(colonists: 8)
+        let big = packStrength(colonists: 120)
+        #expect(small > 0 && big > 0, "no pack ever came")
+        #expect(big > small * 2, "a town of a hundred and twenty drew the same wolves as eight")
+    }
+
     @Test("Wildlife evolution is deterministic")
     func deterministic() {
         func run() -> WildlifeState {

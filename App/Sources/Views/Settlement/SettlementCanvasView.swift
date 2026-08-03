@@ -27,6 +27,23 @@ enum CanvasSelection: Equatable {
     case animal(UUID)
 }
 
+/// What a tap means while a raid is going on.
+///
+/// The colony is run by standing orders and a battle should not suddenly demand
+/// that sixty people be steered one at a time — so this is deliberately the
+/// *same* two taps the rest of the canvas already uses: pick somebody, then
+/// point. "I go somewhere and do something", in the player's own words.
+///
+/// Nothing here decides anything. It is handed up to the view model, which
+/// writes it onto the siege, where it becomes an input the simulation replays
+/// from (`SiegeEngine.order`). Rule 5 is untouched.
+enum SiegeCommand: Equatable {
+    /// Go there and hold it.
+    case move(pawn: UUID, to: LocalPoint)
+    /// Go for that one.
+    case engage(pawn: UUID, raider: UUID)
+}
+
 /// The living settlement: a `TimelineView`-driven `Canvas` where colonists walk
 /// their day. All motion is presentational (see `AgentMotion`); the simulation
 /// underneath is untouched. Pinch to zoom, drag to pan, tap to inspect a
@@ -51,6 +68,9 @@ struct SettlementCanvasView: View {
     /// of an hour-long colony year; looking away used to mean missing it for
     /// good.
     var battleReplay: SettlementBattle.Replay?
+    /// Where a tap goes while a raid is on: an order for the colonist who is
+    /// already picked out, rather than another inspection.
+    var onSiegeOrder: ((SiegeCommand) -> Void)?
 
     /// A fixed, *absolute* epoch so the animation clock is stable across
     /// redraws — and so anyone else (the pawn inspector's "right now" line)
@@ -134,11 +154,45 @@ struct SettlementCanvasView: View {
                 aim(plan, at: value.location, size: size)
                 return
             }
+            // A raid you are standing in: once you have somebody picked out of
+            // the line, a tap tells *them* where to go instead of inspecting
+            // whatever happens to be under your thumb.
+            if let command = siegeOrder(at: value.location, size: size) {
+                onSiegeOrder?(command)
+                return
+            }
             let hit = hitTest(value.location, size: size)
             withAnimation(.easeOut(duration: 0.15)) {
                 selection = (hit == selection) ? .none : hit
             }
         }
+    }
+
+    /// The order a tap carries, if there is a fight on and somebody in the line
+    /// is picked out to carry it.
+    ///
+    /// Nearest raider wins if the tap landed on one — "take that one" — and
+    /// open ground is "go there". The selection is deliberately kept, so a
+    /// player can walk one fighter around without re-picking them every time.
+    private func siegeOrder(at location: CGPoint, size: CGSize) -> SiegeCommand? {
+        guard let siege = settlement.siege, !siege.isFinished,
+              case let .pawn(id) = selection,
+              siege.line.contains(id), !siege.withdrawn.contains(id) else { return nil }
+        let rect = SettlementRenderer.worldRect(
+            viewRect: CGRect(origin: .zero, size: size), camera: camera)
+
+        var mark: UUID?
+        var nearest = touchRadius * touchRadius
+        for raider in siege.raiders where !raider.down {
+            let p = SettlementRenderer.point(raider.at, in: rect)
+            let dx = p.x - location.x, dy = p.y - location.y
+            let d2 = dx * dx + dy * dy
+            guard d2 < nearest else { continue }
+            nearest = d2
+            mark = raider.id
+        }
+        if let mark { return .engage(pawn: id, raider: mark) }
+        return .move(pawn: id, to: SettlementRenderer.normalised(location, in: rect))
     }
 
     /// Points the ghost at the tapped ground.

@@ -110,7 +110,14 @@ enum NotificationScheduler {
                          digestLine(world)))
 
         // Rate limit: cap the count and keep them apart.
-        var lastAt: TimeInterval = 0
+        //
+        // `lastAt` starts far enough back that the **first** message keeps its
+        // own time. Starting it at zero meant the gap was measured from the
+        // moment the player left, so the one message that is actually urgent —
+        // the council waiting on a decision, due at two hours — was quietly
+        // pushed out to six every single time. A rate limit is for the space
+        // *between* messages; there is nothing before the first one.
+        var lastAt: TimeInterval = -minimumGap
         var sent = 0
         for message in messages.sorted(by: { $0.after < $1.after }) {
             guard sent < maxPerSpell else { break }

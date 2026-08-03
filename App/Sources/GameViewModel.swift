@@ -218,6 +218,23 @@ final class GameViewModel {
             world.settlements[index], pawnID: pawnID, out: !holding)
     }
 
+    /// Sends one colonist somewhere, or after somebody.
+    ///
+    /// The tap half of the fight. Written onto the siege, like the posture, so
+    /// it is an input the same seed replays from rather than a thing that
+    /// happened outside the world.
+    func command(_ order: SiegeCommand) {
+        guard let index = selectedSettlementIndex else { return }
+        switch order {
+        case .move(let pawn, let point):
+            world.settlements[index] = SiegeEngine.order(
+                world.settlements[index], pawnID: pawn, moveTo: point)
+        case .engage(let pawn, let raider):
+            world.settlements[index] = SiegeEngine.order(
+                world.settlements[index], pawnID: pawn, engage: raider)
+        }
+    }
+
     /// Advances any ticks that have come due while the app sits open, and
     /// turns what happened into toasts.
     func advanceLive(now: Date = Date()) {

@@ -53,13 +53,18 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
             }
         }
 
-        /// How much of the wall still counts. Nobody behind it while pressing,
-        /// all of it while giving ground.
-        public var cover: Double {
+        /// How far out from the town this posture is willing to fight.
+        ///
+        /// This replaces the old `cover` multiplier, and the difference is the
+        /// whole pivot: a posture no longer *says* how much of the wall counts,
+        /// it says **where people stand**, and `SiegeField.cover(at:)` reads the
+        /// wall off the ground they are standing on. Pressing loses the wall
+        /// because it walks out from behind it.
+        public var reach: Double {
             switch self {
-            case .hold: return 1
-            case .press: return 0.35
-            case .giveGround: return 1.2
+            case .hold: return SiegeField.musterReach
+            case .press: return SiegeField.originReach
+            case .giveGround: return 0
             }
         }
 
@@ -85,6 +90,60 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
                 .en: "Nobody dies for grain.", .cs: "Za obilí se neumírá."])
             }
         }
+    }
+
+    /// One figure on the field, and **where it is standing**.
+    ///
+    /// The fight used to be arithmetic on one strength number paired against a
+    /// round index: raider seven fought colonist three because seven and three
+    /// were opposite each other in two lists. Nobody walked anywhere, which is
+    /// exactly why the rounds felt strange to stand in — the canvas drew an
+    /// arrangement of people the simulation did not have.
+    ///
+    /// A combatant has a position the Core owns and moves. Contact is being
+    /// close enough to reach, the approach is *not being close enough yet*
+    /// rather than a step count, and an order to go somewhere is a thing the
+    /// simulation can actually carry out.
+    public struct Combatant: Codable, Sendable, Equatable, Identifiable {
+        public enum Side: String, Codable, Sendable { case colony, raider }
+
+        /// A colonist's pawn id, or a raider's own stable id.
+        public let id: UUID
+        public let side: Side
+        /// Where they are, in local-map coordinates.
+        public var at: LocalPoint
+        /// What a raider is still worth — their share of the warband, spent as
+        /// the line cuts them down. A colonist's weight is their health, so
+        /// this holds their opening power and is only read, never spent.
+        public var strength: Double
+        /// Who they have closed on, if anybody.
+        public var target: UUID?
+        /// Down, or gone from the field.
+        public var down: Bool
+
+        public init(id: UUID, side: Side, at: LocalPoint, strength: Double,
+                    target: UUID? = nil, down: Bool = false) {
+            self.id = id
+            self.side = side
+            self.at = at
+            self.strength = strength
+            self.target = target
+            self.down = down
+        }
+    }
+
+    /// What the player has told **one** colonist to do, by tapping them and
+    /// then tapping the ground or an enemy.
+    ///
+    /// Recorded on the siege exactly as `posture` is, for exactly the same
+    /// reason: the fight may depend on the player's orders, but given the same
+    /// seed *and the same orders* it has to replay to the same dead. An order
+    /// that lived in the view would be a hole in determinism.
+    public enum Order: Codable, Sendable, Equatable {
+        /// Go there and hold it.
+        case moveTo(LocalPoint)
+        /// Go for that one.
+        case engage(UUID)
     }
 
     /// How many action steps a siege runs before it is decided one way or the
@@ -129,6 +188,13 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
     public var withdrawn: Set<UUID>
     /// What the player has told the line to do, right now.
     public var posture: Posture
+    /// Everyone on the field, with a place on it. Colonists first, in the order
+    /// they took the line, then the raiders as they come over the ground.
+    public var fighters: [Combatant]
+    /// …and what individual colonists have been told, over the top of the
+    /// posture. Empty is the normal case: a colony is run by standing orders
+    /// and a battle should not demand that sixty people be steered one by one.
+    public var orders: [UUID: Order]
     /// Damage dealt so far, by pawn — applied to the colonists as it lands.
     public var damage: [UUID: Double]
     /// The record as it accumulates, so the canvas can draw a fight that has
@@ -161,6 +227,8 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         self.line = line
         self.withdrawn = []
         self.posture = posture
+        self.fighters = []
+        self.orders = [:]
         self.damage = [:]
         self.moments = []
         self.plundered = 0
@@ -187,6 +255,28 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
     /// Whether the colony held. Only meaningful once it is finished.
     public var repelled: Bool { strength <= 0 }
 
+    // MARK: - The field, read
+
+    public var raiders: [Combatant] { fighters.filter { $0.side == .raider } }
+    public var defenders: [Combatant] { fighters.filter { $0.side == .colony } }
+
+    /// Whether anybody is close enough to anybody to be fighting them. What
+    /// "the ranks are in contact" means now that there is a ground to be on —
+    /// the phase is read off the field rather than off a step number.
+    public var inContact: Bool {
+        let colony = fighters.filter { $0.side == .colony && !$0.down }
+        guard !colony.isEmpty else { return false }
+        return fighters.contains { raider in
+            guard raider.side == .raider, !raider.down else { return false }
+            return colony.contains { SiegeField.distance($0.at, raider.at) <= SiegeEngine.reach }
+        }
+    }
+
+    /// Where a given fighter is standing, if they are on this field.
+    public func place(of id: UUID) -> LocalPoint? {
+        fighters.first { $0.id == id }?.at
+    }
+
     // MARK: - Codable (resilient: sieges postdate the first battles)
 
     private enum CodingKeys: String, CodingKey {
@@ -194,6 +284,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         case attackerTribeID
         case approach, attackers, openingStrength, strength, fortification, seed
         case line, withdrawn, posture, damage, moments, plundered
+        case fighters, orders
     }
 
     public init(from decoder: Decoder) throws {
@@ -214,6 +305,11 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         line = try c.decodeIfPresent([UUID].self, forKey: .line) ?? []
         withdrawn = try c.decodeIfPresent(Set<UUID>.self, forKey: .withdrawn) ?? []
         posture = try c.decodeIfPresent(Posture.self, forKey: .posture) ?? .hold
+        // A raid saved before anybody had a position on the field: the engine
+        // stages the roster on the next step it fights (rule 3 — every new
+        // field optional, with a default that the code can actually work from).
+        fighters = try c.decodeIfPresent([Combatant].self, forKey: .fighters) ?? []
+        orders = try c.decodeIfPresent([UUID: Order].self, forKey: .orders) ?? [:]
         damage = try c.decodeIfPresent([UUID: Double].self, forKey: .damage) ?? [:]
         moments = try c.decodeIfPresent([BattleMoment].self, forKey: .moments) ?? []
         plundered = try c.decodeIfPresent(Double.self, forKey: .plundered) ?? 0

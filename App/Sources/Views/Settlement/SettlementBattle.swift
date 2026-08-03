@@ -91,14 +91,33 @@ enum SettlementBattle {
         }
     }
 
+    /// The same question, asked of a fight that is **happening**.
+    ///
+    /// A replay has only a clock to read the phase off, so it uses the fractions
+    /// above. A live siege has a ground: "the ranks are in contact" is people
+    /// being close enough to reach each other, and the caption stops being a
+    /// guess about the fight and becomes a description of it.
+    static func phase(of siege: Siege) -> Phase {
+        if siege.isFinished || siege.progress >= breakAt { return .breaking }
+        if siege.inContact { return .melee }
+        return siege.moments.contains { $0.kind == .volley } ? .volley : .marching
+    }
+
     /// The line across the top of the fight: who is on the field, at what
     /// stage, and what it has cost so far.
-    static func caption(_ log: BattleLog, progress: Double, cs: Bool) -> String {
+    static func caption(
+        _ log: BattleLog, progress: Double, cs: Bool, siege: Siege? = nil
+    ) -> String {
         let attacker = log.attacker(cs ? .cs : .en)
-        let standing = attackersStanding(log, at: progress)
-        let head = "\(attacker) \(standing) — \(log.defenderName) \(defendersStanding(log, at: progress))"
+        // Live, both tallies are counted off the field rather than estimated
+        // from the outcome — because there is a field to count.
+        let standing = siege.map { $0.raiders.count { !$0.down } }
+            ?? attackersStanding(log, at: progress)
+        let holding = siege.map { $0.defenders.count { !$0.down } }
+            ?? defendersStanding(log, at: progress)
+        let head = "\(attacker) \(standing) — \(log.defenderName) \(holding)"
         let stage: String
-        switch phase(at: progress) {
+        switch siege.map({ phase(of: $0) }) ?? phase(at: progress) {
         case .marching: stage = cs ? "táhnou na osadu" : "coming over the ground"
         case .volley:   stage = cs ? "salva" : "the wall looses"
         case .melee:    stage = cs ? "boj muže proti muži" : "the ranks are in contact"
@@ -154,59 +173,26 @@ enum SettlementBattle {
 
     // MARK: - The field
 
-    /// Where everything stands. One geometry, shared by the drawing and by
-    /// `AgentMotion` — the defenders have to run to the same line the raiders
-    /// are drawn breaking on, or the colony fights an empty field.
-    struct Field {
-        /// The heart of the settlement, which is what is being defended.
-        let heart: LocalPoint
-        /// Off the edge of the map, where the attackers came from.
-        let origin: LocalPoint
-        /// Where the two ranks meet.
-        let front: LocalPoint
-        /// The unit vector along the line the ranks face each other across.
-        let axis: (x: Double, y: Double)
+    /// Where everything stands — **from the Core**.
+    ///
+    /// This used to be a struct of its own here, and it had to be: the fight
+    /// was arithmetic on one strength number and a round index, so the canvas
+    /// invented an arrangement of people to hang it on. `SiegeField` is the
+    /// simulation's own geometry now (rule 8: one number, one place), and a
+    /// live fight is *read* off real positions rather than choreographed.
+    static func ground(_ log: BattleLog) -> SiegeField {
+        SiegeField(approach: log.approach, heart: SettlementRenderer.colonyHeart)
+    }
 
-        init(_ log: BattleLog, heart: LocalPoint = SettlementRenderer.colonyHeart) {
-            self.heart = heart
-            let a = log.approach
-            axis = (cos(a), sin(a))
-            origin = LocalPoint(x: heart.x + axis.x * 0.48, y: heart.y + axis.y * 0.46)
-            // The line forms outside the built colony, not on top of it.
-            front = LocalPoint(x: heart.x + axis.x * 0.30, y: heart.y + axis.y * 0.29)
-        }
-
-        /// The place a given defender holds in the line: shoulder to shoulder,
-        /// spread across the front, facing the way the attack came.
-        func defenderPost(index: Int, of count: Int) -> LocalPoint {
-            post(at: front, index: index, of: count, back: 0.012)
-        }
-
-        /// …and where a raider stands opposite them. `closed` walks the rank in
-        /// to arm's length once the ranks are in contact, which is the whole
-        /// difference between two lines of people and a fight.
-        func attackerPost(index: Int, of count: Int, closed: Double = 0) -> LocalPoint {
-            post(at: front, index: index, of: count,
-                 back: -0.030 + 0.016 * min(1, max(0, closed)))
-        }
-
-        /// A rank of `count` bodies abreast, `back` behind the front along the
-        /// axis of the attack. Fanned a little so it reads as a line of people
-        /// rather than a fence.
-        private func post(at centre: LocalPoint, index: Int, of count: Int,
-                          back: Double) -> LocalPoint {
-            let spread = 0.030
-            let offset = count <= 1 ? 0 : (Double(index) / Double(count - 1) - 0.5)
-            // Perpendicular to the axis: the width of the line.
-            let px = -axis.y, py = axis.x
-            // A shallow crescent — the ends of a line sag back.
-            let sag = abs(offset) * 0.014
-            return LocalPoint(
-                x: centre.x + px * offset * spread * Double(count) * 0.6
-                    + axis.x * (back + sag),
-                y: centre.y + py * offset * spread * Double(count) * 0.6
-                    + axis.y * (back + sag))
-        }
+    /// Where a raider stands in a **replay**. A finished record has no
+    /// positions in it — only who came, from where, and what happened when —
+    /// so the old staging is kept for playing one back. `closed` walks the rank
+    /// in to arm's length as the ranks meet.
+    static func stagedAttackerPost(
+        _ field: SiegeField, index: Int, of count: Int, closed: Double
+    ) -> LocalPoint {
+        let reach = SiegeField.musterReach + 0.040 - 0.018 * min(1, max(0, closed))
+        return field.post(index: index, of: count, reach: reach)
     }
 
     /// The battle a settlement is fighting right now, if it is fighting one —
@@ -265,7 +251,7 @@ enum SettlementBattle {
         for pawnID: UUID, log: BattleLog, progress: Double, from: LocalPoint
     ) -> (position: LocalPoint, arrived: Bool)? {
         guard let index = log.line.firstIndex(of: pawnID) else { return nil }
-        let field = Field(log)
+        let field = ground(log)
         let post = field.defenderPost(index: index, of: log.line.count)
         // They run out while the raiders are still coming on, and hold from
         // the volley onward.
@@ -274,6 +260,31 @@ enum SettlementBattle {
         return (LocalPoint(x: from.x + (post.x - from.x) * eased,
                            y: from.y + (post.y - from.y) * eased),
                 t >= 1)
+    }
+
+    /// Where a colonist **is**, in a fight that is actually happening.
+    ///
+    /// This is the whole point of moving positions into the Core. `station`
+    /// above interpolates a defender onto a post because a *record* has no
+    /// positions in it; a live siege does, and the canvas reads them instead of
+    /// guessing. Rule 5 holds either way — nothing here writes anything.
+    /// `facing` is the x-component of the way they are looking, which is the
+    /// unit `AgentMotion.Pose` speaks: −1 is left, +1 is right.
+    static func post(for pawnID: UUID, siege: Siege) -> (position: LocalPoint, facing: Double)? {
+        guard let me = siege.fighters.first(where: { $0.id == pawnID && $0.side == .colony })
+        else { return nil }
+        // Facing whoever they are on, and out along the attack if nobody.
+        guard let mark = me.target.flatMap({ siege.place(of: $0) }) else {
+            return (me.at, SiegeField(approach: siege.approach).axisX)
+        }
+        return (me.at, toward(me.at, mark).x)
+    }
+
+    private static func toward(_ a: LocalPoint, _ b: LocalPoint) -> (x: Double, y: Double) {
+        let dx = b.x - a.x, dy = b.y - a.y
+        let d = (dx * dx + dy * dy).squareRoot()
+        guard d > 0 else { return (0, 0) }
+        return (dx / d, dy / d)
     }
 
     // MARK: - Drawing
@@ -286,33 +297,181 @@ enum SettlementBattle {
         guard let (log, progress) = live(settlement, continuousTick: continuousTick,
                                          secondsPerTick: secondsPerTick,
                                          replay: replay) else { return }
-        draw(&context, rect: rect, log: log, progress: progress, time: time, zoom: zoom)
+        // A fight that is happening has real people standing in real places. A
+        // record being played back has neither, and has to be staged.
+        let siege = settlement.siege.flatMap { $0.id == log.id ? $0 : nil }
+        draw(&context, rect: rect, log: log, progress: progress, time: time,
+             zoom: zoom, siege: siege)
     }
 
     /// The fight itself, from a record and a point inside it. Split out so a
     /// test — and a replay — can drive it at any moment without a settlement.
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, log: BattleLog,
-        progress: Double, time: Double, zoom: CGFloat
+        progress: Double, time: Double, zoom: CGFloat, siege: Siege? = nil
     ) {
-        let field = Field(log)
+        let field = ground(log)
         let unit = min(rect.width, rect.height)
-        let stage = phase(at: progress)
+        let strike = strikeBeat(log, at: progress)
 
-        // How far the ranks have closed on each other, and how hard the fight
-        // is going at this instant.
+        if let siege {
+            drawLive(&context, rect: rect, siege: siege, field: field,
+                     time: time, zoom: zoom, strike: strike, unit: unit)
+        } else {
+            drawStaged(&context, rect: rect, log: log, field: field, progress: progress,
+                       time: time, zoom: zoom, strike: strike, unit: unit)
+        }
+
+        // What the fight has done to the colonists holding the line, over their
+        // heads: a wound is a thing you can see happening to somebody. Live,
+        // that is read straight off the damage the simulation has dealt.
+        for (index, id) in log.line.enumerated() {
+            let hurt = siege.map { min(0.95, ($0.damage[id] ?? 0) / 100) }
+                ?? harm(log, pawn: id, at: progress)
+            guard hurt > 0.01 else { continue }
+            let post = siege?.place(of: id)
+                ?? field.defenderPost(index: index, of: log.line.count)
+            wounded(&context, at: SettlementRenderer.point(post, in: rect),
+                    harm: hurt, unit: unit, zoom: zoom)
+        }
+
+        // The beats: arrows away from the wall, sparks where steel met, and the
+        // dead marked where they stood.
+        for moment in log.moments(upTo: progress) {
+            let age = progress - moment.at
+            guard age >= 0, age < 0.12 else { continue }
+            let fade = 1 - age / 0.12
+            switch moment.kind {
+            case .volley:
+                volley(&context, field: field, rect: rect, fade: fade, zoom: zoom)
+            case .clash, .charge:
+                sparks(&context, at: SettlementRenderer.point(
+                    seam(siege: siege, field: field), in: rect),
+                       fade: fade, unit: unit, seed: moment.id)
+            case .wound:
+                if let p = place(of: moment, log: log, field: field, siege: siege) {
+                    hit(&context, at: SettlementRenderer.point(p, in: rect),
+                        fade: fade, unit: unit, tint: Theme.accent)
+                }
+            case .death:
+                if let p = place(of: moment, log: log, field: field, siege: siege) {
+                    hit(&context, at: SettlementRenderer.point(p, in: rect),
+                        fade: fade, unit: unit, tint: Theme.danger)
+                }
+            case .plunder:
+                plunder(&context, field: field, rect: rect, fade: fade, unit: unit)
+            case .repelled:
+                horn(&context, at: SettlementRenderer.point(field.muster, in: rect),
+                     fade: fade, unit: unit)
+            }
+        }
+
+        // And the bodies, lying where they fell for as long as the field stays.
+        // A live fight lays out its own; a replay reads them from the record.
+        if siege == nil {
+            for (index, moment) in casualties(log, upTo: progress).enumerated() {
+                guard let p = place(of: moment, log: log, field: field, siege: nil) else { continue }
+                body(&context, at: SettlementRenderer.point(p, in: rect),
+                     zoom: zoom, seed: UInt64(index &+ moment.id))
+            }
+        }
+
+        banner(&context, rect: rect, log: log, progress: progress, siege: siege)
+    }
+
+    /// A fight that is **happening**: everybody is drawn where the simulation
+    /// says they are, and nothing is interpolated.
+    ///
+    /// The colonists are not drawn here — they are drawn by the ordinary figure
+    /// pass, because they *are* the ordinary colonists and they walked out to
+    /// the line on the Core's own legs (`AgentMotion` reads `Siege.fighters`).
+    /// What this adds is the warband, who is on whom, and the dead.
+    private static func drawLive(
+        _ context: inout GraphicsContext, rect: CGRect, siege: Siege, field: SiegeField,
+        time: Double, zoom: CGFloat, strike: Double, unit: CGFloat
+    ) {
+        for (index, raider) in siege.raiders.enumerated() {
+            let screen = SettlementRenderer.point(raider.at, in: rect)
+            guard !raider.down else {
+                body(&context, at: screen, zoom: zoom, seed: UInt64(index &* 31))
+                continue
+            }
+            let mark = raider.target.flatMap { siege.place(of: $0) }
+            let closed = mark.map { SiegeField.distance(raider.at, $0) <= SiegeEngine.reach }
+                ?? false
+            // A little jostle, so a rank of raiders is not a row of stamps.
+            let jitter = sin(time * 3.4 + Double(index) * 1.7) * 0.0022
+            raiderFigure(
+                &context,
+                at: CGPoint(x: screen.x + CGFloat(jitter) * rect.width,
+                            y: screen.y + CGFloat(jitter) * 0.6 * rect.height),
+                heading: mark.map { toward(raider.at, $0) } ?? (-field.axisX, -field.axisY),
+                zoom: zoom, time: time, phase: Double(index) * 0.9,
+                swinging: closed ? strike : 0)
+            // Who they are on — drawn only once they have actually reached
+            // them, so the thread means contact rather than intent.
+            if closed, let mark {
+                pairing(&context, from: screen,
+                        to: SettlementRenderer.point(mark, in: rect),
+                        fade: strike * 0.5 + 0.12, unit: unit)
+            }
+        }
+        // Anybody who fell stays on the ground where they fell.
+        for fallen in siege.defenders where fallen.down && !siege.withdrawn.isEmpty {
+            guard siege.damage[fallen.id] ?? 0 > 0 else { continue }
+            body(&context, at: SettlementRenderer.point(fallen.at, in: rect),
+                 zoom: zoom, seed: UInt64(fallen.id.uuidString.hashValue & 0xFF))
+        }
+        // And the orders the player has given, so a tap is visibly a thing that
+        // happened rather than a thing you hope happened.
+        for (pawn, order) in siege.orders {
+            let spot: LocalPoint?
+            switch order {
+            case .moveTo(let point): spot = point
+            case .engage(let mark): spot = siege.place(of: mark)
+            }
+            guard let spot, let from = siege.place(of: pawn) else { continue }
+            marker(&context, at: SettlementRenderer.point(spot, in: rect),
+                   from: SettlementRenderer.point(from, in: rect),
+                   time: time, unit: unit)
+        }
+    }
+
+    /// Where somebody has been told to be: a soft ring on the ground with a
+    /// thread back to whoever was told.
+    private static func marker(
+        _ context: inout GraphicsContext, at p: CGPoint, from: CGPoint,
+        time: Double, unit: CGFloat
+    ) {
+        let pulse = 0.5 + 0.5 * sin(time * 3)
+        let r = unit * (0.010 + 0.004 * pulse)
+        context.stroke(Path { path in
+            path.move(to: from)
+            path.addLine(to: p)
+        }, with: .color(Theme.accent.opacity(0.22)),
+           style: StrokeStyle(lineWidth: max(0.6, unit * 0.0014), dash: [3, 4]))
+        context.stroke(
+            Path(ellipseIn: CGRect(x: p.x - r, y: p.y - r, width: r * 2, height: r * 2)),
+            with: .color(Theme.accent.opacity(0.5 + 0.3 * pulse)), lineWidth: 1.4)
+    }
+
+    /// A record being played back. There are no positions in a `BattleLog` —
+    /// only who came, from where, and what happened when — so the ranks are
+    /// staged onto the field and walked through the shape of the fight.
+    private static func drawStaged(
+        _ context: inout GraphicsContext, rect: CGRect, log: BattleLog, field: SiegeField,
+        progress: Double, time: Double, zoom: CGFloat, strike: Double, unit: CGFloat
+    ) {
+        let stage = phase(at: progress)
         let closing = min(1, progress / volleyAt)
         let closed = stage == .marching ? 0
             : min(1, max(0, (progress - volleyAt) / (meleeAt - volleyAt)))
-        let strike = strikeBeat(log, at: progress)
 
-        // The raiders. They come in over the ground, form up opposite the line,
-        // close, and then either go back over the hill or push through.
         let count = log.drawnAttackers
         let standing = attackersStanding(log, at: progress)
         let defenders = max(1, log.line.count)
         for i in 0..<count {
-            let post = field.attackerPost(index: i, of: count, closed: closed)
+            let post = stagedAttackerPost(field, index: i, of: count, closed: closed)
             var p = interpolate(field.origin, post, t: ease(closing))
             var down = false
             if progress > breakAt {
@@ -333,15 +492,12 @@ enum SettlementBattle {
                 body(&context, at: screen, zoom: zoom, seed: UInt64(i &* 31))
                 continue
             }
-            // A little jostle, so a rank of raiders is not a row of stamps.
             let jitter = sin(time * 3.4 + Double(i) * 1.7) * 0.0022
-            raider(&context,
-                   at: CGPoint(x: screen.x + CGFloat(jitter) * rect.width,
-                               y: screen.y + CGFloat(jitter) * 0.6 * rect.height),
-                   facing: field.axis, zoom: zoom, time: time, phase: Double(i) * 0.9,
-                   swinging: stage == .melee ? strike : 0)
-            // Who they are fighting: a short line to the colonist opposite,
-            // drawn only while the ranks are in contact.
+            raiderFigure(&context,
+                         at: CGPoint(x: screen.x + CGFloat(jitter) * rect.width,
+                                     y: screen.y + CGFloat(jitter) * 0.6 * rect.height),
+                         heading: (-field.axisX, -field.axisY), zoom: zoom, time: time,
+                         phase: Double(i) * 0.9, swinging: stage == .melee ? strike : 0)
             if stage == .melee, defenders > 0 {
                 let opposite = defenders == 1 ? 0 : i * (defenders - 1) / max(1, count - 1)
                 pairing(&context, from: screen,
@@ -357,55 +513,24 @@ enum SettlementBattle {
             contact(&context, field: field, rect: rect, log: log,
                     progress: progress, strike: strike, unit: unit)
         }
+    }
 
-        // What the fight has done to the colonists holding the line, over their
-        // heads: a wound is a thing you can see happening to somebody.
-        for (index, id) in log.line.enumerated() {
-            let hurt = harm(log, pawn: id, at: progress)
-            guard hurt > 0.01 else { continue }
-            let post = field.defenderPost(index: index, of: log.line.count)
-            wounded(&context, at: SettlementRenderer.point(post, in: rect),
-                    harm: hurt, unit: unit, zoom: zoom)
-        }
-
-        // The beats: arrows away from the wall, sparks at the seam, and the
-        // dead marked where they stood.
-        for moment in log.moments(upTo: progress) {
-            let age = progress - moment.at
-            guard age >= 0, age < 0.12 else { continue }
-            let fade = 1 - age / 0.12
-            switch moment.kind {
-            case .volley:
-                volley(&context, field: field, rect: rect, fade: fade, zoom: zoom)
-            case .clash, .charge:
-                sparks(&context, at: SettlementRenderer.point(field.front, in: rect),
-                       fade: fade, unit: unit, seed: moment.id)
-            case .wound:
-                if let p = place(of: moment, log: log, field: field) {
-                    hit(&context, at: SettlementRenderer.point(p, in: rect),
-                        fade: fade, unit: unit, tint: Theme.accent)
-                }
-            case .death:
-                if let p = place(of: moment, log: log, field: field) {
-                    hit(&context, at: SettlementRenderer.point(p, in: rect),
-                        fade: fade, unit: unit, tint: Theme.danger)
-                }
-            case .plunder:
-                plunder(&context, field: field, rect: rect, fade: fade, unit: unit)
-            case .repelled:
-                horn(&context, at: SettlementRenderer.point(field.front, in: rect),
-                     fade: fade, unit: unit)
+    /// Where the fighting is, for the things that happen "at the front": the
+    /// middle of the contact if there is one, and the muster line otherwise.
+    private static func seam(siege: Siege?, field: SiegeField) -> LocalPoint {
+        guard let siege else { return field.muster }
+        let met = siege.raiders.filter { !$0.down }
+            .compactMap { raider -> LocalPoint? in
+                guard let mark = raider.target.flatMap({ siege.place(of: $0) }),
+                      SiegeField.distance(raider.at, mark) <= SiegeEngine.reach * 1.5
+                else { return nil }
+                return LocalPoint(x: (raider.at.x + mark.x) / 2, y: (raider.at.y + mark.y) / 2)
             }
+        guard !met.isEmpty else {
+            return siege.raiders.first { !$0.down }?.at ?? field.muster
         }
-
-        // And the bodies, lying where they fell for as long as the field stays.
-        for (index, moment) in casualties(log, upTo: progress).enumerated() {
-            guard let p = place(of: moment, log: log, field: field) else { continue }
-            body(&context, at: SettlementRenderer.point(p, in: rect),
-                 zoom: zoom, seed: UInt64(index &+ moment.id))
-        }
-
-        banner(&context, rect: rect, log: log, progress: progress)
+        return LocalPoint(x: met.reduce(0) { $0 + $1.x } / Double(met.count),
+                          y: met.reduce(0) { $0 + $1.y } / Double(met.count))
     }
 
     /// How hard a blow is landing right now, 0…1 — a spike at every clash in
@@ -426,11 +551,14 @@ enum SettlementBattle {
         return best
     }
 
-    /// Where a beat happened: at the fallen colonist's post in the line if they
-    /// were in it, otherwise at the front.
-    private static func place(of moment: BattleMoment, log: BattleLog, field: Field) -> LocalPoint? {
-        guard let id = moment.pawnID else { return field.front }
-        guard let index = log.line.firstIndex(of: id) else { return field.front }
+    /// Where a beat happened: on the person it happened to, if the fight knows
+    /// where they are standing, and otherwise at the line.
+    private static func place(
+        of moment: BattleMoment, log: BattleLog, field: SiegeField, siege: Siege?
+    ) -> LocalPoint? {
+        guard let id = moment.pawnID else { return seam(siege: siege, field: field) }
+        if let live = siege?.place(of: id) { return live }
+        guard let index = log.line.firstIndex(of: id) else { return field.muster }
         return field.defenderPost(index: index, of: log.line.count)
     }
 
@@ -443,9 +571,11 @@ enum SettlementBattle {
     /// The caption: who is fighting whom, how many of each are up, and which
     /// part of the fight this is. Drawn over the field, high enough to clear it.
     private static func banner(
-        _ context: inout GraphicsContext, rect: CGRect, log: BattleLog, progress: Double
+        _ context: inout GraphicsContext, rect: CGRect, log: BattleLog,
+        progress: Double, siege: Siege?
     ) {
-        let text = Text(caption(log, progress: progress, cs: AppStrings.language == .cs))
+        let text = Text(caption(log, progress: progress,
+                                cs: AppStrings.language == .cs, siege: siege))
             .font(.system(size: 9, weight: .semibold))
             .foregroundStyle(Theme.bone)
         let resolved = context.resolve(text)
@@ -494,8 +624,8 @@ enum SettlementBattle {
 
     /// A raider: a dark figure with a shield and a weapon, leaning into the
     /// advance and swinging when the record says a blow landed.
-    private static func raider(
-        _ context: inout GraphicsContext, at p: CGPoint, facing: (x: Double, y: Double),
+    private static func raiderFigure(
+        _ context: inout GraphicsContext, at p: CGPoint, heading: (x: Double, y: Double),
         zoom: CGFloat, time: Double, phase: Double, swinging: Double
     ) {
         let s = 4.2 * zoom
@@ -506,8 +636,8 @@ enum SettlementBattle {
         let swing = sway + blow
         let skin = Color(red: 0.62, green: 0.30, blue: 0.27)
         let cloth = Color(red: 0.38, green: 0.18, blue: 0.18)
-        // Which way they are facing: back down the line they came in on.
-        let lean = CGFloat(-facing.x) * s * 0.18
+        // Which way they are facing: toward whoever they are walking at.
+        let lean = CGFloat(heading.x) * s * 0.18
 
         // Shadow first, so they stand on the ground.
         context.fill(Path(ellipseIn: CGRect(x: p.x - s * 0.5, y: p.y + s * 0.85,
@@ -567,7 +697,7 @@ enum SettlementBattle {
     /// The line where the ranks meet: a bright band that flares as blades land
     /// rather than pulsing on a clock of its own.
     private static func contact(
-        _ context: inout GraphicsContext, field: Field, rect: CGRect,
+        _ context: inout GraphicsContext, field: SiegeField, rect: CGRect,
         log: BattleLog, progress: Double, strike: Double, unit: CGFloat
     ) {
         let count = max(2, log.line.count)
@@ -583,14 +713,14 @@ enum SettlementBattle {
 
     /// Arrows loosed from the colony's side, back down the road.
     private static func volley(
-        _ context: inout GraphicsContext, field: Field, rect: CGRect,
+        _ context: inout GraphicsContext, field: SiegeField, rect: CGRect,
         fade: Double, zoom: CGFloat
     ) {
         for i in 0..<6 {
             let t = 0.15 + Double(i) * 0.12
             let spread = (Double(i) - 2.5) * 0.012
-            let px = -field.axis.y * spread, py = field.axis.x * spread
-            let from = LocalPoint(x: field.front.x + px, y: field.front.y + py)
+            let px = -field.axisY * spread, py = field.axisX * spread
+            let from = LocalPoint(x: field.muster.x + px, y: field.muster.y + py)
             let to = LocalPoint(x: field.origin.x + px, y: field.origin.y + py)
             let a = SettlementRenderer.point(interpolate(from, to, t: t), in: rect)
             let b = SettlementRenderer.point(interpolate(from, to, t: t + 0.06), in: rect)
@@ -634,13 +764,13 @@ enum SettlementBattle {
 
     /// Stores going the other way, on somebody's back.
     private static func plunder(
-        _ context: inout GraphicsContext, field: Field, rect: CGRect,
+        _ context: inout GraphicsContext, field: SiegeField, rect: CGRect,
         fade: Double, unit: CGFloat
     ) {
         for i in 0..<3 {
             let t = 0.3 + Double(i) * 0.14
             let p = SettlementRenderer.point(
-                interpolate(field.front, field.origin, t: t), in: rect)
+                interpolate(field.muster, field.origin, t: t), in: rect)
             let s = unit * 0.010
             context.fill(Path(CGRect(x: p.x - s / 2, y: p.y - s / 2, width: s, height: s)),
                          with: .color(Theme.accent.opacity(0.55 * fade)))

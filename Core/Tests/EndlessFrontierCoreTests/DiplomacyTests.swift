@@ -185,6 +185,48 @@ struct DiplomacyTests {
         #expect(a == b)
     }
 
+    // MARK: - A grudge has to be able to start
+
+    /// Named for the reachability, not the behaviour (rule 6 / rule 13).
+    ///
+    /// Grudge had exactly one source — a quarrel — and a quarrel needed
+    /// standing below −15, while standing drifts toward a compatibility of 62
+    /// or better. Every term of the loop was inside the loop, so it never
+    /// started: measured over two hundred years, six peoples sat at 0/0/0/+75/
+    /// +80/+82 and not one war was ever declared. Every fight in the game was
+    /// wolves.
+    @Test("A people can come to hate you without hating you first")
+    func crowdingBuildsAGrudge() throws {
+        let reg = try registry()
+        // A colony four times their size, on perfectly good terms to begin with.
+        var w = world(capital(folk(120), morale: 80),
+                      tribes: [tribe(standing: 60, population: 30)], config: reg.config)
+        w.tribes[0].discovered = true
+        #expect(DiplomacyEngine.crowding(w, tribeIndex: 0) > 0,
+                "being four times their size has to weigh something")
+
+        for year in 1...60 {
+            w.tick = year * reg.config.ticksPerYear
+            w = DiplomacyEngine.advanceYear(w, registry: reg)
+            // Keep the colony big: the point is the pressure, not the drift.
+            w.settlements[0].pawns = folk(120)
+            w.tribes[0].population = 30
+        }
+        #expect(w.tribes[0].grudge > 20, "sixty years of crowding them cost nothing")
+        #expect(w.tribes[0].standing < DiplomacyEngine.warStanding,
+                "…and it never turned into anything")
+    }
+
+    /// The other half of the same lever: it has to be a pressure the player can
+    /// manage, not a countdown to a war they cannot avoid.
+    @Test("A neighbour you do not crowd bears you no grudge")
+    func livingSmallCostsNothing() throws {
+        let reg = try registry()
+        let w = world(capital(folk(20)), tribes: [tribe(standing: 40, population: 40)],
+                      config: reg.config)
+        #expect(DiplomacyEngine.crowding(w, tribeIndex: 0) == 0)
+    }
+
     @Test("Tribes survive a save round-trip")
     func tribesPersist() throws {
         let reg = try registry()

@@ -34,6 +34,7 @@ struct SiegeCommandCard: View {
             header
             pressure
             postures
+            handHint
             if !defenders.isEmpty { roster }
         }
         .padding(16)
@@ -114,6 +115,26 @@ struct SiegeCommandCard: View {
                 }
             }
             Text(siege.posture.note.resolve(AppStrings.language))
+                .font(.caption2)
+                .foregroundStyle(Theme.textDim)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// The one thing the player cannot discover by looking: that a tap on the
+    /// canvas is now an order.
+    ///
+    /// The posture steers the whole line, which is right for a game run by
+    /// standing orders. But a colonist has a *place* on the field now, so "I go
+    /// somewhere and do something" is a thing the simulation can carry out, and
+    /// nothing on screen would otherwise say so.
+    private var handHint: some View {
+        HStack(alignment: .top, spacing: 6) {
+            Image(systemName: "hand.tap")
+                .font(.caption2).foregroundStyle(Theme.accent.opacity(0.85))
+            Text(cs
+                 ? "Klepni na osadníka, pak na zem nebo na nepřítele — půjde tam."
+                 : "Tap a colonist, then the ground or an enemy — they will go.")
                 .font(.caption2)
                 .foregroundStyle(Theme.textDim)
                 .fixedSize(horizontal: false, vertical: true)

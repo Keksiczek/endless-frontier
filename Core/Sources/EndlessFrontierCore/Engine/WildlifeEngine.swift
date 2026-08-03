@@ -27,8 +27,14 @@ public enum WildlifeEngine {
     static let basePredatorPressure: Double = 8
     static let predatorPressurePerEra: Double = 5
     static let predatorPressureDrift: Double = 0.01
-    /// …and an attack roll each tick scales with it.
-    static let attackChancePerPressure: Double = 0.00025
+    /// …and an attack roll each tick scales with it. At a pressure of twelve
+    /// that is a pack roughly every three and a half years, which is often
+    /// enough to be part of the life of the colony rather than a thing you
+    /// remember happening once.
+    static let attackChancePerPressure: Double = 0.0004
+    /// How many colonists a settlement has to hold before it is worth another
+    /// full measure of pressure to the things in the wood.
+    static let packPerColonist: Double = 26
 
     /// Hunting-work efficiency: a thin herd yields less meat, never zero.
     static let huntFloorFactor: Double = 0.3
@@ -86,14 +92,24 @@ public enum WildlifeEngine {
         // A siege already running is left alone — the colony has enough on.
         let attackChance = map.wildlife.predatorPressure * attackChancePerPressure
         if s.siege == nil, rng.nextUnit() < attackChance {
-            let watch = s.pawns
-                .filter { $0.health > 0 && !$0.isBroken && !$0.isAway }
+            let able = s.pawns.filter { $0.health > 0 && !$0.isBroken && !$0.isAway }
+            let watch = able
                 .sorted { $0.assignedWork == .garrison && $1.assignedWork != .garrison }
-                .prefix(6).map(\.id)
+                .prefix(max(6, able.count / 6)).map(\.id)
             if !watch.isEmpty {
-                // The pack's weight is its pressure, so a bad year really does
-                // send something worse out of the trees.
-                let strength = max(6, map.wildlife.predatorPressure * 0.9)
+                // The pack's weight is its pressure — and how much there is to
+                // come for.
+                //
+                // Pressure alone is capped by the era (8, plus 5 an era), so a
+                // pack was ten strong whether the colony was five people or
+                // four hundred. Measured over the first thirty years of a real
+                // world: four fights, worst wound *nothing at all*. A threat
+                // that does not answer the thing it threatens is not a threat;
+                // it is scenery. More herds, more middens, more trails — a big
+                // settlement genuinely does bring something worse out of the
+                // wood.
+                let strength = max(6, map.wildlife.predatorPressure
+                                   * (0.9 + Double(able.count) / packPerColonist))
                 s = SiegeEngine.begin(
                     s, attackerStrength: strength,
                     attackerName: packName.resolve(.en),

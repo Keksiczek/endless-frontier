@@ -85,7 +85,8 @@ struct SettlementScreen: View {
                     settlement: settlement, map: map, registry: game.registry,
                     season: game.season, caravans: game.world.caravans,
                     clock: game.tickClock, selection: $selection,
-                    buildPlan: $buildPlan, battleReplay: battleReplay)
+                    buildPlan: $buildPlan, battleReplay: battleReplay,
+                    onSiegeOrder: { game.command($0) })
                 .overlay(alignment: .topTrailing) {
                     MinimapView(map: map).padding(12)
                 }

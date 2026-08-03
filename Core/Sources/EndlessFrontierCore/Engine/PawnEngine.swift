@@ -102,7 +102,18 @@ public enum PawnEngine {
                 s.pawns[i].health -= starvationHealthDamage
             } else {
                 let regen = hasEquipment ? ItemEngine.healthRegenBonus(s.pawns[i], registry: registry) : 0
-                s.pawns[i].health = min(100, s.pawns[i].health + healthRecovery + regen)
+                // Nothing knits while a wound is still open.
+                //
+                // The comment above says the ordinary recovery runs *after* the
+                // bleeding so a bleeding colonist does not quietly heal at the
+                // same time — and then it did exactly that, unconditionally, at
+                // 0.3 a tick. Bleeding is a fraction of that, so an untreated
+                // wound closed by itself as fast as a tended one and the whole
+                // healer's trade bought nothing. It is the recurring shape:
+                // a system whose bite is cancelled by a flat number nothing
+                // gates. Being hurt has to cost the colony something.
+                let mending = s.pawns[i].body.bleeding > 0 ? 0 : healthRecovery + regen
+                s.pawns[i].health = min(100, s.pawns[i].health + mending)
             }
             s.pawns[i].health = max(0, s.pawns[i].health)
 
