@@ -2,7 +2,17 @@
 
 Branch **`main`**.
 
-Tests: **Core**, **93 app**. `swift test --package-path Core` takes ~250 s cold.
+Tests: **860 Core**, **94 app**. `swift test --package-path Core` takes ~270 s.
+
+Three batches this day, newest first:
+
+| | What |
+|---|---|
+| `7432272` | Find one colonist in a town of a hundred; arm them from their own card |
+| `ea45437` | The town has room to be a town; every building has its own face; a place has something in it |
+| `1c8de0d` | The fight has a ground to stand on, and the neighbours can come to hate you |
+
+§6 and §7 below cover the two later batches; §1–§4 are the combat pivot.
 
 ---
 
@@ -136,6 +146,10 @@ answers a colony that has grown"*.
   is not a constraint either. §8.1 cause 3, untouched.
 - **Births do not keep pace with old age** past the peak.
 - **Era stops at `ancient`** with the whole tech tree researched.
+- **The world map's own sites are still instant.** `SiteEngine.interact` —
+  ruins, dungeons, anomalies, lost cities on the hex map — resolves in one call
+  with no party and no journey. `SiteVisitEngine` fixed the *valley's* places;
+  this needs travel between regions, which does not exist yet.
 - **`BACKLOG` 3.6** — 40 of 71 events never name a building, a place or a
   colonist. All the hooks exist.
 - Battle has no sound and no haptics.
@@ -168,6 +182,37 @@ Full list in `BACKLOG.md` §"Rules". Added this session:
     in the danger direction, hiding behind numbers that looked fine.
 
 ---
+
+## 6. Scale and charm (`ea45437`)
+
+**The hut that held thirty people** was rule 8 again — two numbers for one
+thing. `housing` said thirty and fed the population cap; the RimWorld layer gave
+that hut one tile and four beds, so the ledger counted twenty-six people the
+building had nowhere to put and all of them slept rough for ever. `housing` is a
+*flag* now; `BuildingDefinition.sleepers` is the number, derived from the ground
+covered times `floors`, read by both the ledger and the beds.
+
+Scale with it: grid 18×18 → **24×24**, every footprint up a tile each way, the
+span on screen unchanged so a *building* comes out larger, camera opens at 2×.
+Dwelling costs fell with their capacity — beds per material are what they were,
+because the fix was geometry and not difficulty. Miss that and the colony misses
+its first era milestone; `StewardTests` caught it.
+
+**Forty-seven buildings shared eleven shapes** because thirty-six stated no
+`look` and the numbers cannot tell a farm from a granary from a well. Now 29
+archetypes, none carrying more than four, seventeen of them new in
+`SettlementTrades`, interiors furnished to match.
+
+**A visit with a middle.** `SiteEncounter` + `SiteVisitEngine`: a place holds
+caches, traps and something living in it, and the party walks between them on
+the action clock exactly as a raid is fought. What comes home is what they got
+the lid off.
+
+## 7. Finding and arming one person (`7432272`)
+
+A name field and five lenses on the colonists panel; `EquipmentStrip` on both
+the colonist row and the canvas inspector, so equipping is person-first instead
+of a menu of every colonist in the town.
 
 ## 5. Commands
 
