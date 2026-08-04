@@ -963,7 +963,15 @@ enum SettlementRenderer {
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap,
         season: Season, zoom: CGFloat = 1, showLabels: Bool = false
     ) {
-        for node in map.nodes where map.isExplored(node.position) {
+        // Only the deposits that are genuinely a *patch of worked ground*.
+        //
+        // A wood is drawn as trees and a massif as blocks, and the node behind
+        // them is a ledger, not a place: drawing it too put a "Forest · 87 %"
+        // glyph in the middle of an actual wood, which is the duplication the
+        // whole entity layer exists to remove. Fields and herb beds keep
+        // theirs, because a tilled plot really is one thing.
+        for node in map.nodes
+        where map.isExplored(node.position) && !FloraEngine.isEntityBacked(node.kind, in: map) {
             let center = point(node.position, in: rect)
             let fraction = node.capacity > 0 ? node.amount / node.capacity : 1
             drawDeposit(node.kind, at: center, fraction: fraction,

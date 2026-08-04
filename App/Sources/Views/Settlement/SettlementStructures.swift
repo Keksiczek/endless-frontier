@@ -462,44 +462,144 @@ enum SettlementStructures {
         let lit = Theme.accent.opacity(0.32 + night * 0.55)   // a lamp lit after dark
         switch glyph {
         case .house:
+            // A home, and not the same home twice.
+            //
+            // One drawing served every dwelling in the colony: a hut and a
+            // longhouse were the same gable at two sizes, with one window in
+            // the same place. A street of them read as a stamp repeated. What a
+            // house actually varies by is what it is *made* of, how long it is,
+            // and what its household has left lying in the yard.
             let w = s * 1.6 * aspect, h = s * 1.1
             let body = CGRect(x: c.x - w / 2, y: c.y - h / 2, width: w, height: h)
             groundShadow(at: c, halfWidth: w / 2, footY: body.maxY + s * 0.08, context: &context)
-            // Walls, then a filled roof over them — a solid gabled house.
             context.fill(Path(body), with: .color(wall))
+
+            // How steeply it is roofed, and whether the ridge is thatched or
+            // shingled. Fixed per house, so a street has variety and a house
+            // does not change its own roof between frames.
+            let pitch = 0.58 + Double((seed >> 18) & 7) / 20      // 0.58…0.93
+            let thatched = (seed >> 9) & 1 == 0
+            let ridgeY = body.minY - h * CGFloat(pitch)
+            let eaves = s * 0.16
             let roofShape = Path { p in
-                p.move(to: CGPoint(x: body.minX - s * 0.14, y: body.minY))
-                p.addLine(to: CGPoint(x: c.x, y: body.minY - h * 0.72))
-                p.addLine(to: CGPoint(x: body.maxX + s * 0.14, y: body.minY))
+                p.move(to: CGPoint(x: body.minX - eaves, y: body.minY))
+                if thatched {
+                    // Thatch sags: a soft ridge rather than a folded one.
+                    p.addQuadCurve(to: CGPoint(x: body.maxX + eaves, y: body.minY),
+                                   control: CGPoint(x: c.x, y: ridgeY - h * 0.18))
+                } else {
+                    p.addLine(to: CGPoint(x: c.x, y: ridgeY))
+                    p.addLine(to: CGPoint(x: body.maxX + eaves, y: body.minY))
+                }
                 p.closeSubpath()
             }
             context.fill(roofShape, with: .color(roof))
             context.stroke(Path(body), with: .color(ink), lineWidth: 1)
             context.stroke(roofShape, with: .color(bright), lineWidth: 1.1)
-            // Two courses of shingles down the roof.
-            for k in 1...2 {
-                let t = CGFloat(k) / 3
+            if !thatched {
+                for k in 1...2 {
+                    let t = CGFloat(k) / 3
+                    context.stroke(Path { p in
+                        p.move(to: CGPoint(x: body.minX - eaves + (c.x - body.minX + eaves) * t,
+                                           y: body.minY - (body.minY - ridgeY) * (1 - t)))
+                        p.addLine(to: CGPoint(x: body.maxX + eaves - (body.maxX + eaves - c.x) * t,
+                                              y: body.minY - (body.minY - ridgeY) * (1 - t)))
+                    }, with: .color(Theme.boneDim.opacity(0.5)), lineWidth: 0.5)
+                }
+            }
+
+            // A long house is a house with more *bays*, not a stretched hut:
+            // one door and as many windows as it has rooms behind them.
+            let bays = max(1, min(4, Int((w / (s * 0.72)).rounded(.down))))
+            let doorBay = Int((seed >> 3) % UInt64(bays))
+            for bay in 0..<bays {
+                let mid = body.minX + body.width * (CGFloat(bay) + 0.5) / CGFloat(bays)
+                if bay == doorBay {
+                    let dw = min(s * 0.32, body.width / CGFloat(bays) * 0.5)
+                    let door = CGRect(x: mid - dw / 2, y: c.y + s * 0.02,
+                                      width: dw, height: body.maxY - c.y - s * 0.02)
+                    context.fill(Path(door), with: .color(roof))
+                    context.stroke(Path(door), with: .color(ink), lineWidth: 0.8)
+                    continue
+                }
+                // Whether this window has a light behind it is fixed per house
+                // and bay — a home does not blink at you.
+                let awake = ((seed >> UInt64(20 + bay)) & 3) != 0
+                let pane = CGRect(x: mid - s * 0.17, y: c.y - s * 0.08,
+                                  width: s * 0.34, height: s * 0.3)
+                context.fill(Path(pane), with: .color(awake ? lit : stone.opacity(0.75)))
+                context.stroke(Path(pane), with: .color(ink), lineWidth: 0.6)
+            }
+
+            // A chimney, on the gable end, with smoke on it after dark.
+            let stackX = body.minX + body.width * ((seed >> 5) & 1 == 0 ? 0.18 : 0.82)
+            let stack = CGRect(x: stackX - s * 0.09, y: ridgeY + h * 0.06,
+                               width: s * 0.18, height: body.minY - ridgeY + s * 0.1)
+            if stack.height > 0 {
+                context.fill(Path(stack), with: .color(stone))
+                context.stroke(Path(stack), with: .color(ink), lineWidth: 0.6)
+                if night > 0.15 {
+                    for puff in 0..<3 {
+                        let t = Double(puff) / 3
+                        let drift = CGFloat(sin(time * 0.7 + Double(puff) * 1.3)) * s * 0.08
+                        let r = s * CGFloat(0.07 + t * 0.09)
+                        context.fill(Path(ellipseIn: CGRect(
+                            x: stack.midX - r + drift,
+                            y: stack.minY - s * CGFloat(0.16 + t * 0.5),
+                            width: r * 2, height: r * 1.5)),
+                            with: .color(Theme.boneDim.opacity(0.14 * night * (1 - t))))
+                    }
+                }
+            }
+
+            // And what a household leaves in its own yard. One of these, never
+            // all of them: a colony of woodpiles is as much of a stamp as a
+            // colony of bare walls.
+            switch (seed >> 13) % 4 {
+            case 0:
+                // A stack of firewood against the wall.
+                for log in 0..<3 {
+                    let ly = body.maxY - s * (0.06 + CGFloat(log) * 0.09)
+                    context.stroke(Path { p in
+                        p.move(to: CGPoint(x: body.maxX + s * 0.08, y: ly))
+                        p.addLine(to: CGPoint(x: body.maxX + s * 0.42, y: ly))
+                    }, with: .color(Theme.boneDim.opacity(0.55)), lineWidth: max(0.8, s * 0.07))
+                }
+            case 1:
+                // A washing line between the eaves and a post.
+                let postX = body.minX - s * 0.4
                 context.stroke(Path { p in
-                    p.move(to: CGPoint(x: body.minX - s * 0.14 + (c.x - body.minX + s * 0.14) * t,
-                                       y: body.minY - h * 0.72 * (1 - t)))
-                    p.addLine(to: CGPoint(x: body.maxX + s * 0.14 - (body.maxX + s * 0.14 - c.x) * t,
-                                          y: body.minY - h * 0.72 * (1 - t)))
+                    p.move(to: CGPoint(x: postX, y: body.maxY))
+                    p.addLine(to: CGPoint(x: postX, y: body.midY - s * 0.1))
+                }, with: .color(ink), lineWidth: 0.8)
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: postX, y: body.midY - s * 0.08))
+                    p.addQuadCurve(to: CGPoint(x: body.minX, y: body.midY - s * 0.16),
+                                   control: CGPoint(x: (postX + body.minX) / 2,
+                                                    y: body.midY + s * 0.02))
                 }, with: .color(Theme.boneDim.opacity(0.5)), lineWidth: 0.5)
+            case 2:
+                // A low fence around a scrap of garden.
+                for post in 0..<4 {
+                    let px = body.maxX + s * (0.12 + CGFloat(post) * 0.11)
+                    context.stroke(Path { p in
+                        p.move(to: CGPoint(x: px, y: body.maxY + s * 0.04))
+                        p.addLine(to: CGPoint(x: px, y: body.maxY - s * 0.16))
+                    }, with: .color(Theme.boneDim.opacity(0.45)), lineWidth: 0.6)
+                }
+            default:
+                // A lean-to off the gable end — the commonest thing anyone
+                // adds to a house they have outgrown.
+                let lean = Path { p in
+                    p.move(to: CGPoint(x: body.minX, y: body.maxY))
+                    p.addLine(to: CGPoint(x: body.minX - s * 0.36, y: body.maxY))
+                    p.addLine(to: CGPoint(x: body.minX - s * 0.3, y: body.midY + s * 0.04))
+                    p.addLine(to: CGPoint(x: body.minX, y: body.midY - s * 0.06))
+                    p.closeSubpath()
+                }
+                context.fill(lean, with: .color(wall.opacity(0.9)))
+                context.stroke(lean, with: .color(ink), lineWidth: 0.7)
             }
-            // A warm window — someone lives here — and a plank door.
-            context.fill(Path(CGRect(x: c.x - s * 0.5, y: c.y - s * 0.08,
-                                     width: s * 0.34, height: s * 0.32)), with: .color(lit))
-            context.stroke(Path(CGRect(x: c.x - s * 0.5, y: c.y - s * 0.08,
-                                       width: s * 0.34, height: s * 0.32)),
-                           with: .color(ink), lineWidth: 0.6)
-            let door = Path { p in
-                p.move(to: CGPoint(x: c.x + s * 0.28, y: body.maxY))
-                p.addLine(to: CGPoint(x: c.x + s * 0.28, y: c.y + s * 0.02))
-                p.addLine(to: CGPoint(x: c.x + s * 0.6, y: c.y + s * 0.02))
-                p.addLine(to: CGPoint(x: c.x + s * 0.6, y: body.maxY))
-            }
-            context.fill(door, with: .color(roof))
-            context.stroke(door, with: .color(ink), lineWidth: 0.8)
         case .granary:
             let silo = CGRect(x: c.x - s * 0.7, y: c.y - s * 0.5, width: s * 1.4, height: s * 1.4)
             groundShadow(at: c, halfWidth: s * 0.7, footY: silo.maxY + s * 0.05, context: &context)

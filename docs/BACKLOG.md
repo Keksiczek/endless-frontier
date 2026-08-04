@@ -501,10 +501,49 @@ do was take a thing off. `EquipmentStrip` is three slots you tap, on both the
 colonist row and the canvas inspector, offering only what actually fits and best
 quality first.
 
-> **Still instant: the world map's own sites.** `SiteEngine.interact` (ruins,
-> dungeons, anomalies, lost cities on the hex map) resolves in one call with no
-> party and no journey. That is the other half of 9.1 and it needs travel
-> between *regions*, which does not exist yet.
+### 9.10 — out of the valley (2026-08-04)
+
+The other half of 9.1, and the last button in the game. `SiteEngine.interact`
+took a region id and handed back an outcome in the same tick: nobody went,
+nobody was gone, nobody could fail, and a lost city three regions away cost
+exactly what one next door did.
+
+`RegionExpedition` + `RegionExpeditionEngine`: hands leave the colony and are
+*not there* — the labour engine notices — for `travelTicksPerHex` a hex each
+way. At the far end the party works a `SiteEncounter` through the very same
+`SiteVisitEngine` the valley's places use (`work(_:site:party:step:)` was split
+out for it), with the guardians stiffened by the region's own hazard. What comes
+home is what they opened, and the site's own table pays out **in proportion to
+how much of it they cleared** — a party driven out brings back less.
+
+### 9.11 — the duplication, and what work is aimed at
+
+Three things Keks named, all one bug at heart: **the entity layer was invisible
+in the places it should have been most obvious.**
+
+- `AgentMotion.workplace` checked the deposit nodes **before** `currentJob`. A
+  logger the job board had sent to a named tree was drawn standing on the
+  abstract "forest" blob — and the comment three lines below already claimed the
+  job outranked everything, while the code above it quietly won. Job first now,
+  then a *real thing* of the right kind (a mature tree, a rock face, a
+  non-predator), and only then the node.
+- The renderer drew **every** node, so a "Forest · 87 %" glyph sat in the middle
+  of an actual wood and a "Stone" blob on top of a massif. Entity-backed kinds
+  are skipped now: a wood is trees, a massif is blocks. Fields and herb beds
+  keep theirs, because a tilled plot really is one thing.
+- The hit test offered those same phantom nodes, so tapping a wood selected
+  "Forest · 87 %" instead of the birch under your thumb.
+
+### 9.12 — houses
+
+One drawing served every dwelling: a hut and a longhouse were the same gable at
+two sizes with one window in the same place, so a street read as a stamp
+repeated. A house now varies by roof pitch and whether it is thatched or
+shingled, by **bays** (a long house is more rooms, not a stretched hut), by
+which windows have a light behind them, by a chimney that smokes after dark, and
+by what its household left in the yard — a woodpile, a washing line, a fence or
+a lean-to. All fixed per building seed, so a house does not change its own roof
+between frames.
 
 ## 7. The frozen world (2026-08-02) — the biggest thing found so far
 

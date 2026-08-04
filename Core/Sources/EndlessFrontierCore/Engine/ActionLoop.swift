@@ -43,6 +43,9 @@ public enum ActionLoop {
             if let finished = fought.concluded { concluded.append(finished) }
             return fought.settlement
         }
+        // Parties out of the valley entirely, on the road to a ruin or an
+        // anomaly on the world map. Same clock, one scale up.
+        s = RegionExpeditionEngine.advanceStep(s, clock: clock, registry: registry)
         // What the attempt cost the people who made it is only known once the
         // fighting stops — the player's own orders decide how much of the
         // warband walks home. Charged here, where the tribes are reachable.

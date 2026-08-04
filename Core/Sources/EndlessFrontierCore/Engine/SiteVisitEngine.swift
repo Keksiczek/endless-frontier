@@ -101,24 +101,40 @@ public enum SiteVisitEngine {
         registry: GameDataRegistry
     ) -> Settlement {
         var s = settlement
-        guard var site = s.expeditions[index].site, !site.isCleared else { return s }
+        guard let site = s.expeditions[index].site else { return s }
+        let worked = work(s, site: site, party: s.expeditions[index].memberIDs,
+                          step: step, registry: registry)
+        s = worked.settlement
+        s.expeditions[index].site = worked.site
+        return s
+    }
+
+    /// One step at a place, given the site and who is standing in it.
+    ///
+    /// Split out of `advanceStep` so the *world* map's ruins can be worked by
+    /// the same code as the valley's: a `RegionExpedition` is the same journey
+    /// one scale up, and a room with a chest and something living in it does
+    /// not care which map it is on.
+    public static func work(
+        _ settlement: Settlement, site: SiteEncounter, party members: [UUID],
+        step: Int, registry: GameDataRegistry
+    ) -> (settlement: Settlement, site: SiteEncounter) {
+        var s = settlement
+        var site = site
+        guard !site.isCleared else { return (s, site) }
         var rng = SeededRNG(seed: site.seed
                             &+ UInt64(bitPattern: Int64(step)) &* 0x9E37_79B9_7F4A_7C15)
 
-        let party = s.expeditions[index].memberIDs.filter { id in
+        let party = members.filter { id in
             s.pawns.first { $0.id == id }.map { $0.health > 0 && !$0.isBroken } ?? false
         }
-        guard !party.isEmpty else {
-            s.expeditions[index].site = sealed(site, .driven)
-            return s
-        }
+        guard !party.isEmpty else { return (s, sealed(site, .driven)) }
 
         aim(&site, party: party)
         walk(&site, party: party)
         s = act(s, site: &site, party: party, registry: registry, rng: &rng)
         if site.isCleared { site = sealed(site, .cleared) }
-        s.expeditions[index].site = site
-        return s
+        return (s, site)
     }
 
     /// Everybody picks the nearest thing still to be dealt with — anything

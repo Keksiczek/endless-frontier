@@ -160,6 +160,9 @@ public struct WorldState: Codable, Sendable, Equatable {
     public var regions: [Region]
     public var tradeRoutes: [TradeRoute]
     public var caravans: [Caravan]
+    /// Parties out of the valley entirely, walking to a ruin or an anomaly
+    /// somewhere on the world map. See `RegionExpeditionEngine`.
+    public var regionExpeditions: [RegionExpedition]
     public var activeExpedition: Expedition?
 
     public var eventHistory: [HistoricalEvent]
@@ -198,6 +201,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         regions: [Region] = [],
         tradeRoutes: [TradeRoute] = [],
         caravans: [Caravan] = [],
+        regionExpeditions: [RegionExpedition] = [],
         activeExpedition: Expedition? = nil,
         eventHistory: [HistoricalEvent] = [],
         eventCooldowns: [String: Int] = [:],
@@ -229,6 +233,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         self.regions = regions
         self.tradeRoutes = tradeRoutes
         self.caravans = caravans
+        self.regionExpeditions = regionExpeditions
         self.activeExpedition = activeExpedition
         self.eventHistory = eventHistory
         self.eventCooldowns = eventCooldowns
@@ -259,7 +264,7 @@ public struct WorldState: Codable, Sendable, Equatable {
              researchedTechs, techCompletions, statModifiers, activeResearch,
              researchProgress, globalStats,
              unlockedBuildings, worldFlags, settlements, regions, tradeRoutes,
-             caravans, activeExpedition, eventHistory, eventCooldowns,
+             caravans, regionExpeditions, activeExpedition, eventHistory, eventCooldowns,
              scheduledEffects, activeQuests, completedQuests, pendingLawProposal, records, tribes, pendingEvents
         case actionStep, stewardEnabled
     }
@@ -295,6 +300,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         regions = value(.regions, [])
         tradeRoutes = value(.tradeRoutes, [])
         caravans = value(.caravans, [])
+        regionExpeditions = value(.regionExpeditions, [])
         activeExpedition = (try? c.decodeIfPresent(Expedition.self, forKey: .activeExpedition)) ?? nil
         eventHistory = value(.eventHistory, [])
         eventCooldowns = value(.eventCooldowns, [:])
@@ -328,6 +334,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         try c.encode(regions, forKey: .regions)
         try c.encode(tradeRoutes, forKey: .tradeRoutes)
         try c.encode(caravans, forKey: .caravans)
+        try c.encode(regionExpeditions, forKey: .regionExpeditions)
         try c.encodeIfPresent(activeExpedition, forKey: .activeExpedition)
         try c.encode(eventHistory, forKey: .eventHistory)
         try c.encode(eventCooldowns, forKey: .eventCooldowns)

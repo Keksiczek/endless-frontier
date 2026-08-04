@@ -296,6 +296,35 @@ enum AgentMotion {
         let doing: Activity
     }
 
+    /// A real thing of the kind this trade works — a tree for the axe, a block
+    /// for the pick, a beast for the bow.
+    ///
+    /// Between the job board's postings there is a gap, and a colonist standing
+    /// in that gap used to be drawn on the deposit glyph. A logger between two
+    /// trees should be *at a tree*.
+    private static func realThing(
+        for pawn: Pawn, map: LocalMap, seed: UInt64
+    ) -> LocalPoint? {
+        func pick<T>(_ items: [T], _ position: (T) -> LocalPoint) -> LocalPoint? {
+            let seen = items.filter { map.isExplored(position($0)) }
+            let field = seen.isEmpty ? items : seen
+            guard !field.isEmpty else { return nil }
+            return position(field[Int(seed % UInt64(field.count))])
+        }
+        switch pawn.assignedWork {
+        case .logging:
+            return pick(map.trees.filter { $0.isMature }, \.position)
+        case .mining:
+            // The face of the massif is where the pick goes, not its middle.
+            if let face = pick(map.stone.faces(), { StoneField.centre(of: $0) }) { return face }
+            return pick(map.rocks, \.position)
+        case .hunting:
+            return pick(map.wildlife.animals.filter { !$0.species.isPredator }, \.position)
+        default:
+            return nil
+        }
+    }
+
     /// Where a colonist is (and what they're doing) at `time`.
     ///
     /// A fight outranks everything. While one is running, anyone the engine
@@ -549,22 +578,35 @@ enum AgentMotion {
     /// The spot a colonist's trade is actually plied at.
     static func workplace(for pawn: Pawn, map: LocalMap, scene: Scene,
                           seed: UInt64, time: Double = 0) -> LocalPoint {
-        // Any ground this trade works — a miner belongs at the iron seam as
-        // much as at the quarry, and on a map with no ore, at the quarry.
+        // **The job the engine actually gave them, first**: *this* tree, *this*
+        // outcrop, this scaffold.
+        //
+        // This used to run third, after a check against the deposit nodes — so
+        // a logger the `JobBoard` had sent to a named tree was drawn standing
+        // on the abstract "forest" blob instead, and the whole entity layer was
+        // invisible in the one place it should have been most obvious. The
+        // comment below it already claimed the job outranked everything; the
+        // code above it quietly won.
+        if let job = pawn.currentJob {
+            return jitter(job.position, seed: seed, radius: 0.012)
+        }
+        // Otherwise: something real of the right kind, and only then the ground
+        // it grows on. A wood is trees; a massif is blocks. Sending somebody to
+        // the *node* is sending them to a number.
+        if let thing = realThing(for: pawn, map: map, seed: seed) { return thing }
         let worked = Set(pawn.assignedWork.harvestedDeposits)
         if !worked.isEmpty {
-            let matching = map.nodes.filter { worked.contains($0.kind) && map.isExplored($0.position) }
+            let matching = map.nodes.filter {
+                worked.contains($0.kind) && map.isExplored($0.position)
+                    && !FloraEngine.isEntityBacked($0.kind, in: map)
+            }
             if !matching.isEmpty {
                 return matching[Int(seed % UInt64(matching.count))].position
             }
-            let any = map.nodes.filter { worked.contains($0.kind) }
+            let any = map.nodes.filter {
+                worked.contains($0.kind) && !FloraEngine.isEntityBacked($0.kind, in: map)
+            }
             if !any.isEmpty { return any[Int(seed % UInt64(any.count))].position }
-        }
-        // The job the engine actually gave them: *this* tree, *this* outcrop,
-        // this scaffold. It outranks the post, because a logger's bench at the
-        // lumberyard is not where the logging happens.
-        if let job = pawn.currentJob {
-            return jitter(job.position, seed: seed, radius: 0.012)
         }
 
         // The post the engine actually gave them. `LaborEngine.staffBuildings`

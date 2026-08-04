@@ -370,7 +370,13 @@ struct SettlementCanvasView: View {
         if let hit = probe.take() { return hit }
 
         // The land answers last: deposits with their fullness.
-        for node in settlement.localMap?.nodes ?? [] where map.isExplored(node.position) {
+        //
+        // Only the ones that *are* a patch. A wood is trees and a massif is
+        // blocks — both already answer for themselves, above — so offering the
+        // node as well put a second, invisible "Forest · 87 %" target on top of
+        // the trees and stole the tap from them.
+        for node in settlement.localMap?.nodes ?? []
+        where map.isExplored(node.position) && !FloraEngine.isEntityBacked(node.kind, in: map) {
             let fullness = node.capacity > 0 ? Int(node.amount / node.capacity * 100) : 100
             probe.offer(.landmark("\(node.kind.displayLabel) · \(fullness) %"),
                         at: SettlementRenderer.point(node.position, in: rect))

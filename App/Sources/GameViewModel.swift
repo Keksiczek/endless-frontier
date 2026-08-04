@@ -420,12 +420,28 @@ final class GameViewModel {
 
     private(set) var lastSiteOutcome: SiteOutcome?
 
-    func interactWithSite(_ regionID: UUID) {
-        let (newState, outcome) = GameEngine.interactWithSite(world, regionID: regionID, registry: registry)
-        world = newState
-        lastSiteOutcome = outcome
+    /// Sends a party out to a ruin or an anomaly on the world map.
+    ///
+    /// This used to resolve the whole thing on the spot: `interactWithSite` and
+    /// an outcome, same tick, nobody gone. Now hands leave the colony and are
+    /// away for as long as the country is wide, and the report lands when they
+    /// walk back in — see `RegionExpeditionEngine`.
+    func sendToSite(_ regionID: UUID) {
+        guard let settlement = selectedSettlement,
+              let sent = RegionExpeditionEngine.dispatch(
+                world, settlementID: settlement.id, regionID: regionID,
+                registry: registry) else { return }
+        world = sent
         persist()
     }
+
+    /// The party on the road to this region, if one is out.
+    func partyOut(toRegion regionID: UUID) -> RegionExpedition? {
+        world.regionExpeditions.first { $0.regionID == regionID }
+    }
+
+    /// Every party out of the valley, for the world map to draw.
+    var regionExpeditions: [RegionExpedition] { world.regionExpeditions }
 
     func dismissSiteOutcome() { lastSiteOutcome = nil }
 

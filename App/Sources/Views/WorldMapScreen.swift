@@ -203,8 +203,14 @@ struct RegionDetailCard: View {
             Text(AppStrings.expeditionAlreadyOut)
                 .font(.caption).foregroundStyle(Theme.textDim)
         } else {
-            if let siteLabel = game.siteActionLabel(for: region) {
-                actionButton(siteLabel, systemImage: "flashlight.on.fill") { game.interactWithSite(region.id) }
+            if let party = game.partyOut(toRegion: region.id) {
+                // Somebody is already on that road. Say where they are rather
+                // than offering the button again.
+                partyLine(party)
+            } else if let siteLabel = game.siteActionLabel(for: region) {
+                actionButton(siteLabel, systemImage: "figure.walk.departure") {
+                    game.sendToSite(region.id)
+                }
             }
             if game.canFound(region) {
                 actionButton("Found Outpost", systemImage: "house.lodge.fill") { game.foundOutpost(in: region.id) }
@@ -262,6 +268,28 @@ struct RegionDetailCard: View {
             Text(title.uppercased()).font(.caption2.weight(.bold)).tracking(1)
                 .foregroundStyle(Theme.textDim)
             Text(value).font(.subheadline.weight(.medium))
+        }
+    }
+
+    /// Where a party already on that road has got to. Sending people out is a
+    /// journey now, so the panel owes you the middle of it.
+    private func partyLine(_ party: RegionExpedition) -> some View {
+        let cs = AppStrings.language == .cs
+        let left = party.ticksRemaining(at: game.world.tick)
+        let where_: String
+        switch party.phase(at: game.world.tick) {
+        case .outbound:  where_ = cs ? "na cestě tam" : "on the road out"
+        case .working:   where_ = cs ? "prohledávají to" : "searching it"
+        case .returning: where_ = cs ? "na cestě domů" : "on the road home"
+        }
+        return VStack(alignment: .leading, spacing: 5) {
+            Label("\(party.memberIDs.count) — \(where_)", systemImage: "figure.walk")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(Theme.accent)
+            ProgressView(value: party.progress(at: game.world.tick))
+                .tint(Theme.accent)
+            Text(cs ? "Zpátky za \(left) taktů." : "Back in \(left) ticks.")
+                .font(.caption2).foregroundStyle(Theme.textDim)
         }
     }
 
