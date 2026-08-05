@@ -1,8 +1,8 @@
-# Handoff — 2026-08-05
+# Handoff — 2026-08-05 (second session)
 
-Branch **`main`**, clean and pushed. Last commit `9f8cc01`.
+Branch **`main`**, clean and pushed. Last commit `3cb1473`.
 
-Tests: **889 Core**, **94 app**.
+Tests: **914 Core**, app build and tests green.
 
 ```bash
 swift test --package-path Core
@@ -22,170 +22,147 @@ Regenerate the Xcode project after adding any file under `App/Sources`.
 
 ## Read this first
 
-**This session was cut short deliberately.** Keks gave six pieces of feedback,
-one of them was fixed, and he asked for the rest to be written down rather than
-half-built. Everything below §2 is *specified, not started*. Nothing is in
-flight; the tree is clean.
+**The probe numbers in the previous handoff were never reproducible, and neither
+was anything else.** `Pawn.init` defaults `id` to a fresh `UUID()` and the four
+founders were taking it, so every launch of the same seed began with four
+different people — and since per-entity randomness comes from
+`(mapSeed, entity.id, tick)`, the whole world diverged from tick zero. That is
+fixed (`3cb1473`), and the figures in §3 below are the first the project can
+actually compare against.
+
+Four of Keks's six are done. The fifth (pace) is deliberately not, and the sixth
+was done last session.
 
 ---
 
-## 1. What shipped today
+## 1. What shipped
 
-**`9f8cc01` — a militia of farmers stops looking like a company of swordsmen.**
+### `ff06bf4` — a blow is a moment on two bodies, and the blood stays
 
-`SettlementFigures.fightingArms` took a `Bool` (bow or blade), so everybody
-without a bow was drawn swinging a bar of iron — including the sixty colonists
-who own no weapon at all. `CombatEngine` has always priced them as unarmed
-(`baseUnarmedPower`); only the drawing disagreed.
+The simulation was already right; the *drawing* still spoke in aggregate — a
+bright seam across the whole line, sparks at a computed "front", a harm bar
+floating over every defender's head.
 
-`SettlementFigures.Armament` (`.bow` / `.blade` / `.none`) is now what is
-actually in their hands, resolved from `CombatEngine.weaponProfile`. Unarmed
-colonists swing the tool of their trade — axe, pick, scythe, hammer — and a
-trade with no edge on it fights with fists.
+A beat was a time and a name, so there was nowhere to put a blow.
+`BattleMoment.spot` is the point of impact, stamped by `SiegeEngine.answer`
+between the two people who were touching. On that one fact: `SettlementBlood`
+draws the impact once and short with the spray thrown the way the blow
+travelled, stains the ground permanently in a pass drawn *before* the figures,
+and puts harm on the body that took it — colonists and raiders both. The seam,
+the sparks, the hit ring and eleven of the twelve floating bars are gone; the
+bar survives only for the selected pawn.
+
+### `2f82c9d` — needs send people places, and the council leaves the valley
+
+**Needs cause decisions.** `Errand` + `ErrandEngine`: a need past its threshold
+posts a walk to the nearest larder or hearth, and the need is answered **on
+arrival**. Built as a field of its own rather than a `JobKind` — an errand is a
+person's own business and has to *interrupt* work, not compete for the same
+slot. `AgentMotion` reads the Core's own positions for the walk.
+
+Balance held flat on purpose: a meal at the granary fills you and costs food in
+proportion, so steady-state upkeep is unchanged (pinned by a test). One thing a
+per-tick top-up got right for free: in a famine nobody may eat the granary, so a
+sitting is capped at a head's worth of the store — that alone took starvation
+over two hundred years from 340 to 182.
+
+`JobBoard` also hands out the **nearest** piece of a trade's work now, anchored
+on the worker's own door.
+
+**The council leaves the valley.** A fourth `StewardEngine` clause charts the
+nearest unknown region, works a landmark in its own valley, then goes over the
+hill. Tuned twice by measurement — see §4.
+
+### `3cb1473` — the land has weather, and the same seed founds the same colony
+
+`Climate` is one thermometer read by both people and beasts;
+`temperature_shift` on the biome makes where you settle a decision (tundra −13,
+mountains −8, forest −2, coast +4, desert +11). A tundra winter reaches past a
+roof and a coat.
+
+And it is on screen: the status strip says what it is outside next to the season
+that causes it, coloured when the day can hurt somebody, and the colonist card
+itemises the sum out of `ComfortEngine.reckon` — the day is −35, your roof is
+worth 26, your coat 11.
+
+Plus the founder-id fix described above.
 
 ---
 
-## 2. Keks's feedback, still open
+## 2. Still open, from Keks
 
-In the order I would do it. Each has a diagnosis, not just a wish.
-
-### 2.1 Combat should read as real time, and a hit should be a hit
-
-> *"ať je to prostě real time mapa — bouchne ho a je vidět že ho zasáh a z toho
-> krev, ne kaňky barvy všude jako teď"*
-
-The simulation is already right: `SiegeEngine` moves real fighters over real
-ground, contact is proximity, and a blow lands on a named person. **The drawing
-is what is wrong.** `SettlementBattle` still paints the *aggregate*: a bright
-`contact` seam across the whole line, `sparks` at a computed "front", a `hit`
-ring, and a `wounded` bar floating over each defender. That is the "kaňky barvy
-všude" — colour standing in for events.
-
-What it should be instead, and all of it is available already:
-
-- A blow is a **moment on two specific bodies**. `Siege.fighters` has both
-  positions and `SiegeEngine` already writes a `.wound` / `.death` beat with a
-  `pawnID`. Draw the impact *between the two figures that are touching*, once,
-  and short.
-- **Blood belongs on the person and on the ground**, and it should persist.
-  `Siege.damage[pawnID]` is the accumulated harm and `Pawn.body.ailments` names
-  the part. A splash at the moment of the hit, then a mark that stays on them
-  and a stain where they stood. That is what turns a number into an injury.
-- **Delete the seam and the floating bars.** The contact band and the
-  over-the-head harm bars are both aggregate readouts of a thing that now has
-  individuals in it. The bar can stay for the *selected* fighter only.
-- Files: `App/Sources/Views/Settlement/SettlementBattle.swift` (`drawLive`,
-  `contact`, `sparks`, `hit`, `wounded`). Everything needed is already on
-  `Siege`; this is presentation-only, so rule 5 is not at risk.
-
-### 2.2 Nobody does anything because of what they need
-
-> *"stále to nemá tu dynamičnost, že by lidé něco logicky dělali dle potřeb a
-> okolí a svého zaměření"*
-
-This is the biggest one and it has a precise cause: **needs are satisfied by
-teleportation.** In `PawnEngine.advanceOneTick`, a hungry colonist eats out of
-the settlement's store wherever they happen to be standing
-(`s.pawns[i].needs.hunger += hungerPerMeal`). Nobody walks to a granary. Warmth
-is a passive comfort number — nobody walks to a fire. Rest is handled by
-`AgentMotion`'s day cycle, which is *presentation*, so it is a picture of
-sleeping rather than sleeping.
-
-So needs exist, and they bite (mood, health, frostbite), but they never *cause a
-decision*. That is exactly what "no dynamism" means.
-
-The shape of the fix, reusing what exists:
-
-- `JobKind` already drives movement through `Pawn.currentJob.position`, and
-  `AgentMotion` already puts a colonist wherever their job is (fixed yesterday
-  — the job now outranks the deposit blob).
-- Add `JobKind.eat` and `.warmUp`. A needs pass posts one when a need crosses a
-  threshold, targeting the **nearest** food store / hearth-bearing building.
-- The need is satisfied **on arrival**, not on the tick. A colony whose granary
-  is on the far side of town, or burned, genuinely fails to feed people.
-- "Podle svého zaměření" falls out of the same pass: when nothing is biting,
-  pick the *nearest* instance of your trade's work rather than a random one.
-- Watch: this changes food timing, so measure with `DangerProbe` before and
-  after. It is the sort of change that can quietly start a famine.
-
-### 2.3 The steward never sends anybody out
-
-> *"automat neposílá výpravy na prozkoumání mapy"*
-
-`StewardEngine.advanceOneTick` does exactly three things: `chooseResearch`,
-`keepMaterialsComing`, `raiseWhatIsShort`. It never explores, never works a POI,
-and never sends a `RegionExpedition` — all three of which now exist and work
-(`LocalPOIEngine.dispatch`, `RegionExpeditionEngine.dispatch`,
-`GameEngine.explore`).
-
-So a player who does not personally tap the world map never sees any of the
-expedition content, which is most of what was built this week.
-
-Add a fourth clause to the council: when there are spare hands and no party out,
-send one — to the nearest unexplored region first, then to an unworked POI, then
-to a site. Same "acts only in the gaps" rule as the rest of `StewardEngine`, so
-an explicit choice by the player is never overridden.
-
-### 2.4 Temperature is cosmetic, and it does not match
-
-> *"je tam stav teploty ale ten vůbec nesedí a je spíš kosmetický, stejně tak
-> pro lidi"*
-
-Two separate faults:
-
-1. **Temperature is season-only and biome-blind.** `AnimalEngine.temperature`
-   is a four-case switch on `Season`, and `biomes.json` has no temperature field
-   at all. A tundra valley in January is exactly as cold as a coastal one. The
-   world says "tundra" and the body does not agree — that is the "nesedí".
-2. **It is nowhere on screen.** The only reading is a "Warmth" need bar on the
-   colonist card. There is no temperature anywhere, so the player cannot connect
-   the season, the biome, the roof and the coat to the number. `ComfortEngine`
-   computes all four terms and shows none of them.
-
-Fix: a `temperature_shift` on the biome, one shared
-`temperature(season:biome:)` used by **both** people and animals (rule 8 — it is
-one number), a reading in the status strip, and a line on the colonist card that
-says *why*: the day is −22, your roof is worth 26, your coat 11.
-
-It already bites for the roofless (`freezingBelow` 18 against a housed warmth of
-~40), so this is about making it honest and legible, not about making it hurt
-more. A tundra shift would make a hard winter dangerous even indoors, which is
-the point of choosing a tundra.
-
-### 2.5 The pace
+### 2.1 The pace (§10.6)
 
 > *"možná snížit tempo hry potom"*
 
-Deliberately last: pace should be judged once the above are in, because most of
-what makes it feel fast is that events resolve without a middle. `WorldConfig`
-carries the tick rate; slowing it is a one-line change and a large balance
-change, so measure with `DangerProbe` after, not before.
+Deliberately not done. `WorldConfig` carries the tick rate and slowing it is a
+one-line change and a large balance change — and the thing that made it feel
+fast was that events resolved without a middle, which is exactly what the three
+commits above put back. **This one wants a phone in hand, not a probe.** Play it
+first; if it still runs away, `realSecondsPerTick` is the knob and `DangerProbe`
+is the check afterwards.
 
 ---
 
-## 3. How the world measures right now
+## 3. How the world measures now
 
-`DangerProbe` is the instrument, off unless asked:
+`DangerProbe`, off unless asked:
 
 ```bash
 EF_PROBE=1 swift test --package-path Core --filter DangerProbe
 ```
 
-Two hundred years, seed 4242, nobody playing:
+Two hundred years, seed 4242, nobody playing — **and reproducible for the first
+time**:
 
 ```
-deaths      old_age 219 · starvation 132 · sickness 10 · battle 1
-population  476        morale 73        food 13/2850
-fights      91  (37 turned back)        sicknesses 4
-tribes      6   standings [−80, −51, −9, 0, 0, 0]
+deaths      old_age 190 · starvation 310 · sickness 4
+population  266        morale 65        food 6/1950
+fights      91  (41 turned back)        sicknesses 4
+tribes      6   standings [−78, −56, −25, 0, 0, 74]
+threat      22  predators 12
 ```
 
-Run it before and after anything that touches a combat, wildlife, diplomacy,
-food or needs number. It has caught three regressions no unit test would have.
+Do not compare these against any earlier handoff. Every previous run measured a
+different colony.
+
+**The one number that is shouting: 310 starved against 190 of old age, with the
+granary at 6 of 1950 for most of the run.** This predates everything in §1 —
+food income stops scaling with mouths somewhere past a few dozen souls and never
+recovers. It is the largest measured failure in the game and it is the obvious
+next session. Start from *what rate is food supposed to grow at, and can it
+reach the population the housing allows?*
 
 ---
 
-## 4. Also still open, from before
+## 4. What the new work turned over, and how it was tuned
+
+Worth reading before touching `StewardEngine` or `DiplomacyEngine`.
+
+- **The council's outward push had to be tuned twice.** Unguarded it charted
+  twenty-six regions in fifty years and spent every material the town would have
+  built with: 44 buildings and 62 people became 33 and 32, and the colony never
+  left the first era. It now looks over the hill only out of *overflow* (a bar
+  above the one building has to clear), considers it once every three sittings,
+  and keeps under an eighth of its adults abroad.
+- **Every `dispatch` in the game was written for a player who tapped it once.**
+  `chooseParty` refuses to strip a settlement "bare", meaning two people left
+  standing — fine as a deliberate act, ruinous as a standing order. New rule 15
+  in `BACKLOG.md`.
+- **Defection was rolled per neighbour.** `0.30 × tribes met`, with nothing
+  capping the count, so the colony began bleeding the moment it started
+  exploring. It is one question asked once a year of the colony now. New rule 14.
+- **People out at the ruins eat their provisions where they are.** Without that
+  exception, four colonists on an expedition starved in a town with a full
+  granary.
+- **`theWorldAdvancesUnattended` now runs 4000 ticks, not 3000.** The colony
+  reaches the second era about a decade later because it also charts a map and
+  works ruins. The canary is *frozen*, not *slow* — but if that horizon has to
+  move again, something is wrong.
+
+---
+
+## 5. Also still open, from before
 
 - **Events happen nowhere, to nobody.** 40 of 71 never name a building, a place
   or a colonist, and every hook exists (`WorldQuery`, `EffectApplier`). Cheapest
@@ -194,43 +171,39 @@ food or needs number. It has caught three regressions no unit test would have.
   `LocalizedText` is in place; this is a translation pass.
 - **Fields and herb beds are still places, not things.** The wood, the rock and
   the beasts are entities; `field` and `herbs` are still `ResourceNode` blobs.
-  Last of "everything is blocks or pawns".
-- **Births do not keep pace; the era stops at `ancient`.** Two thirds of the
-  tech tree is unreachable in practice. Measure before tuning.
+- **Births do not keep pace; the era stalls.** Related to the famine above —
+  measure the food first.
 - Battle has **no sound and no haptics**.
 - The world-map `SiteOutcome.narrative` is a plain `String`, not
   `LocalizedText` — the one journal line that cannot be Czech.
 
 ---
 
-## 5. Things that will bite you
+## 6. Things that will bite you
 
-1. **Never seed an RNG from `hashValue`** — Swift seeds its hasher per process,
-   so it replays differently every launch and silently breaks determinism.
-   Derive from the UUID's bytes (`PlagueEngine.seed`, `BanditEngine.seed`).
+1. **Never seed an RNG from `hashValue`**, and never let an entity take the
+   default `UUID()`. Swift seeds its hasher per process; a random id breaks
+   determinism from the moment the entity exists. This has now cost two
+   sessions, the second one at world creation itself.
 2. **Every new field on a saved type is `decodeIfPresent` with a default**, with
    a "a save written before this existed still loads" test.
-3. **Two numbers for one thing is the recurring design bug** — `housing` vs
-   beds, `span` vs `colonySpan`, the muster line in two files. Derive the second
-   one instead of writing it.
-4. **The recurring bug shape, six times running:** a system whose effect cannot
-   reach the thing it is aimed at. When something feels flat, ask *what rate is
-   supposed to move this, and can it get there?* Rules 6, 12 and 13 in
-   `BACKLOG.md`.
-5. **Check the drawing before rebuilding the system.** Yesterday's "the entity
-   layer feels fake" was three lines of ordering in `AgentMotion`, not a design
-   problem. §2.1 above is the same shape.
+3. **Two numbers for one thing is the recurring design bug.** Derive the second.
+4. **The recurring bug shape, now both ways round:** a rate that cannot reach
+   its threshold (rule 6), *and* a rate multiplied by an entity count nobody
+   bounded (rule 14).
+5. **Check the drawing before rebuilding the system.** §1's first commit is
+   presentation-only and fixed what read as a simulation problem.
 6. Keks's Mac is an **8 GB Intel** machine; `signal 9` in the asset-catalog step
    is memory pressure, not the repo. Simulator is **iPhone 17**.
 
 ---
 
-## 6. Where to look
+## 7. Where to look
 
 | For | Read |
 |---|---|
 | Everything ever asked for | `docs/BACKLOG.md` |
-| The 13 rules a change must not break | `docs/BACKLOG.md` § "Rules" |
+| The 15 rules a change must not break | `docs/BACKLOG.md` § "Rules" |
 | Systems and formulas | `docs/DESIGN.md` |
 | Footprints, lots, pawn-like animals | `docs/RIMWORLD_LAYER.md` |
 | Layer separation | `docs/architecture/LAYERS.md` |

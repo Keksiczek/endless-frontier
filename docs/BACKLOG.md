@@ -3,7 +3,7 @@
 Everything requested, kept here so nothing is lost between sessions. The
 ordering inside each section is my recommendation, not a promise.
 
-Last updated: 2026-07-29.
+Last updated: 2026-08-05.
 
 ---
 
@@ -550,11 +550,11 @@ between frames.
 | # | Thing | State |
 |---|---|---|
 | 10.1 | **Everyone swings a sword**, including the sixty who own nothing | **done** — `9f8cc01` |
-| 10.2 | **A hit should be a hit**: real time, you see it land, blood from it — not blobs of colour everywhere | todo |
-| 10.3 | **No dynamism** — people do not act on needs, surroundings or their own trade | todo |
-| 10.4 | The **steward never sends expeditions** to explore | todo |
-| 10.5 | **Temperature is cosmetic and does not match** the biome, for people or animals | todo |
-| 10.6 | Maybe **slow the pace**, once the above are in | todo |
+| 10.2 | **A hit should be a hit**: real time, you see it land, blood from it — not blobs of colour everywhere | **done** — `ff06bf4` |
+| 10.3 | **No dynamism** — people do not act on needs, surroundings or their own trade | **done** — `2f82c9d` |
+| 10.4 | The **steward never sends expeditions** to explore | **done** — `2f82c9d` |
+| 10.5 | **Temperature is cosmetic and does not match** the biome, for people or animals | **done** — `3cb1473` |
+| 10.6 | Maybe **slow the pace**, once the above are in | todo — wants a phone in hand, not a probe |
 
 Each is specified in `docs/HANDOFF.md` §2 with the diagnosis rather than the
 wish. The short version of the two that matter most:
@@ -564,11 +564,49 @@ wish. The short version of the two that matter most:
   paints the *aggregate* — a seam across the line, sparks at a computed front,
   bars floating over heads. Draw the impact between the two bodies that are
   touching, put blood on the person and the ground, and delete the seam.
-- **10.3 has a precise cause: needs are satisfied by teleportation.** A hungry
-  colonist eats out of the store wherever they are standing; nobody walks to a
-  granary or a fire. Needs bite but never cause a *decision*, which is exactly
-  what "no dynamism" means. `JobKind` already drives movement — `.eat` and
-  `.warmUp` posted against the nearest store and hearth, satisfied on arrival.
+- **10.3 had a precise cause: needs were satisfied by teleportation.** A hungry
+  colonist ate out of the store wherever they were standing; nobody walked to a
+  granary or a fire. Needs bit but never caused a *decision*, which is exactly
+  what "no dynamism" means. Built as `Errand` + `ErrandEngine` rather than as a
+  `JobKind`: an errand is a person's own business and has to *interrupt* work,
+  not queue behind it for the same slot.
+
+### 10.7 — what 10.3 and 10.4 turned over
+
+Three things nobody was looking for, each found by measuring rather than by
+reading:
+
+1. **The same seed founded a different colony every launch.** `Pawn.init`
+   defaults `id` to a fresh `UUID()` and the four founders were taking it, so
+   per-entity randomness — which comes from `(mapSeed, entity.id, tick)` —
+   diverged from tick zero. Every determinism test in the suite was comparing
+   headcounts loose enough to pass on luck, and `DangerProbe` had never twice
+   measured the same world. Rule 2, in the one place nobody looked: world
+   creation. Fixed in `3cb1473`; the probe numbers below are the first
+   reproducible ones the project has had.
+2. **Defection was rolled per neighbour, not per colony.** `0.30 × however many
+   peoples you had met`, with nothing capping the count. Invisible while the
+   colony never explored; the moment the council started charting regions a town
+   at 90 morale with a full granary bled from fifty souls to thirty with no
+   deaths but old age. Rule 6 from the other side — not a rate too small to
+   reach its threshold, but a rate multiplied by an entity count nobody bounded.
+3. **A standing order is not a player's choice, and must not be priced like
+   one.** `LocalPOIEngine.chooseParty` refuses to strip a settlement "bare",
+   meaning *two people left standing* — right for a party the player asked for,
+   ruinous four times a year for ever. The council keeps under an eighth of its
+   adults abroad and only looks over the hill out of overflow.
+
+### 10.8 — the one the probe is now shouting about
+
+Two hundred years, seed 4242, reproducible: **310 dead of starvation** against
+190 of old age, with the granary sitting at 6 of 1950 for most of the run. The
+famine-sharing cap took it from 340 to 182 and the determinism fix moved the
+world underneath it again, but the shape is unchanged: past a few dozen souls
+the colony's food income stops scaling with its mouths and stays pinned at
+zero. Nothing in §10 caused it — it predates all of it — and it is now the
+largest measured failure in the game. Worth a session of its own, starting from
+"what rate is food supposed to grow at, and can it reach the population the
+housing allows?"
 
 ## 7. The frozen world (2026-08-02) — the biggest thing found so far
 
@@ -714,6 +752,19 @@ Every one of them has cost a session at least once:
    peoples at +75…+82 and not one war in two hundred years. Anything that is
    supposed to *build up* has to be fed by something that is true whether or not
    it has already started — here, the colony being the bigger neighbour.
+14. **A rate multiplied by an entity count is a rate with no ceiling.** Rule 6
+   read backwards. Defection was `0.30 per discovered tribe per year`, which is
+   fine at one tribe and fatal at six — and the count only started growing when
+   something *else* (the council exploring) changed. Ask of any per-entity roll:
+   what bounds the number of entities, and what happens to the colony when that
+   number is at its maximum? If the answer is "it dies quietly", the roll
+   belongs on the colony, asked once.
+15. **An autonomous standing order must be priced as a standing order.** Every
+   `dispatch` in the game is written for a player who tapped it once and knew
+   what it cost. Handing the same call to the council turns "once, deliberately"
+   into "four times a year, for ever" — so the council needs its own, stricter
+   gates on top: a cadence, a surplus bar above the one building has to clear,
+   and a cap on how much of the workforce may be abroad.
 11. **Playback pace is not simulation pace.** A tick is a real minute and a
    battle is eight rounds; played at the tick's own speed that is one
    exchange every seven and a half seconds, which reads as nothing happening.
