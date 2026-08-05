@@ -545,6 +545,31 @@ by what its household left in the yard — a woodpile, a washing line, a fence o
 a lean-to. All fixed per building seed, so a house does not change its own roof
 between frames.
 
+## 10. Played it — 2026-08-05 feedback
+
+| # | Thing | State |
+|---|---|---|
+| 10.1 | **Everyone swings a sword**, including the sixty who own nothing | **done** — `9f8cc01` |
+| 10.2 | **A hit should be a hit**: real time, you see it land, blood from it — not blobs of colour everywhere | todo |
+| 10.3 | **No dynamism** — people do not act on needs, surroundings or their own trade | todo |
+| 10.4 | The **steward never sends expeditions** to explore | todo |
+| 10.5 | **Temperature is cosmetic and does not match** the biome, for people or animals | todo |
+| 10.6 | Maybe **slow the pace**, once the above are in | todo |
+
+Each is specified in `docs/HANDOFF.md` §2 with the diagnosis rather than the
+wish. The short version of the two that matter most:
+
+- **10.2 is a drawing problem, not a simulation one.** `SiegeEngine` already
+  moves real fighters and lands blows on named people; `SettlementBattle` still
+  paints the *aggregate* — a seam across the line, sparks at a computed front,
+  bars floating over heads. Draw the impact between the two bodies that are
+  touching, put blood on the person and the ground, and delete the seam.
+- **10.3 has a precise cause: needs are satisfied by teleportation.** A hungry
+  colonist eats out of the store wherever they are standing; nobody walks to a
+  granary or a fire. Needs bite but never cause a *decision*, which is exactly
+  what "no dynamism" means. `JobKind` already drives movement — `.eat` and
+  `.warmUp` posted against the nearest store and hearth, satisfied on arrival.
+
 ## 7. The frozen world (2026-08-02) — the biggest thing found so far
 
 Measured on a fresh world, twelve thousand ticks, nobody touching it:

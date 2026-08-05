@@ -1,9 +1,8 @@
-# Handoff — 2026-08-04
+# Handoff — 2026-08-05
 
-Branch **`main`**, clean and pushed.
+Branch **`main`**, clean and pushed. Last commit `9f8cc01`.
 
-Tests: **889 Core**, **94 app**. `swift test --package-path Core` takes ~4–9 min
-on Keks's machine depending on load.
+Tests: **889 Core**, **94 app**.
 
 ```bash
 swift test --package-path Core
@@ -17,53 +16,156 @@ xcodebuild -project App/EndlessFrontier.xcodeproj -scheme EndlessFrontier -desti
 cd App && xcodegen generate
 ```
 
-Regenerate the Xcode project after adding any file under `App/Sources` — a new
-file that is not in the target fails as `cannot find type … in scope`.
+Regenerate the Xcode project after adding any file under `App/Sources`.
 
 ---
 
-## The batches, newest first
+## Read this first
 
-| | What |
-|---|---|
-| `a11de53` | Nobody teleports to a ruin; nothing works an abstraction; no two houses alike |
-| `45e5efe` | Three kinds of danger, and the one that gets worse the better you do |
-| `7432272` | Find one colonist in a town of a hundred; arm them from their own card |
-| `ea45437` | The town has room to be a town; every building has its own face; a place has something in it |
-| `1c8de0d` | The fight has a ground to stand on, and the neighbours can come to hate you |
-
-`docs/BACKLOG.md` §8 and §9 carry the full write-up of each. What follows is
-what a next session needs to know and what is left.
+**This session was cut short deliberately.** Keks gave six pieces of feedback,
+one of them was fixed, and he asked for the rest to be written down rather than
+half-built. Everything below §2 is *specified, not started*. Nothing is in
+flight; the tree is clean.
 
 ---
 
-## 1. The through-line, stated once
+## 1. What shipped today
 
-Every one of these batches turned out to be the same bug wearing different
-clothes: **a system whose effect could not reach the thing it was aimed at.**
+**`9f8cc01` — a militia of farmers stops looking like a company of swordsmen.**
 
-- A raid could not be *fought* because it resolved between two frames.
-- A people could not come to hate you, because the only thing that made them
-  angry required them to be angry already.
-- The wild could not threaten a big colony, because its strength was capped by
-  the era and not by the colony.
-- A hut could not house the people its ledger counted, because the ledger and
-  the building were two numbers.
-- A logger could not be seen working a tree, because the drawing checked the
-  abstract deposit first and won.
-- A ruin could not be a journey, because it was a button.
+`SettlementFigures.fightingArms` took a `Bool` (bow or blade), so everybody
+without a bow was drawn swinging a bar of iron — including the sixty colonists
+who own no weapon at all. `CombatEngine` has always priced them as unarmed
+(`baseUnarmedPower`); only the drawing disagreed.
 
-When something in this project "feels flat", the question that has found the
-cause **six times running** is: *what rate is supposed to move this, and can it
-actually get there?* Write the test for the reachability, not for the behaviour.
-
-Rules 6, 12 and 13 in `BACKLOG.md` are three faces of it.
+`SettlementFigures.Armament` (`.bow` / `.blade` / `.none`) is now what is
+actually in their hands, resolved from `CombatEngine.weaponProfile`. Unarmed
+colonists swing the tool of their trade — axe, pick, scythe, hammer — and a
+trade with no edge on it fights with fists.
 
 ---
 
-## 2. What the world does now, measured
+## 2. Keks's feedback, still open
 
-`DangerProbe` is the instrument. It is off unless you ask for it:
+In the order I would do it. Each has a diagnosis, not just a wish.
+
+### 2.1 Combat should read as real time, and a hit should be a hit
+
+> *"ať je to prostě real time mapa — bouchne ho a je vidět že ho zasáh a z toho
+> krev, ne kaňky barvy všude jako teď"*
+
+The simulation is already right: `SiegeEngine` moves real fighters over real
+ground, contact is proximity, and a blow lands on a named person. **The drawing
+is what is wrong.** `SettlementBattle` still paints the *aggregate*: a bright
+`contact` seam across the whole line, `sparks` at a computed "front", a `hit`
+ring, and a `wounded` bar floating over each defender. That is the "kaňky barvy
+všude" — colour standing in for events.
+
+What it should be instead, and all of it is available already:
+
+- A blow is a **moment on two specific bodies**. `Siege.fighters` has both
+  positions and `SiegeEngine` already writes a `.wound` / `.death` beat with a
+  `pawnID`. Draw the impact *between the two figures that are touching*, once,
+  and short.
+- **Blood belongs on the person and on the ground**, and it should persist.
+  `Siege.damage[pawnID]` is the accumulated harm and `Pawn.body.ailments` names
+  the part. A splash at the moment of the hit, then a mark that stays on them
+  and a stain where they stood. That is what turns a number into an injury.
+- **Delete the seam and the floating bars.** The contact band and the
+  over-the-head harm bars are both aggregate readouts of a thing that now has
+  individuals in it. The bar can stay for the *selected* fighter only.
+- Files: `App/Sources/Views/Settlement/SettlementBattle.swift` (`drawLive`,
+  `contact`, `sparks`, `hit`, `wounded`). Everything needed is already on
+  `Siege`; this is presentation-only, so rule 5 is not at risk.
+
+### 2.2 Nobody does anything because of what they need
+
+> *"stále to nemá tu dynamičnost, že by lidé něco logicky dělali dle potřeb a
+> okolí a svého zaměření"*
+
+This is the biggest one and it has a precise cause: **needs are satisfied by
+teleportation.** In `PawnEngine.advanceOneTick`, a hungry colonist eats out of
+the settlement's store wherever they happen to be standing
+(`s.pawns[i].needs.hunger += hungerPerMeal`). Nobody walks to a granary. Warmth
+is a passive comfort number — nobody walks to a fire. Rest is handled by
+`AgentMotion`'s day cycle, which is *presentation*, so it is a picture of
+sleeping rather than sleeping.
+
+So needs exist, and they bite (mood, health, frostbite), but they never *cause a
+decision*. That is exactly what "no dynamism" means.
+
+The shape of the fix, reusing what exists:
+
+- `JobKind` already drives movement through `Pawn.currentJob.position`, and
+  `AgentMotion` already puts a colonist wherever their job is (fixed yesterday
+  — the job now outranks the deposit blob).
+- Add `JobKind.eat` and `.warmUp`. A needs pass posts one when a need crosses a
+  threshold, targeting the **nearest** food store / hearth-bearing building.
+- The need is satisfied **on arrival**, not on the tick. A colony whose granary
+  is on the far side of town, or burned, genuinely fails to feed people.
+- "Podle svého zaměření" falls out of the same pass: when nothing is biting,
+  pick the *nearest* instance of your trade's work rather than a random one.
+- Watch: this changes food timing, so measure with `DangerProbe` before and
+  after. It is the sort of change that can quietly start a famine.
+
+### 2.3 The steward never sends anybody out
+
+> *"automat neposílá výpravy na prozkoumání mapy"*
+
+`StewardEngine.advanceOneTick` does exactly three things: `chooseResearch`,
+`keepMaterialsComing`, `raiseWhatIsShort`. It never explores, never works a POI,
+and never sends a `RegionExpedition` — all three of which now exist and work
+(`LocalPOIEngine.dispatch`, `RegionExpeditionEngine.dispatch`,
+`GameEngine.explore`).
+
+So a player who does not personally tap the world map never sees any of the
+expedition content, which is most of what was built this week.
+
+Add a fourth clause to the council: when there are spare hands and no party out,
+send one — to the nearest unexplored region first, then to an unworked POI, then
+to a site. Same "acts only in the gaps" rule as the rest of `StewardEngine`, so
+an explicit choice by the player is never overridden.
+
+### 2.4 Temperature is cosmetic, and it does not match
+
+> *"je tam stav teploty ale ten vůbec nesedí a je spíš kosmetický, stejně tak
+> pro lidi"*
+
+Two separate faults:
+
+1. **Temperature is season-only and biome-blind.** `AnimalEngine.temperature`
+   is a four-case switch on `Season`, and `biomes.json` has no temperature field
+   at all. A tundra valley in January is exactly as cold as a coastal one. The
+   world says "tundra" and the body does not agree — that is the "nesedí".
+2. **It is nowhere on screen.** The only reading is a "Warmth" need bar on the
+   colonist card. There is no temperature anywhere, so the player cannot connect
+   the season, the biome, the roof and the coat to the number. `ComfortEngine`
+   computes all four terms and shows none of them.
+
+Fix: a `temperature_shift` on the biome, one shared
+`temperature(season:biome:)` used by **both** people and animals (rule 8 — it is
+one number), a reading in the status strip, and a line on the colonist card that
+says *why*: the day is −22, your roof is worth 26, your coat 11.
+
+It already bites for the roofless (`freezingBelow` 18 against a housed warmth of
+~40), so this is about making it honest and legible, not about making it hurt
+more. A tundra shift would make a hard winter dangerous even indoors, which is
+the point of choosing a tundra.
+
+### 2.5 The pace
+
+> *"možná snížit tempo hry potom"*
+
+Deliberately last: pace should be judged once the above are in, because most of
+what makes it feel fast is that events resolve without a middle. `WorldConfig`
+carries the tick rate; slowing it is a one-line change and a large balance
+change, so measure with `DangerProbe` after, not before.
+
+---
+
+## 3. How the world measures right now
+
+`DangerProbe` is the instrument, off unless asked:
 
 ```bash
 EF_PROBE=1 swift test --package-path Core --filter DangerProbe
@@ -78,94 +180,58 @@ fights      91  (37 turned back)        sicknesses 4
 tribes      6   standings [−80, −51, −9, 0, 0, 0]
 ```
 
-For most of this project's life that tally was one line long (`old_age`). It is
-now four, and each line comes from a different system:
-
-- **Battle** — `SiegeEngine`, real positions, contact by proximity.
-- **Sickness** — `PlagueEngine`, the threat that scales *with* your success.
-- **Starvation** — food finally binds, once wolves stopped looting like a
-  warband (`Siege.carriesOff`).
-- **Old age** — still the commonest, which is right.
-
-Anything that changes a combat, wildlife, diplomacy or food number should be
-measured against this before and after. It takes ~7 minutes and it has caught
-three regressions that no unit test would have.
+Run it before and after anything that touches a combat, wildlife, diplomacy,
+food or needs number. It has caught three regressions no unit test would have.
 
 ---
 
-## 3. Still open — in the order I would do them
+## 4. Also still open, from before
 
-### 3.1 Events happen nowhere, to nobody
-
-`BACKLOG` 3.6. **40 of 71 events never name a building, a place or a colonist**,
-and every hook to do it already exists (`WorldQuery` can pick a pawn, a
-building, a POI; `EffectApplier` can act on one). This is the cheapest large win
-left: it is content work against a working machine, and it turns the storyteller
-from a ticker into something that happens *to* people you know by name.
-
-### 3.2 The old English content
-
-Events, buildings and techs still ship English-only. `LocalizedText` is in place
-and everything new is bilingual, so this is a translation pass, not a
-refactor — but it is the last thing standing between the game and being fully
-Czech, and Keks plays in Czech.
-
-### 3.3 Fields and herb beds are still places, not things
-
-`SiteVisitEngine` and the entity layer took the wood, the rock and the beasts.
-`LocalResourceKind.field` and `.herbs` are still `ResourceNode` blobs harvested
-by proportional arithmetic (`FloraEngine.isEntityBacked` returns false for both).
-A field of individual crops that ripen and are cut is the same move again, and
-it is the last of "everything is blocks or pawns".
-
-### 3.4 Births do not keep pace, and the era stops at `ancient`
-
-Population peaks and drifts back. The later era milestones ask for settlement
-counts and populations the colony never reaches, so two thirds of the tech tree
-and the whole late game are unreachable in practice. This wants measuring before
-it wants tuning — the probe will show where the ceiling actually is.
-
-### 3.5 Smaller, and real
-
-- Battle has **no sound and no haptics**. The one place a phone game should
-  reach out of the screen, and it is silent.
-- `Diagnostics` / `WorldReport` have grown organically and nobody reads half of
-  it; a pass to make it say the four or five things that actually matter would
-  pay for itself the next time something is "flat".
-- The **world-map site outcome** narrative is a plain `String`, not
-  `LocalizedText` — it predates the localisation and is the one journal line
-  that cannot be Czech.
+- **Events happen nowhere, to nobody.** 40 of 71 never name a building, a place
+  or a colonist, and every hook exists (`WorldQuery`, `EffectApplier`). Cheapest
+  large win left.
+- **Old English content** — events, buildings, techs are English-only.
+  `LocalizedText` is in place; this is a translation pass.
+- **Fields and herb beds are still places, not things.** The wood, the rock and
+  the beasts are entities; `field` and `herbs` are still `ResourceNode` blobs.
+  Last of "everything is blocks or pawns".
+- **Births do not keep pace; the era stops at `ancient`.** Two thirds of the
+  tech tree is unreachable in practice. Measure before tuning.
+- Battle has **no sound and no haptics**.
+- The world-map `SiteOutcome.narrative` is a plain `String`, not
+  `LocalizedText` — the one journal line that cannot be Czech.
 
 ---
 
-## 4. Things that will bite you, from experience
+## 5. Things that will bite you
 
-1. **`swift test` on the whole Core is slow.** Filter while working
-   (`--filter SiegeTests`) and run the whole thing once before committing.
-2. **Never seed an RNG from `hashValue`.** Swift seeds its hasher per process,
-   so a hash-derived seed replays differently on every launch and silently
-   breaks determinism. Derive from the UUID's *bytes* — see
-   `PlagueEngine.seed`, `BanditEngine.seed`, `RegionExpeditionEngine.seed`.
-3. **Every new field on a saved type is `decodeIfPresent` with a default.**
-   Every batch this week added one and every one of them has a "a save written
-   before this existed still loads" test.
-4. **Two numbers for one thing is the recurring design bug.** `housing` vs beds,
-   `SettlementGeometry.span` vs `colonySpan`, the muster line in two files.
-   When you find yourself writing the second one, derive it instead.
-5. **Keks's Mac is an 8 GB Intel machine.** If a build dies with `terminated
-   with uncaught signal 9` in the asset-catalog step, that is the host under
-   memory pressure, not the repo.
-6. The simulator installed is **iPhone 17**.
+1. **Never seed an RNG from `hashValue`** — Swift seeds its hasher per process,
+   so it replays differently every launch and silently breaks determinism.
+   Derive from the UUID's bytes (`PlagueEngine.seed`, `BanditEngine.seed`).
+2. **Every new field on a saved type is `decodeIfPresent` with a default**, with
+   a "a save written before this existed still loads" test.
+3. **Two numbers for one thing is the recurring design bug** — `housing` vs
+   beds, `span` vs `colonySpan`, the muster line in two files. Derive the second
+   one instead of writing it.
+4. **The recurring bug shape, six times running:** a system whose effect cannot
+   reach the thing it is aimed at. When something feels flat, ask *what rate is
+   supposed to move this, and can it get there?* Rules 6, 12 and 13 in
+   `BACKLOG.md`.
+5. **Check the drawing before rebuilding the system.** Yesterday's "the entity
+   layer feels fake" was three lines of ordering in `AgentMotion`, not a design
+   problem. §2.1 above is the same shape.
+6. Keks's Mac is an **8 GB Intel** machine; `signal 9` in the asset-catalog step
+   is memory pressure, not the repo. Simulator is **iPhone 17**.
 
 ---
 
-## 5. Where to look
+## 6. Where to look
 
 | For | Read |
 |---|---|
-| What has been asked for, ever | `docs/BACKLOG.md` |
-| The rules a change must not break | `docs/BACKLOG.md` § "Rules" (13 of them) |
+| Everything ever asked for | `docs/BACKLOG.md` |
+| The 13 rules a change must not break | `docs/BACKLOG.md` § "Rules" |
 | Systems and formulas | `docs/DESIGN.md` |
 | Footprints, lots, pawn-like animals | `docs/RIMWORLD_LAYER.md` |
 | Layer separation | `docs/architecture/LAYERS.md` |
-| Whether the world is actually dangerous | `DangerProbe`, `EF_PROBE=1` |
+| Whether the world is dangerous | `DangerProbe`, `EF_PROBE=1` |
