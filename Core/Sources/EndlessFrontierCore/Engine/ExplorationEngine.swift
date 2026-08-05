@@ -23,6 +23,11 @@ public enum ExplorationEngine {
         config.baseExpeditionTicks + region.hazardLevel * config.ticksPerHazard
     }
 
+    /// What an expedition is paid for in. One list, so anybody asking "can we
+    /// afford to look around?" is asking about the same resources the trip
+    /// actually spends (rule 8).
+    public static let expeditionResources: [ResourceType] = [.food, .materials]
+
     /// Cost in resources to launch an expedition to `region`.
     public static func expeditionCost(to region: Region, config: WorldConfig) -> Resources {
         let hazardScale = 1 + Double(region.hazardLevel) * 0.2

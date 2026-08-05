@@ -82,6 +82,7 @@ public enum StewardEngine {
         for index in s.settlements.indices {
             s = keepMaterialsComing(s, index: index, registry: registry)
             s = raiseWhatIsShort(s, index: index, registry: registry)
+            s = sendSomebodyOut(s, index: index, registry: registry)
         }
         return s
     }
@@ -404,6 +405,158 @@ public enum StewardEngine {
             return GameEngine.hasMaterials(def.materialCost, in: state,
                                            settlementID: settlement.id)
         }
+    }
+
+    // MARK: - Sending people out
+
+    /// Puts a party on the road when there are spare hands and nobody is out.
+    ///
+    /// The council did three things — study, keep timber on the shelf, raise
+    /// what is short — and never once left the valley. A player who does not
+    /// personally tap the world map therefore saw *none* of the expedition
+    /// content: the fog never lifted, the ruins were never worked, the
+    /// landmarks in the neighbouring regions were never visited. All three
+    /// paths existed and worked; nothing autonomous ever called them.
+    ///
+    /// Same "acts only in the gaps" rule as the rest of the council. Every
+    /// dispatch below refuses on its own when a party is already out, when the
+    /// standing roster says nobody leaves, or when the colony cannot spare the
+    /// people — so an explicit choice by the player is never overridden and a
+    /// town of six never sends four of them down a cave.
+    ///
+    /// In the order a council would argue it: know where you are first, then
+    /// work what is on your own doorstep, then go over the hill.
+    static func sendSomebodyOut(
+        _ state: WorldState, index: Int, registry: GameDataRegistry
+    ) -> WorldState {
+        let settlement = state.settlements[index]
+        guard settlement.policy.roster != .nobody else { return state }
+        // The council sits four times a year and it must not decide to send
+        // somebody out at every sitting: unguarded, that charted twenty-six
+        // regions in fifty years and left the colony too poor to build.
+        // Once every few years is a standing order; four times a year is a
+        // policy of permanent absence.
+        guard state.tick % outwardInterval == 0 else { return state }
+        if canAffordToLookAround(settlement),
+           let charted = chartTheFog(state, registry: registry) { return charted }
+        guard canSpareTheHands(settlement, registry: registry) else { return state }
+        if let worked = workTheValley(state, index: index, registry: registry) { return worked }
+        return goOverTheHill(state, index: index, registry: registry) ?? state
+    }
+
+    /// How much of its working strength a council will have out of the valley
+    /// at once, and the smallest colony that will send anybody at all.
+    ///
+    /// `LocalPOIEngine.chooseParty` already refuses to strip a settlement bare,
+    /// but "bare" there means *two people left standing* — which is the right
+    /// floor for a party the player asked for and far too generous for a
+    /// standing order. Measured: a town of forty had four to seven people on
+    /// the road permanently, and stopped growing at forty.
+    static let handsAbroad = 0.12
+    static let smallestPartySender = 12
+
+    /// How often the council will even consider sending somebody out of the
+    /// valley. A multiple of `interval`, so it lands on a sitting.
+    static let outwardInterval = interval * 3
+
+    static func canSpareTheHands(
+        _ settlement: Settlement, registry: GameDataRegistry
+    ) -> Bool {
+        let ticksPerYear = max(1, registry.config.ticksPerYear)
+        let adults = settlement.pawns.filter {
+            $0.isAdult(ticksPerYear: ticksPerYear) && !$0.isBroken
+        }
+        guard adults.count >= smallestPartySender else { return false }
+        return Double(adults.count { $0.isAway }) < Double(adults.count) * handsAbroad
+    }
+
+    /// Whether the colony has enough put by that looking over the hill is not
+    /// taken out of somebody's dinner.
+    ///
+    /// An expedition is paid for in food and timber, and the council sits four
+    /// times a year: unguarded, it charted twenty-six regions in fifty years
+    /// and spent every material the town would otherwise have built with.
+    /// Measured — 44 buildings and a population of 62 became 33 and 32, and the
+    /// colony never left the first era. Exactly the shape rule 6 warns about,
+    /// running the other way: a new sink that quietly starves an existing one.
+    ///
+    /// So the bar is set **above** the one building has to clear
+    /// (`hasSomethingSpare`, at `comfortable`) rather than beside it: the
+    /// colony looks over the hill out of *overflow*, when the store is at the
+    /// brim and the next barrow of timber would be thrown away anyway. Raising
+    /// a roof always wins the argument, which is right — you explore from a
+    /// full granary, not from a full-ish one.
+    static func canAffordToLookAround(_ settlement: Settlement) -> Bool {
+        guard settlement.storageCapacity > 0 else { return false }
+        return ResourceType.allCases.allSatisfy { resource in
+            ExplorationEngine.expeditionResources.contains(resource)
+                ? settlement.storage[resource] >= settlement.storageCapacity * brimming
+                : true
+        }
+    }
+
+    /// The nearest unknown region, if the colony can pay for the trip.
+    ///
+    /// Nearest to anything already held, so the frontier grows outward from the
+    /// colony rather than jumping about the map. Ties on id.
+    static func chartTheFog(
+        _ state: WorldState, registry: GameDataRegistry
+    ) -> WorldState? {
+        guard state.activeExpedition == nil else { return nil }
+        let held = state.regions.filter { $0.explorationState != .unknown }.map(\.coord)
+        guard !held.isEmpty else { return nil }
+        func reach(_ region: Region) -> Int {
+            held.map { region.coord.distance(to: $0) }.min() ?? Int.max
+        }
+        let pick = ExplorationEngine.exploreableRegions(state)
+            .filter { ExplorationEngine.canAfford(expeditionTo: $0, in: state, registry: registry) }
+            .min { a, b in
+                let ra = reach(a), rb = reach(b)
+                if ra != rb { return ra < rb }
+                // Somewhere safe before somewhere sheer, then by id.
+                if a.hazardLevel != b.hazardLevel { return a.hazardLevel < b.hazardLevel }
+                return a.id.uuidString < b.id.uuidString
+            }
+        guard let pick else { return nil }
+        let out = ExplorationEngine.startExpedition(
+            state, targetRegionID: pick.id, registry: registry)
+        return out.activeExpedition == nil ? nil : out
+    }
+
+    /// A landmark in the colony's own valley that nobody is working.
+    static func workTheValley(
+        _ state: WorldState, index: Int, registry: GameDataRegistry
+    ) -> WorldState? {
+        let settlement = state.settlements[index]
+        // One party out of the valley at a time. Two is the colony emptying
+        // itself, and it is the player's call to open a second.
+        guard settlement.expeditions.isEmpty, let map = settlement.localMap else { return nil }
+        let ticksPerYear = max(1, registry.config.ticksPerYear)
+        for poi in map.pois.sorted(by: { $0.id < $1.id })
+        where poi.isWorkable(tick: state.tick, ticksPerYear: ticksPerYear) {
+            if let out = LocalPOIEngine.dispatch(
+                state, settlementID: settlement.id, poiID: poi.id, registry: registry) {
+                return out
+            }
+        }
+        return nil
+    }
+
+    /// …and failing that, a site in a region the colony has already charted.
+    static func goOverTheHill(
+        _ state: WorldState, index: Int, registry: GameDataRegistry
+    ) -> WorldState? {
+        let settlement = state.settlements[index]
+        guard state.regionExpeditions.isEmpty else { return nil }
+        for region in state.regions
+            .filter({ $0.explorationState != .unknown && $0.hasActiveSite })
+            .sorted(by: { $0.id.uuidString < $1.id.uuidString }) {
+            if let out = RegionExpeditionEngine.dispatch(
+                state, settlementID: settlement.id, regionID: region.id, registry: registry) {
+                return out
+            }
+        }
+        return nil
     }
 
     /// The affordable building with the most of something, ties by id. Returns

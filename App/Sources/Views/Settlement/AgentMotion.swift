@@ -381,6 +381,17 @@ enum AgentMotion {
         if let journey = scene.journey(for: pawn) {
             return travelPose(journey: journey, scene: scene, seed: seed, time: time)
         }
+        // …and neither is somebody who has left their work because they are
+        // hungry or cold. The Core owns this walk (`ErrandEngine`): where they
+        // set off from, where they are going and when they get there are all
+        // simulation, and this reads them. It is the same contract as hauling
+        // and the same one as a siege — the canvas never invents a position it
+        // could ask for.
+        if let errand = pawn.errand {
+            let at = errand.position(at: scene.continuousTick)
+            return Pose(position: at, activity: .walking, stride: 1,
+                        facing: facing(from: at, to: errand.to))
+        }
         let home = home(for: pawn, scene: scene, seed: seed)
 
         // The clock: everyone lives the same day, offset a little so the

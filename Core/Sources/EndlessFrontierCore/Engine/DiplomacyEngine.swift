@@ -99,6 +99,11 @@ public enum DiplomacyEngine {
             s = drift(s, tribeIndex: index, registry: registry, rng: &rng)
             s = resolveRelations(s, tribeIndex: index, registry: registry, rng: &rng)
         }
+        // …and once, of the colony: whether anybody has had enough of it.
+        var leaving = SeededRNG(seed: tribeSeed(mapSeed: s.mapSeed,
+                                                tribeID: s.settlements.first?.id ?? UUID(),
+                                                year: year))
+        s = maybeSomebodyLeaves(s, registry: registry, rng: &leaving)
         return s
     }
 
@@ -346,33 +351,63 @@ public enum DiplomacyEngine {
             s.tribes[tribeIndex].grudge *= 0.5
         }
 
-        // Defection: someone slips away to a people who might treat them better.
-        //
-        // This used to need average morale under 45 — the very condition that
-        // made secession unreachable, since a working colony sits at 70–86. But
-        // an average is exactly the wrong instrument: a colony can be content
-        // *on the whole* and still be one its poorest have no reason to stay
-        // in. So inequality drives it too, and the one who leaves is the one
-        // with least, not merely the saddest.
+        return s
+    }
+
+    /// Defection: someone slips away to a people who might treat them better.
+    ///
+    /// This used to need average morale under 45 — the very condition that made
+    /// secession unreachable, since a working colony sits at 70–86. But an
+    /// average is exactly the wrong instrument: a colony can be content *on the
+    /// whole* and still be one its poorest have no reason to stay in. So
+    /// inequality drives it too, and the one who leaves is the one with least,
+    /// not merely the saddest.
+    ///
+    /// **Asked once a year of the colony, not once a year of every neighbour.**
+    /// It lived inside the per-tribe loop, so the rate was `0.30 × however many
+    /// peoples you had met` — a number with nothing bounding it but the size of
+    /// the map. The moment the council started charting regions on its own the
+    /// colony met six peoples instead of one, and a town that was content, fed,
+    /// housed and at 90 morale bled from fifty souls to thirty with no deaths
+    /// but old age. Emigration is a fact about *the place people are leaving*;
+    /// which neighbour they go to is a detail, and it is settled here by taking
+    /// whoever stands highest with them.
+    ///
+    /// That is the recurring shape from the other side: not a rate too small to
+    /// reach its threshold, but a rate multiplied by an entity count nobody
+    /// capped.
+    static func maybeSomebodyLeaves(
+        _ state: WorldState, registry: GameDataRegistry, rng: inout SeededRNG
+    ) -> WorldState {
+        var s = state
+        guard let capitalIndex = s.settlements.indices.first else { return s }
         let capital = s.settlements[capitalIndex]
+        guard capital.pawns.count > 8 else { return s }
+
         let unequal = capital.society.gini > defectionGiniThreshold
-        if s.tribes[tribeIndex].standing > defectionStanding,
-           capital.stats.morale < defectionMorale || unequal,
-           rng.nextUnit() < defectionChance,
-           capital.pawns.count > 8 {
-            let ticksPerYear = registry.config.ticksPerYear
-            let candidates = capital.pawns.indices.filter {
-                capital.pawns[$0].isAdult(ticksPerYear: ticksPerYear)
-            }
-            let leaver = unequal
-                ? candidates.min(by: { capital.pawns[$0].wealth < capital.pawns[$1].wealth })
-                : candidates.min(by: { capital.pawns[$0].mood < capital.pawns[$1].mood })
-            if let leaver {
-                s.settlements[capitalIndex].pawns.remove(at: leaver)
-                s.tribes[tribeIndex].population += 1
-                s.tribes[tribeIndex].defections += 1
-            }
+        guard capital.stats.morale < defectionMorale || unequal else { return s }
+        guard rng.nextUnit() < defectionChance else { return s }
+        // Somewhere to go: the people they get on with best, ties on id.
+        guard let tribeIndex = s.tribes.indices
+            .filter({ s.tribes[$0].discovered && s.tribes[$0].standing > defectionStanding })
+            .max(by: { a, b in
+                s.tribes[a].standing == s.tribes[b].standing
+                    ? s.tribes[a].id.uuidString > s.tribes[b].id.uuidString
+                    : s.tribes[a].standing < s.tribes[b].standing
+            })
+        else { return s }
+
+        let ticksPerYear = registry.config.ticksPerYear
+        let candidates = capital.pawns.indices.filter {
+            capital.pawns[$0].isAdult(ticksPerYear: ticksPerYear)
         }
+        let leaver = unequal
+            ? candidates.min(by: { capital.pawns[$0].wealth < capital.pawns[$1].wealth })
+            : candidates.min(by: { capital.pawns[$0].mood < capital.pawns[$1].mood })
+        guard let leaver else { return s }
+        s.settlements[capitalIndex].pawns.remove(at: leaver)
+        s.tribes[tribeIndex].population += 1
+        s.tribes[tribeIndex].defections += 1
         return s
     }
 

@@ -14,8 +14,13 @@ struct ResourceLoopTests {
         let first = ResourceLoop.advanceOneTick(state, registry: registry)
         #expect(abs(first.settlements[0].storage[.food] - 110) < 1e-9)   // nobody hungry yet
 
+        // The clock has to actually run: a meal is an errand now, and an
+        // errand arrives on a later tick than the one it was posted on.
         var world = state
-        for _ in 0..<30 { world = ResourceLoop.advanceOneTick(world, registry: registry) }
+        for _ in 0..<30 {
+            world = ResourceLoop.advanceOneTick(world, registry: registry)
+            world.tick += 1
+        }
         let ate = 100 + 30 * 10 - world.settlements[0].storage[.food]
         #expect(ate > 0)   // meals consumed once hunger crossed the threshold
     }

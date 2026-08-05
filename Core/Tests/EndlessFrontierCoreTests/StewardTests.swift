@@ -27,11 +27,19 @@ struct StewardTests {
     // MARK: - The world advances on its own
 
     /// The one that matters. Everything else here is detail.
+    ///
+    /// Sixty-seven years rather than fifty, since the council started leaving
+    /// the valley. Charting the map and working the ruins costs food, timber
+    /// and hands, and meeting the neighbours costs the colony the people who
+    /// decide they would rather live with them — so an unattended world reaches
+    /// the second era about a decade later than one that never looked over the
+    /// hill. That is the trade, and it is the right way round: the canary here
+    /// is *frozen*, not *slow*.
     @Test("A world nobody touches actually goes somewhere")
     func theWorldAdvancesUnattended() throws {
         let before = try registry()
         let start = GameWorldFactory.newGame(registry: before, seed: 4242)
-        let after = try world(ticks: 3000)
+        let after = try world(ticks: 4000)
 
         #expect(after.researchedTechs.count > 0,
                 "fifty years and the colony learned nothing")
@@ -202,6 +210,52 @@ struct StewardTests {
             && !w.researchedTechs.contains(tech.id) {
             #expect(TechEngine.cost(of: pick, in: w, config: reg.config)
                     <= TechEngine.cost(of: tech, in: w, config: reg.config))
+        }
+    }
+
+    // MARK: - It leaves the valley
+
+    /// The council did three things and none of them was ever *outside*. A
+    /// player who never taps the world map therefore saw none of the expedition
+    /// content at all — the fog never lifted, the ruins were never worked. All
+    /// three paths existed and worked; nothing autonomous called them.
+    @Test("A colony nobody steers charts its own map")
+    func theFogLifts() throws {
+        let reg = try registry()
+        let start = GameWorldFactory.newGame(registry: reg, seed: 4242)
+        let known = { (w: WorldState) in
+            w.regions.count { $0.explorationState != .unknown }
+        }
+        let after = try world(ticks: 3000)
+        #expect(known(after) > known(start),
+                "fifty years and the colony never looked over the hill")
+    }
+
+    @Test("A colony nobody steers works the landmarks in its own valley")
+    func theRuinsGetWorked() throws {
+        let reg = try registry()
+        var w = GameWorldFactory.newGame(registry: reg, seed: 4242)
+        var everSentOut = false
+        for _ in 0..<40 {
+            w = TickEngine.advance(w, ticks: 60, registry: reg).state
+            if !w.settlements[0].expeditions.isEmpty { everSentOut = true; break }
+        }
+        #expect(everSentOut, "nobody was ever sent to a place in their own valley")
+    }
+
+    /// The council must not empty the town. Every dispatch it uses refuses on
+    /// its own when the roster says nobody leaves — this pins that the fourth
+    /// clause did not find a way round them.
+    @Test("A colony that has said nobody leaves sends nobody")
+    func theRosterStillHolds() throws {
+        let reg = try registry()
+        var w = GameWorldFactory.newGame(registry: reg, seed: 4242)
+        for index in w.settlements.indices { w.settlements[index].policy.roster = .nobody }
+        for _ in 0..<20 {
+            w = TickEngine.advance(w, ticks: 60, registry: reg).state
+            for index in w.settlements.indices { w.settlements[index].policy.roster = .nobody }
+            #expect(w.settlements[0].expeditions.isEmpty)
+            #expect(w.regionExpeditions.isEmpty)
         }
     }
 

@@ -383,6 +383,11 @@ public enum ResourceLoop {
         if shut < 1 {
             for work in WorkKind.allCases { factors[work] = (factors[work] ?? 1) * shut }
         }
+        // 8c. And their own business. A need past its threshold sends somebody
+        //     to the granary or to a fire, and it is answered when they get
+        //     there — before the pawn tick reads their needs for mood, so a
+        //     meal eaten this minute is a mood this minute.
+        s = ErrandEngine.advanceOneTick(s, registry: registry, tick: tick, laws: laws)
         s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick,
                                       gatheringFactors: factors, laws: laws)
         // 9b. Bleeding, mending, and the healers doing the mending. After the

@@ -95,6 +95,22 @@ public enum JobBoard {
     /// offline catch-up replays tens of thousands of ticks through it.
     public static let interval = 10
 
+    /// How many of the next untaken offers a colonist looks at before picking
+    /// the closest. See `assign`.
+    static let nearestWindow = 24
+
+    /// Every dwelling's door, by placement id. Built once per assignment rather
+    /// than searched per colonist: this runs tens of thousands of times on
+    /// offline catch-up.
+    static func doors(of settlement: Settlement) -> [UUID: LocalPoint] {
+        guard let colony = settlement.colony else { return [:] }
+        var out: [UUID: LocalPoint] = [:]
+        for placement in colony.placements {
+            out[placement.id] = SettlementGeometry.canvasPoint(for: placement, in: colony)
+        }
+        return out
+    }
+
     /// The work this settlement is offering right now, in a stable order.
     ///
     /// Everything here is derived from the world as it stands: no state to keep
@@ -231,15 +247,52 @@ public enum JobBoard {
             }
         }
 
-        // Then fill the idle hands from what is left, in stable order.
+        // Then fill the idle hands from what is left — **the nearest piece of
+        // their trade's work, not the first**.
+        //
+        // Taking the front of the queue meant a logger who lives on the east
+        // side of town walked to whichever tree happened to have the biggest
+        // timber yield, every time, and so did all the other loggers: the
+        // colony's work had an order but no geography. Nobody ever did the
+        // obvious thing, which is a large part of "people are not doing
+        // anything logical for where they are".
+        //
+        // Bounded on purpose. Offline catch-up replays tens of thousands of
+        // ticks through this, and a full nearest-of-all search is pawns ×
+        // jobs every cycle. A cursor walks past the jobs already taken and the
+        // choice is made among the next `nearestWindow` — near enough to be
+        // local, cheap enough to replay a century in.
+        var cursor: [WorkKind: Int] = [:]
+        let doors = doors(of: settlement)
         for i in pawns.indices {
             guard pawns[i].currentJob == nil,
                   pawns[i].isAdult(ticksPerYear: ticksPerYear),
                   !pawns[i].isBroken, !pawns[i].isAway else { continue }
-            guard let offers = byTrade[pawns[i].assignedWork] else { continue }
-            guard let job = offers.first(where: { !taken.contains($0.id) }) else { continue }
-            pawns[i].currentJob = job
-            taken.insert(job.id)
+            let trade = pawns[i].assignedWork
+            guard let offers = byTrade[trade] else { continue }
+            var start = cursor[trade] ?? 0
+            while start < offers.count, taken.contains(offers[start].id) { start += 1 }
+            cursor[trade] = start
+            guard start < offers.count else { continue }
+            // A person works near where they live. Deliberately not near the
+            // job they just held: anchoring on that would let a logger drift a
+            // tree at a time across the valley and never come home.
+            let here = pawns[i].homeID.flatMap { doors[$0] } ?? SettlementGeometry.heart
+            var best = offers[start]
+            var bestDistance = SiegeField.distance(here, best.position)
+            for index in (start + 1)..<min(offers.count, start + nearestWindow) {
+                let job = offers[index]
+                guard !taken.contains(job.id) else { continue }
+                let d = SiegeField.distance(here, job.position)
+                // Ties break on id, never on array order.
+                guard d < bestDistance
+                        || (d == bestDistance && job.id.uuidString < best.id.uuidString)
+                else { continue }
+                best = job
+                bestDistance = d
+            }
+            pawns[i].currentJob = best
+            taken.insert(best.id)
             changed = true
         }
 

@@ -158,12 +158,20 @@ struct SocietyTests {
             q.needs = PawnNeeds(hunger: 40, rest: 80, recreation: 70)
             return q
         }
-        let plain = ResourceLoop.advanceSettlement(town(hungry), registry: reg, config: reg.config,
-                                                   tick: 0, mapSeed: 1)
+        // Long enough for them to walk to the food: a meal is an errand now,
+        // and nothing is eaten on the tick the hunger is noticed.
+        func run(_ start: Settlement) -> Settlement {
+            var s = start
+            for tick in 0..<6 {
+                s = ResourceLoop.advanceSettlement(s, registry: reg, config: reg.config,
+                                                   tick: tick, mapSeed: 1)
+            }
+            return s
+        }
+        let plain = run(town(hungry))
         var rationed = town(hungry)
         rationed.laws = [LawInstance(definitionID: "rationing", enactedTick: 0, expiresTick: 9999)]
-        let lean = ResourceLoop.advanceSettlement(rationed, registry: reg, config: reg.config,
-                                                  tick: 0, mapSeed: 1)
+        let lean = run(rationed)
         #expect(lean.storage[.food] > plain.storage[.food])   // less food eaten
     }
 

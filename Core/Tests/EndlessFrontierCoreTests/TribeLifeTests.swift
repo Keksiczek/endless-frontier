@@ -97,7 +97,7 @@ struct TribeGateTests {
             }
             let before = s.settlements[0].pawns.count
             var rng = SeededRNG(seed: UInt64(seed) &* 2_654_435_761)
-            s = DiplomacyEngine.resolveRelations(s, tribeIndex: 0, registry: registry, rng: &rng)
+            s = DiplomacyEngine.maybeSomebodyLeaves(s, registry: registry, rng: &rng)
             if s.settlements[0].pawns.count < before {
                 defected = true
                 #expect(s.tribes[0].defections == 1)
@@ -107,6 +107,38 @@ struct TribeGateTests {
         #expect(defected, "someone with nothing should look over the fence")
     }
 
+    /// The rate must be a fact about the colony, not about the map.
+    ///
+    /// Defection lived inside the per-tribe loop, so a colony that had met six
+    /// peoples rolled for it six times a year. The moment the council started
+    /// charting regions on its own, a town at 90 morale with a full granary
+    /// bled from fifty souls to thirty with no deaths but old age.
+    @Test("Meeting more peoples does not multiply who walks out")
+    func leavingDoesNotScaleWithNeighbours() {
+        func lost(neighbours: Int) -> Int {
+            var s = world(standing: 40, morale: 80, gini: 0.6)
+            for i in s.settlements[0].pawns.indices {
+                s.settlements[0].pawns[i].wealth = i < 3 ? 900 : 2
+            }
+            let one = s.tribes[0]
+            s.tribes = (0..<neighbours).map { index in
+                Tribe(id: UUID(uuidString: String(
+                          format: "00000000-0000-0000-0000-%012d", index + 1))!,
+                      name: "Sousedé \(index)", foundedTick: 0,
+                      originStory: one.originStory, population: 40, genes: Genes(),
+                      cultID: nil, defense: 10, stores: 200, standing: 40)
+            }
+            let before = s.settlements[0].pawns.count
+            for seed in 0..<20 {
+                var rng = SeededRNG(seed: UInt64(seed) &* 2_654_435_761)
+                s = DiplomacyEngine.maybeSomebodyLeaves(s, registry: registry, rng: &rng)
+            }
+            return before - s.settlements[0].pawns.count
+        }
+        #expect(lost(neighbours: 6) == lost(neighbours: 1),
+                "the same colony loses the same people whoever it happens to know")
+    }
+
     @Test("A fair, contented colony holds on to its people")
     func fairColoniesKeepTheirPeople() {
         var s = world(standing: 40, morale: 85, gini: 0.05)
@@ -114,7 +146,7 @@ struct TribeGateTests {
         let before = s.settlements[0].pawns.count
         for seed in 0..<60 {
             var rng = SeededRNG(seed: UInt64(seed) &* 2_654_435_761)
-            s = DiplomacyEngine.resolveRelations(s, tribeIndex: 0, registry: registry, rng: &rng)
+            s = DiplomacyEngine.maybeSomebodyLeaves(s, registry: registry, rng: &rng)
         }
         #expect(s.settlements[0].pawns.count == before,
                 "nobody walks out on a colony that treats them well")

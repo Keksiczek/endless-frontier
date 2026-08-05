@@ -17,12 +17,31 @@ struct PawnEngineTests {
         #expect(s.pawns[0].needs.hunger < 50)   // no food → hunger falls
     }
 
-    @Test("A hungry pawn eats, restoring hunger and consuming settlement food")
+    /// Eating is `ErrandEngine`'s now, and it happens **where the food is** —
+    /// so this drives the same pair the tick loop drives, in the same order,
+    /// and gives the colonist long enough to walk there. A colonist with no
+    /// granary built yet eats at the fire in the middle of town, which is still
+    /// a walk and still takes a tick.
+    @Test("A hungry pawn goes and eats, restoring hunger and consuming settlement food")
     func eating() {
         let pawn = Pawn(name: "Bo", needs: PawnNeeds(hunger: 40, rest: 80, recreation: 80))
-        let s = PawnEngine.advanceOneTick(settlement(pawns: [pawn], food: 100))
+        var s = settlement(pawns: [pawn], food: 100)
+        for tick in 0..<4 {
+            s = ErrandEngine.advanceOneTick(s, tick: tick)
+            s = PawnEngine.advanceOneTick(s, tick: tick)
+        }
         #expect(s.pawns[0].needs.hunger > 40)        // ate
         #expect(s.storage[.food] < 100)             // food consumed
+    }
+
+    @Test("A meal is taken at the granary, not out of thin air")
+    func eatingIsAnErrand() {
+        let pawn = Pawn(name: "Bo", needs: PawnNeeds(hunger: 40, rest: 80, recreation: 80))
+        let posted = ErrandEngine.advanceOneTick(settlement(pawns: [pawn], food: 100), tick: 0)
+        let errand = posted.pawns[0].errand
+        #expect(errand?.kind == .eat, "hunger past the threshold sends them somewhere")
+        #expect(posted.storage[.food] == 100, "nothing is eaten until they get there")
+        #expect((errand?.arrivesAt ?? 0) > 0, "and getting there takes time")
     }
 
     @Test("Trait shifts mood: an optimist is happier than a pessimist with identical needs")

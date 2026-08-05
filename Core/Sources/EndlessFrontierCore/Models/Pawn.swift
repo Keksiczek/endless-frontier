@@ -178,6 +178,11 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     /// they are doing. Nil when idle, away or unemployed; old saves decode to
     /// nil and are given work on the next posting.
     public var currentJob: Job?
+    /// Where they are going **because of something they need** — a meal, a
+    /// fire. Outranks the job: a need interrupts work rather than queueing
+    /// behind it, which is the whole reason it is a field of its own and not a
+    /// `JobKind`. Nil is the ordinary case.
+    public var errand: Errand?
     /// The dwelling this colonist sleeps in — a `BuildingPlacement.id`, or nil
     /// for someone sleeping rough.
     ///
@@ -225,6 +230,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         pregnancyTicksRemaining: Int = 0,
         expeditionID: UUID? = nil,
         currentJob: Job? = nil,
+        errand: Errand? = nil,
         homeID: UUID? = nil,
         carrying: HaulLoad? = nil,
         haulPosition: LocalPoint? = nil,
@@ -247,6 +253,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         self.pregnancyTicksRemaining = pregnancyTicksRemaining
         self.expeditionID = expeditionID
         self.currentJob = currentJob
+        self.errand = errand
         self.homeID = homeID
         self.carrying = carrying
         self.haulPosition = haulPosition
@@ -272,7 +279,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         case id, name, trait, skills, skillXP, needs, mood, assignedWork
         case health, isBroken, equipment
         case age, genes, wealth, pregnancyTicksRemaining, expeditionID, currentJob
-        case homeID, carrying, haulPosition, body
+        case homeID, carrying, haulPosition, body, errand
     }
 
     public init(from decoder: Decoder) throws {
@@ -294,6 +301,8 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         pregnancyTicksRemaining = try c.decodeIfPresent(Int.self, forKey: .pregnancyTicksRemaining) ?? 0
         expeditionID = try c.decodeIfPresent(UUID.self, forKey: .expeditionID)
         currentJob = try c.decodeIfPresent(Job.self, forKey: .currentJob)
+        // A colonist saved before needs sent anybody anywhere is standing still.
+        errand = try c.decodeIfPresent(Errand.self, forKey: .errand)
         homeID = try c.decodeIfPresent(UUID.self, forKey: .homeID)
         carrying = try c.decodeIfPresent(HaulLoad.self, forKey: .carrying)
         haulPosition = try c.decodeIfPresent(LocalPoint.self, forKey: .haulPosition)

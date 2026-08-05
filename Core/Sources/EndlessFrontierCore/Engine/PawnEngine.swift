@@ -48,7 +48,6 @@ public enum PawnEngine {
     ) -> Settlement {
         guard !settlement.pawns.isEmpty else { return settlement }
         var s = settlement
-        var food = s.storage[.food]
         var output = Resources()
         let ticksPerYear = registry.config.ticksPerYear
         let adultAgeTicks = Pawn.adultAgeYears * ticksPerYear
@@ -83,14 +82,11 @@ public enum PawnEngine {
             s.pawns[i] = ComfortEngine.advanceOneTick(
                 s.pawns[i], season: season, shelter: shelterWarmth)
 
-            // Eat if hungry and food is available. Rationing stretches a meal —
-            // both by law and by the colony's own standing order, which is the
-            // one lever a player can pull the moment a winter turns bad.
-            let meal = foodPerMeal * laws.foodUpkeepMultiplier * ration.foodPerMeal
-            if food >= meal, s.pawns[i].needs.hunger < mealHungerThreshold {
-                food -= meal
-                s.pawns[i].needs.hunger += hungerPerMeal * ration.hungerPerMeal
-            }
+            // Eating happens **at the granary**, in `ErrandEngine`, which runs
+            // just before this. It used to happen here, out of the settlement's
+            // store, wherever the colonist happened to be standing — the purest
+            // case of a need that never caused a decision. Rationing still
+            // applies; it applies where the food actually is.
             s.pawns[i].needs = s.pawns[i].needs.clamped()
 
             // Bleeding, mending, and whoever is seeing to it — before the
@@ -168,8 +164,7 @@ public enum PawnEngine {
             }
         }
 
-        // Commit eaten food and work output to storage.
-        s.storage[.food] = food
+        // Commit work output to storage.
         for resource in ResourceType.allCases where output[resource] != 0 {
             s.storage[resource] = min(s.storage[resource] + output[resource], s.storageCapacity)
         }
