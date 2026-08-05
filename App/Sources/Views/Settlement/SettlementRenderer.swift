@@ -1724,11 +1724,19 @@ enum SettlementRenderer {
             guard map.isExplored(pose.position) else { continue }
             // What they would do with what they are carrying — the same split
             // the simulation fights on, so a bow is drawn being drawn.
-            let ranged = CombatEngine.weaponProfile(pawn, registry: registry)?.kind == .ranged
+            // What is actually in their hands. A colony's militia is its
+            // farmers: somebody who owns nothing swings the tool of their
+            // trade, and somebody whose trade has no edge on it swings fists.
+            let armed: SettlementFigures.Armament
+            switch CombatEngine.weaponProfile(pawn, registry: registry)?.kind {
+            case .ranged: armed = .bow
+            case .melee:  armed = .blade
+            case nil:     armed = .none
+            }
             SettlementFigures.draw(
                 pawn: pawn, pose: pose, at: point(pose.position, in: rect),
                 time: time, ticksPerYear: ticksPerYear,
-                selected: pawn.id == selectedPawnID, zoom: zoom, ranged: ranged,
+                selected: pawn.id == selectedPawnID, zoom: zoom, armed: armed,
                 context: &context)
         }
     }

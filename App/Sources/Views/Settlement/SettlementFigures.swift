@@ -21,7 +21,7 @@ enum SettlementFigures {
     static func draw(
         pawn: Pawn, pose: AgentMotion.Pose, at anchor: CGPoint,
         time: Double, ticksPerYear: Int, selected: Bool, zoom: CGFloat = 1,
-        ranged: Bool = false,
+        armed: Armament = .none,
         context: inout GraphicsContext
     ) {
         var p = anchor
@@ -147,7 +147,7 @@ enum SettlementFigures {
         let hand = CGPoint(x: handX, y: handY)
         if pose.activity == .fighting || (working && pawn.assignedWork == .hunting) {
             mirrored(&context, about: handX, by: mirror) { ctx in
-                fightingArms(ranged: ranged, at: hand,
+                fightingArms(armed, work: pawn.assignedWork, at: hand,
                              scale: scale, alpha: alpha, time: time, context: &ctx)
             }
         } else if working {
@@ -218,6 +218,68 @@ enum SettlementFigures {
         content(&flipped)
     }
 
+    /// What somebody with no weapon fights with.
+    ///
+    /// Not a sword. A colony's militia is its farmers and its miners, and the
+    /// thing in their hands when the horn goes is the thing that was in them a
+    /// moment before: an axe off the stump, a pick off the face, a scythe out
+    /// of the field. `CombatEngine` has always priced them as unarmed —
+    /// `baseUnarmedPower` — and this is what unarmed actually looks like.
+    private static func improvisedArms(
+        work: WorkKind, at hand: CGPoint, scale: CGFloat, alpha: Double,
+        time: Double, wood: Color, iron: Color, context: inout GraphicsContext
+    ) {
+        let swing = sin(time * 6.2)
+        let angle = -2.1 + swing * 1.3
+
+        // What their trade puts in their hand, if anything does.
+        let haft: CGFloat
+        let head: CGFloat
+        switch work {
+        case .logging:  haft = 3.4; head = 1.0     // an axe
+        case .mining:   haft = 3.8; head = 1.2     // a pick
+        case .farming:  haft = 4.0; head = 1.4     // a scythe, unwieldy and long
+        case .hunting:  haft = 3.2; head = 0.7     // a knife on a shaft
+        case .crafting, .building: haft = 3.0; head = 0.9   // a hammer
+        default:
+            // Nothing at all: fists. Two short jabs, and they read as somebody
+            // who should not be in the line.
+            let reach = 1.5 * scale + CGFloat(abs(swing)) * 0.9 * scale
+            for side in [-0.5, 0.35] as [Double] {
+                let a = angle + side
+                let fist = CGPoint(x: hand.x + CGFloat(cos(a)) * reach,
+                                   y: hand.y + CGFloat(sin(a)) * reach)
+                context.stroke(Path { p in
+                    p.move(to: hand)
+                    p.addLine(to: fist)
+                }, with: .color(skin.opacity(alpha * 0.9)),
+                   style: StrokeStyle(lineWidth: 0.9 * scale, lineCap: .round))
+                context.fill(Path(ellipseIn: CGRect(
+                    x: fist.x - 0.45 * scale, y: fist.y - 0.45 * scale,
+                    width: 0.9 * scale, height: 0.9 * scale)),
+                    with: .color(skin.opacity(alpha)))
+            }
+            return
+        }
+
+        // The haft, in wood, and the working end in iron across the tip. A
+        // tool swung in anger is still a tool: shorter reach than a blade and
+        // visibly the wrong shape for this.
+        let tip = CGPoint(x: hand.x + CGFloat(cos(angle)) * haft * scale,
+                          y: hand.y + CGFloat(sin(angle)) * haft * scale)
+        context.stroke(Path { p in
+            p.move(to: hand)
+            p.addLine(to: tip)
+        }, with: .color(wood), style: StrokeStyle(lineWidth: 0.9 * scale, lineCap: .round))
+        let across = angle + .pi / 2
+        context.stroke(Path { p in
+            p.move(to: CGPoint(x: tip.x - CGFloat(cos(across)) * head * scale * 0.5,
+                               y: tip.y - CGFloat(sin(across)) * head * scale * 0.5))
+            p.addLine(to: CGPoint(x: tip.x + CGFloat(cos(across)) * head * scale * 0.5,
+                                  y: tip.y + CGFloat(sin(across)) * head * scale * 0.5))
+        }, with: .color(iron), style: StrokeStyle(lineWidth: 1.0 * scale, lineCap: .round))
+    }
+
     /// What a colonist does with their hands when there is fighting to do.
     ///
     /// The same distinction the simulation already draws — `CombatEngine`
@@ -226,14 +288,35 @@ enum SettlementFigures {
     /// nocking, drawing and loosing on a cycle; someone without is drawn
     /// swinging. It is also what a hunter does, because a hunt is the same
     /// question asked of a deer: reach it from over there, or walk up to it.
+    /// What is actually in a colonist's hands when the fighting starts.
+    ///
+    /// This used to be a `Bool` — bow or blade — and *everybody* without a bow
+    /// was drawn swinging a bar of iron, including the sixty people in the
+    /// colony who own nothing at all. A militia of farmers looked like a
+    /// company of swordsmen. What a colonist brings to a fight is what they
+    /// were already holding: a hunter's bow, a smith's sword if they have one,
+    /// otherwise the axe or the pick or the scythe they work with — and if
+    /// their trade has no edge on it, their fists.
+    enum Armament {
+        case bow
+        case blade
+        /// No weapon. They swing whatever their trade puts in their hand.
+        case none
+    }
+
     private static func fightingArms(
-        ranged: Bool, at hand: CGPoint, scale: CGFloat, alpha: Double,
-        time: Double, context: inout GraphicsContext
+        _ armed: Armament, work: WorkKind, at hand: CGPoint, scale: CGFloat,
+        alpha: Double, time: Double, context: inout GraphicsContext
     ) {
         let wood = Color(red: 0.60, green: 0.48, blue: 0.34).opacity(alpha)
         let iron = Color(red: 0.80, green: 0.83, blue: 0.88).opacity(alpha)
 
-        guard ranged else {
+        if case .none = armed {
+            improvisedArms(work: work, at: hand, scale: scale, alpha: alpha,
+                           time: time, wood: wood, iron: iron, context: &context)
+            return
+        }
+        guard case .bow = armed else {
             // A blade, swung: back over the shoulder, then down and through.
             let swing = sin(time * 7)
             let angle = -2.3 + swing * 1.5
