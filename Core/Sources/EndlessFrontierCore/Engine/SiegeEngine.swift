@@ -478,6 +478,10 @@ public enum SiegeEngine {
             let hit = past * CombatEngine.woundMultiplier(s.pawns[index])
             let name = s.pawns[index].name
             let before = siege.damage[pair.on, default: 0]
+            // Between the two of them, which is where a blow actually lands and
+            // where the blood goes. Half an arm's length from the man taking it.
+            let impact = LocalPoint(x: (attacker.at.x + mark.at.x) / 2,
+                                    y: (attacker.at.y + mark.at.y) / 2)
             // A blow lands *somewhere*: an arm, a leg — not a smaller number.
             s.pawns[index] = MedicineEngine.wound(s.pawns[index], amount: hit,
                                                   tick: siege.startTick, rng: &rng)
@@ -487,13 +491,13 @@ public enum SiegeEngine {
                 siege.withdrawn.insert(pair.on)
                 markDown(pair.on, in: &siege)
                 siege.moments.append(moment(siege, .death, pawnID: pair.on,
-                                            pawnName: name, amount: hit))
+                                            pawnName: name, amount: hit, spot: impact))
                 continue
             }
             let beats = Int((before + hit) / woundBeat) - Int(before / woundBeat)
             guard beats > 0 else { continue }
             siege.moments.append(moment(siege, .wound, pawnID: pair.on, pawnName: name,
-                                        amount: Double(beats) * woundBeat))
+                                        amount: Double(beats) * woundBeat, spot: impact))
         }
         return s
     }
@@ -616,10 +620,11 @@ public enum SiegeEngine {
 
     private static func moment(
         _ siege: Siege, _ kind: BattleMoment.Kind, pawnID: UUID? = nil,
-        pawnName: String? = nil, amount: Double = 0
+        pawnName: String? = nil, amount: Double = 0, spot: LocalPoint? = nil
     ) -> BattleMoment {
         BattleMoment(id: siege.moments.count, at: momentPosition(step: siege.step),
-                     kind: kind, pawnID: pawnID, pawnName: pawnName, amount: amount)
+                     kind: kind, pawnID: pawnID, pawnName: pawnName, amount: amount,
+                     spot: spot)
     }
 
     // MARK: - Ending it

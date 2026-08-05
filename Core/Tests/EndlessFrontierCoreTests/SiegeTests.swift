@@ -559,6 +559,46 @@ struct SiegeTests {
         if let running = s.siege { #expect(running.id == id) }
     }
 
+    // MARK: - A blow happens somewhere
+
+    /// The drawing used to paint the *aggregate*: a bright seam across the whole
+    /// line, sparks at a computed "front". It had to, because a beat was a time
+    /// and a name and nothing else, so there was no place to put a blow. Blood
+    /// on the ground needs one, and this is where it comes from.
+    @Test("Every blow is stamped with the ground it landed on")
+    func woundsCarryTheirPlace() throws {
+        let reg = try registry()
+        var world = WorldState(mapSeed: 12)
+        world.tick = 100
+        // Pressing them puts the line out into the open, so blows land.
+        world.settlements = [SiegeEngine.order(
+            try besieged(colony(pawns: 10, defense: 4), strength: 90), posture: .press)]
+        world = SiegeTestSupport.fightItOut(world, registry: reg)
+
+        let log = try #require(world.settlements[0].lastBattle)
+        let blows = log.moments.filter { $0.kind == .wound || $0.kind == .death }
+        #expect(!blows.isEmpty, "a pressed line against ninety takes something")
+        #expect(blows.allSatisfy { $0.spot != nil },
+                "a blow that landed on nobody in particular is the old aggregate back")
+        // On the field, not off the edge of the map.
+        let field = SiegeField(approach: log.approach)
+        #expect(blows.allSatisfy {
+            guard let spot = $0.spot else { return false }
+            return field.reachFromHeart(spot) <= SiegeField.originReach + 0.05
+        }, "blood belongs on the ground the fight was fought over")
+    }
+
+    @Test("A battle saved before blows had a place still loads")
+    func oldMomentsDecode() throws {
+        let old = """
+        {"id":3,"at":0.5,"kind":"wound","amount":10}
+        """.data(using: .utf8)!
+        let moment = try JSONDecoder().decode(BattleMoment.self, from: old)
+        #expect(moment.spot == nil)
+        #expect(moment.kind == .wound)
+        #expect(moment.amount == 10)
+    }
+
     // MARK: - The neighbours pay for it too
 
     @Test("What the attempt cost the raiders is charged when it ends")

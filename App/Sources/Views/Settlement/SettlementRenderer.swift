@@ -140,6 +140,13 @@ enum SettlementRenderer {
             houses: placed.filter { $0.glyph == .house && !$0.underConstruction },
             time: time, zoom: zoom)
 
+        // Blood is on the ground, so it goes under the people standing on it —
+        // the only part of a battle that is drawn before the figures.
+        SettlementBattle.drawGround(&context, rect: rect, settlement: settlement,
+                                    continuousTick: continuousTick, zoom: zoom,
+                                    secondsPerTick: registry.config.realSecondsPerTick,
+                                    replay: battleReplay)
+
         agents(&context, rect: rect, settlement: settlement, map: map, continuousTick: continuousTick,
                registry: registry, time: time, zoom: zoom, selectedPawnID: selectedPawnID,
                battleReplay: battleReplay)
@@ -149,7 +156,7 @@ enum SettlementRenderer {
         SettlementBattle.draw(&context, rect: rect, settlement: settlement,
                               continuousTick: continuousTick, time: time, zoom: zoom,
                               secondsPerTick: registry.config.realSecondsPerTick,
-                              replay: battleReplay)
+                              replay: battleReplay, selectedPawnID: selectedPawnID)
         fog(&context, rect: rect, map: map, time: time)
         // The seasonal wash is atmosphere over the lens, not part of the world,
         // so it stays in view space and doesn't slide when you pan.

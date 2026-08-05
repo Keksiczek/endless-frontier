@@ -292,7 +292,8 @@ enum SettlementBattle {
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement,
         continuousTick: Double, time: Double, zoom: CGFloat,
-        secondsPerTick: Double = 60, replay: Replay? = nil
+        secondsPerTick: Double = 60, replay: Replay? = nil,
+        selectedPawnID: UUID? = nil
     ) {
         guard let (log, progress) = live(settlement, continuousTick: continuousTick,
                                          secondsPerTick: secondsPerTick,
@@ -301,14 +302,34 @@ enum SettlementBattle {
         // record being played back has neither, and has to be staged.
         let siege = settlement.siege.flatMap { $0.id == log.id ? $0 : nil }
         draw(&context, rect: rect, log: log, progress: progress, time: time,
-             zoom: zoom, siege: siege)
+             zoom: zoom, siege: siege, selectedPawnID: selectedPawnID)
+    }
+
+    /// The blood on the ground, drawn **before** the colonists.
+    ///
+    /// A pass of its own because of where it belongs in the stack: people stand
+    /// on a stained field, they do not wear the stain. Everything else a battle
+    /// draws goes over the figures, which is why the rest is one call after them
+    /// and this is one call before.
+    static func drawGround(
+        _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement,
+        continuousTick: Double, zoom: CGFloat,
+        secondsPerTick: Double = 60, replay: Replay? = nil
+    ) {
+        guard let (log, progress) = live(settlement, continuousTick: continuousTick,
+                                         secondsPerTick: secondsPerTick,
+                                         replay: replay) else { return }
+        let siege = settlement.siege.flatMap { $0.id == log.id ? $0 : nil }
+        SettlementBlood.ground(&context, rect: rect, log: log, progress: progress,
+                               siege: siege, field: ground(log), zoom: zoom)
     }
 
     /// The fight itself, from a record and a point inside it. Split out so a
     /// test — and a replay — can drive it at any moment without a settlement.
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, log: BattleLog,
-        progress: Double, time: Double, zoom: CGFloat, siege: Siege? = nil
+        progress: Double, time: Double, zoom: CGFloat, siege: Siege? = nil,
+        selectedPawnID: UUID? = nil
     ) {
         let field = ground(log)
         let unit = min(rect.width, rect.height)
@@ -322,21 +343,28 @@ enum SettlementBattle {
                        time: time, zoom: zoom, strike: strike, unit: unit)
         }
 
-        // What the fight has done to the colonists holding the line, over their
-        // heads: a wound is a thing you can see happening to somebody. Live,
-        // that is read straight off the damage the simulation has dealt.
+        // What the fight has done to the colonists holding the line, **on them**.
+        //
+        // This used to be a bar floating over every defender's head: twelve
+        // readouts of a number, hovering above a field of people, which is the
+        // aggregate habit at its purest. Harm belongs on the body that took it.
+        // The bar survives for exactly one person — whoever the player has
+        // selected — because that one is a readout they asked for.
         for (index, id) in log.line.enumerated() {
             let hurt = siege.map { min(0.95, ($0.damage[id] ?? 0) / 100) }
                 ?? harm(log, pawn: id, at: progress)
             guard hurt > 0.01 else { continue }
             let post = siege?.place(of: id)
                 ?? field.defenderPost(index: index, of: log.line.count)
-            wounded(&context, at: SettlementRenderer.point(post, in: rect),
-                    harm: hurt, unit: unit, zoom: zoom)
+            let screen = SettlementRenderer.point(post, in: rect)
+            SettlementBlood.onBody(&context, at: screen, harm: hurt, zoom: zoom,
+                                   seed: seed(of: id))
+            guard id == selectedPawnID else { continue }
+            wounded(&context, at: screen, harm: hurt, unit: unit, zoom: zoom)
         }
 
-        // The beats: arrows away from the wall, sparks where steel met, and the
-        // dead marked where they stood.
+        // The beats: arrows away from the wall, and every blow on the two
+        // bodies it happened between.
         for moment in log.moments(upTo: progress) {
             let age = progress - moment.at
             guard age >= 0, age < 0.12 else { continue }
@@ -345,19 +373,18 @@ enum SettlementBattle {
             case .volley:
                 volley(&context, field: field, rect: rect, fade: fade, zoom: zoom)
             case .clash, .charge:
-                sparks(&context, at: SettlementRenderer.point(
-                    seam(siege: siege, field: field), in: rect),
-                       fade: fade, unit: unit, seed: moment.id)
-            case .wound:
-                if let p = place(of: moment, log: log, field: field, siege: siege) {
-                    hit(&context, at: SettlementRenderer.point(p, in: rect),
-                        fade: fade, unit: unit, tint: Theme.accent)
-                }
-            case .death:
-                if let p = place(of: moment, log: log, field: field, siege: siege) {
-                    hit(&context, at: SettlementRenderer.point(p, in: rect),
-                        fade: fade, unit: unit, tint: Theme.danger)
-                }
+                // Nothing of its own. A clash is a tally of the whole line's
+                // swings for one step, and the swings themselves are already
+                // being drawn on the arms of the people taking them (`strike`).
+                break
+            case .wound, .death:
+                guard let p = SettlementBlood.place(of: moment, log: log,
+                                                    field: field, siege: siege)
+                else { break }
+                SettlementBlood.impact(
+                    &context, at: SettlementRenderer.point(p, in: rect),
+                    along: blow(of: moment, at: p, field: field, siege: siege),
+                    age: age, fatal: moment.kind == .death, unit: unit, seed: moment.id)
             case .plunder:
                 plunder(&context, field: field, rect: rect, fade: fade, unit: unit)
             case .repelled:
@@ -390,10 +417,15 @@ enum SettlementBattle {
         _ context: inout GraphicsContext, rect: CGRect, siege: Siege, field: SiegeField,
         time: Double, zoom: CGFloat, strike: Double, unit: CGFloat
     ) {
+        // What one of them was worth when they arrived, so how badly a raider is
+        // cut up can be read off what is left of them.
+        let share = max(1, siege.openingStrength / Double(max(1, siege.attackers)))
         for (index, raider) in siege.raiders.enumerated() {
             let screen = SettlementRenderer.point(raider.at, in: rect)
             guard !raider.down else {
                 body(&context, at: screen, zoom: zoom, seed: UInt64(index &* 31))
+                SettlementBlood.onBody(&context, at: screen, harm: 1, zoom: zoom,
+                                       seed: seed(of: raider.id))
                 continue
             }
             let mark = raider.target.flatMap { siege.place(of: $0) }
@@ -408,6 +440,9 @@ enum SettlementBattle {
                 heading: mark.map { toward(raider.at, $0) } ?? (-field.axisX, -field.axisY),
                 zoom: zoom, time: time, phase: Double(index) * 0.9,
                 swinging: closed ? strike : 0)
+            SettlementBlood.onBody(&context, at: screen,
+                                   harm: max(0, 1 - raider.strength / share),
+                                   zoom: zoom, seed: seed(of: raider.id))
             // Who they are on — drawn only once they have actually reached
             // them, so the thread means contact rather than intent.
             if closed, let mark {
@@ -419,8 +454,12 @@ enum SettlementBattle {
         // Anybody who fell stays on the ground where they fell.
         for fallen in siege.defenders where fallen.down && !siege.withdrawn.isEmpty {
             guard siege.damage[fallen.id] ?? 0 > 0 else { continue }
-            body(&context, at: SettlementRenderer.point(fallen.at, in: rect),
-                 zoom: zoom, seed: UInt64(fallen.id.uuidString.hashValue & 0xFF))
+            let screen = SettlementRenderer.point(fallen.at, in: rect)
+            // Never `hashValue`: Swift seeds its hasher per process, so a body
+            // seeded from one lies at a different angle every launch.
+            body(&context, at: screen, zoom: zoom, seed: seed(of: fallen.id))
+            SettlementBlood.onBody(&context, at: screen, harm: 1, zoom: zoom,
+                                   seed: seed(of: fallen.id))
         }
         // And the orders the player has given, so a tap is visibly a thing that
         // happened rather than a thing you hope happened.
@@ -506,12 +545,32 @@ enum SettlementBattle {
                         fade: strike * 0.5 + 0.12, unit: unit)
             }
         }
+    }
 
-        // The line itself: where the two ranks touch, a bright seam of contact
-        // that brightens as blades land.
-        if stage == .melee || stage == .breaking {
-            contact(&context, field: field, rect: rect, log: log,
-                    progress: progress, strike: strike, unit: unit)
+    /// Which way a blow travelled, so the blood goes the way it was thrown.
+    ///
+    /// Off the field if there is one — whoever is standing on the person it
+    /// happened to is the one who swung — and otherwise in along the line of the
+    /// attack, which is the direction every blow in a raid comes from.
+    private static func blow(
+        of moment: BattleMoment, at spot: LocalPoint, field: SiegeField, siege: Siege?
+    ) -> (x: Double, y: Double) {
+        let inward = (x: -field.axisX, y: -field.axisY)
+        guard let siege, let victim = moment.pawnID else { return inward }
+        let swinging = siege.raiders
+            .filter { !$0.down && $0.target == victim }
+            .min { SiegeField.distance($0.at, spot) < SiegeField.distance($1.at, spot) }
+        guard let swinging else { return inward }
+        let d = toward(swinging.at, spot)
+        return d.x == 0 && d.y == 0 ? inward : d
+    }
+
+    /// A stable number for a pawn, for the deterministic wobble in a smear.
+    /// Off the UUID's own bytes, never `hashValue` — Swift seeds its hasher per
+    /// process, so blood would sit somewhere different on every launch.
+    private static func seed(of id: UUID) -> UInt64 {
+        withUnsafeBytes(of: id.uuid) { bytes in
+            bytes.prefix(8).reduce(UInt64(0)) { $0 &* 31 &+ UInt64($1) }
         }
     }
 
@@ -692,25 +751,6 @@ enum SettlementBattle {
                      with: .color(Theme.boneDim.opacity(0.7)))
     }
 
-    // MARK: - The seam
-
-    /// The line where the ranks meet: a bright band that flares as blades land
-    /// rather than pulsing on a clock of its own.
-    private static func contact(
-        _ context: inout GraphicsContext, field: SiegeField, rect: CGRect,
-        log: BattleLog, progress: Double, strike: Double, unit: CGFloat
-    ) {
-        let count = max(2, log.line.count)
-        let a = SettlementRenderer.point(field.defenderPost(index: 0, of: count), in: rect)
-        let b = SettlementRenderer.point(field.defenderPost(index: count - 1, of: count), in: rect)
-        let heat = progress < breakAt ? 1.0 : max(0, 1 - (progress - breakAt) / (1 - breakAt))
-        context.stroke(Path { p in
-            p.move(to: a)
-            p.addLine(to: b)
-        }, with: .color(Theme.danger.opacity(0.14 * heat * (0.5 + strike * 0.9))),
-           style: StrokeStyle(lineWidth: unit * 0.035, lineCap: .round))
-    }
-
     /// Arrows loosed from the colony's side, back down the road.
     private static func volley(
         _ context: inout GraphicsContext, field: SiegeField, rect: CGRect,
@@ -730,36 +770,6 @@ enum SettlementBattle {
             }, with: .color(Theme.bone.opacity(0.75 * fade)),
                style: StrokeStyle(lineWidth: max(0.7, zoom), lineCap: .round))
         }
-    }
-
-    /// Sparks where steel meets steel.
-    private static func sparks(
-        _ context: inout GraphicsContext, at p: CGPoint, fade: Double,
-        unit: CGFloat, seed: Int
-    ) {
-        var h = UInt64(bitPattern: Int64(seed)) &* 0x9E37_79B9_7F4A_7C15 | 1
-        for _ in 0..<5 {
-            h ^= h >> 33; h = h &* 0xFF51_AFD7_ED55_8CCD
-            let a = Double(h % 360) * .pi / 180
-            let r = unit * (0.006 + 0.020 * (1 - fade))
-            let q = CGPoint(x: p.x + CGFloat(cos(a)) * r, y: p.y + CGFloat(sin(a)) * r)
-            context.stroke(Path { path in
-                path.move(to: q)
-                path.addLine(to: CGPoint(x: q.x + CGFloat(cos(a)) * unit * 0.008,
-                                         y: q.y + CGFloat(sin(a)) * unit * 0.008))
-            }, with: .color(Theme.accent.opacity(0.85 * fade)), lineWidth: 1)
-        }
-    }
-
-    /// A hit landing on someone: a short, sharp ring at their place in the line.
-    private static func hit(
-        _ context: inout GraphicsContext, at p: CGPoint, fade: Double,
-        unit: CGFloat, tint: Color
-    ) {
-        let r = unit * (0.008 + 0.016 * (1 - fade))
-        context.stroke(
-            Path(ellipseIn: CGRect(x: p.x - r, y: p.y - r, width: r * 2, height: r * 2)),
-            with: .color(tint.opacity(0.9 * fade)), lineWidth: 1.6)
     }
 
     /// Stores going the other way, on somebody's back.

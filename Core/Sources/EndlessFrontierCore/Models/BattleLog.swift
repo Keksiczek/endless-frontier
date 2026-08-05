@@ -24,15 +24,44 @@ public struct BattleMoment: Codable, Sendable, Equatable, Identifiable {
     public let pawnName: String?
     /// How much was dealt, taken or carried off — damage, or goods.
     public let amount: Double
+    /// **Where on the ground it landed** — the point of impact, between the two
+    /// people who were touching.
+    ///
+    /// A beat used to be a time and a name, so the drawing had to guess a place
+    /// for it and guessed the same place for all of them: a bright seam across
+    /// the whole line, sparks at a computed "front". Colour standing in for
+    /// events. A blow happens *somewhere*, and blood stays where it fell, so
+    /// the place is part of the record — and a replay of a finished fight, which
+    /// has no positions in it at all, gets its blood in the right places too.
+    public let spot: LocalPoint?
 
     public init(id: Int, at: Double, kind: Kind, pawnID: UUID? = nil,
-                pawnName: String? = nil, amount: Double = 0) {
+                pawnName: String? = nil, amount: Double = 0,
+                spot: LocalPoint? = nil) {
         self.id = id
         self.at = min(1, max(0, at))
         self.kind = kind
         self.pawnID = pawnID
         self.pawnName = pawnName
         self.amount = amount
+        self.spot = spot
+    }
+
+    // MARK: - Codable (resilient: the place postdates the first battles)
+
+    private enum CodingKeys: String, CodingKey {
+        case id, at, kind, pawnID, pawnName, amount, spot
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(Int.self, forKey: .id)
+        at = try c.decode(Double.self, forKey: .at)
+        kind = try c.decode(Kind.self, forKey: .kind)
+        pawnID = try c.decodeIfPresent(UUID.self, forKey: .pawnID)
+        pawnName = try c.decodeIfPresent(String.self, forKey: .pawnName)
+        amount = try c.decodeIfPresent(Double.self, forKey: .amount) ?? 0
+        spot = try c.decodeIfPresent(LocalPoint.self, forKey: .spot)
     }
 }
 
