@@ -13,6 +13,9 @@ enum Theme {
     static let accent = Color(red: 0.95, green: 0.66, blue: 0.27)        // amber
     static let danger = Color(red: 0.88, green: 0.35, blue: 0.32)
     static let good = Color(red: 0.50, green: 0.78, blue: 0.52)
+    /// Cold. Its own colour rather than a blue-tinted `textDim`, because a
+    /// temperature that can hurt somebody should not read as a caption.
+    static let frost = Color(red: 0.55, green: 0.76, blue: 0.93)
 
     static let cardRadius: CGFloat = 18
     static let spacing: CGFloat = 16

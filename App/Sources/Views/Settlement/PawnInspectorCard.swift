@@ -25,6 +25,9 @@ struct PawnInspectorCard: View {
     var moodFactors: [MoodFactor] = []
     /// Whether the engine has given them a roof.
     var housed: Bool = true
+    /// Why they are as warm as they are — the day, the roof, the coat, the
+    /// fires. Nil when the card is shown without a world around it.
+    var warmth: ComfortEngine.Reckoning?
     /// What the settlement has spare, and how to hand it over. Left empty the
     /// card simply does not offer a kit — a card that can *see* a colonist and
     /// not arm them is the thing this fixes.
@@ -135,6 +138,7 @@ struct PawnInspectorCard: View {
                     icon: "flame.fill", tint: Color(red: 0.88, green: 0.55, blue: 0.36))
             NeedBar(label: cs ? "Odpočinek" : "Leisure", value: pawn.needs.recreation,
                     icon: "leaf.fill", tint: Color(red: 0.60, green: 0.80, blue: 0.62))
+            warmthReckoning
             if !housed {
                 HStack(spacing: 5) {
                     Image(systemName: "house.slash").font(.caption2)
@@ -144,6 +148,44 @@ struct PawnInspectorCard: View {
                 .foregroundStyle(Theme.danger)
             }
         }
+    }
+
+    /// Why the warmth bar reads what it reads.
+    ///
+    /// The bar on its own is a comfort with no explanation: a player could see
+    /// a colonist at fourteen and had no way to learn whether the answer was a
+    /// coat, a roof, a fire or moving the whole colony out of the tundra.
+    /// `ComfortEngine` has always added up exactly these four terms and shown
+    /// none of them.
+    @ViewBuilder
+    private var warmthReckoning: some View {
+        if let warmth {
+            let degrees = Int(warmth.outside.rounded())
+            HStack(spacing: 5) {
+                Image(systemName: "thermometer.medium").font(.caption2)
+                Text(cs ? "Venku \(degrees) °C" : "\(degrees) °C outside")
+                    .font(.caption.monospacedDigit())
+                Spacer(minLength: 0)
+                ForEach(gains(of: warmth), id: \.0) { label, amount in
+                    Text("\(label) +\(Int(amount.rounded()))")
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(Theme.textDim)
+                }
+            }
+            .foregroundStyle(warmth.outside < ComfortEngine.comfortLow
+                             ? Theme.frost : Theme.textDim)
+        }
+    }
+
+    /// What is keeping the cold off them, biggest first — and only the terms
+    /// that are actually worth something, so a summer card is not a row of
+    /// zeroes.
+    private func gains(of warmth: ComfortEngine.Reckoning) -> [(String, Double)] {
+        [(cs ? "střecha" : "roof", warmth.roof),
+         (cs ? "oděv" : "coat", warmth.clothes),
+         (cs ? "ohně" : "fires", warmth.fires)]
+            .filter { $0.1 >= 1 }
+            .sorted { $0.1 > $1.1 }
     }
 
     /// What has happened to them, part by part.

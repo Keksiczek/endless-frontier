@@ -11,7 +11,8 @@
       "materials": 0.8
     },
     "homeland_weight": 5,
-    "world_flag": "biome:plains_present"
+    "world_flag": "biome:plains_present",
+    "temperature_shift": 0
   },
   {
     "id": "forest",
@@ -25,7 +26,8 @@
       "food": 0.9
     },
     "homeland_weight": 3,
-    "world_flag": "biome:forest_present"
+    "world_flag": "biome:forest_present",
+    "temperature_shift": -2
   },
   {
     "id": "desert",
@@ -39,7 +41,8 @@
       "food": 0.5
     },
     "homeland_weight": 1,
-    "world_flag": "biome:desert_present"
+    "world_flag": "biome:desert_present",
+    "temperature_shift": 11
   },
   {
     "id": "tundra",
@@ -53,7 +56,8 @@
       "knowledge": 1.1
     },
     "homeland_weight": 1,
-    "world_flag": "biome:tundra_present"
+    "world_flag": "biome:tundra_present",
+    "temperature_shift": -13
   },
   {
     "id": "mountains",
@@ -68,7 +72,8 @@
       "food": 0.4
     },
     "homeland_weight": 1,
-    "world_flag": "biome:mountains_present"
+    "world_flag": "biome:mountains_present",
+    "temperature_shift": -8
   },
   {
     "id": "coast",
@@ -82,6 +87,7 @@
       "influence": 1.3
     },
     "homeland_weight": 2,
-    "world_flag": "biome:coast_present"
+    "world_flag": "biome:coast_present",
+    "temperature_shift": 4
   }
 ]

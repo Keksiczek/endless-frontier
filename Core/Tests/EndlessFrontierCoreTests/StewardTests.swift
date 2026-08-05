@@ -259,13 +259,40 @@ struct StewardTests {
         }
     }
 
+    /// The same seed must grow the same colony, and the *first* thing that has
+    /// to be true of that is that it starts with the same people.
+    ///
+    /// `Pawn.init` defaults `id` to a fresh `UUID()`, and the four founders
+    /// were taking it — so every launch of the same seed began with four
+    /// different people, and since per-entity randomness is derived from
+    /// `(mapSeed, entity.id, tick)`, the whole world diverged from tick zero.
+    /// Every determinism test in the suite was comparing counts loose enough to
+    /// pass on luck. This one compares names and ids.
+    @Test("The same seed always founds the same colony")
+    func theSameSeedFoundsTheSamePeople() throws {
+        let reg = try registry()
+        let a = GameWorldFactory.newGame(registry: reg, seed: 4242)
+        let b = GameWorldFactory.newGame(registry: reg, seed: 4242)
+        #expect(a.settlements[0].pawns.map(\.id) == b.settlements[0].pawns.map(\.id))
+        #expect(a.settlements[0].id == b.settlements[0].id)
+        #expect(a.tribes.map(\.id) == b.tribes.map(\.id))
+
+        let other = GameWorldFactory.newGame(registry: reg, seed: 99)
+        #expect(other.settlements[0].pawns.map(\.id) != a.settlements[0].pawns.map(\.id),
+                "…and a different seed founds a different one")
+    }
+
     @Test("Two identical worlds run unattended stay identical")
     func stewardIsDeterministic() throws {
         let a = try world(ticks: 1200)
         let b = try world(ticks: 1200)
         #expect(a.researchedTechs == b.researchedTechs)
         #expect(a.settlements[0].buildings == b.settlements[0].buildings)
-        #expect(a.settlements[0].pawns.count == b.settlements[0].pawns.count)
+        // Names and ids, not a headcount: two worlds can lose the same number
+        // of people and not be the same world.
+        #expect(a.settlements[0].pawns.map(\.id) == b.settlements[0].pawns.map(\.id))
+        #expect(a.tribes.map(\.population) == b.tribes.map(\.population))
+        #expect(a.regions.map(\.explorationState) == b.regions.map(\.explorationState))
     }
 
     @Test("A save written before the council existed switches it on")

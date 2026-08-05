@@ -135,20 +135,37 @@ public enum GameWorldFactory {
 
     /// The founding colonists: four named specialists the narrator can lean
     /// on, plus a band of settlers — every inhabitant is a real pawn now.
+    /// The four founders, and then the rest of the boat.
+    ///
+    /// **Their ids come from the seed.** `Pawn.init` defaults `id` to a fresh
+    /// `UUID()`, and these four were taking it — so the very first four people
+    /// in every world were different people every launch. Per-entity randomness
+    /// is derived from `(mapSeed, entity.id, tick)`, which means the whole game
+    /// was nondeterministic from tick zero: the same seed grew a different
+    /// colony every time, and any test that asked two identical worlds to agree
+    /// was passing on luck. Exactly the landmine CLAUDE.md rule 3 names, in the
+    /// one place nobody thought to look — world creation itself. The recruits
+    /// behind them were always seeded (`PawnFactory.generate`); it was only the
+    /// people with names.
     private static func starterPawns(seed: UInt64) -> [Pawn] {
         var rng = SeededRNG(seed: seed ^ 0xF0_0D_CAFE)
+        var idRNG = SeededRNG(seed: seed ^ 0xFACE_0FF)
         let named = [
-            Pawn(name: "Mara", trait: .hardWorker, skills: [.farming: 8, .logging: 4],
+            Pawn(id: idRNG.nextUUID(),
+                 name: "Mara", trait: .hardWorker, skills: [.farming: 8, .logging: 4],
                  assignedWork: .farming, genes: .founder(using: &rng)),
-            Pawn(name: "Joss", trait: .optimist, skills: [.logging: 7, .mining: 5],
+            Pawn(id: idRNG.nextUUID(),
+                 name: "Joss", trait: .optimist, skills: [.logging: 7, .mining: 5],
                  assignedWork: .logging, genes: .founder(using: &rng)),
-            Pawn(name: "Eli", trait: .none, skills: [.research: 6, .trade: 3],
+            Pawn(id: idRNG.nextUUID(),
+                 name: "Eli", trait: .none, skills: [.research: 6, .trade: 3],
                  assignedWork: .research, genes: .founder(using: &rng)),
             // Someone has to walk out and look. Without a scout on day one the
             // valley stays the circle it was born with: `chartGround` needs at
             // least one, and `LaborEngine`'s 5% share is the last quota filled,
             // so at founding size it never was.
-            Pawn(name: "Nadia", trait: .pessimist, skills: [.scouting: 6, .trade: 5],
+            Pawn(id: idRNG.nextUUID(),
+                 name: "Nadia", trait: .pessimist, skills: [.scouting: 6, .trade: 5],
                  assignedWork: .scouting, genes: .founder(using: &rng))
         ]
         let settlers = (0..<14).map { PawnFactory.generate(seed: rng.next() &+ UInt64($0)) }

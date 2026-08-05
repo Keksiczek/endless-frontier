@@ -594,6 +594,31 @@ final class GameViewModel {
     var season: Season { world.season(registry.config) }
     var year: Int { world.year(registry.config) }
 
+    /// The weather where the settlement in view actually stands, and what the
+    /// thermometer reads today.
+    ///
+    /// Temperature was computed in two places and shown in none: the only
+    /// reading anywhere was a colonist's "Warmth" bar, which is a comfort and
+    /// not a temperature, so nobody could connect the season, the valley, the
+    /// roof and the coat to the number. This is the same `Climate` the
+    /// simulation runs on — never a second one.
+    var climate: Climate {
+        guard let settlement = selectedSettlement else { return .temperate }
+        return Climate.of(settlement, in: world, registry: registry)
+    }
+
+    var temperature: Double { climate.temperature(season) }
+
+    /// Why one colonist is as warm as they are: the day, the roof, the coat and
+    /// the fires, out of the same engine that decides whether they freeze.
+    func warmthReckoning(for pawn: Pawn) -> ComfortEngine.Reckoning? {
+        guard let settlement = selectedSettlement else { return nil }
+        return ComfortEngine.reckon(
+            season: season, housed: pawn.homeID != nil, clothing: pawn.equipment.count,
+            shelter: ComfortEngine.shelter(settlement, registry: registry),
+            climate: climate)
+    }
+
     /// The living outdoor map of the settlement currently in view.
     var viewedLocalMap: LocalMap? { selectedSettlement?.localMap }
 

@@ -100,10 +100,13 @@ public enum DiplomacyEngine {
             s = resolveRelations(s, tribeIndex: index, registry: registry, rng: &rng)
         }
         // …and once, of the colony: whether anybody has had enough of it.
-        var leaving = SeededRNG(seed: tribeSeed(mapSeed: s.mapSeed,
-                                                tribeID: s.settlements.first?.id ?? UUID(),
-                                                year: year))
-        s = maybeSomebodyLeaves(s, registry: registry, rng: &leaving)
+        // Seeded from the capital's own id — never a fresh `UUID()`, even on
+        // the impossible path, because that is how determinism dies quietly.
+        if let capital = s.settlements.first {
+            var leaving = SeededRNG(seed: tribeSeed(mapSeed: s.mapSeed,
+                                                    tribeID: capital.id, year: year))
+            s = maybeSomebodyLeaves(s, registry: registry, rng: &leaving)
+        }
         return s
     }
 

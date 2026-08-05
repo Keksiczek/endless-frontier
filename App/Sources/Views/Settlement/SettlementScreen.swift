@@ -188,6 +188,7 @@ struct SettlementScreen: View {
                                   moodFactors: MoodLedger.factors(for: pawn,
                                                                   registry: game.registry),
                                   housed: pawn.homeID != nil,
+                                  warmth: game.warmthReckoning(for: pawn),
                                   store: game.equippableStore,
                                   definitionOf: { game.itemDefinition($0) },
                                   onEquip: { game.equip($0, toPawn: pawn.id) },

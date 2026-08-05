@@ -26,6 +26,82 @@ struct ComfortTests {
                 "winter must be able to hurt someone with nothing: \(bare)")
     }
 
+    // MARK: - The land has weather of its own
+
+    /// A biome that does not change the weather is a colour. Temperature was a
+    /// four-case switch on `Season`, so a tundra valley in January was exactly
+    /// as cold as a coastal one — the map said "tundra" and the body did not
+    /// agree.
+    @Test("Where you settle decides how hard the winter is")
+    func theLandChangesTheWeather() throws {
+        let reg = try GameDataRegistry.bundled()
+        let tundra = try #require(reg.biome("tundra")).climate
+        let coast = try #require(reg.biome("coast")).climate
+        #expect(tundra.temperature(.winter) < coast.temperature(.winter) - 10)
+        #expect(try #require(reg.biome("desert")).climate.temperature(.summer)
+                > coast.temperature(.summer))
+    }
+
+    /// The point of choosing a tundra: a hard winter is dangerous even to
+    /// somebody who did everything right.
+    @Test("A tundra winter reaches past a roof and a coat")
+    func tundraBitesThroughShelter() throws {
+        let reg = try GameDataRegistry.bundled()
+        let tundra = try #require(reg.biome("tundra")).climate
+        let sheltered = ComfortEngine.target(
+            season: .winter, housed: true, clothing: 1,
+            shelter: ComfortEngine.maxHearthWarmth, climate: tundra)
+        let temperate = ComfortEngine.target(
+            season: .winter, housed: true, clothing: 1,
+            shelter: ComfortEngine.maxHearthWarmth)
+        #expect(sheltered < temperate,
+                "a tundra has to be colder than the middling country")
+        #expect(sheltered < ComfortEngine.freezingBelow + 25,
+                "…and close enough to the bone to be worth the choice: \(sheltered)")
+    }
+
+    /// One number, read by both. A colonist freezing in a valley where the deer
+    /// are comfortable is two switch statements that stopped agreeing (rule 8).
+    @Test("People and beasts read the same thermometer")
+    func oneThermometer() throws {
+        let reg = try GameDataRegistry.bundled()
+        let tundra = try #require(reg.biome("tundra")).climate
+        for season in [Season.spring, .summer, .autumn, .winter] {
+            #expect(AnimalEngine.temperature(season, climate: tundra)
+                    == ComfortEngine.reckon(season: season, housed: false, clothing: 0,
+                                            shelter: 0, climate: tundra).outside)
+        }
+    }
+
+    /// The other half of "it is cosmetic": every term was computed and none was
+    /// ever shown, so a player could not tell a coat from a roof from a valley.
+    @Test("The card can say why somebody is cold")
+    func theReckoningAddsUp() {
+        let r = ComfortEngine.reckon(season: .winter, housed: true, clothing: 2,
+                                     shelter: 14, climate: Climate(shift: -13))
+        #expect(r.outside == Climate.base(.winter) - 13)
+        #expect(r.roof == ComfortEngine.shelterWarmth)
+        #expect(r.clothes == 2 * ComfortEngine.clothingWarmth)
+        #expect(r.fires == 14)
+        #expect(r.weather < 0)
+        #expect(abs(r.warmth - min(100, max(0, 100 + r.weather + r.roof + r.clothes + r.fires)))
+                < 1e-9)
+    }
+
+    @Test("A summer day gives nothing back for a roof — there is nothing to keep out")
+    func summerHasNoShelterTerm() {
+        let r = ComfortEngine.reckon(season: .summer, housed: true, clothing: 2, shelter: 20)
+        #expect(r.roof == 0 && r.clothes == 0 && r.fires == 0)
+    }
+
+    @Test("A biome written before the land had weather is middling country")
+    func oldBiomesDecode() throws {
+        let old = #"{"id":"plains","name":{"en":"Plains","cs":"Pláně"}}"#.data(using: .utf8)!
+        let biome = try JSONDecoder().decode(BiomeDefinition.self, from: old)
+        #expect(biome.temperatureShift == 0)
+        #expect(biome.climate == .temperate)
+    }
+
     @Test("A roof, a coat and a fire between them make winter survivable")
     func shelterWorks() {
         let sheltered = ComfortEngine.target(season: .winter, housed: true,

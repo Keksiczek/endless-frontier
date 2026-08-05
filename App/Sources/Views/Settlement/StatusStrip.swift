@@ -27,6 +27,7 @@ struct StatusStrip: View {
                         Image(systemName: seasonSymbol)
                             .font(.caption2)
                         Text(AppStrings.seasonName(game.season))
+                        thermometer
                     }
                     .font(.caption)
                     .foregroundStyle(Theme.textDim)
@@ -84,6 +85,28 @@ struct StatusStrip: View {
         case .summer: return "sun.max.fill"
         case .autumn: return "leaf.fill"
         case .winter: return "snowflake"
+        }
+    }
+
+    /// What it is actually like outside, next to the season that causes it.
+    ///
+    /// A season alone cannot tell you why the colony is freezing: the same
+    /// January is −22 on the plains and −35 on the tundra, and until the biome
+    /// carried a temperature the two were the same day. Coloured by how far it
+    /// is from the band a clothed person is comfortable in, so a glance says
+    /// "this is a dangerous day" without reading the number.
+    @ViewBuilder
+    private var thermometer: some View {
+        let degrees = game.temperature
+        let tint: Color = degrees < ComfortEngine.comfortLow ? Theme.frost
+            : (degrees > ComfortEngine.comfortHigh ? Theme.danger : Theme.textDim)
+        Text("· \(Int(degrees.rounded()))°")
+            .font(.caption.monospacedDigit())
+            .foregroundStyle(tint)
+        if let word = game.climate.label?.resolve(AppStrings.language) {
+            Text(word)
+                .font(.caption2)
+                .foregroundStyle(tint.opacity(0.85))
         }
     }
 

@@ -44,7 +44,8 @@ public enum PawnEngine {
         registry: GameDataRegistry = GameDataRegistry(),
         tick: Int = 0,
         gatheringFactors: [WorkKind: Double] = [:],
-        laws: LawModifiers = LawModifiers()
+        laws: LawModifiers = LawModifiers(),
+        climate: Climate = .temperate
     ) -> Settlement {
         guard !settlement.pawns.isEmpty else { return settlement }
         var s = settlement
@@ -80,7 +81,7 @@ public enum PawnEngine {
             // stops. The wild has had comfort bands since animals got bodies;
             // this is the same question asked of a person.
             s.pawns[i] = ComfortEngine.advanceOneTick(
-                s.pawns[i], season: season, shelter: shelterWarmth)
+                s.pawns[i], season: season, shelter: shelterWarmth, climate: climate)
 
             // Eating happens **at the granary**, in `ErrandEngine`, which runs
             // just before this. It used to happen here, out of the settlement's

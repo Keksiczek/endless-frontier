@@ -175,7 +175,10 @@ public enum ResourceLoop {
         s.settlements = s.settlements.map {
             advanceSettlement($0, registry: registry, config: config,
                               tick: state.tick, mapSeed: state.mapSeed, era: state.era,
-                              settlementCount: settlementCount, language: state.language)
+                              settlementCount: settlementCount, language: state.language,
+                              // Where this colony actually stands. A tundra
+                              // valley in January is not a coastal one.
+                              climate: Climate.of($0, in: state, registry: registry))
         }
         s.globalStats = recomputeGlobalStats(s, registry: registry)
         return s
@@ -189,7 +192,8 @@ public enum ResourceLoop {
         mapSeed: UInt64 = 0,
         era: Era = .earlySettlement,
         settlementCount: Int = 1,
-        language: GameLanguage = .cs
+        language: GameLanguage = .cs,
+        climate: Climate = .temperate
     ) -> Settlement {
         var s = settlement
         let profile = s.specialization.profile
@@ -389,7 +393,8 @@ public enum ResourceLoop {
         //     meal eaten this minute is a mood this minute.
         s = ErrandEngine.advanceOneTick(s, registry: registry, tick: tick, laws: laws)
         s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick,
-                                      gatheringFactors: factors, laws: laws)
+                                      gatheringFactors: factors, laws: laws,
+                                      climate: climate)
         // 9b. Bleeding, mending, and the healers doing the mending. After the
         //     pawns' own tick so a wound taken this minute is bleeding by the
         //     next one — and so the healer's trade finally has something to do.
@@ -430,7 +435,8 @@ public enum ResourceLoop {
         s = extractRawMaterials(s, tick: tick, config: config, factors: factors)
 
         // 11. Wildlife: the herd grows and is culled; predators may strike.
-        s = WildlifeEngine.advanceOneTick(s, registry: registry, tick: tick, era: era, mapSeed: mapSeed)
+        s = WildlifeEngine.advanceOneTick(s, registry: registry, tick: tick, era: era,
+                                          mapSeed: mapSeed, climate: climate)
 
         // 11b. Village life: chats, quarrels, weddings — bonds that feed the
         //      recreation need and fill the journal.

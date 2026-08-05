@@ -48,7 +48,8 @@ public enum WildlifeEngine {
         registry: GameDataRegistry,
         tick: Int,
         era: Era,
-        mapSeed: UInt64
+        mapSeed: UInt64,
+        climate: Climate = .temperate
     ) -> Settlement {
         guard var map = settlement.localMap else { return settlement }
         var s = settlement
@@ -155,7 +156,8 @@ public enum WildlifeEngine {
         // times as many beasts as it did (rule 4).
         if tick % AnimalEngine.thinkInterval == 0 {
             map = AnimalEngine.advanceOneTick(map, tick: tick, ticksPerYear: ticksPerYear,
-                                              steps: AnimalEngine.thinkInterval)
+                                              steps: AnimalEngine.thinkInterval,
+                                              climate: climate)
         }
         map = AnimalEngine.breed(map, tick: tick, ticksPerYear: ticksPerYear)
         // And the wood grows while all this happens — in batches, since a tree

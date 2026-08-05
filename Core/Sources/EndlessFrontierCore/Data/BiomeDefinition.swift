@@ -14,6 +14,13 @@ public struct BiomeDefinition: Codable, Sendable, Identifiable, Equatable {
     /// the map a player stares at for the whole game was the same country every
     /// single run — this is the knob that fixes it, in data rather than code.
     public let homelandWeight: Double
+    /// Degrees this country runs above or below the ordinary seasonal swing.
+    ///
+    /// The biome had no temperature at all, so a tundra valley in January was
+    /// exactly as cold as a coastal one and the word "tundra" meant nothing to
+    /// anybody's body. This is what makes choosing where to live a decision:
+    /// see `Climate`.
+    public let temperatureShift: Double
 
     public init(
         id: String,
@@ -21,7 +28,8 @@ public struct BiomeDefinition: Codable, Sendable, Identifiable, Equatable {
         baseHazard: Int = 0,
         resourceAffinity: Resources = Resources(),
         worldFlag: String? = nil,
-        homelandWeight: Double = 0
+        homelandWeight: Double = 0,
+        temperatureShift: Double = 0
     ) {
         self.id = id
         self.name = name
@@ -29,6 +37,7 @@ public struct BiomeDefinition: Codable, Sendable, Identifiable, Equatable {
         self.resourceAffinity = resourceAffinity
         self.worldFlag = worldFlag
         self.homelandWeight = homelandWeight
+        self.temperatureShift = temperatureShift
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -37,6 +46,7 @@ public struct BiomeDefinition: Codable, Sendable, Identifiable, Equatable {
         case resourceAffinity = "resource_affinity"
         case worldFlag = "world_flag"
         case homelandWeight = "homeland_weight"
+        case temperatureShift = "temperature_shift"
     }
 
     public init(from decoder: Decoder) throws {
@@ -47,5 +57,10 @@ public struct BiomeDefinition: Codable, Sendable, Identifiable, Equatable {
         resourceAffinity = try c.decodeIfPresent(Resources.self, forKey: .resourceAffinity) ?? Resources()
         worldFlag = try c.decodeIfPresent(String.self, forKey: .worldFlag)
         homelandWeight = try c.decodeIfPresent(Double.self, forKey: .homelandWeight) ?? 0
+        // A biome written before the land had weather is middling country.
+        temperatureShift = try c.decodeIfPresent(Double.self, forKey: .temperatureShift) ?? 0
     }
+
+    /// The weather in this country.
+    public var climate: Climate { Climate(shift: temperatureShift) }
 }

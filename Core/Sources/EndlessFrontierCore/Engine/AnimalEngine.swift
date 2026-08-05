@@ -39,13 +39,14 @@ public enum AnimalEngine {
     /// Only the death roll is not a rate, and it is compounded properly rather
     /// than multiplied: ten chances at 0.4% is not one chance at 4%.
     public static func advanceOneTick(
-        _ map: LocalMap, tick: Int, ticksPerYear: Int, steps: Int = 1
+        _ map: LocalMap, tick: Int, ticksPerYear: Int, steps: Int = 1,
+        climate: Climate = .temperate
     ) -> LocalMap {
         guard !map.wildlife.animals.isEmpty else { return map }
         let n = Double(max(1, steps))
         var rng = SeededRNG(seed: map.terrainSeed &+ UInt64(bitPattern: Int64(tick)) &* 0x9E37_79B9)
         let season = Season(tick: tick, ticksPerYear: ticksPerYear)
-        let outside = temperature(season)
+        let outside = temperature(season, climate: climate)
         // 1 − (1 − p)ⁿ: the chance of dying at least once across the window.
         let oldAgeOdds = 1 - pow(1 - 0.004, n)
 
@@ -123,20 +124,13 @@ public enum AnimalEngine {
     /// Rough outside temperature for a season, in °C. Crude on purpose — the
     /// point is that winter bites and summer bakes, not a weather model.
     ///
-    /// These have to actually *reach past* the species' comfort bands or the
-    /// frostbite and heatstroke conditions are dead letters. A first pass had
-    /// winter at −12 against a hardiest floor of −15, so nothing on the map
-    /// could ever be cold; the spread below is chosen so the soft-skinned
-    /// (boar, deer, fox) suffer a hard winter while the hare and the big
-    /// predators shrug it off, and the thick-coated (bear, wolf) are the ones
-    /// that suffer high summer. `bandsAreReachable` pins this.
-    public static func temperature(_ season: Season) -> Double {
-        switch season {
-        case .spring: return 11
-        case .summer: return 31
-        case .autumn: return 9
-        case .winter: return -22
-        }
+    /// Now that a valley has a climate of its own, this is `Climate`'s to
+    /// answer — for people and beasts alike, out of one switch statement
+    /// instead of two (rule 8). Kept as the beasts' way of asking.
+    public static func temperature(
+        _ season: Season, climate: Climate = .temperate
+    ) -> Double {
+        climate.temperature(season)
     }
 
     /// Adds a condition of a kind, or deepens the one already there.

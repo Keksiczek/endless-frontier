@@ -50,15 +50,47 @@ public enum ComfortEngine {
         return min(maxHearthWarmth, hearths * hearthWarmth)
     }
 
-    /// The warmth a colonist settles at, given the season and what they have.
+    /// Why a colonist is as warm as they are — the same four terms `target`
+    /// adds up, kept apart so the inspector can say them out loud.
+    ///
+    /// The whole of the second half of "the temperature is cosmetic": the only
+    /// reading anywhere was a "Warmth" bar, so a player could not connect the
+    /// season, the valley, the roof and the coat to the number. Every one of
+    /// these was already computed and none of them was ever shown.
+    public struct Reckoning: Sendable, Equatable {
+        /// What the thermometer says outside, in °C.
+        public let outside: Double
+        /// What being that far out of the comfort band costs, in warmth points
+        /// — negative.
+        public let weather: Double
+        /// …and what is given back.
+        public let roof: Double
+        public let clothes: Double
+        public let fires: Double
+        /// Where all that leaves them, 0…100.
+        public let warmth: Double
+    }
+
+    /// The warmth a colonist settles at, given the season, the country they
+    /// are in, and what they have.
     ///
     /// A hundred is comfortable. Winter on its own is well under zero, so
     /// surviving one is a matter of having built something and put a coat on —
-    /// which is the point.
+    /// which is the point, and on a tundra it is the point twice over.
     public static func target(
-        season: Season, housed: Bool, clothing: Int, shelter: Double
+        season: Season, housed: Bool, clothing: Int, shelter: Double,
+        climate: Climate = .temperate
     ) -> Double {
-        let outside = AnimalEngine.temperature(season)
+        reckon(season: season, housed: housed, clothing: clothing,
+               shelter: shelter, climate: climate).warmth
+    }
+
+    /// The same sum, itemised.
+    public static func reckon(
+        season: Season, housed: Bool, clothing: Int, shelter: Double,
+        climate: Climate = .temperate
+    ) -> Reckoning {
+        let outside = climate.temperature(season)
         // How far outside the band the day is, in degrees.
         let deficit = outside < comfortLow ? comfortLow - outside : 0
         let excess = outside > comfortHigh ? outside - comfortHigh : 0
@@ -69,26 +101,27 @@ public enum ComfortEngine {
         // and the whole mechanic was a dead letter. This is the recurring bug
         // shape in this codebase (a threshold beyond the reach of the rate
         // meant to cross it), and `winterIsReachable` pins it.
-        var warmth = 100 - deficit * coldPerDegree - excess * heatPerDegree
-        if deficit > 0 {
-            // Only the cold is something you can put a wall or a coat against.
-            if housed { warmth += shelterWarmth }
-            warmth += Double(clothing) * clothingWarmth
-            warmth += shelter
-        }
-        return min(100, max(0, warmth))
+        let weather = -(deficit * coldPerDegree + excess * heatPerDegree)
+        // Only the cold is something you can put a wall or a coat against.
+        let roof = deficit > 0 && housed ? shelterWarmth : 0
+        let clothes = deficit > 0 ? Double(clothing) * clothingWarmth : 0
+        let fires = deficit > 0 ? shelter : 0
+        return Reckoning(
+            outside: outside, weather: weather, roof: roof,
+            clothes: clothes, fires: fires,
+            warmth: min(100, max(0, 100 + weather + roof + clothes + fires)))
     }
 
     /// Moves one colonist's warmth toward what the day is offering, and takes
     /// the cost of being out in it. Returns the pawn.
     public static func advanceOneTick(
-        _ pawn: Pawn, season: Season, shelter: Double
+        _ pawn: Pawn, season: Season, shelter: Double, climate: Climate = .temperate
     ) -> Pawn {
         var p = pawn
         // Anything worn counts: armour is a coat when it is cold enough.
         let clothing = p.equipment.count
         let want = target(season: season, housed: p.homeID != nil,
-                          clothing: clothing, shelter: shelter)
+                          clothing: clothing, shelter: shelter, climate: climate)
         p.needs.warmth += (want - p.needs.warmth) * adjustRate
         p.needs.warmth = min(100, max(0, p.needs.warmth))
 
