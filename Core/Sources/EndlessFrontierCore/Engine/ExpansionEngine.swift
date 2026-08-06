@@ -65,6 +65,10 @@ public enum ExpansionEngine {
         for pawn in outpost.pawns {
             outpost = ColonyBuilder.autoAssign(outpost, pawnID: pawn.id, registry: registry)
         }
+        // An outpost arrives with its ground broken, exactly as the capital
+        // does — settlers who have to wait a cadence before anything is sown
+        // are settlers eating their travelling provisions for nothing.
+        outpost = FarmEngine.reconcile(outpost, registry: registry)
 
         s.settlements.append(outpost)
         s.regions[regionIndex].settlementIDs.append(outpost.id)

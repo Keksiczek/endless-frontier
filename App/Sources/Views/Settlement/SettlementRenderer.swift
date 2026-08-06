@@ -1130,6 +1130,7 @@ enum SettlementRenderer {
         // Fire and craft
         case workshop   // light craft
         case forge      // bloomery, foundry — the hearth that glows
+        case cookhouse  // ovens and a standing fire — where the harvest is eaten
         case plant      // heavy industry, the smoking block
         case tanks      // refinery, chemical works
         case rail       // a shed, a water tower and track
@@ -1180,6 +1181,7 @@ enum SettlementRenderer {
         case "temple": return .temple
         case "clinic": return .clinic
         case "granary": return .granary
+        case "cookhouse": return .cookhouse
         case "aqueduct": return .aqueduct
         case "wall": return .wall
         case "tower": return .tower
@@ -1469,6 +1471,7 @@ enum SettlementRenderer {
         case .hall: return 1
         case .market: return 2
         case .granary: return 3
+        case .cookhouse: return 3
         case .workshop: return 4
         case .mill: return 5
         case .plant: return 6
@@ -1581,6 +1584,7 @@ enum SettlementRenderer {
         case .mill:      return 2.2
         case .pad:       return 2.4
         case .granary:   return 1.9
+        case .cookhouse: return 1.6
         case .house:     return 1.7
         case .market:    return 1.6
         case .workshop:  return 1.5

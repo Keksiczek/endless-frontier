@@ -624,6 +624,39 @@ enum SettlementStructures {
             }
             context.fill(cap, with: .color(roof))
             context.stroke(cap, with: .color(bright), lineWidth: 1)
+        case .cookhouse:
+            // A low hall with its long side to the street, a broad oven stack
+            // at one end and a shuttered serving hatch. It reads against the
+            // granary next door: that one is a barrel you put things into,
+            // this one is a roof things come out from under.
+            let hw = s * 0.95 * aspect
+            let body = CGRect(x: c.x - hw, y: c.y - s * 0.42, width: hw * 2, height: s * 0.92)
+            groundShadow(at: c, halfWidth: s * 0.95, footY: body.maxY + s * 0.06, context: &context)
+            context.fill(Path(body), with: .color(wall))
+            context.stroke(Path(body), with: .color(ink), lineWidth: 0.9)
+            // A shallow hipped roof — a kitchen is not a house.
+            let lid = Path { p in
+                p.move(to: CGPoint(x: body.minX - s * 0.12, y: body.minY))
+                p.addLine(to: CGPoint(x: body.minX + s * 0.3, y: body.minY - s * 0.42))
+                p.addLine(to: CGPoint(x: body.maxX - s * 0.3, y: body.minY - s * 0.42))
+                p.addLine(to: CGPoint(x: body.maxX + s * 0.12, y: body.minY))
+                p.closeSubpath()
+            }
+            context.fill(lid, with: .color(roof))
+            context.stroke(lid, with: .color(bright), lineWidth: 1)
+            // The oven stack, squat and wide, with the fire showing at its foot.
+            let stack = CGRect(x: body.maxX - s * 0.62, y: body.minY - s * 0.92,
+                               width: s * 0.44, height: s * 0.62)
+            context.fill(Path(stack), with: .color(wall.opacity(0.95)))
+            context.stroke(Path(stack), with: .color(ink), lineWidth: 0.7)
+            let mouth = CGRect(x: body.maxX - s * 0.58, y: body.midY - s * 0.02,
+                               width: s * 0.36, height: s * 0.3)
+            context.fill(Path(roundedRect: mouth, cornerRadius: s * 0.14),
+                         with: .color(Theme.accent.opacity(0.55)))
+            // …and the hatch the food goes out of.
+            let hatch = CGRect(x: body.minX + s * 0.24, y: body.midY - s * 0.06,
+                               width: s * 0.5, height: s * 0.34)
+            context.stroke(Path(hatch), with: .color(ink.opacity(0.7)), lineWidth: 0.7)
         case .workshop:
             let hw = s * 0.9 * aspect
             let body = CGRect(x: c.x - hw, y: c.y - s * 0.5, width: hw * 2, height: s)

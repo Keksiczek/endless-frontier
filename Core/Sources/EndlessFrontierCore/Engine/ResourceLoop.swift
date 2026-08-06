@@ -424,6 +424,25 @@ public enum ResourceLoop {
         //      between job-board cycles.
         s = HaulEngine.advanceOneTick(s, registry: registry, tick: tick)
 
+        // 10a-ii. The harvest, and then the kitchens — in that order, and both
+        //      *after* the haulers, so a sack carried in this tick can be
+        //      cooked this tick rather than sitting a whole cadence in a colony
+        //      that is hungry now.
+        //
+        //      This is the food chain that replaced a farmer's skill turning
+        //      into meals wherever they stood: plots ripen and are reaped
+        //      (`FarmEngine`), the grain is carried in like timber, and a cook
+        //      turns it into what the colony actually eats (`CookingEngine`).
+        s = FarmEngine.advanceOneTick(s, registry: registry, tick: tick,
+                                      climate: climate, mapSeed: mapSeed)
+        s = CookingEngine.advanceOneTick(s, registry: registry, tick: tick)
+        // What there is no roof for goes over. On the staffing cadence rather
+        // than every tick: it walks the whole shelf, and a colony one sack over
+        // its granary for ten minutes of game time is not a story (rule 4).
+        if tick % LaborEngine.staffingInterval == 0 {
+            s = CookingEngine.spoil(s, registry: registry, tick: tick)
+        }
+
         // 10b. Scouts chart the valley.
         s = chartGround(s, tick: tick, mapSeed: mapSeed, config: config)
 
@@ -588,6 +607,19 @@ public enum ResourceLoop {
     static let workerTicksPerRawUnit: Double = 14
     /// The item a hunter's day yields, alongside the meat.
     public static let hideItemID = "hide"
+    /// …and the meat itself, which for two years was a word in this comment and
+    /// nothing else: hunting banked a hide and put `.food` in the granary out of
+    /// the hunter's skill, so the animal became a number and the leather became
+    /// a thing. Now the carcass is the point and the hide is what is left over.
+    public static let meatItemID = "meat"
+    /// Meat against hide, per hunter-tick. Nobody goes out for leather.
+    static let meatPerHide: Double = 2.0
+    /// What a forager brings back besides the healer's herbs. Small — a basket
+    /// of berries is a nice evening, not a granary — but it is the one wild food
+    /// a colony has before it has ploughed anything, which is what keeps the
+    /// first winter survivable.
+    public static let berriesItemID = "berries"
+    static let berriesPerForagerTick: Double = 0.8
 
     /// Banks the concrete goods the colony's labour actually produces.
     ///
@@ -627,7 +659,13 @@ public enum ResourceLoop {
             guard effort > 0 else { continue }
             if work == .hunting {
                 earned[hideItemID, default: 0] += effort
+                earned[meatItemID, default: 0] += effort * meatPerHide
                 continue
+            }
+            if work == .foraging {
+                earned[berriesItemID, default: 0] += effort * berriesPerForagerTick
+                // …and on to the herb beds below, which is the other half of
+                // what a forager's day is.
             }
             // Timber and stone are not earned by the week any more: they are
             // *carried in*. A felled trunk leaves wood at the stump and a

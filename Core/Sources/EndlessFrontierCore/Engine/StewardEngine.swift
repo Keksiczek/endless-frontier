@@ -344,10 +344,45 @@ public enum StewardEngine {
             return store
         }
 
-        // 3. Something to eat, if the larder is thin.
-        if settlement.storage[.food] < settlement.storageCapacity * 0.25,
-           let farm = best(of: affordable, by: { $0.production[.food] }) {
+        // 2b. Ground under crop for the mouths there are.
+        //
+        //     This clause is about *capacity*, not about stock, and it has to
+        //     come before the larder one — a granary at the brim says nothing
+        //     about whether the fields can still fill it next year. Measured
+        //     without it: two farms and twelve plots feeding a colony that grew
+        //     to seventy-four, food pinned at the cap right up until the season
+        //     it wasn't, and then eighty-seven dead of hunger inside ten years.
+        //     A store is a buffer; a field is an income. Rule 6 in its plainest
+        //     form — check the rate can reach the threshold, and do it before
+        //     the threshold arrives.
+        if FarmEngine.plotsStanding(settlement)
+            < FarmEngine.plotsWanted(for: settlement.population),
+           let farm = best(of: affordable, by: { Double($0.plots) }) {
             return farm
+        }
+
+        // 3. Something to eat, if the larder is thin — and the council has to
+        //    know *which* half of the food chain is short, because the two want
+        //    opposite buildings and building the wrong one changes nothing.
+        //
+        //    A colony with sacks on the shelf and an empty larder does not need
+        //    another field; it needs somebody able to cook, and a fire to do it
+        //    over. A colony with an empty larder and an empty shelf needs
+        //    ground. Ranking farms by `production[.food]` — which is what this
+        //    clause used to do — stopped meaning anything the moment a farm
+        //    became a place that owns plots rather than a food faucet, and
+        //    would have quietly returned nil for ever.
+        if settlement.storage[.food] < settlement.storageCapacity * 0.25 {
+            let onTheShelf = CookingEngine.foodstuffs(registry)
+                .reduce(0) { $0 + settlement.stockpile[$1, default: 0] }
+            if onTheShelf >= sacksWorthCooking,
+               CookingEngine.kitchens(at: settlement, registry: registry) == 0,
+               let kitchen = best(of: affordable, by: { $0.work == .cooking ? 1 : 0 }) {
+                return kitchen
+            }
+            if let farm = best(of: affordable, by: { Double($0.plots) }) {
+                return farm
+            }
         }
 
         // 4. Otherwise — and *only* out of genuine surplus — the cheapest
@@ -373,6 +408,11 @@ public enum StewardEngine {
         guard settlement.storageCapacity > 0 else { return false }
         return settlement.storage[.materials] >= settlement.storageCapacity * comfortable
     }
+
+    /// Raw ingredients on the shelf past which "we have no kitchen" is the
+    /// colony's actual problem rather than "we have no fields". A handful of
+    /// berries is not an argument for a cookhouse; a winter's grain is.
+    static let sacksWorthCooking = 20
 
     /// Whether any store is full enough to be spilling.
     public static func isBrimming(_ settlement: Settlement) -> Bool {

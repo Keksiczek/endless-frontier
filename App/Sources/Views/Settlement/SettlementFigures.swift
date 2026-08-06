@@ -488,6 +488,18 @@ enum SettlementFigures {
                                      y: hand.y - 3.2 * scale + blow,
                                      width: 1.9 * scale, height: 1.1 * scale)),
                          with: .color(iron))
+        case .cooking:
+            // A long spoon turning in a pot, on the slow beat of a stew rather
+            // than the hammer's quick one.
+            let stir = CGFloat(sin(time * 2.2))
+            context.stroke(Path { p in
+                p.move(to: hand)
+                p.addLine(to: CGPoint(x: hand.x + (1.2 + stir * 0.9) * scale,
+                                      y: hand.y + 3.4 * scale))
+            }, with: .color(wood), lineWidth: 0.8 * scale)
+            context.fill(Path(ellipseIn: CGRect(
+                x: hand.x + (0.4 + stir * 0.9) * scale, y: hand.y + 3.2 * scale,
+                width: 1.6 * scale, height: 1.0 * scale)), with: .color(wood))
         case .priest:
             // A raised staff with a small flame.
             context.stroke(Path { p in

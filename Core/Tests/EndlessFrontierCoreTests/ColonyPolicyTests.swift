@@ -55,11 +55,28 @@ struct ColonyPolicyTests {
         }
     }
 
-    @Test("Rebalancing a colony under no orders never moves anybody")
-    func rebalanceIsInertWithoutOrders() {
-        let before = town(30, work: .farming)
-        let after = LaborEngine.rebalance(before, registry: registry)
-        #expect(tally(after) == tally(before))
+    /// This test used to assert the opposite, and the opposite was a bug.
+    ///
+    /// `rebalance` returned early on an empty `policy.trades`, which reads as
+    /// "no orders, nothing to do" — but `quotaTable` falls back to the engine's
+    /// own shares, and those *are* the colony's standing orders whether anybody
+    /// typed them or not. With the guard in place, a town where nobody is idle
+    /// — every town past its first decade, since `assignIdleAdults` only ever
+    /// touches the idle — could not move one person, so a trade the colony had
+    /// no members of at all stayed at zero for ever. Adding cooking made that
+    /// fatal: a colony with a kitchen, a full shelf of grain and not one cook,
+    /// eating raw for six hundred ticks. Rule 9c from the side nobody tested.
+    @Test("A colony under no orders still drifts toward its own quotas")
+    func rebalanceFollowsTheDefaultQuotas() {
+        var s = town(30, work: .farming)
+        #expect(tally(s) == [.farming: 30])
+        // One person per pass, by design — a colony re-sorted wholesale is a
+        // spreadsheet. So it takes several to see the drift.
+        for _ in 0..<8 { s = LaborEngine.rebalance(s, registry: registry) }
+        let after = tally(s)
+        #expect(after[.farming, default: 0] < 30, "farming is far over its 0.20 share")
+        #expect(after.count > 1, "the trades nobody holds have to be reachable")
+        #expect(after.values.reduce(0, +) == 30, "nobody is created or lost by a rebalance")
     }
 
     /// A save written before standing orders existed has no `policy` key at

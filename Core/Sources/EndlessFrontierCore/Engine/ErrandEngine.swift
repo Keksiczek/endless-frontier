@@ -55,6 +55,18 @@ public enum ErrandEngine {
         PawnEngine.foodPerMeal / PawnEngine.hungerPerMeal
     }
 
+    /// What one unit of a raw ingredient is worth, eaten off the shelf, against
+    /// the ~2 food a unit is worth once a cook has had it.
+    ///
+    /// The valve under the whole food chain. Adding a link between the field
+    /// and the mouth adds a new way for everybody to die: lose your last cook,
+    /// or your only cookhouse in a raid, and a colony with a full granary of
+    /// grain starves beside it. That is not a difficulty setting, it is a bug
+    /// with a story attached — so people gnaw raw grain instead, at well under
+    /// half the good of a meal. Hungry, not dead. Same idea as
+    /// `ResourceLoop.unstaffedFloor`.
+    public static let rawFoodValue: Double = 0.8
+
     // MARK: - The tick
 
     /// Arrivals first, then departures.
@@ -69,6 +81,9 @@ public enum ErrandEngine {
         guard !settlement.pawns.isEmpty else { return settlement }
         var s = settlement
         var food = s.storage[.food]
+        // Mirrors `food`: pulled out, worked on, written back once — so the
+        // pawn loop never holds two inout accesses into the same settlement.
+        var stockpile = s.stockpile
 
         // Where the colony keeps what it has, and where it keeps a fire. Both
         // are lists of places rather than a number, which is the point.
@@ -78,6 +93,12 @@ public enum ErrandEngine {
         let mealCost = PawnEngine.foodPerMeal * laws.foodUpkeepMultiplier * ration.foodPerMeal
         // A head's worth of what is in the store, so nobody eats the granary.
         let share = food / Double(max(1, s.pawns.count))
+        // What is on the shelf that a desperate person could chew on. Ordered,
+        // never taken from a dictionary's own order, so two runs of one seed eat
+        // the same sack first.
+        let rawKinds = CookingEngine.foodstuffs(registry)
+            .filter { stockpile[$0, default: 0] > 0 }
+            .sorted()
 
         for i in s.pawns.indices {
             // Somebody out at the ruins cannot walk to the granary, and they do
@@ -90,9 +111,13 @@ public enum ErrandEngine {
             // eleven dead of hunger against a store at 1245 of 1250.
             guard !s.pawns[i].isAway else {
                 s.pawns[i].errand = nil
-                guard s.pawns[i].needs.hunger < hungryBelow, food >= mealCost else { continue }
-                food = eat(&s.pawns[i], from: food, mealCost: mealCost,
-                           ration: ration, share: share)
+                guard s.pawns[i].needs.hunger < hungryBelow else { continue }
+                if food >= mealCost {
+                    food = eat(&s.pawns[i], from: food, mealCost: mealCost,
+                               ration: ration, share: share)
+                } else {
+                    gnaw(&s.pawns[i], from: &stockpile, kinds: rawKinds)
+                }
                 s.pawns[i].needs = s.pawns[i].needs.clamped()
                 continue
             }
@@ -100,8 +125,15 @@ public enum ErrandEngine {
                 guard errand.hasArrived(at: tick) else { continue }
                 switch errand.kind {
                 case .eat:
-                    food = eat(&s.pawns[i], from: food, mealCost: mealCost,
-                               ration: ration, share: share)
+                    // A cooked meal if the kitchens managed one; otherwise
+                    // whatever is in the sacks, which is far worse and is meant
+                    // to be. See `rawFoodValue`.
+                    if food >= mealCost {
+                        food = eat(&s.pawns[i], from: food, mealCost: mealCost,
+                                   ration: ration, share: share)
+                    } else {
+                        gnaw(&s.pawns[i], from: &stockpile, kinds: rawKinds)
+                    }
                 case .warmUp:
                     s.pawns[i].needs.warmth = max(s.pawns[i].needs.warmth, hearthWarmth)
                 }
@@ -116,10 +148,12 @@ public enum ErrandEngine {
             // Hunger first: being cold is survivable for longer than being
             // empty, and a person who is both goes for the food.
             let kind: Errand.Kind = hungry ? .eat : .warmUp
-            // Somebody has to actually be able to answer it. No food in the
-            // store and no trip is worth making — that is the colony *failing
-            // to feed people*, which is exactly what should happen.
-            if kind == .eat, food < mealCost { continue }
+            // Somebody has to actually be able to answer it. Nothing cooked and
+            // nothing on the shelf, and no trip is worth making — that is the
+            // colony *failing to feed people*, which is exactly what should
+            // happen. A bare larder with sacks of grain in it is still worth
+            // walking to.
+            if kind == .eat, food < mealCost, rawKinds.isEmpty { continue }
             let candidates = kind == .eat ? larders : hearths
             let start = anchor(of: s.pawns[i], in: s, registry: registry)
             guard let target = nearest(to: start, among: candidates) else {
@@ -136,6 +170,7 @@ public enum ErrandEngine {
         }
 
         s.storage[.food] = max(0, food)
+        s.stockpile = stockpile
         return s
     }
 
@@ -167,6 +202,23 @@ public enum ErrandEngine {
         let cost = min(min(food, max(mealCost, share)), wanted * perPoint)
         pawn.needs.hunger += cost / perPoint
         return food - cost
+    }
+
+    /// Eating raw, off the shelf, because nobody cooked.
+    ///
+    /// One unit at a time and one unit only: this is not a meal and must never
+    /// compete with one, or a colony would rationally skip the kitchen. It takes
+    /// the edge off and leaves the person hungry, which is what keeps them
+    /// coming back — and keeps the mood penalty of a colony with no cook real
+    /// without killing it.
+    private static func gnaw(
+        _ pawn: inout Pawn, from stockpile: inout [String: Int], kinds: [String]
+    ) {
+        guard pawn.needs.hunger < 100,
+              let kind = kinds.first(where: { stockpile[$0, default: 0] > 0 }) else { return }
+        stockpile[kind, default: 0] -= 1
+        if stockpile[kind, default: 0] <= 0 { stockpile[kind] = nil }
+        pawn.needs.hunger += rawFoodValue / foodPerHungerPoint
     }
 
     private static func leg(

@@ -52,14 +52,34 @@ struct ScoutingTests {
         #expect(after > before, "scouts exist to push the fog back; they must actually do it")
     }
 
-    @Test("A colony with no scouts learns nothing new")
+    @Test("A colony that has forbidden scouting learns nothing new")
     func noScoutsNoReveal() {
         let reg = registry
         var s = world(scouts: 0)
-        let before = s.settlements[0].localMap!.exploredFraction
+        // Scouting **switched off**, not merely unstaffed.
+        //
+        // `LaborEngine.rebalance` runs on the engine's own quotas now, whether
+        // or not the player has set a policy — which it must, or a trade the
+        // colony has no members of can never acquire any, and cooking would
+        // have stayed at zero for ever in a town where nobody is idle. The
+        // consequence here is that a colony with no scouts *hires* one within
+        // a few cadences, so "nobody happens to be scouting" is no longer a
+        // state a world can sit in. The thing worth pinning was never the
+        // accident; it is that ground does not chart itself without somebody
+        // walking it. Saying so out loud is what this policy does.
+        s.settlements[0].policy = ColonyPolicy(trades: [.scouting: .off])
 
         s = TickEngine.advance(s, ticks: 400, registry: reg).state
-        #expect(s.settlements[0].localMap!.exploredFraction == before,
+        // Measured as **scout-work done**, not as fog cleared.
+        //
+        // `exploredFraction` is not scouting's alone: driving a shaft into the
+        // hillside opens ground the colony can see through, and `StoneEngine`
+        // says so out loud by inserting those cells itself. With rebalance now
+        // following the default quotas, a town of ten farmers acquires miners
+        // — so the fog moves for a reason that has nothing to do with anybody
+        // walking out to look at it. `scoutProgress` is the honest number here:
+        // one step per scout per reveal, and nothing else touches it.
+        #expect(s.settlements[0].localMap!.scoutProgress == 0,
                 "ground doesn't chart itself")
     }
 

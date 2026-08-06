@@ -19,17 +19,35 @@ struct SpecializationTests {
         return WorldState(settlements: [s])
     }
 
-    private func food(after ticks: Int, spec: SettlementSpecialization, registry: GameDataRegistry) -> Double {
+    /// How much crop is standing in the settlement's fields after `ticks`.
+    ///
+    /// Measured at the **plots**, not at `storage[.food]`, because that is where
+    /// a settlement's bent now applies. Food used to come out of
+    /// `production[.food]` on the farm building, so multiplying that number was
+    /// the whole of specialisation; a farm is a place that owns ground now
+    /// (`FarmEngine`), and what an agricultural town is better at is *growing*.
+    /// Reading the granary here would measure the cook instead — and this world
+    /// deliberately has no colonists, so nobody reaps and nobody cooks.
+    private func standingCrop(
+        after ticks: Int, spec: SettlementSpecialization, registry: GameDataRegistry
+    ) -> Double {
         var w = world(spec: spec, buildings: ["farm_basic", "farm_basic"])
+        // Plots need ground to stand on: a layout, and a map to put it on.
+        w.settlements[0].colony = ColonyBuilder.seededLayout(
+            for: w.settlements[0].buildings, registry: registry)
+        w.settlements[0].localMap = LocalMapGenerator.generate(
+            mapSeed: 11, regionID: w.settlements[0].id, biome: registry.biome("plains"))
+        w.settlements[0] = FarmEngine.reconcile(w.settlements[0], registry: registry)
+        #expect(!w.settlements[0].localMap!.crops.isEmpty, "two farms have to have fields")
         for _ in 0..<ticks { w = ResourceLoop.advanceOneTick(w, registry: registry) }
-        return w.settlements[0].storage[.food]
+        return w.settlements[0].localMap!.crops.reduce(0) { $0 + $1.growth }
     }
 
-    @Test("Agricultural out-produces balanced on food; industrial under-produces it")
+    @Test("Agricultural grows its crops faster than balanced")
     func agriculturalBoostsFood() throws {
         let r = try reg()
-        let balanced = food(after: 10, spec: .balanced, registry: r)
-        let agricultural = food(after: 10, spec: .agricultural, registry: r)
+        let balanced = standingCrop(after: 10, spec: .balanced, registry: r)
+        let agricultural = standingCrop(after: 10, spec: .agricultural, registry: r)
         #expect(agricultural > balanced)
     }
 

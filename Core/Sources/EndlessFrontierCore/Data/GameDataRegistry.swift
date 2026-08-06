@@ -28,6 +28,9 @@ public struct GameDataRegistry: Sendable {
     public let laws: [String: LawDefinition]
     public let cults: [String: CultDefinition]
     public let plagues: [String: PlagueDefinition]
+    /// What cooks can make. Never read directly — go through `cookableMeals`,
+    /// which is what guarantees a colony can always eat something.
+    public let meals: [String: MealDefinition]
     public let config: WorldConfig
     public let mapGen: MapGenConfig
 
@@ -43,9 +46,11 @@ public struct GameDataRegistry: Sendable {
         laws: [LawDefinition] = [],
         plagues: [PlagueDefinition] = [],
         cults: [CultDefinition] = [],
+        meals: [MealDefinition] = [],
         config: WorldConfig = .default,
         mapGen: MapGenConfig = .default
     ) {
+        self.meals = Dictionary(uniqueKeysWithValues: meals.map { ($0.id, $0) })
         self.buildings = Dictionary(uniqueKeysWithValues: buildings.map { ($0.id, $0) })
         self.techs = Dictionary(uniqueKeysWithValues: techs.map { ($0.id, $0) })
         self.eras = Dictionary(uniqueKeysWithValues: eras.map { ($0.era, $0) })
@@ -70,6 +75,21 @@ public struct GameDataRegistry: Sendable {
     public func plague(_ id: String) -> PlagueDefinition? { plagues[id] }
     public func cult(_ id: String) -> CultDefinition? { cults[id] }
     public func eraDefinition(_ era: Era) -> EraDefinition? { eras[era] }
+
+    /// Every meal a cook may consider, in a stable order.
+    ///
+    /// Falls back to a single hardcoded pot of gruel when the table is empty.
+    /// `meals.json` is loaded with `try?` like every other optional data file,
+    /// and rule 9b is the standing reminder of what that costs: one malformed
+    /// entry silently empties the whole table. For items that means no loot;
+    /// for meals it would mean **the colony cannot cook and everybody starves
+    /// with a full granary**, which is not a failure worth shipping. A world
+    /// with no meal data eats badly instead of dying.
+    public var cookableMeals: [MealDefinition] {
+        meals.isEmpty
+            ? [MealDefinition.fallback]
+            : meals.values.sorted { $0.id < $1.id }
+    }
 
     /// Techs whose prerequisites are all met and that aren't yet researched.
     public func availableTechs(researched: Set<String>) -> [TechDefinition] {
@@ -111,6 +131,7 @@ public struct GameDataRegistry: Sendable {
         let laws = (try? load([LawDefinition].self, "laws")) ?? []
         let plagues = (try? load([PlagueDefinition].self, "plagues")) ?? []
         let cults = (try? load([CultDefinition].self, "cults")) ?? []
+        let meals = (try? load([MealDefinition].self, "meals")) ?? []
         return GameDataRegistry(
             buildings: try load([BuildingDefinition].self, "buildings"),
             techs: try load([TechDefinition].self, "techs"),
@@ -123,6 +144,7 @@ public struct GameDataRegistry: Sendable {
             laws: laws,
             plagues: plagues,
             cults: cults,
+            meals: meals,
             config: try load(WorldConfig.self, "world-config"),
             mapGen: mapGen
         )

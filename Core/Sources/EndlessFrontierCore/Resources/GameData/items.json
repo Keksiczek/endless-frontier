@@ -1370,5 +1370,70 @@
       "en": "It still carries. Blown from the wall, everyone in the fields hears it and knows what it means.",
       "cs": "Pořád nese. Zatroubený z hradby ho slyší každý na poli a ví, co znamená."
     }
+  },
+  {
+    "id": "grain",
+    "name": {
+      "en": "Grain",
+      "cs": "Obilí"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Threshed off the ear and dry. Not food until somebody cooks it.",
+      "cs": "Vymlácené z klasu a suché. Jídlo z toho bude, až to někdo uvaří."
+    }
+  },
+  {
+    "id": "roots",
+    "name": {
+      "en": "Roots",
+      "cs": "Okopaniny"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Lifted out of the cold ground. Keeps all winter in a cellar.",
+      "cs": "Vytahané ze studené země. Ve sklepě vydrží celou zimu."
+    }
+  },
+  {
+    "id": "greens",
+    "name": {
+      "en": "Greens",
+      "cs": "Zelenina"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Cut from the beds. Good for a week and no longer.",
+      "cs": "Sklizená ze záhonů. Dobrá týden a ani o den víc."
+    }
+  },
+  {
+    "id": "meat",
+    "name": {
+      "en": "Raw Meat",
+      "cs": "Syrové maso"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Butchered where it fell, carried home over a shoulder.",
+      "cs": "Vyvržené tam, kde zvíře padlo, a doneseno domů na rameni."
+    }
+  },
+  {
+    "id": "berries",
+    "name": {
+      "en": "Berries",
+      "cs": "Lesní plody"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Picked off the bushes at the wood's edge by whoever had a basket.",
+      "cs": "Natrhané z keřů na kraji lesa každým, kdo měl košík."
+    }
   }
 ]

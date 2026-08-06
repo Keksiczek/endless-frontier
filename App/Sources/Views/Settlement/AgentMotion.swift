@@ -718,6 +718,7 @@ enum AgentMotion {
             case .building: return cs ? "Staví na lešení" : "Up on the scaffolding"
             case .scouting: return cs ? "Na obchůzce po hranici" : "Walking the bounds"
             case .crafting: return cs ? "Vyrábí u ponku" : "At the bench"
+            case .cooking: return cs ? "Vaří v kuchyni" : "Cooking in the kitchen"
             case .priest: return cs ? "Slouží v chrámu" : "Serving at the temple"
             case .garrison: return cs ? "Drží hlídku" : "Standing watch"
             case .idle: return cs ? "Postává na návsi" : "Idling on the green"

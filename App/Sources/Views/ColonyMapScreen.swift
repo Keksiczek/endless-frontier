@@ -418,6 +418,7 @@ struct ColonyMapScreen: View {
         case .garrison: return "shield.lefthalf.filled"
         case .priest: return "sparkles"
         case .crafting: return "hammer.circle.fill"
+        case .cooking: return "flame.fill"
         case .idle: return def.production[.energy] > 0 ? "bolt.fill" : "building.2.fill"
         }
     }

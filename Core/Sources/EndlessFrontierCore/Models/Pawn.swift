@@ -22,9 +22,25 @@ public enum WorkKind: String, Codable, Sendable, CaseIterable, Equatable {
     /// and required a workshop, and no colonist could ever be a person who
     /// worked in one. See `CraftingEngine`.
     case crafting
+    /// Turns what the fields and the woods brought in into **food**.
+    ///
+    /// The trade at the end of the chain, and the one the colony never had.
+    /// Farming used to put food in the granary directly — a farmer's skill
+    /// became meals wherever they stood — so grain, meat and a kitchen were
+    /// three things the game had words for and no mechanism behind. See
+    /// `CookingEngine`.
+    case cooking
     case idle
 
     /// The resource this work contributes to, if any.
+    ///
+    /// Farming and hunting used to answer `.food` here, which is what made a
+    /// farmer's skill turn into meals out of nowhere. They make **things** now
+    /// — grain in the field, meat at the carcass — exactly as crafting always
+    /// has, and cooking is what turns those into the pool the colony eats from.
+    /// Kept for settlements still on the old abstract fields (see
+    /// `LocalMap.usesEntityFields`), which is the only path that still reads it
+    /// for food.
     public var resource: ResourceType? {
         switch self {
         case .farming, .hunting: return .food
@@ -32,8 +48,11 @@ public enum WorkKind: String, Codable, Sendable, CaseIterable, Equatable {
         case .research, .foraging: return .knowledge
         case .trade: return .influence
         // Crafting makes *things*, which is exactly why it feeds no
-        // abstract pool: its output is an item on a shelf.
-        case .healing, .building, .scouting, .priest, .garrison, .crafting, .idle:
+        // abstract pool: its output is an item on a shelf. Cooking is the same
+        // shape from the other end: it makes food out of things, and
+        // `CookingEngine` — not the per-skill trickle — is what banks it.
+        case .healing, .building, .scouting, .priest, .garrison, .crafting,
+             .cooking, .idle:
             return nil
         }
     }

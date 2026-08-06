@@ -662,6 +662,25 @@ public struct LocalMap: Codable, Sendable, Equatable {
     public var stone: StoneField
     /// Goods lying where the work happened, waiting to be carried in.
     public var piles: [HaulPile]
+    /// The harvest as **plots of tilled ground** — the last trade to stop being
+    /// a number with a picture. Each belongs to a standing farm, carries a crop
+    /// that ripens with the season, and gives up raw ingredients when somebody
+    /// reaps it. See `Crop` and `FarmEngine`. Old saves have none.
+    public var crops: [Crop]
+    /// Whether this map's harvest is made of *plots*.
+    ///
+    /// `!crops.isEmpty` is the wrong question for the same reason
+    /// `usesEntityLand` exists (rule 5): a colony that has just reaped
+    /// everything, or whose only farm has fallen down, has no crops either —
+    /// and reading that as "no plot layer" would put the old abstract field
+    /// arithmetic back for a colony that is merely between harvests.
+    public var usesEntityFields: Bool
+    /// Part-finished reaping is banked in the plot itself (`Crop.reaped`); this
+    /// is the *fractional ingredient* left over when a harvest does not divide
+    /// into whole carryable units, by item id. Same reason as `quarryCredit`:
+    /// rounding every harvest down loses a colony its whole margin, and
+    /// rounding up pays it for work nobody did.
+    public var harvestCredit: [String: Double] = [:]
     /// Part-broken rock, banked until it is a whole unit somebody can carry.
     ///
     /// A tick at a granite face yields less than half a unit; rounding that to
@@ -703,8 +722,12 @@ public struct LocalMap: Codable, Sendable, Equatable {
         piles: [HaulPile] = [],
         visitors: [Visitor] = [],
         scoutProgress: Double = 0,
-        scoutFocus: LocalPoint? = nil
+        scoutFocus: LocalPoint? = nil,
+        crops: [Crop] = [],
+        usesEntityFields: Bool = false
     ) {
+        self.crops = crops
+        self.usesEntityFields = usesEntityFields
         self.stone = stone
         self.piles = piles
         self.visitors = visitors
@@ -730,6 +753,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
         case river, nodes, pois, wildlife, exploredCells, biomeID, terrainSeed, scenery
         case trees, rocks, shore, usesEntityLand, stone, piles, visitors
         case scoutProgress, scoutFocus, quarryCredit
+        case crops, usesEntityFields, harvestCredit
     }
 
     public init(from decoder: Decoder) throws {
@@ -752,6 +776,9 @@ public struct LocalMap: Codable, Sendable, Equatable {
         scoutProgress = try c.decodeIfPresent(Double.self, forKey: .scoutProgress) ?? 0
         scoutFocus = try c.decodeIfPresent(LocalPoint.self, forKey: .scoutFocus)
         quarryCredit = try c.decodeIfPresent([String: Double].self, forKey: .quarryCredit) ?? [:]
+        crops = try c.decodeIfPresent([Crop].self, forKey: .crops) ?? []
+        usesEntityFields = try c.decodeIfPresent(Bool.self, forKey: .usesEntityFields) ?? false
+        harvestCredit = try c.decodeIfPresent([String: Double].self, forKey: .harvestCredit) ?? [:]
     }
 
     /// Fraction of the map revealed (0…1).

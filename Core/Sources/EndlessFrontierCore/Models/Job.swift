@@ -20,6 +20,8 @@ public enum JobKind: String, Codable, Sendable, CaseIterable {
     case stalkAnimal     // *this* deer, standing over there
     case cutStone        // *this* block of the hillside, at the face
     case craftItem       // *this* bench, with an order standing on it
+    case workPlot        // *this* plot of tilled ground — sow it, tend it, reap it
+    case cookMeal        // *this* fire, with something on the shelf to put on it
 
     /// The trade that does this work.
     public var work: WorkKind {
@@ -27,10 +29,11 @@ public enum JobKind: String, Codable, Sendable, CaseIterable {
         case .fellTree: return .logging
         case .quarryRock, .cutStone: return .mining
         case .raiseBuilding: return .building
-        case .tendDeposit: return .farming
+        case .tendDeposit, .workPlot: return .farming
         case .standWatch: return .garrison
         case .stalkAnimal: return .hunting
         case .craftItem: return .crafting
+        case .cookMeal: return .cooking
         }
     }
 }
@@ -365,6 +368,19 @@ public enum SettlementGeometry {
         // The footprint's middle, not its top-left corner.
         let fx = (Double(placement.coord.x) + Double(placement.width) / 2) / w - 0.5
         let fy = (Double(placement.coord.y) + Double(placement.height) / 2) / h - 0.5
+        return LocalPoint(x: heart.x + fx * span, y: heart.y + fy * span)
+    }
+
+    /// The middle of one **tile** of the build grid.
+    ///
+    /// `canvasPoint(for:in:)` answers where a whole building is; this answers
+    /// where a piece of its ground is, which is what a plot of crop needs — six
+    /// plots of one farm all standing on the building's pin would be the same
+    /// mistake `AgentMotion.WorkSite` was built to fix for its workers.
+    public static func canvasPoint(tileX: Int, tileY: Int, in colony: ColonyMap) -> LocalPoint {
+        let w = Double(max(1, colony.width)), h = Double(max(1, colony.height))
+        let fx = (Double(tileX) + 0.5) / w - 0.5
+        let fy = (Double(tileY) + 0.5) / h - 0.5
         return LocalPoint(x: heart.x + fx * span, y: heart.y + fy * span)
     }
 }

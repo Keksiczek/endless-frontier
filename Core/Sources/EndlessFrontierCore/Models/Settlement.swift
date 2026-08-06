@@ -167,6 +167,14 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     /// bench and work at — see `CraftingEngine`.
     public var craftOrders: [CraftOrder] = []
 
+    /// Worker-ticks the cooks have banked toward the next batch.
+    ///
+    /// The same reason `rawProgress` exists: a colony too small to finish a pot
+    /// of anything in one tick would have its work rounded away every tick and
+    /// never cook a thing. Capped at one batch by `CookingEngine` so a kitchen
+    /// standing idle over a bare shelf cannot store up a decade of afternoons.
+    public var kitchenProgress: Double = 0
+
     /// A fight that is **still going on** here, if one is.
     ///
     /// `lastBattle` is a recording; this is the thing itself, mid-swing, with
@@ -281,7 +289,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         case laws, leaderID, society, strikeTicksRemaining, faith
         case constructions, constructionSequence, journal, relationships, expeditions
         case tamed
-        case stockpile, rawProgress, lastBattle, policy, siege, craftOrders
+        case stockpile, rawProgress, lastBattle, policy, siege, craftOrders, kitchenProgress
         case outbreak, lastOutbreakTick
     }
 
@@ -325,6 +333,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         outbreak = try c.decodeIfPresent(Outbreak.self, forKey: .outbreak)
         lastOutbreakTick = try c.decodeIfPresent(Int.self, forKey: .lastOutbreakTick)
         craftOrders = try c.decodeIfPresent([CraftOrder].self, forKey: .craftOrders) ?? []
+        kitchenProgress = try c.decodeIfPresent(Double.self, forKey: .kitchenProgress) ?? 0
         // Decode-if-present: a save from before standing orders loads as a
         // colony under none, and plays exactly as it did.
         policy = try c.decodeIfPresent(ColonyPolicy.self, forKey: .policy) ?? ColonyPolicy()

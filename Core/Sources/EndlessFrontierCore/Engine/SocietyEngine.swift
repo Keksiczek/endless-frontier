@@ -19,6 +19,9 @@ public enum SocietyEngine {
         case .crafting: return 3.6
         case .mining, .healing: return 3.5
         case .research: return 3.2
+        // A cook feeds the whole town out of what the fields sent in — skilled
+        // work, and paid a shade under the bench.
+        case .cooking: return 3.2
         case .farming, .logging, .hunting, .building, .trade: return 3.0
         // Standing a watch is paid work, a little under a trade.
         case .garrison: return 2.8

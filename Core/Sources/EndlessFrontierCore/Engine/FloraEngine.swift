@@ -161,6 +161,10 @@ public enum FloraEngine {
     /// Whether a deposit kind is backed by real things, and so should neither
     /// be depleted nor regrown by the old node arithmetic.
     public static func isEntityBacked(_ kind: LocalResourceKind, in map: LocalMap) -> Bool {
+        // Fields answer to their own layer, on their own flag: a map can have
+        // plots without having trees (an old save whose colony has since raised
+        // a farm) and trees without plots. See `LocalMap.usesEntityFields`.
+        if kind == .field { return map.usesEntityFields }
         guard map.usesEntityLand else { return false }
         switch kind {
         case .forest, .stone, .ironOre, .clay: return true

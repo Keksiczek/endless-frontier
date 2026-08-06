@@ -596,17 +596,88 @@ reading:
    ruinous four times a year for ever. The council keeps under an eighth of its
    adults abroad and only looks over the hill out of overflow.
 
-### 10.8 — the one the probe is now shouting about
+### 10.8 — the famine, and what was under it — **done** (2026-08-06)
 
-Two hundred years, seed 4242, reproducible: **310 dead of starvation** against
-190 of old age, with the granary sitting at 6 of 1950 for most of the run. The
-famine-sharing cap took it from 340 to 182 and the determinism fix moved the
-world underneath it again, but the shape is unchanged: past a few dozen souls
-the colony's food income stops scaling with its mouths and stays pinned at
-zero. Nothing in §10 caused it — it predates all of it — and it is now the
-largest measured failure in the game. Worth a session of its own, starting from
-"what rate is food supposed to grow at, and can it reach the population the
-housing allows?"
+Two hundred years, seed 4242, on the commit before this one: **182 dead of
+starvation** against 134 of old age, granary at 7 of 2000 for most of the run.
+
+The arithmetic, once anybody did it. Food came out of `PawnEngine` as
+`skill × 0.15 × season × gatherFactor`, and `gatherFactor` read how full the
+`.field` deposits were. Those regrew at `capacity × 0.0009` a tick while each
+farmer drew `harvestPerWorker` = `0.45` off them. Two field nodes of ~220 is
+440 capacity, so the fields regrew **0.396 a tick against 0.45 a farmer** —
+equilibrium under *one farmer*. Any real colony stripped its fields inside a
+season and left `gatherFactor` pinned at `depositFloorFactor` (0.35) for the
+next two centuries, and every extra farmer made it worse. Rule 14 exactly: a
+rate multiplied by an entity count nobody bounded. It never *could* scale with
+mouths, because the ground it drew on was a fixed patch of wilderness.
+
+### 10.9 — what replaced it: a food chain (2026-08-06)
+
+Asked for as *"lidi farmí přímo určité suroviny, ty mohou mít v sýpce nebo
+skladu, ale pak musí ještě z toho kuchaři uvařit jídlo"* — and it is also the
+fix, because the ceiling stops being a patch of wild ground and becomes **the
+farms the colony builds**, which is a thing it can do more of.
+
+`ResourceType.food` survives and means what every reader of it already assumed:
+**cooked meals in the larder**. `ErrandEngine`, the famine, trade, caravans,
+expedition provisions, events, laws and quests are untouched. What changed is
+where the number comes from.
+
+| Was | Is |
+|---|---|
+| a `.field` `ResourceNode` a farmer's presence subtracted from | `Crop` — a plot of tilled ground that ripens and is reaped |
+| `production[.food]` on a farm building | `BuildingDefinition.plots`, derived from the footprint like `sleepers` |
+| a farmer's skill becoming meals where they stood | grain/roots/greens dropped at the plot, hauled in like timber |
+| hunting banking `.food` and a hide | `meat` off the carcass; the hide is what is left over |
+| — | `WorkKind.cooking`, a `cookhouse`, and `meals.json` (8 meals, CZ+EN) |
+| an uncapped `stockpile` | foodstuffs share the granary's ceiling; the rest goes over |
+
+Measured, same seed, 200 years — **and the harness decides the answer**:
+
+- unattended (`TickEngine.advance`, what `StewardEngine` runs): starvation
+  **182 → 5**, colony alive, food near the cap;
+- `DangerProbe` (driven by `BalanceHarness.autoPlay`, which builds "the one it
+  has fewest of" and never consults the steward): starvation **182 → 451**,
+  population 108, food 0 of 1850.
+
+Both are wanted. Keks's call, 2026-08-06: *"umřít na hlad bez zásahu klidně
+můžou"* — a colony nobody manages is allowed to starve. Manage the fields and
+the famine is over; don't, and the valley buries you. Before this change neither
+was possible, because no amount of management could move the number.
+
+Five things this turned over, each of which had to be found by running it:
+
+1. **Nobody could ever become a cook.** `assignIdleAdults` only touches the
+   idle, and `rebalance` returned early whenever `policy.trades` was empty —
+   which is every colony the player has not given orders to. So a town where
+   nobody is idle (every town past its first decade) could not move one person,
+   and a trade with *no members at all* stayed at zero for ever. Six hundred
+   ticks, a cookhouse, 269 sacks of grain and a larder at zero. Rule 9c from
+   the side nobody had tested; `rebalance` follows the engine's own quotas now.
+2. **A farm in disrepair deleted its own harvest.** Plots were gated on
+   `BuildingEngine.isWorking`, so four standing farms' plots fell 26 → 20 → 8 →
+   0 and the colony starved with the buildings still there. Ground does not
+   stop existing because the roof leaks.
+3. **The council never built ahead of demand.** Its food clause fired on a thin
+   larder, and a larder is a *buffer*: two farms fed seventy-four people at the
+   cap right up to the season they didn't, then eighty-seven died. There is a
+   clause on **capacity** now — `plotsWanted(for:)` against `plotsStanding` —
+   and `FarmEngine.peoplePerPlot` is worked out from the crop table rather than
+   guessed, with a test that fails if the crops stop being able to reach it.
+4. **The kitchens burned the staple and hoarded the rest.** Picking the richest
+   meal outright meant every pot took grain, greens piled to 2 852 against 17
+   grain, and the colony went extinct with a full store of salad. Meals are
+   scored against the *pressure* they put on the shelf, so cooks use up what
+   there is most of.
+5. **A chain has a new way to kill everybody.** Two valves, both load-bearing:
+   a colony with no cookhouse cooks over the fire at half rate, and a colony
+   with no cook eats raw off the shelf at `ErrandEngine.rawFoodValue` — hungry,
+   not dead.
+
+Still open: the plots are not drawn on the settlement canvas yet, and there is
+no `JobKind.workPlot` / `.cookMeal` posting, so a farmer walks to the farm
+rather than to *this* furrow. Both are presentation, and both are next.
 
 ## 7. The frozen world (2026-08-02) — the biggest thing found so far
 
@@ -759,6 +830,19 @@ Every one of them has cost a session at least once:
    what bounds the number of entities, and what happens to the colony when that
    number is at its maximum? If the answer is "it dies quietly", the roll
    belongs on the colony, asked once.
+16. **An income is not a store, and a council that watches the store builds too
+   late.** The larder being full says nothing about whether the fields can fill
+   it again next year. Anything that raises capacity — farms, beds, storage —
+   has to be triggered by a *rate against a need*, never by a stock level:
+   `plotsWanted(for: population)` against `plotsStanding`, not `food < 25 %`.
+   The failure is silent right up until it is total, because a buffer hides it.
+17. **A trade with no members cannot acquire any.** `assignIdleAdults` only
+   touches the idle, by design, so every mechanism that is supposed to *reach*
+   a working town has to be checked against a town where nobody is idle — which
+   is every town past its first decade. `rebalance` is that mechanism, and it
+   had a guard on it that switched it off for exactly the colonies that needed
+   it. Rule 9c is the same lesson; this is the case where the count starts at
+   zero and therefore never moves at all.
 15. **An autonomous standing order must be priced as a standing order.** Every
    `dispatch` in the game is written for a player who tapped it once and knew
    what it cost. Handing the same call to the council turns "once, deliberately"

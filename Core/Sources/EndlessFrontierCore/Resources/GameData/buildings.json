@@ -67,22 +67,10 @@
       "materials": 20
     },
     "workers": 2,
-    "production": {
-      "food": 6
-    },
+    "production": {},
     "consumption": {},
     "morale_effect": 1,
     "adjacency": [
-      {
-        "neighbor": "well",
-        "resource": "food",
-        "bonus": 2
-      },
-      {
-        "neighbor": "granary",
-        "resource": "food",
-        "bonus": 1
-      },
       {
         "neighbor": "aqueduct",
         "morale": 1
@@ -96,7 +84,8 @@
       "w": 4,
       "h": 3
     },
-    "look": "farm"
+    "look": "farm",
+    "work": "farming"
   },
   {
     "id": "lumberyard",
@@ -139,9 +128,7 @@
       "timber_bundle": 2
     },
     "workers": 2,
-    "production": {
-      "food": 4
-    },
+    "production": {},
     "consumption": {},
     "morale_effect": 0,
     "description": {
@@ -151,7 +138,8 @@
     "footprint": {
       "w": 3,
       "h": 2
-    }
+    },
+    "work": "hunting"
   },
   {
     "id": "quarry",
@@ -193,21 +181,21 @@
       "materials": 40,
       "knowledge": 10
     },
-    "workers": 3,
-    "production": {
-      "food": 12
-    },
+    "workers": 4,
+    "production": {},
     "consumption": {},
     "morale_effect": 1,
     "description": {
-      "en": "Irrigation multiplies the yield of every field.",
-      "cs": "Zavlažování znásobí úrodu každého pole."
+      "en": "Ditches and sluices carry water to every plot, so a bigger farm can be worked at all.",
+      "cs": "Struhy a stavidla dovedou vodu ke každému záhonu, takže se dá obdělat i větší statek."
     },
     "footprint": {
       "w": 4,
-      "h": 3
+      "h": 4
     },
-    "look": "farm"
+    "look": "farm",
+    "work": "farming",
+    "adjacency": []
   },
   {
     "id": "library",
@@ -457,10 +445,8 @@
     "material_cost": {
       "timber_bundle": 3
     },
-    "workers": 1,
-    "production": {
-      "food": 2
-    },
+    "workers": 0,
+    "production": {},
     "morale_effect": 2,
     "storage": 250,
     "description": {
@@ -472,6 +458,34 @@
       "h": 3
     },
     "look": "granary"
+  },
+  {
+    "id": "cookhouse",
+    "look": "cookhouse",
+    "era": "early_settlement",
+    "name": {
+      "en": "Cookhouse",
+      "cs": "Kuchyně"
+    },
+    "cost": {
+      "materials": 16
+    },
+    "material_cost": {
+      "timber_bundle": 1
+    },
+    "workers": 3,
+    "work": "cooking",
+    "production": {},
+    "consumption": {},
+    "morale_effect": 2,
+    "description": {
+      "en": "Ovens, a long table and a standing fire. What the fields bring in becomes something worth eating here.",
+      "cs": "Pece, dlouhý stůl a stále živý oheň. Tady se z toho, co dala pole, stane něco k jídlu."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 2
+    }
   },
   {
     "id": "well",

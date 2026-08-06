@@ -8,7 +8,16 @@ public enum LaborEngine {
     /// Target share of the adult workforce for each kind of work. Deficits
     /// against these drive assignment. (Tuning; can move to config later.)
     static let quotas: [(work: WorkKind, share: Double)] = [
-        (.farming, 0.26),
+        // Farming was 0.26 when a farmer's skill *was* the colony's food. It is
+        // reaping work now (`FarmEngine`), bounded by how many plots are ripe
+        // rather than by how many hands are in the field, so a quarter of the
+        // town standing in the furrows was a quarter of the town idle. What
+        // came off it went to cooking, which is the new half of the same job.
+        (.farming, 0.20),
+        // Somebody has to actually make dinner. Not conditional the way
+        // `.crafting` and `.garrison` are — those are trades with no work until
+        // the colony asks for some, and everybody eats every day.
+        (.cooking, 0.07),
         (.logging, 0.12),
         (.mining, 0.10),
         (.building, 0.09),
@@ -109,7 +118,18 @@ public enum LaborEngine {
         _ settlement: Settlement, registry: GameDataRegistry
     ) -> Settlement {
         let policy = settlement.policy
-        guard !policy.trades.isEmpty else { return settlement }
+        // Runs whether or not the player has set a policy.
+        //
+        // It used to return here on an empty `policy.trades`, which read as
+        // "no orders, nothing to do" and is wrong: `quotaTable` falls back to
+        // the engine's own shares, and those are the colony's standing orders
+        // whether anybody typed them or not. With the guard in place a town
+        // where nobody is idle — which is every town past its first decade —
+        // could never move a single person, so a trade the colony had *no
+        // members of at all* stayed at zero for ever. That is what happened
+        // the moment cooking was added: a colony with a cookhouse, a full
+        // shelf and not one cook, for six hundred ticks and counting. Rule 9c,
+        // from the side nobody had tested.
         let adultAgeTicks = Pawn.adultAgeYears * registry.config.ticksPerYear
 
         var counts: [WorkKind: Int] = [:]

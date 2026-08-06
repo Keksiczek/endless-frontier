@@ -27,9 +27,10 @@ endless-frontier/
 │   ├── Package.swift
 │   ├── Sources/EndlessFrontierCore/
 │   │   ├── Models/           WorldState, Settlement, Pawn (+Genes), Animal, Season,
-│   │   │                     LocalMap/LocalTerrain, ColonyMap, Society, Diplomacy,
+│   │   │                     LocalMap/LocalTerrain, Crop, ColonyMap, Society, Diplomacy,
 │   │   │                     Region, Era
 │   │   ├── Engine/           SeededRNG, TickEngine, ResourceLoop, PawnEngine,
+│   │                     FarmEngine, CookingEngine,
 │   │   │                     PopulationEngine, LaborEngine, WildlifeEngine,
 │   │   │                     SocietyEngine, FaithEngine, DiplomacyEngine,
 │   │   │                     ChronicleEngine, LocalMapGenerator, MapGenerator,
@@ -78,6 +79,14 @@ What the game is now:
   courage), age, wealth and a life cycle — births mutate genes, so natural
   selection is visible in the chronicle. `Settlement.population` is *derived*
   from `pawns.count`; there is no macro headcount.
+- **Food is a chain, not a number.** Farms own **plots** of tilled ground
+  (`Crop`, `FarmEngine`); a plot ripens with the season and the weather and is
+  *reaped* by a farmer. What comes off is grain/roots/greens lying at the plot,
+  carried in by `HaulEngine` like timber, and a **cook** turns it into
+  `storage[.food]` — which means *meals ready to eat* and nothing else
+  (`CookingEngine`, `meals.json`). Hunting yields `meat`, foraging `berries`.
+  Two valves keep a broken link from being fatal: no cookhouse means cooking
+  over the fire at half rate, no cook means eating raw off the shelf badly.
 - **A living settlement view** (`App/Sources/Views/Settlement/`): a
   `TimelineView`+`Canvas` line-art world with seeded ground tiles, biome-driven
   scenery and deposits, fog of war, seasons, and colonists who walk their day.
@@ -140,6 +149,7 @@ startup by `GameDataRegistry.bundled()`:
 | `events.json` | Event templates (storyteller) |
 | `laws.json` | Laws the assembly votes on (V2) |
 | `cults.json` | Faiths a temple can seed (V2) |
+| `meals.json` | What a cook can make out of the harvest |
 | `items.json`, `recipes.json`, `quests.json` | RPG layer |
 | `map-gen.json` | Hex world generation tuning |
 | `world-config.json` | Tuning constants (tick rate, calendar, tension formula, etc.) |

@@ -62,6 +62,18 @@ public enum PawnEngine {
         let shelterWarmth = ComfortEngine.shelter(s, registry: registry)
         // And what the colony has decided a meal is this year.
         let ration = s.policy.ration
+        // Whether this colony's food comes off **plots** now.
+        //
+        // A farmer's skill used to turn straight into meals in the granary,
+        // which is the step `FarmEngine` and `CookingEngine` replace: they reap
+        // grain and cook it. Leaving this trickle in as well would feed the
+        // colony twice over out of one harvest — and pin food at the cap again,
+        // which is exactly the shape of bug the two-numbers rule exists for.
+        //
+        // A map generated before plots existed keeps the old arithmetic for
+        // ever, the same way `usesEntityLand` protects the abstract wood and
+        // stone. See `LocalMap.usesEntityFields`.
+        let plotsFeedThem = s.localMap?.usesEntityFields ?? false
 
         // Mutate pawns in place (index loop) to avoid rebuilding the array and
         // copying every pawn's dictionaries each tick — this runs up to 43,200
@@ -151,9 +163,17 @@ public enum PawnEngine {
                 let gatherFactor = gatheringFactors[work] ?? 1.0
                 // A school makes every scholar's year count for more.
                 let lawFactor = resource == .knowledge ? laws.knowledgeMultiplier : 1
-                output[resource] = output[resource]
-                    + Double(effectiveSkill) * outputPerSkill * moodFactor
-                    * seasonFactor * gatherFactor * lawFactor * ableness
+                // A colony whose food comes off plots banks nothing here — the
+                // grain is reaped by `FarmEngine` and cooked by `CookingEngine`.
+                // The skill still grows: a farmer working a plot is learning to
+                // farm whether or not this line pays out, and dropping the whole
+                // block would have quietly frozen every farmer at the skill they
+                // were founded with.
+                if !(plotsFeedThem && resource == .food) {
+                    output[resource] = output[resource]
+                        + Double(effectiveSkill) * outputPerSkill * moodFactor
+                        * seasonFactor * gatherFactor * lawFactor * ableness
+                }
 
                 var xp = (s.pawns[i].skillXP[work] ?? 0) + xpPerTickWorking
                 let level = s.pawns[i].skill(work)

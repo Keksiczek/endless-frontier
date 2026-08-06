@@ -15,7 +15,15 @@ public enum GameWorldFactory {
         let homeland = regions[homelandIndex]
 
         // Starter buildings, only those that actually exist in the data.
-        let starterBuildingIDs = ["farm_basic", "lumberyard", "hut"]
+        // A founding party has a fire they cook over, and it is the only reason
+        // the grain they reap becomes anything. Without a cookhouse in this
+        // list nobody in the colony can ever hold the cooking trade —
+        // `LaborEngine.staffBuildings` seats people at buildings, so a trade
+        // with no building is a trade with no people — and the whole colony
+        // lives off raw grain out of `ErrandEngine.rawFoodValue` for ever.
+        // Measured before it was here: a hundred years, a shelf with 246 sacks
+        // of grain on it, and a larder at zero the entire time.
+        let starterBuildingIDs = ["farm_basic", "cookhouse", "lumberyard", "hut"]
 
         // The capital's identity must come from the seed: engines derive
         // per-settlement RNG streams from the settlement id, so a random id
@@ -53,6 +61,12 @@ public enum GameWorldFactory {
         for pawn in settlement.pawns {
             settlement = ColonyBuilder.autoAssign(settlement, pawnID: pawn.id, registry: registry)
         }
+
+        // The founding farm arrives with its ground already tilled. Without
+        // this the colony's food chain does not start until the first reconcile
+        // cadence, and a world the player opens on tick 0 shows a farm with
+        // nothing growing on it — which reads as broken rather than as early.
+        settlement = FarmEngine.reconcile(settlement, registry: registry)
 
         regions[homelandIndex].settlementIDs = [settlement.id]
 
@@ -166,7 +180,18 @@ public enum GameWorldFactory {
             // so at founding size it never was.
             Pawn(id: idRNG.nextUUID(),
                  name: "Nadia", trait: .pessimist, skills: [.scouting: 6, .trade: 5],
-                 assignedWork: .scouting, genes: .founder(using: &rng))
+                 assignedWork: .scouting, genes: .founder(using: &rng)),
+            // And someone who can cook, for exactly the reason Nadia is here.
+            // `ColonyBuilder.autoAssign` only ever seats a colonist at a
+            // building matching the trade they *already* hold, so a cookhouse
+            // with nobody in the party who cooks stands empty — and
+            // `assignIdleAdults` cannot fix it, because it only touches the
+            // idle and the first colonist born will not come of age for
+            // sixteen years. Measured without her: six hundred ticks, 269 sacks
+            // of grain on the shelf and a larder at zero the whole time.
+            Pawn(id: idRNG.nextUUID(),
+                 name: "Osk", trait: .none, skills: [.cooking: 7, .farming: 4],
+                 assignedWork: .cooking, genes: .founder(using: &rng))
         ]
         let settlers = (0..<14).map { PawnFactory.generate(seed: rng.next() &+ UInt64($0)) }
         return named + settlers

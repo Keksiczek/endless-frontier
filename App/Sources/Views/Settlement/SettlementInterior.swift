@@ -164,6 +164,8 @@ enum SettlementInterior {
             return ([.counter], [.crate, .barrel, .sack], 1, 4)
         case .granary:
             return ([.table], [.sack, .sack, .barrel, .crate], 1, 3)
+        case .cookhouse:
+            return ([.hearth, .table], [.sack, .barrel, .shelf], 2, 4)
         case .workshop:
             return ([.bench, .anvil], [.rack, .crate], 1, 5)
         case .plant:

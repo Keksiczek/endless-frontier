@@ -1,0 +1,93 @@
+[
+  {
+    "id": "gruel",
+    "name": { "en": "Gruel", "cs": "Kaše" },
+    "ingredients": { "grain": 3 },
+    "food": 6,
+    "work": 1.0,
+    "description": {
+      "en": "Grain boiled in water. Nobody asks for it twice.",
+      "cs": "Obilí uvařené ve vodě. Nikdo si o ni neřekne dvakrát."
+    }
+  },
+  {
+    "id": "roast",
+    "name": { "en": "Roast Meat", "cs": "Pečeně" },
+    "ingredients": { "meat": 3 },
+    "food": 9,
+    "work": 1.2,
+    "description": {
+      "en": "Game over the fire. Good, and gone by morning.",
+      "cs": "Zvěřina nad ohněm. Dobrá, a do rána po ní není památky."
+    }
+  },
+  {
+    "id": "forage_board",
+    "name": { "en": "Forager's Board", "cs": "Co les dal" },
+    "ingredients": { "greens": 2, "berries": 2 },
+    "food": 7,
+    "work": 0.8,
+    "description": {
+      "en": "Greens and berries, laid out on a board. It fills nobody up.",
+      "cs": "Zelenina a lesní plody na prkénku. Nikoho to nezasytí."
+    }
+  },
+  {
+    "id": "greens_pot",
+    "name": { "en": "Pot of Greens", "cs": "Hrnec zeleniny" },
+    "ingredients": { "greens": 4 },
+    "food": 6,
+    "work": 0.9,
+    "description": {
+      "en": "Everything off the beds, boiled soft. Thin, and there is always more of it.",
+      "cs": "Všechno ze záhonů, uvařené doměkka. Řídké, a je toho vždycky dost."
+    }
+  },
+  {
+    "id": "root_mash",
+    "name": { "en": "Root Mash", "cs": "Kaše z okopanin" },
+    "ingredients": { "roots": 4 },
+    "food": 7,
+    "work": 1.0,
+    "description": {
+      "en": "Boiled and beaten with a little fat. It sits heavy and it lasts.",
+      "cs": "Uvařené a rozšlehané s trochou tuku. Leží v žaludku a vydrží."
+    }
+  },
+  {
+    "id": "pottage",
+    "name": { "en": "Pottage", "cs": "Polévka" },
+    "ingredients": { "grain": 2, "roots": 2 },
+    "food": 11,
+    "work": 1.5,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Grain and roots in one pot, kept on the boil all day.",
+      "cs": "Obilí a okopaniny v jednom hrnci, který se celý den nesundává."
+    }
+  },
+  {
+    "id": "stew",
+    "name": { "en": "Stew", "cs": "Guláš" },
+    "ingredients": { "grain": 1, "roots": 1, "meat": 2 },
+    "food": 17,
+    "work": 2.0,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Meat, roots and grain, and time. The most a colony gets out of what it has.",
+      "cs": "Maso, okopaniny, obilí a čas. Nejvíc, co kolonie ze svého dostane."
+    }
+  },
+  {
+    "id": "preserved_stores",
+    "name": { "en": "Preserved Stores", "cs": "Zavařenina" },
+    "ingredients": { "roots": 2, "berries": 2, "grain": 1 },
+    "food": 13,
+    "work": 1.8,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Put up in jars against the months when nothing grows.",
+      "cs": "Zavařené do sklenic na měsíce, kdy nic neroste."
+    }
+  }
+]

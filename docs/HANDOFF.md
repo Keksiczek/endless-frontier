@@ -1,8 +1,8 @@
-# Handoff — 2026-08-05 (second session)
+# Handoff — 2026-08-06
 
-Branch **`main`**, clean and pushed. Last commit `3cb1473`.
+Branch **`main`**, clean and pushed.
 
-Tests: **914 Core**, app build and tests green.
+Tests: **927 Core**, app build and tests green.
 
 ```bash
 swift test --package-path Core
@@ -22,70 +22,72 @@ Regenerate the Xcode project after adding any file under `App/Sources`.
 
 ## Read this first
 
-**The probe numbers in the previous handoff were never reproducible, and neither
-was anything else.** `Pawn.init` defaults `id` to a fresh `UUID()` and the four
-founders were taking it, so every launch of the same seed began with four
-different people — and since per-entity randomness comes from
-`(mapSeed, entity.id, tick)`, the whole world diverged from tick zero. That is
-fixed (`3cb1473`), and the figures in §3 below are the first the project can
-actually compare against.
+**Food is a chain now** — farms own plots, plots ripen and are reaped, the
+harvest is carried in like timber, and a cook turns it into what the colony
+eats. The write-up, including the arithmetic that caused the old famine and the
+five things the change turned over, is `docs/BACKLOG.md` §10.8–10.9.
 
-Four of Keks's six are done. The fifth (pace) is deliberately not, and the sixth
-was done last session.
+**And the two measurements disagree. Read §3 before believing either.**
+
+- Unattended (`TickEngine.advance`, 12 000 ticks, seed 4242): starvation
+  **182 → 5**, the colony lives, food stays near the cap. This is what
+  `FoodChainTests` pins.
+- `DangerProbe`, same seed and length: starvation **182 → 451**, population 108,
+  food 0 of 1850. **Worse than before the change.**
+
+The difference is the harness, and the cause is understood: `DangerProbe` drives
+the world through `BalanceHarness.autoPlay`, which calls `GameEngine.build`
+directly and picks "the building the capital has fewest of". It therefore never
+sees `StewardEngine`'s new plot-capacity clause, and never keeps fields in step
+with a population its own greedy research is growing. So the colony it plays out
+is a colony that builds a second observatory instead of a third farm.
+
+**Keks's call, 2026-08-06: a colony nobody manages is allowed to starve.** So
+the probe's 451 is not a bug to be tuned away — it is a badly-run colony getting
+what a badly-run colony gets, and the chain is doing its job by making bad
+management fatal. What the numbers say together is the thing worth keeping:
+manage your fields and the famine is over (5 dead in two centuries); don't, and
+the valley buries you. That is a game, where before it was arithmetic nobody
+could influence.
+
+Do not quote "182 → 5" without saying which path it was measured on.
 
 ---
 
 ## 1. What shipped
 
-### `ff06bf4` — a blow is a moment on two bodies, and the blood stays
+### The chain
 
-The simulation was already right; the *drawing* still spoke in aggregate — a
-bright seam across the whole line, sparks at a computed "front", a harm bar
-floating over every defender's head.
+```
+plot ripens (season + weather)  →  farmer reaps it  →  grain/roots/greens on the ground
+      →  hauler carries it in   →  cook makes a meal  →  storage[.food]  →  somebody eats
+```
 
-A beat was a time and a name, so there was nowhere to put a blow.
-`BattleMoment.spot` is the point of impact, stamped by `SiegeEngine.answer`
-between the two people who were touching. On that one fact: `SettlementBlood`
-draws the impact once and short with the spray thrown the way the blow
-travelled, stains the ground permanently in a pass drawn *before* the figures,
-and puts harm on the body that took it — colonists and raiders both. The seam,
-the sparks, the hit ring and eleven of the twelve floating bars are gone; the
-bar survives only for the selected pawn.
+- **`Crop` + `FarmEngine`.** A farm building owns `plots` derived from its
+  footprint, exactly as `sleepers` is (rule 8). A plot carries a crop that grows
+  with the season and the temperature — **winter grows nothing**, which is the
+  first time the granary has had a reason to exist — and gives up raw
+  ingredients when somebody walks out and cuts it.
+- **`CookingEngine` + `meals.json`.** Eight meals, CZ+EN. Cooks pick by food per
+  batch *weighted by the pressure it puts on the shelf*, so the kitchens use up
+  what there is most of. That weighting is not a nicety: without it the colony
+  buried itself under 2 852 greens and 17 grain and went extinct.
+- **`WorkKind.cooking`**, a `cookhouse` (starter building, new renderer
+  archetype), a `.cooking` share in `LaborEngine.quotas`, and a founder who can
+  cook.
+- **Hunting yields `meat`**, foraging yields `berries`. The hide is what is left
+  over now rather than the point of the hunt.
+- **The shelf has a ceiling.** Foodstuffs share the granary's capacity; what
+  there is no roof for goes over. Ore and clay are left uncapped — that is a
+  separate argument and this change should not smuggle it in.
 
-### `2f82c9d` — needs send people places, and the council leaves the valley
+### What `.food` means now
 
-**Needs cause decisions.** `Errand` + `ErrandEngine`: a need past its threshold
-posts a walk to the nearest larder or hearth, and the need is answered **on
-arrival**. Built as a field of its own rather than a `JobKind` — an errand is a
-person's own business and has to *interrupt* work, not compete for the same
-slot. `AgentMotion` reads the Core's own positions for the walk.
-
-Balance held flat on purpose: a meal at the granary fills you and costs food in
-proportion, so steady-state upkeep is unchanged (pinned by a test). One thing a
-per-tick top-up got right for free: in a famine nobody may eat the granary, so a
-sitting is capped at a head's worth of the store — that alone took starvation
-over two hundred years from 340 to 182.
-
-`JobBoard` also hands out the **nearest** piece of a trade's work now, anchored
-on the worker's own door.
-
-**The council leaves the valley.** A fourth `StewardEngine` clause charts the
-nearest unknown region, works a landmark in its own valley, then goes over the
-hill. Tuned twice by measurement — see §4.
-
-### `3cb1473` — the land has weather, and the same seed founds the same colony
-
-`Climate` is one thermometer read by both people and beasts;
-`temperature_shift` on the biome makes where you settle a decision (tundra −13,
-mountains −8, forest −2, coast +4, desert +11). A tundra winter reaches past a
-roof and a coat.
-
-And it is on screen: the status strip says what it is outside next to the season
-that causes it, coloured when the day can hurt somebody, and the colonist card
-itemises the sum out of `ComfortEngine.reckon` — the day is −35, your roof is
-worth 26, your coat 11.
-
-Plus the founder-id fix described above.
+**Cooked meals in the larder**, and nothing else. Every existing reader —
+`ErrandEngine`, morale, famine, trade, caravans, expedition provisions, events,
+laws, quests, `DangerProbe` — is untouched and still correct. The chain was
+built *in front of* the pool rather than replacing it, which is why no authored
+content had to change.
 
 ---
 
@@ -95,12 +97,17 @@ Plus the founder-id fix described above.
 
 > *"možná snížit tempo hry potom"*
 
-Deliberately not done. `WorldConfig` carries the tick rate and slowing it is a
-one-line change and a large balance change — and the thing that made it feel
-fast was that events resolved without a middle, which is exactly what the three
-commits above put back. **This one wants a phone in hand, not a probe.** Play it
-first; if it still runs away, `realSecondsPerTick` is the knob and `DangerProbe`
-is the check afterwards.
+Still not done, and still wants a phone in hand rather than a probe.
+`realSecondsPerTick` is the knob, `DangerProbe` is the check afterwards.
+
+### 2.2 The plots are not on the canvas yet
+
+The chain runs in the Core and the settlement view does not know about it. A
+farmer walks to the *farm* rather than to this furrow, and there is nothing
+drawn growing on the ground. `JobKind.workPlot` and `.cookMeal` exist and are
+posted by nobody — `JobBoard` is where they go, and `SettlementFlora` is the
+precedent for drawing them. This is the obvious next session: the simulation is
+right and the drawing has not caught up, which is the shape §9.11 warns about.
 
 ---
 
@@ -112,53 +119,75 @@ is the check afterwards.
 EF_PROBE=1 swift test --package-path Core --filter DangerProbe
 ```
 
-Two hundred years, seed 4242, nobody playing — **and reproducible for the first
-time**:
+Two hundred years, seed 4242, nobody playing — **and the harness matters**.
+
+`DangerProbe` (world driven by `BalanceHarness.autoPlay`):
 
 ```
-deaths      old_age 190 · starvation 310 · sickness 4
-population  266        morale 65        food 6/1950
-fights      91  (41 turned back)        sicknesses 4
-tribes      6   standings [−78, −56, −25, 0, 0, 74]
-threat      22  predators 12
+                        before (6134290)      after (this commit)
+deaths   old_age            134                 119
+         starvation         182                 451     ← worse
+         sickness             3                  23
+population                  295                 108
+food                       7/2000              0/1850
+fights                      88                  75
 ```
 
-Do not compare these against any earlier handoff. Every previous run measured a
-different colony.
+Plain unattended `TickEngine.advance(world, ticks: 12_000)`, same seed:
 
-**The one number that is shouting: 310 starved against 190 of old age, with the
-granary at 6 of 1950 for most of the run.** This predates everything in §1 —
-food income stops scaling with mouths somewhere past a few dozen souls and never
-recovers. It is the largest measured failure in the game and it is the obvious
-next session. Start from *what rate is food supposed to grow at, and can it
-reach the population the housing allows?*
+```
+                        before                after
+deaths   old_age            —                  132
+         starvation         —                    5
+population                  —                   81
+food                        —              2740/2750
+```
+
+### 3.1 Reading the two numbers
+
+They are not in conflict; they are the two ends of the same lever, and both are
+wanted.
+
+`BalanceHarness.autoPlay` builds the thing the capital has *fewest* of and
+researches the cheapest study going — so it grows the population hard and lets
+the fields fall behind, and it never consults `StewardEngine.nextBuilding`,
+where the plot-capacity clause lives. It is a colony that builds a second
+observatory instead of a third farm, and it starves. **That is allowed** (Keks,
+2026-08-06): a colony nobody manages may die of hunger.
+
+So neither number should be tuned toward the other. What must stay true is the
+gap between them: the managed path (`StewardEngine`, `FoodChainTests`) has to
+stay survivable, and the reachability test is what pins that honest. If a future
+change closes the gap from either side — the unmanaged colony stops dying, or
+the managed one starts — that is the regression, not the absolute figure.
+
+Run both, every time.
 
 ---
 
-## 4. What the new work turned over, and how it was tuned
+## 4. Things that will bite you
 
-Worth reading before touching `StewardEngine` or `DiplomacyEngine`.
-
-- **The council's outward push had to be tuned twice.** Unguarded it charted
-  twenty-six regions in fifty years and spent every material the town would have
-  built with: 44 buildings and 62 people became 33 and 32, and the colony never
-  left the first era. It now looks over the hill only out of *overflow* (a bar
-  above the one building has to clear), considers it once every three sittings,
-  and keeps under an eighth of its adults abroad.
-- **Every `dispatch` in the game was written for a player who tapped it once.**
-  `chooseParty` refuses to strip a settlement "bare", meaning two people left
-  standing — fine as a deliberate act, ruinous as a standing order. New rule 15
-  in `BACKLOG.md`.
-- **Defection was rolled per neighbour.** `0.30 × tribes met`, with nothing
-  capping the count, so the colony began bleeding the moment it started
-  exploring. It is one question asked once a year of the colony now. New rule 14.
-- **People out at the ruins eat their provisions where they are.** Without that
-  exception, four colonists on an expedition starved in a town with a full
-  granary.
-- **`theWorldAdvancesUnattended` now runs 4000 ticks, not 3000.** The colony
-  reaches the second era about a decade later because it also charts a map and
-  works ruins. The canary is *frozen*, not *slow* — but if that horizon has to
-  move again, something is wrong.
+1. **Never seed an RNG from `hashValue`**, and never let an entity take the
+   default `UUID()`. `FarmEngine.plotID` derives a plot's id from the farm
+   placement's own bytes for this reason.
+2. **Every new field on a saved type is `decodeIfPresent` with a default.**
+   `crops`, `usesEntityFields`, `harvestCredit`, `kitchenProgress`. Guarded by
+   "A save written before there were plots still loads" — and that test also
+   pins that such a save keeps the **old** food arithmetic, because a save with
+   no plots *and* no per-skill trickle simply starves.
+3. **`isEmpty` is not "has no layer"** — `usesEntityFields` is the third of
+   these (`usesEntityLand`, `StoneField.usesBlocks`). A colony between harvests
+   has no crops either.
+4. **An income is not a store** (new rule 16). A council that builds farms when
+   the larder is thin builds them a year too late; it has to compare the fields
+   against the mouths. This is what killed two separate attempts at the balance.
+5. **A trade with no members cannot acquire any** (new rule 17). `rebalance`
+   now runs without a policy, which is the only reason cooking ever reaches a
+   town where nobody is idle.
+6. **Check the drawing before rebuilding the system** — still true, and the
+   next session is entirely that.
+7. Keks's Mac is an **8 GB Intel** machine; `signal 9` in the asset-catalog step
+   is memory pressure, not the repo. Simulator is **iPhone 17**.
 
 ---
 
@@ -169,41 +198,24 @@ Worth reading before touching `StewardEngine` or `DiplomacyEngine`.
   large win left.
 - **Old English content** — events, buildings, techs are English-only.
   `LocalizedText` is in place; this is a translation pass.
-- **Fields and herb beds are still places, not things.** The wood, the rock and
-  the beasts are entities; `field` and `herbs` are still `ResourceNode` blobs.
-- **Births do not keep pace; the era stalls.** Related to the famine above —
-  measure the food first.
+- **Herb beds are still places, not things.** Fields are plots now; `herbs` is
+  still a `ResourceNode` blob.
+- **Births do not keep pace; the era stalls.** No longer entangled with the
+  famine — worth measuring on its own now that food is not the binding
+  constraint.
 - Battle has **no sound and no haptics**.
 - The world-map `SiteOutcome.narrative` is a plain `String`, not
   `LocalizedText` — the one journal line that cannot be Czech.
 
 ---
 
-## 6. Things that will bite you
-
-1. **Never seed an RNG from `hashValue`**, and never let an entity take the
-   default `UUID()`. Swift seeds its hasher per process; a random id breaks
-   determinism from the moment the entity exists. This has now cost two
-   sessions, the second one at world creation itself.
-2. **Every new field on a saved type is `decodeIfPresent` with a default**, with
-   a "a save written before this existed still loads" test.
-3. **Two numbers for one thing is the recurring design bug.** Derive the second.
-4. **The recurring bug shape, now both ways round:** a rate that cannot reach
-   its threshold (rule 6), *and* a rate multiplied by an entity count nobody
-   bounded (rule 14).
-5. **Check the drawing before rebuilding the system.** §1's first commit is
-   presentation-only and fixed what read as a simulation problem.
-6. Keks's Mac is an **8 GB Intel** machine; `signal 9` in the asset-catalog step
-   is memory pressure, not the repo. Simulator is **iPhone 17**.
-
----
-
-## 7. Where to look
+## 6. Where to look
 
 | For | Read |
 |---|---|
 | Everything ever asked for | `docs/BACKLOG.md` |
-| The 15 rules a change must not break | `docs/BACKLOG.md` § "Rules" |
+| The famine and the food chain | `docs/BACKLOG.md` §10.8–10.9 |
+| The 17 rules a change must not break | `docs/BACKLOG.md` § "Rules" |
 | Systems and formulas | `docs/DESIGN.md` |
 | Footprints, lots, pawn-like animals | `docs/RIMWORLD_LAYER.md` |
 | Layer separation | `docs/architecture/LAYERS.md` |

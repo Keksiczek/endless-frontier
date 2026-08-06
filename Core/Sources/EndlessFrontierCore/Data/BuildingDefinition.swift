@@ -133,6 +133,27 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         return footprint.width * footprint.height * Self.sleepersPerTile * max(1, floors)
     }
 
+    // MARK: - How much ground it actually has under crop
+
+    /// Tiles of a farm's lot that make up one workable plot.
+    public static let tilesPerPlot = 2
+
+    /// How many plots of tilled ground this building owns.
+    ///
+    /// Derived from the footprint for exactly the reason `sleepers` is (rule
+    /// 8): a farm that draws four tiles by three and feeds the colony out of a
+    /// flat `production.food` of 6 is two numbers for one thing, and the one
+    /// you can point at on the map is the ground. A `farm_basic` is six plots
+    /// because it covers twelve tiles.
+    ///
+    /// Non-zero only for a building whose `work` is farming — the food chain
+    /// starts at ground somebody tills, and a granary is a roof over grain, not
+    /// a place grain comes from.
+    public var plots: Int {
+        guard work == .farming else { return 0 }
+        return max(1, footprint.width * footprint.height / Self.tilesPerPlot)
+    }
+
     public init(
         id: String,
         era: Era,
