@@ -103,10 +103,19 @@ struct StatusStrip: View {
         Text("· \(Int(degrees.rounded()))°")
             .font(.caption.monospacedDigit())
             .foregroundStyle(tint)
+        // What kind of country this is…
         if let word = game.climate.label?.resolve(AppStrings.language) {
             Text(word)
                 .font(.caption2)
                 .foregroundStyle(tint.opacity(0.85))
+        }
+        // …and what kind of *year* it is having, which is a different thing and
+        // the one the colony talks about. Read off the year alone, so a cold
+        // fortnight is not announced as a hard year.
+        if let year = game.climate.yearLabel()?.resolve(AppStrings.language) {
+            Text(year)
+                .font(.caption2.italic())
+                .foregroundStyle(Theme.accent.opacity(0.9))
         }
     }
 

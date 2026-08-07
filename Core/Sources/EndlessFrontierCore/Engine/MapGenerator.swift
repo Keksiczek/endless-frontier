@@ -104,6 +104,29 @@ public enum MapGenerator {
         // A biome set that nominates nobody keeps the old behaviour rather than
         // dropping the player into a world with no ground.
         guard !candidates.isEmpty else { return fallback }
+
+        // Among the countries the data nominates, the one that suits the ground
+        // the homeland actually stands on.
+        //
+        // Drawn rather than rolled, because the homeland sits at the *origin*
+        // of the same three fields every other hex is read from — and a
+        // homeland that ignores them is a desert capital ringed by forest, with
+        // the map disagreeing with itself at the one hex the player looks at
+        // most. The land at the origin still differs from seed to seed, so this
+        // stays as varied as the roll it replaces, and only nominated biomes
+        // can win it.
+        let ground = land(at: .origin, mapSeed: mapSeed)
+        var best: (String, Double)?
+        for (id, weight) in candidates {
+            guard let niche = registry.biome(id)?.niche else { continue }
+            let fit = niche.fit(elevation: ground.elevation,
+                                moisture: ground.moisture,
+                                warmth: ground.warmth) * weight
+            if fit > (best?.1 ?? 0) { best = (id, fit) }
+        }
+        if let best { return best.0 }
+
+        // Nobody nominated has an opinion about where it belongs: roll, as before.
         var rng = SeededRNG(seed: splitmix64(mapSeed ^ 0xB10E_5EED_0000_0001))
         guard let index = rng.weightedIndex(candidates.map(\.1)) else { return fallback }
         return candidates[index].0
@@ -131,7 +154,8 @@ public enum MapGenerator {
         let config = registry.mapGen
         let ring = coord.distance(to: .origin)
         let kind = rollKind(config: config, ring: ring, rng: &rng)
-        let biomeID = rollBiome(biomeIDs: biomeIDs, config: config, rng: &rng)
+        let biomeID = biome(at: coord, mapSeed: mapSeed, registry: registry,
+                            biomeIDs: biomeIDs, config: config, rng: &rng)
         let baseHazard = registry.biome(biomeID)?.baseHazard ?? 1
         let hazard = baseHazard
             + hazardBonus(for: kind, config: config)
@@ -199,6 +223,105 @@ public enum MapGenerator {
         let weights = biomeIDs.map { config.biomeWeights[$0] ?? 1.0 }
         let index = rng.weightedIndex(weights) ?? 0
         return biomeIDs[index]
+    }
+
+    // MARK: - Geography
+
+    /// How wide a feature is, in hexes. Elevation runs on the longest
+    /// wavelength because ranges are the biggest thing on a map; moisture and
+    /// warmth run shorter, so a range can be wet on one side and dry on the
+    /// other.
+    static let elevationScale: Double = 7.5
+    static let moistureScale: Double = 5.5
+    static let warmthScale: Double = 9.0
+
+    /// The land at a hex: how high, how wet, how warm, each −1…1.
+    ///
+    /// Three smooth fields, sampled at the hex's position on the plane. This is
+    /// what turns the world map from salt and pepper into geography: because
+    /// the fields are *continuous*, neighbouring hexes get nearly the same
+    /// answer, so mountains come in ranges, deserts gather in the dry heat and
+    /// a coast is a line rather than a speckle.
+    ///
+    /// Still a pure function of `(mapSeed, coord)` with no global pass, which
+    /// is the property the whole endless map rests on — a hex ten rings out can
+    /// be generated on its own, in any order, and always comes out the same.
+    ///
+    /// Elevation gets a second, finer octave so a range has foothills instead
+    /// of one smooth dome.
+    public static func land(
+        at coord: HexCoord, mapSeed: UInt64
+    ) -> (elevation: Double, moisture: Double, warmth: Double) {
+        // Axial hex → the plane. Without this the fields are sampled in a
+        // sheared space and the features come out as lozenges (rule 10b's
+        // shape: a field that does not know what the grid is really doing).
+        let x = Double(coord.q) + Double(coord.r) / 2
+        let y = Double(coord.r) * 0.8660254
+        let elevation = 0.72 * noise(x / elevationScale, y / elevationScale, mapSeed ^ 0xE1E7)
+            + 0.28 * noise(x / (elevationScale / 3), y / (elevationScale / 3), mapSeed ^ 0xF007)
+        return (
+            elevation: max(-1, min(1, elevation * 1.25)),
+            moisture: noise(x / moistureScale, y / moistureScale, mapSeed ^ 0x3157),
+            warmth: noise(x / warmthScale, y / warmthScale, mapSeed ^ 0x7EAF)
+        )
+    }
+
+    /// The country that wants this ground most.
+    ///
+    /// Biomes with no niche keep the old behaviour and are placed by weight, so
+    /// a biome added to `biomes.json` without an opinion still appears.
+    static func biome(
+        at coord: HexCoord, mapSeed: UInt64, registry: GameDataRegistry,
+        biomeIDs: [String], config: MapGenConfig, rng: inout SeededRNG
+    ) -> String {
+        let ground = land(at: coord, mapSeed: mapSeed)
+        var best: String?
+        var bestFit = 0.0
+        for id in biomeIDs {
+            guard let niche = registry.biome(id)?.niche else { continue }
+            // Weight still counts, as a thumb on the scale rather than the
+            // whole decision: a common country wins ties on its own ground.
+            let fit = niche.fit(elevation: ground.elevation,
+                                moisture: ground.moisture,
+                                warmth: ground.warmth)
+                * (config.biomeWeights[id] ?? 1)
+            if fit > bestFit { bestFit = fit; best = id }
+        }
+        guard let best else {
+            return rollBiome(biomeIDs: biomeIDs, config: config, rng: &rng)
+        }
+        return best
+    }
+
+    // MARK: - Value noise
+
+    /// Smooth value noise in −1…1: a lattice of stable random values with a
+    /// smoothstep between them.
+    ///
+    /// Deterministic and positional — the same `(mapSeed, x, y)` is the same
+    /// number on every machine and every run, which is what lets a hex be
+    /// generated lazily and still agree with the hexes around it.
+    static func noise(_ x: Double, _ y: Double, _ seed: UInt64) -> Double {
+        let x0 = Int(floor(x)), y0 = Int(floor(y))
+        let fx = x - Double(x0), fy = y - Double(y0)
+        let sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy)
+        let a = lattice(seed, x0, y0), b = lattice(seed, x0 + 1, y0)
+        let c = lattice(seed, x0, y0 + 1), d = lattice(seed, x0 + 1, y0 + 1)
+        let top = a + (b - a) * sx
+        let bottom = c + (d - c) * sx
+        return top + (bottom - top) * sy
+    }
+
+    /// One lattice point's value, −1…1.
+    static func lattice(_ seed: UInt64, _ x: Int, _ y: Int) -> Double {
+        var h = seed &+ 0x9E37_79B9_7F4A_7C15
+        h = (h ^ UInt64(bitPattern: Int64(x))) &* 0xBF58_476D_1CE4_E5B9
+        h = (h ^ UInt64(bitPattern: Int64(y))) &* 0x94D0_49BB_1331_11EB
+        h = splitmix64(h)
+        // `h >> 11` is 53 bits, so the divisor is 2^53 — the same arithmetic
+        // that `Climate.wobble` got wrong and that made every swing there three
+        // times its stated size.
+        return Double(h >> 11) / Double(1 << 53) * 2 - 1
     }
 
     static func hazardBonus(for kind: RegionKind, config: MapGenConfig) -> Int {

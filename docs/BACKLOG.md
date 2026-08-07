@@ -1024,6 +1024,116 @@ event-rare. Raising `perTick` buys a colony that grows because the dice were
 retuned; arrivals buy a colony that grows because people came, which is the same
 number and a different game. Do not start until Keks says which.
 
+### 11.11 — newcomers, and the two things that were not weather or a map (2026-08-07)
+
+Keks, asked which way §11.10 should be answered: *"jj newcomers — rng event že
+přijde člověk a chce pomoct, nebo můžeme zajímat ostatní co na nás útočí,
+věznit je a konvertovat, nebo se k nám lidé přidají, zvandrovalci poutníci"*.
+
+Three doors, and the difference between them turned out to be the design.
+
+**The traveller asks.** `.wanderer` already walked in, told the evening's
+stories and left — and `decision(for:)` returned nil for them, so they were the
+one visitor who could not change anything. `visitors_wanderer` is the card.
+
+**Settlers do not ask.** A new `VisitorKind.settler`, drawn by what the colony
+looks like from outside: fourteen food per head, two beds standing empty, morale
+above 55. All three, because any one alone is a number that drifts into range.
+
+They carry **no card**, and that is the load-bearing decision.
+`StoryPlanner.expireDecisions` applies *none* of a decision's effects when the
+moment passes — deliberately — so a colony whose only door to growth needs a tap
+is a colony that dies every time nobody is watching. One door has to survive an
+empty chair. It also makes prosperity the growth lever and gives rule 19 a
+second, literal meaning: beds are no longer merely permission to grow, they are
+the reason somebody comes.
+
+**Captives are taken.** A broken raid leaves people on the ground.
+`CaptiveEngine` takes a third if there is room, and from there it is what the
+place is like to live in: fed and in good heart and they come round over about a
+decade; hungry and wretched and they go over the wall. Only from an attacker
+that was *people* — the alternative is a colony that converts a bear. A
+`Captive` is a separate list, not a flagged `Pawn`: `population` is derived from
+`pawns.count` and forty-odd call sites walk that array, so the first one that
+forgot to skip a prisoner would have married them off. Bounded at one per nine
+colonists (rule 14).
+
+Measured, seed 4242, 200 years: **peak 51 around year sixty, oscillating 28–51**
+against a decline to three. Beds are the ceiling and `headroomFactor`
+self-limits near 60% of them, so the player decides how big by what they build.
+
+### 11.12 — the weather, alive (2026-08-07)
+
+`Climate.base(season) + shift` meant every spring in a colony's life was exactly
+11°. Three things are laid over it now, all off `(mapSeed, tick)` so a save
+reloaded mid-winter comes back to the same winter: **the year**, milder or
+harder and holding from one spring to the next; **the spell**, a month or so of
+one sky, eased between anchors rather than switched; and rarely **the year
+people talk about**, a fat tail, because an even spread never produces the
+winter anybody remembers — it produces a slightly colder average.
+
+One place to change and five things came alive from it, exactly as §11.8
+predicted: `FarmEngine.growthStep` already measured the distance outside a
+crop's range at both ends, so a hard year is a bad harvest; `ComfortEngine`
+decides who freezes; `AnimalEngine` which beasts suffer; and the status strip
+says which kind of year it is out loud.
+
+`Climate` carries `ticksPerYear` rather than taking it as a parameter, so the
+length of a year is stated once (rule 8) and `temperature(_:)` keeps the
+signature its ten callers already had. A climate with **no world behind it** is
+the ordinary run of things and has no weather — which is the right answer for
+`CropSpecies.sown(inPlot:climate:)`, a decision a farm makes once about the
+country it stands in and must not re-make every warm fortnight.
+
+One bug found by its own test, and worth writing down: `wobble` shifted a
+**53**-bit value and divided it by 2^52, so it returned −1…3 rather than −1…1
+and every swing ran to three times the number written beside it. Caught by the
+sky jumping 5.6° in a tick against a 5° spell. A generator whose range is wrong
+makes every constant that reads it a lie — the range is asserted directly now.
+
+### 11.13 — the world map is geography, not confetti (2026-08-07)
+
+Keks: *"tiles na mapě nevypadají vůbec jako mapa"*, then *"mapa musí vypadat dle
+klimatu — poušť, hory atd… ať je variabilní, živá a různorodá, aby mapy nebyly
+stejné"*, then *"aby mapa světa dávala větší smysl"*.
+
+It was not the drawing. `MapGenerator.rollBiome` rolled **every hex
+independently** out of `biomeWeights`, so a desert sat beside a tundra beside a
+coast and no feature was ever larger than one hex. A map made of independent
+samples cannot look like a map however it is painted — and this is the same
+family as rules 10 and 10b, one level up: a field that does not know what it is
+a field *of*.
+
+Biomes come off three smooth fields now — how high, how wet, how warm — sampled
+at the hex's position on the plane. Because the fields are continuous,
+neighbours get nearly the same answer, so mountains come in ranges, deserts
+gather in the dry heat and a coast is a line rather than a speckle. Elevation
+runs on the longest wavelength with a second finer octave, so a range has
+foothills instead of one smooth dome.
+
+Where each country belongs is **data**: `BiomeNiche` in `biomes.json` says what
+ground a biome wants and how hard it insists, and the biome with the best fit
+wins the hex. A biome with no niche is still placed by weight, so adding one
+without an opinion keeps working. The homeland is drawn the same way among the
+countries `homeland_weight` nominates — otherwise the one hex the player looks
+at most is a desert capital ringed by forest.
+
+Still a pure function of `(mapSeed, coord)` with no global pass, which is what
+the endless map rests on: a hex ten rings out is generated on its own, in any
+order, and always comes out the same.
+
+Measured — **neighbour agreement 77%, against about 20% for independent rolls**
+— and `MapProbe` (`EF_PROBE=1`) prints the thing so somebody can look at it:
+
+```
+        ~ . . ░ ░ ░ ~ ~ ~
+      ♣ . ~ . ░ ░ ░ ░ . ~ ~
+   ♣ ♣ ♣ . . . ~ ~ . . . ~ ~ ~
+ . . ♣ . . . . ~ ~ ~ ~ ~ ~ ~ ~ ~
+    . . . . . ♣ ♣ ♣ ♣ . ~ ~ ~
+        . . ♣ ♣ ♣ ♣ ♣ ♣ ♣
+```
+
 ### 11.8 — the weather has to be alive too
 
 Keks, immediately after: *"stejně tak počasí atd, vše bude proměnlivé, ne pevně

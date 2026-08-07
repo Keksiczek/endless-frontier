@@ -12,7 +12,13 @@
     },
     "homeland_weight": 5,
     "world_flag": "biome:plains_present",
-    "temperature_shift": 0
+    "temperature_shift": 0,
+    "niche": {
+      "elevation": -0.05,
+      "moisture": 0.05,
+      "warmth": 0.2,
+      "pull": 0.85
+    }
   },
   {
     "id": "forest",
@@ -27,7 +33,13 @@
     },
     "homeland_weight": 3,
     "world_flag": "biome:forest_present",
-    "temperature_shift": -2
+    "temperature_shift": -2,
+    "niche": {
+      "elevation": 0.0,
+      "moisture": 0.7,
+      "warmth": 0.2,
+      "pull": 1.0
+    }
   },
   {
     "id": "desert",
@@ -42,7 +54,13 @@
     },
     "homeland_weight": 1,
     "world_flag": "biome:desert_present",
-    "temperature_shift": 11
+    "temperature_shift": 11,
+    "niche": {
+      "elevation": 0.05,
+      "moisture": -0.85,
+      "warmth": 0.8,
+      "pull": 1.2
+    }
   },
   {
     "id": "tundra",
@@ -57,7 +75,13 @@
     },
     "homeland_weight": 1,
     "world_flag": "biome:tundra_present",
-    "temperature_shift": -13
+    "temperature_shift": -13,
+    "niche": {
+      "elevation": 0.3,
+      "moisture": -0.05,
+      "warmth": -0.9,
+      "pull": 1.2
+    }
   },
   {
     "id": "mountains",
@@ -73,7 +97,13 @@
     },
     "homeland_weight": 1,
     "world_flag": "biome:mountains_present",
-    "temperature_shift": -8
+    "temperature_shift": -8,
+    "niche": {
+      "elevation": 0.85,
+      "moisture": 0.0,
+      "warmth": -0.35,
+      "pull": 1.6
+    }
   },
   {
     "id": "coast",
@@ -88,6 +118,12 @@
     },
     "homeland_weight": 2,
     "world_flag": "biome:coast_present",
-    "temperature_shift": 4
+    "temperature_shift": 4,
+    "niche": {
+      "elevation": -0.75,
+      "moisture": 0.55,
+      "warmth": 0.15,
+      "pull": 1.35
+    }
   }
 ]
