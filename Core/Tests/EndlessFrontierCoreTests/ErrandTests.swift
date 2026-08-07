@@ -115,6 +115,76 @@ struct ErrandTests {
         #expect(s.storage[.food] < 500)
     }
 
+    // MARK: - The walk nobody made
+
+    /// `furthestWorthGoing` is a **comfort** rule, and applied to a need that
+    /// kills it was a quiet death sentence with no story attached.
+    ///
+    /// The valley is a unit square and work happens all over it — a logger's
+    /// tree, a scout's fog, a beast being stalked at the treeline — while the
+    /// granary stands wherever the town happened to put it. Anybody whose day
+    /// took them further than half a map from it simply *never went to eat
+    /// again*: the errand was refused every tick, hunger ran to zero, and they
+    /// starved beside a full store. Measured over two centuries of seed 4242:
+    /// eighteen dead of hunger with the granary at 1148 of 1150.
+    ///
+    /// Named for the reachability rather than the behaviour (rule 6): can a
+    /// colonist standing at the furthest point the game is able to put them
+    /// reach the food the colony actually has?
+    @Test("A colonist working at the far edge of the valley can still reach the granary")
+    func theFurthestWorkerCanStillEat() {
+        var s = hungry(town(granaryAt: TileCoord(0, 0)), to: 20)
+        // Out at the fog, which is where scouting, hunting and logging take
+        // people — and the diagonally opposite corner from the granary.
+        for i in s.pawns.indices {
+            s.pawns[i].currentJob = Job(id: id(300 + i), kind: .stalkAnimal,
+                                        position: LocalPoint(x: 0.98, y: 0.98))
+        }
+        let start = ErrandEngine.anchor(of: s.pawns[0], in: s, registry: registry)
+        let larder = ErrandEngine.places(in: s, registry: registry) { $0.storage > 0 }
+        #expect(larder.contains { SiegeField.distance(start, $0.at)
+                                    > ErrandEngine.furthestWorthGoing },
+                "the fixture has to actually put the food out of comfortable reach")
+
+        var out = ErrandEngine.advanceOneTick(s, registry: registry, tick: 0)
+        let errand = out.pawns[0].errand
+        #expect(errand?.kind == .eat, "starving is not a reason to stay put")
+
+        let arrival = errand?.arrivesAt ?? 1
+        out = ErrandEngine.advanceOneTick(out, registry: registry, tick: arrival)
+        #expect(out.pawns[0].needs.hunger > 20, "and they ate when they got there")
+        #expect(out.storage[.food] < 500, "out of the store that was full all along")
+    }
+
+    /// The other half of the same rule: the cap still has to *mean* something,
+    /// or every mild twinge sends the whole colony walking and no work is done.
+    @Test("A merely peckish colonist that far out stays where they are")
+    func theFurthestWorkerDoesNotStrollForASnack() {
+        var s = hungry(town(granaryAt: TileCoord(0, 0)),
+                       to: ErrandEngine.hungryBelow - 1)
+        for i in s.pawns.indices {
+            s.pawns[i].currentJob = Job(id: id(300 + i), kind: .stalkAnimal,
+                                        position: LocalPoint(x: 0.98, y: 0.98))
+        }
+        let out = ErrandEngine.advanceOneTick(s, registry: registry, tick: 0)
+        #expect(out.pawns.allSatisfy { $0.errand == nil })
+    }
+
+    /// Freezing is the same shape, and would have been the same bug the first
+    /// winter somebody worked the far hedge.
+    @Test("A colonist freezing at the far edge can still reach a fire")
+    func theFurthestWorkerCanStillGetWarm() {
+        var s = town(granaryAt: nil)
+        for i in s.pawns.indices {
+            s.pawns[i].needs.warmth = ComfortEngine.freezingBelow - 4
+            s.pawns[i].currentJob = Job(id: id(300 + i), kind: .fellTree,
+                                        position: LocalPoint(x: 0.02, y: 0.02))
+        }
+        // The hut with the hearth in it stands at the far corner of the grid.
+        let out = ErrandEngine.advanceOneTick(s, registry: registry, tick: 0)
+        #expect(out.pawns[0].errand?.kind == .warmUp)
+    }
+
     // MARK: - What it costs the colony
 
     /// Steady-state food upkeep must not move. The meal is bigger and comes

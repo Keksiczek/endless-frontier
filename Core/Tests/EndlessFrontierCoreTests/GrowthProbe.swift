@@ -34,11 +34,8 @@ struct GrowthProbe {
         for step in 1...20 {
             state = TickEngine.advance(state, ticks: 600, registry: registry).state
             guard let s = state.settlements.first else { break }
-            let beds = ResourceLoop.housingCapacity(s, registry: registry)
-            let homes = s.colony?.placements.filter {
-                !$0.underConstruction
-                    && (registry.building($0.definitionID)?.housing ?? 0) > 0
-            }.count ?? 0
+            // The roofs are `theChain`'s column now, along with the headroom
+            // they buy — this table is the couples behind the curve.
             let deaths = s.deathTallies.sorted { $0.key < $1.key }
                 .map { "\($0.key.prefix(5)):\($0.value)" }.joined(separator: " ")
             let ticksPerYear = registry.config.ticksPerYear
@@ -48,7 +45,6 @@ struct GrowthProbe {
             let courting = s.relationships.count {
                 $0.kind == .friend && $0.strength >= SocialEngine.weddingMinStrength
             }
-            _ = homes; _ = beds
             // Couples where **both** are inside the fertile window — the thing
             // that actually decides whether a colony has a future.
             let fertilePairs = s.relationships.count { bond in
@@ -86,6 +82,53 @@ struct GrowthProbe {
             print(String(format: "%4d %5d %5d %6d %5d %5d %5d %8.5f %6d   %@",
                          step * 10, s.pawns.count, adults, couples, courting,
                          fertilePairs, pregnant, best, Int(s.storage[.food]), deaths))
+        }
+        print("──────────────────────────────────────────────────────────────\n")
+    }
+
+    /// Where the food chain actually breaks, link by link.
+    ///
+    /// The curve above says a colony starved; it does not say *which* link
+    /// failed, and the four candidates want opposite fixes. Ground under crop,
+    /// hands to reap it, sacks on the shelf, and somebody to cook them are
+    /// four different colonies in trouble, and a single `food` column cannot
+    /// tell them apart.
+    @Test("Where the food chain breaks")
+    func theChain() throws {
+        let registry = try GameDataRegistry.bundled()
+        var state = GameWorldFactory.newGame(registry: registry, seed: 4242)
+
+        print("""
+
+        ── the food chain ─────────────────────────────────────────────
+        year   pop  adult  farm  cook  plots want   shelf   food  hungry  beds  headroom
+        """)
+
+        for step in 1...20 {
+            state = TickEngine.advance(state, ticks: 600, registry: registry).state
+            guard let s = state.settlements.first else { break }
+            let ticksPerYear = registry.config.ticksPerYear
+            let adults = s.pawns.count { $0.isAdult(ticksPerYear: ticksPerYear) }
+            let census = { (work: WorkKind) in
+                s.pawns.count { $0.assignedWork == work
+                    && $0.isAdult(ticksPerYear: ticksPerYear) && !$0.isAway }
+            }
+            let plots = FarmEngine.plotsStanding(s)
+            let shelf = CookingEngine.foodstuffs(registry)
+                .reduce(0) { $0 + s.stockpile[$1, default: 0] }
+            let hungry = s.pawns.count { $0.needs.hunger < ErrandEngine.hungryBelow }
+            // What the roofs allow, and what that does to a couple's chances.
+            // Rule 19: size comes from housing, so a colony pinned against its
+            // beds has its birth rate multiplied by something near zero however
+            // healthy every other column looks.
+            let beds = ResourceLoop.housingCapacity(s, registry: registry)
+            let headroom = PopulationEngine.headroomFactor(
+                population: s.population, capacity: beds)
+            print(String(format: "%4d %5d %5d %5d %5d %6d %4d %7d %6d %6d %6d %9.3f",
+                         step * 10, s.pawns.count, adults,
+                         census(.farming), census(.cooking),
+                         plots, FarmEngine.plotsWanted(for: s.population),
+                         shelf, Int(s.storage[.food]), hungry, Int(beds), headroom))
         }
         print("──────────────────────────────────────────────────────────────\n")
     }

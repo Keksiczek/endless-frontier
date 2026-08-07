@@ -44,10 +44,30 @@ public enum ErrandEngine {
     /// What a colonist walks away from a hearth with. Not a full 100: a fire
     /// takes the edge off, it does not replace a roof.
     public static let hearthWarmth: Double = 34
-    /// The longest walk anybody will make for a need. Past this, whatever is
-    /// out there is not worth the trip and they make do where they are — which
-    /// is what stops an errand from eating a whole day.
+    /// The longest walk anybody will make for a need that **can wait**. Past
+    /// this, whatever is out there is not worth the trip and they make do where
+    /// they are — which is what stops an errand from eating a whole day.
     public static let furthestWorthGoing: Double = 0.55
+
+    /// …and the point at which the need stops being able to wait.
+    ///
+    /// The cap above is a comfort rule. Applied to a need that *kills*, it was
+    /// a death sentence with no story attached: the valley is a unit square and
+    /// work happens all over it — a logger's tree, a scout's fog, a beast at the
+    /// treeline — while the granary stands wherever the town put it. Anybody
+    /// whose day took them further than half a map from it was refused the
+    /// errand every tick from `hungryBelow` all the way down to zero, and
+    /// starved beside a full store. Measured over two centuries of seed 4242:
+    /// **eighteen dead of hunger with the granary at 1148 of 1150**, and it is
+    /// the same rule 6 in the same clothes — a threshold the thing meant to
+    /// cross it cannot reach.
+    ///
+    /// Below these the distance stops being a *reason*. It does not stop being
+    /// a cost: the walk is exactly as long as it was, so a colony whose work is
+    /// spread thin still pays for it in the hours it takes, which is the only
+    /// thing the cap was ever for.
+    public static let desperateHunger: Double = 35
+    public static let desperateWarmth: Double = ComfortEngine.freezingBelow + 6
 
     /// Food per point of hunger restored, taken straight from the old inline
     /// meal so the colony's upkeep is unchanged (rule 8: one number).
@@ -164,7 +184,14 @@ public enum ErrandEngine {
                                         tick: tick, placementID: nil)
                 continue
             }
-            guard SiegeField.distance(start, target.at) <= furthestWorthGoing else { continue }
+            // Too far to be worth it — unless it has stopped being a matter of
+            // comfort. See `desperateHunger`.
+            let desperate = kind == .eat
+                ? s.pawns[i].needs.hunger < desperateHunger
+                : s.pawns[i].needs.warmth < desperateWarmth
+            guard desperate
+                    || SiegeField.distance(start, target.at) <= furthestWorthGoing
+            else { continue }
             s.pawns[i].errand = leg(kind, from: start, to: target.at,
                                     tick: tick, placementID: target.id)
         }

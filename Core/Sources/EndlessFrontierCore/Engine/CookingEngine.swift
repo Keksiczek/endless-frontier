@@ -45,6 +45,37 @@ public enum CookingEngine {
     /// whose stores are full has better uses for three pairs of hands.
     static let fullEnough: Double = 0.995
 
+    /// The most banked effort a kitchen carries into the next tick: **one batch
+    /// of the dearest thing on the table**.
+    ///
+    /// A ceiling has to be here. Without one a colony with cooks and no
+    /// ingredients spins progress up for a decade and then turns a single sack
+    /// of grain into a year's dinners at once — the trap `CraftingEngine` had to
+    /// be taught (§6.14). One batch is the right *size* for it.
+    ///
+    /// **Which** batch was not. Capped at the *cheapest* meal, the bank could
+    /// never reach the work a dearer one costs — and `best(for:)` chooses by
+    /// what the shelf can spare, not by what the morning's work can afford. So a
+    /// kitchen with a full shelf reached for the stew every tick, could never
+    /// pay for it, and cooked **nothing at all**: the `while` loop never turned
+    /// over once, and the cheaper pot it could have afforded was never
+    /// considered.
+    ///
+    /// It only bit a kitchen with *one* cook, which is why nobody saw it. Two
+    /// unskilled cooks clear a stew in a tick; one needs four levels of skill
+    /// before their hands plus the old 0.8 ceiling reach 2.0, and a sick one
+    /// needs twelve. Measured on seed 4242: a colony of twenty-three with
+    /// fourteen plots, eleven hundred units of raw harvest on the shelf and a
+    /// cook on the staff, with `storage[.food]` at **zero for a hundred years**
+    /// and eighteen dead of hunger. Rule 6 in the kitchen — a threshold the rate
+    /// meant to cross it cannot reach.
+    ///
+    /// Read through here rather than recomputed, so the ceiling and the cost it
+    /// has to clear are one number in one place (rule 8).
+    public static func bankCeiling(_ registry: GameDataRegistry) -> Double {
+        registry.cookableMeals.map(\.work).max() ?? 1
+    }
+
     // MARK: - The tick
 
     public static func advanceOneTick(
@@ -86,13 +117,10 @@ public enum CookingEngine {
             cooked[meal.id, default: 0] += 1
         }
 
-        // Effort banked against a bare shelf is capped at one batch of the
-        // cheapest thing there is. Without it, a colony with cooks and no
-        // ingredients spins progress up for a decade and then turns a single
-        // sack of grain into a year's dinners at once — the same trap
-        // `CraftingEngine` had to be taught (§6.14).
-        let cheapest = registry.cookableMeals.map(\.work).min() ?? 1
-        s.kitchenProgress = min(s.kitchenProgress, cheapest)
+        // Effort banked against a bare shelf is capped at one batch — see
+        // `bankCeiling`, and note that it is one batch of the *dearest* meal
+        // rather than the cheapest, or the dearer ones can never be paid for.
+        s.kitchenProgress = min(s.kitchenProgress, bankCeiling(registry))
 
         if let headline = cooked.max(by: { ($0.value, $1.key) < ($1.value, $0.key) }),
            let meal = registry.meals[headline.key] ?? (registry.meals.isEmpty ? MealDefinition.fallback : nil),
@@ -251,8 +279,9 @@ public enum CookingEngine {
     ///
     /// Derived from the meal table rather than listed, so adding a crop to
     /// `meals.json` cannot leave the granary refusing to store it (rule 8: the
-    /// ingredients are stated in one place).
+    /// ingredients are stated in one place). Built once when the registry
+    /// loads, not on every read: the errands ask this question every tick.
     public static func foodstuffs(_ registry: GameDataRegistry) -> Set<String> {
-        Set(registry.cookableMeals.flatMap(\.ingredients.keys))
+        registry.foodstuffs
     }
 }

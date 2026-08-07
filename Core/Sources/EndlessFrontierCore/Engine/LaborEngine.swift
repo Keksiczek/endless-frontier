@@ -28,6 +28,39 @@ public enum LaborEngine {
         (.trade, 0.05),
         (.healing, 0.05),
     ]
+    /// The trades a colony cannot do without, and the fewest hands each wants
+    /// **before any share applies**.
+    ///
+    /// A share is a fine way to divide a town and a useless way to divide a
+    /// village. The table above was written when a colony was eighty people;
+    /// cooking's 0.07 is a person and a half in a town of twenty adults and
+    /// **half a person in a hamlet of seven** — and half a person is not a small
+    /// kitchen, it is no kitchen at all. `rebalance` moves nobody for a gap
+    /// worth less than half a body, so any share under `0.5 / adults` can never
+    /// be filled once the colony is past having idle hands, which is every
+    /// colony past its first decade (rule 17). The trades that fails are exactly
+    /// the ones at the bottom of the table, and two of them are how people eat.
+    ///
+    /// A floor is what a colony actually does: somebody cooks and somebody works
+    /// the ground, whatever the arithmetic says, because everybody eats every
+    /// day. Below the floor the trade outranks any ordinary deficit; at or above
+    /// it the shares take over again and nothing else changes. A trade standing
+    /// *at* its floor is also never a surplus, so the colony cannot solve its
+    /// missing cook by taking its last farmer.
+    ///
+    /// Standing orders still win: a player who sets cooking to `.off` gets a
+    /// colony that eats raw off the shelf (`ErrandEngine.rawFoodValue`), which
+    /// is a valve that already exists and is theirs to open.
+    static let floors: [(work: WorkKind, hands: Int)] = [
+        (.farming, 1),
+        (.cooking, 1),
+    ]
+
+    /// The fewest hands a trade wants before its share means anything.
+    static func floor(_ work: WorkKind) -> Int {
+        floors.first { $0.work == work }?.hands ?? 0
+    }
+
     /// Healing only becomes a staffed role once a settlement is large enough
     /// to spare the hands.
     static let healingMinPopulation = 16
@@ -139,7 +172,12 @@ public enum LaborEngine {
             adultCount += 1
             counts[pawn.assignedWork, default: 0] += 1
         }
-        guard adultCount >= 4 else { return settlement }
+        // Two: one to move and one to move them from. It used to be four, which
+        // switched the slow hand off for exactly the colonies that cannot spare
+        // a missing cook — a hamlet of three that buries its last one has no
+        // idle hands to reassign and no rebalance to do it either, so the trade
+        // stays at zero for ever (rule 17).
+        guard adultCount >= 2 else { return settlement }
 
         let hasTemple = settlement.faith.hasTemple
         let hasWalls = settlement.colony?.placements.contains {
@@ -151,24 +189,65 @@ public enum LaborEngine {
         let table = quotaTable(hasTemple: hasTemple, hasWalls: hasWalls,
                                hasCraftWork: hasCraftWork, policy: policy)
 
-        // The trade with the biggest surplus, and the one with the biggest gap.
         var overWork: WorkKind?, overBy = 0.0
         var underWork: WorkKind?, underBy = 0.0
+
+        // A trade below its floor is a gap whatever its share is worth, and it
+        // is answered before the table is consulted. Same shape as the eviction
+        // below, from the other side: "somebody cooks" has to mean somebody, not
+        // "somebody once the rest of the table is fed".
+        var filling = false
+        for (work, hands) in floors
+        where counts[work, default: 0] < hands && policy.stance(work) != .off {
+            let short = 1 + Double(hands - counts[work, default: 0]) / Double(adultCount)
+            if short > underBy { underBy = short; underWork = work; filling = true }
+        }
+
+        // Now the trade with the biggest surplus to answer it with. A trade
+        // standing at its floor is never a surplus, however far over its share
+        // the arithmetic puts it — otherwise a colony of three answers "nobody
+        // cooks" by taking its only farmer, and then answers "nobody farms" by
+        // taking the cook back.
+        func offer(_ work: WorkKind, surplus: Double) {
+            guard counts[work, default: 0] > floor(work), surplus > overBy else { return }
+            overBy = surplus; overWork = work
+        }
         for (work, share) in table {
-            if work == .healing, adultCount < healingMinPopulation { continue }
-            if work == .building, !hasConstruction { continue }
-            if work == .crafting, !hasCraftWork { continue }
+            let idleTrade = (work == .healing && adultCount < healingMinPopulation)
+                || (work == .building && !hasConstruction)
+                || (work == .crafting && !hasCraftWork)
             let current = Double(counts[work, default: 0]) / Double(adultCount)
             let gap = share - current
-            if gap > underBy { underBy = gap; underWork = work }
-            if -gap > overBy { overBy = -gap; overWork = work }
+            if !idleTrade, gap > underBy { underBy = gap; underWork = work }
+            offer(work, surplus: idleTrade ? (filling ? current : 0) : -gap)
+        }
+        // A colony that cannot feed itself may also draft the trades that have
+        // no work in them at all — the masons who finished the last scaffold,
+        // the priest with no temple, the watch with no wall. They are invisible
+        // to the table, so without this a village whose only spare hands were
+        // theirs could not staff a kitchen with them and starved holding them.
+        // Only while a floor is short: outside that, parking a trade until its
+        // work comes back is right, and draining the masons after every project
+        // would make the next one slow to man.
+        //
+        // Walked in the trades' own order, never the dictionary's: `counts` is a
+        // `Dictionary` and Swift does not keep its iteration order stable
+        // between runs, so two trades tied on surplus would hand the colonist to
+        // whichever came out first — a different colony from the same seed.
+        let held = counts.keys.sorted { $0.rawValue < $1.rawValue }
+        if filling {
+            for work in held where !table.contains(where: { $0.work == work }) {
+                offer(work, surplus: Double(counts[work] ?? 0) / Double(adultCount))
+            }
         }
         // A trade the orders switched off is a surplus however small it is, and
         // it empties whether or not anywhere else is short — "nobody" has to
         // mean nobody, not "nobody once the rest of the table is satisfied".
         var evicting = false
-        for (work, count) in counts where policy.stance(work) == .off && count > 0 {
-            let surplus = 1 + Double(count) / Double(adultCount)   // outranks any gap
+        for work in held where policy.stance(work) == .off && (counts[work] ?? 0) > 0 {
+            // Outranks any gap, and any floor: switching a trade off is the
+            // player saying so, and that is theirs to say.
+            let surplus = 1 + Double(counts[work] ?? 0) / Double(adultCount)
             if surplus > overBy { overBy = surplus; overWork = work; evicting = true }
         }
         // Move only when the mismatch is worth a person — otherwise a colony
@@ -176,7 +255,8 @@ public enum LaborEngine {
         // for ever.
         let onePerson = 1.0 / Double(adultCount)
         guard let from = overWork, let to = underWork, from != to,
-              evicting || (overBy >= onePerson * 0.5 && underBy >= onePerson * 0.5)
+              evicting || filling
+                || (overBy >= onePerson * 0.5 && underBy >= onePerson * 0.5)
         else { return settlement }
 
         var pick: Int?
@@ -300,6 +380,13 @@ public enum LaborEngine {
         // Scouting's floor still applies — unless the orders say nobody scouts.
         if needsScouts, counts[.scouting, default: 0] == 0,
            policy.stance(.scouting) != .off { return .scouting }
+
+        // …and so do the floors under the trades a colony cannot do without,
+        // which come before any share at all. See `floors`.
+        for (work, hands) in floors
+        where counts[work, default: 0] < hands && policy.stance(work) != .off {
+            return work
+        }
 
         let table = quotaTable(hasTemple: hasTemple, hasWalls: hasWalls,
                                hasCraftWork: hasCraftWork, policy: policy)

@@ -82,6 +82,52 @@ struct FoodChainTests {
                 "cooks at \(share(.cooking)) of the town make \(foodCooked) a tick against \(eaten) eaten")
     }
 
+    /// The question the quota arithmetic above never asks: `cooksKeepUpWith
+    /// Farmers` divides a *thousand* cooks' hands by the dearest meal, which is
+    /// true of a town and says nothing about a village. A batch is not divisible
+    /// — one cook either clears the work a pot costs or the pot is never made —
+    /// so the rate that matters is **one** pair of hands against **one** batch.
+    ///
+    /// Rule 6, and the arithmetic form of it: banked effort plus a tick's work
+    /// has to reach the dearest thing `best(for:)` is willing to reach for.
+    @Test("A lone unskilled cook can pay for the dearest meal on the table")
+    func aLoneCookCanReachTheDearestMeal() throws {
+        let reg = try registry()
+        let dearest = try #require(reg.cookableMeals.map(\.work).max())
+        // The worst cook the game can staff a kitchen with: no skill, and only
+        // just well enough to stand.
+        let hands = CookingEngine.effortPerCook * 0.35
+        #expect(CookingEngine.bankCeiling(reg) + hands >= dearest,
+                """
+                One cook banks at most \(CookingEngine.bankCeiling(reg)) and adds \
+                \(hands) a tick, against a \(dearest)-work pot the kitchen will \
+                keep choosing — so it is never made and nothing else is either.
+                """)
+    }
+
+    /// …and the same thing run rather than reasoned about. A colony that has
+    /// done *everything right* — fields, harvest, granary, cookhouse, a cook —
+    /// must not starve because there is only one of them.
+    @Test("One cook with a full shelf and a cookhouse actually feeds people")
+    func oneCookIsEnough() throws {
+        let reg = try registry()
+        var s = Settlement(
+            id: UUID(uuidString: "00000000-0000-0000-C00C-00000000F00D")!,
+            name: "One Pot", buildings: [BuildingInstance(definitionID: "cookhouse")],
+            storage: [.food: 0], storageCapacity: 400)
+        s.pawns = [Pawn(id: UUID(uuidString: "00000000-0000-0000-C00C-000000000001")!,
+                        name: "Cook", assignedWork: .cooking)]
+        // A shelf with everything on it, which is when the kitchen reaches
+        // highest — and when the bug bit hardest.
+        for kind in CookingEngine.foodstuffs(reg) { s.stockpile[kind] = 200 }
+
+        for tick in 0..<40 {
+            s = CookingEngine.advanceOneTick(s, registry: reg, tick: tick)
+        }
+        #expect(s.storage[.food] > 0, "one cook, a cookhouse and a full shelf cooked nothing")
+        #expect(s.pawns[0].skill(.cooking) == 0, "and did it without needing to be trained first")
+    }
+
     // MARK: - The chain, end to end
 
     @Test("A colony left alone reaps, carries, cooks and eats")

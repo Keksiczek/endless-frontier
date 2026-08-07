@@ -749,6 +749,7 @@ Two holes, both now closed:
 | 11.2 | **Fewer colonists**, so you have a bond with each one; grow gradually from nothing | **done** — 11.4 |
 | 11.3 | **The map does not look like a map.** The tiles on the world map read as nothing — not terrain, not country, not a place | todo — 11.5 |
 | 11.4 | **Battle and attacks** are to be reworked again | todo — 11.6 |
+| 11.5 | **The colony starves in its second century** (found by probe, not asked for) | **done** — 11.9 |
 
 ### 11.4 — the pace and the size of a colony, as built
 
@@ -883,6 +884,145 @@ village that loses its cook eats raw off the shelf (`ErrandEngine.rawFoodValue`)
 until it starves. The whole labour quota table is shares of a workforce that used
 to be eighty and is now twenty, and every trade in it needs re-checking against
 the number of people who actually exist. First thing next session.
+
+### 11.9 — the colony died because it built a kitchen (2026-08-07)
+
+§11.7 handed the next session a diagnosis: *"a colony of ten to twenty-five that
+cannot keep a cook"*. It was the right symptom read onto the wrong cause, and
+the way to find that out was to put a second table under the growth curve —
+`GrowthProbe.theChain`, which prints the food chain link by link, because
+`food = 0` is four different colonies in trouble that want opposite fixes.
+
+What it showed, seed 4242, and it is not what anybody expected:
+
+```
+year   pop  adult  farm  cook  plots want   shelf   food  hungry
+  40    28    21     4     2      14    7    1132   1148       5
+  80    25    21     4     2      14    7    1158   1150       0
+ 100    23    18     4     1      14    6    1147      0       9
+ 160     8     7     2     1      14    2    1156      0       3
+```
+
+Fourteen plots for a colony that wants six. Eleven hundred units of raw harvest
+on the shelf, at the granary's ceiling, every single decade. A cook on the staff
+the whole way. **And `storage[.food]` at zero for a hundred years.** Nothing
+upstream was short of anything. Two defects, both rule 6, and neither of them
+the quota table:
+
+**1. A comfort cap on a need that kills.** `ErrandEngine.furthestWorthGoing`
+(0.55) was written to stop a mild need eating a colonist's whole day. But the
+valley is a unit square and work happens all over it — a logger's tree, a
+scout's fog, a beast at the treeline — while the granary stands wherever the
+town put it, and the colony grid alone is `span × √2` = 0.82 corner to corner.
+Anybody whose day took them past the cap was refused the errand **every tick,
+from `hungryBelow` all the way down to zero**, and starved beside a full store.
+Eighteen dead of hunger with the granary at 1148 of 1150. Now
+`desperateHunger` / `desperateWarmth`: below those, distance stops being a
+*reason* while staying a *cost* — the walk is exactly as long as it was, which
+is the only thing the cap was ever for.
+
+**2. A bank capped below the batch it was saving for.** `CookingEngine` banked
+`kitchenProgress` and capped it at one batch of the **cheapest** meal — 0.8 —
+so a kitchen with a bare shelf could not hoard a decade of effort. Sound idea,
+wrong batch. `best(for:)` chooses the meal by what the shelf can *spare*, not by
+what the morning's work can *afford*, so a full shelf reached for the stew at
+`work: 2.0` every tick — and one unskilled cook banks `0.8 + 1.0 = 1.8`. The
+`while` loop never turned over once, and the gruel it could have afforded was
+never considered. Cap is `bankCeiling` now: one batch of the **dearest**, which
+is the same "no hoarding" rule stated so the dearest can actually be paid for.
+
+Two details are why it hid for eighty years:
+
+- **It needed a cookhouse.** Without one, stew is filtered out of the table and
+  the dearest reachable meal is 1.2, which the old 0.8 ceiling *could* pay for.
+  Every colony that had not built a kitchen yet ate fine. The colony died
+  because it built one.
+- **It needed exactly one cook.** Two unskilled cooks clear a stew in a single
+  tick. So it appeared only as the village shrank — which read exactly like the
+  labour-quota story §11.7 wrote down.
+
+`cooksKeepUpWithFarmers` was green throughout: it divides a *thousand* cooks'
+hands by the dearest meal. A batch is not divisible, and the rate that matters
+is **one** pair of hands against **one** batch. That is the new test —
+`aLoneCookCanReachTheDearestMeal`, plus `oneCookIsEnough` which runs it.
+
+**3. The quota floors — §11.7's own item, which was also real.** `LaborEngine`
+shares are shares of a workforce that used to be eighty. At seven adults, half a
+person is `0.071` and cooking's entire share is `0.07`, so `rebalance` — which
+moves nobody for a gap worth less than half a body — could never make the move
+at all. `LaborEngine.floors` puts one farmer and one cook before any share
+applies. A trade standing *at* its floor is never a surplus, so a village cannot
+answer "nobody cooks" by taking its last farmer and then answer "nobody farms"
+by taking the cook back. Standing orders still win: `.off` beats the floor, and
+the colony eats raw off the shelf, which is a valve that already exists.
+
+Three smaller things fell out of it:
+
+- `rebalance` gated on `adultCount >= 4`, which switched the slow hand off for
+  exactly the hamlets that cannot spare a missing cook. Two now — one to move
+  and one to move them from.
+- A trade with no work left in it (masons after the last scaffold, a priest with
+  no temple, the watch with no wall) was skipped by *both* halves of the scan, so
+  its members were unmovable. They are draftable now — but only while a floor is
+  short, or draining the masons after every project would make the next one slow
+  to man.
+- The eviction loop walked `counts`, a `Dictionary`. Swift does not keep that
+  order stable between runs, so two trades tied on surplus handed the colonist to
+  whichever came out first — a different colony from the same seed. Sorted by
+  `rawValue` now. Rule 2, hiding in a loop nobody was looking at.
+
+Where it landed, seed 4242, 200 years: **0 dead of starvation against 46 of old
+age** (was 18 against 38), the granary between 1134 and 1150 every decade of the
+two centuries instead of empty for ten of them, and a peak of 30 rather than 28.
+
+**What is still open, and it is now the only thing:** the colony peaks around
+year forty and declines to nothing by year two hundred, entirely of old age.
+Food is no longer any part of it. See §11.10.
+
+### 11.10 — what is left when nothing is broken
+
+With §11.9 in, seed 4242 over two centuries is: founded 12, **30 by year forty**,
+then a steady decline to three. `starvation: 0`. `old_age: 46`. `sickness: 2`.
+
+Nothing is *failing* any more. The colony is simply running below replacement,
+and the numbers say where it is and where it is not:
+
+```
+year   pop  adult  cook  plots want   shelf   food  hungry  beds  headroom
+  40    30    23     2      14    8    1146   1148      4     82     0.402
+  70    22    19     1      14    6    1161   1147      2     82     0.535
+ 100    23    18     1      14    6    1166   1134      1     82     0.518
+```
+
+- **Not food.** The granary sits between 1134 and 1150 every decade of the two
+  hundred years, and the shelf is at its ceiling throughout.
+- **Not the roofs**, which is the thing rule 19 would have you check first:
+  eighty-two beds against a population of twenty-three, and `headroomFactor`
+  between 0.40 and 0.55 — a factor of two, not the factor of twenty a colony
+  pressed against its housing would show.
+- **Not the social layer** either, which §11.7 already cleared: seven to ten
+  couples standing, three to six of them inside the fertile window, and a real
+  per-tick chance on the best of them.
+
+It is the ratio itself. Roughly **0.2 births a year against 0.24 deaths**, held
+there by the arithmetic in `PopulationEngine.conceive` — `perTick` is
+`1 / (yearsToConceive × ticksPerYear)`, halved again by headroom, multiplied by
+a readiness slope and by the product of two fertilities. A closed founding party
+is a positive-feedback loop and this one runs a hair under unity, so it decays
+on a two-century timescale however well everything else works.
+
+This is §2.4 of the handoff, and it is **not a bug to fix — it is a design
+question nobody has answered**. Keks has said plainly that a colony being *able*
+to fail is wanted (*"líbí se mi, že to může failnout na základě nějakého RNG"*),
+so the target is a world where a village can die and a well-run one can grow, not
+one where growth is guaranteed. Right now every village dies, which is the other
+half of the same failure.
+
+If it is picked up, answer it with **newcomers rather than a higher birth
+chance** — `visitors_refugees`, the tribes and `add_pawn` all exist and are
+event-rare. Raising `perTick` buys a colony that grows because the dice were
+retuned; arrivals buy a colony that grows because people came, which is the same
+number and a different game. Do not start until Keks says which.
 
 ### 11.8 — the weather has to be alive too
 
@@ -1119,6 +1259,25 @@ Every one of them has cost a session at least once:
    into "four times a year, for ever" — so the council needs its own, stricter
    gates on top: a cadence, a surplus bar above the one building has to clear,
    and a cap on how much of the workforce may be abroad.
+21. **A rate that saves up for an indivisible batch has to reach the *dearest*
+   batch, not the cheapest.** Rule 6 in an accumulate-then-spend loop, and it
+   killed the colony twice over in one session. `CookingEngine` banked effort
+   and capped the bank at one batch of the cheapest meal — a sound rule against
+   hoarding — while `best(for:)` chose the meal by what the *shelf* could spare.
+   A full shelf reached for the 2.0-work stew every tick against a ceiling of
+   0.8 plus one cook's 1.0, so nothing was ever cooked and the cheaper pot was
+   never even considered. Ask of any bank: what does the thing being saved for
+   cost, and can one worker's rate plus the carry-over ever reach it? Aggregate
+   throughput tests go straight past this — `cooksKeepUpWithFarmers` divides a
+   thousand cooks by the dearest meal and was green the whole time.
+22. **A convenience threshold on a survival path is a death sentence.**
+   `ErrandEngine.furthestWorthGoing` means "not worth the walk", which is right
+   for a mild need and lethal for hunger: anybody working further than half the
+   valley from the granary was refused the errand every tick from `hungryBelow`
+   down to zero and starved beside a full store. Of any "not worth it" rule,
+   ask what happens when the need behind it kills. It hides perfectly, because
+   every food metric reads fine — the granary was at 1148 of 1150 the whole
+   time.
 11. **Playback pace is not simulation pace.** A tick is a real minute and a
    battle is eight rounds; played at the tick's own speed that is one
    exchange every seven and a half seconds, which reads as nothing happening.

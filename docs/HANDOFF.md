@@ -1,8 +1,8 @@
-# Handoff — 2026-08-07
+# Handoff — 2026-08-07 (second pass)
 
 Branch **`main`**, clean and pushed.
 
-Tests: **933 Core**, app build and tests green.
+Tests: **942 Core**, app build green.
 
 ```bash
 swift test --package-path Core
@@ -18,7 +18,7 @@ cd App && xcodegen generate
 
 Regenerate the Xcode project after adding any file under `App/Sources`.
 
-Two measuring instruments, both off unless asked:
+Three measuring instruments, all off unless asked:
 
 ```bash
 EF_PROBE=1 swift test --package-path Core --filter DangerProbe
@@ -28,63 +28,71 @@ EF_PROBE=1 swift test --package-path Core --filter DangerProbe
 EF_PROBE=1 swift test --package-path Core --filter GrowthProbe
 ```
 
+`GrowthProbe` runs two tables now: `theCurve` (the population and the couples
+behind it) and **`theChain`** (the food chain link by link — farmers, cooks,
+plots, shelf, larder, beds, headroom). Run both before touching anything that
+touches food, because `food = 0` is four different colonies in trouble and they
+want opposite fixes.
+
 ---
 
 ## Read this first
 
-The colony's whole **scale** changed on 2026-08-07, and everything balanced
-against the old scale is now suspect. A settlement is founded with twelve
-people, not nineteen; a hut is a household of eight, not twelve; a tick is two
-real minutes, so a year is two hours; and **children come out of marriages
-rather than out of a birth rate**.
+**The colony no longer starves.** Seed 4242, 200 years: `starvation: 0` against
+`old_age: 46`, and the granary holds between 1134 and 1150 every decade of the
+two centuries. It was 18 starved and the larder empty for ten of twenty decades
+this morning.
 
-The full account — seven hard edges found on the way, each of which showed up
-only as "the colony is gone by year 130" — is `docs/BACKLOG.md` §11.4 and §11.7.
-Read them before touching `PopulationEngine`, `SocialEngine` or
-`LaborEngine.quotas`.
+The two things that were wrong are written up in `docs/BACKLOG.md` §11.9, and
+neither of them was the labour quota table the last handoff pointed at:
 
-**Where it actually stands, measured, seed 4242, 200 years: founded 12, 31 by
-year fifty, then a long decline to six. The social layer is no longer the
-limiter. Food is.** 17 dead of starvation against 37 of old age, granary at zero
-for eight of the twenty decades. That is the first thing to fix, and §1 below
-says why it is not the famine that was already fixed.
+1. **`ErrandEngine.furthestWorthGoing`** — a comfort cap ("not worth the walk")
+   applied to hunger. Anybody working further than half the valley from the
+   granary was refused the eat errand every tick from `hungryBelow` down to
+   zero. They starved beside a full store.
+2. **`CookingEngine`'s banked effort** was capped at one batch of the *cheapest*
+   meal while `best(for:)` reached for the *dearest*. A kitchen with one
+   unskilled cook cooked **nothing at all**, for ever. It needed a cookhouse to
+   bite, so: the colony died because it built a kitchen.
+
+Both are new faces of rule 6, and they are now rules **21** and **22** in
+`docs/BACKLOG.md`. Read them before writing another accumulate-then-spend loop
+or another "not worth it" threshold.
+
+The quota floors the last handoff asked for are in as well — `LaborEngine.floors`,
+one farmer and one cook before any share applies — because at seven adults half a
+person is 0.071 and cooking's whole share is 0.07, so `rebalance` could never
+make the move.
 
 ---
 
-## 1. Next: the labour quotas are shares of a workforce that no longer exists
+## 1. Next: decide what growth *is*, then build it
 
-**The one to do first.** `LaborEngine.quotas` are fractions of the adult
-workforce, written when a colony was eighty people. A village of twenty adults
-gets:
+**A design question, not a bug, and it wants Keks before it wants code.**
 
-| trade | share | people in a village of 20 adults |
-|---|---|---|
-| farming | 0.20 | 4 |
-| logging | 0.12 | 2.4 |
-| **cooking** | **0.07** | **1.4** |
-| research | 0.10 | 2 |
-| hunting | 0.07 | 1.4 |
-| foraging | 0.06 | 1.2 |
-| scouting | 0.05 | 1 |
-| trade | 0.05 | 1 |
-| healing | 0.05 | 1 (and gated at 16 population) |
+With the food chain honest, the colony peaks at **30 around year forty** and
+declines to three by year two hundred, entirely of old age. `docs/BACKLOG.md`
+§11.10 has the measurement that rules out the usual suspects:
 
-A colony that loses its one cook eats raw off the shelf
-(`ErrandEngine.rawFoodValue` — deliberately poor) until it starves. That is the
-measured 17 starvation deaths: **not** the §10.8 famine, which was three hundred
-people outgrowing their fields. This is twenty people who cannot keep a kitchen
-staffed.
+- **Not food** — granary full the whole way, shelf at its ceiling.
+- **Not the roofs** — 82 beds against 23 people, `headroomFactor` 0.40–0.55.
+  Rule 19 says check this first; it is not this.
+- **Not the social layer** — 7–10 couples, 3–6 of them fertile.
 
-Every trade in the table wants re-checking against the number of people who
-actually exist, and the honest shape of the fix is probably *floors* rather than
-shares for the trades a colony cannot do without — one cook and one farmer
-before any share applies. `rebalance` already moves one person per cadence and
-now runs without a policy, so the mechanism to reach a full town exists; what is
-missing is the rule that says "a colony always has a cook".
+It is the ratio: about **0.2 births a year against 0.24 deaths**. A closed
+founding party is a positive-feedback loop and this one runs a hair under unity,
+so it decays on a two-century timescale however well every part works.
 
-Guard it with a reachability test (rule 6), not a behaviour test: *can a colony
-of N adults staff the trades it cannot live without, for every N the game
-allows?*
+Keks has said a colony being able to fail is wanted (*"líbí se mi, že to může
+failnout na základě nějakého RNG"*). Right now **every** village fails, which is
+the other half of that. The two answers are different games:
+
+- raise `PopulationEngine.conceive`'s odds → a colony that grows because the
+  dice were retuned;
+- **newcomers** — `visitors_refugees`, the tribes, `add_pawn`, all of which
+  exist and are event-rare → a colony that grows because people came.
+
+Ask which. Do not pick one quietly.
 
 ## 2. Also open, from Keks
 
@@ -122,25 +130,12 @@ What it wants: a temperature that wanders around the season's mean, years that
 are harder or milder than usual, and the odd winter people still talk about —
 all derived from `(mapSeed, tick)` so it stays deterministic and replayable.
 
-Worth doing straight after the map: the crops, the comfort bands, the animals and
+The best-value item on this list. The crops, the comfort bands, the animals and
 the status strip **all already read `Climate`**, so there is one place to change
-and five things that come alive from it. Note that `FarmEngine.growthStep` reads
-both ends of the range now (cold floor and heat ceiling), so a bad year would
-immediately mean a bad harvest.
-
-### 2.4 Growth past a village — newcomers, not a bigger number
-
-The colony does not become a civilisation, and it is not yet decided whether it
-should. The cause is structural, not tuning: a closed founding party is a
-positive-feedback loop (people → couples → children → people) running barely
-above unity. Real colonies grow by **immigration**, and the pieces exist —
-`visitors_refugees`, the tribes, `add_pawn` — and are event-rare.
-
-If this gets picked up, answer it with newcomers arriving rather than with a
-higher birth chance. Keks has said plainly that a colony being *able* to fail is
-wanted (*"líbí se mi, že to může failnout na základě nějakého RNG"*), so the
-target is a world where a village can die and a well-run one can grow, not one
-where growth is guaranteed.
+and five things that come alive from it. `FarmEngine.growthStep` reads both ends
+of the range now, so a bad year would immediately mean a bad harvest — which
+also means it is the first change that could make the food chain bite again.
+Re-run `GrowthProbe.theChain` after it.
 
 ## 3. Older, still open
 
@@ -154,34 +149,42 @@ where growth is guaranteed.
 - Battle has **no sound and no haptics**.
 - The world-map `SiteOutcome.narrative` is a plain `String`, not
   `LocalizedText` — the one journal line that cannot be Czech.
+- `GameDataRegistry.cookableMeals` re-sorts the whole meal table on every
+  access, and it sits inside the per-tick cooking loop (rule 4). Small, real.
 
 ## 4. Things that will bite you
 
 1. **Never seed an RNG from `hashValue`**, and never let an entity take the
    default `UUID()`. Per-entity randomness comes from `(mapSeed, id, tick)`, so
-   a hashed or random id is a different world every launch.
+   a hashed or random id is a different world every launch. **And never iterate
+   a `Dictionary` where the result decides anything** — Swift does not keep that
+   order stable between runs. Found this session in `LaborEngine.rebalance`'s
+   eviction loop, where two trades tied on surplus handed the colonist to
+   whichever came out first.
 2. **Every new field on a saved type is `decodeIfPresent` with a default.**
    Recent ones: `crops`, `usesEntityFields`, `harvestCredit`, `kitchenProgress`,
    `Job.cropID`, `Crop.halfWidth`/`halfHeight`, `Relationship.lastChildTick`.
 3. **`isEmpty` is not "has no layer"** — `usesEntityLand`, `usesEntityFields`,
    `StoneField.usesBlocks`.
 4. **A cap in ticks is a cap in wall-clock time only until a tick changes.**
-   `realSecondsPerTick` doubled this session and `maxOfflineTicks` had to halve
-   with it. `WorldConfig.default` mirrors `world-config.json` and they must be
-   edited together.
-5. **A birth rate is not a population knob** (rule 19). Births and deaths are
-   both per-capita, so there is no equilibrium population — only growth or
-   collapse. Size comes from the roofs.
+   `WorldConfig.default` mirrors `world-config.json`; edit them together.
+5. **A birth rate is not a population knob** (rule 19). Size comes from the
+   roofs — but check that it *is* the roofs before you reach for them. It was
+   not, this time: 82 beds and 23 people.
 6. **A rate linear in population against an opportunity space quadratic in it
-   shrinks as the world succeeds** (rule 20). This is what made friendships
-   unable to reach a wedding in any colony bigger than a dozen.
-7. **What is in the simulation is on the canvas** (rule 18). Anything that
-   describes a colonist reads the same source the drawing does.
-8. **Check the drawing before rebuilding the system** — and remember a thing
-   that renders and is *covered* looks exactly like a thing that does not
-   render. The crop plots were drawn underneath their own farm for a whole
-   build. Screenshot it.
-9. Keks's Mac is an **8 GB Intel** machine; a full `swift test` is 6–12 minutes
+   shrinks as the world succeeds** (rule 20).
+7. **A bank capped at the cheapest batch can never buy the dearest** (rule 21,
+   new). Ask what the thing being saved for costs, and whether *one* worker's
+   rate plus the carry-over reaches it. Aggregate throughput tests go straight
+   past this: `cooksKeepUpWithFarmers` divides a thousand cooks' hands by the
+   dearest meal and was green all along.
+8. **A "not worth it" threshold on a survival path is a death sentence**
+   (rule 22, new). It hides perfectly, because every metric upstream reads fine
+   — the granary was at 1148 of 1150 while people starved next to it.
+9. **What is in the simulation is on the canvas** (rule 18).
+10. **Check the drawing before rebuilding the system** — a thing that renders
+   and is *covered* looks exactly like a thing that does not render.
+11. Keks's Mac is an **8 GB Intel** machine; a full `swift test` is 5–10 minutes
    and two concurrent runs make both crawl. Simulator is **iPhone 17**.
 
 ## 5. Where to look
@@ -189,11 +192,14 @@ where growth is guaranteed.
 | For | Read |
 |---|---|
 | Everything ever asked for | `docs/BACKLOG.md` |
-| The colony's new scale, and the seven edges | `docs/BACKLOG.md` §11.4, §11.7 |
+| The two that starved the colony | `docs/BACKLOG.md` §11.9 |
+| Why it still shrinks, and what is ruled out | `docs/BACKLOG.md` §11.10 |
+| The colony's scale, and the seven edges | `docs/BACKLOG.md` §11.4, §11.7 |
 | The food chain | `docs/BACKLOG.md` §10.8–10.10 |
-| The 20 rules a change must not break | `docs/BACKLOG.md` § "Rules" |
+| The 22 rules a change must not break | `docs/BACKLOG.md` § "Rules" |
 | Systems and formulas | `docs/DESIGN.md` |
 | Footprints, lots, pawn-like animals | `docs/RIMWORLD_LAYER.md` |
 | Layer separation | `docs/architecture/LAYERS.md` |
 | Whether the world is dangerous | `DangerProbe`, `EF_PROBE=1` |
-| What shape a colony's life has | `GrowthProbe`, `EF_PROBE=1` |
+| What shape a colony's life has | `GrowthProbe.theCurve`, `EF_PROBE=1` |
+| Where the food chain breaks | `GrowthProbe.theChain`, `EF_PROBE=1` |

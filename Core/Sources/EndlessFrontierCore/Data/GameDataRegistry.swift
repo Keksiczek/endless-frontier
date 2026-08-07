@@ -34,6 +34,33 @@ public struct GameDataRegistry: Sendable {
     public let config: WorldConfig
     public let mapGen: MapGenConfig
 
+    /// Every meal a cook may consider, in a stable order.
+    ///
+    /// Falls back to a single hardcoded pot of gruel when the table is empty.
+    /// `meals.json` is loaded with `try?` like every other optional data file,
+    /// and rule 9b is the standing reminder of what that costs: one malformed
+    /// entry silently empties the whole table. For items that means no loot;
+    /// for meals it would mean **the colony cannot cook and everybody starves
+    /// with a full granary**, which is not a failure worth shipping. A world
+    /// with no meal data eats badly instead of dying.
+    ///
+    /// Sorted once at load rather than on every read. This is the per-tick
+    /// path — `CookingEngine.best` re-chooses a meal inside a `while` loop,
+    /// `bankCeiling` reads it every tick, and `ErrandEngine` reaches it through
+    /// `foodstuffs` — so a sort over the meal table was being paid tens of
+    /// thousands of times to hand back the same answer. The order is what
+    /// determinism rests on (see the tie-break in `CookingEngine.best`); it is
+    /// the same order, decided in one place.
+    public let cookableMeals: [MealDefinition]
+
+    /// Every item id any meal is built out of — what counts as a foodstuff.
+    ///
+    /// Derived from the meal table rather than listed, so adding a crop to
+    /// `meals.json` cannot leave the granary refusing to store it (rule 8: the
+    /// ingredients are stated in one place). Read through
+    /// `CookingEngine.foodstuffs`, which is where the question is asked from.
+    public let foodstuffs: Set<String>
+
     public init(
         buildings: [BuildingDefinition] = [],
         techs: [TechDefinition] = [],
@@ -50,7 +77,13 @@ public struct GameDataRegistry: Sendable {
         config: WorldConfig = .default,
         mapGen: MapGenConfig = .default
     ) {
-        self.meals = Dictionary(uniqueKeysWithValues: meals.map { ($0.id, $0) })
+        let mealTable = Dictionary(uniqueKeysWithValues: meals.map { ($0.id, $0) })
+        let cookable = mealTable.isEmpty
+            ? [MealDefinition.fallback]
+            : mealTable.values.sorted { $0.id < $1.id }
+        self.meals = mealTable
+        self.cookableMeals = cookable
+        self.foodstuffs = Set(cookable.flatMap(\.ingredients.keys))
         self.buildings = Dictionary(uniqueKeysWithValues: buildings.map { ($0.id, $0) })
         self.techs = Dictionary(uniqueKeysWithValues: techs.map { ($0.id, $0) })
         self.eras = Dictionary(uniqueKeysWithValues: eras.map { ($0.era, $0) })
@@ -75,21 +108,6 @@ public struct GameDataRegistry: Sendable {
     public func plague(_ id: String) -> PlagueDefinition? { plagues[id] }
     public func cult(_ id: String) -> CultDefinition? { cults[id] }
     public func eraDefinition(_ era: Era) -> EraDefinition? { eras[era] }
-
-    /// Every meal a cook may consider, in a stable order.
-    ///
-    /// Falls back to a single hardcoded pot of gruel when the table is empty.
-    /// `meals.json` is loaded with `try?` like every other optional data file,
-    /// and rule 9b is the standing reminder of what that costs: one malformed
-    /// entry silently empties the whole table. For items that means no loot;
-    /// for meals it would mean **the colony cannot cook and everybody starves
-    /// with a full granary**, which is not a failure worth shipping. A world
-    /// with no meal data eats badly instead of dying.
-    public var cookableMeals: [MealDefinition] {
-        meals.isEmpty
-            ? [MealDefinition.fallback]
-            : meals.values.sorted { $0.id < $1.id }
-    }
 
     /// Techs whose prerequisites are all met and that aren't yet researched.
     public func availableTechs(researched: Set<String>) -> [TechDefinition] {
