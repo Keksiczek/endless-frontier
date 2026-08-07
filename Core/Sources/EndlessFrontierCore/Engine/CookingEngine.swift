@@ -71,9 +71,12 @@ public enum CookingEngine {
     /// meant to cross it cannot reach.
     ///
     /// Read through here rather than recomputed, so the ceiling and the cost it
-    /// has to clear are one number in one place (rule 8).
+    /// has to clear are one number in one place (rule 8). The number itself is
+    /// worked out once when the meal table is loaded — this runs every tick of
+    /// every settlement, and the dearest pot does not change between the answer
+    /// and the next question (rule 4).
     public static func bankCeiling(_ registry: GameDataRegistry) -> Double {
-        registry.cookableMeals.map(\.work).max() ?? 1
+        registry.dearestMealWork
     }
 
     // MARK: - The tick

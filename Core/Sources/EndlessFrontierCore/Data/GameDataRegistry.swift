@@ -61,6 +61,16 @@ public struct GameDataRegistry: Sendable {
     /// `CookingEngine.foodstuffs`, which is where the question is asked from.
     public let foodstuffs: Set<String>
 
+    /// The work the dearest pot on the table costs — what a kitchen's banked
+    /// effort has to be able to reach, and therefore what it is capped at.
+    ///
+    /// Same reason as the two above: `CookingEngine.bankCeiling` asks this
+    /// every tick of every settlement, and the meal table does not change
+    /// between the answer and the next question. Read through `bankCeiling`,
+    /// never off here — that function is where the *meaning* of the number is
+    /// written down.
+    public let dearestMealWork: Double
+
     public init(
         buildings: [BuildingDefinition] = [],
         techs: [TechDefinition] = [],
@@ -84,6 +94,7 @@ public struct GameDataRegistry: Sendable {
         self.meals = mealTable
         self.cookableMeals = cookable
         self.foodstuffs = Set(cookable.flatMap(\.ingredients.keys))
+        self.dearestMealWork = cookable.map(\.work).max() ?? 1
         self.buildings = Dictionary(uniqueKeysWithValues: buildings.map { ($0.id, $0) })
         self.techs = Dictionary(uniqueKeysWithValues: techs.map { ($0.id, $0) })
         self.eras = Dictionary(uniqueKeysWithValues: eras.map { ($0.era, $0) })
