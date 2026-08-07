@@ -750,6 +750,10 @@ Two holes, both now closed:
 | 11.3 | **The map does not look like a map.** The tiles on the world map read as nothing — not terrain, not country, not a place | todo — 11.5 |
 | 11.4 | **Battle and attacks** are to be reworked again | todo — 11.6 |
 | 11.5 | **The colony starves in its second century** (found by probe, not asked for) | **done** — 11.9 |
+| 11.6 | **Newcomers**, so a colony can grow at all | **done** — 11.11 |
+| 11.7 | **The weather must be alive**, not four constants | **done** — 11.12 |
+| 11.8 | **The world map must look like a map**, and follow its climate | **done** — 11.13 |
+| 11.9 | **Bigger maps**, and places that are landmarks in themselves | **done** — 11.14 |
 
 ### 11.4 — the pace and the size of a colony, as built
 
@@ -1134,6 +1138,53 @@ Measured — **neighbour agreement 77%, against about 20% for independent rolls*
         . . ♣ ♣ ♣ ♣ ♣ ♣ ♣
 ```
 
+### 11.14 — a bigger frontier, and places that are somewhere (2026-08-07)
+
+Keks: *"udělej mapy 2-3× větší, je to malé — nemusí být víc POI, jeden dva"*,
+and *"ty biomy nebo mapy by mohly samy o sobě být POI — kráterové jezero,
+průsmyk."*
+
+**The frontier.** `mapRadius` 3 → 5, which is 37 hexes to 91. The map has always
+been endless and grown as it is explored, so this is the frontier you *begin
+inside* rather than the size of the world — and at radius three that frontier
+was one ring wider than the first expedition.
+
+Every site chance came down with it, and finding the right numbers turned over a
+bug that had been there all along: `specialChancePerRing` was added to **all five
+site kinds independently**, so a ring-*r* hex got `4 × r × 0.015` of extra site
+chance in total. At radius three that was invisible; at radius five it put
+**twenty-nine specials in a starting world**, and on an endless map it passes 1.0
+somewhere around ring twenty — every far hex a ruin, for ever. Rule 14 in the map
+generator. The bonus is *split across* the kinds now and capped at
+`maxRingBonus`, so the deep frontier is rich rather than paved.
+
+**The places.** A region that is only ever "forest, hazard 3" is a colour with a
+number. `RegionFeature` is what the land at a hex actually *is* — a pass, a
+crater lake, an oasis, a gorge, a peak, a plateau, a fen, a headland — and every
+one of them is **read off the ground** rather than rolled, because §11.13 put
+elevation, moisture and warmth fields there. Keks asked for exactly this: *"vše
+budou jen věci v simulaci, která bude mít nějaké podmínky, takže by to nemělo
+být tak hard."* Nothing is authored per hex and a feature can never contradict
+its country, because it *is* its country. The region keeps its own forged name,
+so two crater lakes are still two distinct places.
+
+Calibrating the thresholds is the part worth remembering, and it is rule 6 twice
+in one sitting. The first cut guessed, and was wrong in **both directions at
+once**: a peak had to stand 0.10 above all six neighbours, when the 99th
+percentile of "this hex minus its highest neighbour" is **+0.018** — so no peak
+could ever exist — while a plateau had to be flat to within 0.22, which is the
+**33rd** percentile, so every high hex was one. Measured result: twenty-nine
+plateaus in a world, and never a pass or a crater lake. Then oasis and headland
+turned out to be dead the same way, on the moisture field, across ten thousand
+hexes.
+
+The fix was to stop guessing magnitudes and define the sharp features as **local
+extrema** — a peak is simply higher than everything it touches — which needs no
+magic number and cannot drift when a field's scale is retuned. `MapProbe.relief`
+prints the percentiles the remaining thresholds are set against; read it before
+touching `MapGenerator.feature`. Guarded by "Every landform the game can name is
+one the ground can make", swept over forty seeds.
+
 ### 11.8 — the weather has to be alive too
 
 Keks, immediately after: *"stejně tak počasí atd, vše bude proměnlivé, ne pevně
@@ -1388,6 +1439,18 @@ Every one of them has cost a session at least once:
    ask what happens when the need behind it kills. It hides perfectly, because
    every food metric reads fine — the granary was at 1148 of 1150 the whole
    time.
+23. **A threshold against a field must be set from the field's own
+   distribution, not from what the number "feels like".** Rule 6's measuring
+   half, and it went wrong in *both* directions in one sitting: a peak had to
+   stand 0.10 above all six neighbours, when the 99th percentile of that
+   measure is +0.018, so no peak could exist — while a plateau had to be flat
+   to within 0.22, which is the 33rd percentile, so every high hex was one.
+   Twenty-nine plateaus in a world and never a pass. Print the percentiles
+   first (`MapProbe.relief`), and prefer definitions that need **no magnitude
+   at all** — a peak is higher than everything it touches — because those
+   cannot drift when the field's scale is retuned. The same arithmetic slip
+   killed `Climate.wobble`: a generator whose *range* is wrong makes every
+   constant that reads it a lie.
 11. **Playback pace is not simulation pace.** A tick is a real minute and a
    battle is eight rounds; played at the tick's own speed that is one
    exchange every seven and a half seconds, which reads as nothing happening.

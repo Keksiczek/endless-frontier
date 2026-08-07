@@ -140,6 +140,20 @@ struct RegionDetailCard: View {
                     label("Biome", game.biomeName(region.biomeID))
                     label("Hazard", "\(region.hazardLevel)")
                 }
+                // What the land here actually *is*, when the ground makes
+                // something of itself. A region that is only ever "forest,
+                // hazard 3" is a colour with a number; one that is the pass is
+                // somewhere you remember. See `RegionFeature`.
+                if let feature = region.feature {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(feature.displayName.resolve(AppStrings.language))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.accent)
+                        Text(feature.note.resolve(AppStrings.language))
+                            .font(.caption)
+                            .foregroundStyle(Theme.textDim)
+                    }
+                }
             }
 
             if let settlement = game.settlement(in: region) {

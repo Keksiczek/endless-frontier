@@ -147,7 +147,8 @@ public enum MapGenerator {
                 kind: .homeland,
                 biomeID: homelandBiome,
                 hazardLevel: registry.biome(homelandBiome)?.baseHazard ?? 0,
-                explorationState: .fullyExplored
+                explorationState: .fullyExplored,
+                feature: feature(at: .origin, mapSeed: mapSeed)
             )
         }
 
@@ -169,7 +170,8 @@ public enum MapGenerator {
             kind: kind,
             biomeID: biomeID,
             hazardLevel: hazard,
-            explorationState: .unknown
+            explorationState: .unknown,
+            feature: feature(at: coord, mapSeed: mapSeed)
         )
     }
 
@@ -200,15 +202,29 @@ public enum MapGenerator {
 
     // MARK: - Rolls
 
+    /// The most the frontier's distance may add to the chance of a hex holding
+    /// something. Past this the far country is dangerous and rich, not paved
+    /// with ruins.
+    static let maxRingBonus = 0.25
+
     static func rollKind(config: MapGenConfig, ring: Int, rng: inout SeededRNG) -> RegionKind {
-        let bonus = Double(ring) * config.specialChancePerRing
-        let ruins = config.ruinsChance + bonus
-        let dungeon = config.dungeonChance + bonus
-        let anomaly = config.anomalyChance + bonus
-        // The wonders are rarer, and grow only half as fast with distance —
+        // The distance bonus is **split across** the kinds, not added to each.
+        //
+        // It used to be added to all five independently, so a ring-*r* hex got
+        // `4 × r × specialChancePerRing` of extra site chance in total. At the
+        // old starting radius of three that was invisible; at radius five it
+        // put twenty-nine specials in a starting world, and on an endless map
+        // it passes 1.0 somewhere around ring twenty — every far hex a ruin,
+        // for ever. Rule 14 in the map generator: a per-ring rate multiplied by
+        // the number of things it is added to, with nothing bounding either.
+        let bonus = min(maxRingBonus, Double(ring) * config.specialChancePerRing)
+        let ruins = config.ruinsChance + bonus * 0.40
+        let dungeon = config.dungeonChance + bonus * 0.28
+        let anomaly = config.anomalyChance + bonus * 0.20
+        // The wonders are rarer and take the smallest slice of the growth —
         // they should stay finds, not fixtures.
-        let sanctuary = config.sanctuaryChance + bonus * 0.5
-        let lostCity = config.lostCityChance + bonus * 0.5
+        let sanctuary = config.sanctuaryChance + bonus * 0.06
+        let lostCity = config.lostCityChance + bonus * 0.06
         let roll = rng.nextUnit()
         if roll < ruins { return .ruins }
         if roll < ruins + dungeon { return .dungeon }
@@ -291,6 +307,68 @@ public enum MapGenerator {
             return rollBiome(biomeIDs: biomeIDs, config: config, rng: &rng)
         }
         return best
+    }
+
+    // MARK: - What the land is
+
+    /// The landform at a hex, if the ground makes one.
+    ///
+    /// Read off the fields rather than rolled, so a pass is genuinely a way
+    /// through high country and a crater lake genuinely has a rim — see
+    /// `RegionFeature`. Nil is the ordinary case and must stay that way: a map
+    /// where every hex is a landmark has no landmarks.
+    ///
+    /// Order matters. The tests are the specific shapes, so they are asked
+    /// first; the broad ones (plateau, fen) are what is left.
+    public static func feature(at coord: HexCoord, mapSeed: UInt64) -> RegionFeature? {
+        let here = land(at: coord, mapSeed: mapSeed)
+        let around = coord.neighbors().map { land(at: $0, mapSeed: mapSeed) }
+        guard around.count == 6 else { return nil }
+        let heights = around.map(\.elevation)
+        guard let highest = heights.max(), let lowest = heights.min() else { return nil }
+        let mean = heights.reduce(0, +) / Double(heights.count)
+        let wetAround = around.map(\.moisture).reduce(0, +) / Double(around.count)
+
+        // Every threshold below is measured against what the ground **actually
+        // does** between neighbours, which `MapProbe.relief` prints. The first
+        // cut guessed instead and was wrong in both directions at once: it
+        // wanted a peak to stand 0.10 above all six neighbours, when the 99th
+        // percentile of "this hex minus its highest neighbour" is +0.018, so no
+        // peak ever existed — while asking a plateau to be flat to within 0.22,
+        // which is the 33rd percentile, so *every* high hex was one. Twenty-nine
+        // plateaus in a world and never a pass or a crater lake.
+        //
+        // So the sharp features are defined as **local extrema** instead, which
+        // needs no magic number and cannot drift when the field's scale is
+        // retuned: a peak is simply higher than everything it touches.
+        let spread = highest - lowest
+
+        // Higher than everything around it.
+        if here.elevation > highest, here.elevation > 0.42 { return .peak }
+        // Lower than everything around it, and holding water: a hollow with a rim.
+        if here.elevation < lowest, here.moisture > 0.15,
+           here.elevation < 0.3 { return .craterLake }
+        // The ground opens: the biggest step across a hex, p97 and above.
+        if spread > 0.70 { return .gorge }
+        // A dip *through* high country — low against its neighbours, but not a
+        // pit, or it would be the hollow above.
+        if highest > 0.45, here.elevation < mean - 0.045,
+           here.elevation > lowest { return .pass }
+        // Green with a great deal of nothing around it: the wettest hex in dry,
+        // warm country. A local maximum again rather than an absolute number,
+        // because moisture is as smooth as height is — asking for a hex 0.25
+        // wetter than its neighbours produced no oasis in ten thousand hexes.
+        if here.moisture > (around.map(\.moisture).max() ?? 1),
+           here.warmth > 0.25, wetAround < 0.05 { return .oasis }
+        // Land reaching out into the low ground: it falls away on half its
+        // sides. Measured against *this hex* rather than against sea level, for
+        // the same reason — "three neighbours below −0.45" never happened.
+        if heights.count(where: { $0 < here.elevation - 0.28 }) >= 3 { return .headland }
+        // High, and level to within the flattest tenth of the map.
+        if here.elevation > 0.45, spread < 0.13 { return .plateau }
+        // Low and soaked.
+        if here.elevation < -0.32, here.moisture > 0.55 { return .fen }
+        return nil
     }
 
     // MARK: - Value noise

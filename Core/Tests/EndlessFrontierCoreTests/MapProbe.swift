@@ -56,6 +56,15 @@ struct MapProbe {
             let agreement = touching == 0 ? 0 : Double(same) / Double(touching) * 100
             let census = counts.sorted { ($0.value, $1.key) > ($1.value, $0.key) }
                 .map { "\(glyph($0.key))\($0.value)" }.joined(separator: " ")
+            var landforms: [String: Int] = [:]
+            for coord in HexCoord.disc(radius: radius) {
+                if let f = MapGenerator.feature(at: coord, mapSeed: seed) {
+                    landforms[f.rawValue, default: 0] += 1
+                }
+            }
+            let features = landforms.isEmpty ? "no landmarks at all"
+                : landforms.sorted { ($0.value, $1.key) > ($1.value, $0.key) }
+                    .map { "\($0.key)×\($0.value)" }.joined(separator: " ")
 
             print("""
 
@@ -63,8 +72,46 @@ struct MapProbe {
             \(rows.keys.sorted().map { rows[$0] ?? "" }.joined(separator: "\n"))
 
             neighbours agreeing: \(Int(agreement))%   ·   \(census)
+            landmarks: \(features)
             """)
         }
+        print("──────────────────────────────────────────────────────────────\n")
+    }
+
+    /// How much the ground actually moves from one hex to the next.
+    ///
+    /// The number every landform threshold is measured against, and the reason
+    /// the first cut of them was wrong in both directions at once: the
+    /// elevation field is smooth at hex scale, so "higher than all six
+    /// neighbours by 0.10" almost never happens while "flat to within 0.22"
+    /// almost always does. Read this before touching `MapGenerator.feature`.
+    @Test("How much the ground moves between neighbours")
+    func relief() {
+        var spread: [Double] = []     // highest neighbour − lowest neighbour
+        var fromMean: [Double] = []   // this hex − the mean of its neighbours
+        var above: [Double] = []      // this hex − its highest neighbour
+        for seed in [UInt64(4242), 7, 99, 1_234_567] {
+            for coord in HexCoord.disc(radius: 9) {
+                let here = MapGenerator.land(at: coord, mapSeed: seed).elevation
+                let n = coord.neighbors().map { MapGenerator.land(at: $0, mapSeed: seed).elevation }
+                guard let hi = n.max(), let lo = n.min() else { continue }
+                spread.append(hi - lo)
+                fromMean.append(here - n.reduce(0, +) / Double(n.count))
+                above.append(here - hi)
+            }
+        }
+        func percentiles(_ name: String, _ values: [Double]) {
+            let s = values.sorted()
+            func at(_ p: Double) -> String {
+                String(format: "%+.3f", s[min(s.count - 1, Int(Double(s.count) * p))])
+            }
+            print("\(name)  p5 \(at(0.05))  p25 \(at(0.25))  p50 \(at(0.50))  "
+                  + "p75 \(at(0.75))  p95 \(at(0.95))  p99 \(at(0.99))")
+        }
+        print("\n── relief, \(spread.count) hexes ─────────────────────────────")
+        percentiles("neighbour spread ", spread)
+        percentiles("this − mean      ", fromMean)
+        percentiles("this − highest   ", above)
         print("──────────────────────────────────────────────────────────────\n")
     }
 

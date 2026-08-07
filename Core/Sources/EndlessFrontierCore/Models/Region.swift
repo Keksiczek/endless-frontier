@@ -48,6 +48,16 @@ public struct Region: Codable, Sendable, Identifiable, Equatable {
     /// multi-visit sites decode (missing key → nil → zero visits). A lost city
     /// takes several salvage runs to strip bare.
     public var siteVisits: Int?
+    /// What the land here actually is, when the ground makes something of
+    /// itself — a pass, a crater lake, an oasis. Read off the elevation,
+    /// moisture and warmth fields rather than rolled, so it can never disagree
+    /// with the country around it. See `RegionFeature`.
+    ///
+    /// Optional in every sense: most hexes are ordinary country, and a map
+    /// where everywhere is a landmark has no landmarks. Being `Optional` on a
+    /// synthesised `Codable` is also what lets every save written before the
+    /// land had features decode straight through (rule 3).
+    public var feature: RegionFeature?
 
     public init(
         id: UUID = UUID(),
@@ -60,7 +70,8 @@ public struct Region: Codable, Sendable, Identifiable, Equatable {
         resourceDeposits: Resources = Resources(),
         settlementIDs: [UUID] = [],
         siteCleared: Bool = false,
-        siteVisits: Int? = nil
+        siteVisits: Int? = nil,
+        feature: RegionFeature? = nil
     ) {
         self.id = id
         self.name = name
@@ -73,6 +84,7 @@ public struct Region: Codable, Sendable, Identifiable, Equatable {
         self.settlementIDs = settlementIDs
         self.siteCleared = siteCleared
         self.siteVisits = siteVisits
+        self.feature = feature
     }
 
     /// `true` if this region has an interactable special site that's explored

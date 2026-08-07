@@ -25,13 +25,27 @@ public struct MapGenConfig: Codable, Sendable, Equatable {
     public var hazardPerRing: Double
     public var specialChancePerRing: Double
 
+    // Mirrors `map-gen.json`; the two are edited together (rule 8).
+    //
+    // The starting disc went 3 → 5, which is 37 hexes to 91: Keks, looking at
+    // it, "udělej mapy 2-3× větší, je to malé". The map has always been endless
+    // and grown as it is explored, so this is the *frontier you begin inside*
+    // rather than the size of the world — and at radius 3 that frontier was one
+    // ring wider than the first expedition.
+    //
+    // Every site chance came down with it, to a shade under half. "Nemusí být
+    // víc POI, jeden dva" — two and a half times the ground at the same density
+    // is two and a half times the landmarks, which turns a frontier into a
+    // checklist. Roughly ten specials across the starting disc now against
+    // eight before, and `specialChancePerRing` still makes the far country
+    // richer than the near, which is the reason to push out at all.
     public static let `default` = MapGenConfig(
-        mapRadius: 3,
-        ruinsChance: 0.10,
-        dungeonChance: 0.05,
-        anomalyChance: 0.04,
-        sanctuaryChance: 0.03,
-        lostCityChance: 0.04,
+        mapRadius: 5,
+        ruinsChance: 0.035,
+        dungeonChance: 0.016,
+        anomalyChance: 0.013,
+        sanctuaryChance: 0.008,
+        lostCityChance: 0.010,
         biomeWeights: [:],
         dungeonHazardBonus: 3,
         anomalyHazardBonus: 2,

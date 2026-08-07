@@ -1,3 +1,14 @@
+# Handoff — 2026-08-07 (third pass)
+
+> **Everything on the previous handoff's list is done.** Newcomers (§11.11),
+> the weather (§11.12), the world map (§11.13), a bigger frontier and places
+> that are landmarks in themselves (§11.14). What is left is in §1 and §2 below,
+> and the one item that still needs Keks before anything is built is **battle**
+> — §2.2, unchanged since it was flagged, because nobody has said what is wrong
+> with the current feel.
+
+---
+
 # Handoff — 2026-08-07 (second pass)
 
 Branch **`main`**, clean and pushed.

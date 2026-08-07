@@ -125,6 +125,135 @@ struct WorldGeographyTests {
                 "never generated: \(named.subtracting(found).sorted())")
     }
 
+    // MARK: - Room to explore, without a checklist
+
+    /// Keks: *"udělej mapy 2-3× větší, je to malé — nemusí být víc POI, jeden
+    /// dva."* Both halves matter, and they pull against each other: more ground
+    /// at the same site density is proportionally more landmarks, which turns a
+    /// frontier into a list of errands.
+    @Test("The world you start inside got bigger without filling up with sites")
+    func aBiggerFrontierIsNotACheckList() throws {
+        let reg = try registry()
+        #expect(reg.mapGen.mapRadius >= 5, "the starting frontier is still one ring wide")
+
+        // Averaged over seeds, because a single world is a small sample.
+        var specials = 0
+        let seeds: [UInt64] = [1, 2, 3, 4, 5, 6, 7, 8]
+        for seed in seeds {
+            specials += MapGenerator.generate(seed: seed, registry: reg)
+                .count { $0.kind != .wilderness && $0.kind != .homeland }
+        }
+        let perWorld = Double(specials) / Double(seeds.count)
+        // Eight is what the old radius-3 disc averaged. A handful more is the
+        // "jeden dva"; twenty would be the checklist.
+        #expect(perWorld < 14,
+                "a starting world holds \(perWorld) special sites — that is a list of errands")
+        #expect(perWorld > 4, "a starting world holds \(perWorld) — there is nothing out there")
+    }
+
+    /// The endless half of the same sum, which is the one nobody could see at
+    /// the old radius: the distance bonus used to be added to all five site
+    /// kinds independently, so it passed 1.0 somewhere around ring twenty and
+    /// every far hex became a ruin for ever.
+    @Test("The deep frontier is rich, not paved with ruins")
+    func theFarCountryStaysCountry() throws {
+        let reg = try registry()
+        for ring in [10, 20, 60, 500] {
+            var specials = 0
+            let sample = 400
+            for i in 0..<sample {
+                var rng = SeededRNG(seed: UInt64(i) &* 0x9E37)
+                if MapGenerator.rollKind(config: reg.mapGen, ring: ring, rng: &rng) != .wilderness {
+                    specials += 1
+                }
+            }
+            let share = Double(specials) / Double(sample)
+            #expect(share < 0.5,
+                    "at ring \(ring), \(Int(share * 100))% of hexes hold a site")
+        }
+    }
+
+    // MARK: - The place is the landmark
+
+    /// Keks: *"ty biomy nebo mapy by mohly samy o sobě být POI — kráterové
+    /// jezero, průsmyk."* A landform is only worth having if it is **rare** —
+    /// a map where every hex is a landmark has no landmarks — and only worth
+    /// trusting if it agrees with the ground it is read from.
+    @Test("Landforms are rare enough to be landmarks")
+    func featuresAreRare() {
+        var featured = 0, total = 0
+        for seed in [UInt64(4242), 7, 99, 1_234_567] {
+            for coord in disc(radius: 9) {
+                total += 1
+                if MapGenerator.feature(at: coord, mapSeed: seed) != nil { featured += 1 }
+            }
+        }
+        let share = Double(featured) / Double(total)
+        #expect(share > 0.02, "only \(Int(share * 1000))‰ of the world is anywhere at all")
+        #expect(share < 0.30, "\(Int(share * 100))% of hexes are landmarks, so none of them are")
+    }
+
+    /// The half that makes them worth reading off the ground rather than
+    /// rolling: a pass really is a way *through* high country, and a crater
+    /// lake really does have a rim.
+    @Test("A landform agrees with the land it is read from")
+    func featuresMatchTheGround() {
+        for seed in [UInt64(4242), 7, 99, 1_234_567, 31] {
+            for coord in disc(radius: 9) {
+                guard let feature = MapGenerator.feature(at: coord, mapSeed: seed) else { continue }
+                let here = MapGenerator.land(at: coord, mapSeed: seed)
+                let heights = coord.neighbors().map { MapGenerator.land(at: $0, mapSeed: seed).elevation }
+                switch feature {
+                case .peak:
+                    #expect(here.elevation > (heights.max() ?? 1), "a peak nothing towers over")
+                case .pass:
+                    #expect((heights.max() ?? 0) > here.elevation, "a pass with nothing to pass through")
+                case .craterLake:
+                    #expect((heights.min() ?? -1) > here.elevation, "a crater lake with no rim")
+                    #expect(here.moisture > 0, "a dry lake")
+                case .fen:
+                    #expect(here.moisture > 0, "a dry fen")
+                case .oasis:
+                    #expect(here.moisture > 0, "a dry oasis")
+                case .plateau:
+                    #expect(here.elevation > 0, "a plateau at the bottom of everything")
+                case .gorge, .headland:
+                    break   // both are about the spread around, checked by construction
+                }
+            }
+        }
+    }
+
+    /// Rule 6, in the shape this project keeps producing: a landform whose
+    /// conditions the ground never actually satisfies is dead code that reads
+    /// as content. The first cut had four of the eight unreachable — a peak had
+    /// to stand 0.10 over all six neighbours, and the 99th percentile of that
+    /// measure is +0.018.
+    @Test("Every landform the game can name is one the ground can make")
+    func everyLandformIsReachable() {
+        var seen: Set<RegionFeature> = []
+        for seed in UInt64(1)...40 {
+            for coord in disc(radius: 9) {
+                if let f = MapGenerator.feature(at: coord, mapSeed: seed) { seen.insert(f) }
+            }
+        }
+        let missing = Set(RegionFeature.allCases).subtracting(seen)
+        #expect(missing.isEmpty,
+                "never produced by any ground: \(missing.map(\.rawValue).sorted())")
+    }
+
+    @Test("Two places with the same landform are still two places")
+    func featuresDoNotCollapseNames() throws {
+        let reg = try registry()
+        let regions = disc(radius: 8).map {
+            MapGenerator.region(at: $0, mapSeed: 4242, registry: reg)
+        }
+        let named = regions.filter { $0.feature != nil }
+        #expect(named.count > 1)
+        #expect(Set(named.map(\.name)).count == named.count,
+                "two landmarks share a name — the no-collision naming was lost")
+    }
+
     // MARK: - The rules that must not break
 
     /// The property the endless map rests on: a hex is generated on its own,
