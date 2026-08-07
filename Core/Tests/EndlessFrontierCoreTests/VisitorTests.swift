@@ -143,9 +143,107 @@ struct VisitorTests {
         let envoy = Visitor(id: UUID(), kind: .envoy, fromName: "Kamenní",
                             position: entry, entry: entry)
         let before = s.storage[.materials]
-        s = VisitorEngine.settle(s, visitor: envoy, tick: 10)
+        s = VisitorEngine.settle(s, visitor: envoy, world: world(tribes: []), tick: 10)
         #expect(s.storage[.materials] == before)
         #expect(s.storage[.influence] > 0)
+    }
+
+    // MARK: - Word getting around
+
+    /// A colony that is doing well enough to be worth moving to, so the roll is
+    /// the only thing left between it and a household on the road.
+    private func thriving() -> WorldState {
+        var w = world(tribes: [])
+        var s = w.settlements[0]
+        s.pawns = (0..<6).map {
+            Pawn(id: UUID(uuidString: String(format: "00000000-0000-0000-7715-1000%08d", $0))!,
+                 name: "Soul \($0)")
+        }
+        s.storage[.food] = VisitorEngine.settlerFoodPerHead * s.population + 40
+        s.stats.morale = 80
+        w.settlements[0] = s
+        return w
+    }
+
+    @Test("A colony worth moving to has people move to it")
+    func settlersComeToAGoodColony() {
+        let after = run(thriving(), ticks: 900)
+        #expect(after.settlements[0].pawns.count > 6,
+                "nobody came in fifteen years to a colony doing everything right")
+    }
+
+    /// The half that keeps a colony able to fail. Every condition is checked on
+    /// its own, because three conditions where one is doing all the work is one
+    /// condition with two decorations.
+    @Test("Nobody moves to a colony with an empty larder, no beds or no heart")
+    func settlersStayAwayFromABadOne() {
+        // The baseline is taken *after* the change, because two of these cases
+        // work by adding people — measuring against the six the fixture starts
+        // with would call the setup itself an arrival.
+        func comes(_ change: (inout Settlement) -> Void) -> Bool {
+            var w = thriving()
+            change(&w.settlements[0])
+            let before = w.settlements[0].pawns.count
+            return run(w, ticks: 900).settlements[0].pawns.count > before
+        }
+        #expect(!comes { $0.storage[.food] = 0 }, "they came to a colony with nothing to eat")
+        #expect(!comes { $0.stats.morale = 20 }, "they came to a wretched colony")
+        #expect(!comes { s in
+            // Filled to the rafters: no bed to offer anybody.
+            let beds = ResourceLoop.housingCapacity(s, registry: registry())
+            s.pawns += (0..<Int(beds)).map { i in
+                Pawn(id: UUID(uuidString: String(format: "00000000-0000-0000-7715-2000%08d", i))!,
+                     name: "Full \(i)")
+            }
+            s.storage[.food] = VisitorEngine.settlerFoodPerHead * s.population + 40
+        }, "they came to a colony with nowhere to sleep")
+    }
+
+    @Test("Settlers put the handcart down and stay")
+    func settlersNeverLeave() {
+        var w = thriving()
+        // Shut the road behind them, so what arrives is the one party placed
+        // here and not a second household that heard the same good news. An
+        // already-walking party settles regardless — the conditions are checked
+        // when somebody sets out, not when they knock.
+        w.settlements[0].stats.morale = 20
+        let entry = LocalPoint(x: 0.02, y: 0.5)
+        w.settlements[0].localMap?.visitors = [
+            Visitor(id: UUID(uuidString: "00000000-0000-0000-7715-000000000003")!,
+                    kind: .settler, fromName: "downriver",
+                    position: entry, entry: entry)
+        ]
+        for _ in 0..<200 {
+            w = VisitorEngine.advanceOneTick(w, registry: registry(), mapSeed: w.mapSeed)
+            w.tick += 1
+        }
+        #expect(w.settlements[0].localMap?.visitors.isEmpty == true,
+                "the party is still standing in the square")
+        #expect(w.settlements[0].pawns.count == 6 + VisitorKind.settler.partySize,
+                "they left, or they arrived more than once")
+    }
+
+    /// The reason this door has no card at all: `StoryPlanner.expireDecisions`
+    /// applies none of a decision's effects when the moment passes, so a colony
+    /// whose only way to grow needs a tap is a colony that dies whenever nobody
+    /// is watching. Growth by arrival has to survive an empty chair.
+    @Test("Settlers arrive without anybody answering a card")
+    func settlersNeedNoDecision() {
+        let after = run(thriving(), ticks: 900)
+        #expect(after.pendingEvents.isEmpty, "a settler asked for a decision")
+        #expect(after.settlements[0].pawns.count > 6)
+    }
+
+    @Test("A traveller now has something to ask")
+    func aWandererAsksToStay() throws {
+        let bundled = try GameDataRegistry.bundled()
+        let asks = try #require(VisitorEngine.decision(for: .wanderer))
+        #expect(bundled.events.contains { $0.id == asks },
+                "the wanderer asks for an event that is not in the table")
+        let template = try #require(bundled.events.first { $0.id == asks })
+        #expect(template.choices.contains { choice in
+            choice.effects.contains { if case .addPawn = $0 { return true }; return false }
+        }, "and none of the answers actually takes them in")
     }
 
     // MARK: - The rules that must not break

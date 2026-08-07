@@ -33,6 +33,36 @@ public enum VisitorEngine {
     public static let chancePerFriend = 0.06
     /// The most parties on the map at once. A valley is not a fairground.
     public static let maxVisitors = 2
+
+    // MARK: - Word getting around
+
+    /// What a colony has to look like from outside before anybody moves to it,
+    /// and how likely they are to when it does.
+    ///
+    /// A closed founding party is a loop with no input from outside itself, and
+    /// §11.10 measured what that costs: about 0.2 births a year against 0.24
+    /// deaths, so every village decays to nothing on a two-century timescale
+    /// however well it is run. Rule 13 in the population's clothes — a thing
+    /// that is supposed to build up has to be fed by something that is true
+    /// whether or not it has already started.
+    ///
+    /// So this is fed by what the colony *is*, not by what it has done: a full
+    /// larder, a roof going spare and people in good heart. All three, because
+    /// any one of them alone is a number that drifts. That makes prosperity the
+    /// growth lever and gives rule 19 a second, literal meaning — beds do not
+    /// merely permit a colony to grow, they are the reason somebody comes.
+    ///
+    /// Deliberately small. §11.2 asked for a village you can hold in your head,
+    /// so this is worth a household every decade or two to a colony that is
+    /// doing everything right, and nothing at all to one that is not.
+    public static let settlerChance = 0.16
+    /// Food per head the larder has to hold before the colony looks like it
+    /// could feed one more.
+    public static let settlerFoodPerHead: Double = 14
+    /// …and beds standing empty, so there is somewhere to put them.
+    public static let settlerSpareBeds = 2
+    /// …and a town that is not visibly miserable.
+    public static let settlerMorale: Double = 55
     /// How long a party stands in the square before starting home.
     public static let stayTicks = 12
     /// How far they cover per tick.
@@ -55,7 +85,19 @@ public enum VisitorEngine {
         case .refugee: return "visitors_refugees"
         case .envoy: return "visitors_envoy"
         case .trader: return "visitors_traders"
-        case .wanderer: return nil   // a traveller wants nothing from you
+        // A traveller used to want nothing from you, which made them the one
+        // kind of visitor who could not change anything. Some of them have been
+        // walking a long time and would rather stop — and a colony that only
+        // ever grows out of its own cradle decays on a two-century timescale
+        // however well it is run (§11.10). This is the door that is a decision.
+        case .wanderer: return "visitors_wanderer"
+        // Word gets around on its own, and a family that has decided to move is
+        // not asking permission — see `settle`. That door has no card, which is
+        // the whole reason it is a different door: an unanswered decision
+        // expires with none of its effects applied (`StoryPlanner.expire
+        // Decisions`), so a colony whose *only* way to grow needs a tap is a
+        // colony that dies whenever nobody is watching.
+        case .settler: return nil
         }
     }
 
@@ -122,13 +164,17 @@ public enum VisitorEngine {
                 }
             case .visiting:
                 if !visitor.settled {
-                    s = settle(s, visitor: visitor, tick: tick)
+                    s = settle(s, visitor: visitor, world: world, tick: tick)
                     asks = asks ?? decision(for: visitor.kind)
                     visitor.settled = true
                 }
                 visitor.ticksRemaining -= 1
                 if visitor.ticksRemaining <= 0 { visitor.phase = VisitorPhase.leaving }
             case .leaving:
+                // Settlers are the one party who came to stop. They unpacked in
+                // the square and they are colonists now, so there is nobody left
+                // to walk back out.
+                if visitor.kind == .settler { continue }
                 visitor.position = step(from: visitor.position, toward: visitor.entry, by: pace)
                 // Gone off the edge, and out of the save.
                 if within(visitor.position, visitor.entry, arrivalRadius) { continue }
@@ -149,6 +195,22 @@ public enum VisitorEngine {
         var s = state
         guard let map = s.settlements[settlementIndex].localMap,
               map.visitors.count < maxVisitors else { return s }
+
+        // Word getting around is the colony's own business and answers to
+        // nobody's politics, so it is rolled first and on its **own** stream.
+        // Inserting a draw into the one below would shift every roll after it
+        // and quietly re-deal two centuries of visits in every existing save
+        // (rule 2: new draws go at the end of a pass, never into the middle).
+        if let party = settlerParty(s.settlements[settlementIndex],
+                                    registry: registry, mapSeed: mapSeed, tick: tick) {
+            var updated = map
+            updated.visitors.append(party)
+            s.settlements[settlementIndex].localMap = updated
+            s.settlements[settlementIndex].journal.append(
+                tick: tick, kind: .arrival,
+                text: approachText(kind: .settler, from: party.fromName))
+            return s
+        }
 
         // Who out there is on speaking terms.
         let known = s.tribes.filter { $0.discovered && $0.status != .war }
@@ -173,6 +235,37 @@ public enum VisitorEngine {
         s.settlements[settlementIndex].journal.append(
             tick: tick, kind: .discovery, text: approachText(kind: kind, from: name))
         return s
+    }
+
+    /// A household on the road to *this* colony, if it is the sort of place
+    /// anybody would move to.
+    ///
+    /// All three conditions, and each is doing a different job: the larder says
+    /// the colony can feed one more, the empty beds say there is somewhere to
+    /// put them, and morale says the people already there are not visibly
+    /// wretched. Any one alone is a number that drifts into range and stays
+    /// there; the three together are a description of a place that is working.
+    ///
+    /// Nil when the colony is not that place — which is the half that keeps a
+    /// badly run one able to die.
+    static func settlerParty(
+        _ settlement: Settlement, registry: GameDataRegistry,
+        mapSeed: UInt64, tick: Int
+    ) -> Visitor? {
+        let mouths = max(1, settlement.population)
+        guard settlement.storage[.food] / mouths >= settlerFoodPerHead,
+              settlement.stats.morale >= settlerMorale else { return nil }
+        let beds = ResourceLoop.housingCapacity(settlement, registry: registry)
+        guard beds - settlement.population >= Double(settlerSpareBeds) else { return nil }
+
+        var rng = SeededRNG(seed: visitorSeed(mapSeed: mapSeed,
+                                              settlementID: settlement.id,
+                                              tick: tick) ^ 0x5345_5454_4C45_5253)
+        guard rng.nextUnit() < settlerChance else { return nil }
+        let entry = edgePoint(rng: &rng)
+        return Visitor(id: rng.nextUUID(), kind: .settler,
+                       fromName: wandererOrigin(rng: &rng), tribeID: nil,
+                       position: entry, entry: entry)
     }
 
     /// What kind of party a given people sends.
@@ -200,7 +293,9 @@ public enum VisitorEngine {
     /// What a visit is actually worth. Deliberately small: a caravan is a
     /// caravan, a visit is a visit, and the point of this layer is that the
     /// world *turns up* rather than that it pays well.
-    static func settle(_ settlement: Settlement, visitor: Visitor, tick: Int) -> Settlement {
+    static func settle(
+        _ settlement: Settlement, visitor: Visitor, world: WorldState, tick: Int
+    ) -> Settlement {
         var s = settlement
         switch visitor.kind {
         case .trader:
@@ -228,8 +323,40 @@ public enum VisitorEngine {
             s.journal.append(tick: tick, kind: .discovery, text: LocalizedText(values: [
                 .en: "A traveller out of \(visitor.fromName) told the evening's stories.",
                 .cs: "Poutník z \(visitor.fromName) vyprávěl u ohně."]))
+        case .settler:
+            // They put the handcart down and that is that. No card: an
+            // unanswered decision expires with none of its effects applied, so
+            // a colony whose only door to growth needs a tap is a colony that
+            // dies every time nobody is watching. This one is the world
+            // deciding, and the player's say over it is upstream — the larder,
+            // the roofs and the mood are what brought them.
+            //
+            // Deterministic: the party's own id seeds the household, so the
+            // same world always takes in the same people (rule 2).
+            var rng = SeededRNG(seed: householdSeed(visitor.id) ^ UInt64(bitPattern: Int64(tick)))
+            var arrived: [String] = []
+            for _ in 0..<VisitorKind.settler.partySize {
+                let pawn = PawnFactory.generate(seed: rng.next(), language: world.language)
+                arrived.append(pawn.name)
+                s.pawns.append(pawn)
+            }
+            let who = arrived.joined(separator: " a ")
+            let whoEN = arrived.joined(separator: " and ")
+            s.journal.append(tick: tick, kind: .arrival, text: LocalizedText(values: [
+                .en: "\(whoEN) came up the road from \(visitor.fromName), heard the place was doing well, and stayed.",
+                .cs: "\(who) přišli po cestě od \(visitor.fromName), slyšeli, že se tu daří, a zůstali."]))
         }
         return s
+    }
+
+    /// A stable stream for the household a settler party turns into.
+    static func householdSeed(_ id: UUID) -> UInt64 {
+        let b = id.uuid
+        var h: UInt64 = UInt64(b.0) << 56 | UInt64(b.1) << 48 | UInt64(b.2) << 40
+            | UInt64(b.3) << 32 | UInt64(b.4) << 24 | UInt64(b.5) << 16
+            | UInt64(b.6) << 8 | UInt64(b.7)
+        h = (h ^ 0x484F_5553_4548_4F4C) &* 0x9E37_79B9_7F4A_7C15
+        return h
     }
 
     static func approachText(kind: VisitorKind, from: String) -> LocalizedText {
@@ -250,6 +377,10 @@ public enum VisitorEngine {
             return LocalizedText(values: [
                 .en: "Somebody is coming up the road.",
                 .cs: "Po cestě někdo přichází."])
+        case .settler:
+            return LocalizedText(values: [
+                .en: "A handcart is coming up the road from \(from), and it is loaded for good.",
+                .cs: "Po cestě od \(from) jede vozík, a je naložený nastálo."])
         }
     }
 

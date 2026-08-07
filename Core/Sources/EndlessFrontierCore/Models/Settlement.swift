@@ -198,6 +198,13 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     /// too sick to farm.
     public var lastOutbreakTick: Int?
 
+    /// People taken off the field when a raid broke, who are not colonists yet.
+    ///
+    /// Kept apart from `pawns` on purpose — see `Captive`. They eat, they do no
+    /// work, and what the colony is like to live in decides whether they come
+    /// round or go over the wall. See `CaptiveEngine`.
+    public var captives: [Captive]
+
     /// The colony's standing orders — trades, rations and who parties may take.
     /// At sixty souls the pawn screen is for looking at somebody; this is how
     /// the town is actually run. See `ColonyPolicy`.
@@ -247,6 +254,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         stockpile: [String: Int] = [:],
         rawProgress: [String: Double] = [:],
         lastBattle: BattleLog? = nil,
+        captives: [Captive] = [],
         policy: ColonyPolicy = ColonyPolicy()
     ) {
         self.id = id
@@ -278,6 +286,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.stockpile = stockpile
         self.rawProgress = rawProgress
         self.lastBattle = lastBattle
+        self.captives = captives
         self.policy = policy
     }
 
@@ -290,7 +299,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         case constructions, constructionSequence, journal, relationships, expeditions
         case tamed
         case stockpile, rawProgress, lastBattle, policy, siege, craftOrders, kitchenProgress
-        case outbreak, lastOutbreakTick
+        case outbreak, lastOutbreakTick, captives
     }
 
     public init(from decoder: Decoder) throws {
@@ -331,6 +340,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         lastBattle = try c.decodeIfPresent(BattleLog.self, forKey: .lastBattle)
         siege = try c.decodeIfPresent(Siege.self, forKey: .siege)
         outbreak = try c.decodeIfPresent(Outbreak.self, forKey: .outbreak)
+        // Every save written before anybody was ever taken alive holds nobody.
+        captives = try c.decodeIfPresent([Captive].self, forKey: .captives) ?? []
         lastOutbreakTick = try c.decodeIfPresent(Int.self, forKey: .lastOutbreakTick)
         craftOrders = try c.decodeIfPresent([CraftOrder].self, forKey: .craftOrders) ?? []
         kitchenProgress = try c.decodeIfPresent(Double.self, forKey: .kitchenProgress) ?? 0

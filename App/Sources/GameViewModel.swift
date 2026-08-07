@@ -191,7 +191,8 @@ final class GameViewModel {
         guard let index = selectedSettlementIndex,
               let running = world.settlements[index].siege else { return false }
         let fought = SiegeEngine.fight(
-            world.settlements[index], to: running.advancedTo + 1, registry: registry)
+            world.settlements[index], to: running.advancedTo + 1, registry: registry,
+            language: world.language)
         world.settlements[index] = fought.settlement
         if let finished = fought.concluded {
             // The neighbours are charged for what the attempt actually cost

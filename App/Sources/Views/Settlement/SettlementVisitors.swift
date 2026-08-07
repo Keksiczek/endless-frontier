@@ -155,6 +155,9 @@ enum SettlementVisitors {
         case .envoy: return Color(red: 0.64, green: 0.60, blue: 0.86)
         case .refugee: return Color(red: 0.70, green: 0.62, blue: 0.58)
         case .wanderer: return Color(red: 0.62, green: 0.74, blue: 0.72)
+        // Warmer than the rest of the road: the one party that is not passing
+        // through, and the only one still on the canvas next season.
+        case .settler: return Color(red: 0.82, green: 0.72, blue: 0.48)
         }
     }
 }

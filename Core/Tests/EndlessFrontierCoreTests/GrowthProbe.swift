@@ -28,7 +28,7 @@ struct GrowthProbe {
         ·   a year is \(registry.config.ticksPerYear) ticks \
         (\(String(format: "%.1f", Double(registry.config.ticksPerYear)
                   * registry.config.realSecondsPerTick / 3600))h real)
-        year   pop  adult  pairs  wed  fert  preg  chance   food   deaths
+        year   pop  adult  pairs  wed  fert  preg  chance   food  came   deaths
         """)
 
         for step in 1...20 {
@@ -79,9 +79,14 @@ struct GrowthProbe {
                 best = max(best, 1 / (PopulationEngine.yearsToConceive * Double(ticksPerYear))
                            * readiness * least * (able[0] + able[1]) / 2 * mood * headroom)
             }
-            print(String(format: "%4d %5d %5d %6d %5d %5d %5d %8.5f %6d   %@",
+            // People the world sent, cumulative. A closed founding party is a
+            // loop with no input from outside itself, and §11.10 measured what
+            // that costs — so this column is the one that decides whether the
+            // curve has a future at all.
+            let came = s.journal.entries.count { $0.kind == .arrival }
+            print(String(format: "%4d %5d %5d %6d %5d %5d %5d %8.5f %6d %5d   %@",
                          step * 10, s.pawns.count, adults, couples, courting,
-                         fertilePairs, pregnant, best, Int(s.storage[.food]), deaths))
+                         fertilePairs, pregnant, best, Int(s.storage[.food]), came, deaths))
         }
         print("──────────────────────────────────────────────────────────────\n")
     }

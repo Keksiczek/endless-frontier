@@ -39,7 +39,8 @@ public enum ActionLoop {
             guard next.siege != nil else { return next }
             // The siege *as it finished*, not as it stood before the last step
             // — the tribe is charged for what the fight actually cost it.
-            let fought = SiegeEngine.fight(next, to: clock.absoluteStep, registry: registry)
+            let fought = SiegeEngine.fight(next, to: clock.absoluteStep, registry: registry,
+                                           language: s.language)
             if let finished = fought.concluded { concluded.append(finished) }
             return fought.settlement
         }

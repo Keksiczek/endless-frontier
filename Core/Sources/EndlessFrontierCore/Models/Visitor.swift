@@ -23,6 +23,14 @@ public enum VisitorKind: String, Codable, Sendable, CaseIterable {
     case refugee
     /// A traveller with nothing to sell and a story worth hearing.
     case wanderer
+    /// A family that heard the place was doing well, and has come to stay.
+    ///
+    /// The only visitor who comes for the colony *itself* rather than out of
+    /// somebody else's politics: no tribe sends them, and what decides whether
+    /// they come at all is what the colony looks like from outside — full
+    /// larder, spare beds, people in good heart. They are also the only kind
+    /// who never leave.
+    case settler
 
     /// How many walk in together.
     public var partySize: Int {
@@ -31,6 +39,10 @@ public enum VisitorKind: String, Codable, Sendable, CaseIterable {
         case .envoy: return 4
         case .refugee: return 3
         case .wanderer: return 1
+        // A household: two who came together, sometimes with a child. Small on
+        // purpose — §11.2 asked for a village you can hold in your head, so
+        // arrivals have to be memorable rather than a faucet.
+        case .settler: return 2
         }
     }
 
@@ -39,6 +51,8 @@ public enum VisitorKind: String, Codable, Sendable, CaseIterable {
     public var hasPackAnimals: Bool {
         switch self {
         case .trader: return true
+        // Everything they own is on the handcart, which is the picture.
+        case .settler: return true
         case .envoy, .refugee, .wanderer: return false
         }
     }
@@ -49,6 +63,7 @@ public enum VisitorKind: String, Codable, Sendable, CaseIterable {
         case .envoy: return LocalizedText(values: [.en: "An envoy", .cs: "Vyslanec"])
         case .refugee: return LocalizedText(values: [.en: "Refugees", .cs: "Uprchlíci"])
         case .wanderer: return LocalizedText(values: [.en: "A wanderer", .cs: "Poutník"])
+        case .settler: return LocalizedText(values: [.en: "Settlers", .cs: "Osadníci"])
         }
     }
 }

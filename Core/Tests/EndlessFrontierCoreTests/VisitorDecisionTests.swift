@@ -78,12 +78,26 @@ struct VisitorDecisionTests {
         #expect(after.pendingEvents.contains { $0.templateID == "visitors_refugees" })
     }
 
-    @Test("A traveller who wants nothing interrupts nobody")
-    func aWandererAsksNothing() throws {
+    /// A traveller used to want nothing, which made them the one visitor who
+    /// could not change anything. Some of them have been walking a long time
+    /// and would rather stop — and a colony that only ever grows out of its own
+    /// cradle decays whatever else is done right (§11.10). So they ask now.
+    @Test("A traveller who has walked far enough asks to stay")
+    func aWandererAsksToStay() throws {
         let reg = try registry()
         let after = run(send(.wanderer, into: world()), registry: reg, ticks: 40)
+        #expect(after.pendingEvents.contains { $0.templateID == "visitors_wanderer" })
+    }
+
+    /// The settler is the one who does *not* ask: an unanswered decision
+    /// expires with none of its effects applied, so a colony whose only door to
+    /// growth needs a tap dies whenever nobody is watching.
+    @Test("A household that has already decided asks nobody")
+    func aSettlerAsksNothing() throws {
+        let reg = try registry()
+        let after = run(send(.settler, into: world()), registry: reg, ticks: 40)
         #expect(after.pendingEvents.isEmpty)
-        #expect(VisitorEngine.decision(for: .wanderer) == nil)
+        #expect(VisitorEngine.decision(for: .settler) == nil)
     }
 
     @Test("The question is asked once, not every tick they stand there")

@@ -38,6 +38,9 @@ public enum TickEngine {
             // people somebody else's bad winter turned out. Same diplomacy,
             // walking in over your own ground.
             s = VisitorEngine.advanceOneTick(s, registry: registry, mapSeed: s.mapSeed)
+            // …and the ones who came to take the place and are still here. They
+            // eat every tick; whether they come round is asked on a cadence.
+            s = CaptiveEngine.advanceOneTick(s, registry: registry, mapSeed: s.mapSeed)
             s.tick += 1
             let scheduled = ScheduledEffectEngine.advanceOneTick(s, registry: registry)
             s = scheduled.state

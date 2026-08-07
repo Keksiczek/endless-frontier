@@ -198,7 +198,8 @@ public enum SiegeEngine {
     /// left holding the state from *before* the last step. That is how the
     /// tribes came to be charged for a fight they had not finished yet.
     public static func fight(
-        _ settlement: Settlement, to absoluteStep: Int, registry: GameDataRegistry
+        _ settlement: Settlement, to absoluteStep: Int, registry: GameDataRegistry,
+        language: GameLanguage = .cs
     ) -> (settlement: Settlement, concluded: Siege?) {
         guard var siege = settlement.siege else { return (settlement, nil) }
         guard absoluteStep > siege.advancedTo else { return (settlement, nil) }
@@ -214,7 +215,7 @@ public enum SiegeEngine {
         s.siege = siege
 
         guard siege.isFinished else { return (s, nil) }
-        return (conclude(s, registry: registry), siege)
+        return (conclude(s, registry: registry, language: language), siege)
     }
 
     /// One step of the fight: people move, and whoever is within reach of
@@ -632,11 +633,18 @@ public enum SiegeEngine {
     /// Settles a finished siege: the dead are buried, the record is written,
     /// and the raiders take home whatever they got past the door with.
     public static func conclude(
-        _ settlement: Settlement, registry: GameDataRegistry
+        _ settlement: Settlement, registry: GameDataRegistry,
+        language: GameLanguage = .cs
     ) -> Settlement {
         guard let siege = settlement.siege, siege.isFinished else { return settlement }
         var s = settlement
         s.siege = nil
+
+        // Whoever went down and did not get back up, if they were people and
+        // there is anywhere to hold them. Taken here rather than during the
+        // fighting for the same reason the dead leave the roster here: while
+        // the line is still swinging, "down" is not yet "captured".
+        s = CaptiveEngine.take(s, siege: siege, registry: registry, language: language)
 
         // The record, sealed. A siege that broke says so as its last beat.
         var moments = siege.moments

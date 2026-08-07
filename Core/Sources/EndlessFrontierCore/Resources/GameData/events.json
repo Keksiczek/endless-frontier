@@ -4207,6 +4207,78 @@
     ]
   },
   {
+    "id": "visitors_wanderer",
+    "type": "opportunity",
+    "name": {
+      "en": "The traveller wants to stay",
+      "cs": "Poutník by zůstal"
+    },
+    "description": {
+      "en": "They told their stories at the fire and did not get up to leave. They know a trade, and they are asking.",
+      "cs": "Vyprávěl u ohně a pak nevstal k odchodu. Umí řemeslo a ptá se."
+    },
+    "narrative_hint": {
+      "en": "the year the traveller stayed",
+      "cs": "rok, kdy poutník zůstal"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval",
+      "early_industrial",
+      "modern",
+      "near_future"
+    ],
+    "weight": 0,
+    "cooldown_ticks": 40,
+    "decision_ticks": 30,
+    "effects": [],
+    "choices": [
+      {
+        "id": "let_them_stay",
+        "label": {
+          "en": "Give them a bed",
+          "cs": "Dát mu lůžko"
+        },
+        "description": {
+          "en": "One more at the table this winter, and a pair of hands that already knows something.",
+          "cs": "V zimě o jedna ústa víc — a ruce, které už něco umí."
+        },
+        "cost": {
+          "food": 12
+        },
+        "effects": [
+          {
+            "type": "add_pawn"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 3
+          }
+        ]
+      },
+      {
+        "id": "send_them_on",
+        "label": {
+          "en": "Wish them well",
+          "cs": "Popřát mu šťastnou cestu"
+        },
+        "description": {
+          "en": "The colony is what it is, and it feeds who it already has.",
+          "cs": "Osada je, jaká je, a živí ty, které už má."
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -2
+          }
+        ]
+      }
+    ]
+  },
+  {
     "id": "visitors_envoy",
     "type": "opportunity",
     "name": {
