@@ -369,8 +369,14 @@ struct SettlementScreen: View {
         let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
                                     time: Date().timeIntervalSinceReferenceDate,
                                     ticksPerYear: game.ticksPerYear)
+        // The job and the plot it names, so the line says the same thing the
+        // figure on the canvas is standing on.
+        let crop = pawn.currentJob?.cropID.flatMap { id in
+            map.crops.first { $0.id == id }
+        }
         return AgentMotion.activityLabel(pose.activity, work: pawn.assignedWork,
-                                         cs: AppStrings.language == .cs)
+                                         cs: AppStrings.language == .cs,
+                                         job: pawn.currentJob, crop: crop)
     }
 
     /// The colonist's bonds, resolved to living names — spouse first, then the

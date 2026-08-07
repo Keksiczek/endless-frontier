@@ -74,13 +74,33 @@ public enum CropSpecies: String, Codable, Sendable, CaseIterable {
         }
     }
 
-    /// Below this, in °C, the crop does not grow at all. Roots take a frost;
+    /// Below this, in °C, the crop starts to struggle. Roots take a frost;
     /// greens do not.
+    ///
+    /// Measured against `Climate`: spring is 11° and autumn 9° on the plains,
+    /// but −2° and −4° on the tundra and 3°/1° in the mountains. So a northern
+    /// valley genuinely cannot grow greens and can grow roots, which is the
+    /// point — and `sown(inPlot:climate:)` is what stops a farm planting the
+    /// thing its own weather will kill.
     public var coldFloor: Double {
         switch self {
         case .roots: return -6
         case .grain: return 0
         case .greens: return 3
+        }
+    }
+
+    /// …and above this it bolts, wilts or simply burns off.
+    ///
+    /// The other half of the same idea, and the half the world was missing:
+    /// summer is 31° on the plains and **42° in the desert**, and nothing
+    /// anywhere read the top of the range. A desert was a hot colour. Greens go
+    /// first, grain stands more, roots sit in the ground and take the most.
+    public var heatCeiling: Double {
+        switch self {
+        case .greens: return 28
+        case .grain: return 34
+        case .roots: return 37
         }
     }
 
@@ -92,15 +112,37 @@ public enum CropSpecies: String, Codable, Sendable, CaseIterable {
         }
     }
 
-    /// What a farm sows in its Nth plot. Grain first and mostly — a colony eats
-    /// bread — with roots and greens filling out the rotation, so a settlement
-    /// with a single farm still has more than one thing on the shelf and its
-    /// cooks have something better than gruel to make.
-    public static func sown(inPlot index: Int) -> CropSpecies {
-        switch index % 4 {
-        case 0, 1: return .grain
-        case 2: return .roots
-        default: return .greens
+    /// What a farm sows in its Nth plot, **given the weather it has**.
+    ///
+    /// Grain first and mostly — a colony eats bread — with roots and greens
+    /// filling out the rotation, so a settlement with a single farm still has
+    /// more than one thing on the shelf and its cooks have something better
+    /// than gruel to make.
+    ///
+    /// The climate is not decoration here. A tundra spring is −2° and its
+    /// autumn −4°, against a greens floor of +3: a fixed rotation put a quarter
+    /// of every northern farm under a crop that grows at an eighth rate and
+    /// dies most years. A desert summer is 42° against a greens ceiling of 28.
+    /// A farm sows what its own land will carry, which is the difference
+    /// between a biome that is a colour and a biome that is a place.
+    public static func sown(inPlot index: Int, climate: Climate = .temperate) -> CropSpecies {
+        let rotation: [CropSpecies] = [.grain, .grain, .roots, .greens]
+        let wanted = rotation[index % rotation.count]
+        guard !wanted.thrives(in: climate) else { return wanted }
+        // Fall back through the rotation to the hardiest thing that will grow
+        // here; if nothing will, sow roots and take what the good years give.
+        return [CropSpecies.roots, .grain, .greens].first { $0.thrives(in: climate) } ?? .roots
+    }
+
+    /// Whether this crop can actually make a season in a given country.
+    ///
+    /// Judged on spring and autumn rather than on the whole year: winter grows
+    /// nothing anywhere, and a crop that only fails in high summer still brings
+    /// in two harvests at the shoulders.
+    public func thrives(in climate: Climate) -> Bool {
+        [Season.spring, .autumn].allSatisfy { season in
+            let t = climate.temperature(season)
+            return t >= coldFloor && t <= heatCeiling
         }
     }
 }
@@ -118,6 +160,15 @@ public struct Crop: Codable, Sendable, Equatable, Identifiable {
     /// The building whose ground this is. A farm that falls down takes its
     /// plots with it.
     public let farmID: UUID
+    /// How much ground this plot covers, in local-map units, from its middle to
+    /// its edge.
+    ///
+    /// Carried on the plot rather than worked out again by whoever draws it:
+    /// the plot's size is a function of the lot it was cut from and how many
+    /// plots that lot holds, and two answers to that would drift the moment a
+    /// footprint changed (rule 8). The renderer asks; it never derives.
+    public let halfWidth: Double
+    public let halfHeight: Double
     /// Ripeness, 0…1. Advanced by the season and the weather, never by the
     /// clock alone — a winter plot genuinely does not grow, which is the whole
     /// reason a granary is worth building.
@@ -127,13 +178,34 @@ public struct Crop: Codable, Sendable, Equatable, Identifiable {
     public var reaped: Double
 
     public init(id: Int, species: CropSpecies, position: LocalPoint, farmID: UUID,
+                halfWidth: Double = 0.012, halfHeight: Double = 0.010,
                 growth: Double = 0, reaped: Double = 0) {
         self.id = id
         self.species = species
         self.position = position
         self.farmID = farmID
+        self.halfWidth = halfWidth
+        self.halfHeight = halfHeight
         self.growth = growth
         self.reaped = reaped
+    }
+
+    // MARK: - Codable (resilient: plots had no size at first)
+
+    private enum CodingKeys: String, CodingKey {
+        case id, species, position, farmID, halfWidth, halfHeight, growth, reaped
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(Int.self, forKey: .id)
+        species = try c.decode(CropSpecies.self, forKey: .species)
+        position = try c.decode(LocalPoint.self, forKey: .position)
+        farmID = try c.decode(UUID.self, forKey: .farmID)
+        halfWidth = try c.decodeIfPresent(Double.self, forKey: .halfWidth) ?? 0.012
+        halfHeight = try c.decodeIfPresent(Double.self, forKey: .halfHeight) ?? 0.010
+        growth = try c.decodeIfPresent(Double.self, forKey: .growth) ?? 0
+        reaped = try c.decodeIfPresent(Double.self, forKey: .reaped) ?? 0
     }
 
     public var isRipe: Bool { growth >= 1 }

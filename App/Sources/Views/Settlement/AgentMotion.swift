@@ -693,7 +693,20 @@ enum AgentMotion {
     }
 
     /// The inspector's "right now" line.
-    static func activityLabel(_ activity: Activity, work: WorkKind, cs: Bool) -> String {
+    ///
+    /// **Reads the job before the trade.** The line used to be a function of
+    /// `(activity, assignedWork)` alone, while `workplace` had already been
+    /// taught to prefer `pawn.currentJob` — so the two disagreed about the same
+    /// colonist. A farmer with no plot to work was *drawn inside the farm
+    /// building* and *described as out in the field*, which is precisely the
+    /// "je uvnitř, píše to venku" Keks reported. A job says what is being done
+    /// and where; when there is one, it is the answer, and the figure standing
+    /// there is standing on it.
+    static func activityLabel(_ activity: Activity, work: WorkKind, cs: Bool,
+                              job: Job? = nil, crop: Crop? = nil) -> String {
+        if activity == .working, let job {
+            return jobLabel(job, crop: crop, cs: cs)
+        }
         switch activity {
         case .sleeping: return cs ? "Spí doma" : "Asleep at home"
         case .atHome: return cs ? "Doma u ohně" : "At home by the fire"
@@ -723,6 +736,43 @@ enum AgentMotion {
             case .garrison: return cs ? "Drží hlídku" : "Standing watch"
             case .idle: return cs ? "Postává na návsi" : "Idling on the green"
             }
+        }
+    }
+
+    /// What the engine has this colonist doing, said out loud.
+    ///
+    /// Every line here names a *thing* — this plot, this fire — because that is
+    /// what a `Job` is. Anything vaguer belongs in `activityLabel`'s fallback,
+    /// which is for colonists the board has not reached yet.
+    static func jobLabel(_ job: Job, crop: Crop?, cs: Bool) -> String {
+        switch job.kind {
+        case .fellTree:
+            return cs ? "Kácí strom" : "Felling a tree"
+        case .quarryRock, .cutStone:
+            return cs ? "Láme kámen ve stěně" : "Breaking stone at the face"
+        case .raiseBuilding:
+            return cs ? "Staví na lešení" : "Up on the scaffolding"
+        case .tendDeposit:
+            return cs ? "Obdělává půdu" : "Working the ground"
+        case .standWatch:
+            return cs ? "Drží hlídku na hradbě" : "Standing watch on the wall"
+        case .stalkAnimal:
+            return cs ? "Stopuje zvěř" : "Stalking game"
+        case .craftItem:
+            return cs ? "Vyrábí u ponku" : "At the bench"
+        case .cookMeal:
+            return cs ? "Vaří u ohně v kuchyni" : "At the fire in the cookhouse"
+        case .workPlot:
+            guard let crop else {
+                return cs ? "Na poli" : "Out in the field"
+            }
+            let what = crop.species.displayName.resolve(cs ? .cs : .en).lowercased()
+            if crop.isRipe {
+                return cs ? "Sklízí \(what)" : "Reaping the \(what)"
+            }
+            let percent = Int((crop.growth * 100).rounded())
+            return cs ? "Obdělává \(what) — \(percent) % zralé"
+                      : "Tending the \(what) — \(percent)% ripe"
         }
     }
 

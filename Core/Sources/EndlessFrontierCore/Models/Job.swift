@@ -49,10 +49,14 @@ public struct Job: Codable, Sendable, Equatable, Identifiable {
     public let rockID: Int?
     public let placementID: UUID?
     public let animalID: UUID?
+    /// The plot of tilled ground this is being done to — *this* furrow, not
+    /// "the farm". Without it a farmer was sent to the farm building and drawn
+    /// standing inside it while the inspector said they were out in the field.
+    public let cropID: Int?
 
     public init(id: UUID, kind: JobKind, position: LocalPoint,
                 treeID: Int? = nil, rockID: Int? = nil, placementID: UUID? = nil,
-                animalID: UUID? = nil) {
+                animalID: UUID? = nil, cropID: Int? = nil) {
         self.id = id
         self.kind = kind
         self.position = position
@@ -60,12 +64,13 @@ public struct Job: Codable, Sendable, Equatable, Identifiable {
         self.rockID = rockID
         self.placementID = placementID
         self.animalID = animalID
+        self.cropID = cropID
     }
 
     // MARK: - Codable (resilient: quarry came before the hunt)
 
     private enum CodingKeys: String, CodingKey {
-        case id, kind, position, treeID, rockID, placementID, animalID
+        case id, kind, position, treeID, rockID, placementID, animalID, cropID
     }
 
     public init(from decoder: Decoder) throws {
@@ -77,6 +82,7 @@ public struct Job: Codable, Sendable, Equatable, Identifiable {
         rockID = try c.decodeIfPresent(Int.self, forKey: .rockID)
         placementID = try c.decodeIfPresent(UUID.self, forKey: .placementID)
         animalID = try c.decodeIfPresent(UUID.self, forKey: .animalID)
+        cropID = try c.decodeIfPresent(Int.self, forKey: .cropID)
     }
 
     public var work: WorkKind { kind.work }
@@ -182,9 +188,26 @@ public enum JobBoard {
             jobs.append(Job(id: jobID("stalk", animal.id), kind: .stalkAnimal,
                             position: animal.position, animalID: animal.id))
         }
-        // Ground that is worked rather than a thing that is taken.
+        // The plots, **ripest first**. A farmer is sent to *this* furrow, and
+        // the one nearest ready to cut is the one worth standing in.
+        //
+        // Posted before the abstract field nodes on purpose: a colony whose
+        // ground is plots must never offer both, or half its farmers would be
+        // sent to a `.field` blob that no longer produces anything and drawn
+        // standing on it — the §9.11 mistake, in the one system that had not
+        // made it yet.
+        for crop in map.crops
+            .filter({ charted($0.position) })
+            .sorted(by: { $0.growth == $1.growth ? $0.id < $1.id : $0.growth > $1.growth }) {
+            jobs.append(Job(id: jobID("plot", crop.id), kind: .workPlot,
+                            position: crop.position, cropID: crop.id))
+        }
+        // Ground that is worked rather than a thing that is taken. Fields drop
+        // out once the colony has plots, exactly as the forest deposit does
+        // once it has trees.
         for node in map.nodes
-        where (node.kind == .field || node.kind == .herbs) && charted(node.position) {
+        where (node.kind == .field || node.kind == .herbs) && charted(node.position)
+            && !FloraEngine.isEntityBacked(node.kind, in: map) {
             jobs.append(Job(id: jobID("tend", node.id), kind: .tendDeposit,
                             position: node.position))
         }
@@ -198,6 +221,11 @@ public enum JobBoard {
         let benchesWanted = Set(settlement.craftOrders
             .filter { !$0.paused }
             .compactMap { registry.recipes[$0.recipeID]?.requiresBuilding })
+        // …and whether there is anything on the shelf worth lighting a fire
+        // for. Unlike the bench, the colony does not have to be *asked*: people
+        // eat every day, so the standing order is "there are ingredients".
+        let kitchensWanted = CookingEngine.foodstuffs(registry)
+            .contains { settlement.stockpile[$0, default: 0] > 0 }
         if let colony = settlement.colony {
             for placement in colony.placements {
                 let position = SettlementGeometry.canvasPoint(for: placement, in: colony)
@@ -213,6 +241,16 @@ public enum JobBoard {
                 if benchesWanted.contains(placement.definitionID) {
                     jobs.append(Job(id: jobID("bench", placement.id),
                                     kind: .craftItem,
+                                    position: position, placementID: placement.id))
+                }
+                // A fire with something to put over it. Same shape as the
+                // bench, and for the same reason: cooking is not a place until
+                // a kitchen with work in it says so, and a cook standing
+                // wherever the day's schedule guessed is a cook the canvas is
+                // making up.
+                if kitchensWanted, registry.building(placement.definitionID)?.work == .cooking {
+                    jobs.append(Job(id: jobID("hearth", placement.id),
+                                    kind: .cookMeal,
                                     position: position, placementID: placement.id))
                 }
             }
@@ -378,9 +416,15 @@ public enum SettlementGeometry {
     /// plots of one farm all standing on the building's pin would be the same
     /// mistake `AgentMotion.WorkSite` was built to fix for its workers.
     public static func canvasPoint(tileX: Int, tileY: Int, in colony: ColonyMap) -> LocalPoint {
+        canvasPoint(tileX: Double(tileX) + 0.5, tileY: Double(tileY) + 0.5, in: colony)
+    }
+
+    /// …and the same in fractions of a tile, for the things that do not sit on
+    /// the grid's own squares. Six plots over a four-wide lot are one and a
+    /// third tiles apart, and rounding that to whole tiles stacks two of them.
+    public static func canvasPoint(tileX: Double, tileY: Double, in colony: ColonyMap) -> LocalPoint {
         let w = Double(max(1, colony.width)), h = Double(max(1, colony.height))
-        let fx = (Double(tileX) + 0.5) / w - 0.5
-        let fy = (Double(tileY) + 0.5) / h - 0.5
-        return LocalPoint(x: heart.x + fx * span, y: heart.y + fy * span)
+        return LocalPoint(x: heart.x + (tileX / w - 0.5) * span,
+                          y: heart.y + (tileY / h - 0.5) * span)
     }
 }

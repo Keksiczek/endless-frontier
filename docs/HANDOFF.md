@@ -1,8 +1,8 @@
-# Handoff — 2026-08-06
+# Handoff — 2026-08-06 (second pass)
 
 Branch **`main`**, clean and pushed.
 
-Tests: **927 Core**, app build and tests green.
+Tests: **932 Core**, app build and tests green.
 
 ```bash
 swift test --package-path Core
@@ -100,14 +100,25 @@ content had to change.
 Still not done, and still wants a phone in hand rather than a probe.
 `realSecondsPerTick` is the knob, `DangerProbe` is the check afterwards.
 
-### 2.2 The plots are not on the canvas yet
+### 2.2 ~~The plots are not on the canvas~~ — done 2026-08-06
 
-The chain runs in the Core and the settlement view does not know about it. A
-farmer walks to the *farm* rather than to this furrow, and there is nothing
-drawn growing on the ground. `JobKind.workPlot` and `.cookMeal` exist and are
-posted by nobody — `JobBoard` is where they go, and `SettlementFlora` is the
-precedent for drawing them. This is the obvious next session: the simulation is
-right and the drawing has not caught up, which is the shape §9.11 warns about.
+`JobBoard` posts `workPlot` and `cookMeal`; `Job.cropID` names the furrow; the
+farmer sent to a plot is the one who reaps it; `SettlementCrops` draws the beds,
+the shoots and a half-cut harvest; and the inspector reads the job rather than
+the trade, so the card says "Tending the grain — 6 % ripe" over a figure
+standing on that plot. See `docs/BACKLOG.md` §10.10.
+
+Verified in the simulator, not only in tests — which is how the first cut was
+caught: the plots were laid out over the farm's whole footprint and every one
+of them was **drawn underneath the building**. They existed, ripened and were
+reaped, invisibly, for a whole build.
+
+### 2.3 Weather, checked — done 2026-08-06
+
+`Climate` was sound; two things read only half of it. Crops had a cold floor and
+no ceiling (a 42° desert summer did nothing), and a farm sowed the same rotation
+on the tundra as on the plains. Both closed — `docs/BACKLOG.md` §10.11 has the
+temperature table.
 
 ---
 
@@ -184,9 +195,15 @@ Run both, every time.
 5. **A trade with no members cannot acquire any** (new rule 17). `rebalance`
    now runs without a policy, which is the only reason cooking ever reaches a
    town where nobody is idle.
-6. **Check the drawing before rebuilding the system** — still true, and the
-   next session is entirely that.
-7. Keks's Mac is an **8 GB Intel** machine; `signal 9` in the asset-catalog step
+6. **Check the drawing before rebuilding the system** — and this time it bit in
+   a new way: the plots were not merely undrawn, they were drawn *underneath*
+   the building that owns them. A thing that renders and is covered looks
+   exactly like a thing that does not render. Screenshot it.
+7. **A `Job` is what somebody is doing; a `WorkKind` is only what they are.**
+   `workplace` reads the job, so anything else that describes a colonist has to
+   read it too or the two will disagree about the same person. That is what
+   "je uvnitř, píše to venku" was.
+8. Keks's Mac is an **8 GB Intel** machine; `signal 9` in the asset-catalog step
    is memory pressure, not the repo. Simulator is **iPhone 17**.
 
 ---

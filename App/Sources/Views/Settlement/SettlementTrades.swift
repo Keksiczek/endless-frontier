@@ -112,19 +112,16 @@ enum SettlementTrades {
         _ seed: UInt64, _ f: Surfaces, _ ctx: inout GraphicsContext
     ) {
         let w = s * 2.0 * aspect
-        // The worked ground, in front of and below the barn.
-        let field = CGRect(x: c.x - w / 2, y: c.y + s * 0.05, width: w, height: s * 0.8)
-        ctx.fill(Path(roundedRect: field, cornerRadius: s * 0.08),
-                 with: .color(f.stone.opacity(0.55)))
-        for row in 0..<5 {
-            let y = field.minY + field.height * (CGFloat(row) + 0.6) / 5
-            let sway = CGFloat(sin(time * 0.6 + Double(row))) * s * 0.012
-            ctx.stroke(Path { p in
-                p.move(to: CGPoint(x: field.minX + s * 0.08, y: y))
-                p.addLine(to: CGPoint(x: field.maxX - s * 0.08, y: y + sway))
-            }, with: .color(Theme.boneDim.opacity(0.35)), lineWidth: 0.6)
-        }
-        // The barn: a wide, low shed with the doors thrown open.
+        // **No field is drawn here.** There used to be one: five ruled rows of
+        // decorative furrow, identical on every farm, that knew nothing about
+        // what was growing. The plots are real now (`Crop`, `FarmEngine`) and
+        // `SettlementCrops` draws them where the simulation put them, so a
+        // painted field beside them would be the same building's ground stated
+        // twice — and the fake one always looked ripe.
+        //
+        // The barn keeps the top of the lot; `FarmEngine.reconcile` lays the
+        // plots out over the rows below it, which is why they are visible at
+        // all: laid over the whole footprint they sat under this glyph.
         let barn = CGRect(x: c.x - w * 0.30, y: c.y - s * 0.85, width: w * 0.60, height: s * 0.9)
         SettlementStructures.groundShadow(at: c, halfWidth: barn.width / 2,
                                           footY: barn.maxY + s * 0.05, context: &ctx)

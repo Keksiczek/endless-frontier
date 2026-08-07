@@ -68,7 +68,9 @@ public enum ExpansionEngine {
         // An outpost arrives with its ground broken, exactly as the capital
         // does — settlers who have to wait a cadence before anything is sown
         // are settlers eating their travelling provisions for nothing.
-        outpost = FarmEngine.reconcile(outpost, registry: registry)
+        outpost = FarmEngine.reconcile(
+            outpost, registry: registry,
+            climate: registry.biome(state.regions[regionIndex].biomeID)?.climate ?? .temperate)
 
         s.settlements.append(outpost)
         s.regions[regionIndex].settlementIDs.append(outpost.id)

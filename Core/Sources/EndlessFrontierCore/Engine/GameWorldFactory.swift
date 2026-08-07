@@ -66,7 +66,9 @@ public enum GameWorldFactory {
         // this the colony's food chain does not start until the first reconcile
         // cadence, and a world the player opens on tick 0 shows a farm with
         // nothing growing on it — which reads as broken rather than as early.
-        settlement = FarmEngine.reconcile(settlement, registry: registry)
+        settlement = FarmEngine.reconcile(
+            settlement, registry: registry,
+            climate: registry.biome(homeland.biomeID)?.climate ?? .temperate)
 
         regions[homelandIndex].settlementIDs = [settlement.id]
 

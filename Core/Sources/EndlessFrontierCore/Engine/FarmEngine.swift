@@ -48,9 +48,9 @@ public enum FarmEngine {
         .spring: 1.0, .summer: 1.3, .autumn: 0.6, .winter: 0
     ]
 
-    /// How far below a crop's cold floor kills its growth outright. Between the
-    /// floor and this it slows; past it, nothing.
-    static let killingFrost: Double = 8
+    /// How far outside a crop's range — frost below, heat above — kills its
+    /// growth outright. Inside this band it slows; past it, nothing at all.
+    static let outsideRange: Double = 8
 
     /// How many mouths one plot of tilled ground feeds, with a season's slack.
     ///
@@ -91,13 +91,12 @@ public enum FarmEngine {
     ) -> Settlement {
         var s = settlement
         if tick % reconcileInterval == 0 {
-            s = reconcile(s, registry: registry)
+            s = reconcile(s, registry: registry, climate: climate)
         }
         guard var map = s.localMap, map.usesEntityFields, !map.crops.isEmpty else { return s }
 
         let season = Season(tick: tick, ticksPerYear: registry.config.ticksPerYear)
         let temperature = climate.temperature(season)
-        let hands = reapingEffort(of: s, registry: registry)
         // What the settlement has made of itself. An agricultural town used to
         // out-grow a balanced one by multiplying `production[.food]` on its
         // farm buildings — and farms stopped having any, so the whole
@@ -116,9 +115,34 @@ public enum FarmEngine {
                                       * bent)
         }
 
-        // The ripe plots, nearest the store first, so a short-handed colony
-        // brings in the harvest it can actually carry rather than spreading
-        // itself over the whole farm and finishing none of it.
+        // **Each farmer reaps the plot they are standing in.**
+        //
+        // The whole point of `JobKind.workPlot`: a farmer the job board sent to
+        // furrow #7 must be the one who cuts furrow #7, or the canvas is
+        // drawing a person at a place where nothing they do is happening. That
+        // was the complaint — "je uvnitř, píše to venku" — and pooling every
+        // farmer's effort over the ripest plots is the version of it that would
+        // have survived posting the jobs.
+        //
+        // What is left over — a farmer with no job yet, an old save, the ticks
+        // before the board's cadence comes round — falls into a pool spent on
+        // the ripe plots nearest the store, so a colony still brings its harvest
+        // in while the board catches up.
+        var byPlot: [Int: Double] = [:]
+        var pooled = 0.0
+        let shut = workFactor(of: s)
+        if shut > 0 {
+            for pawn in s.pawns where pawn.assignedWork == .farming {
+                let hands = effort(of: pawn, registry: registry) * shut
+                guard hands > 0 else { continue }
+                if let job = pawn.currentJob, job.kind == .workPlot, let plot = job.cropID {
+                    byPlot[plot, default: 0] += hands
+                } else {
+                    pooled += hands
+                }
+            }
+        }
+
         let store = HaulEngine.storePosition(s)
         let ripe = map.crops.indices
             .filter { map.crops[$0].isRipe }
@@ -128,23 +152,37 @@ public enum FarmEngine {
                 return a == b ? map.crops[$0].id < map.crops[$1].id : a < b
             }
 
-        var remaining = hands
         var cut: [(itemID: String, amount: Double, at: LocalPoint)] = []
-        for index in ripe where remaining > 0 {
+        func reap(_ index: Int, with hands: Double) -> Double {
             let crop = map.crops[index]
+            guard crop.isRipe, hands > 0 else { return hands }
             let owed = (1 - crop.reaped) * crop.species.reapWork
-            let spent = min(remaining, owed)
-            remaining -= spent
+            let spent = min(hands, owed)
             let reaped = crop.reaped + spent / crop.species.reapWork
             guard reaped >= 1 else {
                 map.crops[index].reaped = reaped
-                continue
+                return hands - spent
             }
             // Off the plot, onto the ground, and the plot is sown again. The
             // ground is permanent; the crop on it is what cycles.
             cut.append((crop.species.itemID, crop.standing, crop.position))
             map.crops[index].reaped = 0
             map.crops[index].growth = 0
+            return hands - spent
+        }
+
+        // Their own furrow first. Effort a farmer puts into a plot that is not
+        // ripe yet is *tending* — it does nothing, and it should not: a plot
+        // is not brought on faster by standing in it.
+        for (plot, hands) in byPlot.sorted(by: { $0.key < $1.key }) {
+            guard let index = map.crops.firstIndex(where: { $0.id == plot }) else {
+                pooled += hands
+                continue
+            }
+            pooled += reap(index, with: hands)
+        }
+        for index in ripe where pooled > 0 {
+            pooled = reap(index, with: pooled)
         }
 
         // Part-units bank against the map exactly as broken rock does
@@ -180,10 +218,14 @@ public enum FarmEngine {
     ) -> Double {
         let bySeason = seasonGrowth[season] ?? 1
         guard bySeason > 0 else { return 0 }
-        let below = species.coldFloor - temperature
-        guard below > 0 else { return bySeason / species.ripenTicks }
-        guard below < killingFrost else { return 0 }
-        return bySeason * (1 - below / killingFrost) / species.ripenTicks
+        // How far outside the crop's range the day is — cold below, heat above.
+        // Heat was missing entirely, and it is why a desert summer of 42° did
+        // nothing to a field of greens whose ceiling is 28.
+        let outside = max(species.coldFloor - temperature,
+                          temperature - species.heatCeiling)
+        guard outside > 0 else { return bySeason / species.ripenTicks }
+        guard outside < outsideRange else { return 0 }
+        return bySeason * (1 - outside / outsideRange) / species.ripenTicks
     }
 
     /// The worker-ticks the colony's farmers put into reaping this tick.
@@ -192,22 +234,37 @@ public enum FarmEngine {
     /// same guards `CraftingEngine.effort` applies, and for the same reason: a
     /// trade is a claim on real people, not a multiplier on a headcount.
     static func reapingEffort(of settlement: Settlement, registry: GameDataRegistry) -> Double {
-        // A strike stops the harvest, and shutting the gates against a sickness
-        // slows it. Both used to reach food through `gatheringFactors`, which
-        // reaping does not go anywhere near — so without this a struck colony
-        // would have gone on bringing the crop in, which is the one thing a
-        // strike is for.
-        guard settlement.strikeTicksRemaining == 0 else { return 0 }
-        let shut = PlagueEngine.workFactor(settlement)
-        let ticksPerYear = registry.config.ticksPerYear
+        let shut = workFactor(of: settlement)
+        guard shut > 0 else { return 0 }
         return shut * settlement.pawns.reduce(0.0) { total, pawn in
-            guard pawn.assignedWork == .farming,
-                  pawn.isAdult(ticksPerYear: ticksPerYear),
-                  !pawn.isBroken, !pawn.isAway, pawn.health > 0 else { return total }
-            let skill = Double(pawn.skill(.farming)) / 20
-            let condition = min(1, max(0.35, pawn.health / 100))
-            return total + (effortPerFarmer + skill * skillEffort) * condition
+            guard pawn.assignedWork == .farming else { return total }
+            return total + effort(of: pawn, registry: registry)
         }
+    }
+
+    /// What one farmer is worth at the harvest this tick.
+    ///
+    /// Zero for anybody who cannot work: broken, away, a child, or too badly
+    /// hurt to stand. The same shape as `CraftingEngine.effort` and
+    /// `CookingEngine.effort` — one idea of what a trained pair of hands is
+    /// worth, in the three places that each need it.
+    static func effort(of pawn: Pawn, registry: GameDataRegistry) -> Double {
+        guard pawn.isAdult(ticksPerYear: registry.config.ticksPerYear),
+              !pawn.isBroken, !pawn.isAway, pawn.health > 0 else { return 0 }
+        let skill = Double(pawn.skill(.farming)) / 20
+        let condition = min(1, max(0.35, pawn.health / 100))
+        return (effortPerFarmer + skill * skillEffort) * condition
+    }
+
+    /// What the colony's own troubles do to the harvest.
+    ///
+    /// A strike stops it outright and shutting the gates against a sickness
+    /// slows it. Both used to reach food through `gatheringFactors`, which
+    /// reaping does not go anywhere near — so without this a struck colony
+    /// would go on bringing the crop in, which is the one thing a strike is for.
+    static func workFactor(of settlement: Settlement) -> Double {
+        guard settlement.strikeTicksRemaining == 0 else { return 0 }
+        return PlagueEngine.workFactor(settlement)
     }
 
     // MARK: - The ground itself
@@ -219,7 +276,8 @@ public enum FarmEngine {
     /// they are — a reconcile in the middle of a growing season must not reset
     /// anybody's harvest.
     public static func reconcile(
-        _ settlement: Settlement, registry: GameDataRegistry
+        _ settlement: Settlement, registry: GameDataRegistry,
+        climate: Climate = .temperate
     ) -> Settlement {
         guard var map = settlement.localMap, let colony = settlement.colony else {
             return settlement
@@ -242,16 +300,31 @@ public enum FarmEngine {
             guard !placement.underConstruction,
                   let def = registry.building(placement.definitionID),
                   def.plots > 0 else { continue }
+            // The plots tile the lot **below the barn**.
+            //
+            // Laid out over the whole footprint at first, which put every plot
+            // squarely underneath the building drawn on top of it — six fields
+            // that existed, ripened, were reaped, and could not be seen. The
+            // top row of the lot is the yard the shed stands in; the rest is
+            // ground under crop, which is what a farm mostly is.
+            let rows = max(1, placement.height - 1)
+            let firstRow = placement.height > 1 ? placement.coord.y + 1 : placement.coord.y
+            let columns = max(1, Int((Double(def.plots) / Double(rows)).rounded(.up)))
+            let tileW = Double(placement.width) / Double(columns)
+            let halfWidth = SettlementGeometry.span * tileW / Double(max(1, colony.width)) * 0.40
+            let halfHeight = SettlementGeometry.span / Double(max(1, colony.height)) * 0.38
             for index in 0..<def.plots {
-                let tile = index * BuildingDefinition.tilesPerPlot
-                let column = placement.coord.x + tile % max(1, placement.width)
-                let row = placement.coord.y + tile / max(1, placement.width)
+                let column = Double(index % columns)
+                let row = Double(min(rows - 1, index / columns))
                 wanted.append(Crop(
                     id: plotID(farm: placement.id, index: index),
-                    species: CropSpecies.sown(inPlot: index),
+                    species: CropSpecies.sown(inPlot: index, climate: climate),
                     position: SettlementGeometry.canvasPoint(
-                        tileX: column, tileY: row, in: colony),
-                    farmID: placement.id))
+                        tileX: Double(placement.coord.x) + (column + 0.5) * tileW,
+                        tileY: Double(firstRow) + row + 0.5,
+                        in: colony),
+                    farmID: placement.id,
+                    halfWidth: halfWidth, halfHeight: halfHeight))
             }
         }
         // Keep what is already growing; the reconcile is about which plots

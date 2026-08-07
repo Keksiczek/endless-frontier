@@ -675,9 +675,71 @@ Five things this turned over, each of which had to be found by running it:
    with no cook eats raw off the shelf at `ErrandEngine.rawFoodValue` — hungry,
    not dead.
 
-Still open: the plots are not drawn on the settlement canvas yet, and there is
-no `JobKind.workPlot` / `.cookMeal` posting, so a farmer walks to the farm
-rather than to *this* furrow. Both are presentation, and both are next.
+### 10.10 — the canvas catches up, and the card stops lying (2026-08-06)
+
+Keks, playing it: *"nesedí popis pawna — je uvnitř, píše to venku. Chci to mít
+přesně: co je v simulaci, to na plátně."*
+
+He was right, and it was two bugs wearing one coat.
+
+**The card and the canvas answered different questions.** `AgentMotion.workplace`
+had been taught to prefer `pawn.currentJob` (§9.11); `activityLabel` had not, and
+still read `(activity, assignedWork)`. A farmer with no plot job was *drawn at a
+spot inside the farm building* and *described as out in the field*. The label
+reads the job now — and names the thing: "Tending the grain — 6 % ripe",
+"Reaping the roots", "At the fire in the cookhouse".
+
+**And there was no field to be in.** `JobBoard` posted nothing for plots or
+kitchens, so no farmer ever *had* a plot job. Now:
+
+| # | Thing | State |
+|---|---|---|
+| 10.10.1 | `JobKind.workPlot` / `.cookMeal` posted, ripest plot first | **done** |
+| 10.10.2 | `Job.cropID` — *this* furrow, not "the farm" | **done** |
+| 10.10.3 | The farmer who was sent to a plot is the one who reaps it | **done** |
+| 10.10.4 | Field nodes retire once a colony has plots (the §9.11 mistake, pre-empted) | **done** |
+| 10.10.5 | `SettlementCrops` — tilled beds, shoots, ears, and a plot half-reaped | **done** |
+| 10.10.6 | The farm glyph's **fake** five-row field, deleted | **done** |
+
+Two things worth keeping from it:
+
+- **The plots were invisible for a whole build**, and existed the entire time.
+  Laid out over the farm's whole footprint, every one of them landed under the
+  building drawn on top of it. `reconcile` gives the barn the lot's top row and
+  the plots the rows below. The same shape as §9.11: the entity layer was right
+  and the drawing put something else in front of it.
+- **The farm was already drawing a field** — five ruled furrows, identical on
+  every farm, always looking ripe, knowing nothing. Two numbers for one thing
+  (rule 8) in the renderer rather than the engine. Deleted; `Crop.halfWidth` /
+  `halfHeight` come off the plot, so the drawing cannot drift from the ground.
+
+### 10.11 — the weather, checked (2026-08-06)
+
+Asked for at the same time. `Climate` is sound — one shift per biome, read by
+people, beasts and the status strip alike — and the seasonal bases reach past
+the comfort bands they are measured against. The table it produces:
+
+```
+biome        shift  spring summer autumn winter
+plains           0      11     31      9    -22
+forest          -2       9     29      7    -24
+desert          11      22     42     20    -11
+tundra         -13      -2     18     -4    -35
+mountains       -8       3     23      1    -30
+coast            4      15     35     13    -18
+```
+
+Two holes, both now closed:
+
+- **Nothing read the top of the range.** Crops had a `coldFloor` and no ceiling,
+  so a desert summer of 42° did nothing at all to a field of greens. There is a
+  `heatCeiling` now (greens 28, grain 34, roots 37) and `growthStep` measures
+  how far outside the range the day is in *either* direction.
+- **A farm sowed the same rotation everywhere.** Tundra spring is −2° and its
+  autumn −4°, against a greens floor of +3 — so a quarter of every northern
+  farm was under a crop that grows at an eighth rate. `CropSpecies.sown(inPlot:
+  climate:)` sows what the land will carry: roots on the tundra, the full
+  rotation at home. A biome that does not change what a farm plants is a colour.
 
 ## 7. The frozen world (2026-08-02) — the biggest thing found so far
 

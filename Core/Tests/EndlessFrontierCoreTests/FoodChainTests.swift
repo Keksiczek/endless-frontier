@@ -33,12 +33,13 @@ struct FoodChainTests {
         // What one plot yields in ingredient units per tick, worked out from
         // the crop table rather than asserted from a constant — so a change to
         // any species' yield or ripening has to keep this true.
-        let rotation = (0..<4).map(CropSpecies.sown(inPlot:))
-        let perGrowthTick = rotation.reduce(0.0) { $0 + $1.yield / $1.ripenTicks }
-            / Double(rotation.count)
-        let seasonAverage = Season.allCases.reduce(0.0) {
-            $0 + (FarmEngine.seasonGrowth[$1] ?? 0)
-        } / Double(Season.allCases.count)
+        let rotation: [CropSpecies] = (0..<4).map { CropSpecies.sown(inPlot: $0) }
+        var rotationTotal = 0.0
+        for species in rotation { rotationTotal += species.yield / species.ripenTicks }
+        let perGrowthTick = rotationTotal / Double(rotation.count)
+        var seasonTotal = 0.0
+        for season in Season.allCases { seasonTotal += FarmEngine.seasonGrowth[season] ?? 0 }
+        let seasonAverage = seasonTotal / Double(Season.allCases.count)
         let unitsPerTick = perGrowthTick * seasonAverage
 
         // …and what a cook gets out of a unit, taken from the leanest meal in
@@ -265,6 +266,78 @@ struct FoodChainTests {
         #expect(FarmEngine.growthStep(.greens, season: .spring, temperature: -20) == 0)
         #expect(FarmEngine.growthStep(.roots, season: .spring, temperature: -5) > 0,
                 "roots take a frost that finishes greens")
+    }
+
+    /// The reachability question for the *top* of the range, which had no
+    /// answer at all: a desert summer is 42° and nothing anywhere read it.
+    @Test("Heat stops a crop as surely as frost")
+    func heatStopsGrowth() throws {
+        let reg = try registry()
+        let desert = try #require(reg.biome("desert")).climate
+        #expect(desert.temperature(.summer) > CropSpecies.greens.heatCeiling,
+                "a desert summer has to reach past a crop's ceiling or the ceiling is decoration")
+        #expect(FarmEngine.growthStep(.greens, season: .summer,
+                                      temperature: desert.temperature(.summer)) == 0)
+        #expect(FarmEngine.growthStep(.roots, season: .summer, temperature: 30) > 0,
+                "roots sit in the ground and take the most")
+    }
+
+    /// A biome that does not change what a farm plants is a colour.
+    @Test("A farm sows what its own country will carry")
+    func sowingFollowsTheClimate() throws {
+        let reg = try registry()
+        let tundra = try #require(reg.biome("tundra")).climate
+        let plains = try #require(reg.biome("plains")).climate
+
+        // Tundra spring is −2° and its autumn −4°, against a greens floor of
+        // +3. A fixed rotation put a quarter of every northern farm under a
+        // crop that grows at an eighth rate.
+        #expect(!CropSpecies.greens.thrives(in: tundra))
+        #expect(CropSpecies.roots.thrives(in: tundra))
+        let north = (0..<8).map { CropSpecies.sown(inPlot: $0, climate: tundra) }
+        #expect(!north.contains(.greens), "nobody plants lettuce on the tundra")
+
+        // …and the ordinary country still gets the ordinary rotation, or the
+        // fallback has quietly become the rule.
+        let home = Set((0..<8).map { CropSpecies.sown(inPlot: $0, climate: plains) })
+        #expect(home == Set(CropSpecies.allCases))
+    }
+
+    @Test("A farmer reaps the plot they were sent to")
+    func theJobIsTheWork() throws {
+        let reg = try registry()
+        var world = GameWorldFactory.newGame(registry: reg, seed: 4242)
+        // Far enough for a crop to have come ripe and the board to have run.
+        world = TickEngine.advance(world, ticks: 400, registry: reg).state
+        let s = world.settlements[0]
+
+        let farmers = s.pawns.filter { $0.assignedWork == .farming }
+        #expect(!farmers.isEmpty)
+        let onPlots = farmers.filter { $0.currentJob?.kind == .workPlot }
+        #expect(!onPlots.isEmpty, "farmers must be sent to a furrow, not to the farm")
+
+        // Every plot job names a plot that is actually on the map — a job
+        // pointing at nothing is a colonist standing on bare ground.
+        let plotIDs = Set((s.localMap?.crops ?? []).map(\.id))
+        for pawn in onPlots {
+            let crop = try #require(pawn.currentJob?.cropID)
+            #expect(plotIDs.contains(crop))
+            let plot = try #require(s.localMap?.crops.first { $0.id == crop })
+            #expect(SiegeField.distance(plot.position, pawn.currentJob!.position) < 0.001,
+                    "the job is at the furrow, so the figure drawn there is standing on it")
+        }
+    }
+
+    @Test("A colony with plots is never offered its old field blobs")
+    func plotsRetireTheFieldNodes() throws {
+        let reg = try registry()
+        let s = GameWorldFactory.newGame(registry: reg, seed: 4242).settlements[0]
+        let jobs = JobBoard.post(for: s, registry: reg)
+        #expect(jobs.contains { $0.kind == .workPlot })
+        // §9.11's mistake, in the one system that had not made it yet: half the
+        // farmers sent to an abstract blob that no longer produces anything.
+        let fieldNodes = Set((s.localMap?.nodes ?? []).filter { $0.kind == .field }.map(\.position.x))
+        #expect(!jobs.contains { $0.kind == .tendDeposit && fieldNodes.contains($0.position.x) })
     }
 
     @Test("Cooks use up what there is most of")
