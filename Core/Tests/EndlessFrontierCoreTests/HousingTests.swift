@@ -37,6 +37,13 @@ struct HousingTests {
         let reg = try GameDataRegistry.bundled()
         // Very fertile founders + two years of ticks → at least one birth.
         var world = WorldState(settlements: [settlement(pop: 10, huts: 1, fertility: 1.0)])
+        // Paired off, because a child comes from a couple now rather than from
+        // a birth rate every colonist rolls privately.
+        let souls = world.settlements[0].pawns
+        world.settlements[0].relationships = stride(from: 0, to: souls.count - 1, by: 2).map {
+            Relationship(between: souls[$0].id, and: souls[$0 + 1].id,
+                         kind: .partner, strength: 90)
+        }
         world = TickEngine.advance(world, ticks: 200, registry: reg).state
         #expect(world.settlements[0].population > 10)
         #expect(world.settlements[0].pawns.contains { $0.age < 200 })   // an actual newborn

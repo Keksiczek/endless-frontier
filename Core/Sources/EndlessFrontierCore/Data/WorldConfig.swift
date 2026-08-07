@@ -128,9 +128,24 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     public var cityUpgradeStability: Double
     public var isolationStabilityPenalty: Double
 
+    /// Mirrors `world-config.json`, which wins at runtime. Two numbers for one
+    /// thing on purpose (rule 8 has an exception here): the JSON is the tuning
+    /// surface and this is what a registry built with no data falls back to, so
+    /// they have to be edited together.
     public static let `default` = WorldConfig(
-        realSecondsPerTick: 60,
-        maxOfflineTicks: 43_200,
+        // A tick is two real minutes, not one.
+        //
+        // The pace lever, and the only one that moves nothing else: every rate
+        // in the game is per *tick*, so doubling this halves how fast the world
+        // runs in real time and leaves every balance number exactly where it
+        // was. A year is two hours now rather than one, which is the difference
+        // between a colonist you watch grow up and a number that ages while you
+        // are reading the card.
+        realSecondsPerTick: 120,
+        // Halved with it, so the catch-up ceiling stays the same **thirty days**
+        // it was. This is the pair rule 6 keeps catching: a cap expressed in
+        // ticks silently doubles in wall-clock time the moment a tick does.
+        maxOfflineTicks: 21_600,
         plannerInterval: 30,
         ticksPerYear: 60,
         seasonFoodYield: [1.0, 1.5, 0.8, 0.3],

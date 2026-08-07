@@ -166,23 +166,30 @@ public enum GameWorldFactory {
     private static func starterPawns(seed: UInt64) -> [Pawn] {
         var rng = SeededRNG(seed: seed ^ 0xF0_0D_CAFE)
         var idRNG = SeededRNG(seed: seed ^ 0xFACE_0FF)
+        // **Different ages.** `Pawn.defaultAdultAgeTicks` is twenty-five, so a
+        // founding party that states no age is five people who are all exactly
+        // twenty-five — and who therefore leave the fertile window in the same
+        // year. Measured: the colony had one childbearing couple at a time for
+        // two centuries and never grew past fourteen. A party that arrives with
+        // a spread of ages has a spread of futures.
+        func years(_ n: Int) -> Int { n * 60 }
         let named = [
             Pawn(id: idRNG.nextUUID(),
                  name: "Mara", trait: .hardWorker, skills: [.farming: 8, .logging: 4],
-                 assignedWork: .farming, genes: .founder(using: &rng)),
+                 assignedWork: .farming, age: years(22), genes: .founder(using: &rng)),
             Pawn(id: idRNG.nextUUID(),
                  name: "Joss", trait: .optimist, skills: [.logging: 7, .mining: 5],
-                 assignedWork: .logging, genes: .founder(using: &rng)),
+                 assignedWork: .logging, age: years(25), genes: .founder(using: &rng)),
             Pawn(id: idRNG.nextUUID(),
                  name: "Eli", trait: .none, skills: [.research: 6, .trade: 3],
-                 assignedWork: .research, genes: .founder(using: &rng)),
+                 assignedWork: .research, age: years(28), genes: .founder(using: &rng)),
             // Someone has to walk out and look. Without a scout on day one the
             // valley stays the circle it was born with: `chartGround` needs at
             // least one, and `LaborEngine`'s 5% share is the last quota filled,
             // so at founding size it never was.
             Pawn(id: idRNG.nextUUID(),
                  name: "Nadia", trait: .pessimist, skills: [.scouting: 6, .trade: 5],
-                 assignedWork: .scouting, genes: .founder(using: &rng)),
+                 assignedWork: .scouting, age: years(18), genes: .founder(using: &rng)),
             // And someone who can cook, for exactly the reason Nadia is here.
             // `ColonyBuilder.autoAssign` only ever seats a colonist at a
             // building matching the trade they *already* hold, so a cookhouse
@@ -193,9 +200,17 @@ public enum GameWorldFactory {
             // of grain on the shelf and a larder at zero the whole time.
             Pawn(id: idRNG.nextUUID(),
                  name: "Osk", trait: .none, skills: [.cooking: 7, .farming: 4],
-                 assignedWork: .cooking, genes: .founder(using: &rng))
+                 assignedWork: .cooking, age: years(23), genes: .founder(using: &rng))
         ]
-        let settlers = (0..<14).map { PawnFactory.generate(seed: rng.next() &+ UInt64($0)) }
+        // **Two, not fourteen.**
+        //
+        // A colony that arrives nineteen strong is a colony you meet as a
+        // crowd: by year ten it was twenty-nine people and nobody in it was
+        // anybody. Five named founders and a couple who came with them is a
+        // party you can hold in your head, and it is what "starting from zero"
+        // has to mean if the first decade is going to be about *people* rather
+        // than about a headcount going up.
+        let settlers = (0..<7).map { PawnFactory.generate(seed: rng.next() &+ UInt64($0)) }
         return named + settlers
     }
 }

@@ -1,7 +1,7 @@
 {
   "tick": {
-    "realSecondsPerTick": 60,
-    "maxOfflineTicks": 43200,
+    "realSecondsPerTick": 120,
+    "maxOfflineTicks": 21600,
     "plannerInterval": 30
   },
   "calendar": {

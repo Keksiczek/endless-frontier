@@ -741,6 +741,187 @@ Two holes, both now closed:
   climate:)` sows what the land will carry: roots on the tundra, the full
   rotation at home. A biome that does not change what a farm plants is a colour.
 
+## 11. Asked for 2026-08-07 — a village you know, at a pace you can watch
+
+| # | Thing | State |
+|---|---|---|
+| 11.1 | **Slow the game down** (was §10.6) | **done** — 11.4 |
+| 11.2 | **Fewer colonists**, so you have a bond with each one; grow gradually from nothing | **done** — 11.4 |
+| 11.3 | **The map does not look like a map.** The tiles on the world map read as nothing — not terrain, not country, not a place | todo — 11.5 |
+| 11.4 | **Battle and attacks** are to be reworked again | todo — 11.6 |
+
+### 11.4 — the pace and the size of a colony, as built
+
+Two complaints and one cause: *"začíná se od nuly"* was not true. A colony
+arrived **nineteen strong** and was twenty-nine people by year ten, so the first
+decade — the only decade in which you can hold everybody in your head — was
+already a crowd. And a year went by in an hour of real time, so the people in it
+aged while you were reading their card.
+
+Three numbers, and it is worth saying which does what, because they were all
+being asked to do the same job and none of them could:
+
+- **`realSecondsPerTick` 60 → 120.** The pace lever, and the only one that moves
+  nothing else: every rate in the game is per *tick*, so this halves how fast the
+  world runs in real time and leaves every balance number exactly where it was. A
+  year is two hours now. `maxOfflineTicks` halved with it, or the thirty-day
+  catch-up ceiling would silently have become sixty (rule 6, in its quietest
+  form: a cap in ticks is a cap in wall-clock time only until a tick changes).
+- **The founding party 19 → 7** — five named founders and the two who came with
+  them. This is most of the fix. It is the difference between meeting a colony
+  and meeting a crowd.
+- **`sleepersPerTile` 3 → 2.** A colony of thirty-seven had *a hundred and
+  forty-seven beds standing empty*, so housing was never a claim on anything and
+  `headroomFactor` — which is supposed to bend the growth curve as the roofs
+  fill — never had anything to bend against. A hut is a household of eight now.
+
+And one that had to be measured rather than reasoned about. **`baseBirthChancePerTick`
+0.0018 → 0.0016**, not the 0.0012 the first cut used: at a third off the colony
+was *below replacement*, peaked at 51 in year 90 and then fell to 19 with the
+granary at zero by year 140. Births and old age are both per-capita, so their
+ratio does not depend on the population — there is no self-correcting
+equilibrium, only growth or collapse, and the only thing that damps it is
+housing. A birth rate is therefore not a "size" knob, and treating it as one
+buys a colony that dies quietly two centuries in.
+
+Measured, seed 4242, same probe (`GrowthProbe`, `EF_PROBE=1`):
+
+```
+            before                  after
+year 0        19                      7
+year 10       29                     14
+year 20       37                     25
+year 50       52                     41
+year 100      76                     48
+year 200      81  (peak 95)          72  (peak 88)
+starvation     5                      0
+```
+
+The first fifty years are a village and they take a hundred real hours to live
+through, which is the whole of what was asked for.
+
+### 11.7 — children come from bonds, not from a birth rate (2026-08-07)
+
+Keks: *"ideálně by nemusela být porodnost, protože děti se budou rodit, když se
+dva osadníci budou mít rádi… ať je to sociálními vazbami a simulací, ne
+koeficientem."* And, on the fragility that came with it: *"líbí se mi, že to může
+failnout na základě nějakého RNG… takovéto stavy jsou ok."*
+
+Every fertile colonist used to roll a private dice each tick, and being married
+multiplied it by 1.6 — so two people who had never met had children at nearly the
+rate of two who had spent a life together. The roll is on the **bond** now:
+`PopulationEngine.conceive` walks the `.partner` relationships, and a couple's
+chance is their bond's strength, both their fertilities and both their moods. A
+child takes after **both** parents (`Genes.blended`), and the bond remembers when
+it last had one (`Relationship.lastChildTick`), which is what spaces a family.
+
+Fertility is a person's own, not a shared window: `fertilityAt` runs from
+`17 − gene×2` to `40 + gene×12` and **tapers over the last quarter** rather than
+ending on a birthday.
+
+What this cost, in the order it was found — every one of them a hard cliff that
+only showed up as "the colony is gone by year 130":
+
+1. **Everyone in the founding party was exactly twenty-five.**
+   `Pawn.defaultAdultAgeTicks` is 25 years and the five named founders stated no
+   age, so they left the fertile window in the same year.
+2. **A founding party of 16–40 is too old to found anything.** A bond takes years
+   of meeting to reach the wedding threshold, so somebody who lands at 38 marries
+   at 44 and is past it. Measured: four married couples, not one of them able to
+   have children, colony gone by year 70. Founders are 18–28 now and
+   `PawnFactory` generates 16–30.
+3. **Weddings *are* the growth curve now**, so 0.10 a meeting was a bachelor camp.
+   0.22, and the age gap narrowed to 12 so couples stay fertile *together*.
+4. **The era ladder was gated on populations this colony will never see** —
+   `ancient` wanted 60 people against a village of eighteen. Rescaled
+   (60/200/600/1500/4000 → 18/45/110/260/600). Rule 6, in the place it always
+   hides: a threshold nobody re-checked after the thing it measures changed
+   scale.
+
+5. **The biggest one, and rule 6 again: friendships could not reach the wedding
+   threshold at all.** `SocialEngine` ran *one encounter per ten colonists* per
+   tick, while the pairs who might meet grow with the square of the population
+   and `decayPerTick` eats every bond at the same rate whatever the size. In a
+   village of seventeen a given two people met once every two and a third years
+   and gained about two points net — **forty-five years to reach a wedding**,
+   which is to say never. Every marriage in the colony was made in its first
+   fifteen years, by the founders, and nobody born after year twenty ever
+   married. One encounter per **two** colonists: a courtship is a couple of
+   years, and it stays a couple of years as the town grows.
+
+   This is the shape rule 6 keeps producing and it is worth naming in its social
+   form: *a rate that is linear in population against an opportunity space that
+   is quadratic in it is a rate that shrinks as the world succeeds.*
+
+   It had a tail, and the test that caught it was asking the right question:
+   five times the meetings at the same journal odds is five times the small
+   talk, and a **wedding** was pushed out of the diary's buffer inside six
+   hundred ticks. `chatJournalChance` and `quarrelJournalChance` cut by five.
+   Anything that changes how often a thing *happens* has to change how often it
+   is *written down*, or the journal stops being a chronicle and becomes a feed.
+
+6. **The wedding age-gap rule went away** (Keks: *"to pravidlo nedává moc
+   smysl"*). It existed to stop marriages that could not have children, and
+   `fertilityAt` says that far better now — an older pair simply have few
+   children rather than being forbidden a marriage. Two rules for one fact, and
+   the blunter one was also the one stopping people marrying.
+
+7. **So did the population gates on the eras** (same message). Progress is
+   tech, prosperity and settlements now: things a player acts on, rather than a
+   headcount a village will never reach.
+
+Where it landed, seed 4242, 200 years: founded 12, **31 by year fifty**, then a
+long decline to six. The social layer is no longer the limiter — nine couples,
+four to six of them fertile, a real chance every tick.
+
+**The new limiter is food, and it is measured: 17 dead of starvation against 37
+of old age, with the granary at zero for eight of the twenty decades.** This is
+*not* the famine §10.8 fixed — that was a colony of three hundred outgrowing its
+fields. This is a colony of ten to twenty-five that cannot keep a *cook*:
+`LaborEngine`'s 0.07 share of a dozen adults is less than one person, so a
+village that loses its cook eats raw off the shelf (`ErrandEngine.rawFoodValue`)
+until it starves. The whole labour quota table is shares of a workforce that used
+to be eighty and is now twenty, and every trade in it needs re-checking against
+the number of people who actually exist. First thing next session.
+
+### 11.8 — the weather has to be alive too
+
+Keks, immediately after: *"stejně tak počasí atd, vše bude proměnlivé, ne pevně
+dané, dynamické dle simulace."*
+
+Today `Climate.base(season)` is four constants and a per-biome shift, so every
+spring in a colony's life is exactly 11 °C. It is *consistent* and it is not
+*weather*. What it wants, in the same shape everything else in this project has
+moved to: a temperature that wanders around the season's mean, years that are
+harder or milder than usual, and the odd winter people still talk about — all
+derived from `(mapSeed, tick)` so it stays deterministic and replayable.
+
+Not started. Worth doing right after the map, because the crops, the comfort
+bands, the animals and the status strip all already read `Climate` — there is
+one place to change and five things that would come alive from it.
+
+### 11.5 — the map does not look like a map
+
+Keks, playing it: *"tiles na mapě nevypadají vůbec jako mapa"*.
+
+Not yet diagnosed, and worth diagnosing before touching: the world map
+(`WorldMapScreen`, hex `Region`s) and the settlement ground (`SettlementGround`,
+`LocalTerrain`) are two different tilings with two different problems, and the
+complaint does not say which. Whichever it is, the shape to look for is the one
+this project keeps producing — a field drawn from noise that reads as *pattern*
+rather than as *country*, because the noise is isotropic and the land is not.
+Rule 10 and 10b are both about exactly this, and both were found in the ground
+layer. Start by screenshotting each at three zooms.
+
+### 11.6 — battle and attacks, again
+
+Flagged, not specified. `SiegeEngine` moves real fighters at real positions and
+`SettlementBattle` draws blows between the two bodies that are touching, so the
+mechanism is sound; what is being asked for is a different *feel*, and that wants
+Keks to say what is wrong with the current one before anything is rebuilt. Do not
+start from the numbers — §8.1 is two sessions of evidence that tuning a shape
+nobody wants is work thrown away.
+
 ## 7. The frozen world (2026-08-02) — the biggest thing found so far
 
 Measured on a fresh world, twelve thousand ticks, nobody touching it:
@@ -892,6 +1073,33 @@ Every one of them has cost a session at least once:
    what bounds the number of entities, and what happens to the colony when that
    number is at its maximum? If the answer is "it dies quietly", the roll
    belongs on the colony, asked once.
+20. **A rate that is linear in population, against an opportunity space that is
+   quadratic in it, shrinks as the world succeeds.** Rule 6's social form, and
+   the one that hid longest: `SocialEngine` held one encounter per ten
+   colonists per tick while the *pairs* who could meet grow as n². So a bond in
+   a village of seventeen gained two points every two years against a decay
+   that never slowed — forty-five years to a wedding, and every marriage in the
+   colony's history made in its first fifteen years. Ask of any per-tick
+   opportunity: how many *pairs*, *sites* or *combinations* is it being spread
+   over, and does that grow faster than the rate does?
+18. **What is in the simulation is on the canvas.** Keks's standing rule, given
+   twice now (2026-08-06, 2026-08-07). Not "the canvas looks plausible" — the
+   canvas shows *the thing the engine is doing*, and anything that describes a
+   colonist reads the same source the drawing does. The two ways this breaks:
+   a value the renderer invents beside one the engine owns (the farm's painted
+   furrows next to real plots; five ruled rows that always looked ripe), and two
+   readers of the same colonist answering from different fields (`workplace`
+   reading `currentJob` while `activityLabel` read `assignedWork` — "je uvnitř,
+   píše to venku"). Before adding any drawing, ask what in the Core it is a
+   picture *of*; if the answer is "nothing", that is the bug.
+19. **A birth rate is not a population knob.** Births and deaths are both
+   per-capita, so their ratio is independent of how many people there are:
+   there is no equilibrium population, only growth or collapse, and the only
+   thing that bends the curve is housing (`headroomFactor`). Cutting births to
+   make a colony "smaller" bought a colony that peaked at 51 and was dying at
+   19 with an empty granary a century later. Size comes from the roofs; pace
+   comes from `realSecondsPerTick`; the birth rate only decides whether the
+   place has a future.
 16. **An income is not a store, and a council that watches the store builds too
    late.** The larder being full says nothing about whether the fields can fill
    it again next year. Anything that raises capacity — farms, beds, storage —

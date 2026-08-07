@@ -11,9 +11,24 @@ import Foundation
 ///
 /// Deterministic: every roll comes from `(mapSeed, settlement.id, tick)`.
 public enum SocialEngine {
-    // How often colonists cross paths: one encounter per this many colonists
-    // per tick (at least one for any inhabited settlement).
-    static let colonistsPerEncounter = 10
+    /// How often colonists cross paths: one encounter per this many colonists
+    /// per tick (at least one for any inhabited settlement).
+    ///
+    /// **Two, not ten**, and this is rule 6 in the social layer. Encounters grow
+    /// with the *population* while the pairs who could meet grow with its
+    /// square, so a bigger colony means any given two people meet less often —
+    /// while `decayPerTick` eats their bond at the same rate regardless. At one
+    /// encounter per ten colonists a friendship in a village of seventeen
+    /// gained about two points a meeting and met every two and a third years:
+    /// **forty-five years to reach the wedding threshold**, which is to say
+    /// never. Measured consequence, once children came from marriages: five
+    /// couples, all of them the original founders, no one born after year
+    /// twenty ever married, and the colony gone by year 130.
+    ///
+    /// At two, a courtship is a couple of years and it *stays* a couple of
+    /// years as the town grows, which is what the rule asks: the rate has to be
+    /// able to reach the threshold from every size the thing can be.
+    static let colonistsPerEncounter = 2
     // What an encounter does to the recreation need.
     static let chatRecreation = 3.0
     static let quarrelRecreation = -6.0
@@ -28,18 +43,40 @@ public enum SocialEngine {
     static let maxRelationsPerPawn = 5
     // Quarrels and weddings.
     static let baseQuarrelChance = 0.16
-    static let weddingChance = 0.10
+    /// How readily two close friends with free hearts marry, per meeting.
+    ///
+    /// Raised from 0.10 when children stopped coming from a birth rate and
+    /// started coming from marriages (`PopulationEngine.conceive`). At a tenth
+    /// a village of thirteen made roughly one couple a decade, which is not a
+    /// colony — it is a bachelor camp that dies of old age, measured, in a
+    /// hundred and thirty years. Weddings *are* the growth curve now, so they
+    /// have to happen at the rate a colony's future depends on.
+    static let weddingChance = 0.22
     static let weddingMinStrength = 45.0
-    static let weddingMaxAgeGapYears = 14
+    // **No age-gap rule.** Two people who are close enough to marry, marry.
+    //
+    // There used to be one — no wedding across more than fourteen years — and
+    // it was doing a job that belongs somewhere else. The thing it was really
+    // guarding against is a couple who cannot have children, and
+    // `PopulationEngine.fertilityAt` says that far better: fertility now tapers
+    // with age, per person, so an older pair simply have few children rather
+    // than being forbidden a marriage. Two rules for one fact, and the blunter
+    // one was also the one that stopped people marrying at all.
     // Grief only strikes for bonds that meant something.
     static let griefMinStrength = 35.0
     // How much of colonist chatter makes the journal — most of it stays
     // between the two of them, or the diary would drown in small talk.
-    static let chatJournalChance = 0.10
+    static let chatJournalChance = 0.02
+    // Both cut by five when `colonistsPerEncounter` went from ten to two: five
+    // times the meetings at the same journal odds is five times the small talk,
+    // and the page filled with "so-and-so chatted" until a **wedding** was
+    // pushed out of the buffer inside six hundred ticks. Caught by the test
+    // that asks whether a wedding makes the diary — which is the right thing to
+    // have been asking.
     // And even less of the quarrelling. A friendship breaking always earns a
     // line, but a routine spat only rarely — otherwise the page fills with
     // "so-and-so quarrelled" and drowns out births, deaths, raids and roofs.
-    static let quarrelJournalChance = 0.06
+    static let quarrelJournalChance = 0.012
 
     /// Where a chat happens — journal flavour.
     static let chatSpots: [LocalizedText] = [
@@ -219,7 +256,6 @@ public enum SocialEngine {
         let adultAgeTicks = Pawn.adultAgeYears * ticksPerYear
         guard s.relationships[bondIndex].strength >= weddingMinStrength,
               first.age >= adultAgeTicks, second.age >= adultAgeTicks,
-              abs(first.age - second.age) <= weddingMaxAgeGapYears * ticksPerYear,
               s.partnerID(of: first.id) == nil, s.partnerID(of: second.id) == nil,
               rng.nextUnit() < weddingChance else { return s }
 

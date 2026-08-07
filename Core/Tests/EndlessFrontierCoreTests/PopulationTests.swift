@@ -49,7 +49,16 @@ struct PopulationTests {
                  name: "F\(i)", mood: 90, genes: Genes(fertility: 1.0))
         }
         // Housing: base 30 → 10 pawns have headroom.
+        //
+        // …and they have to be **married**. Children come out of a bond now
+        // (`PopulationEngine.conceive`), not out of a per-colonist birth rate,
+        // so ten strangers under one roof conceive nothing however fertile they
+        // are — which is the point of the change and is worth a test saying so.
         var s = village(fertile)
+        s.relationships = stride(from: 0, to: fertile.count - 1, by: 2).map {
+            Relationship(between: fertile[$0].id, and: fertile[$0 + 1].id,
+                         kind: .partner, strength: 90)
+        }
         var conceived = false
         for tick in 0..<200 {
             s = PopulationEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: 3)

@@ -113,9 +113,13 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
 
     // MARK: - How many people actually live here
 
-    /// How many sleepers one tile of a dwelling takes. Three, so a two-by-two
-    /// cabin is a household of a dozen rather than a bunkhouse.
-    public static let sleepersPerTile = 3
+    /// How many sleepers one tile of a dwelling takes.
+    ///
+    /// Two, not three. At three a two-by-two cabin slept a dozen, and a colony
+    /// of thirty-seven had a hundred and forty-seven beds standing empty — so
+    /// housing was never a claim on anything and the growth curve never bent.
+    /// Two makes a hut a household of eight and gives the beds back their say.
+    public static let sleepersPerTile = 2
 
     /// How many people this building **houses** — derived from the ground it
     /// covers and the storeys it stacks on it.

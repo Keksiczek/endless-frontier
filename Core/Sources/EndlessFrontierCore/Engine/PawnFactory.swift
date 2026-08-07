@@ -21,7 +21,15 @@ public enum PawnFactory {
         let works = WorkKind.allCases.filter { $0 != .idle }
         let work = works[Int(rng.next() % UInt64(works.count))]
         let skillLevel = 3 + Int(rng.next() % 8)   // 3…10
-        let ageYears = 16 + Int(rng.next() % 25)   // 16…40
+        // 16…30, not 16…40.
+        //
+        // A party that sails out to found a colony is young — and it has to be,
+        // now that children come from marriages rather than from a birth rate:
+        // a bond takes years of meeting to reach the wedding threshold, so
+        // somebody who lands at thirty-eight is married at forty-four and past
+        // it. Measured with the old spread: four married couples, not one of
+        // them able to have children, and the colony gone by year seventy.
+        let ageYears = 16 + Int(rng.next() % 15)   // 16…30
         return Pawn(
             id: rng.nextUUID(),
             name: name,

@@ -36,6 +36,22 @@ public struct Genes: Codable, Sendable, Equatable {
         )
     }
 
+    /// Both lines, before the drift.
+    ///
+    /// A child used to be a mutated copy of whichever parent carried it, so the
+    /// other one contributed nothing at all — two people had a baby and only one
+    /// of them was in it. The midpoint is the plainest honest answer, and it
+    /// makes the chronicle's gene drift a story about the colony rather than
+    /// about a single bloodline.
+    public func blended(with other: Genes) -> Genes {
+        Genes(
+            industry: (industry + other.industry) / 2,
+            fertility: (fertility + other.fertility) / 2,
+            sociability: (sociability + other.sociability) / 2,
+            courage: (courage + other.courage) / 2
+        )
+    }
+
     /// The genes a child inherits: each trait drifts by up to ±`spread`.
     public func mutated(using rng: inout SeededRNG, spread: Double = 0.09) -> Genes {
         func drift(_ value: Double) -> Double {

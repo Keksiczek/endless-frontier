@@ -70,11 +70,17 @@ endless-frontier/
 
 Endless Frontier **V2** merges the original deterministic colony sim with the
 living-world and social systems of a Czech HTML civilisation sim. All V2 phases
-(A–F) are complete. Current: **536 Core tests green** (`cd Core && swift test`),
+(A–F) are complete. Current: **933 Core tests green** (`cd Core && swift test`),
 iOS build green.
 
 What the game is now:
 
+- **A colony starts at seven and grows into a village.** Five named founders
+  and two who came with them; a tick is two real minutes, so a year is two
+  hours and the first fifty years — the ones where you know everybody — are
+  a hundred hours of play. Size comes from the roofs (`headroomFactor` against
+  housing), pace comes from `realSecondsPerTick`, and the birth rate only
+  decides whether the place has a future. Measured by `GrowthProbe`.
 - **Every inhabitant is a pawn** with genes (industry/fertility/sociability/
   courage), age, wealth and a life cycle — births mutate genes, so natural
   selection is visible in the chronicle. `Settlement.population` is *derived*

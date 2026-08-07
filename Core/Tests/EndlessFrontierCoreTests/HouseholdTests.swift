@@ -86,9 +86,13 @@ struct HouseholdTests {
     @Test("Everyone who can have a home gets one, and no house is overfilled")
     func homesAreHandedOut() {
         let reg = registry()
-        let housed = HouseholdEngine.assignHomes(town(huts: 3, souls: 8), registry: reg)
-        // Three huts at four beds apiece: everyone is in.
-        #expect(HouseholdEngine.homeless(housed) == 0)
+        // Three one-tile huts, sized off the constant rather than restating it:
+        // a test that hardcodes "four beds apiece" fails the day a household
+        // changes size, and says nothing about what actually broke.
+        let souls = 3 * BuildingDefinition.sleepersPerTile
+        let housed = HouseholdEngine.assignHomes(
+            town(huts: 3, souls: souls), registry: reg)
+        #expect(HouseholdEngine.homeless(housed) == 0, "three huts hold three huts' worth")
         var perHome: [UUID: Int] = [:]
         for pawn in housed.pawns {
             guard let home = pawn.homeID else { continue }
@@ -118,13 +122,16 @@ struct HouseholdTests {
     @Test("A house pulled down turns its household out, and they find another")
     func aLostHouseRehomesItsPeople() {
         let reg = registry()
-        var housed = HouseholdEngine.assignHomes(town(huts: 3, souls: 6), registry: reg)
+        // Sized so that losing one of the three huts still leaves room for
+        // everybody — the test is about rehoming, not about overcrowding.
+        var housed = HouseholdEngine.assignHomes(
+            town(huts: 3, souls: 2 * BuildingDefinition.sleepersPerTile), registry: reg)
         let lost = housed.pawns[0].homeID
         #expect(lost != nil)
         housed.colony?.placements.removeAll { $0.id == lost }
         let after = HouseholdEngine.assignHomes(housed, registry: reg)
         #expect(after.pawns.allSatisfy { $0.homeID != lost })
-        // Two huts, eight beds, six souls: everybody is still indoors.
+        // Two huts left, and only two huts' worth of people: still indoors.
         #expect(HouseholdEngine.homeless(after) == 0)
     }
 

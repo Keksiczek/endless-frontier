@@ -2,45 +2,107 @@
   {
     "era": "ancient",
     "milestones": [
-      { "type": "tech_researched", "techId": "writing" },
-      { "type": "global_stat", "stat": "prosperity", "min": 35 },
-      { "type": "population_total", "min": 60 }
+      {
+        "type": "tech_researched",
+        "techId": "writing"
+      },
+      {
+        "type": "global_stat",
+        "stat": "prosperity",
+        "min": 35
+      },
+      {
+        "type": "population_total",
+        "min": 18
+      }
     ]
   },
   {
     "era": "medieval",
     "milestones": [
-      { "type": "tech_researched", "techId": "currency" },
-      { "type": "global_stat", "stat": "prosperity", "min": 45 },
-      { "type": "settlement_count", "min": 2 },
-      { "type": "population_total", "min": 200 }
+      {
+        "type": "tech_researched",
+        "techId": "currency"
+      },
+      {
+        "type": "global_stat",
+        "stat": "prosperity",
+        "min": 45
+      },
+      {
+        "type": "settlement_count",
+        "min": 2
+      },
+      {
+        "type": "population_total",
+        "min": 45
+      }
     ]
   },
   {
     "era": "early_industrial",
     "milestones": [
-      { "type": "tech_researched", "techId": "scholarship" },
-      { "type": "global_stat", "stat": "prosperity", "min": 55 },
-      { "type": "settlement_count", "min": 3 },
-      { "type": "population_total", "min": 600 }
+      {
+        "type": "tech_researched",
+        "techId": "scholarship"
+      },
+      {
+        "type": "global_stat",
+        "stat": "prosperity",
+        "min": 55
+      },
+      {
+        "type": "settlement_count",
+        "min": 3
+      },
+      {
+        "type": "population_total",
+        "min": 110
+      }
     ]
   },
   {
     "era": "modern",
     "milestones": [
-      { "type": "tech_researched", "techId": "electricity" },
-      { "type": "global_stat", "stat": "prosperity", "min": 65 },
-      { "type": "settlement_count", "min": 4 },
-      { "type": "population_total", "min": 1500 }
+      {
+        "type": "tech_researched",
+        "techId": "electricity"
+      },
+      {
+        "type": "global_stat",
+        "stat": "prosperity",
+        "min": 65
+      },
+      {
+        "type": "settlement_count",
+        "min": 4
+      },
+      {
+        "type": "population_total",
+        "min": 260
+      }
     ]
   },
   {
     "era": "near_future",
     "milestones": [
-      { "type": "tech_researched", "techId": "computing" },
-      { "type": "global_stat", "stat": "prosperity", "min": 75 },
-      { "type": "settlement_count", "min": 5 },
-      { "type": "population_total", "min": 4000 }
+      {
+        "type": "tech_researched",
+        "techId": "computing"
+      },
+      {
+        "type": "global_stat",
+        "stat": "prosperity",
+        "min": 75
+      },
+      {
+        "type": "settlement_count",
+        "min": 5
+      },
+      {
+        "type": "population_total",
+        "min": 600
+      }
     ]
   }
 ]
