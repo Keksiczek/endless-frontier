@@ -275,6 +275,29 @@ public enum SocialEngine {
         return s
     }
 
+    /// Drops the weakest bond a colonist is carrying, if their head is full.
+    ///
+    /// `maxRelationsPerPawn` is five, and a sociable colonist is always at it —
+    /// which means every system that tries to *give* somebody a new bond does
+    /// nothing for exactly the people it exists for. Ordinary meetings can
+    /// afford to shrug and try again tomorrow; a midsummer fire and a coming of
+    /// age happen once, so they make room instead. You stop thinking about
+    /// somebody you met at last year's fire. A partner is never pushed out.
+    ///
+    /// Order-stable: ties are broken by the bond's id, never by array order.
+    static func makeRoom(_ s: inout Settlement, for pawn: UUID) {
+        guard s.relationships(of: pawn).count >= maxRelationsPerPawn else { return }
+        let droppable = s.relationships.indices.filter {
+            s.relationships[$0].involves(pawn) && s.relationships[$0].kind != .partner
+        }
+        guard let weakest = droppable.min(by: {
+            s.relationships[$0].strength == s.relationships[$1].strength
+                ? s.relationships[$0].id < s.relationships[$1].id
+                : s.relationships[$0].strength < s.relationships[$1].strength
+        }) else { return }
+        s.relationships.remove(at: weakest)
+    }
+
     /// Grief for the dead: those who loved them feel the loss, and their bonds
     /// are laid to rest with them. Called by `PopulationEngine` on each death.
     static func mourn(

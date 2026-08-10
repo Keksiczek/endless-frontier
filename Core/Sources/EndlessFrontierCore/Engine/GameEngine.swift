@@ -48,18 +48,38 @@ public enum GameEngine {
               let paid = EffectApplier.payCost(def.cost, from: state, settlementID: settlementID) else {
             return state
         }
+        // **Somewhere to stand, before anything is paid for.**
+        //
+        // This used to pay first and site afterwards, and shrug if there was no
+        // room: the building went into the ledger with `placementID: nil`, owned
+        // no ground, and could never be drawn. For a farm that is fatal rather
+        // than untidy — `FarmEngine.reconcile` makes plots out of *placements*,
+        // so a farm with nowhere to stand grows nothing at all, and a colony
+        // that has filled its grid quietly stops being able to feed itself while
+        // its ledger still says it built four more farms. Measured, seed 4242:
+        // buildings 79 → 107 with plots frozen at 38 and a hundred and twenty
+        // people starving on a full larder of materials.
+        //
+        // `placeSiteAtFirstFit` widens the colony's ground when it is full, so
+        // this only refuses at `ColonyBuilder.maxSide` — and refusing is right:
+        // materials not spent are materials the council can spend on something
+        // it *can* stand up.
+        var placementID: UUID?
+        var sitedSettlement: Settlement?
+        if state.settlements[settlementIndex].colony != nil {
+            let sited = ColonyBuilder.placeSiteAtFirstFit(
+                state.settlements[settlementIndex], definitionID: buildingID, registry: registry)
+            guard sited.placementID != nil else { return state }
+            sitedSettlement = sited.settlement
+            placementID = sited.placementID
+        }
         var s = payMaterials(def.materialCost, from: paid, settlementIndex: settlementIndex)
         var target = s.settlements[settlementIndex]
-        // A quick-build still stands *somewhere*: on a laid-out colony the
-        // site takes the first tile that fits, so the scaffolding (and later
-        // the building) is visible on the canvas instead of only in a ledger.
-        var placementID: UUID?
-        if target.colony != nil {
-            let sited = ColonyBuilder.placeSiteAtFirstFit(target, definitionID: buildingID, registry: registry)
-            if sited.placementID != nil {
-                target = sited.settlement
-                placementID = sited.placementID
-            }
+        if let sitedSettlement {
+            // The paying happened on a copy taken before the siting; carry the
+            // ground across rather than the other way round, so a wider grid and
+            // a lighter store both survive.
+            target.colony = sitedSettlement.colony
         }
         s.settlements[settlementIndex] = ConstructionEngine.enqueue(
             target, definitionID: buildingID, placementID: placementID,

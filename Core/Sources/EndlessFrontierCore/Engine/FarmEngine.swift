@@ -67,10 +67,30 @@ public enum FarmEngine {
     /// - A cook turns a unit into a shade under two food.
     ///
     /// So a plot is worth about 0.56 food a tick and a colonist eats 0.1 —
-    /// call it five and a half. Four is that with a winter's headroom on it,
-    /// which is the difference between a colony that builds its next farm in
-    /// good time and one that notices it needed it last autumn.
-    public static let peoplePerPlot: Double = 4
+    /// call it five and a half. Four was that with a winter's headroom on it.
+    ///
+    /// **And the colony starved at a hundred and ten anyway.** The arithmetic
+    /// above is the *ceiling* of a plot, and it is not what a plot delivers: a
+    /// crop only counts once a farmer has walked out and cut it, what is cut
+    /// waits to be hauled, and what is hauled waits for a cook. Every one of
+    /// those is a valve, and four assumed all three were open.
+    ///
+    /// Measured once the fertility clock was fixed (§11.19, §11.21) and a colony
+    /// could finally get large, seed 4242: plots stood at **38 from year sixty
+    /// to year two hundred** while the population went 72 → 127, because
+    /// `plotsWanted` said 127 mouths wanted 32 and the colony had 38 — no
+    /// shortage, so the council never raised another farm. A century of surplus
+    /// piled up as raw crops (`shelf` at 2 500–2 900), the population passed
+    /// what the fields actually delivered somewhere near a hundred and ten, and
+    /// then the backlog drained in a decade and took sixty-nine people with it.
+    ///
+    /// So: **2.5**, which is the measured figure — thirty-eight plots carrying
+    /// about a hundred and ten mouths at break-even — with a winter on top. Rule
+    /// 24's sibling: a constant derived from a rate has to be checked against
+    /// what the simulation *realises*, not against what the rate permits. The
+    /// arithmetic above is left standing because it is still the right way to
+    /// reason about the ceiling; it is simply not the floor the council needs.
+    public static let peoplePerPlot: Double = 2.5
 
     /// Plots this settlement ought to have under crop for the mouths it has.
     public static func plotsWanted(for population: Double) -> Int {

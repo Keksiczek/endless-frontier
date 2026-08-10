@@ -120,23 +120,120 @@ public enum LocalTerrain {
     /// Chance a cell breaks from its patch and takes its own cover.
     static let speckleChance = 0.22
 
+    /// Chance a cell breaks from the land and takes its own cover, once the
+    /// ground has a shape of its own. Far below `speckleChance`, which was
+    /// doing the work of hiding square patch edges: land with a *form* wants a
+    /// little grit on it, not a quarter of itself dissolved.
+    static let grit = 0.06
+
     /// The cover of one grid cell.
+    ///
+    /// **The ground has a shape now.** This used to draw cover from a per-biome
+    /// weighting on a four-by-four patch grid, with a fifth of the cells
+    /// speckling to hide the seams — which is a colour scatter, not a country.
+    /// A player looking at it saw grass with rock in it, never a ridge, never a
+    /// hollow, never a bank of marsh where the ground falls to the water.
+    ///
+    /// So: two cheap fields, `elevation` and `moisture`, each a few octaves of
+    /// value noise off the same seed, and the cover read off *both*. Height
+    /// makes ridges and basins; wetness makes marsh in the hollows and sand on
+    /// the dry rises. Bands mean the map has slopes — grass giving way to dirt
+    /// giving way to rock as the ground climbs — which is what reads as
+    /// geography.
+    ///
+    /// Still a pure function of `(terrainSeed, biome, cell)`: nothing is stored,
+    /// saves are unchanged, and the same world always looks the same. The biome
+    /// no longer picks the cover directly — it *tilts the land*, which is the
+    /// honest way round: a desert is dry ground, not a bag of sand tiles.
     public static func cover(
         terrainSeed: UInt64,
         biomeID: String,
         column: Int,
         row: Int
     ) -> GroundCover {
-        let table = weights(for: biomeID)
-        // The patch this cell belongs to decides the base cover…
-        let patch = hash(terrainSeed, column / patchSize, row / patchSize)
-        var pick = weighted(table, unit(patch))
-        // …but a minority of cells speckle, so edges aren't blocky.
+        let land = shape(of: biomeID)
+        let height = min(1, max(0, elevation(terrainSeed, column, row) + land.lift))
+        let wet = min(1, max(0, moisture(terrainSeed, column, row) + land.damp))
+
+        // A little grit, so a band's edge is a shoreline rather than a ruled
+        // line — and so a cold country still has bare stone showing through.
         let fine = hash(terrainSeed &+ 0x51_ED_27, column, row)
-        if unit(fine &>> 8) < speckleChance {
-            pick = weighted(table, unit(fine))
+        if unit(fine &>> 8) < grit {
+            return weighted(weights(for: biomeID), unit(fine))
         }
-        return pick
+
+        switch height {
+        case let h where h > 0.80:
+            return land.cold ? .snow : .rock
+        case let h where h > 0.64:
+            return .rock
+        case let h where h < 0.30 && wet > 0.58:
+            // The bottom of the land, where the water stands.
+            return land.cold ? .snow : .marsh
+        default:
+            if wet < 0.30 { return land.cold ? .rock : .sand }
+            if wet < 0.46 { return .dirt }
+            if wet > 0.70 { return land.cold ? .snow : .meadow }
+            return land.cold ? .snow : .grass
+        }
+    }
+
+    /// How a biome tilts its ground: how high it stands, how wet it is, and
+    /// whether the top of it is under snow.
+    static func shape(of biomeID: String) -> (lift: Double, damp: Double, cold: Bool) {
+        switch biomeID {
+        case "forest":    return (0.02, 0.16, false)
+        case "desert":    return (-0.02, -0.30, false)
+        case "tundra":    return (0.06, 0.04, true)
+        case "mountains": return (0.26, -0.04, false)
+        case "coast":     return (-0.14, 0.22, false)
+        default:          return (0, 0.06, false)   // plains & homeland
+        }
+    }
+
+    /// How far the ground stands, 0…1 — three octaves of value noise.
+    ///
+    /// Value noise rather than anything cleverer because it is a handful of
+    /// hashes and a lerp: this is asked once per visible cell, every frame, and
+    /// the shape it makes is already the shape a valley has.
+    static func elevation(_ seed: UInt64, _ column: Int, _ row: Int) -> Double {
+        var total = 0.0, amplitude = 1.0, weight = 0.0, wavelength = 22.0
+        for octave in 0..<3 {
+            total += amplitude * valueNoise(
+                seed &+ UInt64(octave) &* 0x9E37_79B9,
+                Double(column) / wavelength, Double(row) / wavelength)
+            weight += amplitude
+            amplitude *= 0.5
+            wavelength *= 0.42
+        }
+        return total / max(0.0001, weight)
+    }
+
+    /// How wet the ground is, 0…1 — the same field off a different salt, and at
+    /// a longer wavelength, so wetness runs in broad country rather than
+    /// following every rise.
+    static func moisture(_ seed: UInt64, _ column: Int, _ row: Int) -> Double {
+        var total = 0.0, amplitude = 1.0, weight = 0.0, wavelength = 34.0
+        for octave in 0..<2 {
+            total += amplitude * valueNoise(
+                (seed ^ 0xA01_5D4E_7F) &+ UInt64(octave) &* 0x85EB_CA6B,
+                Double(column) / wavelength, Double(row) / wavelength)
+            weight += amplitude
+            amplitude *= 0.5
+            wavelength *= 0.5
+        }
+        return total / max(0.0001, weight)
+    }
+
+    /// Bilinearly interpolated lattice noise, 0…1.
+    static func valueNoise(_ seed: UInt64, _ x: Double, _ y: Double) -> Double {
+        let x0 = Int(x.rounded(.down)), y0 = Int(y.rounded(.down))
+        let fx = x - Double(x0), fy = y - Double(y0)
+        // Smoothstep, so the lattice does not show as a diamond grid.
+        let sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy)
+        let a = unit(hash(seed, x0, y0)), b = unit(hash(seed, x0 + 1, y0))
+        let c = unit(hash(seed, x0, y0 + 1)), d = unit(hash(seed, x0 + 1, y0 + 1))
+        return (a + (b - a) * sx) + ((c + (d - c) * sx) - (a + (b - a) * sx)) * sy
     }
 
     /// Per-biome cover mix. The dominant cover carries the biome's character.

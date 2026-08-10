@@ -1,3 +1,100 @@
+# Handoff — 2026-08-10 (fourth pass)
+
+> **Land, landscape, and the bench — the three things the third pass left open.
+> All three are in. The colony now grows its own ground, the valley has shapes
+> in it, and a colony nobody touches arms and clothes itself.**
+
+Branch **`main`**. Core green where measured (see *What is not yet re-run*).
+
+## What changed
+
+| | |
+|---|---|
+| **The land grows** | `ColonyBuilder.grownOutward` — when nothing fits, the colony takes in another ring of the valley (+4 a side, symmetric so the town stays in the middle), to 64×64. `SettlementGeometry` maps tiles through the colony's own width and height, so the drawing follows for free. |
+| **A building without ground is refused** | `GameEngine.build` now sites *before* it pays, and returns unchanged if there is nowhere to stand. It used to pay and shrug — the building went into the ledger with `placementID: nil`, and for a **farm** that is fatal, because `FarmEngine.reconcile` makes plots out of placements. Materials not spent are materials the council spends on something it can stand up. |
+| **The valley has shapes** | `LocalTerrain.cover` drew from a per-biome weighting on a 4×4 patch grid with a fifth of the cells speckling to hide the seams — a colour scatter, not a country. Now two cheap fields (elevation, 3 octaves; moisture, 2, longer wavelength) and the cover read off both: ridges and basins, marsh where the ground falls to water, sand on dry rises, rock up top, snow on the peaks of cold countries. The biome no longer picks cover — it *tilts the land*. Still a pure function of `(terrainSeed, biome, cell)`; nothing stored, saves unchanged. |
+| **The bench knows every age it has reached** | `StewardEngine.wantedMaterials` filtered `def.era == .earlySettlement` — true of the colony it was written for, silently false ever after. The council made the four things a hut and a granary want and never ordered the timber bundle a cookhouse asks for, so the buildings of the age the colony had actually reached were unbuildable with the store at its cap. Rule 6 wearing a content filter. |
+| **`QuartermasterEngine`** | §11.22. Nobody was ever given anything: `equipItem` is a UI call and the standing orders knew only building materials, so two hundred years passed without a spear, a coat or a hoe. Orders against a shortfall (never a standing order), best-not-cheapest under the builders' reserve, and the hand-out is a *matching* — a weapon-slot item is a tool as often as a weapon, so the axe finds the woodcutter. It never takes anything off anybody. 8 tests. |
+
+## What is not yet re-run
+
+The full suite is **forty-six minutes**; `StewardTests` alone is sixteen, and the
+century test inside it is sixteen on its own. Re-run before trusting anything
+broad. What has been run against this tree:
+
+- `StewardTests` — **21/21**, including the two housing tests that were red. They
+  were red for a good reason: fields outrank roofs now (§11.21), and a fixture
+  about *housing* with no ground under crop gets a farm, correctly. `fed(_:)`
+  hands the fixture the farms a town that size would have raised.
+- `QuartermasterTests` — 8/8, including a colony left alone for thirty years
+  arming itself.
+- `OfflineCatchUpTests` — the linearity bound was raised from 3× to 4.5× and the
+  runs shortened. **Not a regression:** a world carried twice as far now comes
+  out with two to three times the people in it, every one of them aged, fed,
+  moved, paired and paid every tick, so a perfectly linear-in-*ticks* engine
+  cannot come out at two. A genuine quadratic term lands at eight and up.
+
+## Next
+
+1. **Nothing re-arms a colony whose gear went out of date.** A town in the
+   industrial age still carries the spears of its first century: the slots are
+   full and the quartermaster will not strip anybody. The honest fix is a
+   colonist deciding for themselves that what is on the shelf beats what is in
+   their hand — a *want*, not a policy.
+2. **Colonists who look like different people** — Keks's ask, §11.20. Hair,
+   faces, torsos, visible age, derived from `pawn.id` the way `AgentMotion`
+   derives position. Decide line art vs a sprite catalogue *before* writing any
+   of it.
+3. **Re-run `GrowthProbe.theCurve` and `DangerProbe`** against the land fix. The
+   columns that matter are `plots` against `want` (did the ground unblock the
+   fields) and what a warband costs now that the line is armed.
+
+---
+
+# Handoff — 2026-08-10 (third pass)
+
+> **The fertility clock is fixed and measured. The next ceiling is land, and it
+> is not fixed.**
+
+Branch **`main`**. Core green.
+
+## What changed
+
+| | |
+|---|---|
+| **`FestivalEngine`** | Midsummer. The feast comes out of the larder (never more than 35% of it), everybody's `moodShift` lifts and `conceive` already multiplies by mood — and, the whole point, **the unattached stand beside their own age** instead of being drawn uniformly from a colony that is mostly married elders and children. Courtship is easier by firelight (threshold 30, chance 0.45). 12 tests. |
+| **`GenerationEngine`** | Coming of age is a day in the chronicle, with the bonds of the people you grew up with (±3 years, strength 24 — deliberately under the wedding threshold: a head start, not a betrothal). And the old teach the young: 45+, skill 8+, one master one pupil, +0.3 xp a tick. A trade outlives the person who was good at it. 11 tests. |
+| **`SocialEngine.makeRoom`** | Shared by both. Five bonds is a full head and a sociable colonist is always full, so anything that *gives* somebody a bond does nothing for exactly the people it exists for. The weakest goes; a partner never. |
+| **`FarmEngine.peoplePerPlot`** | 4 → **2.5**. Four was the ceiling of a plot; the fields deliver about half of it once reaping, hauling and cooking have taken their cut. |
+| **`StewardEngine.nextBuilding`** | Fields now outrank roofs. Rule 27 in a second place. |
+
+Measured, seed 4242, two hundred years:
+
+```
+peak population        69 @ y80   →  121 @ y170
+fert (both in window)  1–4        →  20–29  through the second century
+```
+
+## Next — and read §11.21 first
+
+**The colony still starves, and the reason is land.** The grid is a fixed 24×24;
+when `ColonyBuilder.placeSiteAtFirstFit` finds no room, `GameEngine.build`
+enqueues the building anyway with `placementID: nil`, and `FarmEngine.reconcile`
+makes plots out of placements — so a farm raised on a full colony **owns no
+ground and grows nothing**. `built` climbed 79 → 107 while `plots` stood at 38
+and `plotsWanted` reached 49. The previous handoff filed this as a rendering
+problem. It is a production problem, and it is the ceiling the game is under.
+
+1. Let the ground grow with the colony (§11.21 has the three options and the
+   order I would try them in).
+2. **Colonists who look like different people** — Keks's ask, written up in
+   §11.20: hair, faces, torsos, visible age, derived from `pawn.id` the way
+   `AgentMotion` derives position. Decide line art vs a sprite catalog *before*
+   writing any of it.
+3. Everything on the pass below still stands.
+
+---
+
 # Handoff — 2026-08-10 (second pass)
 
 > **The camera now goes to what happened, and the game really was running

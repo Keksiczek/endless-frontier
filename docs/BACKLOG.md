@@ -1306,6 +1306,207 @@ Still open on this one: the **battle log** does not carry the wound kind, so the
 report still says "wounded" where it could say "a stab to the shoulder".
 `BattleMoment` is where that goes.
 
+### 11.22 — nobody was ever given anything (2026-08-10)
+
+The last room the player was still standing in the doorway of.
+`GameEngine.equipItem` is called from the UI and from nowhere else, and
+`StewardEngine`'s standing orders knew about **building materials** and nothing
+else. So a colony left to itself, for two hundred years:
+
+- never made a weapon, though `craft_bronze_spear` needs no building, no tech
+  and fifteen materials, against a store pinned at the cap;
+- never made a coat, though `craft_leather_garb` wants two hides and the
+  hunters' lodge had been tanning them the whole time;
+- never handed anybody a tool, though `worn_tools` and `sturdy_axe` are worth two
+  levels of a trade to the person holding them;
+- and so walked into every raid bare-handed, which is half of why the danger
+  numbers never moved (§8.1).
+
+`QuartermasterEngine` is the answer, and it is the same answer as the frozen
+world: the colony does the obvious thing on its own, and anything the player
+chose stays chosen.
+
+- **Orders against a shortfall, never a standing order.** Gear is a *stock* the
+  colony can name the size of — one coat per pair of hands — not a tap like
+  timber. An endless order would have the bench turning out spears until the iron
+  ran out; rule 21's shape from the other side.
+- **Best, not cheapest.** A town with a workshop and iron on the shelf turns out
+  swords. What stops that beggaring it is the builders' reserve: order only what
+  the colony could pay for twice, the same rule `StewardEngine` builds under.
+- **The hand-out is a matching, not a queue.** A weapon-slot item is a tool as
+  often as it is a weapon — `worn_tools`, `sturdy_axe` and `miners_pick` all hang
+  where a spear does — so the same axe is worth a great deal to a woodcutter and
+  almost nothing to a scholar. Each piece goes to whoever gains most from it.
+- **It never takes anything off anybody.** A hand-out only ever fills an empty
+  slot. Rule 1's cousin for the council: somebody who wants a better axe has to
+  be *given* it.
+
+Still open on this one: nothing re-arms a colony whose gear has gone out of date
+— a town in the industrial age is still carrying the spears it made in its
+first century, because the slots are full and the quartermaster will not strip
+anybody. The honest fix is a colonist deciding for themselves that what they
+hold is worse than what is on the shelf, which is a want and not a policy.
+
+### 11.21 — the land ran out (2026-08-10)
+
+Midsummer and the generational pass (§11.19) did what they were built to do, and
+measured, seed 4242, they moved the curve a long way:
+
+```
+peak population   69 @ y80  →  121 @ y170
+fert (couples both in the window)   1–4 in the second century  →  20–29
+```
+
+And then the colony **starved**. Sixty-nine dead the first time it was measured,
+twenty-six after two rounds of fixing. Three ceilings under it, found in this
+order, and only the last one is the real one:
+
+**1. `FarmEngine.peoplePerPlot` was derived from the ceiling of a plot, not from
+what a plot delivers.** Four mouths a plot is what the ground yields if every
+valve downstream is open — but a crop only counts once a farmer has walked out
+and cut it, what is cut waits to be hauled, and what is hauled waits for a cook.
+Measured: the fields were delivering about half. Now **2.5**, and
+`FoodChainTests` asserts the council's number sits at least 1.8× under the
+ceiling so the valves have room. Rule 24's sibling: **a constant derived from a
+rate has to be checked against what the simulation realises, not against what
+the rate permits.**
+
+**2. Roofs outranked fields, and growth made that permanent.**
+`StewardEngine.nextBuilding` checked housing first. Survivable while the colony
+was not really growing — a town that has stopped growing is not short of beds,
+so the clause fell through and the fields got their turn. Fix the fertility
+clock and the colony grows every year for two centuries, so housing is short
+*every year for two centuries*. Rule 27 in a second place. Fields come first
+now: you can sleep four to a room for a season; you cannot eat next year's
+harvest this winter.
+
+**3. And plots still froze at 38 — because the ground ran out.** The colony's
+grid is a fixed **24×24** (`ColonyBuilder.defaultWidth`), and when
+`ColonyBuilder.placeSiteAtFirstFit` finds no room `GameEngine.build` **enqueues
+the building anyway**, with `placementID: nil`. `FarmEngine.reconcile` makes
+plots out of *placements* — so a farm raised on a full grid **owns no ground and
+grows nothing**. Every number agrees: `built` 79 → 107 while `plots` stood at 38
+and `plotsWanted` climbed to 49, with materials pinned at the cap the whole way.
+The colony was paying for farms that were a line in a ledger.
+
+This was flagged as a rendering problem in the previous handoff — "a full colony
+grows a ledger the canvas cannot show" — and it is not. It is a **production**
+problem, and it is the ceiling the game now sits under.
+
+**Fixed (2026-08-10), by (1) and (2) together:**
+
+1. **Let the ground grow with the colony.** Expand the grid when a site cannot
+   be placed (say +4 a side, to some sane maximum). `ColonyMap` already stores
+   its own width and height and the renderer already divides by them, so
+   everything scales; old saves keep the grid they had. This is the one that
+   matches what the game is about.
+2. **Refuse what cannot be sited.** A building the colony cannot put anywhere
+   should not be enqueued, and `buildableHere` should not offer it — a silent
+   ghost that eats materials is the worst of both. Do this whichever way (1)
+   goes; it is correct on its own.
+3. **Reclaim ground**: derelict buildings (`condition` below `derelictBelow`)
+   hold land they no longer use.
+
+`ColonyBuilder.grownOutward` does (1): +4 a side, symmetric so the town keeps
+its place in the middle, to a `maxSide` of 64. `GameEngine.build` does (2) —
+sites *before* it pays, and refuses outright when there is nowhere to stand, so
+the materials stay in the store for something the council can actually stand up.
+(3), reclaiming the ground under derelicts, is still open and is the right next
+move if 64×64 ever runs out.
+
+Still to do on this: re-run `GrowthProbe.theCurve` — `plots` against `want` is
+the column that says whether the ground really unblocked the fields.
+
+### 11.20 — colonists who look like different people (asked 2026-08-10)
+
+**Flagged by Keks, not yet specified.** *"Chtěl bych, aby byli kolonisti
+různorodější — vlasy, obličeje, trupy atd. jako v RimWorldu."*
+
+Right now every colonist is drawn by the same `SettlementFigures.draw`: a head
+circle, a two-line body, legs that swing on a `sin`, and a colour that comes
+from their trade. Two hundred people in a two-hundred-year colony are two
+hundred instances of one drawing. The simulation underneath already knows they
+are different — `Pawn.genes` (industry, fertility, sociability, courage), age,
+trait, wealth, skills, `Body` with its parts and wounds, equipment in three
+slots — and *none* of that reaches the eye.
+
+What this wants, in RimWorld's terms and this project's:
+
+- **A `Look`, derived not stored.** Hair, face, build, skin. It must be a pure
+  function of `pawn.id` (plus age, which changes it) exactly the way
+  `AgentMotion` derives position — a stored appearance is a save-migration
+  problem and a determinism risk for nothing. Rule 5: presentation never writes
+  the simulation.
+- **Parts that vary independently**: hair shape and colour, beard, face marks,
+  torso width, height, stance. A handful of each multiplies into a crowd.
+- **It has to survive the zoom**: `SettlementCrowd.showsIndividuals` already
+  drops people into group marks when pulled back, so the detail only has to
+  read close in — which is also where the player is when they care who somebody
+  is.
+- **Age should show.** A colony whose problem is that everybody grows old
+  together (§11.17, §11.19) should let you *see* that without opening a panel.
+- **What they are carrying and wearing** is already in the model
+  (`SettlementFigures.Armament`, `equipment`) and is half-drawn; finish it.
+
+Not yet decided: whether this stays line art (`Canvas` paths, no assets, works
+at any zoom, matches the current look) or becomes a sprite-layer system with an
+asset catalog (`docs/ASSET_SPECIFICATION.md` drafted one). Line art keeps the
+game asset-free and infinitely scalable; sprites look better sooner. Decide
+before writing any of it.
+
+See also `docs/RIMWORLD_LAYER.md`, which did this for buildings and animals and
+is the pattern to follow.
+
+### 11.19 — midsummer (2026-08-10)
+
+The colony does not die of hunger or of raiders. It dies because the people who
+could still start a family stop being drawn next to each other.
+
+`SocialEngine.encounter` draws a meeting as **two colonists taken uniformly from
+everybody**. In a young colony most people are unattached adults, so most
+meetings are courtships. In an old one they are two married elders, or a child
+and a grandmother, and the handful of young people who could still start a
+family spend their lives not standing next to each other. Measured, seed 4242:
+`fert` — couples with *both* partners inside the fertile window — runs 9–12
+while the colony grows and **1–4 for the whole second century**, while the store
+sits at its cap and nothing is short of anything.
+
+No rate fixes that. A uniform draw does not find a needle in a haystack faster
+by being rolled more often; rule 6 has a sibling here, and it is that **when the
+*population* you are drawing from is the problem, changing the *rate* is
+arithmetic on the wrong number**. What fixes it is one night a year when the
+draw stops.
+
+`FestivalEngine`, at midsummer — deliberately half a year from the turn, where
+`SocietyEngine.advanceYear` already pays wages, sorts classes and holds
+elections:
+
+- **The feast comes out of the larder**: `feastPerHead` 1.5, about three months'
+  rations spent in a night, and never more than `mostOfTheLarder` (35%) of what
+  is standing. A colony cannot feast itself to death — the fires burn lower
+  instead. An empty granary is its own kind of year: no matches, morale down,
+  and a line that says so.
+- **Everybody eats**, and it sits with them: `moodShift` +9 fading over the
+  season, and `PopulationEngine.conceive` already multiplies by mood (to 1.4×).
+  The birth rate rises through a path that already existed. No special case.
+- **The unattached stand beside their own age.** `whoMeetsWhom` sorts the free
+  adults by age and walks each one outward to their nearest neighbours. This is
+  the entire mechanism. It is a *weighting*, not the age-gap bar `SocialEngine`
+  deleted on purpose — a forty-year-old with nobody their own age left simply
+  meets whoever is nearest.
+- **A full head makes room.** `maxRelationsPerPawn` is five and a sociable
+  colonist is always full, so without this the one night meant to find somebody
+  a match would do nothing for exactly the people it exists for. A bond made at
+  the fire pushes out the weakest one they were carrying; partners never.
+- **Courtship is easier by firelight**: threshold 30 rather than 45, chance 0.45
+  rather than 0.22.
+- Widows and widowers come back to the fire on their own, because "unattached"
+  means "no partner".
+
+Guarded by twelve tests, including the one that matters — six years of an
+ageing colony (thirty souls, four of them young) run twice off the same seed,
+with the fires and without, counting *young* couples rather than couples.
+
 ### 11.18 — the game and the diary were two different games (2026-08-10)
 
 > *"asi by bylo fajn zoomovat na event nebo bitvu pokud se děje, teď musíš hledat
@@ -1734,3 +1935,23 @@ Every one of them has cost a session at least once:
    covered the long path, and only by luck of ordering. Guard the *operation*
    (`isOpeningSession`), not the symptom, and keep both call sites: a relaunch
    and a return from the background are not the same event.
+30. **A constant derived from a rate must be checked against what the
+   simulation *realises*, not against what the rate permits.**
+   `FarmEngine.peoplePerPlot` was four because a plot's ground yields about 5.6
+   mouths' worth of food — true, and irrelevant: a crop only counts once a
+   farmer has cut it, what is cut waits to be hauled, and what is hauled waits
+   for a cook. Every one of those is a valve and four assumed all three open.
+   Measured, the fields delivered about half. Rule 24's sibling — that one is
+   about the units of a rate, this one is about believing a rate at all.
+   Guarded by "A plot feeds what it is built for", which now asserts the
+   council's number sits at least 1.8× under the ceiling.
+31. **Fixing a growth ceiling promotes every ordering that was only ever safe
+   because nothing grew.** `StewardEngine.nextBuilding` put roofs before
+   fields, which was fine while the colony was not really growing: a town that
+   has stopped growing is not short of beds, so the housing clause fell through
+   and the fields got their turn. The moment the fertility clock was fixed,
+   housing was short every year for two centuries and the field clause was
+   never reached again — `plots` at 38 while `plotsWanted` climbed to 49 and the
+   colony starved. Rule 27's shape a second time. After any change that makes a
+   colony grow, re-read every priority chain in the engine and ask which branch
+   has just become permanently true.

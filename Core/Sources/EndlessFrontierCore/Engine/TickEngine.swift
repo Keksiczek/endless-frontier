@@ -64,6 +64,13 @@ public enum TickEngine {
             if s.tick % ticksPerYear == 0 {
                 s = SocietyEngine.advanceYear(s, registry: registry)
             }
+            // Midsummer — deliberately half a year from the turn above, so the
+            // one night the colony is a village is not buried under wages,
+            // classes and an election.
+            s = FestivalEngine.advanceOneTick(s, registry: registry)
+            // …and the colony handing itself on: who came of age today, and the
+            // old standing at the elbow of the young.
+            s = GenerationEngine.advanceOneTick(s, registry: registry)
             if s.tick % interval == 0 {
                 // Decisions the Leader let slide time out before new ones are
                 // offered, so a full queue is always a live one.

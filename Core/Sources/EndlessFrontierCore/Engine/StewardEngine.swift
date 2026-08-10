@@ -112,6 +112,10 @@ public enum StewardEngine {
         for index in s.settlements.indices {
             s = keepMaterialsComing(s, index: index, registry: registry)
             s = raiseWhatIsShort(s, index: index, registry: registry)
+            // Arms, coats and tools, and the handing out of them. The bench
+            // knew about building materials and nothing else, so a colony left
+            // to itself went two hundred years without making a spear.
+            s = QuartermasterEngine.advance(s, index: index, registry: registry)
             s = sendSomebodyOut(s, index: index, registry: registry)
         }
         return s
@@ -278,7 +282,7 @@ public enum StewardEngine {
         let settlement = s.settlements[index]
         // Only what this colony is actually short of, and only what it could
         // plausibly make here.
-        for materialID in wantedMaterials(for: settlement, registry: registry) {
+        for materialID in wantedMaterials(for: settlement, in: s, registry: registry) {
             let held = CraftingEngine.materialCounts(settlement)[materialID] ?? 0
             guard held < materialStock else { continue }
             // One standing order per material is enough — it never finishes.
@@ -295,11 +299,27 @@ public enum StewardEngine {
     }
 
     /// The crafted materials the buildings this colony could raise ask for.
+    ///
+    /// **Every era it has reached, not just the first one.** This read
+    /// `def.era == .earlySettlement`, which was true of the colony it was
+    /// written for and false of every colony that outlives its first age: the
+    /// council went on making the four things a hut and a granary want and
+    /// never once ordered the timber bundle a cookhouse asks for, so the
+    /// buildings of the age the colony had actually reached were unbuildable
+    /// while its store sat at the cap. Caught from the other end by a test that
+    /// asked whether a hundred-year-old colony could pay for the cheapest
+    /// building in the book and found it could not — not for want of materials,
+    /// for want of the *made* thing the recipe turns them into.
+    ///
+    /// Rule 6 wearing a content filter: a clause that was true of the state the
+    /// code was written in, and silently false ever after.
     static func wantedMaterials(
-        for settlement: Settlement, registry: GameDataRegistry
+        for settlement: Settlement, in state: WorldState, registry: GameDataRegistry
     ) -> [String] {
         var wanted: Set<String> = []
-        for def in registry.buildings.values where def.era == .earlySettlement {
+        for def in registry.buildings.values
+        where def.era.index <= state.era.index
+            && (def.era == .earlySettlement || state.unlockedBuildings.contains(def.id)) {
             wanted.formUnion(def.materialCost.keys)
         }
         return wanted.sorted()
@@ -358,7 +378,31 @@ public enum StewardEngine {
         let affordable = buildableHere(settlement, in: state, registry: registry)
         guard !affordable.isEmpty else { return nil }
 
-        // 1. A roof. Population is *throttled* by housing long before it is
+        // 1. Ground under crop. **Dinner outranks a bed**, and it has to.
+        //
+        //    This clause used to sit third, behind roofs and stores, which was
+        //    survivable only while the colony was not really growing: a town
+        //    that has stopped growing is not short of beds, so the housing
+        //    clause fell through and the fields got their turn. Fix the
+        //    fertility clock (§11.19) and the colony grows every year for two
+        //    centuries — so housing is short *every year for two centuries*, and
+        //    the clause below it is never reached. Measured, seed 4242: plots
+        //    stood at **38 from year sixty to year two hundred** while
+        //    `plotsWanted` climbed to 49 and the beds went 160 → 224. The
+        //    council knew it was short of fields, said so, and built houses.
+        //
+        //    Rule 27 in a second place: a priority chain whose first branch has
+        //    become permanently true starves everything under it. The ordering
+        //    that survives growth is the one that is true of people — you can
+        //    sleep four to a room for a season; you cannot eat next year's
+        //    harvest this winter.
+        if FarmEngine.plotsStanding(settlement)
+            < FarmEngine.plotsWanted(for: settlement.population),
+           let farm = best(of: affordable, by: { Double($0.plots) }) {
+            return farm
+        }
+
+        // 2. A roof. Population is *throttled* by housing long before it is
         //    capped by it — `crowdedAbove` is where that starts to bite, and
         //    waiting for the last free bed is how the colony sat at 82 beds and
         //    fifty-five souls for a hundred and eighty years.
@@ -368,28 +412,15 @@ public enum StewardEngine {
             return roof
         }
 
-        // 2. Somewhere to put things. A store at the brim is a colony throwing
+        // 3. Somewhere to put things. A store at the brim is a colony throwing
         //    away everything it earns.
+        //
+        //    Below the fields on purpose, and it always was: a granary at the
+        //    brim says nothing about whether the ground can still fill it next
+        //    year. A store is a buffer; a field is an income.
         if isBrimming(settlement),
            let store = best(of: affordable, by: { $0.storage }) {
             return store
-        }
-
-        // 2b. Ground under crop for the mouths there are.
-        //
-        //     This clause is about *capacity*, not about stock, and it has to
-        //     come before the larder one — a granary at the brim says nothing
-        //     about whether the fields can still fill it next year. Measured
-        //     without it: two farms and twelve plots feeding a colony that grew
-        //     to seventy-four, food pinned at the cap right up until the season
-        //     it wasn't, and then eighty-seven dead of hunger inside ten years.
-        //     A store is a buffer; a field is an income. Rule 6 in its plainest
-        //     form — check the rate can reach the threshold, and do it before
-        //     the threshold arrives.
-        if FarmEngine.plotsStanding(settlement)
-            < FarmEngine.plotsWanted(for: settlement.population),
-           let farm = best(of: affordable, by: { Double($0.plots) }) {
-            return farm
         }
 
         // 3. Something to eat, if the larder is thin — and the council has to

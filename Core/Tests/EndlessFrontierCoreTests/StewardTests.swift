@@ -181,6 +181,29 @@ struct StewardTests {
 
     // MARK: - What it chooses
 
+    /// Fields outrank roofs (§11.21), so a fixture about *housing* has to have
+    /// its ground already under crop — otherwise the council quite rightly
+    /// answers "a farm" and the test is measuring the clause above the one it
+    /// means to. Given, not faked: plots come from farms standing, so this hands
+    /// the settlement the farms a town that size would have raised.
+    private func fed(_ s: Settlement, registry: GameDataRegistry) -> Settlement {
+        var fedSettlement = s
+        let farms = max(1, FarmEngine.plotsWanted(for: max(1, s.population)))
+        fedSettlement.buildings.append(BuildingInstance(
+            id: UUID(uuidString: "57E0A2D0-FA13-0000-0000-000000000001")!,
+            definitionID: "farm_basic", count: farms))
+        var map = fedSettlement.localMap ?? LocalMap(
+            river: RiverShape(baseY: 0.5, amplitude: 0.04, phase: 0),
+            nodes: [], pois: [])
+        map.crops = (0..<farms).map { index in
+            Crop(id: index, species: .grain,
+                 position: LocalPoint(x: 0.5, y: 0.5),
+                 farmID: UUID(uuidString: "57E0A2D0-FA13-0000-0000-000000000001")!)
+        }
+        fedSettlement.localMap = map
+        return fedSettlement
+    }
+
     @Test("A town at its housing ceiling raises a roof")
     func housingComesFirst() throws {
         let reg = try registry()
@@ -199,6 +222,7 @@ struct StewardTests {
             p.age = 25 * reg.config.ticksPerYear
             s.pawns.append(p)
         }
+        s = fed(s, registry: reg)
         var w = GameWorldFactory.newGame(registry: reg, seed: 1)
         w.settlements = [s]
         let pick = try #require(StewardEngine.nextBuilding(for: s, in: w, registry: reg))
@@ -243,6 +267,7 @@ struct StewardTests {
             p.age = 25 * reg.config.ticksPerYear
             s.pawns.append(p)
         }
+        s = fed(s, registry: reg)
         var w = GameWorldFactory.newGame(registry: reg, seed: 1)
         w.settlements = [s]
         let pick = try #require(StewardEngine.nextBuilding(for: s, in: w, registry: reg))

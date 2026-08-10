@@ -157,13 +157,64 @@ public enum ColonyBuilder {
         definitionID: String,
         registry: GameDataRegistry
     ) -> (settlement: Settlement, placementID: UUID?) {
-        guard let def = registry.building(definitionID),
-              let map = settlement.colony,
+        guard let def = registry.building(definitionID) else { return (settlement, nil) }
+        // A colony that has run out of ground takes in more of the valley.
+        var host = settlement
+        if let map = host.colony, centerFit(def.footprint, in: map) == nil {
+            host = grownOutward(host)
+        }
+        guard let map = host.colony,
               let coord = centerFit(def.footprint, in: map) else {
             return (settlement, nil)
         }
-        let sited = placeSite(settlement, definitionID: definitionID, at: coord, registry: registry)
+        let sited = placeSite(host, definitionID: definitionID, at: coord, registry: registry)
         return (sited, sited.colony?.placement(at: coord)?.id)
+    }
+
+    /// How much ground a colony takes in when it runs out, and how far it may go.
+    ///
+    /// **This is the ceiling the game sat under.** The grid was a fixed 24×24,
+    /// and when nothing fitted `GameEngine.build` enqueued the building anyway
+    /// with `placementID: nil` — so it went into the ledger and owned no ground.
+    /// For most buildings that is merely a lie the canvas cannot draw; for a
+    /// *farm* it is fatal, because `FarmEngine.reconcile` makes plots out of
+    /// placements. Measured, seed 4242: buildings 79 → 107 while plots stood at
+    /// 38 and `plotsWanted` climbed to 49, materials pinned at the cap, and the
+    /// colony starved with a hundred and twenty people in it.
+    ///
+    /// A colony is a place in a valley, not a fenced yard. When it needs room it
+    /// takes another ring of the ground it is standing on.
+    public static let growthStep = 4
+    /// Where it stops. 64×64 is four thousand tiles — a town of six hundred
+    /// buildings — and past that the tiles are too small to be worth drawing.
+    public static let maxSide = 64
+
+    /// Takes in another ring of ground, keeping the town where it stands.
+    ///
+    /// Grown **outward on every side** rather than at the right and bottom
+    /// edges, so the settlement stays in the middle of its own map: everything
+    /// on the grid is shifted by half the step, which is why `growthStep` is
+    /// even. `SettlementGeometry` maps tiles to canvas through the colony's own
+    /// width and height, so the drawing follows for free — the tiles get
+    /// smaller and the town keeps its shape.
+    public static func grownOutward(_ settlement: Settlement) -> Settlement {
+        guard var map = settlement.colony,
+              map.width < maxSide || map.height < maxSide else { return settlement }
+        let step = growthStep
+        let shift = step / 2
+        var s = settlement
+        map.width = min(maxSide, map.width + step)
+        map.height = min(maxSide, map.height + step)
+        for index in map.placements.indices {
+            map.placements[index].coord = TileCoord(
+                map.placements[index].coord.x + shift,
+                map.placements[index].coord.y + shift)
+        }
+        map.zones = map.zones.map {
+            ZoneTile(coord: TileCoord($0.coord.x + shift, $0.coord.y + shift), kind: $0.kind)
+        }
+        s.colony = map
+        return s
     }
 
     /// Removes whatever building stands on `coord`, decrements the ledger, and

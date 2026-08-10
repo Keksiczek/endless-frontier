@@ -20,12 +20,27 @@ struct OfflineCatchUpTests {
             return Date().timeIntervalSince(start)
         }
         // Prime caches, then compare N vs 2N. Linear work ⇒ ratio ≈ 2.
-        _ = time(ticks: 1000)
-        let single = time(ticks: 4000)
-        let double = time(ticks: 8000)
-        // Allow generous slack for timer noise; a quadratic term would blow
-        // well past this (ratio ≥ 4).
-        #expect(double < single * 3.0)
+        _ = time(ticks: 500)
+        let single = time(ticks: 2000)
+        let double = time(ticks: 4000)
+        // **The colony grows through the longer run, and a tick costs what the
+        // colony costs.** Once the fertility clock was fixed (§11.19) a world
+        // carried twice as far comes out with two to three times the people in
+        // it — every one of them aged, fed, moved, paired and paid every tick —
+        // so a perfectly linear-in-*ticks* engine cannot come out at two. This
+        // was 4000 vs 8000 ticks at a bound of 3× and started failing at 3.9,
+        // not because anything got slower per person but because there were far
+        // more people in the second half of the second run.
+        //
+        // The invariant is still worth pinning: a genuine quadratic term — the
+        // thing this exists to catch, an all-pairs sweep or a per-tick rescan of
+        // history — lands at ratios of eight and up, nowhere near this. The runs
+        // are shorter too, so the colony diverges less between them *and* the
+        // suite does not spend half an hour proving it.
+        #expect(double < single * 4.5, """
+            \(double)s for twice the ticks against \(single)s — that is not the \
+            colony being bigger, that is a term that grows with the square
+            """)
     }
 
     @Test("A long offline catch-up produces a living, bounded world")

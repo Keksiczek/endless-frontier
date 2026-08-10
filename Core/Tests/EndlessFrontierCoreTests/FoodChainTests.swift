@@ -59,6 +59,21 @@ struct FoodChainTests {
                 `StewardEngine` sizes the colony's fields against — it feeds \
                 \(foodPerPlotPerTick / eatenPerHead) on the leanest meal there is.
                 """)
+
+        // …and **well** below it, not merely below it.
+        //
+        // This is the ceiling of a plot: what the ground yields if every valve
+        // downstream is wide open. A crop only counts once a farmer has walked
+        // out and cut it, what is cut waits to be hauled, and what is hauled
+        // waits for a cook. Measured, seed 4242: at `peoplePerPlot = 4` the
+        // council stopped raising farms at thirty-eight plots, and the colony
+        // starved at a hundred and ten with sixty-nine dead — the fields were
+        // delivering about half of this. The margin is the valves.
+        #expect(foodPerPlotPerTick / eatenPerHead >= FarmEngine.peoplePerPlot * 1.8, """
+            the council sizes the fields at \(FarmEngine.peoplePerPlot) mouths a \
+            plot against a ceiling of \(foodPerPlotPerTick / eatenPerHead) — too \
+            little slack for reaping, hauling and cooking to take their cut
+            """)
     }
 
     /// The other end of the same question: the cooks have to be able to keep up
