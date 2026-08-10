@@ -70,7 +70,7 @@ endless-frontier/
 
 Endless Frontier **V2** merges the original deterministic colony sim with the
 living-world and social systems of a Czech HTML civilisation sim. All V2 phases
-(A–F) are complete. Current: **933 Core tests green** (`cd Core && swift test`),
+(A–F) are complete. Current: **1022 Core tests green** (`cd Core && swift test`),
 iOS build green.
 
 What the game is now:
@@ -112,9 +112,10 @@ What the game is now:
 - **Chronicle**: one `WorldRecord` per in-game year, charted in-app, with
   generated insights (gene drift, inequality, the commonest death).
 
-Remaining content work: the older English content (events, buildings, techs)
-is not yet translated — `LocalizedText` is in place and all *new* content
-(laws, cults, insights, UI) ships bilingual (CZ+EN).
+Remaining content work: **buildings and techs** are still English-only —
+`LocalizedText` is in place, all *new* content (laws, cults, insights, UI)
+ships bilingual, and `events.json` is fully bilingual as of 2026-08-10, guarded
+by "Every event narrates in Czech as well as English" in `ContentTests`.
 
 ## Running tests
 

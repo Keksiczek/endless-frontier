@@ -1306,6 +1306,142 @@ Still open on this one: the **battle log** does not carry the wound kind, so the
 report still says "wounded" where it could say "a stab to the shoulder".
 `BattleMoment` is where that goes.
 
+### 11.18 — the game and the diary were two different games (2026-08-10)
+
+> *"asi by bylo fajn zoomovat na event nebo bitvu pokud se děje, teď musíš hledat
+> kde to hra udělá a vypadá to jako když běží duplicitně."*
+
+Two things, and the second one was literal.
+
+**1. Nothing ever took the player to what happened.** A raid runs for half a
+minute at whichever edge the warband came from; a fire takes hold in a corner of
+a 24×24 colony; the storyteller's disasters now break real buildings and hurt
+real colonists (§11.17). All of it announced itself as a line of text sliding
+past the top of the screen, and finding the place meant panning the valley for
+something that had already finished. So:
+
+- The Core says **who or what** — `ColonyLogEntry.Subject` is `.pawn` /
+  `.building(placementID)` / `.place`, optional, defaulted, and set where the
+  engine already had the thing in its hand: the colonist a disaster picked out,
+  the lot a fire took hold on (`BuildingEngine.damage` now returns its `seat`),
+  the ground a raid was fought over, a finished roof, a newborn.
+- The canvas says **where**, because only it knows: a colonist's position is a
+  function of `(pawn.id, clock)` and lives in `AgentMotion`. `CanvasFocus`
+  resolves a subject to a `LocalPoint`, `SettlementRenderer.Camera.framing`
+  centres it under the same clamp the pan gesture uses, and
+  `SettlementCanvasView.fly` flies there **once** — a camera that keeps
+  re-centring is one you cannot look away from.
+- It fires for a fight (live siege, the report card, a replay) and for any
+  `danger` line that has a place. **Every toast with a subject is tappable**
+  (a `scope` glyph marks it) and the tap takes you there, which also makes the
+  quiet ones — a birth, a roof — reachable without being intrusive.
+
+Layer 3 stays clean: the simulation still holds no screen position, and nothing
+the camera does is written back.
+
+**2. It really was running twice.** `EndlessFrontierApp` calls `openSession()`
+from `.task` *and* from `scenePhase == .active`, and a cold launch fires both.
+`isCatchingUp` guarded only the long path, and only by luck of ordering, so two
+short opens ran back to back: the world advanced twice for one absence, and the
+toasts and the "while you were away" summary were computed off a world that had
+already moved. `isOpeningSession` closes it. Rule **29**.
+
+**Two red tests came out of §11.17, and neither was the thing it looked like.**
+
+- *The valley was never worked.* Not poverty: `spare` and `afford` were both
+  true and four landmarks stood workable for forty years. Charting the fog is
+  tried first and returns, and once the ledger stopped bleeding it could always
+  afford to — so it took every outward sitting there was. The valley gets every
+  other sitting now. Rule **27**.
+- *`buildableHere` was empty at the hundredth year.* Not the freeze: the colony
+  was at its material cap with seventy-nine buildings and wanted nothing,
+  because the repeat cap is `1 + population / 15`. Empty because full. The test
+  now measures whether the ledger can **pay**, which is what the trap took away.
+  Rule **28**.
+
+Still open, and now measured twice: the colony peaks at 79 buildings around year
+eighty and then the population decays 69 → 29 while the store sits at the cap.
+That is the fertility clock of §11.17, not the roofs and not the ledger.
+
+### 11.17 — the colony was paying to stand still (2026-08-10)
+
+The complaint was the ceiling: population pinned at 53–55, `headroom` 0.108, a
+couple's best chance at a child 0.0007. Three things were under it, in the order
+they were found, and only the first was the one that had been diagnosed.
+
+**1. The council built against the last free bed.** `PopulationEngine.headroomFactor`
+is `(1 − pop/beds)²`, so births are down to a ninth of their vigour at two-thirds
+full, while `StewardEngine` did not ask for a roof until `population >= housing − 4`
+— ninety-five per cent. The two thresholds could never meet. Rule 6, in rule 16's
+clothes: a council watching a *stock* while the thing it governs is throttled by a
+*ratio*. It builds against `bedsWanted` now — `population / crowdedAbove`, at 0.55
+— and dwellings are exempt from the repeat cap while the colony is short of them,
+because `1 + population/15` grows with the population and the population is bounded
+by the beds. That one is the same freeze with a delay fuse.
+
+**2. The colony could not afford anything, and had not been able to since year
+thirty.** With the roofs fixed the beds went 82 → 100 and stopped, and the reason
+was not housing at all: `buildableHere` came back **empty** from year thirty to
+year two hundred, materials at 1, twenty-three buildings, while food, energy and
+influence all sat pinned at the storage cap. `upkeepRateOfCost` is charged **per
+tick** as a share of what a building cost to raise, and at 0.03 against a year of
+sixty ticks that is *a hundred and eighty per cent of the price of everything you
+own, every year*. Upkeep 15.4 a tick against a material income of 18 before
+staffing and weather took their cut. Not a balance — a trap, because the store
+clamps at zero, so the council could never buy the lumberyard that would have paid
+for it. Now 0.005 (about thirty per cent a year), in `WorldConfig` and
+`world-config.json` together. Rules **24** and **25**.
+
+Measured after both, same seed, two hundred years: buildings 23 → **79**, beds 82
+→ **160**, population peak 55 → **69**, a couple's best chance 0.0007 → 0.0031.
+
+**3. Every authored mood effect in the game was decoration.** `PawnEngine`
+recomputes `mood` from needs every tick, and `pawn_mood` wrote into `mood` — so a
+golden age and a plague moved the same number for exactly one tick and were gone
+before anybody could feel either. Effects land on `Pawn.moodShift` now, which the
+mood formula reads and which halves over a season. Rule **26**.
+
+Alongside: the **thirty-four** events that touched neither a person nor a place
+(the handoff said thirty-nine; the difference is that `raid` and `region_*` do
+count as somewhere) now break buildings, hurt the colonist least able to take it,
+or lift the colony — and a disaster that picks somebody out **names them in the
+chronicle**. The forty-eight English `narrative_hint` strings are Czech as well as
+English. Both are guarded by tests in `ContentTests`, so neither can come back.
+
+**Still the ceiling, after all of it:** the curve peaks at 69 around year eighty
+and decays to 29 by year two hundred, of old age. The column that says why is
+`fert` — couples with *both* partners inside the fertile window — which runs 9–12
+while the colony grows and 1–4 for the whole second century. The founders age out
+together and the bonds that would replace them form too slowly to catch it.
+That is the social layer's clock (`SocialEngine.weddingMinStrength` and how fast
+`Relationship.strength` climbs), not the roofs and not the ledger. Measure before
+touching: `GrowthProbe.theCurve`'s `wed`/`fert` columns are already the instrument.
+
+### 11.15b — the battle stopped being two rows (2026-08-10)
+
+The half that was left. The formation had depth on the walk in and flattened the
+instant anybody had a target, because `SiegeEngine.closingPoint` pulled every
+defender onto `posture.reach` — one ring for the whole line.
+
+Holding each defender to their *own rank's* ring was tried before and reverted: a
+ring is a wall, so the flanks and the rear ranks could never reach anybody and six
+of eight defenders came out of a raid unmarked. The fix runs the other way — **no
+ring, a band and a crowd**:
+
+- `closingPoint` clamps to `posture.reach + SiegeField.scrumDepth` instead of to
+  `posture.reach`, so the line takes the shape of the warband pressing into it.
+- `SiegeEngine.shoulder` parts anybody standing inside anybody else
+  (`SiegeField.bodySpace`, three relaxation passes a step, off a snapshot so the
+  result never depends on who is updated first). The depth is *emergent*: the
+  people who got to the contact surface first are in the way, and the rest bank up
+  behind them and spill round the ends.
+
+Crowding never forbids anybody anything — it only makes them go round — which is
+why it keeps the combat numbers a rank rule destroyed. Guarded by "The line does
+not flatten when the fight is joined" and "Nobody in the press is standing on top
+of anybody", with "A fight leaves the line hurt, not one person picked out of it"
+unchanged beside them.
+
 ### 11.6 — battle and attacks, again
 
 Flagged, not specified. `SiegeEngine` moves real fighters at real positions and
@@ -1549,3 +1685,52 @@ Every one of them has cost a session at least once:
    A *record* may be replayed at whatever speed makes it legible —
    `SettlementBattle.playSeconds`. Do not confuse "how long it took" with
    "how long to show it for".
+24. **A per-tick rate is a per-year rate multiplied by sixty.** `upkeepRateOfCost`
+   read as "three per cent" and meant **a hundred and eighty per cent of a
+   building's price every year, for ever**. Measured, seed 4242: twenty-three
+   buildings by year thirty, materials at 1, and `StewardEngine.buildableHere`
+   empty for the next hundred and seventy years — the colony paying to stand
+   still while food, energy and influence sat pinned at the cap. Of any rate
+   written per tick, say it out loud times `ticksPerYear` before believing it.
+   Guarded by "A century in, the colony can still afford to build".
+25. **A sink that grows with everything you own, against an income that grows
+   only when you can afford one of three buildings, is a trap and not a
+   balance.** The store clamps at zero, so there is no way back out of it: the
+   council could not buy the lumberyard that would have paid for the upkeep.
+   Rule 20's shape in the ledger. Ask of any cost that scales with the colony:
+   what income scales with it, and can the colony still reach that income from
+   the floor?
+26. **An effect written into a field the engine recomputes every tick does
+   nothing.** `PawnEngine` derives `mood` from needs, so every `pawn_mood` in
+   `events.json` was overwritten on the following tick and no event was ever
+   *felt* — a golden age and a plague moved the same number for the same one
+   tick. Anything an event does to a derived quantity has to land in a term the
+   derivation reads (`Pawn.moodShift`) and fade on its own. Guarded by "A good
+   year is still remembered a tick later".
+27. **When a "cannot afford" bug is fixed, every `if canAfford` above it becomes
+   a new bug.** `StewardEngine.sendSomebodyOut` tries charting the fog first and
+   the branch *returns* — harmless while the store was never brimming, and once
+   `upkeepRateOfCost` stopped draining it the branch was affordable every single
+   sitting. Measured, seed 4242: thirteen regions charted in forty years, four
+   workable landmarks standing in the colony's own valley the whole time, and
+   **not one party ever sent to any of them**. Rule 6 wearing an `if`: a
+   priority chain whose first branch became always-true starved everything
+   under it. After any change that makes the colony richer, re-read every
+   affordability guard that used to fail. Guarded by "A colony nobody steers
+   works the landmarks in its own valley".
+28. **An empty option list is not a diagnosis — ask *why* it is empty.**
+   `buildableHere` came back empty at the hundredth year and the obvious
+   reading was the freeze it had just been fixed for. It was the opposite: the
+   colony held its store at the cap and wanted nothing, because the repeat cap
+   is `1 + population / 15` and it already had one of everything it was allowed.
+   Empty because **full**. A test of "can it still build" that asks for appetite
+   measures the wrong thing; ask whether the ledger can *pay*, which is what the
+   trap actually took away.
+29. **Two call sites that both fire on launch will both fire on launch.**
+   `EndlessFrontierApp` opens the session from `.task` *and* from
+   `scenePhase == .active`, so a cold start opened it twice and the world
+   advanced twice for one absence — every catch-up tick simulated again, and the
+   summary computed off a world that had already moved. `isCatchingUp` only
+   covered the long path, and only by luck of ordering. Guard the *operation*
+   (`isOpeningSession`), not the symptom, and keep both call sites: a relaunch
+   and a return from the background are not the same event.

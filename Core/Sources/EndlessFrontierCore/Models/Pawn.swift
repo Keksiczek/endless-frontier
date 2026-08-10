@@ -180,6 +180,15 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     public var skillXP: [WorkKind: Double]  // progress toward the next level
     public var needs: PawnNeeds
     public var mood: Double              // 0…100, derived from needs + trait
+    /// How the last thing that happened is still sitting with them, added on
+    /// top of the mood their needs give and fading over a season.
+    ///
+    /// `mood` is recomputed from scratch every tick, which made every
+    /// `pawn_mood` effect in `events.json` a lie: a golden age lifted a
+    /// colonist's spirits for exactly one tick and `PawnEngine` wrote over it
+    /// before anybody could notice. An event has to be *felt*, so what it does
+    /// lands here and decays, and the mood formula reads it.
+    public var moodShift: Double = 0
     public var assignedWork: WorkKind
     public var health: Double            // 0…100
     public var isBroken: Bool            // mental break — stops working until mood recovers
@@ -298,7 +307,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         case id, name, trait, skills, skillXP, needs, mood, assignedWork
         case health, isBroken, equipment
         case age, genes, wealth, pregnancyTicksRemaining, expeditionID, currentJob
-        case homeID, carrying, haulPosition, body, errand
+        case homeID, carrying, haulPosition, body, errand, moodShift
     }
 
     public init(from decoder: Decoder) throws {
@@ -327,5 +336,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         haulPosition = try c.decodeIfPresent(LocalPoint.self, forKey: .haulPosition)
         // A colonist from before bodies is whole.
         body = try c.decodeIfPresent(Body.self, forKey: .body) ?? Body()
+        // …and one saved before events were felt is feeling nothing in particular.
+        moodShift = try c.decodeIfPresent(Double.self, forKey: .moodShift) ?? 0
     }
 }

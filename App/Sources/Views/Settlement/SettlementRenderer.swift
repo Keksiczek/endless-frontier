@@ -47,6 +47,35 @@ enum SettlementRenderer {
         static let opening: CGFloat = 2.0
         static let minScale: CGFloat = 1
         static let maxScale: CGFloat = 4
+
+        /// How close the camera goes when it is *taken* somewhere — a fight, a
+        /// roof that just went on, the colonist a disaster picked out.
+        ///
+        /// Nearer than `opening`, because being shown a thing and being shown
+        /// the town it is in are different favours, and past `showsIndividuals`
+        /// so the people at the other end of it are people.
+        static let closeUp: CGFloat = 3.0
+
+        /// The camera that puts a point on the local map in the middle of the
+        /// screen, without letting the world's edge come inside it.
+        ///
+        /// A world point is a fraction of the map, so it lands at
+        /// `rect.origin + p × rect.size`; putting that at the view's centre is
+        /// one line of algebra, and the clamp is the same one the pan gesture
+        /// uses — otherwise being taken to a raid on the southern edge would
+        /// show you half a screen of nothing.
+        static func framing(_ point: LocalPoint, in size: CGSize,
+                            scale: CGFloat = closeUp) -> Camera {
+            let s = min(maxScale, max(minScale, scale))
+            var camera = Camera(scale: s, offset: CGSize(
+                width: size.width * s * (0.5 - point.x),
+                height: size.height * s * (0.5 - point.y)))
+            let slackX = max(0, size.width * (s - 1) / 2)
+            let slackY = max(0, size.height * (s - 1) / 2)
+            camera.offset.width = min(slackX, max(-slackX, camera.offset.width))
+            camera.offset.height = min(slackY, max(-slackY, camera.offset.height))
+            return camera
+        }
     }
 
     /// The rect the world is mapped into for a given camera — the view's rect

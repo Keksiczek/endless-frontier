@@ -50,6 +50,67 @@ struct StewardTests {
         #expect(built > had, "fifty years and nobody raised a roof")
     }
 
+    /// The colony must still be a going concern in its second century, and the
+    /// canary is again *frozen* rather than *slow*.
+    ///
+    /// It was not. Upkeep is charged per tick as a share of what a building cost
+    /// to raise, and at 0.03 a tick — against a year of sixty ticks — a colony
+    /// paid **one hundred and eighty per cent of its own price every year** to
+    /// keep standing. Measured, seed 4242: twenty-three buildings by year
+    /// thirty, materials at 1, and `buildableHere` empty for the next hundred
+    /// and seventy years. Not a balance but a trap: the store clamps at zero, so
+    /// there was no way back out of it, and the beds could never be raised
+    /// however loudly the council asked for them.
+    ///
+    /// A sink that grows with everything you own, against an income that grows
+    /// only when you can afford one of three buildings — rule 6 in the ledger.
+    ///
+    /// **Solvency, not appetite.** The first version of this asked whether
+    /// `buildableHere` was non-empty at the hundredth year, and that is a
+    /// different question with a misleading answer: measured, the colony reaches
+    /// seventy-nine buildings by year eighty and then wants nothing, because the
+    /// repeat cap is `1 + population / 15` and it already has one of everything
+    /// it is allowed. Empty because it is **full**, with the material store
+    /// pinned at its cap the whole way. A colony that has finished is not a
+    /// colony that is frozen — the freeze is *cannot pay*, so pay is what this
+    /// measures.
+    @Test("A century in, the colony can still afford to build")
+    func theEconomyDoesNotSeizeUp() throws {
+        let reg = try registry()
+        var state = GameWorldFactory.newGame(registry: reg, seed: 4242)
+        state = TickEngine.advance(state, ticks: 1800, registry: reg).state   // year 30
+        let early = state.settlements[0].buildings.reduce(0) { $0 + $1.count }
+        state = TickEngine.advance(state, ticks: 4200, registry: reg).state   // year 100
+        let late = state.settlements[0].buildings.reduce(0) { $0 + $1.count }
+        #expect(late > early, """
+            the colony stood at \(early) buildings in its thirtieth year and \
+            \(late) in its hundredth — seventy years of paying to stand still
+            """)
+
+        // Could it pay for a roof, if it wanted one? Under the old upkeep it
+        // could not have paid for anything at all from year thirty on: the
+        // store clamped at zero and stayed there, which is the difference
+        // between a colony that has finished and a colony that is trapped.
+        //
+        // Cheapest by price *then by id* — a `Dictionary`'s order decides
+        // nothing here, because two buildings at the same price would otherwise
+        // make this a different test between runs.
+        let cheapest = try #require(
+            reg.buildings.values
+                .filter { $0.era == .earlySettlement && $0.cost[.materials] > 0 }
+                .min { a, b in
+                    a.cost[.materials] == b.cost[.materials]
+                        ? a.id < b.id
+                        : a.cost[.materials] < b.cost[.materials]
+                })
+        let held = state.settlements[0].storage[.materials]
+        #expect(held >= cheapest.cost[.materials], """
+            a hundred years on the colony is holding \(Int(held)) materials and \
+            the cheapest thing in the book — a \(cheapest.id) — costs \
+            \(Int(cheapest.cost[.materials])). That is the trap, not a balance.
+            """)
+    }
+
     /// Housing was the ceiling the whole game sat under: thirty beds, so a
     /// population that oscillated around twenty-six for two centuries.
     @Test("The colony outgrows the beds it started with")
@@ -143,6 +204,78 @@ struct StewardTests {
         let pick = try #require(StewardEngine.nextBuilding(for: s, in: w, registry: reg))
         #expect((reg.building(pick)?.housing ?? 0) > 0,
                 "\(beds) souls in \(beds) beds and the council built \(pick)")
+    }
+
+    /// The two numbers that decide whether a village can ever become a town,
+    /// checked against each other rather than one at a time.
+    ///
+    /// `PopulationEngine.headroomFactor` squares the free fraction of the beds
+    /// and `StewardEngine` decides when to raise another roof; either alone
+    /// reads fine. Together they were unreachable — births died at two-thirds
+    /// full and the council did not sit until ninety-five per cent — and the
+    /// colony stood at 82 beds and fifty-five souls for a hundred and eighty
+    /// years. This is that arithmetic, written down so it cannot drift apart
+    /// again: at the moment the council acts, a couple must still have a real
+    /// chance of filling what it builds.
+    @Test("The roof is raised while the births can still fill it")
+    func theTriggerIsReachable() {
+        let atTheTrigger = PopulationEngine.headroomFactor(
+            population: StewardEngine.crowdedAbove, capacity: 1)
+        #expect(atTheTrigger > 0.15, """
+            at the council's trigger a couple breeds at \(atTheTrigger) of vigour \
+            — the roof arrives after the births it was meant to house
+            """)
+    }
+
+    @Test("A town raises a roof before the last bed is taken")
+    func roofsComeBeforeTheCeiling() throws {
+        let reg = try registry()
+        var s = Settlement(
+            id: UUID(uuidString: "57E0A2D0-0000-0000-0000-000000000005")!,
+            name: "Close",
+            storage: [.materials: 400, .food: 400], storageCapacity: 500)
+        let beds = ResourceLoop.housingCapacity(s, registry: reg)
+        // Two-thirds housed: nineteen free beds, and a birth rate already down
+        // to a ninth of its vigour.
+        for i in 0..<Int(beds * 0.67) {
+            var p = Pawn(id: UUID(uuidString: String(
+                format: "57E0A2D0-5555-0000-0000-%012d", i))!, name: "H\(i)")
+            p.age = 25 * reg.config.ticksPerYear
+            s.pawns.append(p)
+        }
+        var w = GameWorldFactory.newGame(registry: reg, seed: 1)
+        w.settlements = [s]
+        let pick = try #require(StewardEngine.nextBuilding(for: s, in: w, registry: reg))
+        #expect((reg.building(pick)?.housing ?? 0) > 0,
+                "\(s.pawns.count) souls in \(Int(beds)) beds and the council built \(pick)")
+    }
+
+    /// The repeat cap grows with the population and the population is bounded
+    /// by the beds, so capping dwellings is "no more huts until there are more
+    /// people, and no more people until there are more huts".
+    @Test("A colony short of roofs is not held to the repeat cap")
+    func roofsAreExemptFromTheRepeatCap() throws {
+        let reg = try registry()
+        var s = Settlement(
+            id: UUID(uuidString: "57E0A2D0-0000-0000-0000-000000000006")!,
+            name: "Crowded",
+            buildings: [BuildingInstance(
+                id: UUID(uuidString: "57E0A2D0-1111-0000-0000-000000000006")!,
+                definitionID: "hut", count: 9)],
+            storage: [.materials: 400, .food: 400], storageCapacity: 500)
+        for i in 0..<Int(ResourceLoop.housingCapacity(s, registry: reg) * 0.9) {
+            var p = Pawn(id: UUID(uuidString: String(
+                format: "57E0A2D0-6666-0000-0000-%012d", i))!, name: "H\(i)")
+            p.age = 25 * reg.config.ticksPerYear
+            s.pawns.append(p)
+        }
+        var w = GameWorldFactory.newGame(registry: reg, seed: 1)
+        w.settlements = [s]
+        let allowed = 1 + Int(s.population / StewardEngine.soulsPerRepeatBuilding)
+        #expect(allowed < 9, "the cap is not even binding — the test proves nothing")
+        #expect(StewardEngine.buildableHere(s, in: w, registry: reg)
+            .contains { $0.sleepers > 0 },
+                "nine huts and nowhere to sleep, and the council may not build a tenth")
     }
 
     /// Nine granaries is not an answer to a full granary.

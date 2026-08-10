@@ -57,10 +57,30 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     // Resources
     public var foodPerPersonPerTick: Double
     public var defaultStorageCapacity: Double
-    /// Share of a building's materials cost charged per tick as maintenance,
-    /// when it doesn't declare an explicit `upkeep`. This is the dial that
-    /// decides whether a mature colony's economy has any tension in it: too low
-    /// and the stores just pin at the cap, too high and nothing can be built.
+    /// Share of a building's cost charged **per tick** as maintenance, when it
+    /// doesn't declare an explicit `upkeep`. This is the dial that decides
+    /// whether a mature colony's economy has any tension in it: too low and the
+    /// stores just pin at the cap, too high and nothing can be built.
+    ///
+    /// It was 0.03, which is *per tick* against a year of sixty ticks: **one
+    /// hundred and eighty per cent of a building's price, every year, for ever**.
+    /// Measured, seed 4242: the colony reached twenty-three buildings by year
+    /// thirty, materials fell to 1, and `StewardEngine.buildableHere` came back
+    /// **empty for the next hundred and seventy years**. Upkeep 15.4 a tick
+    /// against a material income of 18 before staffing and weather took their
+    /// cut — the town was paying to stand still, and could never buy the
+    /// lumberyard that would have paid for it. Not a balance: a trap, because
+    /// the store clamps at zero and there is no way back out of it.
+    ///
+    /// Rule 6 wearing a ledger: a sink that grows with **everything you own**
+    /// against an income that grows only when you can afford one of three
+    /// buildings. At 0.005 a colony still pays about thirty per cent of what it
+    /// built each year to keep it standing, so a town of two hundred buildings
+    /// is genuinely stretched — and a town of twenty-three is not frozen.
+    ///
+    /// Physical wear is *separate* and always was: `BuildingEngine.weather` and
+    /// `repair` take the roofs off in winter and charge materials to put them
+    /// back. This number is the rest of it.
     public var upkeepRateOfCost: Double
     /// Power drawn per colonist per tick, before the era multiplier.
     public var energyPerPersonPerTick: Double
@@ -165,7 +185,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         scalePressureCap: 25,
         foodPerPersonPerTick: 0.1,
         defaultStorageCapacity: 500,
-        upkeepRateOfCost: 0.03,
+        upkeepRateOfCost: 0.005,
         energyPerPersonPerTick: 0.05,
         eraEnergyDemand: [0, 0, 0.3, 1.0, 2.0, 3.5],
         influencePerPersonPerTick: 0.18,
@@ -227,7 +247,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         scalePressureCap: Double = 25,
         foodPerPersonPerTick: Double,
         defaultStorageCapacity: Double,
-        upkeepRateOfCost: Double = 0.03,
+        upkeepRateOfCost: Double = 0.005,
         energyPerPersonPerTick: Double = 0.05,
         eraEnergyDemand: [Double] = [0, 0, 0.3, 1.0, 2.0, 3.5],
         influencePerPersonPerTick: Double = 0.18,

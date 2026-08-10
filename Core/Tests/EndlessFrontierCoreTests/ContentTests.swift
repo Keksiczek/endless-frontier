@@ -55,6 +55,55 @@ struct ContentIntegrityTests {
         }
     }
 
+    /// Every event has to happen **to somebody or somewhere**.
+    ///
+    /// Thirty-four of seventy-two did neither: a drought, a wildfire, a bandit
+    /// raid and a golden age were all a number moving in a struct, and the
+    /// colony you were watching went on exactly as before. Every hook to land
+    /// them existed — `pawn_health`, `pawn_mood`, `damage_buildings` — and none
+    /// of them were used. This is the guard so a new event cannot be written
+    /// that way again.
+    @Test("Every event lands on a person or on the place")
+    func eventsHappenToSomebody() throws {
+        let reg = try registry()
+        func lands(_ effect: EventEffect) -> Bool {
+            switch effect {
+            case .pawnHealthDelta, .pawnMoodDelta, .addPawn, .removePawn,
+                 .damageBuildings, .raid, .regionHazardDelta, .regionKindChange:
+                return true
+            default:
+                return false
+            }
+        }
+        let faceless = reg.events
+            .filter { template in
+                !template.effects.contains(where: lands)
+                    && !template.choices.contains { $0.effects.contains(where: lands) }
+            }
+            .map { $0.id }
+            .sorted()
+        #expect(faceless.isEmpty,
+                "these happen to nobody and nowhere: \(faceless.joined(separator: ", "))")
+    }
+
+    /// Content Claude touches ships in both languages in the same change. The
+    /// forty-eight `narrative_hint`s that were plain strings decoded into a
+    /// `LocalizedText` with one value in it, so a Czech player read the whole
+    /// storyteller in English and nothing anywhere said so.
+    @Test("Every event narrates in Czech as well as English")
+    func eventsAreBilingual() throws {
+        let reg = try registry()
+        let english: [String] = reg.events
+            .filter { (template: EventTemplate) -> Bool in
+                template.narrativeHint.resolve(GameLanguage.cs)
+                    == template.narrativeHint.resolve(GameLanguage.en)
+            }
+            .map { $0.id }
+            .sorted()
+        #expect(english.isEmpty,
+                "these narrate in English to a Czech player: \(english.joined(separator: ", "))")
+    }
+
     @Test("Content library has grown across eras")
     func contentVolume() throws {
         let reg = try registry()

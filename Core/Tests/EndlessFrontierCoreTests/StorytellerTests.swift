@@ -114,3 +114,67 @@ struct StoryPlannerTests {
         #expect(result.state.globalStats.prosperity > 40)   // +5 effect applied
     }
 }
+
+/// An event has to still be felt on the tick after it happened.
+///
+/// It was not. `PawnEngine` recomputes `mood` from needs every single tick, and
+/// `pawn_mood` wrote into `mood` — so a golden age lifted the colony's spirits
+/// for one tick and the engine wrote over it before anybody could notice. Every
+/// authored mood effect in `events.json` was decoration. It lands on
+/// `Pawn.moodShift` now, which the mood formula reads and which fades over a
+/// season.
+@Suite("An event is felt")
+struct MoodShiftTests {
+
+    private func colony() throws -> (WorldState, GameDataRegistry) {
+        let reg = try GameDataRegistry.bundled()
+        var state = GameWorldFactory.newGame(registry: reg, seed: 99)
+        // Nobody hungry, nobody cold: the mood under test is the event's.
+        for index in state.settlements[0].pawns.indices {
+            state.settlements[0].pawns[index].needs = PawnNeeds()
+        }
+        return (state, reg)
+    }
+
+    @Test("A good year is still remembered a tick later")
+    func aLiftOutlivesTheTickItLandedOn() throws {
+        let (start, reg) = try colony()
+        let lifted = EffectApplier.apply(
+            start, effect: .pawnMoodDelta(delta: 12, selector: .all), registry: reg)
+        let before = TickEngine.advance(start, ticks: 2, registry: reg).state
+        let after = TickEngine.advance(lifted, ticks: 2, registry: reg).state
+        func averageMood(_ s: WorldState) -> Double {
+            let pawns = s.settlements[0].pawns
+            return pawns.reduce(0) { $0 + $1.mood } / Double(max(1, pawns.count))
+        }
+        #expect(averageMood(after) > averageMood(before) + 1,
+                "the colony felt the event for exactly one tick and then forgot it")
+    }
+
+    /// …and it has to actually *reach* nothing, or one good harvest marks a
+    /// colonist for life. Arithmetic rather than a world, because a living world
+    /// keeps firing new events into the same field — which is the point of it,
+    /// and makes it useless for measuring a fade.
+    @Test("…and a season later it has worn off")
+    func aLiftFades() {
+        var left = PawnEngine.moodShiftLimit
+        for _ in 0..<15 { left *= PawnEngine.moodShiftDecay }   // one season
+        #expect(left < PawnEngine.moodShiftLimit / 2, """
+            a season on, the strongest feeling a colony can hold still carries \
+            \(left) of \(PawnEngine.moodShiftLimit) — that is a mark for life, \
+            not a mood
+            """)
+        // And not so fast that nobody ever notices: still most of it next tick.
+        #expect(PawnEngine.moodShiftDecay > 0.9)
+    }
+
+    @Test("A colonist a disaster picked out is named in the chronicle")
+    func theHurtOneHasAName() throws {
+        let (start, reg) = try colony()
+        let before = start.settlements[0].journal.entries.count
+        let hurt = EffectApplier.apply(
+            start, effect: .pawnHealthDelta(delta: -8, selector: .lowestHealth), registry: reg)
+        #expect(hurt.settlements[0].journal.entries.count > before,
+                "somebody was hurt and the chronicle does not say who")
+    }
+}

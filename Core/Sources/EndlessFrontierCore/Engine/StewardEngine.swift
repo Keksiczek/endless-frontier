@@ -70,8 +70,38 @@ public enum StewardEngine {
     /// shelf, so there is something to build *with* when it decides to build.
     static let materialStock = 12
 
-    /// Housing headroom the council likes to keep. Below this it raises a roof.
-    static let housingHeadroom = 4
+    /// How full the roofs are allowed to get before the council raises another.
+    ///
+    /// **A ratio, not the last free bed**, and that is the whole of this
+    /// constant. `PopulationEngine.headroomFactor` squares the free fraction of
+    /// the beds, so a colony two-thirds housed is already breeding at a ninth of
+    /// its vigour — while a council watching `population >= housing - 4` does
+    /// not call a meeting until ninety-five per cent full. The two thresholds
+    /// could never meet, so the council never met.
+    ///
+    /// Measured, seed 4242, two hundred years: **beds stood at 82 from year
+    /// twenty to year two hundred**, population flat at 53–55, headroom down to
+    /// 0.108 and a couple's best chance at a child 0.0007 a tick. Nothing was
+    /// short of anything — granary full, fields at their wanted count — and the
+    /// village simply could not become a town.
+    ///
+    /// Rule 6 in its plainest form, wearing rule 16's clothes: a council
+    /// watching a *stock* while the thing it governs is throttled by a *ratio*.
+    /// Build against the ratio the births actually feel.
+    ///
+    /// At 0.55 a colony at the trigger still breeds at a fifth of its vigour,
+    /// and above it at more — enough that a village grows, not so much that it
+    /// cannot fail.
+    static let crowdedAbove = 0.55
+
+    /// How many beds a colony of this many souls wants standing.
+    ///
+    /// Deliberately more than one per head. A colony housed exactly to its own
+    /// size has zero headroom and therefore no next generation; the spare beds
+    /// *are* the growth.
+    public static func bedsWanted(for population: Double) -> Double {
+        population / crowdedAbove
+    }
 
     public static func advanceOneTick(
         _ state: WorldState, registry: GameDataRegistry
@@ -143,15 +173,15 @@ public enum StewardEngine {
 
         // What it is short of, worst first.
         let housing = ResourceLoop.housingCapacity(settlement, registry: registry)
-        if settlement.population >= housing - Double(housingHeadroom) {
+        if housing < bedsWanted(for: settlement.population) {
             out.append(Counsel(
                 id: "housing", weight: .wanting,
                 headline: LocalizedText(values: [
-                    .en: "Nowhere left to sleep",
-                    .cs: "Není kde spát"]),
+                    .en: "The houses are close",
+                    .cs: "V domech je těsno"]),
                 detail: LocalizedText(values: [
-                    .en: "\(Int(settlement.population)) souls to \(Int(housing)) beds — the colony cannot grow until something is raised.",
-                    .cs: "\(Int(settlement.population)) duší na \(Int(housing)) lůžek — dokud se nepostaví, osada neporoste."])))
+                    .en: "\(Int(settlement.population)) souls to \(Int(housing)) beds — families stop growing long before the last bed is taken.",
+                    .cs: "\(Int(settlement.population)) duší na \(Int(housing)) lůžek — rodiny přestanou růst dávno předtím, než dojde poslední lůžko."])))
         }
         if isBrimming(settlement) {
             out.append(Counsel(
@@ -328,11 +358,12 @@ public enum StewardEngine {
         let affordable = buildableHere(settlement, in: state, registry: registry)
         guard !affordable.isEmpty else { return nil }
 
-        // 1. A roof. Population is capped by housing, so a colony at its
-        //    ceiling stops growing entirely — which is exactly the two hundred
-        //    frozen years this engine exists to end.
+        // 1. A roof. Population is *throttled* by housing long before it is
+        //    capped by it — `crowdedAbove` is where that starts to bite, and
+        //    waiting for the last free bed is how the colony sat at 82 beds and
+        //    fifty-five souls for a hundred and eighty years.
         let housing = ResourceLoop.housingCapacity(settlement, registry: registry)
-        if settlement.population >= housing - Double(housingHeadroom),
+        if housing < bedsWanted(for: settlement.population),
            let roof = best(of: affordable, by: { $0.housing }) {
             return roof
         }
@@ -427,7 +458,9 @@ public enum StewardEngine {
     static func buildableHere(
         _ settlement: Settlement, in state: WorldState, registry: GameDataRegistry
     ) -> [BuildingDefinition] {
-        registry.buildings.values.filter { def in
+        let shortOfRoofs = ResourceLoop.housingCapacity(settlement, registry: registry)
+            < bedsWanted(for: settlement.population)
+        return registry.buildings.values.filter { def in
             guard state.unlockedBuildings.contains(def.id) || def.era == .earlySettlement
             else { return false }
             guard def.era.index <= state.era.index else { return false }
@@ -437,11 +470,20 @@ public enum StewardEngine {
                 guard cost > 0 else { continue }
                 guard settlement.storage[resource] - cost >= cost * reserve else { return false }
             }
-            // And not the ninth of something a town this size wants one of.
+            // And not the ninth of something a town this size wants one of —
+            // unless it is a roof and the colony is short of roofs.
+            //
+            // A dwelling has to be exempt, because `allowed` grows with the
+            // population and the population is bounded by the beds: leave the
+            // cap on and the colony walks into "no more huts until there are
+            // more people, and no more people until there are more huts". The
+            // same two-century freeze this engine exists to end, arriving later
+            // and at a bigger number. How many dwellings a town wants is the
+            // housing clause's business (`bedsWanted`), not this one's.
             let standing = settlement.buildings
                 .first { $0.definitionID == def.id }?.count ?? 0
             let allowed = 1 + Int(settlement.population / soulsPerRepeatBuilding)
-            guard standing < allowed else { return false }
+            guard (shortOfRoofs && def.sleepers > 0) || standing < allowed else { return false }
             return GameEngine.hasMaterials(def.materialCost, in: state,
                                            settlementID: settlement.id)
         }
@@ -477,6 +519,25 @@ public enum StewardEngine {
         // Once every few years is a standing order; four times a year is a
         // policy of permanent absence.
         guard state.tick % outwardInterval == 0 else { return state }
+
+        // **The valley gets every other sitting.**
+        //
+        // Charting the fog used to be tried first and unconditionally, and it
+        // takes the sitting whenever it succeeds. That was survivable while the
+        // colony was poor, because `canAffordToLookAround` wants a brimming
+        // store and the store was never brimming. Once the ledger stopped
+        // bleeding (`upkeepRateOfCost` 0.03 → 0.005) it was affordable *every
+        // time* — measured, seed 4242: thirteen regions charted in forty years,
+        // four workable landmarks standing in the colony's own valley the whole
+        // while, and **not one party ever sent to any of them**. Nothing was
+        // broken; the first branch of a priority chain simply became always-true
+        // and starved everything underneath it. Rule 6, wearing an `if`.
+        //
+        // Alternating is the smallest honest fix: both paths keep a share, and
+        // whichever has nothing to do hands its turn to the other on the spot.
+        let valleyFirst = (state.tick / outwardInterval) % 2 == 0
+        if valleyFirst, canSpareTheHands(settlement, registry: registry),
+           let worked = workTheValley(state, index: index, registry: registry) { return worked }
         if canAffordToLookAround(settlement),
            let charted = chartTheFog(state, registry: registry) { return charted }
         guard canSpareTheHands(settlement, registry: registry) else { return state }

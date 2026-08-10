@@ -156,12 +156,18 @@ public enum BuildingEngine {
     public static func damage(
         _ settlement: Settlement, kind: DamageKind, severity: Double,
         rng: inout SeededRNG
-    ) -> (settlement: Settlement, hit: Int, ruined: [String]) {
-        guard var colony = settlement.colony else { return (settlement, 0, []) }
+    ///
+    /// `seat` is the lot the harm took hold on — the first of `targets`, which
+    /// `pick` has already ordered by where the thing came from: the seat of a
+    /// fire, the outermost roof a raid reached. It is here so the journal entry
+    /// can carry a place and the canvas can take the player to it, instead of
+    /// "three buildings were knocked about" somewhere in a valley.
+    ) -> (settlement: Settlement, hit: Int, ruined: [String], seat: UUID?) {
+        guard var colony = settlement.colony else { return (settlement, 0, [], nil) }
         let standing = colony.placements.indices.filter {
             !colony.placements[$0].underConstruction && colony.placements[$0].condition > 0
         }
-        guard !standing.isEmpty else { return (settlement, 0, []) }
+        guard !standing.isEmpty else { return (settlement, 0, [], nil) }
 
         let strength = min(1, max(0, severity))
         let reach = max(1, Int((Double(standing.count) * kind.spread * (0.4 + strength)).rounded()))
@@ -183,7 +189,7 @@ public enum BuildingEngine {
         if !ruined.isEmpty {
             s = evictDerelict(s)
         }
-        return (s, targets.count, ruined)
+        return (s, targets.count, ruined, targets.first.map { colony.placements[$0].id })
     }
 
     /// Which buildings a given harm actually reaches.

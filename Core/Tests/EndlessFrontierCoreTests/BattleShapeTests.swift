@@ -74,22 +74,14 @@ struct BattleShapeTests {
         }
     }
 
-    /// The warband keeps its depth all the way in, because a raider walks at
-    /// whoever they closed on and is never pulled back onto a ring.
-    ///
-    /// The defenders do **not**, and that is the half of this that is still to
-    /// do — see `SiegeField.postReach`. `SiegeEngine.closingPoint` puts every
-    /// defender on `posture.reach`, one ring for the whole line, as soon as
-    /// they have a target. Holding each to their own rank's ring was tried and
-    /// reverted: it changes who fights whom, and six of eight defenders stopped
-    /// reaching anybody at all.
-    @Test("The warband keeps its depth as it comes in")
-    func theAttackKeepsItsDepth() throws {
+    /// A raid, staged and carried far enough into the fight to ask questions of.
+    private func raid(steps: Int, defenders: Int = 20, attackers: Int = 24,
+                      strength: Double = 60) throws -> Settlement {
         let registry = try GameDataRegistry.bundled()
         var settlement = Settlement(
             id: UUID(uuidString: "BA771E00-0000-0000-0000-000000000001")!,
             name: "Wallside", storage: [.food: 800], storageCapacity: 2000)
-        settlement.pawns = (0..<20).map {
+        settlement.pawns = (0..<defenders).map {
             Pawn(id: UUID(uuidString: String(format: "BA771E00-0000-0000-0000-%012d", $0))!,
                  name: "Hand \($0)")
         }
@@ -97,17 +89,64 @@ struct BattleShapeTests {
             id: UUID(uuidString: "BA771E00-0000-0000-0000-0000000000FF")!,
             startTick: 0, openedAt: 0, attackerName: "Kamenní",
             attackerTribeID: UUID(uuidString: "BA771E00-0000-0000-0000-0000000000AA")!,
-            approach: 0, attackers: 24, openingStrength: 60, fortification: 8,
-            seed: 0xBEEF, line: settlement.pawns.map(\.id))
-
-        for step in 1...4 {
+            approach: 0, attackers: attackers, openingStrength: strength,
+            fortification: 8, seed: 0xBEEF, line: settlement.pawns.map(\.id))
+        for step in 1...steps {
             settlement = SiegeEngine.advance(settlement, to: step, registry: registry)
         }
+        return settlement
+    }
+
+    /// The warband keeps its depth all the way in, because a raider walks at
+    /// whoever they closed on and is never pulled back onto a ring.
+    @Test("The warband keeps its depth as it comes in")
+    func theAttackKeepsItsDepth() throws {
+        let settlement = try raid(steps: 4)
         let siege = try #require(settlement.siege)
         let f = SiegeField(approach: siege.approach)
         let raiders = siege.fighters.filter { $0.side == .raider && !$0.down }.map(\.at)
         #expect(raiders.count > 8, "not enough of the warband left to say anything")
         #expect(depth(of: raiders, field: f) > 2,
                 "the warband came in as \(depth(of: raiders, field: f)) rows")
+    }
+
+    /// The other half, and the one that was still open: the **defence** used to
+    /// flatten the instant anybody had a target, because `closingPoint` pulled
+    /// every one of them onto `posture.reach` — one ring for the whole line.
+    /// A formation three ranks deep on the walk in became an arc in the fight.
+    ///
+    /// Now the ring is a band (`SiegeField.scrumDepth`) and bodies take up room
+    /// (`SiegeField.bodySpace`), so the line takes the shape of the warband
+    /// pressing into it.
+    @Test("The line does not flatten when the fight is joined")
+    func theDefenceKeepsItsDepthInContact() throws {
+        let settlement = try raid(steps: 12)
+        let siege = try #require(settlement.siege)
+        let f = SiegeField(approach: siege.approach)
+        let line = siege.fighters.filter { $0.side == .colony && !$0.down }.map(\.at)
+        #expect(line.count > 8, "not enough of the line left to say anything")
+        #expect(depth(of: line, field: f) > 2,
+                "the defence fights as \(depth(of: line, field: f)) rows")
+    }
+
+    /// The press is a crowd, and a crowd has nobody standing inside anybody.
+    /// This is the whole mechanism — take it away and every fighter converges
+    /// on the same contact surface, which is what two rows *is*.
+    @Test("Nobody in the press is standing on top of anybody")
+    func bodiesTakeUpRoom() throws {
+        let settlement = try raid(steps: 12)
+        let siege = try #require(settlement.siege)
+        let standing = siege.fighters.filter { !$0.down }
+        var closest = Double.infinity
+        for (i, one) in standing.enumerated() {
+            for other in standing[(i + 1)...] {
+                closest = min(closest, SiegeField.distance(one.at, other.at))
+            }
+        }
+        // One relaxation pass a step, so it converges rather than snapping —
+        // half of a body's space is the honest bar, and it is far above the
+        // nothing at all that a heap of people on one spot gives.
+        #expect(closest > SiegeField.bodySpace / 2,
+                "two fighters stand \(closest) apart — that is a heap, not a press")
     }
 }

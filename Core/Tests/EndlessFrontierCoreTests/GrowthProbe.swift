@@ -106,7 +106,7 @@ struct GrowthProbe {
         print("""
 
         ── the food chain ─────────────────────────────────────────────
-        year   pop  adult  farm  cook  plots want   shelf   food  hungry  beds  headroom
+        year   pop  adult  farm  cook  plots want   shelf   food  hungry  beds  want  headroom  mats  built  site
         """)
 
         for step in 1...20 {
@@ -129,11 +129,19 @@ struct GrowthProbe {
             let beds = ResourceLoop.housingCapacity(s, registry: registry)
             let headroom = PopulationEngine.headroomFactor(
                 population: s.population, capacity: beds)
-            print(String(format: "%4d %5d %5d %5d %5d %6d %4d %7d %6d %6d %6d %9.3f",
+            // Why the beds are what they are. `beds < want` and nothing on the
+            // stocks means the council wanted a roof and could not have one —
+            // which is a different colony from one that has all it needs, and
+            // the two look identical in the `beds` column alone.
+            let built = s.buildings.reduce(0) { $0 + $1.count }
+            print(String(format:
+                "%4d %5d %5d %5d %5d %6d %4d %7d %6d %6d %6d %5d %9.3f %5d %6d %5d",
                          step * 10, s.pawns.count, adults,
                          census(.farming), census(.cooking),
                          plots, FarmEngine.plotsWanted(for: s.population),
-                         shelf, Int(s.storage[.food]), hungry, Int(beds), headroom))
+                         shelf, Int(s.storage[.food]), hungry, Int(beds),
+                         Int(StewardEngine.bedsWanted(for: s.population)), headroom,
+                         Int(s.storage[.materials]), built, s.constructions.count))
         }
         print("──────────────────────────────────────────────────────────────\n")
     }

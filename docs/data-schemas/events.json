@@ -17,8 +17,19 @@
         "description": "Determines tension weight multiplier and UI presentation."
       },
       "name": {
-        "type": "string",
-        "description": "Display name shown in the event card."
+        "description": "Localized text: either a plain string (English only, discouraged) or an object of language codes.",
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "properties": {
+              "en": { "type": "string" },
+              "cs": { "type": "string" }
+            },
+            "required": ["en", "cs"],
+            "additionalProperties": { "type": "string" }
+          }
+        ]
       },
       "era": {
         "type": "array",
@@ -171,8 +182,19 @@
         }
       },
       "narrative_hint": {
-        "type": "string",
-        "description": "Short fallback prose used when LLM narrator is unavailable."
+        "description": "Localized text: either a plain string (English only, discouraged) or an object of language codes.",
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "properties": {
+              "en": { "type": "string" },
+              "cs": { "type": "string" }
+            },
+            "required": ["en", "cs"],
+            "additionalProperties": { "type": "string" }
+          }
+        ]
       }
     }
   }

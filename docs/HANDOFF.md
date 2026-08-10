@@ -1,3 +1,128 @@
+# Handoff — 2026-08-10 (second pass)
+
+> **The camera now goes to what happened, and the game really was running
+> twice.**
+
+Branch **`main`**. Core green, iOS build green, run on the iPhone 17 simulator.
+
+## What changed
+
+| | |
+|---|---|
+| **Something happened *to* something** | `ColonyLogEntry.Subject` — `.pawn` / `.building(placementID)` / `.place`, optional and defaulted, set where the engine already had the thing: the colonist a disaster picked out, the lot a fire took hold on (`BuildingEngine.damage` returns its `seat` now), the ground a raid was fought over, a finished roof, a newborn. The Core says *who*; it still holds no screen position. |
+| **The camera goes there** | `CanvasFocus` resolves a subject to a `LocalPoint` (`AgentMotion` for people, `normalizedLayout` for lots), `SettlementRenderer.Camera.framing` centres it under the pan gesture's own clamp, `SettlementCanvasView.fly` flies **once** and then lets go. Fires for a live siege, the battle report, a replay, and any `danger` line with a place. |
+| **Every toast with a subject is tappable** | A `scope` glyph marks it; the tap takes you there. The quiet lines — a birth, a roof — are reachable without being intrusive. |
+| **It was running twice** | `EndlessFrontierApp` opens the session from `.task` *and* from `scenePhase == .active`; a cold launch fires both, `isCatchingUp` covered only the long path, and two short opens advanced the world twice for one absence. `isOpeningSession`. Rule 29. |
+| **The valley gets a turn** | `chartTheFog` returns and was tried first, and once the ledger stopped bleeding it could afford to every sitting: forty years, thirteen regions charted, four workable landmarks at home, zero parties. Alternating sittings. Rule 27. |
+| **"Can it build" measures pay, not appetite** | `buildableHere` empty at year 100 was the colony *full*, not frozen — store at the cap, seventy-nine buildings, repeat cap `1 + population/15`. Rule 28. |
+
+## Next
+
+1. **The fertility clock** — unchanged and now measured twice: 79 buildings by
+   year eighty, then population 69 → 29 with the store at its cap. `wed`/`fert`
+   in `GrowthProbe.theCurve` are the instrument;
+   `SocialEngine.weddingMinStrength` and how fast `Relationship.strength`
+   climbs are the suspects.
+2. **The repeat cap is tied to a falling population**, so a colony that shrinks
+   can never rebuild. Look at it after the clock, not before.
+3. **Give the rest of the journal a subject.** Nineteen engines write to it and
+   six now say what they happened to. Weddings, plagues, the taming of a beast
+   and a caravan's arrival are all one argument away.
+4. Everything on the previous handoff's list below still stands.
+
+---
+
+# Handoff — 2026-08-10
+
+> **Everything on the last list is done, and the thing the last list was about
+> was not the thing that was wrong.**
+>
+> The colony was capped at ~55 and the diagnosis was housing: births die at 65%
+> occupancy, the council does not act until 95%, the two thresholds never meet.
+> That was true and it is fixed — and it moved the beds from 82 to 100 and no
+> further, because **the colony had not been able to afford anything since year
+> thirty**. `upkeepRateOfCost` is charged *per tick* at 0.03 against a year of
+> sixty ticks: **180% of the price of everything you own, every year**.
+> `buildableHere` came back empty for a hundred and seventy years while food,
+> energy and influence sat pinned at the cap. See `docs/BACKLOG.md` §11.17 and
+> rules **24**, **25**, **26**.
+
+Branch **`main`**. Tests: **Core green**. Nothing under `App/Sources` changed —
+the canvas already reads fighter positions off the Core (rule 18), so the scrum
+shows without a line of view code.
+
+## What changed
+
+| | |
+|---|---|
+| **The roofs** | `StewardEngine.bedsWanted` — build against the ratio the births feel (`crowdedAbove`, 0.55), not against the last free bed. Dwellings are exempt from the repeat cap while the colony is short of them, because `1 + population/15` grows with a population that is bounded by the beds. |
+| **The ledger** | `upkeepRateOfCost` 0.03 → **0.005** (`WorldConfig` *and* `world-config.json`). Physical wear was always separate (`BuildingEngine.weather`/`repair`). |
+| **The battle** | No ring. `closingPoint` clamps to `posture.reach + SiegeField.scrumDepth`, and `SiegeEngine.shoulder` parts anybody standing inside anybody else (`bodySpace`, three passes a step, off a snapshot). The depth is emergent: whoever reached the fighting first is in the way. §11.15b. |
+| **Events land** | The 34 that touched neither a person nor a place now break buildings, hurt the colonist least able to take it, or lift the colony — and a disaster that picks somebody out **names them in the chronicle**. |
+| **Events are felt** | `pawn_mood` wrote into `mood`, which `PawnEngine` recomputes from needs every tick, so every authored mood effect in the game lasted one tick. It lands on `Pawn.moodShift` now and fades over a season. |
+| **Events speak Czech** | 48 plain-string `narrative_hint`s are `{en, cs}`. Guarded, with the above, by two tests in `ContentTests`. |
+
+Measured, seed 4242, two hundred years, before → after:
+
+```
+buildings   23 → 79      beds  82 → 160
+peak pop    55 → 69      best chance at a child  0.0007 → 0.0031
+```
+
+## Next — the ceiling that is left, and where it is
+
+The curve now **peaks at 69 around year eighty and decays to 29 by year two
+hundred**, all of old age. Housing is not it (headroom 0.32–0.35 through the
+growth years), food is not it (granary at the cap the whole way), the ledger is
+not it (materials at the cap from year sixty).
+
+It is `fert` in `GrowthProbe.theCurve` — couples with **both** partners inside
+the fertile window. It runs 9–12 while the colony grows and **1–4 for the whole
+second century**. The founders age out together and the bonds that would replace
+them form too slowly to catch it: a colonist has to make a friend, the friendship
+has to reach `SocialEngine.weddingMinStrength`, and by the time it does the
+couple is past its best years.
+
+So the next question is the **social clock**, not the roofs and not the ledger:
+how fast `Relationship.strength` climbs, and whether a widow or widower ever
+finds anybody again. Measure first — `wed` and `fert` are already the instrument
+— and beware the shape this project keeps producing: a threshold beyond the reach
+of the rate meant to cross it (rule 6, now nine times).
+
+After that, in order:
+
+1. **`GrowthProbe.theChain` has new columns** (`want`, `mats`, `built`, `site`).
+   Use them: `beds < want` with `mats` at 1 is a colony that wanted a roof and
+   could not have one, and it looks identical to a contented one in the `beds`
+   column alone.
+2. **The battle has no sound and no haptics**, and `BattleMoment` still does not
+   carry the wound kind, so the report says "wounded" where it could say "a stab
+   to the shoulder".
+3. **Buildings that cannot be sited are still built.** `GameEngine.build` enqueues
+   with `placementID: nil` when `ColonyBuilder.placeSiteAtFirstFit` finds no room,
+   so a full 24×24 colony grows a ledger the canvas cannot show (rule 18). It has
+   not bitten yet at 79 buildings; it will.
+4. **Old English content** — buildings and techs are still English-only. Events
+   are done.
+
+## Things that will bite you
+
+Everything in the previous handoff's list still holds. Add:
+
+1. **Say a per-tick rate out loud times `ticksPerYear` before believing it**
+   (rule 24). 0.03 a tick is 180% a year.
+2. **A store that clamps at zero turns a sink into a trap** (rule 25). Ask what
+   income scales with the cost, and whether the colony can still reach it from
+   the floor.
+3. **An effect written into a derived field does nothing** (rule 26). `mood` is
+   recomputed every tick; so is `Settlement.population`.
+4. **Do not compare two probe runs across an edit.** Both probes take two and a
+   half minutes; a background run started before an edit finishes against the old
+   code, and combat changes move the growth curve. Determinism is intact —
+   checked directly, two processes, identical fingerprints for 800 ticks.
+
+---
+
 # Handoff — 2026-08-07 (third pass)
 
 > **Everything on the previous handoff's list is done.** Newcomers (§11.11),

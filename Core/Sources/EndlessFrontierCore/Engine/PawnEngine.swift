@@ -31,6 +31,17 @@ public enum PawnEngine {
     static let xpPerTickWorking: Double = 0.5
     static let xpPerLevel: Double = 100
     static let maxSkill: Int = 20
+    /// What is left of a colonist's `moodShift` after one more tick.
+    ///
+    /// 0.95 halves it in about fourteen ticks — a season — so a bad harvest
+    /// sits with people into the next one and a market day has worn off by the
+    /// time the next caravan comes. Without a decay a single event would mark
+    /// somebody for life; without a *shift* at all, `PawnEngine` rewrote mood
+    /// from needs every tick and no event was ever felt for longer than one.
+    static let moodShiftDecay: Double = 0.95
+    /// The most any run of events can move a colonist either way, so a decade of
+    /// good years cannot make a starving colonist cheerful.
+    static let moodShiftLimit: Double = 25
     // Mood break thresholds (hysteresis) and the morale drain while broken.
     static let breakEnterMood: Double = 20
     static let breakExitMood: Double = 40
@@ -133,8 +144,12 @@ public enum PawnEngine {
             // People notice what is on the table. Short rations are a decision
             // the colony can feel, which is what makes them a real choice
             // rather than a free saving.
+            // …and whatever last happened to them, still fading.
+            s.pawns[i].moodShift *= moodShiftDecay
+            if abs(s.pawns[i].moodShift) < 0.05 { s.pawns[i].moodShift = 0 }
             s.pawns[i].mood = min(max(s.pawns[i].needs.average + s.pawns[i].trait.moodModifier
-                                      + moodBonus - roofless + ration.moodEffect, 0), 100)
+                                      + moodBonus - roofless + ration.moodEffect
+                                      + s.pawns[i].moodShift, 0), 100)
 
             // Mental break with hysteresis.
             if s.pawns[i].mood < breakEnterMood {

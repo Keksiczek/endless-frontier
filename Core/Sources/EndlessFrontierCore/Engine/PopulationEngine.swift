@@ -164,6 +164,9 @@ public enum PopulationEngine {
                     s.pawns[heir].wealth += death.pawn.wealth * inheritanceShare
                 }
                 let years = death.pawn.ageYears(ticksPerYear: ticksPerYear)
+                // No subject: they are not standing anywhere any more, and a
+                // camera that flies to where a dead colonist *was* is pointing
+                // at empty ground.
                 s.journal.append(tick: tick, kind: .death, text: LocalizedText(values: [
                     .en: "\(death.pawn.name) has died at \(years) — \(death.cause.label.resolve(.en)).",
                     .cs: "\(death.pawn.name) zemřel(a) v \(years) letech — \(death.cause.label.resolve(.cs))."
@@ -198,7 +201,7 @@ public enum PopulationEngine {
                 s.journal.append(tick: tick, kind: .birth, text: LocalizedText(values: [
                     .en: "\(names) welcomed a child — \(child.name).",
                     .cs: "\(namesCS) přivedli na svět dítě — \(child.name)."
-                ]))
+                ]), subject: .pawn(child.id))
                 s.pawns.append(child)
                 // The bond remembers. It is what spaces the next one.
                 if let partnerID,

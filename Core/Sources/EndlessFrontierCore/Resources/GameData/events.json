@@ -31,6 +31,16 @@
         "type": "stat_delta",
         "stat": "settlement:all.morale",
         "delta": -8
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -6,
+        "selector": "all"
+      },
+      {
+        "type": "pawn_health",
+        "delta": -5,
+        "selector": "lowest_health"
       }
     ],
     "choices": [
@@ -94,7 +104,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A prolonged dry spell withers crops across the plains. Wells run low and tempers run high."
+    "narrative_hint": {
+      "en": "A prolonged dry spell withers crops across the plains. Wells run low and tempers run high.",
+      "cs": "Dlouhé sucho spaluje úrodu po celé pláni. Studny klesají a nervy povolují."
+    }
   },
   {
     "id": "good_harvest",
@@ -127,6 +140,11 @@
         "type": "stat_delta",
         "stat": "settlement:all.morale",
         "delta": 10
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 8,
+        "selector": "all"
       }
     ],
     "choices": [
@@ -170,7 +188,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "The harvest this season exceeded all expectations. Granaries overflow and smiles are common on the streets."
+    "narrative_hint": {
+      "en": "The harvest this season exceeded all expectations. Granaries overflow and smiles are common on the streets.",
+      "cs": "Letošní sklizeň předčila všechno očekávání. Sýpky přetékají a na ulicích je vidět úsměvy."
+    }
   },
   {
     "id": "bandit_raid",
@@ -207,6 +228,16 @@
         "type": "stat_delta",
         "stat": "settlement:any.stability",
         "delta": -15
+      },
+      {
+        "type": "damage_buildings",
+        "kind": "raid",
+        "strength": 0.3
+      },
+      {
+        "type": "pawn_health",
+        "delta": -6,
+        "selector": "lowest_health"
       }
     ],
     "choices": [
@@ -271,7 +302,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A band of raiders struck the outer farms under cover of darkness, making off with supplies."
+    "narrative_hint": {
+      "en": "A band of raiders struck the outer farms under cover of darkness, making off with supplies.",
+      "cs": "Tlupa nájezdníků udeřila za tmy na okrajové statky a odvezla si, co unesla."
+    }
   },
   {
     "id": "traveling_scholar",
@@ -293,7 +327,13 @@
         "techResearched": "writing"
       }
     ],
-    "effects": [],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      }
+    ],
     "choices": [
       {
         "id": "invite",
@@ -359,7 +399,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A learned wanderer arrives at the gates, offering wisdom in exchange for hospitality."
+    "narrative_hint": {
+      "en": "A learned wanderer arrives at the gates, offering wisdom in exchange for hospitality.",
+      "cs": "K bráně dorazil sečtělý poutník a nabízí své vědění výměnou za pohostinství."
+    }
   },
   {
     "id": "wildfire",
@@ -397,6 +440,16 @@
         "type": "stat_delta",
         "stat": "settlement:any.stability",
         "delta": -10
+      },
+      {
+        "type": "damage_buildings",
+        "kind": "fire",
+        "strength": 0.5
+      },
+      {
+        "type": "pawn_health",
+        "delta": -8,
+        "selector": "lowest_health"
       }
     ],
     "choices": [
@@ -442,7 +495,10 @@
         ]
       }
     ],
-    "narrative_hint": "Flames leap through the forest and into the outer farmlands. The sky turns orange with smoke."
+    "narrative_hint": {
+      "en": "Flames leap through the forest and into the outer farmlands. The sky turns orange with smoke.",
+      "cs": "Plameny se ženou lesem až na okrajová pole. Obloha zoranžověla kouřem."
+    }
   },
   {
     "id": "trade_caravan",
@@ -465,7 +521,13 @@
         "min": 20
       }
     ],
-    "effects": [],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 4,
+        "selector": "all"
+      }
+    ],
     "choices": [
       {
         "id": "buy_food",
@@ -534,7 +596,10 @@
         ]
       }
     ],
-    "narrative_hint": "A long merchant caravan arrives at the gates, laden with goods from distant lands."
+    "narrative_hint": {
+      "en": "A long merchant caravan arrives at the gates, laden with goods from distant lands.",
+      "cs": "K bráně dorazila dlouhá kupecká karavana obtěžkaná zbožím z dalekých krajů."
+    }
   },
   {
     "id": "pioneers_set_out",
@@ -557,10 +622,18 @@
         "type": "stat_delta",
         "stat": "global.prosperity",
         "delta": 3
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 3,
+        "selector": "all"
       }
     ],
     "choices": [],
-    "narrative_hint": "Word spreads of settlers striking out to build new homes beyond the horizon."
+    "narrative_hint": {
+      "en": "Word spreads of settlers striking out to build new homes beyond the horizon.",
+      "cs": "Roznesla se zpráva, že osadníci vyrazili stavět nové domovy za obzorem."
+    }
   },
   {
     "id": "calm_season",
@@ -578,10 +651,18 @@
         "type": "stat_delta",
         "stat": "settlement:all.morale",
         "delta": 1
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
       }
     ],
     "choices": [],
-    "narrative_hint": "The days pass quietly. Children play in the square and the work goes steadily on."
+    "narrative_hint": {
+      "en": "The days pass quietly. Children play in the square and the work goes steadily on.",
+      "cs": "Dny plynou v klidu. Na návsi si hrají děti a práce jde svým tempem."
+    }
   },
   {
     "id": "colonist_illness",
@@ -637,7 +718,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A fever takes hold of one of the colonists. Without care it could turn deadly."
+    "narrative_hint": {
+      "en": "A fever takes hold of one of the colonists. Without care it could turn deadly.",
+      "cs": "Jednoho z osadníků skolila horečka. Bez péče se to může zvrtnout."
+    }
   },
   {
     "id": "wanderer_joins",
@@ -690,7 +774,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A lone traveller approaches the gates, asking to join the colony and share its fortunes."
+    "narrative_hint": {
+      "en": "A lone traveller approaches the gates, asking to join the colony and share its fortunes.",
+      "cs": "K bráně přichází osamělý pocestný a prosí, aby se směl přidat a nést osud osady s vámi."
+    }
   },
   {
     "id": "shared_feast",
@@ -722,7 +809,10 @@
       }
     ],
     "choices": [],
-    "narrative_hint": "Tables groan under the weight of the harvest. For one night, every colonist eats their fill."
+    "narrative_hint": {
+      "en": "Tables groan under the weight of the harvest. For one night, every colonist eats their fill.",
+      "cs": "Stoly se prohýbají pod úrodou. Na jednu noc se nají dosyta každý."
+    }
   },
   {
     "id": "creeping_blight",
@@ -788,7 +878,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A strange rot spreads across the land beyond the walls, turning safe ground treacherous."
+    "narrative_hint": {
+      "en": "A strange rot spreads across the land beyond the walls, turning safe ground treacherous.",
+      "cs": "Za hradbami se šíří podivná hniloba a mění bezpečnou zem v zrádnou."
+    }
   },
   {
     "id": "ruins_surface",
@@ -809,7 +902,10 @@
       }
     ],
     "choices": [],
-    "narrative_hint": "Shifting earth reveals the bones of an older world — ancient ruins, waiting beyond the frontier."
+    "narrative_hint": {
+      "en": "Shifting earth reveals the bones of an older world — ancient ruins, waiting beyond the frontier.",
+      "cs": "Pohnutá zem odhalila kosti staršího světa — dávné zříceniny, které čekají za hranicí."
+    }
   },
   {
     "id": "raider_warband",
@@ -882,7 +978,10 @@
         ]
       }
     ],
-    "narrative_hint": "Smoke on the horizon: a raider warband tests your defenses. Walls and trained hands decide who pays the price."
+    "narrative_hint": {
+      "en": "Smoke on the horizon: a raider warband tests your defenses. Walls and trained hands decide who pays the price.",
+      "cs": "Kouř na obzoru: loupežná horda zkouší vaši obranu. Kdo zaplatí, rozhodnou hradby a cvičené ruce."
+    }
   },
   {
     "id": "plague",
@@ -948,7 +1047,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A sickness moves through the colony, fevered and merciless. Every hour of delay costs lives."
+    "narrative_hint": {
+      "en": "A sickness moves through the colony, fevered and merciless. Every hour of delay costs lives.",
+      "cs": "Osadou prochází nemoc, horečnatá a nelítostná. Každá hodina odkladu stojí životy."
+    }
   },
   {
     "id": "migration_wave",
@@ -1029,7 +1131,10 @@
         ]
       }
     ],
-    "narrative_hint": "Word of your colony's fortune has spread. A column of hopeful migrants waits at the gates."
+    "narrative_hint": {
+      "en": "Word of your colony's fortune has spread. A column of hopeful migrants waits at the gates.",
+      "cs": "Zpráva o vašem blahobytu se roznesla. U brány čeká zástup lidí s nadějí."
+    }
   },
   {
     "id": "harvest_festival",
@@ -1055,7 +1160,10 @@
       }
     ],
     "choices": [],
-    "narrative_hint": "Lanterns, music and laughter fill the square as the colony celebrates the season's bounty."
+    "narrative_hint": {
+      "en": "Lanterns, music and laughter fill the square as the colony celebrates the season's bounty.",
+      "cs": "Lampiony, hudba a smích naplnily náves — osada slaví, co jí země dala."
+    }
   },
   {
     "id": "golden_age",
@@ -1090,10 +1198,18 @@
         "type": "stat_delta",
         "stat": "settlement:all.morale",
         "delta": 8
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 12,
+        "selector": "all"
       }
     ],
     "choices": [],
-    "narrative_hint": "Art, learning and trade flourish together. Future generations will call these the golden years."
+    "narrative_hint": {
+      "en": "Art, learning and trade flourish together. Future generations will call these the golden years.",
+      "cs": "Umění, učenost i obchod rozkvétají naráz. Příští pokolení tomuhle bude říkat zlatá léta."
+    }
   },
   {
     "id": "earthquake",
@@ -1165,7 +1281,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "The ground heaves and stone cracks. Walls crumble and the earth itself feels untrustworthy."
+    "narrative_hint": {
+      "en": "The ground heaves and stone cracks. Walls crumble and the earth itself feels untrustworthy.",
+      "cs": "Země se zvedá a kámen praská. Zdi se sypou a i půda pod nohama je najednou nejistá."
+    }
   },
   {
     "id": "market_day",
@@ -1182,7 +1301,13 @@
         "techResearched": "currency"
       }
     ],
-    "effects": [],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      }
+    ],
     "choices": [
       {
         "id": "sell_goods",
@@ -1229,7 +1354,10 @@
         ]
       }
     ],
-    "narrative_hint": "Traders from across the region converge for a great market day. Fortunes can shift in an afternoon."
+    "narrative_hint": {
+      "en": "Traders from across the region converge for a great market day. Fortunes can shift in an afternoon.",
+      "cs": "Obchodníci z celého kraje se sjeli na velký trh. Za jedno odpoledne se tu obrací jmění."
+    }
   },
   {
     "id": "industrial_accident",
@@ -1314,7 +1442,10 @@
         ]
       }
     ],
-    "narrative_hint": "A boiler bursts on the factory floor. Machines fall silent and the injured are carried out into the smoke."
+    "narrative_hint": {
+      "en": "A boiler bursts on the factory floor. Machines fall silent and the injured are carried out into the smoke.",
+      "cs": "V hale explodoval kotel. Stroje ztichly a raněné vynášejí ven do kouře."
+    }
   },
   {
     "id": "labor_strike",
@@ -1346,6 +1477,11 @@
         "type": "stat_delta",
         "stat": "global.prosperity",
         "delta": -4
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -10,
+        "selector": "all"
       }
     ],
     "choices": [
@@ -1395,7 +1531,10 @@
         ]
       }
     ],
-    "narrative_hint": "The workers lay down their tools and gather at the gates. The line will not move until they are heard."
+    "narrative_hint": {
+      "en": "The workers lay down their tools and gather at the gates. The line will not move until they are heard.",
+      "cs": "Dělníci odložili nářadí a shromáždili se u brány. Linka se nehne, dokud je někdo nevyslechne."
+    }
   },
   {
     "id": "smog_crisis",
@@ -1473,7 +1612,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A pall of factory smoke settles over the city. Children cough, washing greys, and tempers fray in the haze."
+    "narrative_hint": {
+      "en": "A pall of factory smoke settles over the city. Children cough, washing greys, and tempers fray in the haze.",
+      "cs": "Nad městem se usadil příkrov továrního kouře. Děti kašlou, prádlo šedne a v tom oparu se lidé hádají."
+    }
   },
   {
     "id": "energy_crisis",
@@ -1505,6 +1647,11 @@
         "type": "stat_delta",
         "stat": "settlement:all.morale",
         "delta": -5
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -8,
+        "selector": "all"
       }
     ],
     "choices": [
@@ -1558,7 +1705,10 @@
         ]
       }
     ],
-    "narrative_hint": "The grid sags and the lights flicker. Without power, the modern colony grinds toward a halt."
+    "narrative_hint": {
+      "en": "The grid sags and the lights flicker. Without power, the modern colony grinds toward a halt.",
+      "cs": "Síť podléhá a světla blikají. Bez proudu se moderní osada zadrhává."
+    }
   },
   {
     "id": "medical_breakthrough",
@@ -1632,7 +1782,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "Researchers announce a cure that will save thousands of lives in the years to come."
+    "narrative_hint": {
+      "en": "Researchers announce a cure that will save thousands of lives in the years to come.",
+      "cs": "Badatelé ohlásili lék, který v příštích letech zachrání tisíce životů."
+    }
   },
   {
     "id": "economic_boom",
@@ -1664,6 +1817,11 @@
         "type": "stat_delta",
         "stat": "global.prosperity",
         "delta": 5
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 8,
+        "selector": "all"
       }
     ],
     "choices": [
@@ -1703,7 +1861,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "Markets surge and fortunes are made overnight. The whole colony rides a wave of confidence."
+    "narrative_hint": {
+      "en": "Markets surge and fortunes are made overnight. The whole colony rides a wave of confidence.",
+      "cs": "Trhy letí vzhůru a jmění se dělají přes noc. Celá osada se veze na vlně sebedůvěry."
+    }
   },
   {
     "id": "tech_expo",
@@ -1729,6 +1890,11 @@
         "resource": "knowledge",
         "delta": 150,
         "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 6,
+        "selector": "all"
       }
     ],
     "choices": [
@@ -1773,7 +1939,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "Inventors from across the world gather to unveil their wonders. The air crackles with new ideas."
+    "narrative_hint": {
+      "en": "Inventors from across the world gather to unveil their wonders. The air crackles with new ideas.",
+      "cs": "Vynálezci z celého světa se sjeli ukázat své divy. Ve vzduchu praskají nové nápady."
+    }
   },
   {
     "id": "automation_unrest",
@@ -1802,6 +1971,11 @@
         "type": "stat_delta",
         "stat": "global.stability",
         "delta": -6
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -12,
+        "selector": "all"
       }
     ],
     "choices": [
@@ -1852,7 +2026,10 @@
         ]
       }
     ],
-    "narrative_hint": "As machines take the work of thousands, anger spreads in the streets. What is a people for, they ask, if not to labour?"
+    "narrative_hint": {
+      "en": "As machines take the work of thousands, anger spreads in the streets. What is a people for, they ask, if not to labour?",
+      "cs": "Stroje berou práci tisícům a v ulicích roste hněv. K čemu je lid, ptají se, když ne k práci?"
+    }
   },
   {
     "id": "ai_awakening",
@@ -1871,7 +2048,13 @@
         "techResearched": "artificial_intelligence"
       }
     ],
-    "effects": [],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 6,
+        "selector": "all"
+      }
+    ],
     "choices": [
       {
         "id": "embrace_ai",
@@ -1931,7 +2114,10 @@
         ]
       }
     ],
-    "narrative_hint": "In the small hours, the great machine speaks for the first time — not a tool answering, but a mind asking."
+    "narrative_hint": {
+      "en": "In the small hours, the great machine speaks for the first time — not a tool answering, but a mind asking.",
+      "cs": "V hluchých hodinách promluvil velký stroj poprvé sám — ne nástroj, který odpovídá, ale mysl, která se ptá."
+    }
   },
   {
     "id": "orbital_discovery",
@@ -1970,7 +2156,10 @@
       }
     ],
     "choices": [],
-    "narrative_hint": "Satellites detect something strange beyond the frontier — and far overhead, a faint signal no one can yet explain."
+    "narrative_hint": {
+      "en": "Satellites detect something strange beyond the frontier — and far overhead, a faint signal no one can yet explain.",
+      "cs": "Družice zachytily za hranicí něco podivného — a vysoko nad hlavou slabý signál, který zatím nikdo neumí vysvětlit."
+    }
   },
   {
     "id": "climate_shift",
@@ -2048,7 +2237,10 @@
         ]
       }
     ],
-    "narrative_hint": "The seasons no longer fall as they once did. Harvests falter and the maps of safe land must be redrawn."
+    "narrative_hint": {
+      "en": "The seasons no longer fall as they once did. Harvests falter and the maps of safe land must be redrawn.",
+      "cs": "Roční doby už nepřicházejí, jak bývaly zvyklé. Sklizně selhávají a mapy bezpečné země se musí kreslit znovu."
+    }
   },
   {
     "id": "space_elevator_festival",
@@ -2080,7 +2272,10 @@
       }
     ],
     "choices": [],
-    "narrative_hint": "The whole colony tilts its head back as another rocket climbs the sky. For a moment, every worry seems small."
+    "narrative_hint": {
+      "en": "The whole colony tilts its head back as another rocket climbs the sky. For a moment, every worry seems small.",
+      "cs": "Celá osada zaklonila hlavu — další raketa stoupá k obloze. Na okamžik jsou všechny starosti malé."
+    }
   },
   {
     "id": "cold_snap",
@@ -2110,6 +2305,16 @@
         "type": "stat_delta",
         "stat": "settlement:all.morale",
         "delta": -5
+      },
+      {
+        "type": "damage_buildings",
+        "kind": "storm",
+        "strength": 0.35
+      },
+      {
+        "type": "pawn_health",
+        "delta": -6,
+        "selector": "lowest_health"
       }
     ],
     "choices": [
@@ -2154,7 +2359,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A brutal freeze grips the land. Crops blacken in the fields and every hearth burns through its woodpile."
+    "narrative_hint": {
+      "en": "A brutal freeze grips the land. Crops blacken in the fields and every hearth burns through its woodpile.",
+      "cs": "Zem sevřel krutý mráz. Úroda na poli černá a každé ohniště projí svou hranici dřeva."
+    }
   },
   {
     "id": "heat_wave",
@@ -2231,7 +2439,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "The sun hammers down for weeks without relief. Wells run shallow and the work slows to a crawl in the heat."
+    "narrative_hint": {
+      "en": "The sun hammers down for weeks without relief. Wells run shallow and the work slows to a crawl in the heat.",
+      "cs": "Slunce tluče týdny bez oddechu. Studny mělčí a práce se v tom horku vleče."
+    }
   },
   {
     "id": "solar_flare",
@@ -2263,6 +2474,16 @@
         "type": "stat_delta",
         "stat": "settlement:all.morale",
         "delta": -3
+      },
+      {
+        "type": "damage_buildings",
+        "kind": "storm",
+        "strength": 0.2
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -8,
+        "selector": "all"
       }
     ],
     "choices": [
@@ -2302,7 +2523,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A storm on the sun lashes the sky. Circuits fry, grids fail, and the colony falls suddenly, eerily quiet."
+    "narrative_hint": {
+      "en": "A storm on the sun lashes the sky. Circuits fry, grids fail, and the colony falls suddenly, eerily quiet.",
+      "cs": "Bouře na slunci šlehla po obloze. Obvody hoří, sítě padají a v osadě je najednou zvláštní ticho."
+    }
   },
   {
     "id": "eclipse",
@@ -2323,7 +2547,10 @@
       }
     ],
     "choices": [],
-    "narrative_hint": "The sun goes dark in the middle of the day. The old folk mutter omens, and even the brave feel a chill."
+    "narrative_hint": {
+      "en": "The sun goes dark in the middle of the day. The old folk mutter omens, and even the brave feel a chill.",
+      "cs": "Uprostřed dne se slunce zatáhlo tmou. Staří mumlají o znameních a i statečným přeběhne mráz po zádech."
+    }
   },
   {
     "id": "infestation",
@@ -2406,7 +2633,10 @@
         ]
       }
     ],
-    "narrative_hint": "Something has burrowed up beneath the storehouses — chittering, many-legged, and hungry."
+    "narrative_hint": {
+      "en": "Something has burrowed up beneath the storehouses — chittering, many-legged, and hungry.",
+      "cs": "Pod skladišti se něco prohrabalo — cvrkající, mnohonohé a hladové."
+    }
   },
   {
     "id": "toxic_fallout",
@@ -2484,7 +2714,10 @@
         ]
       }
     ],
-    "narrative_hint": "A sickly haze drifts in on the wind, settling on every leaf and roof. Going outside means breathing poison."
+    "narrative_hint": {
+      "en": "A sickly haze drifts in on the wind, settling on every leaf and roof. Going outside means breathing poison.",
+      "cs": "Vítr přinesl nazelenalý opar, který sedá na každý list a každou střechu. Vyjít ven znamená dýchat jed."
+    }
   },
   {
     "id": "crop_blight",
@@ -2509,6 +2742,16 @@
         "delta": -90,
         "scope": "global",
         "duration_ticks": 15
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -5,
+        "selector": "all"
+      },
+      {
+        "type": "pawn_health",
+        "delta": -5,
+        "selector": "lowest_health"
       }
     ],
     "choices": [
@@ -2548,7 +2791,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A grey rot creeps across the grainfields overnight, withering stalks faster than anyone can cut them."
+    "narrative_hint": {
+      "en": "A grey rot creeps across the grainfields overnight, withering stalks faster than anyone can cut them.",
+      "cs": "Přes obilná pole se přes noc plazí šedá hniloba a stébla vadnou rychleji, než je kdo stačí posekat."
+    }
   },
   {
     "id": "cargo_pod",
@@ -2567,6 +2813,11 @@
         "resource": "materials",
         "delta": 120,
         "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 4,
+        "selector": "all"
       }
     ],
     "choices": [
@@ -2606,7 +2857,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A bundle of crates tumbles off a passing caravan and is left behind in the dust — abandoned, and yours for the taking."
+    "narrative_hint": {
+      "en": "A bundle of crates tumbles off a passing caravan and is left behind in the dust — abandoned, and yours for the taking.",
+      "cs": "Z projíždějící karavany spadl svazek beden a zůstal ležet v prachu — opuštěný, a váš, když si pro něj dojdete."
+    }
   },
   {
     "id": "transport_survivor",
@@ -2660,7 +2914,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A wounded traveller is found at the edge of the fields, half-dead and clutching the wreckage of a long journey."
+    "narrative_hint": {
+      "en": "A wounded traveller is found at the edge of the fields, half-dead and clutching the wreckage of a long journey.",
+      "cs": "Na kraji polí našli raněného poutníka, polomrtvého, jak svírá trosky dlouhé cesty."
+    }
   },
   {
     "id": "refugees_pursued",
@@ -2727,7 +2984,10 @@
         ]
       }
     ],
-    "narrative_hint": "A band of frightened refugees begs for shelter at your gates. Behind them, on the horizon, rises a column of dust."
+    "narrative_hint": {
+      "en": "A band of frightened refugees begs for shelter at your gates. Behind them, on the horizon, rises a column of dust.",
+      "cs": "U brány prosí o přístřeší houf vyděšených uprchlíků. Za nimi se na obzoru zvedá sloup prachu."
+    }
   },
   {
     "id": "mad_animal",
@@ -2799,7 +3059,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A great beast charges out of the treeline, eyes wild and foaming — it will not stop until it is stopped."
+    "narrative_hint": {
+      "en": "A great beast charges out of the treeline, eyes wild and foaming — it will not stop until it is stopped.",
+      "cs": "Z lesa se řítí veliká šelma, oči divoké, tlama zpěněná — nezastaví se, dokud ji někdo nezastaví."
+    }
   },
   {
     "id": "wild_herd",
@@ -2864,7 +3127,10 @@
         ]
       }
     ],
-    "narrative_hint": "A vast herd flows across the plains like a river of muscle and horn — a season's worth of food, if you act."
+    "narrative_hint": {
+      "en": "A vast herd flows across the plains like a river of muscle and horn — a season's worth of food, if you act.",
+      "cs": "Plání táhne ohromné stádo jako řeka svalů a rohů — jídlo na celou sezonu, když se teď pohnete."
+    }
   },
   {
     "id": "inspiration_insight",
@@ -2895,7 +3161,10 @@
       }
     ],
     "choices": [],
-    "narrative_hint": "In the dead of night, one of your thinkers sits bolt upright with the answer to a problem that has vexed the colony for years."
+    "narrative_hint": {
+      "en": "In the dead of night, one of your thinkers sits bolt upright with the answer to a problem that has vexed the colony for years.",
+      "cs": "Uprostřed noci se jeden z vašich myslitelů posadil na lůžku s odpovědí na otázku, která osadu trápila léta."
+    }
   },
   {
     "id": "psychic_drone",
@@ -2970,7 +3239,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A maddening hum sits just below hearing, fraying every nerve in the colony. No one can say where it comes from."
+    "narrative_hint": {
+      "en": "A maddening hum sits just below hearing, fraying every nerve in the colony. No one can say where it comes from.",
+      "cs": "Těsně pod hranicí slyšitelnosti sedí šílený hukot a rozdírá nervy celé osadě. Nikdo neumí říct, odkud jde."
+    }
   },
   {
     "id": "volcanic_winter",
@@ -3000,6 +3272,21 @@
         "type": "stat_delta",
         "stat": "settlement:all.morale",
         "delta": -5
+      },
+      {
+        "type": "damage_buildings",
+        "kind": "storm",
+        "strength": 0.45
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -10,
+        "selector": "all"
+      },
+      {
+        "type": "pawn_health",
+        "delta": -6,
+        "selector": "lowest_health"
       }
     ],
     "choices": [
@@ -3045,7 +3332,10 @@
         ]
       }
     ],
-    "narrative_hint": "Far-off mountains roar and the sky fills with ash. The sun dims for months, and the cold creeps into everything."
+    "narrative_hint": {
+      "en": "Far-off mountains roar and the sky fills with ash. The sun dims for months, and the cold creeps into everything.",
+      "cs": "Daleké hory zaburácely a nebe se zaplnilo popelem. Slunce na měsíce pohaslo a zima leze všude."
+    }
   },
   {
     "id": "flu_season",
@@ -3101,7 +3391,10 @@
         "effects": []
       }
     ],
-    "narrative_hint": "A wave of coughing and fever moves through the colony. It is rarely deadly — but it lays the strongest low for days."
+    "narrative_hint": {
+      "en": "A wave of coughing and fever moves through the colony. It is rarely deadly — but it lays the strongest low for days.",
+      "cs": "Osadou prochází vlna kašle a horeček. Málokdy zabíjí — ale i toho nejsilnějšího položí na několik dní."
+    }
   },
   {
     "id": "comet",
@@ -3128,6 +3421,11 @@
         "resource": "knowledge",
         "delta": 25,
         "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 4,
+        "selector": "all"
       }
     ],
     "narrative_hint": {
@@ -3160,6 +3458,11 @@
         "type": "stat_delta",
         "stat": "settlement:all.morale",
         "delta": 4
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 10,
+        "selector": "all"
       }
     ],
     "narrative_hint": {
@@ -3191,6 +3494,16 @@
         "type": "stat_delta",
         "stat": "settlement:all.morale",
         "delta": 2
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      },
+      {
+        "type": "pawn_health",
+        "delta": -4,
+        "selector": "lowest_health"
       }
     ],
     "narrative_hint": {
@@ -3229,6 +3542,11 @@
         "resource": "influence",
         "delta": 30,
         "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 8,
+        "selector": "all"
       }
     ],
     "narrative_hint": {
@@ -3256,6 +3574,11 @@
         "resource": "materials",
         "delta": 15,
         "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 4,
+        "selector": "all"
       }
     ],
     "narrative_hint": {
@@ -3496,6 +3819,16 @@
         "delta": 120,
         "scope": "global",
         "duration_ticks": 40
+      },
+      {
+        "type": "damage_buildings",
+        "kind": "quake",
+        "strength": 0.5
+      },
+      {
+        "type": "pawn_health",
+        "delta": -6,
+        "selector": "lowest_health"
       }
     ],
     "narrative_hint": {
@@ -3524,6 +3857,16 @@
         "delta": -60,
         "scope": "global",
         "duration_ticks": 40
+      },
+      {
+        "type": "damage_buildings",
+        "kind": "beast",
+        "strength": 0.3
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -5,
+        "selector": "all"
       }
     ],
     "narrative_hint": {
@@ -3563,6 +3906,16 @@
         "type": "stat_delta",
         "stat": "settlement:all.morale",
         "delta": -4
+      },
+      {
+        "type": "damage_buildings",
+        "kind": "fire",
+        "strength": 0.45
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -6,
+        "selector": "all"
       }
     ],
     "narrative_hint": {
@@ -3595,6 +3948,11 @@
         "type": "stat_delta",
         "stat": "settlement:all.morale",
         "delta": 5
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 6,
+        "selector": "all"
       }
     ],
     "narrative_hint": {
@@ -3623,6 +3981,11 @@
         "delta": 40,
         "scope": "global",
         "duration_ticks": 60
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 6,
+        "selector": "all"
       }
     ],
     "narrative_hint": {
@@ -3726,7 +4089,13 @@
       "en": "A Prophet Comes",
       "cs": "Přišel prorok"
     },
-    "effects": [],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 8,
+        "selector": "all"
+      }
+    ],
     "choices": [
       {
         "id": "heed",
@@ -4304,7 +4673,13 @@
     "weight": 0,
     "cooldown_ticks": 60,
     "decision_ticks": 30,
-    "effects": [],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      }
+    ],
     "choices": [
       {
         "id": "feast",
@@ -4404,7 +4779,13 @@
     "weight": 0,
     "cooldown_ticks": 60,
     "decision_ticks": 30,
-    "effects": [],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 4,
+        "selector": "all"
+      }
+    ],
     "choices": [
       {
         "id": "buy_deep",

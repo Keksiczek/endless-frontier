@@ -40,6 +40,31 @@ public struct SiegeField: Sendable, Equatable {
     /// people reads as having a front and a back; shallow enough that the rear
     /// is in the fight rather than watching it from a field away.
     public static let rankDepth = 0.026
+    /// How much room one body keeps for itself once the fight is joined.
+    ///
+    /// Deliberately **less** than `SiegeEngine.reach`: two people pressed
+    /// against each other are still fighting each other, and a personal space
+    /// wider than arm's length would shove the melee apart every step it
+    /// happened. This is what stops twenty people occupying one spot, and it is
+    /// the whole mechanism of the press — a body that cannot get to the front
+    /// ends up *behind* the people who are already there, which is a scrum.
+    public static let bodySpace = 0.016
+
+    /// How deep the press is allowed to be, out past the ring the posture holds.
+    ///
+    /// The ring is what made a battle two rows. `SiegeEngine.closingPoint`
+    /// pulled every defender who had a target onto `posture.reach` — one radius
+    /// for the whole line — so a formation that started three ranks deep
+    /// flattened into an arc the instant anybody swung, however carefully it had
+    /// formed up. A **band** instead of a ring gives the press somewhere to be,
+    /// and the defenders inherit the depth of the warband they are fighting
+    /// instead of being ironed onto a circle.
+    ///
+    /// Holding the line still means holding it: two and a half ranks is the
+    /// give in a line of people leaning on each other, not permission to chase
+    /// anybody across the field.
+    public static let scrumDepth = rankDepth * 2.5
+
     /// How many bodies stand abreast before a second rank forms.
     ///
     /// Everyone used to be laid out on a **single arc** at one `reach`, both
@@ -140,16 +165,15 @@ public struct SiegeField: Sendable, Equatable {
 
     /// How far out the post at `index` stands.
     ///
-    /// Here for the half of this that is **not** done: the depth above lasts as
-    /// long as the walk in and no longer, because `SiegeEngine.closingPoint`
-    /// pulls every defender onto `posture.reach` — one ring for the whole line —
-    /// the moment anybody has a target. Holding each defender to their own
-    /// rank's ring instead is the obvious next move and was tried; it changes
-    /// *who fights whom*, and it cost six of eight defenders their place in the
-    /// fight ("A fight leaves the line hurt, not one person picked out of it"
-    /// went from eight marked to two). The formation is a presentation change;
-    /// making the ranks mean something in the melee is a combat change, and it
-    /// wants its own pass with `DangerProbe` run alongside.
+    /// Kept for what it measures rather than for what it once was going to fix.
+    /// Holding each defender to *their own rank's ring* was the obvious way to
+    /// make the formation survive contact, and it was tried and reverted: a ring
+    /// is a wall, so the flanks and the rear ranks could never reach anybody and
+    /// six of eight defenders came out of a raid without a scratch. The fix that
+    /// worked runs the other way — no ring at all past `scrumDepth`, and
+    /// `bodySpace` between bodies, so the press has depth because people are *in
+    /// each other's way* rather than because a rule put them there. Crowding
+    /// lets somebody find a way in; a ring forbids it.
     public func postReach(index: Int, of count: Int, reach: Double,
                           behind: Double = -1) -> Double {
         Self.distance(heart, post(index: index, of: count, reach: reach, behind: behind))

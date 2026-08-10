@@ -18,17 +18,41 @@ public struct ColonyLogEntry: Codable, Sendable, Equatable, Identifiable {
         case faith
     }
 
+    /// What this moment happened *to*, when the engine knows.
+    ///
+    /// The Core says **who or what**; it deliberately does not say *where*,
+    /// because where a colonist is standing is presentation and belongs to
+    /// `AgentMotion` (rule: the simulation never holds a screen position). That
+    /// is enough for the canvas to point the camera at it — which is the whole
+    /// reason this exists: a wildfire, a raid or a death was a line of text and
+    /// a number, and finding the place it happened meant panning the valley
+    /// looking for something that had already stopped moving.
+    public enum Subject: Codable, Sendable, Equatable, Hashable {
+        case pawn(UUID)
+        /// A `ColonyMap.Placement` id — the lot, not the definition, so the
+        /// camera lands on the barn that burned and not on barns in general.
+        case building(UUID)
+        /// Somewhere on the local map with nothing standing on it: where the
+        /// warband is coming from, where the lightning struck.
+        case place(LocalPoint)
+    }
+
     /// Monotonic per-settlement sequence — stable identity for SwiftUI lists.
     public let id: Int
     public let tick: Int
     public let kind: Kind
     public let text: LocalizedText
+    /// Who or what it happened to, if the engine knew. Optional on purpose:
+    /// most of the colony's day is nobody in particular.
+    public let subject: Subject?
 
-    public init(id: Int, tick: Int, kind: Kind, text: LocalizedText) {
+    public init(id: Int, tick: Int, kind: Kind, text: LocalizedText,
+                subject: Subject? = nil) {
         self.id = id
         self.tick = tick
         self.kind = kind
         self.text = text
+        self.subject = subject
     }
 }
 
@@ -51,8 +75,14 @@ public struct ColonyLog: Codable, Sendable, Equatable {
     }
 
     /// Appends a moment, trimming the oldest past `capacity`.
-    public mutating func append(tick: Int, kind: ColonyLogEntry.Kind, text: LocalizedText) {
-        entries.append(ColonyLogEntry(id: nextID, tick: tick, kind: kind, text: text))
+    ///
+    /// `subject` defaults to nobody so the hundred existing call sites are
+    /// unchanged; pass it wherever the engine already has the colonist or the
+    /// lot in its hand, and the canvas can take the player there.
+    public mutating func append(tick: Int, kind: ColonyLogEntry.Kind, text: LocalizedText,
+                                subject: ColonyLogEntry.Subject? = nil) {
+        entries.append(ColonyLogEntry(id: nextID, tick: tick, kind: kind, text: text,
+                                      subject: subject))
         nextID += 1
         if entries.count > Self.capacity {
             entries.removeFirst(entries.count - Self.capacity)

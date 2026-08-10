@@ -68,8 +68,23 @@ final class GameViewModel {
     /// much to run on the main actor, which would freeze the launch. The world
     /// is a `Sendable` value and `TickEngine` is pure, so the catch-up is
     /// computed off-thread and only the result is applied here.
+    /// True while a session is being opened, long path or short.
+    ///
+    /// **Cold launch opens the session twice.** `EndlessFrontierApp` calls this
+    /// from `.task` *and* from `scenePhase == .active`, and both fire on the way
+    /// in. `isCatchingUp` only ever covered the long path — and only by luck of
+    /// ordering — so two short opens ran back to back and the world advanced
+    /// twice for one absence: every catch-up tick simulated again, the toasts
+    /// and the "while you were away" summary computed off a world that had
+    /// already moved. From the player's side the game looked like it was running
+    /// two of itself. Both call sites are wanted (a relaunch and a return from
+    /// the background are not the same event); the guard belongs here.
+    private var isOpeningSession = false
+
     func openSession(now: Date = Date()) async {
-        guard !isCatchingUp else { return }
+        guard !isCatchingUp, !isOpeningSession else { return }
+        isOpeningSession = true
+        defer { isOpeningSession = false }
         let snapshot = world
         let registry = registry
 
@@ -117,9 +132,43 @@ final class GameViewModel {
         let icon: String
         let text: String
         let kind: ColonyLogEntry.Kind?
+        /// Who or what it happened to, when the engine knew. A toast that has
+        /// one is tappable, and the tap takes the camera there.
+        var subject: ColonyLogEntry.Subject?
     }
 
     private(set) var toasts: [LiveToast] = []
+
+    /// Somewhere the game is asking the canvas to look.
+    ///
+    /// Set when something loud happens that has a place — a raid, a fire, the
+    /// colonist a disaster picked out — and when the player taps a toast. The
+    /// canvas answers each one **once** (`CanvasFocus.id`), so this can be
+    /// written as often as the world likes without the camera ever fighting the
+    /// hand that is panning it.
+    private(set) var spotlight: CanvasFocus?
+
+    /// Take me there. What a tapped toast, or a "show me" button, calls.
+    func lookAt(_ subject: ColonyLogEntry.Subject?) {
+        guard let focus = CanvasFocus(subject) else { return }
+        spotlight = focus
+    }
+
+    /// Frame the ground a fight is being fought on.
+    ///
+    /// A battle is the one thing on this canvas with its own clock, and it
+    /// happens at whichever edge the warband came from — off screen, more often
+    /// than not, at the zoom the settlement opens on. It is also over in half a
+    /// minute, so "the player will find it" is the same as "the player will
+    /// miss it".
+    ///
+    /// Pulled *back* rather than in: a fight is two lines of people and you want
+    /// to see both of them and the wall they are pushing towards.
+    func lookAtTheField(approach: Double, id: UUID) {
+        spotlight = CanvasFocus(
+            id: id, target: .place(SiegeField(approach: approach).muster),
+            scale: SettlementRenderer.Camera.opening)
+    }
 
     /// Battles the player has already been shown. A fight lands as a `BattleLog`
     /// on the settlement; the report springs up once, and stays down after the
@@ -300,7 +349,14 @@ final class GameViewModel {
                 fresh.append(LiveToast(
                     id: UUID(), icon: Self.icon(for: entry.kind),
                     text: entry.text.resolve(AppStrings.language),
-                    kind: entry.kind))
+                    kind: entry.kind, subject: entry.subject))
+                // The loud ones take the camera with them. A wildfire or a
+                // raid is not a line of text going past — it is happening
+                // somewhere, and hunting the valley for it is how you find out
+                // it finished while you were looking.
+                if entry.kind == .danger, let focus = CanvasFocus(entry.subject) {
+                    spotlight = focus
+                }
             }
         }
         for event in fired {
@@ -717,9 +773,20 @@ final class GameViewModel {
         GameEngine.canAffordChoice(world, eventID: eventID, choiceID: choiceID, registry: registry)
     }
 
+    /// Answering a decision **is** a moment in the colony's life, and until now
+    /// it was the one moment that made no noise.
+    ///
+    /// `surfaceToasts` runs inside `advanceLive` and only looks at journal lines
+    /// written *by that tick*, so everything a choice wrote — "Mara came off
+    /// worst, and is a while mending", a barn in ruins — landed below the next
+    /// tick's mark and was never shown at all. You answered a disaster and the
+    /// game said nothing back. Same surfacing as a tick, so the camera goes to
+    /// whoever it fell on.
     func resolveEventChoice(event eventID: String, choice choiceID: String) {
+        let mark = selectedSettlement?.journal.nextID ?? 0
         world = GameEngine.resolveChoice(world, eventID: eventID, choiceID: choiceID, registry: registry)
         persist()
+        surfaceToasts(fired: [], journalMark: mark)
     }
 
     func dismissEvent(_ eventID: String) {

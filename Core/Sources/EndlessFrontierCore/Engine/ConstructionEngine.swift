@@ -142,7 +142,7 @@ public enum ConstructionEngine {
         s.journal.append(tick: tick, kind: .construction, text: LocalizedText(values: [
             .en: "The \(name.resolve(.en)) is finished — the builders lay down their tools.",
             .cs: "Stavba dokončena: \(name.resolve(.cs)). Stavitelé odkládají nářadí."
-        ]))
+        ]), subject: project.placementID.map { .building($0) })
         return s
     }
 
@@ -180,7 +180,7 @@ public enum ConstructionEngine {
         s.journal.append(tick: tick, kind: .construction, text: LocalizedText(values: [
             .en: "Ground is broken for a \(def.name.resolve(.en)).",
             .cs: "Začala stavba: \(def.name.resolve(.cs))."
-        ]))
+        ]), subject: placementID.map { .building($0) })
         return s
     }
 }

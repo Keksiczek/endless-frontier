@@ -59,8 +59,17 @@ public enum EffectApplier {
             s.worldFlags[flag] = value
         case let .pawnHealthDelta(delta, selector):
             applyToPawns(&s, selector: selector) { $0.health = clamp01_100($0.health + delta) }
+            noteWhoItFellOn(&s, delta: delta, selector: selector)
         case let .pawnMoodDelta(delta, selector):
-            applyToPawns(&s, selector: selector) { $0.mood = clamp01_100($0.mood + delta) }
+            // Into the *shift*, not into `mood` — `PawnEngine` derives mood from
+            // needs every tick and wrote straight over this, so every authored
+            // mood effect in the game lasted exactly one tick and was never
+            // felt. See `Pawn.moodShift`.
+            applyToPawns(&s, selector: selector) {
+                $0.moodShift = min(PawnEngine.moodShiftLimit,
+                                   max(-PawnEngine.moodShiftLimit, $0.moodShift + delta))
+                $0.mood = clamp01_100($0.mood + delta)
+            }
         case .addPawn:
             addPawn(&s)
         case let .removePawn(selector):
@@ -104,7 +113,8 @@ public enum EffectApplier {
                 .en: "\(what.resolve(.en).capitalized) left \(result.ruined.count) buildings in ruins.",
                 .cs: "\(what.resolve(.cs).capitalized) nechala \(result.ruined.count) staveb v troskách."])
         }
-        s.settlements[capital].journal.append(tick: s.tick, kind: .danger, text: entry)
+        s.settlements[capital].journal.append(tick: s.tick, kind: .danger, text: entry,
+                                              subject: result.seat.map { .building($0) })
     }
 
     /// Resolves a raid against the capital's defense. If defended, it's
@@ -343,6 +353,32 @@ public enum EffectApplier {
         for index in selectedPawnIndices(s.settlements[capital].pawns, selector) {
             transform(&s.settlements[capital].pawns[index])
         }
+    }
+
+    /// Says out loud who a disaster actually landed on.
+    ///
+    /// An event that takes eight points of health off "the colonist in the worst
+    /// way" is a thing that happened *to somebody*, and until this it was a
+    /// number moving in a struct: the chronicle carried the drought and never the
+    /// person who nearly died of it. Only for a picked colonist — a delta on
+    /// `all` is the weather, and the weather does not have a name.
+    private static func noteWhoItFellOn(
+        _ s: inout WorldState, delta: Double, selector: PawnSelector
+    ) {
+        guard delta < 0, selector != .all,
+              let capital = s.settlements.indices.first,
+              let index = selectedPawnIndices(s.settlements[capital].pawns, selector).first
+        else { return }
+        let who = s.settlements[capital].pawns[index]
+        let text: LocalizedText = who.health <= 0
+            ? LocalizedText(values: [
+                .en: "\(who.name) did not come through it.",
+                .cs: "\(who.name) to nepřežil(a)."])
+            : LocalizedText(values: [
+                .en: "\(who.name) came off worst, and is a while mending.",
+                .cs: "\(who.name) to odnesl(a) nejhůř a chvíli se bude sbírat."])
+        s.settlements[capital].journal.append(tick: s.tick, kind: .danger, text: text,
+                                              subject: .pawn(who.id))
     }
 
     private static func addPawn(_ s: inout WorldState) {

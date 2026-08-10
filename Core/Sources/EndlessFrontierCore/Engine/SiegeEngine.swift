@@ -312,12 +312,20 @@ public enum SiegeEngine {
     }
 
     /// The point a fighter is trying to reach in order to be within reach of
-    /// somebody — pulled back onto the ring this posture is willing to fight on.
+    /// somebody — held inside the **band** this posture is willing to fight on.
     ///
-    /// Without this, holding the line meant standing at your post while a
-    /// raider two bodies along fought your neighbour: the enemy was a hand's
-    /// breadth away and "the enemy is further out than the muster ring" kept
-    /// you from taking the two steps. A third of the line never swung at all.
+    /// Without any limit at all, holding the line would mean nothing: the watch
+    /// would follow a raider out into the fields and the wall would be behind
+    /// nobody. With a *ring* — which is what this was — the whole line stood at
+    /// exactly `posture.reach` the moment anybody had a target, and a battle
+    /// that formed up three ranks deep flattened into two facing arcs. That is
+    /// the complaint this is here to answer: *"bitva nevypadá jako bitva ale
+    /// jako dvě řady lidí co mávají mečem."*
+    ///
+    /// A band of `SiegeField.scrumDepth` is the fix. Inside it a defender simply
+    /// stands at arm's length from whoever they closed on, so the line takes the
+    /// shape of the warband pressing into it; past it, they are still holding
+    /// the line.
     private static func closingPoint(
         from me: LocalPoint, to enemy: LocalPoint, limit: Double, field: SiegeField
     ) -> LocalPoint {
@@ -325,13 +333,15 @@ public enum SiegeEngine {
         let arm = reach * 0.8
         let want = gap <= arm ? me : SiegeField.stride(from: me, toward: enemy, pace: gap - arm)
         let out = field.reachFromHeart(want)
-        guard out > limit, out > 0 else { return want }
-        let scale = limit / out
+        let ceiling = limit + SiegeField.scrumDepth
+        guard out > ceiling, out > 0 else { return want }
+        let scale = ceiling / out
         return LocalPoint(x: field.heart.x + (want.x - field.heart.x) * scale,
                           y: field.heart.y + (want.y - field.heart.y) * scale)
     }
 
-    /// Everybody takes one stride toward wherever they are trying to be.
+    /// Everybody takes one stride toward wherever they are trying to be, and
+    /// then nobody is standing inside anybody.
     private static func march(_ siege: inout Siege, field: SiegeField) {
         let places = Dictionary(siege.fighters.map { ($0.id, $0.at) },
                                 uniquingKeysWith: { first, _ in first })
@@ -341,6 +351,70 @@ public enum SiegeEngine {
             guard let goal = destination(me, siege: siege, field: field,
                                          places: places, posts: posts) else { continue }
             siege.fighters[index].at = SiegeField.stride(from: me.at, toward: goal, pace: pace)
+        }
+        shoulder(&siege)
+    }
+
+    /// Bodies take up room: one relaxation pass that parts anybody standing
+    /// inside anybody else.
+    ///
+    /// **This is where a battle stops being two rows.** Every fighter walks at
+    /// the enemy they closed on, and the nearest enemy is whoever is at the
+    /// front, so without this every last one of them converges on the same
+    /// contact surface and the fight is an arc facing an arc. With it, the
+    /// people who got there first are *in the way*: the rest bank up behind
+    /// them, spill around the ends and press in where there is room, which is
+    /// what a melee looks like from above.
+    ///
+    /// It is a crowd, deliberately, and not a formation. A rank rule was tried
+    /// first (`SiegeField.postReach`) and it fought the targeting: a defender
+    /// held to their own ring could not reach anybody and six of eight came out
+    /// of a raid unmarked. Crowding never forbids anybody anything — it only
+    /// makes them go round — so everybody still finds their way into the fight.
+    ///
+    /// Deterministic: the pushes are summed off a snapshot taken before anybody
+    /// moves, so the result does not depend on who is updated first, and two
+    /// bodies on exactly the same spot part by their place in the array rather
+    /// than by anything that could differ between runs.
+    private static func shoulder(_ siege: inout Siege) {
+        for _ in 0..<shoulderPasses { shoulderOnce(&siege) }
+    }
+
+    /// How many times the press settles per step. One pass leaves a knot of a
+    /// dozen people still half inside each other, because every one of them
+    /// walked at the same spot before it ran; three is enough to part them
+    /// without the crowd behaving like it is made of springs.
+    static let shoulderPasses = 3
+
+    private static func shoulderOnce(_ siege: inout Siege) {
+        let standing = siege.fighters.enumerated()
+            .filter { !$0.element.down }
+            .map { (index: $0.offset, at: $0.element.at) }
+        guard standing.count > 1 else { return }
+        let space = SiegeField.bodySpace
+
+        for me in standing {
+            var pushX = 0.0, pushY = 0.0
+            for them in standing where them.index != me.index {
+                let dx = me.at.x - them.at.x, dy = me.at.y - them.at.y
+                let apart = (dx * dx + dy * dy).squareRoot()
+                guard apart < space else { continue }
+                let overlap = (space - apart) / 2
+                guard apart > 0 else {
+                    pushX += me.index < them.index ? -overlap : overlap
+                    continue
+                }
+                pushX += dx / apart * overlap
+                pushY += dy / apart * overlap
+            }
+            // Nobody is shoved further than they could walk. In a deep press a
+            // body has a dozen neighbours and the sum of their elbows would
+            // otherwise throw it out of the fight altogether.
+            let shove = (pushX * pushX + pushY * pushY).squareRoot()
+            guard shove > 0 else { continue }
+            let scale = shove > pace ? pace / shove : 1
+            siege.fighters[me.index].at = LocalPoint(
+                x: me.at.x + pushX * scale, y: me.at.y + pushY * scale)
         }
     }
 
@@ -697,7 +771,11 @@ public enum SiegeEngine {
                 .en: "\(siege.attackerName) took what they came for and left.",
                 .cs: "\(siege.attackerName) si vzali, pro co přišli, a odešli."])
         }
-        s.journal.append(tick: siege.startTick, kind: .danger, text: entry)
+        // Where it happened, so the record can be walked back to. The muster is
+        // the ground the two lines met on — the heart of the colony is where
+        // they were headed, and pointing there says nothing about the fight.
+        s.journal.append(tick: siege.startTick, kind: .danger, text: entry,
+                         subject: .place(SiegeField(approach: siege.approach).muster))
         s.stats.morale = max(0, s.stats.morale - (siege.repelled ? 0 : 8))
         return s
     }

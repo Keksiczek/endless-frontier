@@ -27,6 +27,49 @@ enum CanvasSelection: Equatable {
     case animal(UUID)
 }
 
+/// Somewhere the canvas is being asked to take the player.
+///
+/// The colony is a valley and the things that happen in it are small: a raid
+/// runs for half a minute at one edge of a map you are looking at the middle
+/// of, a wildfire takes hold in a corner, and the only sign of either was a
+/// line of text going past at the top of the screen. So you read that something
+/// had happened, panned around hunting for it, and found it already over — the
+/// game and the diary reading like two different games running side by side.
+///
+/// This is the answer: what happened says *who or what* it happened to
+/// (`ColonyLogEntry.Subject`), the canvas is the only thing that knows where
+/// that is, and the camera goes there.
+struct CanvasFocus: Equatable {
+    enum Target: Equatable {
+        case pawn(UUID)
+        /// A `ColonyMap.Placement` id — the lot, not the definition.
+        case building(UUID)
+        case place(LocalPoint)
+    }
+    /// A fresh id re-aims even at the same target, so a second raid on the same
+    /// ground still takes you back to it.
+    let id: UUID
+    let target: Target
+    var scale: CGFloat = SettlementRenderer.Camera.closeUp
+
+    init(id: UUID = UUID(), target: Target,
+         scale: CGFloat = SettlementRenderer.Camera.closeUp) {
+        self.id = id
+        self.target = target
+        self.scale = scale
+    }
+
+    /// The focus a journal entry asks for, if it happened to anything.
+    init?(_ subject: ColonyLogEntry.Subject?, id: UUID = UUID()) {
+        switch subject {
+        case let .pawn(who):      self.init(id: id, target: .pawn(who))
+        case let .building(lot):  self.init(id: id, target: .building(lot))
+        case let .place(spot):    self.init(id: id, target: .place(spot))
+        case nil:                 return nil
+        }
+    }
+}
+
 /// What a tap means while a raid is going on.
 ///
 /// The colony is run by standing orders and a battle should not suddenly demand
@@ -68,6 +111,10 @@ struct SettlementCanvasView: View {
     /// of an hour-long colony year; looking away used to mean missing it for
     /// good.
     var battleReplay: SettlementBattle.Replay?
+    /// Somewhere the game is asking the camera to go. Set it and the view pans
+    /// and closes in once, then leaves the camera alone — a camera that keeps
+    /// correcting the player is worse than one that never moves.
+    var focus: CanvasFocus?
     /// Where a tap goes while a raid is on: an order for the colonist who is
     /// already picked out, rather than another inspection.
     var onSiegeOrder: ((SiegeCommand) -> Void)?
@@ -80,6 +127,10 @@ struct SettlementCanvasView: View {
     /// The camera as it was when the current gesture began, so pinch and drag
     /// compose from a fixed base instead of accumulating drift.
     @State private var gestureBase = SettlementRenderer.Camera()
+    /// The last focus this view actually flew to. SwiftUI re-evaluates the body
+    /// thirty times a second here; without it the camera would be re-aimed on
+    /// every frame and the player could never pan away from a fire.
+    @State private var answered: UUID?
 
     var body: some View {
         GeometryReader { geo in
@@ -112,6 +163,8 @@ struct SettlementCanvasView: View {
             .gesture(pan(in: geo.size).simultaneously(with: zoom))
             .gesture(tap(in: geo.size))
             .overlay(alignment: .bottomTrailing) { zoomChrome }
+            .onChange(of: focus?.id) { _, _ in fly(to: focus, in: geo.size) }
+            .onAppear { fly(to: focus, in: geo.size) }
             .accessibilityLabel(AppStrings.language == .cs
                                 ? "Živá osada. Přiblížení \(Int(camera.scale * 100)) procent."
                                 : "The living settlement. Zoom \(Int(camera.scale * 100)) percent.")
@@ -131,6 +184,52 @@ struct SettlementCanvasView: View {
         let ofYear = tick.truncatingRemainder(dividingBy: perYear)
         let year = ofYear < 0 ? ofYear + perYear : ofYear
         return (year.truncatingRemainder(dividingBy: perSeason)) / perSeason
+    }
+
+    // MARK: - Being taken somewhere
+
+    /// Pans and closes in on whatever the game asked to be shown — **once**.
+    ///
+    /// Once is the whole discipline of it. The camera is the player's, and a
+    /// view that keeps re-centring is a view you cannot look away from; so a
+    /// focus is answered the first time it is seen and then never again, and
+    /// the next pan or pinch immediately overrules it.
+    private func fly(to focus: CanvasFocus?, in size: CGSize) {
+        guard let focus, focus.id != answered,
+              size.width > 0, size.height > 0,
+              let point = place(of: focus.target) else { return }
+        answered = focus.id
+        let aimed = SettlementRenderer.Camera.framing(point, in: size, scale: focus.scale)
+        withAnimation(.easeInOut(duration: 0.55)) { camera = aimed }
+        // The next gesture composes from where the flight put us, not from
+        // where the camera was before it.
+        gestureBase = aimed
+    }
+
+    /// Where on the map the thing being pointed at actually is.
+    ///
+    /// **Presentation answers this, and it has to.** A colonist's position is a
+    /// function of `(pawn.id, clock)` and exists only in `AgentMotion`; the
+    /// simulation has never held one and must not start (rule 5). So the Core
+    /// says *who*, and this says *where they are standing right now*.
+    private func place(of target: CanvasFocus.Target) -> LocalPoint? {
+        switch target {
+        case let .place(spot):
+            return spot
+        case let .building(lot):
+            return SettlementRenderer
+                .normalizedLayout(settlement: settlement, registry: registry)
+                .first { $0.placementID == lot }?.center
+        case let .pawn(id):
+            guard let pawn = settlement.pawns.first(where: { $0.id == id }) else { return nil }
+            let now = Date()
+            let scene = AgentMotion.Scene(settlement: settlement, registry: registry,
+                                          continuousTick: clock.continuous(at: now),
+                                          replay: battleReplay)
+            return AgentMotion.pose(for: pawn, map: map, scene: scene,
+                                    time: now.timeIntervalSince(start),
+                                    ticksPerYear: registry.config.ticksPerYear).position
+        }
     }
 
     private var selectedPawnID: UUID? {

@@ -72,9 +72,27 @@ struct SettlementScreen: View {
         // answer it. Starting the driver is *all* this does — the fight itself
         // is the simulation's, and it happens whether or not this screen is up.
         .onChange(of: game.siege?.id) { _, id in
-            if id != nil { game.startSiegeLoop() } else { game.stopSiegeLoop() }
+            guard id != nil else { game.stopSiegeLoop(); return }
+            game.startSiegeLoop()
+            // …and take the player to it. A raid arrives at whichever edge the
+            // warband came from, which at the opening zoom is usually not on
+            // the screen at all.
+            if let siege = game.siege {
+                game.lookAtTheField(approach: siege.approach, id: siege.id)
+            }
         }
-        .onAppear { if game.siege != nil { game.startSiegeLoop() } }
+        .onAppear {
+            guard let siege = game.siege else { return }
+            game.startSiegeLoop()
+            game.lookAtTheField(approach: siege.approach, id: siege.id)
+        }
+        // A raid the storyteller resolved never had a live siege to announce
+        // it — the report card is the first anybody hears of it, and the fight
+        // it is describing is playing out on the canvas *now*.
+        .onChange(of: game.battleReport?.id) { _, id in
+            guard let id, let battle = game.battleReport else { return }
+            game.lookAtTheField(approach: battle.approach, id: id)
+        }
         .onDisappear { game.stopSiegeLoop() }
     }
 
@@ -86,6 +104,7 @@ struct SettlementScreen: View {
                     season: game.season, caravans: game.world.caravans,
                     clock: game.tickClock, selection: $selection,
                     buildPlan: $buildPlan, battleReplay: battleReplay,
+                    focus: game.spotlight,
                     onSiegeOrder: { game.command($0) })
                 .overlay(alignment: .topTrailing) {
                     MinimapView(map: map).padding(12)
@@ -100,23 +119,46 @@ struct SettlementScreen: View {
 
     /// Passing notes from the living world — a birth, a quarrel, a roof going
     /// on. They drift in at the top and take themselves away.
+    ///
+    /// A note that knows what it happened to is **tappable**, and the tap takes
+    /// the camera there. That is the answer to the oldest complaint about this
+    /// screen: the diary said a thing had happened and finding it meant panning
+    /// a valley looking for something that had already stopped moving. The rest
+    /// stay inert, so the toasts never swallow a tap meant for the ground.
     private var toastStack: some View {
         VStack(spacing: 6) {
             ForEach(game.toasts) { toast in
-                HStack(spacing: 8) {
-                    Image(systemName: toast.icon)
-                        .font(.caption)
-                        .foregroundStyle(toastTint(toast))
-                    Text(toast.text)
-                        .font(.caption)
-                        .foregroundStyle(Theme.text)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
+                let leads = toast.subject != nil
+                Button {
+                    game.lookAt(toast.subject)
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: toast.icon)
+                            .font(.caption)
+                            .foregroundStyle(toastTint(toast))
+                        Text(toast.text)
+                            .font(.caption)
+                            .foregroundStyle(Theme.text)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                        if leads {
+                            Image(systemName: "scope")
+                                .font(.caption2)
+                                .foregroundStyle(Theme.textDim)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .overlay(Capsule().strokeBorder(
+                        (leads ? toastTint(toast) : Theme.boneFaint).opacity(0.35), lineWidth: 1))
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .background(.ultraThinMaterial, in: Capsule())
-                .overlay(Capsule().strokeBorder(Theme.boneFaint.opacity(0.35), lineWidth: 1))
+                .buttonStyle(.plain)
+                .disabled(!leads)
+                .allowsHitTesting(leads)
+                .accessibilityHint(leads ? (AppStrings.language == .cs
+                                            ? "Ukázat, kde se to stalo"
+                                            : "Show where this happened") : "")
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
@@ -124,7 +166,6 @@ struct SettlementScreen: View {
         .padding(.horizontal, 60)   // clear of the minimap
         .frame(maxWidth: .infinity)
         .animation(.spring(duration: 0.35), value: game.toasts)
-        .allowsHitTesting(false)
     }
 
     private func toastTint(_ toast: GameViewModel.LiveToast) -> Color {
@@ -176,7 +217,12 @@ struct SettlementScreen: View {
                 // curiosity about the scene.
                 BattleReportCard(
                     battle: battle,
-                    onReplay: { battleReplay = SettlementBattle.Replay(log: battle) },
+                    onReplay: {
+                        battleReplay = SettlementBattle.Replay(log: battle)
+                        // Watching it again from wherever the camera happens to
+                        // be sitting is how you miss it the second time too.
+                        game.lookAtTheField(approach: battle.approach, id: UUID())
+                    },
                     onClose: {
                         withAnimation(.easeOut(duration: 0.15)) { game.dismissBattleReport() }
                     })
