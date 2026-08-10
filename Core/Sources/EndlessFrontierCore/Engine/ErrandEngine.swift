@@ -181,7 +181,7 @@ public enum ErrandEngine {
                 // at the fire in the middle of it, so the errand still happens
                 // and still takes time.
                 s.pawns[i].errand = leg(kind, from: start, to: SettlementGeometry.heart,
-                                        tick: tick, placementID: nil)
+                                        tick: tick, placementID: nil, colony: s.colony)
                 continue
             }
             // Too far to be worth it — unless it has stopped being a matter of
@@ -193,7 +193,7 @@ public enum ErrandEngine {
                     || SiegeField.distance(start, target.at) <= furthestWorthGoing
             else { continue }
             s.pawns[i].errand = leg(kind, from: start, to: target.at,
-                                    tick: tick, placementID: target.id)
+                                    tick: tick, placementID: target.id, colony: s.colony)
         }
 
         s.storage[.food] = max(0, food)
@@ -250,11 +250,18 @@ public enum ErrandEngine {
 
     private static func leg(
         _ kind: Errand.Kind, from: LocalPoint, to: LocalPoint, tick: Int,
-        placementID: UUID?
+        placementID: UUID?, colony: ColonyMap? = nil
     ) -> Errand {
-        let ticks = max(1, Int((SiegeField.distance(from, to) / pace).rounded(.up)))
+        // Round the houses rather than through them, and **pay for it**: the
+        // long way is longer, so a town that has built itself into a maze costs
+        // its people real minutes. Distance was already the thing that made a
+        // far granary expensive; this keeps that honest now that the line is
+        // not straight.
+        let via = ColonyRoute.corners(from: from, to: to, in: colony)
+        let walk = ColonyRoute.length(from: from, through: via, to: to)
+        let ticks = max(1, Int((walk / pace).rounded(.up)))
         return Errand(kind: kind, from: from, to: to, leftAt: tick,
-                      arrivesAt: tick + ticks, placementID: placementID)
+                      arrivesAt: tick + ticks, placementID: placementID, via: via)
     }
 
     /// Where a colonist is when the need bites: at their work if they have any,

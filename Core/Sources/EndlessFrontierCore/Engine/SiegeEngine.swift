@@ -484,8 +484,13 @@ public enum SiegeEngine {
             let impact = LocalPoint(x: (attacker.at.x + mark.at.x) / 2,
                                     y: (attacker.at.y + mark.at.y) / 2)
             // A blow lands *somewhere*: an arm, a leg — not a smaller number.
-            s.pawns[index] = MedicineEngine.wound(s.pawns[index], amount: hit,
-                                                  tick: siege.startTick, rng: &rng)
+            // And it was made by *something*: a warband leaves cuts and stabs,
+            // a wolf pack leaves bites, and `attackerTribeID` is the same
+            // honest test of which it was that decides whether anybody can be
+            // taken alive (`CaptiveEngine.take`).
+            s.pawns[index] = MedicineEngine.wound(
+                s.pawns[index], amount: hit, tick: siege.startTick, rng: &rng,
+                from: siege.attackerTribeID == nil ? .bite : nil)
             siege.damage[pair.on] = before + hit
 
             if s.pawns[index].health <= 0 {

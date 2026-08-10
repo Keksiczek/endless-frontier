@@ -112,6 +112,27 @@ public enum ComfortEngine {
             warmth: min(100, max(0, 100 + weather + roof + clothes + fires)))
     }
 
+    /// Whether this colonist is **under a roof right now**.
+    ///
+    /// `housed` used to be `pawn.homeID != nil`, which is *owning a bed* and
+    /// not *standing under one*. Keks's card said it out loud: a hunter out
+    /// stalking game, at zero degrees, reading **"Venku 0 °C · střecha +26"** —
+    /// outside, with a full roof bonus. Rule 18's second shape, where two
+    /// readers of one colonist answer from different fields: the canvas drew
+    /// him in the long grass while the engine had him indoors.
+    ///
+    /// Read from what the **simulation** knows about where somebody is — the
+    /// job they hold and whether they are on the road — and never from
+    /// `AgentMotion`'s day cycle, which is presentation and must not feed back
+    /// into the sim (rule 1). Somebody with no job and no errand is about the
+    /// house, which is the one case where owning a roof is the right answer.
+    public static func underRoof(_ pawn: Pawn) -> Bool {
+        // Out at a ruin, on the road to the granary, or carrying a load home.
+        guard !pawn.isAway, pawn.errand == nil, pawn.carrying == nil else { return false }
+        if let job = pawn.currentJob { return job.kind.isUnderCover }
+        return pawn.homeID != nil
+    }
+
     /// Moves one colonist's warmth toward what the day is offering, and takes
     /// the cost of being out in it. Returns the pawn.
     public static func advanceOneTick(
@@ -120,7 +141,7 @@ public enum ComfortEngine {
         var p = pawn
         // Anything worn counts: armour is a coat when it is cold enough.
         let clothing = p.equipment.count
-        let want = target(season: season, housed: p.homeID != nil,
+        let want = target(season: season, housed: underRoof(p),
                           clothing: clothing, shelter: shelter, climate: climate)
         p.needs.warmth += (want - p.needs.warmth) * adjustRate
         p.needs.warmth = min(100, max(0, p.needs.warmth))

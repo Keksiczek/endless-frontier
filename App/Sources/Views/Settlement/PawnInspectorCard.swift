@@ -193,6 +193,16 @@ struct PawnInspectorCard: View {
     /// A number called health could tell you a colonist was at sixty and never
     /// whether that was a bad winter or a boar. This says which arm, whether
     /// anybody has seen to it, and what it is costing them — which is the whole
+    /// How bad a thing is, in a word rather than a decimal.
+    private func severityWord(_ ailment: Ailment) -> String {
+        switch ailment.severity {
+        case ..<0.2:  return cs ? "škrábnutí" : "a scratch"
+        case ..<0.45: return cs ? "lehké" : "slight"
+        case ..<0.7:  return cs ? "vážné" : "bad"
+        default:      return cs ? "těžké" : "grave"
+        }
+    }
+
     /// reason to give a person a body.
     private var condition: some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -203,11 +213,20 @@ struct PawnInspectorCard: View {
                         .font(.system(size: 9))
                         .foregroundStyle(ailment.tended ? Theme.good : Theme.danger)
                         .frame(width: 12)
-                    Text(ailment.part?.displayName.resolve(AppStrings.language)
-                         ?? ailment.kind.displayName.resolve(AppStrings.language))
+                    // What it is *and* where — "Bodná rána — levá paže". This
+                    // named only the part, so every injury in the game read as
+                    // a body part with no story: a wolf's bite and a spear
+                    // through the shoulder were both "Left arm".
+                    Text(ailment.title.resolve(AppStrings.language))
                         .font(.caption)
                         .foregroundStyle(Theme.text)
                     Spacer(minLength: 6)
+                    // How bad, then what is being done about it. A wound that
+                    // bleeds fast is the one that kills somebody after the
+                    // fighting stopped, and it should be the one that shouts.
+                    Text(severityWord(ailment))
+                        .font(.caption2)
+                        .foregroundStyle(Theme.textDim)
                     Text(ailment.tended
                          ? (cs ? "ošetřeno" : "tended")
                          : (cs ? "krvácí" : "bleeding"))

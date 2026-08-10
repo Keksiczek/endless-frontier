@@ -125,13 +125,32 @@ public enum MedicineEngine {
     /// The one place damage becomes a *thing that happened to somebody*. Every
     /// caller that used to do `pawn.health -= x` should come through here, so
     /// that a mauling leaves a mauled arm and the inspector can say so.
+    /// What a blow with nothing named behind it turns out to have been.
+    ///
+    /// A scuffle, a fall down a shaft, a beam coming down: mostly edges and
+    /// blunt force, some of it going deep. Rolled rather than fixed so a fight
+    /// leaves a *variety* of harm on a line of people — which is the whole of
+    /// what Keks asked for after watching one.
+    static func ordinaryWound(_ roll: Double) -> WoundKind {
+        switch roll {
+        case ..<0.48: return .cut
+        case ..<0.78: return .bruise
+        default:      return .stab
+        }
+    }
+
     public static func wound(
-        _ pawn: Pawn, amount: Double, tick: Int, rng: inout SeededRNG
+        _ pawn: Pawn, amount: Double, tick: Int, rng: inout SeededRNG,
+        from kind: WoundKind? = nil
     ) -> Pawn {
         guard amount > 0 else { return pawn }
         var p = pawn
         let part = Body.struckPart(roll: rng.nextUnit())
-        p.body.injure(part, by: amount, id: rng.nextUUID(), tick: tick)
+        // What made it, so the card can say "a stab to the left arm" rather
+        // than "wound" for everything from a wolf to a falling beam. Drawn
+        // before the id so the stream stays in a fixed order (rule 2).
+        let made = kind ?? ordinaryWound(rng.nextUnit())
+        p.body.injure(part, by: amount, id: rng.nextUUID(), tick: tick, from: made)
         p.health = max(0, p.health - amount)
         if !p.body.isAlive { p.health = 0 }
         return p

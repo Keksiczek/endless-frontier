@@ -100,7 +100,8 @@ public enum HaulEngine {
                     continue
                 }
                 let next = step(from: s.pawns[i].haulPosition ?? store,
-                                toward: load.destination, by: pace)
+                                toward: load.destination, by: pace,
+                                around: s.colony)
                 s.pawns[i].haulPosition = next
                 if within(next, load.destination, arrivalRadius) {
                     s.stockpile[load.itemID, default: 0] += load.amount
@@ -133,7 +134,7 @@ public enum HaulEngine {
                 s.pawns[i].haulPosition = pilePosition
             } else {
                 s.pawns[i].haulPosition = step(from: standing, toward: pilePosition,
-                                               by: pace)
+                                               by: pace, around: s.colony)
             }
         }
 
@@ -180,6 +181,21 @@ public enum HaulEngine {
     }
 
     /// A step toward a point, kept on the map.
+    /// One stride toward a place, going **round** whatever stands between.
+    ///
+    /// A hauler walked the straight line home, which on a town of any size runs
+    /// through the houses. `ColonyRoute` gives the corners; the walker aims at
+    /// the first one they have not reached yet, so the load tracks the street
+    /// rather than the crow's flight. Recomputed per stride rather than stored,
+    /// because a pile can be claimed and a building can go up mid-carry — and
+    /// the route is only sought at all when something is actually in the way.
+    static func step(from: LocalPoint, toward: LocalPoint, by distance: Double,
+                     around colony: ColonyMap?) -> LocalPoint {
+        let corners = ColonyRoute.corners(from: from, to: toward, in: colony)
+        let aim = corners.first ?? toward
+        return step(from: from, toward: aim, by: distance)
+    }
+
     static func step(from: LocalPoint, toward: LocalPoint, by distance: Double) -> LocalPoint {
         let dx = toward.x - from.x, dy = toward.y - from.y
         let length = (dx * dx + dy * dy).squareRoot()

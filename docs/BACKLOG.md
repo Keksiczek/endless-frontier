@@ -1258,6 +1258,54 @@ everyone in it.
 
 `SiegeField.postReach` is left in place with the attempt written up next to it.
 
+### 11.16 — through the houses, an indoor hunter, and wounds you can read (2026-08-10)
+
+Three from Keks in one message, and the middle one came with a screenshot that
+made it undeniable.
+
+**People walked through the houses.** Every walk in the game was a straight
+line: `ErrandEngine` set off from a job and arrived at a granary, `HaulEngine`
+carried a load home, and the shortest way across a town runs over whatever is
+standing in it. `ColonyRoute` is A* over the colony's own tile grid — the only
+grid buildings occupy — straightened afterwards so a colonist cuts across a
+square instead of walking a staircase of cell centres. The route is worked out
+**once, when a walk begins** (rule 4), stored on the `Errand` as `via`, and the
+canvas follows for free because `Errand.position(at:)` is what it already reads.
+
+Two things it was careful about. The long way round **costs time**, because
+distance was already the thing that made a far granary expensive and the walk
+must not become free. And a colonist who cannot find a way round walks straight
+anyway rather than not at all — refusing the walk is exactly the shape of rule
+22, and it is how people starved beside a full granary last week.
+
+**A hunter out stalking game had a roof over him.** The card said it in one
+line: **"Venku 0 °C · střecha +26"** — outside, and credited a full roof.
+`ComfortEngine` took `housed: pawn.homeID != nil`, which is *owning a bed* and
+not *standing under one*, so everybody who had ever been given a house was warm
+wherever they were. Rule 18's second shape, where two readers of one colonist
+answer from different fields: the canvas drew him in the long grass and the
+engine had him indoors.
+
+`ComfortEngine.underRoof` now reads what the **simulation** knows about where
+somebody is — the job they hold and whether they are on the road — and never
+`AgentMotion`'s day cycle, which is presentation and must not feed back (rule
+1). `JobKind.isUnderCover` makes every kind of work answer the question, so a
+job added later cannot inherit a default.
+
+**Wounds had no kind.** Combat has gone through `MedicineEngine.wound` for a
+while, so a blow already landed on a named part with a severity — but there was
+nothing to say *what made it*, and a wolf's bite and a spear through the
+shoulder both read as "Left arm". `WoundKind` (cut, stab, bruise, bite, burn)
+is drawn from the attacker: `attackerTribeID` is the same honest test of people
+versus beasts that decides whether anybody can be taken alive. The name does
+work rather than decorating — `bleedFactor` means a stab is what kills somebody
+an hour after the fighting stopped and a bruise is what they walk off — and the
+card reads "Bodná rána — levá paže · vážné · krvácí".
+
+Still open on this one: the **battle log** does not carry the wound kind, so the
+report still says "wounded" where it could say "a stab to the shoulder".
+`BattleMoment` is where that goes.
+
 ### 11.6 — battle and attacks, again
 
 Flagged, not specified. `SiegeEngine` moves real fighters at real positions and

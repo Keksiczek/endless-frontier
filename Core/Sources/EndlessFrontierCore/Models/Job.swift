@@ -23,6 +23,21 @@ public enum JobKind: String, Codable, Sendable, CaseIterable {
     case workPlot        // *this* plot of tilled ground — sow it, tend it, reap it
     case cookMeal        // *this* fire, with something on the shelf to put on it
 
+    /// Whether this work happens **under a roof**.
+    ///
+    /// Only two kinds do. A bench stands in a workshop and a pot stands on a
+    /// fire in the cookhouse; everything else on this list is a tree, a rock, a
+    /// furrow, a beast or a stretch of wall, and all of them are outdoors in
+    /// whatever the sky is doing. Read by `ComfortEngine.underRoof`, which is
+    /// what stops a hunter out stalking game being credited with a roof.
+    public var isUnderCover: Bool {
+        switch self {
+        case .craftItem, .cookMeal: return true
+        case .fellTree, .quarryRock, .raiseBuilding, .tendDeposit,
+             .standWatch, .stalkAnimal, .cutStone, .workPlot: return false
+        }
+    }
+
     /// The trade that does this work.
     public var work: WorkKind {
         switch self {

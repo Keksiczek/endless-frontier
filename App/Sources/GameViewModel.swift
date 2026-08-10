@@ -615,7 +615,11 @@ final class GameViewModel {
     func warmthReckoning(for pawn: Pawn) -> ComfortEngine.Reckoning? {
         guard let settlement = selectedSettlement else { return nil }
         return ComfortEngine.reckon(
-            season: season, housed: pawn.homeID != nil, clothing: pawn.equipment.count,
+            // The same question the engine asks, out of the same function —
+            // the card said "Venku 0 °C · střecha +26" because these two once
+            // answered it differently (rule 8, and rule 18).
+            season: season, housed: ComfortEngine.underRoof(pawn),
+            clothing: pawn.equipment.count,
             shelter: ComfortEngine.shelter(settlement, registry: registry),
             climate: climate)
     }

@@ -50,15 +50,22 @@ public struct Errand: Codable, Sendable, Equatable {
     public let arrivesAt: Int
     /// The building they are going to, when it is a building.
     public let placementID: UUID?
+    /// The corners they go round on the way, when the straight line would have
+    /// taken them through somebody's house. Empty is the common case and means
+    /// exactly what it used to: walk at it. Worked out once by `ColonyRoute`
+    /// when the walk begins, never per tick (rule 4).
+    public let via: [LocalPoint]
 
     public init(kind: Kind, from: LocalPoint, to: LocalPoint,
-                leftAt: Int, arrivesAt: Int, placementID: UUID? = nil) {
+                leftAt: Int, arrivesAt: Int, placementID: UUID? = nil,
+                via: [LocalPoint] = []) {
         self.kind = kind
         self.from = from
         self.to = to
         self.leftAt = leftAt
         self.arrivesAt = max(leftAt, arrivesAt)
         self.placementID = placementID
+        self.via = via
     }
 
     /// Where they are on the way, so the canvas draws somebody crossing the
@@ -66,14 +73,58 @@ public struct Errand: Codable, Sendable, Equatable {
     ///
     /// Takes a *continuous* tick, because the canvas runs between ticks and a
     /// walk that advanced once a minute would be a person teleporting slowly.
+    ///
+    /// Walks the corners when there are any. `from → to` used to be a straight
+    /// line, which is why colonists went **through the houses** — the shortest
+    /// way across a town runs over whatever is standing in it. `via` is worked
+    /// out once, by `ColonyRoute`, when the walk begins.
     public func position(at tick: Double) -> LocalPoint {
         let span = Double(max(1, arrivesAt - leftAt))
         let t = min(1, max(0, (tick - Double(leftAt)) / span))
-        return LocalPoint(x: from.x + (to.x - from.x) * t,
-                          y: from.y + (to.y - from.y) * t)
+        guard !via.isEmpty else {
+            return LocalPoint(x: from.x + (to.x - from.x) * t,
+                              y: from.y + (to.y - from.y) * t)
+        }
+        // Spread the walk over the legs by their length, so somebody rounding a
+        // long barn does not sprint one side and dawdle the other.
+        let legs = zip([from] + via, via + [to]).map { SiegeField.distance($0, $1) }
+        let total = legs.reduce(0, +)
+        guard total > 0 else { return to }
+        var travelled = t * total
+        var here = from
+        for (index, leg) in legs.enumerated() {
+            let next = index < via.count ? via[index] : to
+            if travelled <= leg {
+                let f = leg > 0 ? travelled / leg : 1
+                return LocalPoint(x: here.x + (next.x - here.x) * f,
+                                  y: here.y + (next.y - here.y) * f)
+            }
+            travelled -= leg
+            here = next
+        }
+        return to
     }
 
     public func position(at tick: Int) -> LocalPoint { position(at: Double(tick)) }
 
     public func hasArrived(at tick: Int) -> Bool { tick >= arrivesAt }
+
+    // MARK: - Codable (resilient: walks used to be straight lines)
+
+    private enum CodingKeys: String, CodingKey {
+        case kind, from, to, leftAt, arrivesAt, placementID, via
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try c.decode(Kind.self, forKey: .kind)
+        from = try c.decode(LocalPoint.self, forKey: .from)
+        to = try c.decode(LocalPoint.self, forKey: .to)
+        leftAt = try c.decode(Int.self, forKey: .leftAt)
+        arrivesAt = try c.decode(Int.self, forKey: .arrivesAt)
+        placementID = try c.decodeIfPresent(UUID.self, forKey: .placementID)
+        // A walk saved before anybody went round a house is a straight line,
+        // which is exactly what an empty `via` means (rule 3).
+        via = try c.decodeIfPresent([LocalPoint].self, forKey: .via) ?? []
+    }
 }
