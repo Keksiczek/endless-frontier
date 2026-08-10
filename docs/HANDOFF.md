@@ -28,7 +28,11 @@ Branch **`main`**. Core green, iOS build green, run on the iPhone 17 simulator.
 3. **Give the rest of the journal a subject.** Nineteen engines write to it and
    six now say what they happened to. Weddings, plagues, the taming of a beast
    and a caravan's arrival are all one argument away.
-4. Everything on the previous handoff's list below still stands.
+4. Everything on the previous handoff's list below still stands, with one
+   correction: a full `swift test` is **~46 minutes** on this machine now
+   (1022 tests, measured 2767 s), not the 5–10 the older list says. Run it
+   once, at the end, and use `--filter <TypeName>` — note the *type*, not the
+   `@Suite` display name — while you are working.
 
 ---
 
