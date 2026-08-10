@@ -137,9 +137,7 @@ public enum SocialEngine {
         let second = s.pawns[bi]
 
         // How the meeting goes: rivals and the unsociable clash more.
-        let existing = s.relationships.firstIndex {
-            $0.involves(first.id) && $0.involves(second.id)
-        }
+        let existing = s.relationships.firstIndex { $0.joins(first.id, second.id) }
         let sociability = (first.genes.sociability + second.genes.sociability) / 2
         var quarrelChance = baseQuarrelChance * (1.4 - sociability)
         if let e = existing, s.relationships[e].kind == .rival {
@@ -147,13 +145,13 @@ public enum SocialEngine {
         }
 
         if rng.nextUnit() < quarrelChance {
-            return quarrel(s, first: first, second: second,
+            return quarrel(s, first: first, second: second, at: (ai, bi),
                            existing: existing, rng: &rng, tick: tick)
         }
 
         // A good chat.
-        adjustRecreation(&s, first.id, by: chatRecreation)
-        adjustRecreation(&s, second.id, by: chatRecreation)
+        adjustRecreation(&s, at: ai, by: chatRecreation)
+        adjustRecreation(&s, at: bi, by: chatRecreation)
 
         if let e = existing {
             let before = s.relationships[e].strength
@@ -174,12 +172,12 @@ public enum SocialEngine {
                 }
                 // …and old friends may become something more.
                 if s.relationships[e].kind == .friend {
-                    s = maybeWed(s, first: first, second: second, bondIndex: e,
+                    s = maybeWed(s, first: first, second: second, at: (ai, bi), bondIndex: e,
                                  rng: &rng, tick: tick, ticksPerYear: ticksPerYear)
                 }
             }
-        } else if s.relationships(of: first.id).count < maxRelationsPerPawn,
-                  s.relationships(of: second.id).count < maxRelationsPerPawn {
+        } else if s.bondCount(of: first.id) < maxRelationsPerPawn,
+                  s.bondCount(of: second.id) < maxRelationsPerPawn {
             s.relationships.append(Relationship(
                 between: first.id, and: second.id, kind: .friend, strength: strengthPerChat + 4))
         }
@@ -197,12 +195,12 @@ public enum SocialEngine {
 
     /// Hard words: recreation drains, and the bond curdles toward rivalry.
     static func quarrel(
-        _ settlement: Settlement, first: Pawn, second: Pawn,
+        _ settlement: Settlement, first: Pawn, second: Pawn, at rows: (Int, Int),
         existing: Int?, rng: inout SeededRNG, tick: Int
     ) -> Settlement {
         var s = settlement
-        adjustRecreation(&s, first.id, by: quarrelRecreation)
-        adjustRecreation(&s, second.id, by: quarrelRecreation)
+        adjustRecreation(&s, at: rows.0, by: quarrelRecreation)
+        adjustRecreation(&s, at: rows.1, by: quarrelRecreation)
 
         var friendshipBroke = false
         if let e = existing {
@@ -222,8 +220,8 @@ public enum SocialEngine {
                 // Married couples quarrel too; the marriage holds.
                 break
             }
-        } else if s.relationships(of: first.id).count < maxRelationsPerPawn,
-                  s.relationships(of: second.id).count < maxRelationsPerPawn {
+        } else if s.bondCount(of: first.id) < maxRelationsPerPawn,
+                  s.bondCount(of: second.id) < maxRelationsPerPawn {
             // A new grudge is still a bond — it competes for the same few
             // slots a colonist's head has room for.
             s.relationships.append(Relationship(
@@ -249,8 +247,8 @@ public enum SocialEngine {
 
     /// Close friends, both adult and unattached, may wed.
     static func maybeWed(
-        _ settlement: Settlement, first: Pawn, second: Pawn, bondIndex: Int,
-        rng: inout SeededRNG, tick: Int, ticksPerYear: Int
+        _ settlement: Settlement, first: Pawn, second: Pawn, at rows: (Int, Int),
+        bondIndex: Int, rng: inout SeededRNG, tick: Int, ticksPerYear: Int
     ) -> Settlement {
         var s = settlement
         let adultAgeTicks = Pawn.adultAgeYears * ticksPerYear
@@ -262,8 +260,8 @@ public enum SocialEngine {
         s.relationships[bondIndex] = Relationship(
             between: first.id, and: second.id, kind: .partner,
             strength: max(s.relationships[bondIndex].strength, 70))
-        adjustRecreation(&s, first.id, by: weddingRecreation)
-        adjustRecreation(&s, second.id, by: weddingRecreation)
+        adjustRecreation(&s, at: rows.0, by: weddingRecreation)
+        adjustRecreation(&s, at: rows.1, by: weddingRecreation)
         // The whole settlement celebrates a little.
         for i in s.pawns.indices {
             s.pawns[i].needs.recreation = min(100, s.pawns[i].needs.recreation + 2)
@@ -322,7 +320,20 @@ public enum SocialEngine {
     /// Fixed-point-free helper: nudges one colonist's recreation need.
     static func adjustRecreation(_ settlement: inout Settlement, _ pawnID: UUID, by delta: Double) {
         guard let i = settlement.pawns.firstIndex(where: { $0.id == pawnID }) else { return }
-        settlement.pawns[i].needs.recreation = min(100, max(0, settlement.pawns[i].needs.recreation + delta))
+        adjustRecreation(&settlement, at: i, by: delta)
+    }
+
+    /// The same, for a caller that already knows where the colonist stands.
+    ///
+    /// `encounter` draws its two people **by index** and then handed their ids
+    /// to a linear search that found the row it had just come from — four scans
+    /// of the roster per meeting, and meetings scale with the population
+    /// (§11.23). Nothing inside an encounter removes a colonist, so the index
+    /// the draw produced is still good when the blows and the chatter land.
+    static func adjustRecreation(_ settlement: inout Settlement, at index: Int, by delta: Double) {
+        guard settlement.pawns.indices.contains(index) else { return }
+        settlement.pawns[index].needs.recreation =
+            min(100, max(0, settlement.pawns[index].needs.recreation + delta))
     }
 
     static func socialSeed(mapSeed: UInt64, settlementID: UUID, tick: Int) -> UInt64 {

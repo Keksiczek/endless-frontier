@@ -154,12 +154,12 @@ struct QuartermasterTests {
                 "the axe went to \(carrying?.assignedWork.rawValue ?? "nobody")")
     }
 
-    /// Rule 1's cousin for the council: what the player chose stays chosen. A
-    /// hand-out fills an empty slot and never strips anybody to upgrade them.
-    @Test("Nobody is stripped to be upgraded")
-    func whatThePlayerGaveStays() throws {
+    /// Empty hands outrank a better fit, always. A second coat on a warm back
+    /// while somebody stands in the rain is not an upgrade, it is a waste.
+    @Test("Bare hands are served before anybody trades up")
+    func bareHandsComeFirst() throws {
         let reg = try registry()
-        var s = bareColony(reg, hands: 1)
+        var s = bareColony(reg, hands: 2)
         let kept = ItemInstance(
             id: UUID(uuidString: "0A47E12A-5555-0000-0000-000000000001")!,
             definitionID: "worn_tools")
@@ -169,9 +169,67 @@ struct QuartermasterTests {
             definitionID: "iron_sword")]
         let after = QuartermasterEngine.handOutGear(world(s, reg), index: 0, registry: reg)
         #expect(after.settlements[0].pawns[0].equipment[.weapon]?.id == kept.id,
-                "the council took the tools out of somebody's hands")
-        #expect(after.settlements[0].inventory.count == 1,
-                "the sword should still be on the shelf, waiting for empty hands")
+                "the tools were taken out of somebody's hands while a colonist stood empty-handed")
+        #expect(after.settlements[0].pawns[1].equipment[.weapon] != nil,
+                "the sword sat on the shelf while somebody had nothing at all")
+    }
+
+    /// A town in the industrial age was still carrying the spears of its first
+    /// century: every slot was full, nothing ever came off anybody, and the
+    /// plate harness sat on the shelf for ever. Somebody has to want it.
+    @Test("A colonist puts down a spear for a harness")
+    func gearIsTradedUp() throws {
+        let reg = try registry()
+        var s = bareColony(reg, hands: 1, work: .garrison)
+        let old = ItemInstance(
+            id: UUID(uuidString: "0A47E12A-7777-0000-0000-000000000001")!,
+            definitionID: "bronze_spear")
+        s.pawns[0].equipment[.weapon] = old
+        s.inventory = [ItemInstance(
+            id: UUID(uuidString: "0A47E12A-7777-0000-0000-000000000002")!,
+            definitionID: "chainsaw")]     // damage 6 → 18, well past the margin
+        let after = QuartermasterEngine.handOutGear(world(s, reg), index: 0, registry: reg)
+        #expect(after.settlements[0].pawns[0].equipment[.weapon]?.definitionID == "chainsaw",
+                "twice the weapon on the shelf and nobody reached for it")
+        #expect(after.settlements[0].inventory.contains { $0.id == old.id },
+                "the spear they put down should be on the shelf for the next empty pair of hands")
+    }
+
+    /// …and not for anything slightly better, or the colony spends every
+    /// council sitting passing gear round itself and a loadout set by hand
+    /// never survives a season.
+    @Test("Nobody swaps for a small improvement")
+    func smallGainsAreNotWorthTheSwap() throws {
+        let reg = try registry()
+        var s = bareColony(reg, hands: 1, work: .garrison)
+        let kept = ItemInstance(
+            id: UUID(uuidString: "0A47E12A-8888-0000-0000-000000000001")!,
+            definitionID: "iron_sword")
+        s.pawns[0].equipment[.weapon] = kept
+        s.inventory = [ItemInstance(
+            id: UUID(uuidString: "0A47E12A-8888-0000-0000-000000000002")!,
+            definitionID: "crossbow")]
+        let after = QuartermasterEngine.handOutGear(world(s, reg), index: 0, registry: reg)
+        #expect(after.settlements[0].pawns[0].equipment[.weapon]?.id == kept.id,
+                "a colonist swapped a sword for a crossbow that is barely better")
+    }
+
+    /// The maker's hand counts: a masterwork is not put down for a plain piece
+    /// of the next kind up.
+    @Test("A masterwork is not traded for a plain upgrade")
+    func qualityCountsInTheTrade() throws {
+        let reg = try registry()
+        var s = bareColony(reg, hands: 1, work: .garrison)
+        let kept = ItemInstance(
+            id: UUID(uuidString: "0A47E12A-9999-0000-0000-000000000001")!,
+            definitionID: "iron_sword", quality: .masterwork)
+        s.pawns[0].equipment[.weapon] = kept
+        s.inventory = [ItemInstance(
+            id: UUID(uuidString: "0A47E12A-9999-0000-0000-000000000002")!,
+            definitionID: "chainsaw", quality: .shoddy)]
+        let after = QuartermasterEngine.handOutGear(world(s, reg), index: 0, registry: reg)
+        #expect(after.settlements[0].pawns[0].equipment[.weapon]?.id == kept.id,
+                "a masterwork blade was put down for a shoddy one of the next kind up")
     }
 
     // MARK: - End to end

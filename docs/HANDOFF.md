@@ -15,6 +15,8 @@ Branch **`main`**. Core green where measured (see *What is not yet re-run*).
 | **The valley has shapes** | `LocalTerrain.cover` drew from a per-biome weighting on a 4×4 patch grid with a fifth of the cells speckling to hide the seams — a colour scatter, not a country. Now two cheap fields (elevation, 3 octaves; moisture, 2, longer wavelength) and the cover read off both: ridges and basins, marsh where the ground falls to water, sand on dry rises, rock up top, snow on the peaks of cold countries. The biome no longer picks cover — it *tilts the land*. Still a pure function of `(terrainSeed, biome, cell)`; nothing stored, saves unchanged. |
 | **The bench knows every age it has reached** | `StewardEngine.wantedMaterials` filtered `def.era == .earlySettlement` — true of the colony it was written for, silently false ever after. The council made the four things a hut and a granary want and never ordered the timber bundle a cookhouse asks for, so the buildings of the age the colony had actually reached were unbuildable with the store at its cap. Rule 6 wearing a content filter. |
 | **The gear chain is stocked** | The first measurement with the quartermaster in: forty of fifty-five armed with spears and bows, and **nobody clothed, ever**. A coat is `leather_garb`, leather is `tan_leather` out of hides the lodge had been stacking the whole time — and leather is not a *building* material, so the only wanted-materials list in the game never asked for it. Rule **32**: a demand list that names one consumer gets read as if it named them all. The gear bench publishes its own wants now. |
+| **Gear is traded up** | Empty hands are served first, always — a second coat on a warm back while somebody stands in the rain is a waste. Only then does a colonist put down what they carry, and only when the shelf is worth **twice** it, quality counted, with what they put down going straight back for the next pair of empty hands. That is what stops a town in the industrial age still carrying the spears of its first century; the margin is what stops the colony spending every sitting passing gear round itself. |
+| **The social quadratic** | §11.23. `Relationship.joins`, `Settlement.bondCount` and an index-taking `adjustRecreation` — three changes, each provably the same arithmetic, verified by replaying a 12 000-tick probe at a fixed seed before and after and getting **identical tables, line for line**. `SocialEngine` is now absent from the profile. |
 | **`QuartermasterEngine`** | §11.22. Nobody was ever given anything: `equipItem` is a UI call and the standing orders knew only building materials, so two hundred years passed without a spear, a coat or a hoe. Orders against a shortfall (never a standing order), best-not-cheapest under the builders' reserve, and the hand-out is a *matching* — a weapon-slot item is a tool as often as a weapon, so the axe finds the woodcutter. It never takes anything off anybody. 8 tests. |
 
 Measured, seed 4242, two hundred years (the run that found the leather gap, so
@@ -55,26 +57,25 @@ broad. What has been run against this tree:
 
 ## Next
 
-0. **The per-tick cost is quadratic in the colony (§11.23).** Profiled on a
-   12 000-tick probe: 2 004 of 2 089 samples in `ResourceLoop.advanceSettlement`,
-   and 733 of the 794 in that frame under `SocialEngine.encounter` — a full scan
-   of the bond list per encounter, with encounters per tick scaling with the
-   population and the bond list scaling with it too. It did not matter while a
-   colony was fifty-five and could not grow. It matters at a hundred and twenty,
-   and offline catch-up replays exactly this path. A pair → index map fixes it
-   without touching determinism.
-1. **Nothing re-arms a colony whose gear went out of date.** A town in the
-   industrial age still carries the spears of its first century: the slots are
-   full and the quartermaster will not strip anybody. The honest fix is a
-   colonist deciding for themselves that what is on the shelf beats what is in
-   their hand — a *want*, not a policy.
-2. **Colonists who look like different people** — Keks's ask, §11.20. Hair,
-   faces, torsos, visible age, derived from `pawn.id` the way `AgentMotion`
-   derives position. Decide line art vs a sprite catalogue *before* writing any
-   of it.
-3. **Re-run `GrowthProbe.theCurve` and `DangerProbe`** against the land fix. The
-   columns that matter are `plots` against `want` (did the ground unblock the
-   fields) and what a warband costs now that the line is armed.
+1. **`HaulEngine` → `ColonyRoute` is the hot spot now (§11.23).** The social half
+   of the quadratic is fixed and `SocialEngine` is gone from the profile
+   entirely; what is left is **2 582 of 2 596 samples** at
+   `HaulEngine.step(..., around: s.colony)`. Every hauler re-plans its route
+   *every tick*: `crossesABuilding` samples the line at half a tile — about a
+   hundred and thirty samples now the grid can grow to 64×64 — and every sample
+   calls `ColonyMap.placement(at:)`, a linear scan of a hundred buildings. Ten
+   thousand tile tests per hauler per tick, and it got worse exactly when the
+   land started growing. A tile → placement map built once per tick fixes it and
+   changes no route.
+2. **Colonists who look like different people** — §11.20, now **decided: line
+   art**, with the parts, the age cues and the file to put it in written out
+   there. `PawnLook` beside `AgentMotion`, derived from `pawn.id`, never stored.
+   And now that the quartermaster actually arms people there is something to
+   draw in the three equipment slots.
+3. **Reclaim ground under derelicts** (§11.21 item 3) — the last of the land
+   work, and the right move if 64×64 ever runs out.
+4. **Re-run the full suite.** It is forty-six minutes and has not been run
+   end-to-end against this tree.
 
 ---
 

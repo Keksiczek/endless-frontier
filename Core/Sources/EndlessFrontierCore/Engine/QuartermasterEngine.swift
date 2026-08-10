@@ -199,9 +199,17 @@ public enum QuartermasterEngine {
     /// it, then the next, and so on. A perfect assignment would be an
     /// interesting problem and a colonist cannot tell the difference.
     ///
-    /// **Only ever fills an empty slot.** Rule 1's cousin for the council: what
-    /// the player chose stays chosen, so a hand-out never strips anybody to
-    /// upgrade them. Somebody who wants a better axe has to be given it.
+    /// **Empty hands first, and only then a trade up.** A piece goes to somebody
+    /// with nothing in that slot if anybody has nothing; failing that, to
+    /// somebody for whom it is worth `worthTradingUp` times what they are
+    /// already carrying — and what they put down goes straight back on the shelf
+    /// for the next pass.
+    ///
+    /// The trade is what stops a town in the industrial age still carrying the
+    /// spears of its first century: every slot was full, nothing ever came off
+    /// anybody, and the plate harness sat on the shelf for ever. The margin is
+    /// what stops it being a colony that spends every council sitting passing
+    /// gear round itself, and what keeps a loadout the player set by hand.
     static func handOutGear(
         _ state: WorldState, index: Int, registry: GameDataRegistry
     ) -> WorldState {
@@ -213,8 +221,8 @@ public enum QuartermasterEngine {
             .filter { registry.item($0.definitionID)?.slot == .equipment }
         guard !shelf.isEmpty else { return s }
         shelf.sort { a, b in
-            let wa = registry.item(a.definitionID).map(worth(of:)) ?? 0
-            let wb = registry.item(b.definitionID).map(worth(of:)) ?? 0
+            let wa = registry.item(a.definitionID).map { worth(of: $0, quality: a.quality) } ?? 0
+            let wb = registry.item(b.definitionID).map { worth(of: $0, quality: b.quality) } ?? 0
             return wa == wb ? a.id.uuidString < b.id.uuidString : wa > wb
         }
 
@@ -222,22 +230,55 @@ public enum QuartermasterEngine {
             guard let def = registry.item(item.definitionID),
                   let slot = def.equipSlot else { continue }
             let settlement = s.settlements[index]
-            let taker = settlement.pawns
-                .filter {
-                    $0.isAdult(ticksPerYear: ticksPerYear) && $0.health > 0
-                        && $0.equipment[slot] == nil
-                }
-                .max { a, b in
+            let hands = settlement.pawns.filter {
+                $0.isAdult(ticksPerYear: ticksPerYear) && $0.health > 0
+            }
+            let offered = worth(of: def, quality: item.quality)
+            func pick(_ eligible: [Pawn]) -> Pawn? {
+                eligible.max { a, b in
                     let wa = worth(of: def, to: a), wb = worth(of: def, to: b)
                     return wa == wb ? a.id.uuidString > b.id.uuidString : wa < wb
                 }
+            }
+            // Bare hands first, always. A second coat on a warm back while
+            // somebody stands in the rain is not an upgrade, it is a waste.
+            var taker = pick(hands.filter { $0.equipment[slot] == nil })
+            if taker == nil {
+                taker = pick(hands.filter { holder in
+                    guard let held = holder.equipment[slot],
+                          let heldDef = registry.item(held.definitionID) else { return false }
+                    let carrying = worth(of: heldDef, quality: held.quality)
+                    return offered >= carrying * worthTradingUp
+                })
+            }
             guard let taker else { continue }
+            // `equipItem` already puts whatever they were holding back on the
+            // shelf, so the spear a colonist puts down is there for the next
+            // pair of empty hands.
             s = GameEngine.equipItem(s, settlementID: settlement.id,
                                      pawnID: taker.id, itemID: item.id,
                                      registry: registry)
         }
         return s
     }
+
+    /// What a piece is worth with the maker's hand counted in — a masterwork
+    /// spear beats a plain one, and beats a plain sword by enough that nobody
+    /// puts it down for one.
+    static func worth(of item: ItemDefinition, quality: ItemQuality) -> Double {
+        worth(of: item) * quality.multiplier
+    }
+
+    /// How much better a thing has to be before somebody puts down what they
+    /// are already holding.
+    ///
+    /// **Not a small margin, deliberately.** A colonist swapping for anything
+    /// slightly better would have the whole colony passing gear round itself
+    /// every council sitting, and would quietly undo a loadout the player set by
+    /// hand. Twice as good is the difference between the spear of the first
+    /// century and a plate harness — a thing worth crossing the square for —
+    /// and not the difference between two axes.
+    static let worthTradingUp = 2.0
 
     /// What this piece of gear is worth to *this* colonist.
     ///

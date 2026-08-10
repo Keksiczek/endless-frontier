@@ -59,6 +59,19 @@ public struct Relationship: Codable, Sendable, Equatable, Identifiable {
 
     public func involves(_ id: UUID) -> Bool { a == id || b == id }
 
+    /// Whether this is the bond between *these two*, in either order.
+    ///
+    /// Written out rather than `involves(x) && involves(y)`, which is what the
+    /// hot path used to say: that costs up to four UUID comparisons on every
+    /// bond in the list, where this usually settles it on the first. The bond
+    /// list is scanned once per encounter and encounters scale with the
+    /// population, so the constant here is multiplied by the square of the
+    /// colony — see §11.23.
+    @inline(__always)
+    public func joins(_ x: UUID, _ y: UUID) -> Bool {
+        (a == x && b == y) || (a == y && b == x)
+    }
+
     /// The other colonist in the bond, if `id` is one of them.
     public func other(than id: UUID) -> UUID? {
         if a == id { return b }
@@ -71,6 +84,17 @@ public extension Settlement {
     /// All bonds a colonist has.
     func relationships(of pawnID: UUID) -> [Relationship] {
         relationships.filter { $0.involves(pawnID) }
+    }
+
+    /// How many bonds a colonist is carrying.
+    ///
+    /// The same answer as `relationships(of:).count` and **without building the
+    /// array to throw it away**. Two of these happen on every encounter, and
+    /// encounters scale with the population, so on a colony of a hundred and
+    /// thirty that was two allocations and two full scans of the bond list a
+    /// hundred and thirty times a tick, forever (§11.23).
+    func bondCount(of pawnID: UUID) -> Int {
+        relationships.count { $0.involves(pawnID) }
     }
 
     /// The colonist's spouse, if they have one.

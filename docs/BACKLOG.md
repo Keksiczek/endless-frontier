@@ -1306,7 +1306,7 @@ Still open on this one: the **battle log** does not carry the wound kind, so the
 report still says "wounded" where it could say "a stab to the shoulder".
 `BattleMoment` is where that goes.
 
-### 11.23 — the per-tick cost is quadratic in the colony (2026-08-10)
+### 11.23 — the per-tick cost is quadratic in the colony (2026-08-10) — **social half fixed**
 
 Found by profiling a 12 000-tick probe rather than by a test, and it is the
 ceiling that arrives next now that a colony really does reach a hundred and
@@ -1329,19 +1329,43 @@ grows with the population — so the per-tick cost grows with the **square** of 
 colony. It did not matter while a colony was fifty-five people and could not
 grow; it matters now, and it will matter more on a phone than it does on a Mac.
 
-Two things to do, in this order:
+**Fixed (2026-08-10), and `SocialEngine` is now absent from the profile
+entirely.** Three changes, every one of them provably the same arithmetic:
 
-1. **Make the lookup constant.** A pair → index map for the bonds, built once at
-   the top of `advanceOneTick` and kept honest across the handful of mutations
-   `encounter` makes (it removes a rival bond that wears down to nothing, and
-   appends new ones). Determinism is untouched — the *same* relationship is
-   found, only faster. The cheap half of it, worth doing even alone: compare the
-   pair directly rather than calling `involves` twice, which is up to four UUID
-   comparisons an element where one usually suffices.
-2. **Then re-measure.** `OfflineCatchUpTests` already pins linearity, and its
-   bound was widened from 3× to 4.5× in this pass *because the colony grows
-   through the longer run* — that is a real effect and not a cover for this one.
-   The probe is the instrument: a 12 000-tick run at a fixed seed, timed.
+- `Relationship.joins(_:_:)` in place of `involves(x) && involves(y)` — the same
+  predicate for a pair of *distinct* colonists, settled on the first comparison
+  instead of the fourth.
+- `Settlement.bondCount(of:)` in place of `relationships(of:).count` — the same
+  number **without building the array to throw it away**. Two of those happened
+  on every encounter.
+- `adjustRecreation(at:)` in place of `adjustRecreation(_ pawnID:)` where the
+  caller already has the row. `encounter` draws its two people *by index* and
+  then handed their ids to a linear search that found the row it had just come
+  from — four scans of the roster a meeting.
+
+Verified by replaying a 12 000-tick probe at a fixed seed before and after:
+**the two tables are identical, line for line**, which is the only check that
+matters for a change that must not move the world.
+
+**The next hot spot, measured on the same run: `HaulEngine` → `ColonyRoute`.**
+2 582 of 2 596 samples under `advanceSettlement`, all of it at the two calls to
+`HaulEngine.step(..., around: s.colony)`. Every hauler re-plans its route **every
+tick**: `ColonyRoute.crossesABuilding` samples the line at half a tile — about a
+hundred and thirty samples now the grid can grow to 64×64 — and every sample
+calls `ColonyMap.placement(at:)`, which is `placements.first { $0.covers(...) }`,
+a linear scan of a hundred buildings. That is over ten thousand tile tests per
+hauler per tick, and it got worse exactly when the land started growing (§11.21).
+
+Two ways, and the first is cheap and behaviour-free:
+
+1. **A tile → placement lookup built once per tick** and passed into
+   `ColonyRoute`, so a sample is a dictionary hit rather than a scan of the
+   colony. Same route, same corners, same world.
+2. **Stop re-planning every tick.** A hauler walking to a heap could keep its
+   corners and follow them, the way `JobBoard.interval` already gates *looking*
+   for work — the comment at `HaulEngine.advanceOneTick` line 117 makes exactly
+   this argument for the other half of the loop. Wants a stored `haulRoute` on
+   the pawn (rule 3: decode-if-present), so it is the bigger of the two.
 
 Not urgent for correctness; urgent for the promise the game makes about coming
 back after a week away, since catch-up replays exactly this path.
@@ -1523,11 +1547,38 @@ What this wants, in RimWorld's terms and this project's:
 - **What they are carrying and wearing** is already in the model
   (`SettlementFigures.Armament`, `equipment`) and is half-drawn; finish it.
 
-Not yet decided: whether this stays line art (`Canvas` paths, no assets, works
-at any zoom, matches the current look) or becomes a sprite-layer system with an
-asset catalog (`docs/ASSET_SPECIFICATION.md` drafted one). Line art keeps the
-game asset-free and infinitely scalable; sprites look better sooner. Decide
-before writing any of it.
+**Decided (2026-08-10): line art.** Four reasons, in the order they matter:
+
+1. **The whole settlement view is line art.** A sprite layer would be pasted on
+   top of a `Canvas` world of paths, tones and seasons — the colonists would
+   stop belonging to the place they stand in. That is a worse outcome than
+   plainer people who look like they live there.
+2. **The canvas zooms, and sprites do not.** `SettlementCrowd.showsIndividuals`
+   drops people to group marks when pulled back and shows them close in, which
+   is exactly where a raster figure would go soft.
+3. **No asset pipeline, no catalogue, no artist.** This is a solo project and
+   `docs/ASSET_SPECIFICATION.md` is a promise of work nobody is going to do.
+   Paths cost one function each.
+4. **It stays derived.** A `Look` computed from `pawn.id` needs no storage, no
+   save migration and no determinism risk (rule 3, rule 5). A sprite system
+   wants an index stored on the pawn, and that is a field that can drift.
+
+**The shape to build**, following `RIMWORLD_LAYER.md`:
+
+- `PawnLook`, in the **App** beside `AgentMotion` — presentation, derived, never
+  written back. A pure function of `(pawn.id, ageYears, genes, trait)`.
+- Parts that vary independently, each a small closed set so the combinations do
+  the work: hair shape (6) × hair colour (5) × beard (4, adults) × build (3) ×
+  height (3, plus a child's) × skin tone (5). That is a crowd of thousands off
+  four bytes of hash.
+- **Age shows**: hair pales and thins, the stance stoops, a child is shorter and
+  narrower. The colony's real problem is everybody growing old together
+  (§11.17, §11.19) and it should be visible without opening a panel.
+- **Genes tilt it, they do not decide it** — a courageous colonist stands
+  squarer — so the look carries a little information without becoming a readout.
+- Finish what is half-drawn: `SettlementFigures.Armament` and the three
+  equipment slots are in the model already, and now that the quartermaster
+  actually arms people (§11.22) there is something to draw.
 
 See also `docs/RIMWORLD_LAYER.md`, which did this for buildings and animals and
 is the pattern to follow.
