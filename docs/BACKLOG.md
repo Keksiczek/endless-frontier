@@ -1214,6 +1214,50 @@ rather than as *country*, because the noise is isotropic and the land is not.
 Rule 10 and 10b are both about exactly this, and both were found in the ground
 layer. Start by screenshotting each at three zooms.
 
+### 11.15 — a battle that is two rows (2026-08-07) — **half done**
+
+At last a specification for §11.6. Keks, watching one: *"bitva nevypadá jako
+bitva ale jako dvě řady lidí co mávají mečem, chtěl bych aby bylo realnější —
+co v simulaci to na plátně."*
+
+It was **not the drawing**. `SiegeField.post` laid every fighter on a *single
+arc* at one `reach`, both sides — defenders at `musterReach` 0.30, raiders at
+`originReach` 0.48 — so twenty against twenty was two parallel lines by
+construction, and no renderer could have made it look like anything else.
+
+Two things turned over on the way:
+
+- **The formation has depth now.** At most `abreast(of:)` stand shoulder to
+  shoulder and the rest form up behind, each rank staggered half a place so
+  nobody is directly behind anybody. `behind` says which way the rear runs,
+  because that is the one thing a post cannot work out for itself — the
+  defenders' rear is toward the town and the raiders' is out toward the country
+  they came from.
+- **The width had to scale with the number**, and this fixed something that had
+  been wrong since the field was written: ninety raiders on one arc came out
+  `rankSpacing × 89` = **1.69 wide, on a map one unit across**. Most of a
+  warband stood off the edge of the world. Growing as the square root keeps a
+  body about two and a half times as wide as it is deep at every size.
+
+**What is not done, and why it stopped here.** The depth lasts exactly as long
+as the walk in. `SiegeEngine.closingPoint` pulls every defender onto
+`posture.reach` — one ring for the whole line — the moment they have a target,
+so the defence flattens back into a row on contact. Holding each defender to
+their own rank's ring was written, and reverted: it changes *who fights whom*,
+and "A fight leaves the line hurt, not one person picked out of it" went from
+eight defenders marked to **two** — the rear ranks stood a stride behind the
+fighting and never reached anybody.
+
+That is the real lesson and it is worth stating plainly: **the formation is a
+presentation change; making ranks mean something in the melee is a combat
+change.** They look like one job and they are two, and the second wants its own
+pass with `DangerProbe` run beside it. The next move is probably not a ring at
+all but a *scrum* — on contact the ranks should stop existing and the bodies
+knot around the fighting, which is both what a melee looks like and what keeps
+everyone in it.
+
+`SiegeField.postReach` is left in place with the attempt written up next to it.
+
 ### 11.6 — battle and attacks, again
 
 Flagged, not specified. `SiegeEngine` moves real fighters at real positions and

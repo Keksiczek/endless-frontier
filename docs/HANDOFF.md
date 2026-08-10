@@ -2,10 +2,18 @@
 
 > **Everything on the previous handoff's list is done.** Newcomers (§11.11),
 > the weather (§11.12), the world map (§11.13), a bigger frontier and places
-> that are landmarks in themselves (§11.14). What is left is in §1 and §2 below,
-> and the one item that still needs Keks before anything is built is **battle**
-> — §2.2, unchanged since it was flagged, because nobody has said what is wrong
-> with the current feel.
+> that are landmarks in themselves (§11.14).
+>
+> **Battle finally has a specification** (§11.15) — *"bitva nevypadá jako bitva
+> ale jako dvě řady lidí co mávají mečem"* — and it is **half done**. The
+> formation has depth on the approach; the defence still flattens into one row
+> on contact, because `SiegeEngine.closingPoint` puts the whole line on one
+> ring. Fixing that properly is a *combat* change, not a presentation one: the
+> obvious version was written and reverted after it dropped "a fight leaves the
+> line hurt" from eight defenders marked to two. **Start here, and run
+> `DangerProbe` beside it.** The next move is probably a scrum rather than a
+> ring — on contact the ranks stop existing and the bodies knot around the
+> fighting.
 
 ---
 
