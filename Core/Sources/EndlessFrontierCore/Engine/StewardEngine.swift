@@ -322,6 +322,19 @@ public enum StewardEngine {
             && (def.era == .earlySettlement || state.unlockedBuildings.contains(def.id)) {
             wanted.formUnion(def.materialCost.keys)
         }
+        // …and what the **gear** bench asks for, which is a different list.
+        //
+        // Measured with the quartermaster in and nothing else changed: a colony
+        // armed forty of its fifty-five with spears and bows and clothed
+        // **nobody, ever**. A coat is `leather_garb`, leather is `tan_leather`
+        // out of hides the lodge had been stacking the whole time — and leather
+        // is not a *building* material, so nothing on this list ever asked for
+        // it, so the tannery never ran and `QuartermasterEngine.bestGear` found
+        // no armour it could work. The same shape as the era filter above: a
+        // demand list that names one consumer and is read as if it named them
+        // all.
+        wanted.formUnion(QuartermasterEngine.wantedMaterials(
+            for: settlement, in: state, registry: registry))
         return wanted.sorted()
     }
 

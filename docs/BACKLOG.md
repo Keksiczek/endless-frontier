@@ -1306,6 +1306,46 @@ Still open on this one: the **battle log** does not carry the wound kind, so the
 report still says "wounded" where it could say "a stab to the shoulder".
 `BattleMoment` is where that goes.
 
+### 11.23 — the per-tick cost is quadratic in the colony (2026-08-10)
+
+Found by profiling a 12 000-tick probe rather than by a test, and it is the
+ceiling that arrives next now that a colony really does reach a hundred and
+twenty people.
+
+`sample` on a running world, 2 089 samples: **2 004 of them in
+`TickEngine.advance` → `ResourceLoop.advanceSettlement`, and 733 of the 794 in
+that frame under `SocialEngine.advanceOneTick` → `encounter`** — almost all of it
+in `Relationship.involves`, called from
+
+```swift
+let existing = s.relationships.firstIndex {
+    $0.involves(first.id) && $0.involves(second.id)
+}
+```
+
+That is a full scan of the bond list, once per encounter, and there are
+`pawns.count / colonistsPerEncounter` encounters a tick against a bond list that
+grows with the population — so the per-tick cost grows with the **square** of the
+colony. It did not matter while a colony was fifty-five people and could not
+grow; it matters now, and it will matter more on a phone than it does on a Mac.
+
+Two things to do, in this order:
+
+1. **Make the lookup constant.** A pair → index map for the bonds, built once at
+   the top of `advanceOneTick` and kept honest across the handful of mutations
+   `encounter` makes (it removes a rival bond that wears down to nothing, and
+   appends new ones). Determinism is untouched — the *same* relationship is
+   found, only faster. The cheap half of it, worth doing even alone: compare the
+   pair directly rather than calling `involves` twice, which is up to four UUID
+   comparisons an element where one usually suffices.
+2. **Then re-measure.** `OfflineCatchUpTests` already pins linearity, and its
+   bound was widened from 3× to 4.5× in this pass *because the colony grows
+   through the longer run* — that is a real effect and not a cover for this one.
+   The probe is the instrument: a 12 000-tick run at a fixed seed, timed.
+
+Not urgent for correctness; urgent for the promise the game makes about coming
+back after a week away, since catch-up replays exactly this path.
+
 ### 11.22 — nobody was ever given anything (2026-08-10)
 
 The last room the player was still standing in the doorway of.
@@ -1340,6 +1380,41 @@ chose stays chosen.
 - **It never takes anything off anybody.** A hand-out only ever fills an empty
   slot. Rule 1's cousin for the council: somebody who wants a better axe has to
   be *given* it.
+
+**The link before the last one.** With the quartermaster in and nothing else
+changed, the first measurement said: a colony of fifty-five armed **forty** of
+them with spears and bows, and clothed **nobody, ever**. A coat is
+`leather_garb`; leather is `tan_leather` out of hides the lodge had been stacking
+the whole time — and leather is not a *building* material, so
+`StewardEngine.wantedMaterials`, the only list of wanted materials in the game,
+never asked for it. The tannery never ran, so `bestGear` could never find an
+armour it was able to work, so the armour slot stayed empty for two centuries
+while the weapon slot filled in a decade.
+
+Rule 6 in the supply chain, and worth stating as its own shape: **a demand list
+that names one consumer gets read as if it named them all.** The gear bench now
+publishes its own wants (`QuartermasterEngine.wantedMaterials`) and the council
+unions them in. Guarded by "The bench is asked for what the coats are made of".
+
+Measured before that fix, seed 4242, two hundred years — the weapon half of it
+working exactly as intended, and the armour half flat at nothing:
+
+```
+year   pop  armed  clothed
+  10    21     14        0
+  50    54     40        0
+ 100    88     66        1
+ 150   138    113        0
+ 200   134    108        0
+```
+
+Two things in that table beyond the coats. **The colony holds at 130-138 people
+for the last seventy years** rather than peaking and collapsing — that is the
+land fix (§11.21) and the fertility clock (§11.19) together, and it is the first
+run in this project's history where the second century is not a decline. And
+`armed` tracks about **eighty per cent of the population** from the first decade
+on, which is the quartermaster doing its job: before it, that column was zero
+for two hundred years.
 
 Still open on this one: nothing re-arms a colony whose gear has gone out of date
 — a town in the industrial age is still carrying the spears it made in its
@@ -1955,3 +2030,14 @@ Every one of them has cost a session at least once:
    colony starved. Rule 27's shape a second time. After any change that makes a
    colony grow, re-read every priority chain in the engine and ask which branch
    has just become permanently true.
+32. **A demand list that names one consumer gets read as if it named them all.**
+   `StewardEngine.wantedMaterials` was the only list of wanted materials in the
+   game, and it was built from what *buildings* ask for. So when the
+   quartermaster arrived and wanted `leather` for coats, nothing anywhere asked
+   anybody to tan a hide: the tannery never ran, `bestGear` never found an
+   armour it could work, and a colony that armed forty of its fifty-five in a
+   decade clothed **nobody in two hundred years** — with hides stacked in the
+   store the whole time. Rule 6 in the supply chain: the last link was
+   reachable, and the one before it was never asked for. When a new consumer
+   appears, it publishes its own wants and the council unions them in; nobody
+   edits a list that belongs to somebody else.

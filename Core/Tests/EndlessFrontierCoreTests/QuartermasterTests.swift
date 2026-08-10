@@ -94,6 +94,28 @@ struct QuartermasterTests {
         #expect(after.settlements[0].craftOrders.isEmpty)
     }
 
+    /// The link before the last one. A coat is `leather_garb`, leather is
+    /// `tan_leather` out of hides — and leather is not a *building* material, so
+    /// the only list of wanted materials in the game never asked for it. The
+    /// tannery never ran, `bestGear` could never find an armour it was able to
+    /// work, and a colony that armed forty of its fifty-five with spears and
+    /// bows clothed **nobody, ever**, for two hundred years.
+    @Test("The bench is asked for what the coats are made of")
+    func theGearChainIsStocked() throws {
+        let reg = try registry()
+        var s = bareColony(reg)
+        s.buildings.append(BuildingInstance(
+            id: UUID(uuidString: "0A47E12A-6666-0000-0000-000000000001")!,
+            definitionID: "hunters_lodge"))
+        let w = world(s, reg)
+        #expect(QuartermasterEngine.wantedMaterials(for: s, in: w, registry: reg)
+            .contains("leather"),
+                "the colony wants coats and never asks anybody to tan a hide")
+        // …and the council's own list, which is the one the bench reads, has it.
+        #expect(StewardEngine.wantedMaterials(for: s, in: w, registry: reg)
+            .contains("leather"))
+    }
+
     // MARK: - Handing it out
 
     @Test("What comes off the bench ends up on somebody")

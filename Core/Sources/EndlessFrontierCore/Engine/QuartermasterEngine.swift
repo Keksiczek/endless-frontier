@@ -92,6 +92,40 @@ public enum QuartermasterEngine {
         return s
     }
 
+    /// The made things the gear bench needs on the pile — hide tanned into
+    /// leather, ore smelted into ingots — which is a **different list** from the
+    /// one the builders keep.
+    ///
+    /// Measured with the quartermaster in and this missing: a colony armed forty
+    /// of its fifty-five with spears and bows and clothed *nobody, ever*, for
+    /// two hundred years. A coat is `leather_garb`; leather is `tan_leather` out
+    /// of hides the lodge had been stacking the whole time; and leather is not a
+    /// **building** material, so `StewardEngine.wantedMaterials` never asked for
+    /// it, so the tannery never ran and `bestGear` could never find an armour it
+    /// was able to work. Rule 6 in the supply chain: the last link was reachable
+    /// and the one before it was never asked for.
+    ///
+    /// Only what the colony could actually work — a shop it has, a tech it
+    /// knows — so it does not stand a standing order for ingots it has no
+    /// bloomery to smelt.
+    static func wantedMaterials(
+        for settlement: Settlement, in state: WorldState, registry: GameDataRegistry
+    ) -> [String] {
+        var wanted: Set<String> = []
+        for recipe in registry.recipes.values {
+            guard let item = registry.item(recipe.outputItemID),
+                  item.slot == .equipment else { continue }
+            if let building = recipe.requiresBuilding,
+               !settlement.buildings.contains(where: { $0.definitionID == building }) {
+                continue
+            }
+            if let tech = recipe.requiresTech,
+               !state.researchedTechs.contains(tech) { continue }
+            wanted.formUnion(recipe.materials.keys)
+        }
+        return wanted.sorted()
+    }
+
     /// The best thing the colony could make for a slot and still afford to
     /// build with afterwards — or nil if there is nothing it can both work and
     /// pay for.
