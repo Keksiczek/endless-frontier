@@ -157,7 +157,7 @@ public enum VisitorEngine {
         for var visitor in map.visitors {
             switch visitor.phase {
             case .arriving:
-                visitor.position = step(from: visitor.position, toward: square, by: pace)
+                walkOn(&visitor, toward: square, at: tick)
                 if within(visitor.position, square, arrivalRadius) {
                     visitor.phase = VisitorPhase.visiting
                     visitor.ticksRemaining = stayTicks
@@ -175,7 +175,7 @@ public enum VisitorEngine {
                 // the square and they are colonists now, so there is nobody left
                 // to walk back out.
                 if visitor.kind == .settler { continue }
-                visitor.position = step(from: visitor.position, toward: visitor.entry, by: pace)
+                walkOn(&visitor, toward: visitor.entry, at: tick)
                 // Gone off the edge, and out of the save.
                 if within(visitor.position, visitor.entry, arrivalRadius) { continue }
             }
@@ -406,6 +406,23 @@ public enum VisitorEngine {
     static func within(_ a: LocalPoint, _ b: LocalPoint, _ radius: Double) -> Bool {
         let dx = a.x - b.x, dy = a.y - b.y
         return dx * dx + dy * dy <= radius * radius
+    }
+
+    /// One tick's stride toward a point, and the leg it just walked.
+    ///
+    /// `position` is unchanged — still the simulation's answer on the tick, and
+    /// still what everything reasoning about a visit reads. What is new is
+    /// `walk`: the same stride expressed as a thing with a beginning and an
+    /// end, so the canvas can ask where they are a *third of the way* through
+    /// it. Without it a party stood still for two whole minutes and then
+    /// jumped, which is what made the valley read as a diorama rather than a
+    /// place. The same fix as `Pawn.haulWalk`, in the shape that suits a walker
+    /// whose next target is not known until they get there.
+    static func walkOn(_ visitor: inout Visitor, toward target: LocalPoint, at tick: Int) {
+        let from = visitor.position
+        let to = step(from: from, toward: target, by: pace)
+        visitor.position = to
+        visitor.walk = WalkPath(from: from, to: to, leftAt: tick, arrivesAt: tick + 1)
     }
 
     static func step(from: LocalPoint, toward: LocalPoint, by distance: Double) -> LocalPoint {

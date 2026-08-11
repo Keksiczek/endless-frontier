@@ -278,7 +278,15 @@ public enum AnimalEngine {
                     y: centre.y + station.y + (rng.nextUnit() - 0.5) * wander)
                 pace = stride
             }
-            animal.position = step(from: animal.position, toward: target, by: pace)
+            let from = animal.position
+            animal.position = step(from: from, toward: target, by: pace)
+            // …and the same stride with a beginning and an end, so the canvas
+            // can draw the crossing. It spans a whole think, because that is
+            // exactly how long it is until the beast decides again — twenty
+            // real minutes, which is how long a grazing deer used to hold one
+            // pose before teleporting.
+            animal.walk = WalkPath(from: from, to: animal.position,
+                                   leftAt: tick, arrivesAt: tick + thinkInterval)
             moved.append(animal)
         }
 

@@ -3,9 +3,17 @@ import EndlessFrontierCore
 
 /// The wild, drawn: the deer herd the hunters live off grazes its way around
 /// the valley, and when predator pressure climbs, something grey prowls the
-/// tree line. Purely presentational — herd size and pressure are read from
-/// `WildlifeState`; where the animals *stand* is a deterministic function of
-/// the map seed and the frame clock, so the sim stays untouched.
+/// tree line.
+///
+/// **Where a beast is and what it is doing both come from the simulation.**
+/// `Animal.position` (and `walk`, for the ground between two thinks) says
+/// where; `Animal.activity` says whether it is at grass, has stopped to look,
+/// or is running. The frame clock is left with what it is for — the gait, the
+/// breathing, the head coming up — and never decides *which* pose. It used to
+/// decide both, which is how a deer came to graze in mid-flight from a wolf.
+/// Nothing here writes back: the sim stays untouched.
+/// The abstract herd below is the fallback for saves made before the wild had
+/// bodies, and is the one place positions are still a function of the clock.
 enum SettlementWildlife {
     /// Predator pressure above which a prowler appears at the fringe…
     static let prowlerPressure: Double = 15
@@ -69,10 +77,16 @@ enum SettlementWildlife {
             let at = SettlementRenderer.point(position, in: rect)
             let s = size(kept.animal.species) * zoom
 
+            // Kept stock is not roamed by `AnimalEngine`, so its `activity`
+            // is whatever it held when it was gentled. A beast in the pen is a
+            // beast at grass, and saying so beats reading a stale field.
             switch kept.animal.species {
-            case .deer: deer(&context, at: at, s: s, time: time, phase: phase)
-            case .boar: boar(&context, at: at, s: s, time: time, phase: phase)
-            case .hare: hare(&context, at: at, s: s, time: time, phase: phase)
+            case .deer: deer(&context, at: at, s: s, time: time, phase: phase,
+                             doing: .grazing, urgency: 1)
+            case .boar: boar(&context, at: at, s: s, time: time, phase: phase,
+                             doing: .grazing, urgency: 1)
+            case .hare: hare(&context, at: at, s: s, time: time, phase: phase,
+                             doing: .grazing)
             case .fox, .wolf, .bear:
                 prowler(&context, at: at, s: s, time: time, hungry: false)
             }
@@ -94,10 +108,11 @@ enum SettlementWildlife {
 
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double,
-        zoom: CGFloat = 1
+        continuousTick: Double = 0, zoom: CGFloat = 1
     ) {
         guard map.wildlife.animals.isEmpty else {
-            entities(&context, rect: rect, map: map, time: time, zoom: zoom)
+            entities(&context, rect: rect, map: map, time: time,
+                     continuousTick: continuousTick, zoom: zoom)
             return
         }
         abstractHerd(&context, rect: rect, map: map, time: time)
@@ -134,13 +149,18 @@ enum SettlementWildlife {
     /// the gait, the head coming up.
     private static func entities(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double,
-        zoom: CGFloat
+        continuousTick: Double, zoom: CGFloat
     ) {
-        // Back to front, so a beast in front overlaps the one behind it.
-        for animal in map.wildlife.animals.sorted(by: { $0.position.y < $1.position.y }) {
+        // Back to front, so a beast in front overlaps the one behind it. Sorted
+        // on where they *are on this frame*, or a beast crossing in front of
+        // another would keep the stacking it had on the last think.
+        let standing = map.wildlife.animals
+            .map { (animal: $0, at: $0.position(at: continuousTick)) }
+            .sorted { $0.at.y < $1.at.y }
+        for (animal, where_) in standing {
             let phase = Double(hash(animal.id) % 6199) / 6199 * 2 * .pi
-            guard map.isExplored(animal.position) else { continue }
-            let at = SettlementRenderer.point(animal.position, in: rect)
+            guard map.isExplored(where_) else { continue }
+            let at = SettlementRenderer.point(where_, in: rect)
             let ailing = !animal.conditions.isEmpty
                 || animal.health < animal.species.baseHealth * 0.55
             // A running beast is drawn running — but *not* by speeding the
@@ -156,19 +176,33 @@ enum SettlementWildlife {
             let beat = time
             let s = size(animal.species) * zoom * (1 + (urgency - 1) * 0.06)
 
+            // **What it is doing is the simulation's to say.** `activity` is set
+            // by `AnimalEngine.roam` — the enum's own cases spell out the poses
+            // ("head down", "stopped to look", "running") — and the canvas used
+            // to ignore it and invent the pose from the frame clock instead. A
+            // deer put its head in the grass whenever `sin(time)` said so, mid
+            // flight from a wolf; a hare bolted on a timer with nothing chasing
+            // it. The clock's job is *when, within* a pose — a grazing deer
+            // still lifts its head now and then — never *which* pose.
+            let doing = animal.activity
             switch animal.species {
             case .deer:
-                deer(&context, at: at, s: s, time: beat, phase: phase)
+                deer(&context, at: at, s: s, time: beat, phase: phase,
+                     doing: doing, urgency: urgency)
             case .boar:
-                boar(&context, at: at, s: s, time: beat, phase: phase)
+                boar(&context, at: at, s: s, time: beat, phase: phase,
+                     doing: doing, urgency: urgency)
             case .hare:
-                hare(&context, at: at, s: s, time: beat, phase: phase)
+                hare(&context, at: at, s: s, time: beat, phase: phase, doing: doing)
             case .fox:
-                prowler(&context, at: at, s: s, time: beat, hungry: false)
+                prowler(&context, at: at, s: s, time: beat, hungry: false,
+                        doing: doing, urgency: urgency)
             case .wolf:
-                prowler(&context, at: at, s: s, time: beat, hungry: ailing)
+                prowler(&context, at: at, s: s, time: beat, hungry: ailing,
+                        doing: doing, urgency: urgency)
             case .bear:
-                prowler(&context, at: at, s: s, time: beat, hungry: ailing)
+                prowler(&context, at: at, s: s, time: beat, hungry: ailing,
+                        doing: doing, urgency: urgency)
             }
             // Something has spooked it: a mark over the head, the way a herd
             // lifting all at once tells you a wolf came down the valley.
@@ -207,7 +241,8 @@ enum SettlementWildlife {
                 y: herd.y + sin(time * 0.14 + phase * 1.7) * 0.028)
             guard map.isExplored(p) else { continue }
             deer(&context, at: SettlementRenderer.point(p, in: rect),
-                 s: unit * 0.010, time: time, phase: phase)
+                 s: unit * 0.010, time: time, phase: phase,
+                 doing: .grazing, urgency: 1)
         }
 
         let pressure = map.wildlife.predatorPressure
@@ -236,7 +271,7 @@ enum SettlementWildlife {
     /// A boar: low, heavy, snout down, with a bristled back.
     private static func boar(
         _ context: inout GraphicsContext, at p: CGPoint, s: CGFloat,
-        time: Double, phase: Double
+        time: Double, phase: Double, doing: AnimalActivity, urgency: Double
     ) {
         let hide = Color(red: 0.33, green: 0.27, blue: 0.23)
         let body = CGRect(x: p.x - s * 1.0, y: p.y - s * 0.5, width: s * 2.0, height: s * 0.95)
@@ -259,8 +294,10 @@ enum SettlementWildlife {
                 q.addLine(to: CGPoint(x: x + s * 0.06, y: body.minY - s * 0.24))
             }, with: .color(Theme.bone.opacity(0.4)), lineWidth: 0.6)
         }
-        // Four short legs, working.
-        let gait = CGFloat(sin(time * 3 + phase)) * s * 0.16
+        // Four short legs, working — harder when it is running, still when it
+        // has lain down. Amplitude carries the urgency, never the clock rate.
+        let gait = doing == .resting ? 0
+            : CGFloat(sin(time * 3 + phase)) * s * 0.16 * CGFloat(urgency)
         for i in 0..<4 {
             let x = body.minX + body.width * (CGFloat(i) + 0.5) / 4
             context.stroke(Path { q in
@@ -273,11 +310,20 @@ enum SettlementWildlife {
     /// A hare: small, still, then suddenly not.
     private static func hare(
         _ context: inout GraphicsContext, at p: CGPoint, s: CGFloat,
-        time: Double, phase: Double
+        time: Double, phase: Double, doing: AnimalActivity
     ) {
         let fur = Color(red: 0.62, green: 0.55, blue: 0.44)
-        // It sits, then bolts a short way and sits again.
-        let bolt = max(0, sin(time * 0.9 + phase) - 0.86) * 7
+        // It sits, then bolts — but it bolts because **something scared it**,
+        // not because a sine came round again. This used to run off the clock
+        // alone, so a hare with nothing within half the valley would suddenly
+        // leg it, and one genuinely running from a fox would sit there.
+        // Grazing keeps the odd startled hop; a wary hare freezes flat.
+        let bolt: Double
+        switch doing {
+        case .fleeing:  bolt = 1
+        case .grazing:  bolt = max(0, sin(time * 0.9 + phase) - 0.93) * 6
+        case .wary, .resting, .stalking: bolt = 0
+        }
         let hop = CGFloat(abs(sin(time * 9 + phase))) * s * CGFloat(bolt)
         let c = CGPoint(x: p.x + CGFloat(bolt) * s * 0.8, y: p.y - hop)
         context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.8, y: c.y - s * 0.5,
@@ -301,11 +347,14 @@ enum SettlementWildlife {
     /// not a mark on the grass.
     private static func deer(
         _ context: inout GraphicsContext, at p: CGPoint, s: CGFloat,
-        time: Double, phase: Double
+        time: Double, phase: Double, doing: AnimalActivity, urgency: Double
     ) {
         let hide = Color(red: 0.72, green: 0.62, blue: 0.46)
         let dark = Color(red: 0.53, green: 0.44, blue: 0.32)
-        let grazing = sin(time * 0.6 + phase) > 0.3
+        // Head down only when it is actually grazing — and even then it lifts
+        // now and again, which is what the clock is for. A deer that is wary,
+        // running or lying up keeps its head up: that is what those words mean.
+        let grazing = doing == .grazing && sin(time * 0.6 + phase) > 0.3
         let stag = Int(phase.rounded()) % 2 == 0
         let headY = grazing ? p.y + s * 0.55 : p.y - s * 0.95
         let headX = p.x + s * 1.35
@@ -314,9 +363,17 @@ enum SettlementWildlife {
         context.fill(Path(ellipseIn: CGRect(x: p.x - s * 1.1, y: p.y + s * 1.05,
                                             width: s * 2.4, height: s * 0.5)),
                      with: .color(Theme.ink.opacity(0.18)))
-        // Four legs.
-        for dx in [-0.65, -0.45, 0.45, 0.65] as [CGFloat] {
-            context.fill(Path(CGRect(x: p.x + dx * s - s * 0.09, y: p.y + s * 0.2,
+        // Four legs, and this is where the urgency goes — *amplitude*, not a
+        // faster clock. (The clock rate is one for everybody: multiplying it
+        // makes the phase jump by (urgency − 1) × time the moment the activity
+        // changes, so the beast snaps into a different pose every time it takes
+        // fright.) `urgency` was computed and then dropped on the floor, so a
+        // deer running for its life had the same rigid legs as one at grass.
+        let swing = doing == .resting ? 0
+            : CGFloat(sin(time * 3.2 + phase)) * s * 0.09 * CGFloat(urgency)
+        for (i, dx) in ([-0.65, -0.45, 0.45, 0.65] as [CGFloat]).enumerated() {
+            let lead = i % 2 == 0 ? swing : -swing
+            context.fill(Path(CGRect(x: p.x + dx * s - s * 0.09 + lead, y: p.y + s * 0.2,
                                      width: s * 0.18, height: s * 1.15)),
                          with: .color(dark))
         }
@@ -362,12 +419,17 @@ enum SettlementWildlife {
     /// pack pressure the eye catches red and the colony should be worried.
     private static func prowler(
         _ context: inout GraphicsContext, at p: CGPoint, s: CGFloat,
-        time: Double, hungry: Bool
+        time: Double, hungry: Bool,
+        doing: AnimalActivity = .grazing, urgency: Double = 1
     ) {
         let coat = Color(red: 0.50, green: 0.51, blue: 0.55)
         let dark = Color(red: 0.36, green: 0.37, blue: 0.41)
-        let lope = CGFloat(sin(time * 2.2)) * s * 0.15
-        let sw = CGFloat(sin(time * 2.2)) * s * 0.22
+        // A wolf closing on a deer is a wolf *moving*; one lying up is not.
+        // The engine says which (`.stalking`, `.resting`) and this reads it —
+        // before, every prowler loped identically whatever it was doing.
+        let drive = doing == .resting ? 0 : CGFloat(urgency)
+        let lope = CGFloat(sin(time * 2.2)) * s * 0.15 * drive
+        let sw = CGFloat(sin(time * 2.2)) * s * 0.22 * drive
 
         // Shadow.
         context.fill(Path(ellipseIn: CGRect(x: p.x - s * 1.4, y: p.y + s * 0.9,

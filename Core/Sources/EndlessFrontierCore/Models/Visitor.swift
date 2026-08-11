@@ -87,7 +87,21 @@ public struct Visitor: Codable, Sendable, Equatable, Identifiable {
     /// The tribe they belong to, when they belong to one. Nil for a wanderer.
     public let tribeID: UUID?
     /// Where the party is right now, in the local map's normalised space.
+    ///
+    /// This is the *simulation's* answer, on the tick — what everything that
+    /// reasons about a visit reads. What the canvas draws is `walk`.
     public var position: LocalPoint
+    /// The leg they just walked, so the canvas can draw them crossing the
+    /// ground instead of standing still and jumping.
+    ///
+    /// A tick is two real minutes and a party moved one stride per tick, so a
+    /// visitor stood frozen for two minutes at a time. This is the same fix
+    /// `Pawn.haulWalk` got, in the shape that suits a walker whose next target
+    /// is not known in advance: the leg runs from where they were to where they
+    /// now are, and the canvas asks for a *fraction* of it. Nil until they have
+    /// taken their first step — and in a save written before this, which is
+    /// simply a party standing at `position` until they next move.
+    public var walk: WalkPath?
     /// The edge they came in by, and will go back out by.
     public let entry: LocalPoint
     public var phase: VisitorPhase
@@ -99,7 +113,8 @@ public struct Visitor: Codable, Sendable, Equatable, Identifiable {
     public init(id: UUID, kind: VisitorKind, fromName: String, tribeID: UUID? = nil,
                 position: LocalPoint, entry: LocalPoint,
                 phase: VisitorPhase = .arriving, ticksRemaining: Int = 0,
-                settled: Bool = false) {
+                settled: Bool = false, walk: WalkPath? = nil) {
+        self.walk = walk
         self.id = id
         self.kind = kind
         self.fromName = fromName
@@ -109,5 +124,11 @@ public struct Visitor: Codable, Sendable, Equatable, Identifiable {
         self.phase = phase
         self.ticksRemaining = ticksRemaining
         self.settled = settled
+    }
+
+    /// Where to draw them at a *continuous* tick. Falls back to the tick's own
+    /// answer for a party that has not moved yet, or one out of an old save.
+    public func position(at tick: Double) -> LocalPoint {
+        walk?.position(at: tick) ?? position
     }
 }

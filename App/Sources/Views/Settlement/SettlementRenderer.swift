@@ -148,6 +148,7 @@ enum SettlementRenderer {
         SettlementPiles.draw(&context, rect: rect, map: map, zoom: zoom)
         // And whoever has come in over the edge to trade or to talk.
         SettlementVisitors.draw(&context, rect: rect, map: map, time: time,
+                                continuousTick: continuousTick,
                                 zoom: zoom, showLabels: showLabels)
         // Your own carts, on the leg of the road that crosses this valley.
         SettlementConvoys.draw(&context, rect: rect, settlement: settlement,
@@ -159,7 +160,8 @@ enum SettlementRenderer {
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels,
              expeditions: settlement.expeditions)
-        SettlementWildlife.draw(&context, rect: rect, map: map, time: time, zoom: zoom)
+        SettlementWildlife.draw(&context, rect: rect, map: map, time: time,
+                                continuousTick: continuousTick, zoom: zoom)
 
         let placed = layout(settlement: settlement, registry: registry, rect: rect)
         // Pushed in close, every structure says what it is — the answer to
@@ -260,7 +262,8 @@ enum SettlementRenderer {
         camera: Camera,
         regionKind: RegionKind,
         tribe: Tribe?,
-        seasonProgress: Double = 0.5
+        seasonProgress: Double = 0.5,
+        continuousTick: Double = 0
     ) {
         let viewRect = CGRect(origin: .zero, size: size)
         let rect = worldRect(viewRect: viewRect, camera: camera)
@@ -289,11 +292,13 @@ enum SettlementRenderer {
         SettlementPiles.draw(&context, rect: rect, map: map, zoom: zoom)
         // And whoever has come in over the edge to trade or to talk.
         SettlementVisitors.draw(&context, rect: rect, map: map, time: time,
+                                continuousTick: continuousTick,
                                 zoom: zoom, showLabels: showLabels)
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels)
-        SettlementWildlife.draw(&context, rect: rect, map: map, time: time, zoom: zoom)
+        SettlementWildlife.draw(&context, rect: rect, map: map, time: time,
+                                continuousTick: continuousTick, zoom: zoom)
         if regionKind == .anomaly {
             anomalyGlow(&context, rect: rect, time: time)
         }

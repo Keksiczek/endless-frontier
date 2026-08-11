@@ -136,6 +136,48 @@ struct VisitorTests {
         #expect(!paidTwice, "a visit pays once")
     }
 
+    /// A party crossed the valley one stride per tick, and a tick is two real
+    /// minutes — so a visitor stood frozen for two minutes and then jumped.
+    /// `position` is still the tick's answer; the *leg they just walked* is
+    /// what the canvas draws, and it has to move between one tick and the next.
+    /// The same defect, and the same fix, as `Pawn.haulWalk`.
+    @Test("A visitor is somewhere new between one tick and the next")
+    func theWalkInIsContinuous() {
+        var w = world(tribes: [])
+        let entry = LocalPoint(x: 0.02, y: 0.5)
+        w.settlements[0].localMap?.visitors = [
+            Visitor(id: UUID(uuidString: "00000000-0000-0000-7715-000000000009")!,
+                    kind: .trader, fromName: "Kamenní",
+                    position: entry, entry: entry)
+        ]
+        w = VisitorEngine.advanceOneTick(w, registry: registry(), mapSeed: w.mapSeed)
+
+        guard let walk = w.settlements[0].localMap?.visitors.first?.walk else {
+            Issue.record("the party took a step without leaving a leg behind")
+            return
+        }
+        let start = Double(walk.leftAt)
+        #expect(walk.position(at: start + 0.25) != walk.from,
+                "a quarter of a tick in, still on the spot")
+        #expect(walk.position(at: start + 0.5) != walk.position(at: start + 0.25),
+                "half a tick later, not a step further")
+        // The leg ends exactly where the tick put them: the canvas fills in the
+        // gap, it does not invent a different answer from the simulation's.
+        #expect(walk.to == w.settlements[0].localMap?.visitors.first?.position)
+    }
+
+    @Test("A visitor out of a save written before walks had legs stands where they stood")
+    func oldSavesStandStill() throws {
+        let json = """
+        {"id":"00000000-0000-0000-7715-00000000000A","kind":"trader","fromName":"Kamenní",
+         "position":{"x":0.3,"y":0.4},"entry":{"x":0.02,"y":0.5},
+         "phase":"arriving","ticksRemaining":0,"settled":false}
+        """
+        let visitor = try JSONDecoder().decode(Visitor.self, from: Data(json.utf8))
+        #expect(visitor.walk == nil)
+        #expect(visitor.position(at: 12.5) == LocalPoint(x: 0.3, y: 0.4))
+    }
+
     @Test("An envoy's visit is a diplomatic one, not a market day")
     func anEnvoyIsNotATrader() {
         var s = world(tribes: []).settlements[0]

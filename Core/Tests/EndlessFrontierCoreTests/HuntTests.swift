@@ -30,6 +30,30 @@ struct HuntTests {
 
     // MARK: - Roaming
 
+    /// A beast thinks once every `thinkInterval` ticks and a tick is two real
+    /// minutes, so a grazing deer held one pose for **twenty minutes** and then
+    /// teleported a stride. `position` is still the simulation's answer — a
+    /// hunter walks to *that* — and the leg it just walked is what the canvas
+    /// draws, spread over the whole think. Same defect, same fix, as hauling.
+    @Test("A beast is somewhere new between one think and the next")
+    func theRoamIsContinuous() {
+        let map = AnimalEngine.roam(
+            mapWith([deer(at: LocalPoint(x: 0.3, y: 0.3)),
+                     deer(at: LocalPoint(x: 0.6, y: 0.6))]), tick: 0)
+        guard let walk = map.wildlife.animals.first?.walk else {
+            Issue.record("a beast moved without leaving a leg behind")
+            return
+        }
+        // A whole think long, so the crossing fills the gap rather than
+        // finishing in the first instant and standing about for the rest.
+        #expect(walk.arrivesAt - walk.leftAt == AnimalEngine.thinkInterval)
+        let start = Double(walk.leftAt)
+        #expect(walk.position(at: start + 1) != walk.from, "a tick in, still on the spot")
+        #expect(walk.position(at: start + 2) != walk.position(at: start + 1),
+                "a tick later, not a step further")
+        #expect(walk.to == map.wildlife.animals.first?.position)
+    }
+
     @Test("A herd keeps together rather than scattering")
     func herdKeepsTogether() {
         let far = [deer(at: LocalPoint(x: 0.2, y: 0.3)),

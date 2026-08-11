@@ -164,6 +164,16 @@ public struct Animal: Codable, Sendable, Equatable, Identifiable {
     /// dead where it fell. Storing it is what lets the hunt be an encounter
     /// between two things that are in the same place.
     public var position: LocalPoint
+    /// The leg it just walked, so the canvas can draw a beast crossing the
+    /// meadow instead of one standing still and jumping.
+    ///
+    /// A beast thinks every `AnimalEngine.thinkInterval` ticks and a tick is
+    /// two real minutes, so grazing deer held one pose for **twenty minutes**
+    /// and then teleported a stride. `position` is still the simulation's
+    /// answer on the tick — a hunter walks to *that* — and this is the same
+    /// stride given a beginning and an end so the canvas can fill in between.
+    /// Nil for a beast that has not moved yet, and for one out of an old save.
+    public var walk: WalkPath?
     /// What it is doing right now — set by the think-step, read by the canvas.
     public var activity: AnimalActivity
     /// How far somebody has got with gentling it, 0…1. At 1 it stops running
@@ -175,8 +185,10 @@ public struct Animal: Codable, Sendable, Equatable, Identifiable {
                 health: Double? = nil, body: [AnimalBodyPart]? = nil,
                 conditions: [AnimalCondition] = [],
                 position: LocalPoint = LocalPoint(x: 0.5, y: 0.5),
+                walk: WalkPath? = nil,
                 activity: AnimalActivity = .grazing,
                 tameProgress: Double = 0) {
+        self.walk = walk
         self.id = id
         self.species = species
         self.sex = sex
@@ -193,7 +205,7 @@ public struct Animal: Codable, Sendable, Equatable, Identifiable {
 
     private enum CodingKeys: String, CodingKey {
         case id, species, sex, age, health, body, conditions, position, activity
-        case tameProgress
+        case tameProgress, walk
     }
 
     public init(from decoder: Decoder) throws {
@@ -212,6 +224,15 @@ public struct Animal: Codable, Sendable, Equatable, Identifiable {
             ?? Animal.scatter(id)
         activity = try c.decodeIfPresent(AnimalActivity.self, forKey: .activity) ?? .grazing
         tameProgress = try c.decodeIfPresent(Double.self, forKey: .tameProgress) ?? 0
+        // A beast saved before its strides had a beginning and an end is simply
+        // standing at `position` until it next thinks (rule 3).
+        walk = try c.decodeIfPresent(WalkPath.self, forKey: .walk)
+    }
+
+    /// Where to draw it at a *continuous* tick. Falls back to the tick's own
+    /// answer for a beast that has not moved yet, or one out of an old save.
+    public func position(at tick: Double) -> LocalPoint {
+        walk?.position(at: tick) ?? position
     }
 
     /// A stable spot on the map for a beast that has never had one, spread over
