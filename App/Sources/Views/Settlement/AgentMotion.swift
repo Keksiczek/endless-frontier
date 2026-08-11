@@ -340,14 +340,19 @@ enum AgentMotion {
         // position is *simulation* rather than a function of the clock: a load
         // has to be picked up somewhere and put down somewhere else, and both
         // ends are real. Hauling outranks the day and yields only to a fight.
-        if let carried = pawn.haulPosition, scene.battle == nil {
-            // A hauler faces the store they are walking the load to; someone
-            // on their way out faces the heap they are going to fetch.
-            let target = pawn.carrying?.destination ?? pawn.currentJob?.position
-            return Pose(position: carried,
+        if let haul = pawn.haulWalk, scene.battle == nil {
+            // Asked with a *fractional* tick, the same as an errand and a party
+            // on the road. Reading the walk's endpoint once a tick is what made
+            // the village look dead: a tick is two real minutes, so a hauler
+            // stood perfectly still — legs swinging — and then jumped a stride.
+            let at = haul.position(at: scene.continuousTick)
+            // They face the way the walk is going, so somebody rounding a barn
+            // turns with the corner rather than staring at the store through it.
+            let ahead = haul.heading(at: scene.continuousTick)
+            return Pose(position: at,
                         activity: pawn.carrying == nil ? .walking : .hauling,
                         stride: 1,
-                        facing: target.map { facing(from: carried, to: $0) } ?? 0)
+                        facing: facing(from: .init(x: 0, y: 0), to: ahead))
         }
         let base = dailyPose(for: pawn, map: map, scene: scene,
                              time: time, ticksPerYear: ticksPerYear)

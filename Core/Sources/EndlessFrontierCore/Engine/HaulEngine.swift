@@ -24,8 +24,6 @@ public enum HaulEngine {
     /// normalised units. A pile a quarter of the map away is a few ticks of
     /// walking, which is the point — distance is a cost now.
     public static let carrySpeed: Double = 0.06
-    /// How close is close enough to have arrived.
-    public static let arrivalRadius: Double = 0.02
     /// The most piles a map keeps. Past this the oldest are merged into the
     /// nearest neighbour rather than left to accumulate for ever: a valley
     /// logged flat should not carry two hundred heaps in its save.
@@ -73,9 +71,11 @@ public enum HaulEngine {
 
     /// One tick of hauling for a settlement: pick up, walk, put down.
     ///
-    /// Runs every tick, unlike the job board — a carried load has to *move*
-    /// every tick or a hauler would teleport between board cycles. It is
-    /// linear in the number of carriers, which is small.
+    /// Runs every tick, unlike the job board, so a load that has arrived is put
+    /// down on the tick it arrives rather than at the next board cycle. The
+    /// *walk* is not stepped here — it was decided when it began (`WalkPath`)
+    /// and the canvas reads it at a fractional tick — so this only starts walks,
+    /// finishes them, and hands loads over. Linear in the number of carriers.
     public static func advanceOneTick(
         _ settlement: Settlement, registry: GameDataRegistry, tick: Int
     ) -> Settlement {
@@ -89,24 +89,33 @@ public enum HaulEngine {
         // A pack animal takes the weight off: the colony's beasts of burden
         // make every hauler quicker, which is the whole reason to keep one.
         let pace = carrySpeed * (1 + TamingEngine.bonuses(s).haul)
+        // What stands where, worked out once for the whole colony rather than
+        // once per walker per sampled point (§11.23).
+        let standing = s.colony.map(ColonyRoute.Occupancy.init)
+
+        // Where a hauler is right now, and the walk that gets them to `target`
+        // — the one they are already on if it still goes there, or a fresh one
+        // from wherever they have got to. Deciding the walk **once** is the
+        // whole point: it is what lets the canvas draw them crossing the town
+        // instead of standing still for two minutes and jumping (`WalkPath`),
+        // and it takes the route out of the per-tick path (rule 4).
+        func walk(of pawn: Pawn, to target: LocalPoint) -> WalkPath {
+            if let under = pawn.haulWalk, under.to == target { return under }
+            let here = pawn.haulWalk?.position(at: Double(tick)) ?? store
+            return WalkPath.across(from: here, to: target, leavingAt: tick,
+                                   pace: pace, in: s.colony, occupancy: standing)
+        }
 
         for i in s.pawns.indices {
             // Someone already carrying just walks, and hands it over on arrival.
             if let load = s.pawns[i].carrying {
-                if within(s.pawns[i].haulPosition ?? store, load.destination, arrivalRadius) {
+                let home = walk(of: s.pawns[i], to: load.destination)
+                if home.hasArrived(at: tick) {
                     s.stockpile[load.itemID, default: 0] += load.amount
                     s.pawns[i].carrying = nil
-                    s.pawns[i].haulPosition = nil
-                    continue
-                }
-                let next = step(from: s.pawns[i].haulPosition ?? store,
-                                toward: load.destination, by: pace,
-                                around: s.colony)
-                s.pawns[i].haulPosition = next
-                if within(next, load.destination, arrivalRadius) {
-                    s.stockpile[load.itemID, default: 0] += load.amount
-                    s.pawns[i].carrying = nil
-                    s.pawns[i].haulPosition = nil
+                    s.pawns[i].haulWalk = nil
+                } else {
+                    s.pawns[i].haulWalk = home
                 }
                 continue
             }
@@ -126,15 +135,18 @@ public enum HaulEngine {
             // Claim it, walk to it, and pick it up when they get there.
             map.piles[index].claimedBy = s.pawns[i].id
             let pilePosition = map.piles[index].position
-            let standing = s.pawns[i].haulPosition ?? store
-            if within(standing, pilePosition, arrivalRadius) {
+            let out = walk(of: s.pawns[i], to: pilePosition)
+            if out.hasArrived(at: tick) {
                 let pile = map.piles.remove(at: index)
                 s.pawns[i].carrying = HaulLoad(itemID: pile.itemID, amount: pile.amount,
                                                destination: store)
-                s.pawns[i].haulPosition = pilePosition
+                // …and they turn round on the spot: the walk home begins at the
+                // heap, not at the store they set out from.
+                s.pawns[i].haulWalk = WalkPath.across(
+                    from: pilePosition, to: store, leavingAt: tick,
+                    pace: pace, in: s.colony, occupancy: standing)
             } else {
-                s.pawns[i].haulPosition = step(from: standing, toward: pilePosition,
-                                               by: pace, around: s.colony)
+                s.pawns[i].haulWalk = out
             }
         }
 
@@ -178,31 +190,6 @@ public enum HaulEngine {
             }
         }
         return SettlementGeometry.heart
-    }
-
-    /// A step toward a point, kept on the map.
-    /// One stride toward a place, going **round** whatever stands between.
-    ///
-    /// A hauler walked the straight line home, which on a town of any size runs
-    /// through the houses. `ColonyRoute` gives the corners; the walker aims at
-    /// the first one they have not reached yet, so the load tracks the street
-    /// rather than the crow's flight. Recomputed per stride rather than stored,
-    /// because a pile can be claimed and a building can go up mid-carry — and
-    /// the route is only sought at all when something is actually in the way.
-    static func step(from: LocalPoint, toward: LocalPoint, by distance: Double,
-                     around colony: ColonyMap?) -> LocalPoint {
-        let corners = ColonyRoute.corners(from: from, to: toward, in: colony)
-        let aim = corners.first ?? toward
-        return step(from: from, toward: aim, by: distance)
-    }
-
-    static func step(from: LocalPoint, toward: LocalPoint, by distance: Double) -> LocalPoint {
-        let dx = toward.x - from.x, dy = toward.y - from.y
-        let length = (dx * dx + dy * dy).squareRoot()
-        guard length > 1e-9 else { return toward }
-        let t = min(1, distance / length)
-        return LocalPoint(x: min(1, max(0, from.x + dx * t)),
-                          y: min(1, max(0, from.y + dy * t)))
     }
 
     /// Whether this ground's goods arrive by being carried rather than by being

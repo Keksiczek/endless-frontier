@@ -78,32 +78,14 @@ public struct Errand: Codable, Sendable, Equatable {
     /// line, which is why colonists went **through the houses** — the shortest
     /// way across a town runs over whatever is standing in it. `via` is worked
     /// out once, by `ColonyRoute`, when the walk begins.
-    public func position(at tick: Double) -> LocalPoint {
-        let span = Double(max(1, arrivesAt - leftAt))
-        let t = min(1, max(0, (tick - Double(leftAt)) / span))
-        guard !via.isEmpty else {
-            return LocalPoint(x: from.x + (to.x - from.x) * t,
-                              y: from.y + (to.y - from.y) * t)
-        }
-        // Spread the walk over the legs by their length, so somebody rounding a
-        // long barn does not sprint one side and dawdle the other.
-        let legs = zip([from] + via, via + [to]).map { SiegeField.distance($0, $1) }
-        let total = legs.reduce(0, +)
-        guard total > 0 else { return to }
-        var travelled = t * total
-        var here = from
-        for (index, leg) in legs.enumerated() {
-            let next = index < via.count ? via[index] : to
-            if travelled <= leg {
-                let f = leg > 0 ? travelled / leg : 1
-                return LocalPoint(x: here.x + (next.x - here.x) * f,
-                                  y: here.y + (next.y - here.y) * f)
-            }
-            travelled -= leg
-            here = next
-        }
-        return to
+    /// The walk itself. The geometry lives in `WalkPath`, because an errand and
+    /// a hauler cross the same colony the same way and only ever differed in
+    /// that one of them had been taught to do it smoothly.
+    public var path: WalkPath {
+        WalkPath(from: from, to: to, leftAt: leftAt, arrivesAt: arrivesAt, via: via)
     }
+
+    public func position(at tick: Double) -> LocalPoint { path.position(at: tick) }
 
     public func position(at tick: Int) -> LocalPoint { position(at: Double(tick)) }
 

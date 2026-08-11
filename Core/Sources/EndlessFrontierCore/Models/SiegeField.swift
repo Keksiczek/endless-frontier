@@ -13,7 +13,7 @@ import Foundation
 /// geometry is simulation, not decoration — CLAUDE.md rule 8: two numbers that
 /// must agree live in one place, and "where the line forms" is now one of them.
 ///
-/// The precedent is `Pawn.currentJob.position` and `HaulEngine.haulPosition`:
+/// The precedent is `Pawn.currentJob.position` and `Pawn.haulWalk`:
 /// Core-owned positions the renderer *reads*. Rule 5 is untouched — the canvas
 /// still never writes any of this.
 public struct SiegeField: Sendable, Equatable {

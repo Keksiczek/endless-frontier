@@ -32,6 +32,56 @@ public enum ColonyRoute {
     /// a budget.
     static let mostTilesSearched = 900
 
+    // MARK: - What stands where
+
+    /// Which building covers each tile, laid out flat so the answer is an index
+    /// rather than a search.
+    ///
+    /// **This is the whole of §11.23's second half.** `ColonyMap.placement(at:)`
+    /// is `placements.first { $0.covers(coord) }` — a linear walk of every
+    /// building in the colony — and routing asks it *per sampled point along a
+    /// line*: about a hundred and thirty samples for a walk across a 64×64 grid,
+    /// times a hundred buildings, per walker, per tick. Measured on a 12 000-tick
+    /// run: 2 582 of 2 596 samples under `advanceSettlement` were here.
+    ///
+    /// Built once — by `HaulEngine` at the top of its tick, by `corners` itself
+    /// for a one-off caller — and then every lookup is an array subscript. The
+    /// routes that come out are identical; this only changes what it costs to
+    /// ask.
+    public struct Occupancy: Sendable {
+        let width: Int
+        let height: Int
+        /// Tile index → the building standing on it. Nil where the ground is open.
+        private let byTile: [UUID?]
+
+        public init(_ colony: ColonyMap) {
+            width = max(0, colony.width)
+            height = max(0, colony.height)
+            var tiles = [UUID?](repeating: nil, count: width * height)
+            // `ColonyMap.placement(at:)` answers with the **first** placement
+            // that covers a tile, so where two overlap the earlier one wins.
+            // Walking the list backwards means `placements[0]` writes last and
+            // is what stays — the same answer, from an array subscript.
+            for placement in colony.placements.reversed() {
+                let w = max(1, placement.width), h = max(1, placement.height)
+                for y in placement.coord.y..<(placement.coord.y + h) {
+                    guard y >= 0, y < height else { continue }
+                    for x in placement.coord.x..<(placement.coord.x + w) {
+                        guard x >= 0, x < width else { continue }
+                        tiles[y * width + x] = placement.id
+                    }
+                }
+            }
+            byTile = tiles
+        }
+
+        public func placementID(at coord: TileCoord) -> UUID? {
+            guard coord.x >= 0, coord.y >= 0, coord.x < width, coord.y < height
+            else { return nil }
+            return byTile[coord.y * width + coord.x]
+        }
+    }
+
     /// The corners of a walk from `a` to `b` that keeps out of the buildings.
     ///
     /// Empty means "go straight" — either the straight line was already clear,
@@ -40,21 +90,27 @@ public enum ColonyRoute {
     /// failing is deliberate: a colonist who cannot find a way round still has
     /// to be able to eat, and a walk that never happens is the shape of bug
     /// this project keeps producing (rule 22).
+    /// Pass an `Occupancy` when the caller is routing more than one walk over
+    /// the same colony — building it per walk is the cost this exists to avoid.
     public static func corners(
-        from a: LocalPoint, to b: LocalPoint, in colony: ColonyMap?
+        from a: LocalPoint, to b: LocalPoint, in colony: ColonyMap?,
+        occupancy: Occupancy? = nil
     ) -> [LocalPoint] {
         guard let colony, !colony.placements.isEmpty,
               SiegeField.distance(a, b) > worthRouting,
               let start = tile(a, in: colony), let goal = tile(b, in: colony)
         else { return [] }
+        let where_ = occupancy ?? Occupancy(colony)
         // The building they are walking *to* is not in the way — they are going
         // inside it. Neither is the one they are stood in.
-        let allowed = Set([colony.placement(at: start)?.id,
-                           colony.placement(at: goal)?.id].compactMap { $0 })
-        guard crossesABuilding(from: a, to: b, in: colony, allowing: allowed) else { return [] }
-        guard let tiles = search(from: start, to: goal, in: colony, allowing: allowed)
+        let allowed = Set([where_.placementID(at: start),
+                           where_.placementID(at: goal)].compactMap { $0 })
+        guard crossesABuilding(from: a, to: b, in: colony, standing: where_, allowing: allowed)
         else { return [] }
-        return straighten(tiles, in: colony, allowing: allowed, from: a, to: b)
+        guard let tiles = search(from: start, to: goal, in: colony,
+                                 standing: where_, allowing: allowed)
+        else { return [] }
+        return straighten(tiles, in: colony, standing: where_, allowing: allowed, from: a, to: b)
     }
 
     /// The total length of a walk through these corners — what the walk costs
@@ -77,10 +133,14 @@ public enum ColonyRoute {
     /// Sampled along the line at half a tile, which is fine for a grid this
     /// coarse: a building is at least one tile across, so it cannot hide
     /// between two samples.
+    /// `standing` is optional so a one-off caller — a test, a single question
+    /// asked once — does not have to build the colony's occupancy itself. The
+    /// walkers pass one in, because they ask this a hundred times a tick.
     static func crossesABuilding(
         from a: LocalPoint, to b: LocalPoint, in colony: ColonyMap,
-        allowing allowed: Set<UUID>
+        standing: Occupancy? = nil, allowing allowed: Set<UUID>
     ) -> Bool {
+        let standing = standing ?? Occupancy(colony)
         let span = SiegeField.distance(a, b)
         let tileSpan = SettlementGeometry.span / Double(max(colony.width, colony.height))
         let steps = max(2, Int((span / (tileSpan * 0.5)).rounded(.up)))
@@ -88,8 +148,8 @@ public enum ColonyRoute {
             let t = Double(i) / Double(steps)
             let p = LocalPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t)
             guard let coord = tile(p, in: colony),
-                  let placement = colony.placement(at: coord) else { continue }
-            if !allowed.contains(placement.id) { return true }
+                  let standingHere = standing.placementID(at: coord) else { continue }
+            if !allowed.contains(standingHere) { return true }
         }
         return false
     }
@@ -99,11 +159,11 @@ public enum ColonyRoute {
     /// A*, four-way, over the colony's tiles.
     static func search(
         from start: TileCoord, to goal: TileCoord, in colony: ColonyMap,
-        allowing allowed: Set<UUID>
+        standing: Occupancy, allowing allowed: Set<UUID>
     ) -> [TileCoord]? {
         func blocked(_ c: TileCoord) -> Bool {
-            guard let placement = colony.placement(at: c) else { return false }
-            return !allowed.contains(placement.id)
+            guard let here = standing.placementID(at: c) else { return false }
+            return !allowed.contains(here)
         }
         func index(_ c: TileCoord) -> Int { c.y * colony.width + c.x }
         func heuristic(_ c: TileCoord) -> Double {
@@ -157,8 +217,8 @@ public enum ColonyRoute {
     /// otherwise clip a building turns it back into somebody cutting across a
     /// square — which is what a person does, and what the canvas should draw.
     static func straighten(
-        _ tiles: [TileCoord], in colony: ColonyMap, allowing allowed: Set<UUID>,
-        from a: LocalPoint, to b: LocalPoint
+        _ tiles: [TileCoord], in colony: ColonyMap, standing: Occupancy,
+        allowing allowed: Set<UUID>, from a: LocalPoint, to b: LocalPoint
     ) -> [LocalPoint] {
         let points = tiles.map { centre(of: $0, in: colony) }
         var kept: [LocalPoint] = []
@@ -166,14 +226,16 @@ public enum ColonyRoute {
         var i = 0
         while i < points.count {
             // Once the door is in sight, stop cornering and walk at it.
-            if !crossesABuilding(from: here, to: b, in: colony, allowing: allowed) { break }
+            if !crossesABuilding(from: here, to: b, in: colony,
+                                 standing: standing, allowing: allowed) { break }
             // Otherwise cut to the furthest corner still in a straight line
             // from here. Nothing reachable leaves `furthest` at `i`, which
             // still moves us on a tile — a tight gap has to produce a walk
             // rather than nothing.
             var furthest = i
             for j in (i..<points.count).reversed()
-            where !crossesABuilding(from: here, to: points[j], in: colony, allowing: allowed) {
+            where !crossesABuilding(from: here, to: points[j], in: colony,
+                                    standing: standing, allowing: allowed) {
                 furthest = j
                 break
             }

@@ -225,10 +225,23 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     /// What they have in their arms, if anything — a heap of timber or stone
     /// on its way to the store. Nil for everyone not presently carrying.
     public var carrying: HaulLoad?
-    /// Where a hauler has walked to. Only ever set while they are fetching or
+    /// The walk a hauler is on. Only ever set while they are fetching or
     /// carrying: the rest of the time their place on the canvas is a function
     /// of their day, and this stays nil so nothing overrides it.
-    public var haulPosition: LocalPoint?
+    ///
+    /// This used to be a single point advanced one step per tick, and that is
+    /// why the village looked dead. A tick is two real minutes, hauling
+    /// outranks the day in `AgentMotion`, and the whole food chain runs on
+    /// carrying the harvest in — so most of the colony was drawn standing
+    /// perfectly still for two minutes at a time, legs swinging, then jumping a
+    /// stride. A walk that knows when it began and when it ends can be asked
+    /// for a *fractional* tick, which is what `Errand` had worked out already.
+    public var haulWalk: WalkPath?
+
+    /// Where a hauler is at `tick` — nil for everyone not presently on a walk.
+    public func haulPosition(at tick: Double) -> LocalPoint? {
+        haulWalk?.position(at: tick)
+    }
     /// What happened to them, part by part.
     ///
     /// `health` is still the aggregate everything balances on; this is the
@@ -261,7 +274,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         errand: Errand? = nil,
         homeID: UUID? = nil,
         carrying: HaulLoad? = nil,
-        haulPosition: LocalPoint? = nil,
+        haulWalk: WalkPath? = nil,
         body: Body = Body()
     ) {
         self.id = id
@@ -284,7 +297,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         self.errand = errand
         self.homeID = homeID
         self.carrying = carrying
-        self.haulPosition = haulPosition
+        self.haulWalk = haulWalk
         self.body = body
     }
 
@@ -307,7 +320,15 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         case id, name, trait, skills, skillXP, needs, mood, assignedWork
         case health, isBroken, equipment
         case age, genes, wealth, pregnancyTicksRemaining, expeditionID, currentJob
-        case homeID, carrying, haulPosition, body, errand, moodShift
+        case homeID, carrying, haulWalk, body, errand, moodShift
+    }
+
+    /// Keys that no longer have a property behind them. Kept apart from
+    /// `CodingKeys` so `Encodable` still synthesises: a key with nothing to
+    /// encode stops Swift writing the encoder for the whole type.
+    private enum LegacyKeys: String, CodingKey {
+        /// A hauler used to be stored as the one point they stood on.
+        case haulPosition
     }
 
     public init(from decoder: Decoder) throws {
@@ -333,7 +354,16 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         errand = try c.decodeIfPresent(Errand.self, forKey: .errand)
         homeID = try c.decodeIfPresent(UUID.self, forKey: .homeID)
         carrying = try c.decodeIfPresent(HaulLoad.self, forKey: .carrying)
-        haulPosition = try c.decodeIfPresent(LocalPoint.self, forKey: .haulPosition)
+        // A hauler saved before walks had a beginning and an end is standing on
+        // the one point that was kept for them; the next tick gives them a
+        // proper walk from there (rule 3).
+        if let walk = try c.decodeIfPresent(WalkPath.self, forKey: .haulWalk) {
+            haulWalk = walk
+        } else {
+            let old = try decoder.container(keyedBy: LegacyKeys.self)
+            haulWalk = try old.decodeIfPresent(LocalPoint.self, forKey: .haulPosition)
+                .map { WalkPath(from: $0, to: $0, leftAt: 0, arrivesAt: 0) }
+        }
         // A colonist from before bodies is whole.
         body = try c.decodeIfPresent(Body.self, forKey: .body) ?? Body()
         // …and one saved before events were felt is feeling nothing in particular.

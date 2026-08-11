@@ -143,6 +143,51 @@ struct HaulTests {
         #expect(!HaulEngine.isHauled(.herbs))
     }
 
+    /// **The village looked dead, and this is why.** A hauler's place used to be
+    /// one point moved a stride per tick, and a tick is two real minutes — so
+    /// most of the colony (the whole food chain runs on carrying the harvest in)
+    /// stood perfectly still for two minutes with their legs swinging, then
+    /// jumped. `Errand` had already worked this out; hauling had not. The walk
+    /// knows when it began and when it ends, so it can be asked for a *fraction*
+    /// of a tick, and the answer has to actually move.
+    @Test("A hauler is somewhere new between one tick and the next")
+    func theWalkIsContinuous() {
+        let s = run(colony(hands: 1, piles: [("wood", 10, LocalPoint(x: 0.9, y: 0.1))]),
+                    ticks: JobBoard.interval + 1)
+        guard let walk = s.pawns.compactMap(\.haulWalk).first else {
+            Issue.record("nobody set off for the heap")
+            return
+        }
+        // A walk long enough to be worth watching, and one that is under way.
+        #expect(walk.arrivesAt > walk.leftAt + 1,
+                "the walk arrives in \(walk.arrivesAt - walk.leftAt) tick(s) — nothing to interpolate")
+        let quarter = walk.position(at: Double(walk.leftAt) + 0.25)
+        let half = walk.position(at: Double(walk.leftAt) + 0.5)
+        #expect(quarter != walk.from, "a quarter of a tick in, still on the doorstep")
+        #expect(half != quarter, "half a tick later, not a step further")
+        // …and it ends where it was sent, rather than drifting past it.
+        #expect(walk.position(at: Double(walk.arrivesAt)) == walk.to)
+    }
+
+    /// The route is decided once, when the walk begins — not re-asked every
+    /// tick the hauler is under way (rule 4). Pinning it here because the
+    /// per-tick version is what §11.23 measured as 2 582 of 2 596 samples.
+    @Test("A walk under way keeps the route it set off with")
+    func theRouteIsSettledOnce() {
+        var s = run(colony(hands: 1, piles: [("wood", 10, LocalPoint(x: 0.9, y: 0.1))]),
+                    ticks: JobBoard.interval + 1)
+        guard let before = s.pawns.compactMap(\.haulWalk).first else {
+            Issue.record("nobody set off for the heap")
+            return
+        }
+        s = HaulEngine.advanceOneTick(s, registry: registry(), tick: JobBoard.interval + 1)
+        guard let after = s.pawns.compactMap(\.haulWalk).first else {
+            Issue.record("the hauler stopped walking")
+            return
+        }
+        #expect(after == before, "the walk was thrown away and worked out again")
+    }
+
     @Test("A save written before hauling has no heaps and nobody carrying")
     func oldSavesCarryNothing() throws {
         let json = """
