@@ -117,6 +117,9 @@ public enum StewardEngine {
             // to itself went two hundred years without making a spear.
             s = QuartermasterEngine.advance(s, index: index, registry: registry)
             s = sendSomebodyOut(s, index: index, registry: registry)
+            // …and, when it is doing well enough to spare them, a party that
+            // does not come back: a daughter town on charted ground.
+            s = foundIfItCan(s, index: index, registry: registry)
         }
         return s
     }
@@ -603,6 +606,82 @@ public enum StewardEngine {
     /// How often the council will even consider sending somebody out of the
     /// valley. A multiple of `interval`, so it lands on a sitting.
     static let outwardInterval = interval * 3
+
+    // MARK: - Founding
+
+    /// The smallest a colony may be and still send a founding party out.
+    ///
+    /// Six settlers leave with them (`ExpansionEngine.settlers`), and a village
+    /// that gives up six of thirty has gutted its own workforce. This is
+    /// deliberately well above the point where the colony is merely surviving:
+    /// a daughter town is what a colony does when it is *doing well*, not a way
+    /// out of trouble.
+    static let smallestFounder = 55.0
+
+    /// How many souls a colony wants for each town it holds before it founds
+    /// another. Without this the capital seeds a settlement every few years the
+    /// moment it clears the floor, and a realm of eight hamlets of six people
+    /// is not a civilisation — it is one colony with its hands cut off.
+    static let soulsPerSettlement = 45.0
+
+    /// Sends out a founding party, when the colony is big enough to spare one
+    /// and there is charted ground with nobody on it.
+    ///
+    /// **The fourth room the player was standing in the doorway of.**
+    /// `ExpansionEngine.foundOutpost` is reached only through
+    /// `GameEngine.foundOutpost`, and that is only ever called from the UI — so
+    /// a world nobody touches holds exactly one settlement for ever. Measured,
+    /// seed 4242, two hundred years: **thirty-three fully charted regions with
+    /// nobody living in them**, and not one founding party in the whole run.
+    ///
+    /// It was not a small thing to leave undone. Era milestones asked for two,
+    /// three, four settlements, so an unattended colony was **locked in the
+    /// ancient age for ever** and could never build the medieval or industrial
+    /// buildings its own scholars had unlocked — `buildableHere` filters on
+    /// `def.era.index <= state.era.index`, so the whole later half of the game
+    /// was unreachable. The settlement gates are gone from `eras.json` now, and
+    /// this is the other half: population is what the remaining gates ask for,
+    /// and one valley cannot hold enough people to answer them.
+    static func foundIfItCan(
+        _ state: WorldState, index: Int, registry: GameDataRegistry
+    ) -> WorldState {
+        // Its own cadence, and never on the sitting that sends people out to
+        // explore: a colony that empties itself of hands in the same season it
+        // gives away six of them is a colony that stops working. Hence the
+        // offset — `sendSomebodyOut` takes the sitting on the interval, this
+        // one takes the sitting after it, so the two never draw on the same
+        // roster in the same season.
+        guard state.tick % outwardInterval == interval else { return state }
+        let settlement = state.settlements[index]
+        guard settlement.kind == .capital,
+              settlement.policy.roster != .nobody,
+              settlement.population >= smallestFounder,
+              settlement.population
+                  >= soulsPerSettlement * Double(state.settlements.count + 1),
+              canSpareTheHands(settlement, registry: registry) else { return state }
+        // Charted ground with nobody on it — the nearest, so a realm grows
+        // outward from its own valley rather than scattering. Ties on id, so
+        // the same world founds the same towns in the same order (rule 2).
+        guard let home = state.regions.first(where: { $0.id == settlement.regionID }),
+              let pick = ExpansionEngine.foundableRegions(state)
+                .min(by: { a, b in
+                    let da = a.coord.distance(to: home.coord)
+                    let db = b.coord.distance(to: home.coord)
+                    return da == db ? a.id.uuidString < b.id.uuidString : da < db
+                })
+        else { return state }
+        let founded = ExpansionEngine.foundOutpost(
+            state, regionID: pick.id, name: "", registry: registry)
+        guard founded.settlements.count > state.settlements.count else { return state }
+        var s = founded
+        if let town = s.settlements.last {
+            s.settlements[index].journal.append(
+                tick: s.tick, kind: .arrival, text: LocalizedText(values: [
+                    .en: "A founding party walked out to raise \(town.name).",
+                    .cs: "Skupina osadníků vyšla založit \(town.name)."]))
+        }
+        return s
+    }
 
     static func canSpareTheHands(
         _ settlement: Settlement, registry: GameDataRegistry

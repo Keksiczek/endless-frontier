@@ -184,7 +184,13 @@ public enum LocalTerrain {
         switch biomeID {
         case "forest":    return (0.02, 0.16, false)
         case "desert":    return (-0.02, -0.30, false)
-        case "tundra":    return (0.06, 0.04, true)
+        // A tundra is a **cold plain**, not a cold mountain. Lifted and dry, it
+        // came out dominated by bare rock — the height band above 0.64 and the
+        // dry band below 0.30 both answer `rock` in a cold country, and between
+        // them they took most of the map. Low and damp puts the snow back where
+        // the eye expects it. Guarded by "Each biome's dominant cover matches
+        // its character".
+        case "tundra":    return (-0.06, 0.14, true)
         case "mountains": return (0.26, -0.04, false)
         case "coast":     return (-0.14, 0.22, false)
         default:          return (0, 0.06, false)   // plains & homeland

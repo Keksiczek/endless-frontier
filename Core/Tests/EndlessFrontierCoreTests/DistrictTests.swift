@@ -87,8 +87,13 @@ struct DistrictTests {
                 == town(20).colony?.placements.map(\.coord))
     }
 
-    @Test("A full grid gives up rather than looping")
-    func afullGridStops() {
+    /// A colony out of room **takes in more of the valley** (§11.21). This used
+    /// to assert the opposite — that a full grid gives up — and giving up was
+    /// the ceiling the whole game sat under: `FarmEngine.reconcile` makes plots
+    /// out of placements, so a farm that could not be sited grew nothing, and a
+    /// town that had filled its 24×24 quietly stopped being able to feed itself.
+    @Test("A colony out of room takes in more of the valley")
+    func aFullGridGrows() {
         var s = Settlement(id: UUID(), name: "Tight", regionID: UUID())
         s.storage[ResourceType.materials] = 10_000
         s = ColonyBuilder.ensureMap(s, width: 2, height: 2)
@@ -96,6 +101,21 @@ struct DistrictTests {
             s = ColonyBuilder.placeSiteAtFirstFit(s, definitionID: "hut",
                                                   registry: registry).settlement
         }
-        #expect((s.colony?.placements.count ?? 0) <= 4)
+        #expect(s.colony?.placements.count == 8,
+                "eight huts asked for and \(s.colony?.placements.count ?? 0) stood up")
+        #expect((s.colony?.width ?? 0) > 2, "the ground never widened")
+        #expect((s.colony?.width ?? 0) <= ColonyBuilder.maxSide)
+    }
+
+    /// …and the valley is not endless. The fuse still has to be there, or a
+    /// colony that cannot place a building loops for ever trying.
+    @Test("A colony that has taken the whole valley grows no further")
+    func growthStopsAtTheEdge() {
+        var s = Settlement(id: UUID(), name: "Wide", regionID: UUID())
+        s = ColonyBuilder.ensureMap(s, width: ColonyBuilder.maxSide,
+                                    height: ColonyBuilder.maxSide)
+        let grown = ColonyBuilder.grownOutward(s)
+        #expect(grown.colony?.width == ColonyBuilder.maxSide)
+        #expect(grown.colony?.height == ColonyBuilder.maxSide)
     }
 }
