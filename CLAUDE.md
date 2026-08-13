@@ -181,10 +181,29 @@ The JSON schemas live in `docs/data-schemas/`. Validate new data files against t
 
 ## Where to look for context
 
-- Game systems and formulas → `docs/DESIGN.md`
-- What to build next → `docs/ROADMAP.md`, `docs/NEXT_STEPS.md`
-- Architecture rules → `docs/architecture/LAYERS.md`
-- Building footprints, lots, pawn-like animals → `docs/RIMWORLD_LAYER.md`
-- Event template schema → `docs/data-schemas/events.json`
-- Tech tree schema → `docs/data-schemas/techs.json`
-- Starter event examples → `docs/events/starter-events.json`
+**Start at `docs/README.md`** — it says which doc is live and which is
+historical. Consolidated 2026-08-13, because `ROADMAP.md` and `NEXT_STEPS.md`
+had been stale for two months while this section still pointed at them as "what
+to build next".
+
+Read these three, in order, when picking work up cold:
+
+1. `docs/CODEMAPS/architecture.md` — three layers, tick order, how a decision flows
+2. **`docs/RULES.md`** — 35 rules, each of which cost a session. Read *before*
+   writing a threshold, not after
+3. `docs/BACKLOG.md` — the living plan
+
+| Question | Where |
+|---|---|
+| What does this engine own? | `docs/CODEMAPS/engines.md` |
+| Entity or still a number? | `docs/CODEMAPS/models.md` |
+| Content files and tuning constants | `docs/CODEMAPS/data.md` |
+| The canvas | `docs/CODEMAPS/app.md` |
+| How to measure the world | `docs/CODEMAPS/probes.md` |
+| Game systems and formulas | `docs/DESIGN.md` |
+| Architecture rules | `docs/architecture/LAYERS.md` |
+| Footprints, lots, pawn-like animals | `docs/RIMWORLD_LAYER.md` |
+| Event / tech schemas | `docs/data-schemas/` |
+
+**Historical, do not plan from:** `ROADMAP.md`, `NEXT_STEPS.md`, `HANDOFF.md`.
+`NEXT_PHASE.md` is partly live — its three unconverted rows still stand.

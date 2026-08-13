@@ -1,5 +1,11 @@
 # Endless Frontier — What to Build Next
 
+> **HISTORICAL — frozen 2026-06-06. Do not plan from this file.**
+> The living plan is [BACKLOG.md](BACKLOG.md); start at [README.md](README.md).
+> Kept for the reasoning in it. Its status line below was true once and has been
+> false for months.
+
+
 Snapshot (2026-06-06): the Core simulation is deep and heavily tested
 (**179 tests**). What exists now:
 

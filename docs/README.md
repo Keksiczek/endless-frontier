@@ -1,0 +1,47 @@
+# Docs — what is where
+
+<!-- Consolidated 2026-08-13 -->
+
+Read in this order when picking work up cold:
+
+| # | Doc | What it is |
+|---|---|---|
+| 1 | [CODEMAPS/architecture.md](CODEMAPS/architecture.md) | The three layers, the tick order, where a decision flows |
+| 2 | [RULES.md](RULES.md) | **35 rules, each of which cost a session.** Read before writing a threshold |
+| 3 | [BACKLOG.md](BACKLOG.md) | **The living plan.** What is open, what was measured, what Keks asked for |
+
+## Reference, by question
+
+| Question | Doc |
+|---|---|
+| What does this engine own? | [CODEMAPS/engines.md](CODEMAPS/engines.md) |
+| Is this an entity or still a number? | [CODEMAPS/models.md](CODEMAPS/models.md) |
+| Where does content live? | [CODEMAPS/data.md](CODEMAPS/data.md) |
+| How does the canvas work? | [CODEMAPS/app.md](CODEMAPS/app.md) |
+| How do I measure the world? | [CODEMAPS/probes.md](CODEMAPS/probes.md) |
+| What are the game's systems and formulas? | [DESIGN.md](DESIGN.md) |
+| Building footprints, lots, pawn-like animals | [RIMWORLD_LAYER.md](RIMWORLD_LAYER.md) |
+| Art direction, why it is line art | [ASSET_SPECIFICATION.md](ASSET_SPECIFICATION.md) |
+| Event / tech JSON schemas | `data-schemas/` |
+
+## Historical — do not plan from these
+
+They are kept for the reasoning in them, not for their status lines. Both were
+overtaken without being updated, which is exactly how a stale doc does damage.
+
+| Doc | Frozen at | Says |
+|---|---|---|
+| [ROADMAP.md](ROADMAP.md) | 2026-06-01 | "45 tests, phases 0–2 done, next is Phase 3" |
+| [NEXT_STEPS.md](NEXT_STEPS.md) | 2026-06-06 | "179 tests" |
+| [NEXT_PHASE.md](NEXT_PHASE.md) | ~2026-07-28 | The entity-conversion brief. Its **three unconverted rows are still true** — see [CODEMAPS/models.md](CODEMAPS/models.md) |
+| [HANDOFF.md](HANDOFF.md) | 2026-08-10 | A state report, not a plan |
+
+Reality as of 2026-08-13: **1070 Core tests**, 95 App tests, V2 phases A–F
+complete, and the work is tracked in `BACKLOG.md` §11.
+
+## The one rule about these docs
+
+A status line in a doc is a claim with a date on it. If you are about to trust
+one — "buildings and techs are still English-only", "next up is Phase 3" —
+**check the code first.** Both of those examples were false for weeks before
+anyone noticed.

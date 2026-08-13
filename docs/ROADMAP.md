@@ -1,5 +1,11 @@
 # Endless Frontier — Implementation Roadmap
 
+> **HISTORICAL — frozen 2026-06-01. Do not plan from this file.**
+> The living plan is [BACKLOG.md](BACKLOG.md); start at [README.md](README.md).
+> Kept for the reasoning in it. Its status line below was true once and has been
+> false for months.
+
+
 This is a solo-developer project. Each phase is independently shippable and testable. Later phases build on earlier ones without breaking them.
 
 > **Status (2026-06-01):** Phases 0, 1, and 2 are implemented and tested (45

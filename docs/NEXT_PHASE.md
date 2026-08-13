@@ -1,5 +1,13 @@
 # The next phase — one world of entities, and it moves
 
+> **PARTLY LIVE.** Written ~2026-07-28. Much of it is built (haul jobs, animal
+> positions, battle figures, the day cycle). Its **three unconverted rows are
+> still true** — buildings are a tally, `deerHerd` still drives yield, events are
+> text — and those are the next phase. See
+> [CODEMAPS/models.md](CODEMAPS/models.md) for the current status table and
+> [BACKLOG.md](BACKLOG.md) for the plan.
+
+
 Brief for the next working session. The goal in one line:
 
 > **Everything in the world is the same kind of thing — a body with a life —
