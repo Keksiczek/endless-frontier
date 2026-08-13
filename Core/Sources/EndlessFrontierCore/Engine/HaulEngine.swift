@@ -86,6 +86,7 @@ public enum HaulEngine {
         var s = settlement
         let store = storePosition(s)
         let ticksPerYear = max(1, registry.config.ticksPerYear)
+        map.piles = releasingDeadClaims(map.piles, pawns: s.pawns, ticksPerYear: ticksPerYear)
         // A pack animal takes the weight off: the colony's beasts of burden
         // make every hauler quicker, which is the whole reason to keep one.
         let pace = carrySpeed * (1 + TamingEngine.bonuses(s).haul)
@@ -156,6 +157,48 @@ public enum HaulEngine {
 
         s.localMap = map
         return s
+    }
+
+    /// Gives back the heaps whose claimant can no longer come for them.
+    ///
+    /// **This was the famine.** A claim was only ever *set* — the one place it
+    /// came off was `piles.remove(at:)`, when the carrier arrived. A colonist
+    /// who claimed a heap and then died, sickened, or walked out to a landmark
+    /// took it with them: `nearestUnclaimed` skips a claimed heap, so that food
+    /// sat on the ground for the rest of the game. Over two centuries of
+    /// ordinary deaths the claims accumulate and the harvest quietly stops
+    /// arriving.
+    ///
+    /// Measured by `ZZStewardProbe`, seed 4242: goods lying reaped and uncarried
+    /// climbed **9 → 42 → 136 → 228 → 318 → 354 and never once came down**,
+    /// while the raw shelf went 4118 → 516 → **0** and the colony fell from 197
+    /// to 44. Plots stood at 140 against 79 wanted the whole time, cooks and
+    /// farmers both scaled with the population, and the larder emptied anyway —
+    /// which is what "the famine is downstream of the fields" turned out to
+    /// mean. Nothing was short. The food was reaped, dropped, and owned by
+    /// somebody who was no longer alive to fetch it.
+    ///
+    /// Rule 6 in a place nobody thought to look for it: a resource whose
+    /// *release* rate is zero fills up whatever the arrival rate is.
+    static func releasingDeadClaims(
+        _ piles: [HaulPile], pawns: [Pawn], ticksPerYear: Int
+    ) -> [HaulPile] {
+        guard piles.contains(where: { $0.claimedBy != nil }) else { return piles }
+        // Who could still walk to a heap. A carrier already holding a load is
+        // not among them — they picked their pile up, which removed it — so
+        // anything still claimed in their name is a leak too.
+        let ableHands = Set(
+            pawns.filter { canHaul($0, ticksPerYear: ticksPerYear) && $0.carrying == nil }
+                .map(\.id))
+        guard !ableHands.isEmpty || piles.contains(where: { $0.claimedBy != nil }) else {
+            return piles
+        }
+        return piles.map { pile in
+            guard let owner = pile.claimedBy, !ableHands.contains(owner) else { return pile }
+            var freed = pile
+            freed.claimedBy = nil
+            return freed
+        }
     }
 
     /// Whether this colonist's hands are free for a heap.

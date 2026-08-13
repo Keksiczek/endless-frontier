@@ -27,7 +27,8 @@ struct TechEngineTests {
         state = TechEngine.setResearch(state, techID: "basic_tools", registry: registry)
         // Research is funded by knowledge the settlements banked, not by an
         // abstract output figure (which only ever counted buildings).
-        state.settlements[0].storage[.knowledge] = 30   // exactly the cost
+        // The cost, plus the floor the scholars will not draw below.
+        state.settlements[0].storage[.knowledge] = 30 + registry.config.knowledgeReserve
 
         let after = TechEngine.advanceResearch(state, registry: registry)
         #expect(after.researchedTechs.contains("basic_tools"))

@@ -172,6 +172,106 @@ public enum FloraEngine {
         }
     }
 
+    /// How many trees a valley will carry. The generator lays down roughly
+    /// eleven to nineteen per forest centre plus scattered ones, so this is a
+    /// ceiling a generated map starts well under and a cleared one climbs back
+    /// toward — not a target.
+    static let woodCeiling = 160
+
+    /// Below this share of the ceiling, seed blows in from outside the valley.
+    /// Without it a colony that fells its **last** tree has nothing left to
+    /// seed from and the wood is gone for ever, which is the lock this whole
+    /// function exists to break.
+    static let windBorneBelow = 0.12
+
+    /// Lets the wood come back on its own.
+    ///
+    /// **`plant` had no callers.** Its own doc comment called it "the only way a
+    /// wood that has been cleared ever comes back inside a colony's lifetime",
+    /// and nothing in the engine ever called it — so a valley was felled once
+    /// and stayed bare forever. That is not a cosmetic loss: `wood` is what the
+    /// `saw_timber` recipe turns into `timber_bundle`, and a `timber_bundle` is
+    /// what most buildings in `buildings.json` list under `material_cost`. When
+    /// the wood ran out, **every building with a crafted cost became permanently
+    /// unbuildable**.
+    ///
+    /// Measured by `ZZStewardProbe`, seed 2025: `timber_bundle` on the shelf
+    /// went 16 at year seventy to **zero at year eighty and stayed there for the
+    /// remaining hundred and twenty years**, and `buildableHere` returned an
+    /// **empty list** for almost all of it, while the materials store climbed to
+    /// 5500. The council was not idle and it was not poor — it was standing on a
+    /// mountain of raw stone and timber it had no way to turn into anything. It
+    /// is also why the brownout clause added the same day never fired once:
+    /// `nextBuilding` returns at its first `guard !affordable.isEmpty`, so no
+    /// clause below it is ever reached.
+    ///
+    /// Seed lands next to standing trees, so a wood grows back from its own
+    /// edges and a genuinely cleared corner stays cleared. Deterministic from
+    /// `(mapSeed, tick)` per rule 3.
+    public static func reseeded(
+        _ map: LocalMap, mapSeed: UInt64, tick: Int
+    ) -> LocalMap {
+        guard map.usesEntityLand, map.trees.count < woodCeiling else { return map }
+        var rng = SeededRNG(seed: mapSeed &* 0x9E37_79B9 &+ UInt64(bitPattern: Int64(tick)) &* 0x85EB_CA6B)
+
+        // A parent to seed from: any tree grown enough to bear.
+        //
+        // Counted and walked rather than filtered and sorted. The first cut did
+        // `filter { $0.isMature }.sorted { $0.id < $1.id }` — an allocation and
+        // an O(n log n) sort of the whole wood, every pass — and the wood *grows
+        // over a run*, so the cost grew with it. That is the shape
+        // `OfflineCatchUpTests.catchUpScalesLinearly` exists to catch, and it
+        // caught it. `map.trees` is append-only with increasing ids, so index
+        // order is already id order and there is nothing to sort.
+        var matureCount = 0
+        for tree in map.trees where tree.isMature { matureCount += 1 }
+
+        let origin: LocalPoint
+        let species: TreeSpecies
+        if matureCount > 0 {
+            var skip = Int(rng.nextUnit() * Double(matureCount)) % matureCount
+            var chosen: Tree?
+            for tree in map.trees where tree.isMature {
+                if skip == 0 { chosen = tree; break }
+                skip -= 1
+            }
+            guard let parent = chosen else { return map }
+            origin = parent.position
+            species = parent.species
+        } else if Double(map.trees.count) < Double(woodCeiling) * windBorneBelow {
+            // Nothing left to seed from. Seed rides in over the valley wall.
+            let palette = FloraFactory.species(for: map.biomeID)
+            guard !palette.isEmpty else { return map }
+            species = palette[Int(rng.nextUnit() * Double(palette.count)) % palette.count]
+            origin = LocalPoint(x: rng.nextUnit(), y: rng.nextUnit())
+        } else {
+            return map
+        }
+
+        // Close to the parent — a wood thickens at its edge rather than
+        // teleporting a sapling across the valley.
+        let spread = 0.06
+        let at = LocalPoint(
+            x: min(0.98, max(0.02, origin.x + (rng.nextUnit() - 0.5) * spread * 2)),
+            y: min(0.98, max(0.02, origin.y + (rng.nextUnit() - 0.5) * spread * 2)))
+
+        // Never under a roof or on broken ground: a colony does not have to
+        // weed its own streets, and a sapling in a wall would be a tree the
+        // router has to path around for no reason anybody chose.
+        guard isClearGround(map, at) else { return map }
+        return plant(map, species: species, at: at)
+    }
+
+    /// Whether a sapling may take root here — nothing standing on it, and not
+    /// tilled.
+    static func isClearGround(_ map: LocalMap, _ p: LocalPoint) -> Bool {
+        if map.crops.contains(where: { within($0.position, p, 0.03) }) { return false }
+        if map.trees.contains(where: { within($0.position, p, 0.02) }) { return false }
+        if map.rocks.contains(where: { within($0.position, p, 0.03) }) { return false }
+        if let shore = map.shore, shore.isWater(p) { return false }
+        return true
+    }
+
     /// Plants a sapling — the other half of felling, and the only way a wood
     /// that has been cleared ever comes back inside a colony's lifetime.
     public static func plant(

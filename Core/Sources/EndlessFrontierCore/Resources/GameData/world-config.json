@@ -6,8 +6,18 @@
   },
   "calendar": {
     "ticksPerYear": 60,
-    "seasonFoodYield": [1.0, 1.5, 0.8, 0.3],
-    "seasonMaterialsYield": [1.0, 1.2, 0.9, 0.7]
+    "seasonFoodYield": [
+      1.0,
+      1.5,
+      0.8,
+      0.3
+    ],
+    "seasonMaterialsYield": [
+      1.0,
+      1.2,
+      0.9,
+      0.7
+    ]
   },
   "tension": {
     "threatMultiplier": 0.4,
@@ -29,11 +39,19 @@
     "defaultStorageCapacity": 500,
     "upkeepRateOfCost": 0.005,
     "energyPerPersonPerTick": 0.05,
-    "eraEnergyDemand": [0, 0, 0.3, 1.0, 2.0, 3.5],
+    "eraEnergyDemand": [
+      0,
+      0,
+      0.3,
+      1.0,
+      2.0,
+      3.5
+    ],
     "influencePerPersonPerTick": 0.18,
     "influencePerSettlement": 3,
     "selfGoverningPopulation": 100,
-    "repeatableTechCostGrowth": 1.35
+    "repeatableTechCostGrowth": 1.35,
+    "knowledgeReserve": 120
   },
   "stability": {
     "collapseThreshold": 10,
@@ -49,10 +67,30 @@
     "decisionDeadlineTicks": 180,
     "indecisionMoralePenalty": 2.5,
     "tensionBands": [
-      { "maxTension": 30, "disasterWeight": 0.5, "opportunityWeight": 1.5, "flavorWeight": 2.0 },
-      { "maxTension": 60, "disasterWeight": 1.0, "opportunityWeight": 1.0, "flavorWeight": 1.0 },
-      { "maxTension": 80, "disasterWeight": 1.8, "opportunityWeight": 0.6, "flavorWeight": 0.5 },
-      { "maxTension": 100, "disasterWeight": 3.0, "opportunityWeight": 0.3, "flavorWeight": 0.1 }
+      {
+        "maxTension": 30,
+        "disasterWeight": 0.5,
+        "opportunityWeight": 1.5,
+        "flavorWeight": 2.0
+      },
+      {
+        "maxTension": 60,
+        "disasterWeight": 1.0,
+        "opportunityWeight": 1.0,
+        "flavorWeight": 1.0
+      },
+      {
+        "maxTension": 80,
+        "disasterWeight": 1.8,
+        "opportunityWeight": 0.6,
+        "flavorWeight": 0.5
+      },
+      {
+        "maxTension": 100,
+        "disasterWeight": 3.0,
+        "opportunityWeight": 0.3,
+        "flavorWeight": 0.1
+      }
     ]
   },
   "diplomacy": {

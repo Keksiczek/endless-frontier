@@ -19,21 +19,45 @@ instances of it:
 | Goods on the ground | — | `HaulPile` | ✅ | ✅ | ✅ |
 | Crops | `field` node | `Crop` (plots) | ✅ | ✅ | ✅ |
 | Wild animals | `deerHerd` | `Animal` | ⚠️ **herd still drives yield** | ✅ | ❌ |
-| **Buildings** | `BuildingInstance.count` | `BuildingPlacement` | ❌ **reads the count** | ✅ | ❌ |
+| **Buildings** | `BuildingInstance.count` | `BuildingPlacement` | ⚠️ count for output, **condition per placement** | ✅ | ⚠️ partly |
 | Events | — | `EventTemplate` | n/a | ❌ text only | ❌ |
 
-**The three ❌ rows are the next phase.** See [../BACKLOG.md](../BACKLOG.md).
+**The ❌ rows are the next phase**, and the buildings row is less of a
+blocker than `NEXT_PHASE.md` claims — see below. See [../BACKLOG.md](../BACKLOG.md).
 
-### Why the buildings row matters most
+### What the buildings row actually is — narrower than it looks
 
 `Settlement.buildings` is `[BuildingInstance(definitionID:count:)]` — a tally.
 `ColonyMap.placements` holds the real, sited, footprinted buildings, and the two
-are kept in sync by hand in `ColonyBuilder.place`/`remove`. Consequences:
+are kept in sync by hand in `ColonyBuilder.place`/`remove`.
 
-- A building has **no `condition` of its own**, so nothing can burn, wear out or
-  be damaged individually. Two granaries are indistinguishable.
-- It blocks §11.26 (durability) and §11.27 (buildings as cover / turrets)
-  outright — you cannot damage or shoot at a row in a ledger.
+**Correction (2026-08-13).** `NEXT_PHASE.md` says "a building has no condition,
+nothing can be damaged", and the first draft of this file repeated it without
+checking. It is **out of date**. `BuildingPlacement.condition` exists and is
+live: `BuildingEngine` has `derelictBelow` and `repairBelow`,
+`ColonyBuilder.clearedOfDerelicts` pulls wrecks down for their ground, and
+`ResourceLoop.staffingFactors` folds soundness into output — a workshop with the
+roof off produces less, a derelict one nothing.
+
+What is *actually* still missing:
+
+- Production is averaged **per definition id**, not per building, so two
+  granaries are one entry with a mean condition. One cannot be the old one that
+  leaks.
+- The ledger and the placements are kept in step by hand, which is a
+  correctness burden with no upside.
+
+Consequently this row is a **tidy-up with modest payoff**, not the unlock it was
+billed as. It does *not* block:
+
+- **§11.26 durability** — that needs `ItemInstance.quality` to be mutable in
+  practice (it is written in `init` and never again anywhere in the codebase),
+  not building conversion.
+- **§11.27 cover / turrets** — that needs a **height** and a solidity on
+  `Landform`, `Flora` and the rocks, none of which have either.
+  `BuildingDefinition.floors` is not it: it is read only by `HouseholdEngine`,
+  is never drawn, and measures *upward*, while cover is decided at the height of
+  a person standing on the ground.
 
 ## Derived, not stored
 

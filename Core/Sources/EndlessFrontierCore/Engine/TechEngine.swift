@@ -20,7 +20,13 @@ public enum TechEngine {
         // colony holding 5,000 that finished a 100-cost tech burned 4,900 of it,
         // which made stockpiling knowledge actively harmful and left the stores
         // reading empty forever.
-        s.researchProgress += drawKnowledge(&s, upTo: price - s.researchProgress)
+        // …down to `knowledgeReserve`, and no further. Taking the last point
+        // every tick left `storage[.knowledge]` permanently at zero, and a
+        // colony with nothing banked can never *buy* anything priced in
+        // knowledge — which is every generator above the windmill, the bank,
+        // the university and the research campus. See `WorldConfig.knowledgeReserve`.
+        s.researchProgress += drawKnowledge(&s, upTo: price - s.researchProgress,
+                                            leaving: registry.config.knowledgeReserve)
         guard s.researchProgress >= price else { return s }
 
         // Complete the research. A repeatable study is never struck off the
@@ -52,15 +58,21 @@ public enum TechEngine {
     /// study is paid for. With nothing being researched, knowledge simply
     /// accumulates — so a colony can stockpile before committing, and what it
     /// banks beyond the price stays banked.
-    static func drawKnowledge(_ s: inout WorldState, upTo limit: Double) -> Double {
+    static func drawKnowledge(
+        _ s: inout WorldState, upTo limit: Double, leaving reserve: Double = 0
+    ) -> Double {
         guard limit > 0 else { return 0 }
         var drawn = 0.0
         for index in s.settlements.indices {
             let remaining = limit - drawn
             guard remaining > 0 else { break }
             let banked = s.settlements[index].storage[.knowledge]
-            guard banked > 0 else { continue }
-            let take = min(banked, remaining)
+            // The reserve is per settlement, not per realm: it is what makes a
+            // *town* able to pay for its own library, and a capital's bank is
+            // no use to an outpost that wants one.
+            let spendable = banked - reserve
+            guard spendable > 0 else { continue }
+            let take = min(spendable, remaining)
             s.settlements[index].storage[.knowledge] = banked - take
             drawn += take
         }

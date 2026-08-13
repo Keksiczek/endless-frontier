@@ -1,6 +1,6 @@
 # Rules — what has already gone wrong, and must not again
 
-<!-- Extracted from BACKLOG.md 2026-08-13 | 35 rules -->
+<!-- Extracted from BACKLOG.md 2026-08-13 | 36 rules -->
 
 **Every one of these cost a session at least once.** They are the project's
 troubleshooting guide and its lessons learned in one list: when something in the
@@ -250,3 +250,23 @@ fires, do the arithmetic before you rewrite the mechanic.
    reachable, and the one before it was never asked for. When a new consumer
    appears, it publishes its own wants and the council unions them in; nobody
    edits a list that belongs to somebody else.
+33. **A claim that is only ever taken fills up at whatever rate it is issued.**
+   `HaulPile.claimedBy` was set when a colonist reserved a heap and cleared in
+   exactly one place — `piles.remove(at:)`, when the carrier arrived. Anyone who
+   claimed a heap and then died, sickened, or walked out to a landmark took it
+   with them for ever, because `nearestUnclaimed` skips a claimed heap. Two
+   centuries of ordinary deaths leak claims steadily, and the harvest quietly
+   stops arriving.
+   Measured, seed 4242: goods lying reaped and uncarried climbed
+   **9 → 42 → 136 → 228 → 318 → 354 and never once came down**, the raw shelf
+   went 4118 → 516 → **0**, and the colony fell 197 → 44 — while plots stood at
+   140 against 79 wanted, and cooks and farmers both scaled correctly with the
+   population. *Nothing was short.* The food was reaped, dropped, and owned by
+   somebody no longer alive to fetch it. Releasing dead claims took the same
+   colony to **298 and still growing** at year two hundred, with nothing left
+   lying from year forty on.
+   Rule 6 in a place nobody thinks to look: it is not a threshold or a rate that
+   fails here, it is a *release* rate of zero. Of any claim, lock, reservation
+   or assignment, ask what clears it when the holder is gone — and note that
+   this hides perfectly behind healthy production numbers, because production
+   was never the problem.

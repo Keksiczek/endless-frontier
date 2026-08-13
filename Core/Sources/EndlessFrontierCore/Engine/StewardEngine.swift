@@ -466,9 +466,28 @@ public enum StewardEngine {
                let kitchen = best(of: affordable, by: { $0.work == .cooking ? 1 : 0 }) {
                 return kitchen
             }
-            if let farm = best(of: affordable, by: { Double($0.plots) }) {
-                return farm
-            }
+            // **No farm fallback.** It used to reach for one here, and that was
+            // wrong twice over.
+            //
+            // Wrong by construction: clause 1 above already answers "the ground
+            // is short" and takes the same `best(of:by:plots)`. So control only
+            // arrives here when plots are *not* short — or when no farm is
+            // affordable, in which case this lookup fails too. The branch could
+            // therefore only ever fire in the one case where another field
+            // changes nothing.
+            //
+            // And wrong in what it cost: a thin larder is thin for as long as
+            // the famine lasts, so this branch was permanently true, and rule
+            // 27 did the rest — everything below it starved. Measured, seed
+            // 2025: `Emake` flat at 5.0 (one windmill) from year sixty to year
+            // two hundred while demand climbed to 5.9 and the store sat at zero
+            // from year 170. The brownout clause below was never reached, not
+            // once, because the colony was hungry.
+            //
+            // Falling through is the honest answer. An empty larder with the
+            // ground already broken and a cook already standing is not a
+            // building problem, and the council saying nothing lets the clauses
+            // under it — light, and breadth — have their turn.
         }
 
         // 3c. Light and heat. The council had **no clause for energy at all** —
@@ -602,10 +621,66 @@ public enum StewardEngine {
                 .first { $0.definitionID == def.id }?.count ?? 0
             let allowed = 1 + Int(settlement.population / soulsPerRepeatBuilding)
             guard (shortOfRoofs && def.sleepers > 0) || standing < allowed else { return false }
+            // …and the colony can still *keep* it standing (rule 25) — unless
+            // it is a roof and there are not enough. **Shelter is not a
+            // discretionary purchase.** The upkeep brake refused huts the
+            // moment the ledger tightened, which is a colony forbidden to grow:
+            // `PopulationEngine.headroomFactor` throttles births on the free
+            // fraction of the beds, so no roofs means no people means no income
+            // means still no roofs. Caught by "A town at its housing ceiling
+            // raises a roof" — the same exemption the repeat cap already makes
+            // one line above, and for the same reason.
+            guard (shortOfRoofs && def.sleepers > 0)
+                    || canAffordToKeep(def, at: settlement, registry: registry) else { return false }
             return GameEngine.hasMaterials(def.materialCost, in: state,
                                            settlementID: settlement.id)
         }
     }
+
+    /// Whether the colony's income still covers its upkeep once this is
+    /// standing.
+    ///
+    /// **Rule 25, measured.** `upkeepRateOfCost` is 0.005 *a tick*, which is
+    /// thirty per cent of a building's price every year, for ever — and the
+    /// council had no notion of it. It builds for breadth out of surplus
+    /// (`hasSomethingSpare`), so every sitting added a standing cost and most
+    /// of them added no income at all.
+    ///
+    /// Measured by `ZZStewardProbe` on the day the timber lock was opened, seed
+    /// 4242: the colony reached the **modern era** with 163 buildings and a
+    /// population of 204 — the furthest this game has ever got — and then
+    /// materials went 7886 → 3084 → **9**, food to zero, and the population fell
+    /// 204 → 28 in twenty years. It did not starve for want of ground or hands.
+    /// It had built more than it could feed, and the ledger took the difference
+    /// out of everything at once.
+    ///
+    /// The test is the honest one: after this building stands, does the colony
+    /// still make more than it spends? A lumberyard passes on its own
+    /// production; a fourth observatory does not.
+    static func canAffordToKeep(
+        _ def: BuildingDefinition, at settlement: Settlement, registry: GameDataRegistry
+    ) -> Bool {
+        let config = registry.config
+        var income = 0.0
+        var outgoing = 0.0
+        for instance in settlement.buildings {
+            guard let standing = registry.building(instance.definitionID) else { continue }
+            let count = Double(instance.count)
+            income += standing.production[.materials] * count
+            outgoing += ResourceLoop.upkeep(for: standing, config: config)[.materials] * count
+            outgoing += standing.consumption[.materials] * count
+        }
+        income += def.production[.materials]
+        outgoing += ResourceLoop.upkeep(for: def, config: config)[.materials]
+        outgoing += def.consumption[.materials]
+        // A margin, not a knife edge: a colony that breaks exactly even has
+        // nothing left the season a lumberyard falls derelict.
+        return income >= outgoing * upkeepMargin
+    }
+
+    /// How much more than its upkeep a colony wants to be earning before it
+    /// takes on another standing cost.
+    static let upkeepMargin = 1.15
 
     // MARK: - Sending people out
 

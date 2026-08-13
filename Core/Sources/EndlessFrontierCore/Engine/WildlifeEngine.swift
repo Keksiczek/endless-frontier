@@ -165,6 +165,17 @@ public enum WildlifeEngine {
         // of the whole wood for no visible difference.
         if tick % LaborEngine.staffingInterval == 0 {
             map = FloraEngine.advanceOneTick(map, by: LaborEngine.staffingInterval)
+            // …and comes back where it was cut. `FloraEngine.plant` existed
+            // with no callers, so a felled valley stayed bare for ever and the
+            // colony lost `timber_bundle` — and with it every building that
+            // lists a crafted cost. See `FloraEngine.reseeded`.
+            // Once a season rather than once a shift. A sapling needs thousands
+            // of ticks to be worth an axe, so seeding ten times as often buys
+            // nothing a player could see and costs a scan of the wood each time
+            // (rule 4).
+            if tick % (LaborEngine.staffingInterval * 10) == 0 {
+                map = FloraEngine.reseeded(map, mapSeed: mapSeed, tick: tick)
+            }
         }
 
         s.localMap = map

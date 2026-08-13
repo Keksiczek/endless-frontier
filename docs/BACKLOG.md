@@ -1439,6 +1439,61 @@ So the honest order is: derive travel time → give animals draught → tame hor
 → carts → fuel as items → motor vehicles. Each step is worthless without the one
 before it, and the first two are small.
 
+### 11.31 — the famine, found (2026-08-13) — **fixed**
+
+§11.28 left the famine mechanism unknown, with fields, energy and cook headcount
+all ruled out. It was **none of the things that were being measured**. It was a
+lock that was only ever taken.
+
+`HaulPile.claimedBy` is set when a colonist reserves a heap and cleared in
+exactly one place: `piles.remove(at:)`, when the carrier arrives. A colonist who
+claimed a heap and then died, sickened, or walked out to a landmark took it with
+them permanently — `nearestUnclaimed` skips a claimed heap, so that food sat
+where it fell for the rest of the game. Two centuries of ordinary deaths leak
+claims steadily.
+
+The column that showed it, once the probe printed it, was goods **lying reaped
+and uncarried**: `9 → 42 → 136 → 228 → 292 → 318 → 354`, monotonic, never once
+down. Against a raw shelf going `4118 → 3099 → 516 → 0`.
+
+`HaulEngine.releasingDeadClaims` gives a heap back when its claimant can no
+longer come for it. Measured, council alone, two hundred years:
+
+| year 200 | before | after |
+|---|---|---|
+| seed 4242 population | 44 | **298**, still climbing |
+| seed 4242 food / shelf | 0 / 0 | 4486 / 4403 |
+| seed 2025 population | 33 | **157** |
+| goods left lying | 354 | **0** from year forty |
+
+The first run in this project's history where a colony left alone for two
+centuries is **still growing at the end**. Rule **33**.
+
+Three things this cost, worth naming because each wasted a measurement:
+
+1. The famine hid behind healthy production numbers. Plots stood at 140 against
+   79 wanted; farmers and cooks both scaled correctly with the population.
+   Nothing that was being watched was short.
+2. It was diagnosed from the outside twice and wrong both times — first as
+   clause ordering in `nextBuilding`, then as cooking throughput. Both were
+   arithmetic done on the right numbers and the wrong question.
+3. It was only visible once the probe printed **`shelf` and `lying` together**.
+   Either alone says nothing; the pair says the harvest exists and is not
+   arriving.
+
+Two smaller findings from the same run, both correcting earlier guesses:
+
+- **Daughter towns do get founded** — seed 4242 reaches four settlements
+  (years 110, 150, 180), seed 2025 three. The earlier guess that charting was
+  the brake was wrong; twenty-five charted, empty regions sit unused because
+  `soulsPerSettlement × (settlements + 1)` wants 225 people for a fifth town.
+  They also did not help: four towns and the capital still collapsed, because
+  every one of them had the same claim leak.
+- **Upkeep was a real trap but not this one.** `canAffordToKeep` (rule 25) was
+  added the same day after materials went `7886 → 3084 → 9`; it holds the
+  building count flat and materials recover, but on its own it did not stop the
+  collapse. A correct fix for a genuine second problem.
+
 ### 11.28 — what the council does with two centuries to itself (2026-08-13)
 
 Measured by `ZZStewardProbe` (`EF_DIAG=1 swift test --filter ZZStewardProbe`),

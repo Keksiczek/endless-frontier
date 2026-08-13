@@ -142,9 +142,11 @@ struct KnowledgeOverflowTests {
         var w = TechEngine.setResearch(world(knowledge: 5000), techID: "dear", registry: reg)
         w = TechEngine.advanceResearch(w, registry: reg)
 
+        let reserve = reg.config.knowledgeReserve
         #expect(!w.researchedTechs.contains("dear"))
-        #expect(w.settlements[0].storage[.knowledge] == 0, "an unfinished study takes all you can give")
-        #expect(w.researchProgress == 5000)
+        #expect(w.settlements[0].storage[.knowledge] == reserve,
+                "an unfinished study takes all you can give — down to the floor that keeps knowledge-priced buildings buyable at all")
+        #expect(w.researchProgress == 5000 - reserve)
     }
 
     @Test("With nothing being studied, knowledge simply accumulates")

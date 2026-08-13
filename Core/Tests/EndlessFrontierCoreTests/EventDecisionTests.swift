@@ -31,12 +31,18 @@ struct EventDecisionTests {
         let tech = try #require(reg.availableTechs(researched: []).first)
         // Bank less than the study costs, so it advances without completing.
         let banked = tech.knowledgeCost / 2
-        var world = WorldState(settlements: [town(knowledge: banked)])
+        let reserve = reg.config.knowledgeReserve
+        // `knowledgeReserve` (2026-08-13): the scholars leave a floor banked so
+        // the colony can still *buy* what is priced in knowledge — before it,
+        // `storage[.knowledge]` was zero every tick and every knowledge-priced
+        // building in the game was unreachable for ever. So a study draws what
+        // is above the line, and the fixtures bank the line as well as the price.
+        var world = WorldState(settlements: [town(knowledge: banked + reserve)])
         world = TechEngine.setResearch(world, techID: tech.id, registry: reg)
 
         world = TechEngine.advanceResearch(world, registry: reg)
-        #expect(world.researchProgress == banked)                   // the bank funded it
-        #expect(world.settlements[0].storage[.knowledge] == 0)      // and was spent
+        #expect(world.researchProgress == banked)                   // the spendable bank funded it
+        #expect(world.settlements[0].storage[.knowledge] == reserve) // the floor stayed
     }
 
     @Test("Scholars alone move research, with no library in sight")
@@ -57,7 +63,8 @@ struct EventDecisionTests {
     func researchCompletes() throws {
         let reg = try registry()
         let tech = try #require(reg.availableTechs(researched: []).first)
-        var world = WorldState(settlements: [town(knowledge: tech.knowledgeCost + 10)])
+        var world = WorldState(settlements: [
+            town(knowledge: tech.knowledgeCost + 10 + reg.config.knowledgeReserve)])
         world = TechEngine.setResearch(world, techID: tech.id, registry: reg)
         world = TechEngine.advanceResearch(world, registry: reg)
         #expect(world.researchedTechs.contains(tech.id))

@@ -99,6 +99,21 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     /// What each completion multiplies a repeatable tech's cost by, so endless
     /// research keeps absorbing a growing colony's growing output.
     public var repeatableTechCostGrowth: Double
+    /// Knowledge the scholars leave in the bank, so the colony can still *buy*
+    /// things priced in it.
+    ///
+    /// `TechEngine.drawKnowledge` took every banked point every tick, and the
+    /// council always has a study running, so `storage[.knowledge]` was
+    /// **permanently zero**. `StewardEngine.buildableHere` asks for the cost and
+    /// as much again in reserve, so at zero banked, every knowledge-priced
+    /// building in the game was unreachable for ever: power plant, bank,
+    /// university, hydro dam, refinery, research campus, data centre. A price in
+    /// a currency another system empties each tick is not a price, it is a wall.
+    ///
+    /// 120 clears the dearest early gate (a 40-cost university needs 80 banked)
+    /// with room over. Research still absorbs everything above the line, which
+    /// is what keeps it a sink.
+    public var knowledgeReserve: Double
 
     // Stability thresholds
     public var collapseThreshold: Double
@@ -192,6 +207,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         influencePerSettlement: 3,
         selfGoverningPopulation: 100,
         repeatableTechCostGrowth: 1.35,
+        knowledgeReserve: 120,
         collapseThreshold: 10,
         warningThreshold: 20,
         mercyEventThreshold: 10,
@@ -254,6 +270,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         influencePerSettlement: Double = 3,
         selfGoverningPopulation: Double = 100,
         repeatableTechCostGrowth: Double = 1.35,
+        knowledgeReserve: Double = 120,
         collapseThreshold: Double,
         warningThreshold: Double,
         mercyEventThreshold: Double,
@@ -309,6 +326,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         self.influencePerSettlement = influencePerSettlement
         self.selfGoverningPopulation = selfGoverningPopulation
         self.repeatableTechCostGrowth = repeatableTechCostGrowth
+        self.knowledgeReserve = knowledgeReserve
         self.collapseThreshold = collapseThreshold
         self.warningThreshold = warningThreshold
         self.mercyEventThreshold = mercyEventThreshold
@@ -382,7 +400,8 @@ public struct WorldConfig: Codable, Sendable, Equatable {
     private enum ResourceKeys: String, CodingKey {
         case foodPerPersonPerTick, defaultStorageCapacity, upkeepRateOfCost,
              energyPerPersonPerTick, eraEnergyDemand, influencePerPersonPerTick,
-             influencePerSettlement, selfGoverningPopulation, repeatableTechCostGrowth
+             influencePerSettlement, selfGoverningPopulation, repeatableTechCostGrowth,
+             knowledgeReserve
     }
     private enum StabilityKeys: String, CodingKey {
         case collapseThreshold, warningThreshold, mercyEventThreshold
@@ -432,6 +451,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         influencePerSettlement = (try? res?.decodeIfPresent(Double.self, forKey: .influencePerSettlement)) ?? d.influencePerSettlement
         selfGoverningPopulation = (try? res?.decodeIfPresent(Double.self, forKey: .selfGoverningPopulation)) ?? d.selfGoverningPopulation
         repeatableTechCostGrowth = (try? res?.decodeIfPresent(Double.self, forKey: .repeatableTechCostGrowth)) ?? d.repeatableTechCostGrowth
+        knowledgeReserve = (try? res?.decodeIfPresent(Double.self, forKey: .knowledgeReserve)) ?? d.knowledgeReserve
 
         let stab = try? c.nestedContainer(keyedBy: StabilityKeys.self, forKey: .stability)
         collapseThreshold = (try? stab?.decodeIfPresent(Double.self, forKey: .collapseThreshold)) ?? d.collapseThreshold
@@ -506,6 +526,7 @@ public struct WorldConfig: Codable, Sendable, Equatable {
         try res.encode(influencePerSettlement, forKey: .influencePerSettlement)
         try res.encode(selfGoverningPopulation, forKey: .selfGoverningPopulation)
         try res.encode(repeatableTechCostGrowth, forKey: .repeatableTechCostGrowth)
+        try res.encode(knowledgeReserve, forKey: .knowledgeReserve)
 
         var stab = c.nestedContainer(keyedBy: StabilityKeys.self, forKey: .stability)
         try stab.encode(collapseThreshold, forKey: .collapseThreshold)
