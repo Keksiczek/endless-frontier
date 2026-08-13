@@ -15,7 +15,7 @@ struct ShortageTensionTests {
     @Test("Nearly out counts, not just bone empty")
     func nearEmptyRaisesTension() {
         var full = Fixtures.world(food: 400, materials: 400)
-        full.settlements[0].storageCapacity = 500
+        full.settlements[0].storageCapacity = .uniform(500)
         var scraping = full
         scraping.settlements[0].storage[.food] = 20   // 4% of capacity
 
@@ -27,7 +27,7 @@ struct ShortageTensionTests {
     @Test("A comfortable store contributes nothing")
     func comfortableStoresAreCalm() {
         var world = Fixtures.world()
-        world.settlements[0].storageCapacity = 500
+        world.settlements[0].storageCapacity = .uniform(500)
         for resource in ResourceType.allCases {
             world.settlements[0].storage[resource] = 400
         }
@@ -37,7 +37,7 @@ struct ShortageTensionTests {
     @Test("An empty store still counts")
     func emptyStillCounts() {
         var world = Fixtures.world()
-        world.settlements[0].storageCapacity = 500
+        world.settlements[0].storageCapacity = .uniform(500)
         for resource in ResourceType.allCases {
             world.settlements[0].storage[resource] = 0
         }

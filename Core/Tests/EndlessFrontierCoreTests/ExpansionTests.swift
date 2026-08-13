@@ -10,7 +10,7 @@ struct ExpansionTests {
         let region = Region(name: "Frontier", biomeID: "plains", explorationState: .fullyExplored)
         var capital = Settlement(
             name: "Capital", kind: .capital, pawns: Fixtures.pawns(50),
-            storage: [.materials: 200, .influence: 200], storageCapacity: 500
+            storage: [.materials: 200, .influence: 200], storageCapacity: .uniform(500)
         )
         capital.buildings = [BuildingInstance(definitionID: "farm", count: 1)]
         let world = WorldState(settlements: [capital], regions: [region])

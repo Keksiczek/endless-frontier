@@ -206,7 +206,7 @@ public enum GameEngine {
         s.tribes[index].standing = max(-100, s.tribes[index].standing - config.demandStandingLoss)
         s.tribes[index].grudge = min(100, s.tribes[index].grudge + config.demandStandingLoss / 2)
         s.settlements[seatIndex].storage[.food] = min(
-            s.settlements[seatIndex].storageCapacity,
+            s.settlements[seatIndex].storageCapacity[.food],
             s.settlements[seatIndex].storage[.food] + taken)
         return s
     }

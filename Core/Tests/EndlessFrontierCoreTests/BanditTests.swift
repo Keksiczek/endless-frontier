@@ -26,7 +26,7 @@ struct BanditTests {
         return Settlement(
             id: UUID(uuidString: "00000000-0000-0000-BA47-AAAAAAAAAAAA")!,
             name: "Fat Granary", kind: .capital, pawns: pawns,
-            storage: [.food: food], storageCapacity: capacity,
+            storage: [.food: food], storageCapacity: .uniform(capacity),
             stats: SettlementStats(defense: defense))
     }
 

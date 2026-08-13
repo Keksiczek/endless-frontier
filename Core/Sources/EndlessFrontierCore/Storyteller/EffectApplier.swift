@@ -292,12 +292,12 @@ public enum EffectApplier {
         case .settlementAll:
             s.settlements = s.settlements.map { settlement in
                 var copy = settlement
-                copy.storage[resource] = clampToStorage(copy.storage[resource] + delta, copy.storageCapacity)
+                copy.storage[resource] = clampToStorage(copy.storage[resource] + delta, copy.storageCapacity[resource])
                 return copy
             }
         case .global, .settlementAny, .settlementClosest:
             guard let i = s.settlements.indices.first else { return }
-            let cap = s.settlements[i].storageCapacity
+            let cap = s.settlements[i].storageCapacity[resource]
             s.settlements[i].storage[resource] = clampToStorage(s.settlements[i].storage[resource] + delta, cap)
         }
     }

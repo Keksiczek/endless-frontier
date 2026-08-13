@@ -76,7 +76,7 @@ struct BundledDataTests {
             #expect(settlement.stats.stability >= 0 && settlement.stats.stability <= 100)
             for resource in ResourceType.allCases {
                 #expect(settlement.storage[resource] >= 0)
-                #expect(settlement.storage[resource] <= settlement.storageCapacity)
+                #expect(settlement.storage[resource] <= settlement.storageCapacity[resource])
             }
         }
         #expect(final.globalStats.prosperity >= 0 && final.globalStats.prosperity <= 100)

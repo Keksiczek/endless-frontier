@@ -54,7 +54,7 @@ public enum ExpansionEngine {
             pawns: settlers(seedBase: seedBase, language: s.language),
             buildings: buildings,
             storage: [.food: 40, .materials: 20],
-            storageCapacity: registry.config.defaultStorageCapacity,
+            storageCapacity: .uniform(registry.config.defaultStorageCapacity),
             stats: SettlementStats(stability: 50, morale: 55),
             colony: ColonyBuilder.seededLayout(for: buildings, registry: registry),
             localMap: LocalMapGenerator.generate(mapSeed: s.mapSeed, regionID: regionID,

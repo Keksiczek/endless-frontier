@@ -45,7 +45,7 @@ struct ColonyBonusTests {
     @Test("Adjacency feeds the resource loop's per-tick production")
     func adjacencyFeedsTick() {
         let reg = registry()
-        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-44b69a27541b")!, name: "T", kind: .capital,                            storage: [.food: 0], storageCapacity: 9999)
+        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-44b69a27541b")!, name: "T", kind: .capital,                            storage: [.food: 0], storageCapacity: .uniform(9999))
         s = ColonyBuilder.place(s, definitionID: "farm", at: TileCoord(0, 0), registry: reg)
         s = ColonyBuilder.place(s, definitionID: "well", at: TileCoord(1, 0), registry: reg)
 

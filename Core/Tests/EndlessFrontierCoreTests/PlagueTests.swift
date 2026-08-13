@@ -28,7 +28,7 @@ struct PlagueTests {
             id: UUID(uuidString: "00000000-0000-0000-9149-AAAAAAAAAAAA")!,
             name: "Crowd", kind: .capital, pawns: pawns,
             buildings: [BuildingInstance(definitionID: "hut", count: huts)],
-            storage: [.food: 5000], storageCapacity: 9999)
+            storage: [.food: 5000], storageCapacity: .uniform(9999))
     }
 
     private func struck(_ settlement: Settlement, plague id: String = "camp_fever",

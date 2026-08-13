@@ -302,13 +302,13 @@ public enum VisitorEngine {
             // Goods for goods: what a colony has too much of goes, what it is
             // short of comes. A market makes it worth more.
             let value = 18 + Double(s.buildings.reduce(0) { $0 + $1.count }) * 0.4
-            s.storage[.influence] = min(s.storageCapacity, s.storage[.influence] + value * 0.5)
-            s.storage[.materials] = min(s.storageCapacity, s.storage[.materials] + value)
+            s.storage[.influence] = min(s.storageCapacity[.influence], s.storage[.influence] + value * 0.5)
+            s.storage[.materials] = min(s.storageCapacity[.materials], s.storage[.materials] + value)
             s.journal.append(tick: tick, kind: .arrival, text: LocalizedText(values: [
                 .en: "Traders from \(visitor.fromName) unpacked in the square and did good business.",
                 .cs: "Obchodníci z \(visitor.fromName) složili na návsi a odbyt byl dobrý."]))
         case .envoy:
-            s.storage[.influence] = min(s.storageCapacity, s.storage[.influence] + 10)
+            s.storage[.influence] = min(s.storageCapacity[.influence], s.storage[.influence] + 10)
             s.stats.morale = min(100, s.stats.morale + 2)
             s.journal.append(tick: tick, kind: .arrival, text: LocalizedText(values: [
                 .en: "An envoy of \(visitor.fromName) was heard in the square.",
@@ -318,7 +318,7 @@ public enum VisitorEngine {
                 .en: "Families out of \(visitor.fromName) came in off the road, with nothing.",
                 .cs: "Rodiny z \(visitor.fromName) přišly po cestě, bez ničeho."]))
         case .wanderer:
-            s.storage[.knowledge] = min(s.storageCapacity, s.storage[.knowledge] + 8)
+            s.storage[.knowledge] = min(s.storageCapacity[.knowledge], s.storage[.knowledge] + 8)
             s.stats.morale = min(100, s.stats.morale + 1)
             s.journal.append(tick: tick, kind: .discovery, text: LocalizedText(values: [
                 .en: "A traveller out of \(visitor.fromName) told the evening's stories.",

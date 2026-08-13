@@ -129,7 +129,7 @@ struct FoodChainTests {
         var s = Settlement(
             id: UUID(uuidString: "00000000-0000-0000-C00C-00000000F00D")!,
             name: "One Pot", buildings: [BuildingInstance(definitionID: "cookhouse")],
-            storage: [.food: 0], storageCapacity: 400)
+            storage: [.food: 0], storageCapacity: .uniform(400))
         s.pawns = [Pawn(id: UUID(uuidString: "00000000-0000-0000-C00C-000000000001")!,
                         name: "Cook", assignedWork: .cooking)]
         // A shelf with everything on it, which is when the kitchen reaches
@@ -190,7 +190,7 @@ struct FoodChainTests {
         var s = Settlement(
             id: UUID(uuidString: "00000000-0000-0000-0000-00000000F00D")!,
             name: "Hungry", kind: .capital, pawns: [],
-            storage: [.food: 0], storageCapacity: 500)
+            storage: [.food: 0], storageCapacity: .uniform(500))
         s.pawns = (0..<4).map { i in
             var p = Pawn(id: UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", 700 + i))!,
                          name: "Soul \(i)", assignedWork: .farming)
@@ -413,7 +413,7 @@ struct FoodChainTests {
         var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0000-00000000C00C")!,
                            name: "Kitchen", kind: .capital, pawns: [],
                            buildings: [BuildingInstance(definitionID: "cookhouse")],
-                           storageCapacity: 9999)
+                           storageCapacity: .uniform(9999))
         s.stockpile = ["greens": 2000, "grain": 30, "roots": 20, "berries": 20, "meat": 20]
 
         var reached = 0
@@ -433,7 +433,7 @@ struct FoodChainTests {
     func theShelfHasACeiling() throws {
         let reg = try registry()
         var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0000-00000000500F")!,
-                           name: "Full", kind: .capital, pawns: [], storageCapacity: 100)
+                           name: "Full", kind: .capital, pawns: [], storageCapacity: .uniform(100))
         s.stockpile = ["grain": 400, "greens": 400, "iron_ore": 400]
         s = CookingEngine.spoil(s, registry: reg, tick: 0)
 

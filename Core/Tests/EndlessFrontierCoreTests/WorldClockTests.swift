@@ -128,7 +128,7 @@ struct ActionLoopTests {
     private var registry: GameDataRegistry { Fixtures.registry(buildings: []) }
 
     private func worldWithParty() -> WorldState {
-        var s = Settlement(id: seat, name: "Camp", storage: [.food: 900], storageCapacity: 2000)
+        var s = Settlement(id: seat, name: "Camp", storage: [.food: 900], storageCapacity: .uniform(2000))
         s.pawns = (0..<8).map { i in
             var p = Pawn(id: UUID(uuidString: String(format: "FFFFFFFF-0000-0000-0000-%012d", 100 + i))!,
                          name: "Hand \(i)", assignedWork: .farming)

@@ -18,7 +18,7 @@ struct HousingTests {
         return Settlement(id: UUID(uuidString: "00000000-0000-0000-0002-000000000001")!,
                           name: "Town", kind: .capital, pawns: pawns,
                           buildings: huts > 0 ? [BuildingInstance(definitionID: "hut", count: huts)] : [],
-                          storage: [.food: 500], storageCapacity: 999,
+                          storage: [.food: 500], storageCapacity: .uniform(999),
                           stats: SettlementStats(morale: morale))
     }
 

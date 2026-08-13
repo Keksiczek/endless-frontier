@@ -97,7 +97,7 @@ public enum CookingEngine {
         _ settlement: Settlement, registry: GameDataRegistry, tick: Int
     ) -> Settlement {
         var s = settlement
-        guard s.storage[.food] < s.storageCapacity * fullEnough else { return s }
+        guard s.storage[.food] < s.storageCapacity[.food] * fullEnough else { return s }
         let hands = effort(of: s, registry: registry)
         guard hands > 0 else { return s }
 
@@ -110,13 +110,13 @@ public enum CookingEngine {
         var cooked: [String: Int] = [:]
         while let meal = best(for: s, registry: registry, hasKitchen: hasKitchen),
               s.kitchenProgress >= meal.work,
-              s.storage[.food] < s.storageCapacity * fullEnough {
+              s.storage[.food] < s.storageCapacity[.food] * fullEnough {
             s.kitchenProgress -= meal.work
             for (itemID, count) in meal.ingredients {
                 s.stockpile[itemID, default: 0] -= count
                 if s.stockpile[itemID, default: 0] <= 0 { s.stockpile[itemID] = nil }
             }
-            s.storage[.food] = min(s.storageCapacity, s.storage[.food] + meal.food)
+            s.storage[.food] = min(s.storageCapacity[.food], s.storage[.food] + meal.food)
             cooked[meal.id, default: 0] += 1
         }
 
@@ -241,7 +241,7 @@ public enum CookingEngine {
         let kinds = foodstuffs(registry)
         var s = settlement
         let held = kinds.reduce(0) { $0 + s.stockpile[$1, default: 0] }
-        let capacity = Int(s.storageCapacity)
+        let capacity = Int(s.storageCapacity[.food])
         guard capacity > 0, held > capacity else { return s }
 
         // Each kind keeps its share of the roof, rather than whichever sack is

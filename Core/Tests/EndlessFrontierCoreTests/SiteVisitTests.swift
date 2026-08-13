@@ -30,7 +30,7 @@ struct SiteVisitTests {
         var s = Settlement(
             id: UUID(uuidString: "00000000-0000-0000-5171-FFFFFFFFFFFF")!,
             name: "Camp", kind: .capital, pawns: pawns,
-            storage: [.food: 500], storageCapacity: 999)
+            storage: [.food: 500], storageCapacity: .uniform(999))
         s.localMap = LocalMap(river: RiverShape(baseY: 0.8, amplitude: 0.02, phase: 0),
                               nodes: [], pois: [poi(kind)])
         return s

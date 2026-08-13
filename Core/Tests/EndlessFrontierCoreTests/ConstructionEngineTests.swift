@@ -12,7 +12,7 @@ struct ConstructionEngineTests {
         // Fixed id: a random one would (correctly) fail the determinism test.
         Settlement(id: UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")!,
                    name: "Test", kind: .capital, pawns: pawns,
-                   storage: [.materials: 500], storageCapacity: 9999)
+                   storage: [.materials: 500], storageCapacity: .uniform(9999))
     }
 
     @Test("Work required scales with cost between the floor and the cap")
@@ -125,7 +125,7 @@ struct ConstructionEngineTests {
 
     @Test("Demolishing a site cancels its project without touching the ledger")
     func demolishSiteCancelsProject() {
-        let cap = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-87cb5c040202")!, name: "C", kind: .capital, storage: [.materials: 100], storageCapacity: 9999)
+        let cap = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-87cb5c040202")!, name: "C", kind: .capital, storage: [.materials: 100], storageCapacity: .uniform(9999))
         let world = WorldState(settlements: [cap])
         let placed = GameEngine.placeBuilding(world, settlementID: cap.id,
                                               buildingID: "farm", at: TileCoord(0, 0), registry: registry)

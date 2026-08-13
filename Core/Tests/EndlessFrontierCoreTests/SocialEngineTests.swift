@@ -16,7 +16,7 @@ struct SocialEngineTests {
         }
         return Settlement(id: UUID(uuidString: "BBBBBBBB-0000-0000-0000-000000000001")!,
                           name: "Ves", kind: .capital, pawns: pawns,
-                          storage: [.food: 500], storageCapacity: 9999)
+                          storage: [.food: 500], storageCapacity: .uniform(9999))
     }
 
     private func advance(_ settlement: Settlement, ticks: Int) -> Settlement {

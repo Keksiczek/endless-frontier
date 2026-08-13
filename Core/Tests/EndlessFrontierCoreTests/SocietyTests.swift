@@ -10,7 +10,7 @@ struct SocietyTests {
 
     private func town(_ pawns: [Pawn], food: Double = 500) -> Settlement {
         Settlement(id: Self.townID, name: "Assembly Town", kind: .capital, pawns: pawns,
-                   storage: [.food: food], storageCapacity: 9999,
+                   storage: [.food: food], storageCapacity: .uniform(9999),
                    stats: SettlementStats(stability: 60, morale: 60))
     }
 

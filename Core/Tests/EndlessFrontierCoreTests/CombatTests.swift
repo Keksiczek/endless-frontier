@@ -34,7 +34,7 @@ struct CombatTests {
         func world(armed: Bool) -> WorldState {
             let pawns = (0..<4).map { armed ? armedPawn("P\($0)") : Pawn(name: "P\($0)") }
             var capital = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-f7695d4586ee")!, name: "C", kind: .capital, pawns: pawns,
-                                     storage: [.materials: 100, .food: 100], storageCapacity: 999)
+                                     storage: [.materials: 100, .food: 100], storageCapacity: .uniform(999))
             capital.stats.defense = 0
             return WorldState(settlements: [capital])
         }

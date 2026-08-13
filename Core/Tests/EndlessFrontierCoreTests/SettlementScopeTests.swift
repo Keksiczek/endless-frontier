@@ -17,12 +17,12 @@ struct SettlementScopeTests {
     ) -> WorldState {
         let capital = Settlement(
             name: "Capital", kind: .capital, pawns: Fixtures.pawns(8),
-            storage: [.materials: capitalMaterials], storageCapacity: 9999,
+            storage: [.materials: capitalMaterials], storageCapacity: .uniform(9999),
             inventory: capitalInventory.map { ItemInstance(definitionID: $0) }
         )
         let outpost = Settlement(
             name: "Frontier Post", kind: .outpost, pawns: Fixtures.pawns(4),
-            storage: [.materials: outpostMaterials], storageCapacity: 9999,
+            storage: [.materials: outpostMaterials], storageCapacity: .uniform(9999),
             inventory: outpostInventory.map { ItemInstance(definitionID: $0) }
         )
         return WorldState(settlements: [capital, outpost])

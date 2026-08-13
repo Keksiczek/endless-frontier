@@ -7,7 +7,7 @@ struct SiteTests {
     private func world(kind: RegionKind, hazard: Int = 4, pawns: [Pawn] = []) -> (WorldState, UUID) {
         let region = Region(name: "Site", coord: HexCoord(2, 0), kind: kind, biomeID: "plains",
                             hazardLevel: hazard, explorationState: .fullyExplored)
-        let capital = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-e60faa8ba6d3")!, name: "Capital", kind: .capital,                                  pawns: pawns, storage: [:], storageCapacity: 9999)
+        let capital = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-e60faa8ba6d3")!, name: "Capital", kind: .capital,                                  pawns: pawns, storage: [:], storageCapacity: .uniform(9999))
         let state = WorldState(mapSeed: 1, settlements: [capital], regions: [region])
         return (state, region.id)
     }

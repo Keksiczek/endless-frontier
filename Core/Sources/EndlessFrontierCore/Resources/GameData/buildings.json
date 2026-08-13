@@ -242,7 +242,10 @@
       "w": 3,
       "h": 3
     },
-    "look": "hall"
+    "look": "hall",
+    "storage": {
+      "knowledge": 200
+    }
   },
   {
     "id": "windmill",
@@ -294,7 +297,10 @@
       "food": 1
     },
     "morale_effect": 1,
-    "storage": 150,
+    "storage": {
+      "materials": 150,
+      "influence": 100
+    },
     "description": {
       "en": "Caravans and traders extend the settlement's reach.",
       "cs": "Karavany a kupci prodlužují dosah osady."
@@ -448,7 +454,9 @@
     "workers": 0,
     "production": {},
     "morale_effect": 2,
-    "storage": 250,
+    "storage": {
+      "food": 250
+    },
     "description": {
       "en": "Stores grain against the lean months.",
       "cs": "Uchovává obilí na hubená léta."
@@ -456,6 +464,35 @@
     "footprint": {
       "w": 3,
       "h": 3
+    },
+    "look": "granary"
+  },
+  {
+    "id": "warehouse",
+    "era": "early_settlement",
+    "name": {
+      "en": "Warehouse",
+      "cs": "Sklad"
+    },
+    "cost": {
+      "materials": 25
+    },
+    "material_cost": {
+      "timber_bundle": 4
+    },
+    "workers": 0,
+    "production": {},
+    "morale_effect": 1,
+    "storage": {
+      "materials": 350
+    },
+    "description": {
+      "en": "Timber and stone under a roof instead of heaped in the mud.",
+      "cs": "Dřevo a kámen pod střechou místo na hromadě v blátě."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 4
     },
     "look": "granary"
   },
@@ -627,7 +664,10 @@
       "en": "A seat of higher learning that compounds discovery.",
       "cs": "Stánek vyššího učení, kde se objevy násobí."
     },
-    "look": "hall"
+    "look": "hall",
+    "storage": {
+      "knowledge": 400
+    }
   },
   {
     "id": "market",
@@ -650,7 +690,11 @@
       "food": 1
     },
     "morale_effect": 2,
-    "storage": 200,
+    "storage": {
+      "food": 150,
+      "materials": 100,
+      "influence": 120
+    },
     "adjacency": [
       {
         "neighbor": "trade_post",
@@ -703,7 +747,10 @@
       "w": 3,
       "h": 3
     },
-    "look": "vault"
+    "look": "vault",
+    "storage": {
+      "influence": 300
+    }
   },
   {
     "id": "workshop",
@@ -890,7 +937,10 @@
       "energy": 3
     },
     "morale_effect": 1,
-    "storage": 500,
+    "storage": {
+      "materials": 500,
+      "food": 200
+    },
     "description": {
       "en": "Freight rolls in and out day and night, knitting the realm together.",
       "cs": "Náklad se valí dnem i nocí a svazuje říši dohromady."
@@ -999,7 +1049,10 @@
       "energy": 30
     },
     "pollution": 35,
-    "storage": 300,
+    "storage": {
+      "materials": 300,
+      "energy": 250
+    },
     "description": {
       "en": "Crude becomes fuel — the lifeblood of an age of engines.",
       "cs": "Z ropy se stává palivo — krev věku motorů."
@@ -1386,7 +1439,11 @@
       "energy": 10
     },
     "morale_effect": 3,
-    "storage": 800,
+    "storage": {
+      "materials": 800,
+      "energy": 400,
+      "knowledge": 300
+    },
     "footprint": {
       "w": 4,
       "h": 4

@@ -70,10 +70,19 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
     public let moraleEffect: Double
     public let defense: Double
     public let housing: Double
-    /// Storage capacity this building adds to its settlement, per instance.
-    /// Capacity is derived from buildings the same way `housing` is, so a
-    /// colony that wants deeper stores has to build for them.
-    public let storage: Double
+    /// Storage capacity this building adds to its settlement, per instance,
+    /// **per resource**. Capacity is derived from buildings the same way
+    /// `housing` is, so a colony that wants deeper stores has to build for them.
+    ///
+    /// Typed as of 2026-08-13. It used to be one number that
+    /// `ResourceLoop.storageCapacity` applied to every `ResourceType` alike, so
+    /// a granary — *"Stores grain against the lean months"* — deepened the
+    /// colony's store of **knowledge and influence** by exactly as much as its
+    /// store of grain. That was visible in the balance trace, where `materials`
+    /// and `influence` sat pinned at the identical value for half a two-century
+    /// run: two unrelated resources agreeing to four digits is one cap wearing
+    /// five hats.
+    public let storage: Resources
     /// What this building costs per tick to keep standing. When `nil` the
     /// resource loop derives it from `cost` — see `ResourceLoop.upkeep(for:)`,
     /// which is what makes upkeep scale with era without hand-authoring 46
@@ -170,7 +179,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         moraleEffect: Double = 0,
         defense: Double = 0,
         housing: Double = 0,
-        storage: Double = 0,
+        storage: Resources = Resources(),
         upkeep: Resources? = nil,
         pollution: Double = 0,
         footprint: TileSize = TileSize(),
@@ -224,7 +233,16 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         moraleEffect = try c.decodeIfPresent(Double.self, forKey: .moraleEffect) ?? 0
         defense = try c.decodeIfPresent(Double.self, forKey: .defense) ?? 0
         housing = try c.decodeIfPresent(Double.self, forKey: .housing) ?? 0
-        storage = try c.decodeIfPresent(Double.self, forKey: .storage) ?? 0
+        // Typed form first; a bare number is the pre-2026-08-13 authoring and
+        // reads as physical goods, which is what every building that had one
+        // actually held. Nothing ever meant "this shed stores knowledge".
+        if let typed = try? c.decodeIfPresent(Resources.self, forKey: .storage) {
+            storage = typed ?? Resources()
+        } else if let flat = try c.decodeIfPresent(Double.self, forKey: .storage) {
+            storage = Resources([.food: flat, .materials: flat])
+        } else {
+            storage = Resources()
+        }
         upkeep = try c.decodeIfPresent(Resources.self, forKey: .upkeep)
         pollution = try c.decodeIfPresent(Double.self, forKey: .pollution) ?? 0
         footprint = try c.decodeIfPresent(TileSize.self, forKey: .footprint) ?? TileSize()

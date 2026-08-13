@@ -32,7 +32,7 @@ struct RegionExpeditionTests {
         var capital = Settlement(
             id: UUID(uuidString: "00000000-0000-0000-4E61-AAAAAAAAAAAA")!,
             name: "Home", kind: .capital, pawns: pawns,
-            storage: [.food: 800], storageCapacity: 4000)
+            storage: [.food: 800], storageCapacity: .uniform(4000))
         capital.regionID = homeRegion.id
         return WorldState(tick: 0, mapSeed: 71, settlements: [capital],
                           regions: [homeRegion, site])

@@ -26,7 +26,7 @@ struct SiegeTests {
         var s = Settlement(
             id: UUID(uuidString: "5E1E6E00-0000-0000-0000-000000000001")!,
             name: "Hold",
-            storage: [.food: 1000], storageCapacity: 2000,
+            storage: [.food: 1000], storageCapacity: .uniform(2000),
             stats: SettlementStats(defense: defense))
         for i in 0..<pawns {
             var p = Pawn(

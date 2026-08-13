@@ -80,7 +80,7 @@ enum Fixtures {
             pawns: pawns(population),
             buildings: buildings,
             storage: [.food: food, .materials: materials],
-            storageCapacity: 500
+            storageCapacity: .uniform(500)
         )
         return WorldState(tick: tick, settlements: [settlement])
     }

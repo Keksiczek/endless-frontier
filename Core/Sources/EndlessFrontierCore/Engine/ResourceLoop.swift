@@ -41,10 +41,22 @@ public enum ResourceLoop {
     /// settlement in every era, so stores filled in the first years and stayed
     /// pinned at the cap forever — nothing was ever scarce, and so no choice
     /// ever cost anything. Deepening the stores is now something you build.
-    public static func storageCapacity(_ settlement: Settlement, registry: GameDataRegistry) -> Double {
-        registry.config.defaultStorageCapacity + settlement.buildings.reduce(0.0) { acc, instance in
-            acc + (registry.building(instance.definitionID)?.storage ?? 0) * Double(instance.count)
+    ///
+    /// **Typed as of 2026-08-13** — see `BuildingDefinition.storage`. The base
+    /// applies to every resource (a colony can always keep *something* of
+    /// anything); past that, a store is only as deep as the buildings that hold
+    /// **that** good. A granary no longer deepens the archive.
+    public static func storageCapacity(
+        _ settlement: Settlement, registry: GameDataRegistry
+    ) -> Resources {
+        var capacity = Resources.uniform(registry.config.defaultStorageCapacity)
+        for instance in settlement.buildings {
+            guard let def = registry.building(instance.definitionID) else { continue }
+            for resource in ResourceType.allCases {
+                capacity[resource] += def.storage[resource] * Double(instance.count)
+            }
         }
+        return capacity
     }
 
     /// The power the colonists themselves draw each tick — light, heat, and
@@ -713,7 +725,7 @@ public enum ResourceLoop {
     static func grantPOIDiscovery(_ settlement: Settlement, poi: LocalPOI, tick: Int) -> Settlement {
         var s = settlement
         func deposit(_ resource: ResourceType, _ amount: Double) {
-            s.storage[resource] = min(s.storageCapacity, s.storage[resource] + amount)
+            s.storage[resource] = min(s.storageCapacity[resource], s.storage[resource] + amount)
         }
         switch poi.kind {
         case .ruins:
@@ -894,7 +906,7 @@ public enum ResourceLoop {
         // What came out of the mountain, as materials. The *goods* it also
         // yielded are lying at the face in `dropped`, waiting to be carried.
         for (_, amount) in hewn {
-            s.storage[.materials] = min(s.storageCapacity, s.storage[.materials] + amount)
+            s.storage[.materials] = min(s.storageCapacity[.materials], s.storage[.materials] + amount)
         }
         // And the heaps themselves. A felled trunk and a broken block are
         // things on the ground now: the timber is at the stump and the stone at

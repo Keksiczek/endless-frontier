@@ -13,7 +13,7 @@ struct EventDecisionTests {
 
     private func town(knowledge: Double = 0, pawns: [Pawn] = []) -> Settlement {
         Settlement(id: Self.townID, name: "Study Town", kind: .capital, pawns: pawns,
-                   storage: [.food: 500, .knowledge: knowledge], storageCapacity: 9999)
+                   storage: [.food: 500, .knowledge: knowledge], storageCapacity: .uniform(9999))
     }
 
     private func scholars(_ count: Int) -> [Pawn] {

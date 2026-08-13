@@ -24,7 +24,7 @@ struct LocalPOIInteractionTests {
         tick: Int = 0, discovered: Bool = true, adults: Int = 8
     ) -> WorldState {
         var settlement = Settlement(id: seat, name: "Camp", pawns: [], storage: [.food: 900],
-                                    storageCapacity: 2000)
+                                    storageCapacity: .uniform(2000))
         settlement.pawns = (0..<adults).map { i in
             var p = Pawn(id: UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", 700 + i))!,
                          name: "Soul \(i)", skills: [.mining: i, .research: i],

@@ -42,7 +42,7 @@ struct ResourceLoopTests {
     func storageClampedToCapacity() {
         let registry = Fixtures.registry()
         var state = Fixtures.world(food: 499, population: 0)
-        state.settlements[0].storageCapacity = 500
+        state.settlements[0].storageCapacity = .uniform(500)
         let next = ResourceLoop.advanceOneTick(state, registry: registry)
         #expect(next.settlements[0].storage[.food] <= 500)
     }

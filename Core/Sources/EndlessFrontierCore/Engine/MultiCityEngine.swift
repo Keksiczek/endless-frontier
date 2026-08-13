@@ -67,7 +67,7 @@ public enum MultiCityEngine {
             let available = min(throughput, s.settlements[from].storage[route.resource])
             guard available > 0 else { continue }
             let capacity = s.settlements[to].storageCapacity
-            let room = max(0, capacity - s.settlements[to].storage[route.resource])
+            let room = max(0, capacity[route.resource] - s.settlements[to].storage[route.resource])
             let moved = min(available, room)
             s.settlements[from].storage[route.resource] -= moved
             s.settlements[to].storage[route.resource] += moved

@@ -27,7 +27,7 @@ struct GenerationTests {
         var s = Settlement(
             id: UUID(uuidString: "6E4E0000-0000-0000-0000-0000000000FF")!,
             name: "Handover",
-            storage: [.food: 600, .materials: 200], storageCapacity: 2000)
+            storage: [.food: 600, .materials: 200], storageCapacity: .uniform(2000))
         s.pawns = pawns
         return s
     }

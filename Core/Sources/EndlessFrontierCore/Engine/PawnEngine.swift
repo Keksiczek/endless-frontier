@@ -202,7 +202,7 @@ public enum PawnEngine {
 
         // Commit work output to storage.
         for resource in ResourceType.allCases where output[resource] != 0 {
-            s.storage[resource] = min(s.storage[resource] + output[resource], s.storageCapacity)
+            s.storage[resource] = min(s.storage[resource] + output[resource], s.storageCapacity[resource])
         }
 
         // Death (removal, cause tallies, inheritance, morale) is handled by

@@ -476,7 +476,7 @@ public enum DiplomacyEngine {
         _ s: inout WorldState, _ index: Int, _ resource: ResourceType, _ amount: Double
     ) {
         s.settlements[index].storage[resource] = min(
-            s.settlements[index].storageCapacity,
+            s.settlements[index].storageCapacity[resource],
             s.settlements[index].storage[resource] + amount)
     }
 

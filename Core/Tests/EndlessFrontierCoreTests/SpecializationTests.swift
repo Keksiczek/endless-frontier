@@ -14,7 +14,7 @@ struct SpecializationTests {
     private func world(spec: SettlementSpecialization, buildings: [String]) -> WorldState {
         let bld = buildings.map { BuildingInstance(definitionID: $0, count: 1) }
         let s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-5eceda7ce01f")!, name: "S", kind: .capital, pawns: [],
-                           buildings: bld, storage: Resources(), storageCapacity: 99999,
+                           buildings: bld, storage: Resources(), storageCapacity: .uniform(99999),
                            specialization: spec)
         return WorldState(settlements: [s])
     }
@@ -88,8 +88,8 @@ struct SpecializationTests {
     @Test("A mercantile source ships more down a trade route")
     func mercantileBoostsTradeThroughput() throws {
         func delivered(sourceSpec: SettlementSpecialization) -> Double {
-            let source = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-c1b765057783")!, name: "Src", kind: .capital,                                     storage: [.food: 1000], storageCapacity: 99999, specialization: sourceSpec)
-            let dest = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-b8ab6a014f51")!, name: "Dst", kind: .city,                                   storage: Resources(), storageCapacity: 99999)
+            let source = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-c1b765057783")!, name: "Src", kind: .capital,                                     storage: [.food: 1000], storageCapacity: .uniform(99999), specialization: sourceSpec)
+            let dest = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-b8ab6a014f51")!, name: "Dst", kind: .city,                                   storage: Resources(), storageCapacity: .uniform(99999))
             var w = WorldState(settlements: [source, dest])
             w.tradeRoutes = [TradeRoute(fromID: source.id, toID: dest.id, resource: .food, amountPerTick: 10)]
             let after = MultiCityEngine.applyTradeRoutes(w)
@@ -104,7 +104,7 @@ struct SpecializationTests {
         // A settlement constructed without naming a specialisation defaults to
         // balanced and must tick identically to an explicitly-balanced one.
         let implicit = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-a795a6871ea9")!, name: "S", kind: .capital,                                   buildings: [BuildingInstance(definitionID: "farm_basic")],
-                                  storageCapacity: 99999)
+                                  storageCapacity: .uniform(99999))
         let explicitBalanced = world(spec: .balanced, buildings: ["farm_basic"])
         var a = WorldState(settlements: [implicit])
         var b = explicitBalanced

@@ -1306,6 +1306,90 @@ Still open on this one: the **battle log** does not carry the wound kind, so the
 report still says "wounded" where it could say "a stab to the shoulder".
 `BattleMoment` is where that goes.
 
+### 11.30 — the game makes no sound at all (asked 2026-08-13)
+
+**Flagged by Keks, not yet built.** *"Ty bys teoreticky mohl najít na YT nějaké
+vhodné royalty free audio a zvukové skladby, co bychom tam mohli dát."*
+
+There is no audio anywhere in the project — no `AVFoundation`, no assets, no
+mixer. A living-world canvas that is completely silent is a real gap, and it is
+the cheapest big change in perceived quality on this list.
+
+**On sourcing, before anything else, because it is the part that can go wrong
+quietly.** Pulling audio off YouTube is not a licence, whatever the video's
+title says. Downloading it breaks YouTube's terms regardless of the uploader's
+claim, and "royalty free music" aggregator channels routinely re-upload tracks
+they do not hold the rights to — so the risk lands on the App Store listing, not
+on them. The *YouTube Audio Library* in Studio is first-party and clean, but its
+grant is aimed at use in YouTube videos and is the wrong instrument for shipping
+inside a paid app.
+
+What is actually safe for a shipped game: **Freesound** (filter to CC0),
+**OpenGameArt**, **Incompetech** (Kevin MacLeod, CC-BY — attribution is a real
+obligation, not a courtesy), **Free Music Archive**, and cheap one-off
+commercial libraries where the licence is written down. Whatever is chosen, the
+licence text and its source URL want to live **in the repository** beside the
+file — a year from now "where did this come from" has to have an answer, and
+CC-BY without the credit in the app is simply infringement with extra steps.
+
+**What the game would use it for**, in rough order of how much each is worth:
+
+- **An ambient bed that follows the world.** The canvas already knows biome,
+  season, weather and time of day, and those are exactly the axes a bed should
+  cross-fade on. Wind over tundra, rain, insects on a summer night. This alone
+  would carry most of the effect.
+- **The colony as a sound.** Its size, not a loop: a hamlet is birdsong and one
+  axe, a town of two hundred is a hum. Derived from what is already drawn.
+- **Stings on the things the journal already reports** — a birth, a death, a
+  raid, an era advancing. The journal→toast path exists; audio is one more
+  reader of the same event.
+- **The bench, the build, the tap.** Cheap, and the difference between a UI that
+  feels dead and one that does not.
+- **Battle**, which is the one place silence is most conspicuous.
+
+**Two rules it must not break.** Presentation never writes the simulation
+(rule 5) — audio reads `WorldState` and the frame clock and touches neither, the
+same discipline `AgentMotion` and `PawnLook` already keep. And a mixer must not
+call `Date()` or an RNG that the engine can see; if a sound wants randomness it
+takes it from the same `(id, tick)` derivation everything else does, or it takes
+it from a source the engine never reads.
+
+Two smaller things that come with it: the app has **no volume or mute control**
+of its own, and per §11.25 B it has no reduce-motion respect either — both belong
+in the same settings pass. And audio has to survive the premise of the game,
+which is that you close it and come back in a week: the session ends, the bed
+stops, nothing keeps playing in the background.
+
+**Sources checked 2026-08-13, with the catch that matters:**
+
+| source | licence | note |
+|---|---|---|
+| [OGA — CC0 Background Ambience](https://opengameart.org/content/cc0-background-ambience) | CC0, author says no attribution required | a **collection** |
+| [OGA — CC0 Calm / Relaxing Music](https://opengameart.org/content/cc0-calm-relaxing-music) | CC0, ~100 tracks, MP3/OGG/WAV | a **collection** |
+| [OGA — CC0 Fantasy Music & Sounds](https://opengameart.org/content/cc0-fantasy-music-sounds) | CC0 | not checked item by item |
+| [Freesound, tag cc0](https://freesound.org/browse/tags/cc0/) | CC0 once filtered | the default browse is mixed-licence |
+
+**The catch:** those OpenGameArt pages are *collections* — somebody gathered
+other people's submissions under a CC0 heading. That is the collector's claim,
+not each author's licence, and OGA says so itself: *"properly attributing the
+work you distribute with your project remains your responsibility."* The
+authoritative licence is the field on the **individual submission page**. So
+this list is a starting point for a search, **not** a set of files that can be
+dropped into the bundle on its authority.
+
+**Scope, to settle before doing it.** Three sizes, cheapest first: an ambient
+bed alone (4–6 loops — forest, tundra, desert, rain, night — cross-faded on
+biome and time of day, the most effect per kilobyte and the axes the canvas
+already knows); the bed plus UI feedback (tap, build, confirm); or both plus
+era music, which is the most megabytes in the bundle and the fastest to grate
+when there are too few tracks.
+
+**Deferred to its own round** (Keks, 2026-08-13: *"to jen zapiš a uděláme to ve
+vlastním kole"*). Nothing downloaded, nothing added to the bundle. When it is
+picked up: verify each track on its own submission page, and write a `CREDITS`
+file into the repo naming author, licence and URL per file as it lands — not
+afterwards, because afterwards is when provenance is already lost.
+
 ### 11.29 — fuel, and the things that move (asked 2026-08-13)
 
 **Flagged by Keks, not yet built.** *"Taky by tam měla být elektrárna nebo nějaké

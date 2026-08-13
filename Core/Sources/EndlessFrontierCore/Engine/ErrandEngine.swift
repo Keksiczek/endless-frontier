@@ -107,7 +107,7 @@ public enum ErrandEngine {
 
         // Where the colony keeps what it has, and where it keeps a fire. Both
         // are lists of places rather than a number, which is the point.
-        let larders = places(in: s, registry: registry) { $0.storage > 0 }
+        let larders = places(in: s, registry: registry) { $0.storage[.food] > 0 }
         let hearths = places(in: s, registry: registry) { $0.housing > 0 || $0.pollution > 0 }
         let ration = s.policy.ration
         let mealCost = PawnEngine.foodPerMeal * laws.foodUpkeepMultiplier * ration.foodPerMeal

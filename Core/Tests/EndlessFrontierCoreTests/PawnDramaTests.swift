@@ -7,7 +7,7 @@ struct PawnDramaTests {
     private func registry() -> GameDataRegistry { Fixtures.registry() }
 
     private func worldWithPawns(_ pawns: [Pawn]) -> WorldState {
-        let capital = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-8cea2d09ea67")!, name: "Capital", kind: .capital,                                  pawns: pawns, storage: [.food: 200, .knowledge: 100], storageCapacity: 500)
+        let capital = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-8cea2d09ea67")!, name: "Capital", kind: .capital,                                  pawns: pawns, storage: [.food: 200, .knowledge: 100], storageCapacity: .uniform(500))
         return WorldState(settlements: [capital])
     }
 
@@ -66,7 +66,7 @@ struct PawnDramaTests {
     func starvationDeath() {
         let frail = Pawn(name: "Frail", needs: PawnNeeds(hunger: 1, rest: 50, recreation: 50), health: 3)
         var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-adaa1e6befa4")!, name: "Camp", kind: .capital, pawns: [frail],
-                           storage: [.food: 0], storageCapacity: 100, stats: SettlementStats(morale: 60))
+                           storage: [.food: 0], storageCapacity: .uniform(100), stats: SettlementStats(morale: 60))
         // No food → hunger hits 0 → health drains → death (PawnEngine drains,
         // PopulationEngine buries and tallies the cause).
         let registry = GameDataRegistry()

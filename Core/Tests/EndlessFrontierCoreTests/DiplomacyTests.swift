@@ -18,7 +18,7 @@ struct DiplomacyTests {
     private func capital(_ pawns: [Pawn], morale: Double = 60, defense: Double = 20,
                          food: Double = 300) -> Settlement {
         Settlement(id: Self.capitalID, name: "Home", kind: .capital, pawns: pawns,
-                   storage: [.food: food], storageCapacity: 9999,
+                   storage: [.food: food], storageCapacity: .uniform(9999),
                    stats: SettlementStats(stability: 60, morale: morale, defense: defense))
     }
 

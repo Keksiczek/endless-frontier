@@ -208,7 +208,7 @@ public enum WildlifeEngine {
 
         // The carcass, banked: meat on the table and a hide off its back.
         if bag.meat > 0 {
-            s.storage[.food] = min(s.storageCapacity, s.storage[.food] + bag.meat)
+            s.storage[.food] = min(s.storageCapacity[.food], s.storage[.food] + bag.meat)
         }
         if bag.hides > 0 {
             s.stockpile[ResourceLoop.hideItemID, default: 0] += bag.hides

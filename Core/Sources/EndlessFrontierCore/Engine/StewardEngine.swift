@@ -197,10 +197,10 @@ public enum StewardEngine {
                     .en: "The stores are overflowing",
                     .cs: "Sklady přetékají"]),
                 detail: LocalizedText(values: [
-                    .en: "Everything earned past the cap is thrown away. A granary deepens the store — for every resource, not only grain.",
-                    .cs: "Všechno nad strop se vyhazuje. Sýpka sklad prohloubí — u všech surovin, ne jen u obilí."])))
+                    .en: "Everything earned past the cap is thrown away. Each store is deepened by the buildings that hold that good — a granary for grain, a warehouse for timber, a library for what is known.",
+                    .cs: "Všechno nad strop se vyhazuje. Každý sklad prohlubují budovy, které to zboží drží — sýpka obilí, sklad dřevo, knihovna vědění."])))
         }
-        if settlement.storage[.food] < settlement.storageCapacity * 0.2 {
+        if settlement.storage[.food] < settlement.storageCapacity[.food] * 0.2 {
             out.append(Counsel(
                 id: "food", weight: .wanting,
                 headline: LocalizedText(values: [
@@ -434,8 +434,16 @@ public enum StewardEngine {
         //    Below the fields on purpose, and it always was: a granary at the
         //    brim says nothing about whether the ground can still fill it next
         //    year. A store is a buffer; a field is an income.
-        if isBrimming(settlement),
-           let store = best(of: affordable, by: { $0.storage }) {
+        //    Typed storage (2026-08-13) made this clause sharper rather than
+        //    harder: it used to rank by one number, so a colony drowning in
+        //    timber answered with whatever had the biggest `storage` field. It
+        //    now builds a store **for the good that is actually spilling** — a
+        //    warehouse for timber, a library for knowledge, a bank for standing.
+        let spilling = brimmingResources(settlement)
+        if !spilling.isEmpty,
+           let store = best(of: affordable, by: { def in
+               spilling.reduce(0) { $0 + def.storage[$1] }
+           }) {
             return store
         }
 
@@ -450,7 +458,7 @@ public enum StewardEngine {
         //    clause used to do — stopped meaning anything the moment a farm
         //    became a place that owns plots rather than a food faucet, and
         //    would have quietly returned nil for ever.
-        if settlement.storage[.food] < settlement.storageCapacity * 0.25 {
+        if settlement.storage[.food] < settlement.storageCapacity[.food] * 0.25 {
             let onTheShelf = CookingEngine.foodstuffs(registry)
                 .reduce(0) { $0 + settlement.stockpile[$1, default: 0] }
             if onTheShelf >= sacksWorthCooking,
@@ -515,8 +523,9 @@ public enum StewardEngine {
 
     /// Whether the colony has enough put by to build for its own sake.
     public static func hasSomethingSpare(_ settlement: Settlement) -> Bool {
-        guard settlement.storageCapacity > 0 else { return false }
-        return settlement.storage[.materials] >= settlement.storageCapacity * comfortable
+        let roof = settlement.storageCapacity[.materials]
+        guard roof > 0 else { return false }
+        return settlement.storage[.materials] >= roof * comfortable
     }
 
     /// Raw ingredients on the shelf past which "we have no kitchen" is the
@@ -549,9 +558,16 @@ public enum StewardEngine {
 
     /// Whether any store is full enough to be spilling.
     public static func isBrimming(_ settlement: Settlement) -> Bool {
-        guard settlement.storageCapacity > 0 else { return false }
-        return ResourceType.allCases.contains {
-            settlement.storage[$0] >= settlement.storageCapacity * brimming
+        !brimmingResources(settlement).isEmpty
+    }
+
+    /// **Which** stores are spilling. Each against its own roof, which is the
+    /// whole point of typing capacity: a colony can be drowning in timber and
+    /// short of grain in the same season, and one number could not say so.
+    public static func brimmingResources(_ settlement: Settlement) -> [ResourceType] {
+        ResourceType.allCases.filter { resource in
+            let roof = settlement.storageCapacity[resource]
+            return roof > 0 && settlement.storage[resource] >= roof * brimming
         }
     }
 
@@ -766,11 +782,10 @@ public enum StewardEngine {
     /// a roof always wins the argument, which is right — you explore from a
     /// full granary, not from a full-ish one.
     static func canAffordToLookAround(_ settlement: Settlement) -> Bool {
-        guard settlement.storageCapacity > 0 else { return false }
-        return ResourceType.allCases.allSatisfy { resource in
-            ExplorationEngine.expeditionResources.contains(resource)
-                ? settlement.storage[resource] >= settlement.storageCapacity * brimming
-                : true
+        ResourceType.allCases.allSatisfy { resource in
+            guard ExplorationEngine.expeditionResources.contains(resource) else { return true }
+            let roof = settlement.storageCapacity[resource]
+            return roof > 0 && settlement.storage[resource] >= roof * brimming
         }
     }
 

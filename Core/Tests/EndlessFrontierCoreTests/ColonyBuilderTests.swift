@@ -165,7 +165,7 @@ struct ColonyBuilderTests {
     @Test("GameEngine.placeBuilding pays the cost and opens a site on the tile")
     func enginePlacePays() throws {
         let reg = try GameDataRegistry.bundled()
-        let cap = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-ef0fba5c0afe")!, name: "C", kind: .capital, storage: [.materials: 100], storageCapacity: 9999)
+        let cap = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-ef0fba5c0afe")!, name: "C", kind: .capital, storage: [.materials: 100], storageCapacity: .uniform(9999))
         let world = WorldState(settlements: [cap])
         let after = GameEngine.placeBuilding(world, settlementID: cap.id,
                                              buildingID: "farm_basic", at: TileCoord(0, 0), registry: reg)
@@ -182,7 +182,7 @@ struct ColonyBuilderTests {
     @Test("GameEngine.placeBuilding is rejected when the cost can't be paid")
     func enginePlaceUnaffordable() throws {
         let reg = try GameDataRegistry.bundled()
-        let cap = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-7f477fe6b83d")!, name: "C", kind: .capital, storage: [.materials: 5], storageCapacity: 9999)
+        let cap = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-7f477fe6b83d")!, name: "C", kind: .capital, storage: [.materials: 5], storageCapacity: .uniform(9999))
         let world = WorldState(settlements: [cap])
         let after = GameEngine.placeBuilding(world, settlementID: cap.id,
                                              buildingID: "farm_basic", at: TileCoord(0, 0), registry: reg)
@@ -215,7 +215,7 @@ struct CenteredPlacementTests {
     func quickBuildCenters() throws {
         let reg = try GameDataRegistry.bundled()
         var settlement = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-dc926643f909")!, name: "C", kind: .capital,
-                                    storage: [.materials: 200], storageCapacity: 999)
+                                    storage: [.materials: 200], storageCapacity: .uniform(999))
         settlement = ColonyBuilder.ensureMap(settlement)
         let (sited, id) = ColonyBuilder.placeSiteAtFirstFit(
             settlement, definitionID: "hut", registry: reg)

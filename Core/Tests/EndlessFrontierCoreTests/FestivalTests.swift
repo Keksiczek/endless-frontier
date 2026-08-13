@@ -23,7 +23,7 @@ struct FestivalTests {
         var s = Settlement(
             id: UUID(uuidString: "FE571A00-0000-0000-0000-000000000001")!,
             name: "Midsummer",
-            storage: [.food: food, .materials: 200], storageCapacity: 2000)
+            storage: [.food: food, .materials: 200], storageCapacity: .uniform(2000))
         for i in 0..<souls {
             var p = Pawn(id: UUID(uuidString: String(
                 format: "FE571A00-1111-0000-0000-%012d", i))!, name: "Soul \(i)")

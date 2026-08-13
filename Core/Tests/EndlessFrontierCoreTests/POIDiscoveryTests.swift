@@ -27,7 +27,7 @@ struct POIDiscoveryTests {
     func rewards(kind: LocalPOIKind) {
         var s = Settlement(id: UUID(uuidString: "CCCCCCCC-0000-0000-0000-000000000002")!,
                            name: "T", kind: .capital, pawns: Fixtures.pawns(4),
-                           storage: [:], storageCapacity: 500)
+                           storage: [:], storageCapacity: .uniform(500))
         for i in s.pawns.indices {
             s.pawns[i].health = 50
             s.pawns[i].needs.recreation = 50
@@ -67,7 +67,7 @@ struct POIDiscoveryTests {
         var s = Settlement(id: UUID(uuidString: "CCCCCCCC-0000-0000-0000-000000000004")!,
                            name: "T", kind: .capital,
                            pawns: Fixtures.pawns(6, work: .scouting),
-                           storage: [:], storageCapacity: 500)
+                           storage: [:], storageCapacity: .uniform(500))
         s.localMap = map
 
         // Enough scouted years for the walkers to cross the whole valley.

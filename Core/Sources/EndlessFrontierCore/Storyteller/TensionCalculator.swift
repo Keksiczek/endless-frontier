@@ -86,10 +86,13 @@ public enum TensionCalculator {
     /// which is when it's already too late to be a story about anything.
     public static func shortageCount(_ state: WorldState, config: WorldConfig) -> Int {
         guard !state.settlements.isEmpty else { return 0 }
-        let capacity = state.settlements.reduce(0) { $0 + $1.storageCapacity }
-        guard capacity > 0 else { return 0 }
+        // Each store against its own roof (typed 2026-08-13). Summing one
+        // capacity across five resources used to mean a colony with deep grain
+        // stores read as "not short of knowledge".
         return ResourceType.allCases.filter { resource in
-            let held = state.settlements.reduce(0) { $0 + $1.storage[resource] }
+            let capacity = state.settlements.reduce(0.0) { $0 + $1.storageCapacity[resource] }
+            guard capacity > 0 else { return false }
+            let held = state.settlements.reduce(0.0) { $0 + $1.storage[resource] }
             return held / capacity <= config.shortageFraction
         }.count
     }

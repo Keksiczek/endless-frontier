@@ -22,7 +22,7 @@ struct WildlifeTests {
         // determinism tests compare like with like.
         return Settlement(id: UUID(uuidString: "00000000-0000-0000-0EEE-000000000001")!,
                           name: "Hunt Camp", kind: .capital, pawns: huntPawns + extra,
-                          storage: [.food: 200], storageCapacity: 9999,
+                          storage: [.food: 200], storageCapacity: .uniform(9999),
                           stats: SettlementStats(defense: defense), localMap: map)
     }
 

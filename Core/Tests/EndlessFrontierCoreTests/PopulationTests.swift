@@ -12,7 +12,7 @@ struct PopulationTests {
 
     private func village(_ pawns: [Pawn], food: Double = 500, id: UUID = fixedID) -> Settlement {
         Settlement(id: id, name: "Village", kind: .capital, pawns: pawns,
-                   storage: [.food: food], storageCapacity: 999)
+                   storage: [.food: food], storageCapacity: .uniform(999))
     }
 
     @Test("Everyone ages one tick per tick")

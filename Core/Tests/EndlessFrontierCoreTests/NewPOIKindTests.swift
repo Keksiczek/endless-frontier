@@ -16,7 +16,7 @@ struct NewPOIKindTests {
 
     private func colony(adults: Int = 8) -> Settlement {
         var settlement = Settlement(id: seat, name: "Camp", pawns: [],
-                                    storage: [.food: 400], storageCapacity: 4000)
+                                    storage: [.food: 400], storageCapacity: .uniform(4000))
         settlement.pawns = (0..<adults).map { i in
             var p = Pawn(
                 id: UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", 900 + i))!,

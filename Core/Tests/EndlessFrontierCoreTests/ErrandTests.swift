@@ -33,7 +33,7 @@ struct ErrandTests {
         granaryAt: TileCoord? = TileCoord(1, 1)
     ) -> Settlement {
         var s = Settlement(id: id(1), name: "Larder",
-                           storage: [.food: food], storageCapacity: 2000)
+                           storage: [.food: food], storageCapacity: .uniform(2000))
         s.pawns = (0..<souls).map { Pawn(id: id(100 + $0), name: "Hand \($0)") }
         var colony = ColonyMap(width: 18, height: 18)
         var placements: [BuildingPlacement] = [
@@ -141,7 +141,7 @@ struct ErrandTests {
                                         position: LocalPoint(x: 0.98, y: 0.98))
         }
         let start = ErrandEngine.anchor(of: s.pawns[0], in: s, registry: registry)
-        let larder = ErrandEngine.places(in: s, registry: registry) { $0.storage > 0 }
+        let larder = ErrandEngine.places(in: s, registry: registry) { $0.storage[.food] > 0 }
         #expect(larder.contains { SiegeField.distance(start, $0.at)
                                     > ErrandEngine.furthestWorthGoing },
                 "the fixture has to actually put the food out of comfortable reach")
@@ -193,7 +193,7 @@ struct ErrandTests {
     @Test("Eating at the granary costs the colony what eating always cost")
     func upkeepIsUnchanged() {
         var s = town(souls: 20, food: 4000)
-        s.storageCapacity = 8000
+        s.storageCapacity = .uniform(8000)
         for tick in 0..<600 {
             s = ErrandEngine.advanceOneTick(s, registry: registry, tick: tick)
             s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick)

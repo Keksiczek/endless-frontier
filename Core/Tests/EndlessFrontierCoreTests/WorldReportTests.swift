@@ -40,7 +40,7 @@ struct WorldReportTests {
         let reg = try registry()
         var world = GameWorldFactory.newGame(registry: reg, seed: 42)
         for resource in ResourceType.allCases {
-            world.settlements[0].storage[resource] = world.settlements[0].storageCapacity
+            world.settlements[0].storage[resource] = world.settlements[0].storageCapacity[resource]
         }
         #expect(WorldReport.generate(world, registry: reg).contains("PINNED at cap"))
     }

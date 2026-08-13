@@ -80,7 +80,7 @@ struct BattleShapeTests {
         let registry = try GameDataRegistry.bundled()
         var settlement = Settlement(
             id: UUID(uuidString: "BA771E00-0000-0000-0000-000000000001")!,
-            name: "Wallside", storage: [.food: 800], storageCapacity: 2000)
+            name: "Wallside", storage: [.food: 800], storageCapacity: .uniform(2000))
         settlement.pawns = (0..<defenders).map {
             Pawn(id: UUID(uuidString: String(format: "BA771E00-0000-0000-0000-%012d", $0))!,
                  name: "Hand \($0)")

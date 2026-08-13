@@ -6,7 +6,7 @@ import Foundation
 struct PawnEngineTests {
     private func settlement(pawns: [Pawn], food: Double = 100) -> Settlement {
         Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-fc0d50535a9f")!, name: "Camp", pawns: pawns,
-                   storage: [.food: food], storageCapacity: 500,
+                   storage: [.food: food], storageCapacity: .uniform(500),
                    stats: SettlementStats(morale: 50))
     }
 

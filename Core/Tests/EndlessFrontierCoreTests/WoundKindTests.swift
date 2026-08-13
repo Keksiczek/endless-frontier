@@ -52,7 +52,7 @@ struct WoundKindTests {
 
         func woundsFrom(tribe: UUID?) throws -> [WoundKind] {
             var settlement = Settlement(
-                id: id(4), name: "Wallside", storage: [.food: 800], storageCapacity: 2000)
+                id: id(4), name: "Wallside", storage: [.food: 800], storageCapacity: .uniform(2000))
             settlement.pawns = (0..<10).map {
                 Pawn(id: UUID(uuidString: String(format: "0D0D0D0D-0000-0000-0001-%012d", $0))!,
                      name: "Hand \($0)")

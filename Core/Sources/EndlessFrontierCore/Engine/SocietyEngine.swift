@@ -116,7 +116,7 @@ public enum SocietyEngine {
             s.pawns[i].mood = min(100, s.pawns[i].mood + spend * 0.9)
         }
         if treasury > 0 {
-            s.storage[.influence] = min(s.storageCapacity, s.storage[.influence] + treasury * 0.1)
+            s.storage[.influence] = min(s.storageCapacity[.influence], s.storage[.influence] + treasury * 0.1)
         }
         return s
     }

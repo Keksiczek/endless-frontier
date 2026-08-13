@@ -10,7 +10,7 @@ struct CraftingTests {
         let inv = materials.map { ItemInstance(definitionID: $0) }
         let bld = buildings.map { BuildingInstance(definitionID: $0, count: 1) }
         let c = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-7b233e2c671d")!, name: "C", kind: .capital, pawns: Fixtures.pawns(5), buildings: bld,
-                           storage: resources, storageCapacity: 9999, inventory: inv)
+                           storage: resources, storageCapacity: .uniform(9999), inventory: inv)
         return WorldState(settlements: [c])
     }
 

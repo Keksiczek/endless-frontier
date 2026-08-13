@@ -152,11 +152,12 @@ public enum WorldReport {
             row("gini", fmt(settlement.society.gini) + (settlement.society.gini > 0.45 ? "  ← unequal" : ""))
             for resource in ResourceType.allCases {
                 let held = settlement.storage[resource]
-                let pct = settlement.storageCapacity > 0 ? Int(held / settlement.storageCapacity * 100) : 0
+                let roof = settlement.storageCapacity[resource]
+                let pct = roof > 0 ? Int(held / roof * 100) : 0
                 var note = ""
                 if pct >= 99 { note = "  ← PINNED at cap" }
                 if held <= 0 { note = "  ← EMPTY" }
-                row("  \(resource)", "\(Int(held)) / \(Int(settlement.storageCapacity))  (\(pct)%)" + note)
+                row("  \(resource)", "\(Int(held)) / \(Int(roof))  (\(pct)%)" + note)
             }
             // Labour: the question "does the automation work?" answered.
             let ticksPerYear = max(1, config.ticksPerYear)

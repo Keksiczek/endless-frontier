@@ -108,7 +108,11 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public var deathTallies: [String: Int]
     public var buildings: [BuildingInstance]
     public var storage: Resources
-    public var storageCapacity: Double
+    /// How deep this settlement's store is, **per resource** — see
+    /// `BuildingDefinition.storage`. One number for all five meant a granary
+    /// deepened the colony's store of knowledge, and it is why `materials` and
+    /// `influence` used to sit pinned at the identical cap for half a run.
+    public var storageCapacity: Resources
     public var stats: SettlementStats
     public var inventory: [ItemInstance]   // unequipped items + active artifacts
     public var specialization: SettlementSpecialization
@@ -234,7 +238,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         deathTallies: [String: Int] = [:],
         buildings: [BuildingInstance] = [],
         storage: Resources = Resources(),
-        storageCapacity: Double = 500,
+        storageCapacity: Resources = .uniform(500),
         stats: SettlementStats = SettlementStats(),
         inventory: [ItemInstance] = [],
         specialization: SettlementSpecialization = .balanced,
@@ -313,7 +317,16 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         deathTallies = try c.decodeIfPresent([String: Int].self, forKey: .deathTallies) ?? [:]
         buildings = try c.decode([BuildingInstance].self, forKey: .buildings)
         storage = try c.decode(Resources.self, forKey: .storage)
-        storageCapacity = try c.decode(Double.self, forKey: .storageCapacity)
+        // Typed as of 2026-08-13. A save written before it holds one number for
+        // all five, which reads as every store being that deep — the world it
+        // was actually played in. `ResourceLoop` re-derives capacity from the
+        // standing buildings on the next tick anyway, so this only has to be
+        // true for the instant between loading and the first tick.
+        if let typed = try? c.decode(Resources.self, forKey: .storageCapacity) {
+            storageCapacity = typed
+        } else {
+            storageCapacity = .uniform(try c.decode(Double.self, forKey: .storageCapacity))
+        }
         stats = try c.decode(SettlementStats.self, forKey: .stats)
         inventory = try c.decode([ItemInstance].self, forKey: .inventory)
         // Saves written before specialisations default to neutral.

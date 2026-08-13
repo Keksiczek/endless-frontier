@@ -62,6 +62,23 @@ public struct Resources: Codable, Sendable, Equatable, ExpressibleByDictionaryLi
         return copy
     }
 
+    /// Returns a new ledger with each resource clamped to `[lower, upper]` for
+    /// **its own** ceiling — a store is only as deep as the buildings that hold
+    /// that particular good.
+    public func clamped(lower: Double, upper: Resources) -> Resources {
+        var copy = self
+        for type in ResourceType.allCases {
+            copy[type] = min(max(copy[type], lower), upper[type])
+        }
+        return copy
+    }
+
+    /// Everything added together, regardless of kind. For a headline figure —
+    /// "this shed holds 350" — where naming each store would be noise.
+    public var total: Double {
+        ResourceType.allCases.reduce(0) { $0 + self[$1] }
+    }
+
     /// True if any resource is strictly below `threshold`.
     public func anyBelow(_ threshold: Double) -> Bool {
         ResourceType.allCases.contains { self[$0] < threshold }

@@ -6,7 +6,7 @@ import Foundation
 struct PawnGrowthTests {
     private func wellFed(_ pawn: Pawn) -> Settlement {
         Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-b46b8f6f4d01")!, name: "Camp", kind: .capital, pawns: [pawn],
-                   storage: [.food: 500], storageCapacity: 500, stats: SettlementStats(morale: 60))
+                   storage: [.food: 500], storageCapacity: .uniform(500), stats: SettlementStats(morale: 60))
     }
 
     @Test("A working colonist gains skill through learning-by-doing")
@@ -37,7 +37,7 @@ struct PawnGrowthTests {
                              needs: PawnNeeds(hunger: 5, rest: 5, recreation: 5),
                              mood: 10, assignedWork: .farming)
         var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-18e92d8f0b01")!, name: "Camp", kind: .capital, pawns: [miserable],
-                           storage: [.food: 0], storageCapacity: 500, stats: SettlementStats(morale: 60))
+                           storage: [.food: 0], storageCapacity: .uniform(500), stats: SettlementStats(morale: 60))
         let foodBefore = s.storage[.food]
         s = PawnEngine.advanceOneTick(s)
         #expect(s.pawns[0].isBroken)

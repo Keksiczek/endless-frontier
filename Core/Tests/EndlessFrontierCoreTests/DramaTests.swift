@@ -202,7 +202,7 @@ struct UpkeepTests {
 struct StorageCapacityTests {
     static let granary = BuildingDefinition(
         id: "granary", era: .earlySettlement, name: "Granary",
-        cost: [.materials: 20], storage: 250,
+        cost: [.materials: 20], storage: [.food: 250],
         description: "Stores grain against the lean months."
     )
 
@@ -218,7 +218,16 @@ struct StorageCapacityTests {
 
         let bareCap = ResourceLoop.storageCapacity(bare, registry: registry)
         let stockedCap = ResourceLoop.storageCapacity(stocked, registry: registry)
-        #expect(stockedCap == bareCap + 500, "two granaries should add 2×250 capacity")
+        // Typed since 2026-08-13: two granaries deepen the *grain* store by
+        // 2×250 and leave every other store exactly where it was. That second
+        // half is the point of the change — a granary used to deepen the
+        // colony's store of knowledge by the same 500.
+        #expect(stockedCap[.food] == bareCap[.food] + 500,
+                "two granaries should add 2×250 grain capacity")
+        for resource in ResourceType.allCases where resource != .food {
+            #expect(stockedCap[resource] == bareCap[resource],
+                    "a granary has no business deepening the store of \(resource)")
+        }
     }
 
     /// Capacity is derived from buildings like housing is, so an existing save
@@ -233,11 +242,11 @@ struct StorageCapacityTests {
                 name: "Old Save", pawns: Fixtures.pawns(5),
                 buildings: [BuildingInstance(definitionID: "granary", count: 1)],
                 storage: [.food: 10],
-                storageCapacity: 500   // what a pre-fix save holds
+                storageCapacity: .uniform(500)   // what a pre-fix save holds
             )
         ])
         world = TickEngine.advance(world, ticks: 1, registry: registry).state
-        #expect(world.settlements[0].storageCapacity > 500,
+        #expect(world.settlements[0].storageCapacity[.food] > 500,
                 "the granary's capacity should be picked up without a migration")
     }
 }

@@ -130,7 +130,7 @@ struct StewardTests {
     func storageDeepens() throws {
         let reg = try registry()
         let after = try world(ticks: 3000)
-        #expect(after.settlements[0].storageCapacity > reg.config.defaultStorageCapacity)
+        #expect(after.settlements[0].storageCapacity.total > reg.config.defaultStorageCapacity * 5)
     }
 
     /// Half the early buildings ask for `timber_bundle`, which only comes off
@@ -213,7 +213,7 @@ struct StewardTests {
             buildings: [BuildingInstance(
                 id: UUID(uuidString: "57E0A2D0-1111-0000-0000-000000000001")!,
                 definitionID: "hut")],
-            storage: [.materials: 400, .food: 400], storageCapacity: 500)
+            storage: [.materials: 400, .food: 400], storageCapacity: .uniform(500))
         // Filled right up: `housingCapacity` has a base on top of the huts.
         let beds = Int(ResourceLoop.housingCapacity(s, registry: reg))
         for i in 0..<beds {
@@ -257,7 +257,7 @@ struct StewardTests {
         var s = Settlement(
             id: UUID(uuidString: "57E0A2D0-0000-0000-0000-000000000005")!,
             name: "Close",
-            storage: [.materials: 400, .food: 400], storageCapacity: 500)
+            storage: [.materials: 400, .food: 400], storageCapacity: .uniform(500))
         let beds = ResourceLoop.housingCapacity(s, registry: reg)
         // Two-thirds housed: nineteen free beds, and a birth rate already down
         // to a ninth of its vigour.
@@ -287,7 +287,7 @@ struct StewardTests {
             buildings: [BuildingInstance(
                 id: UUID(uuidString: "57E0A2D0-1111-0000-0000-000000000006")!,
                 definitionID: "hut", count: 9)],
-            storage: [.materials: 400, .food: 400], storageCapacity: 500)
+            storage: [.materials: 400, .food: 400], storageCapacity: .uniform(500))
         for i in 0..<Int(ResourceLoop.housingCapacity(s, registry: reg) * 0.9) {
             var p = Pawn(id: UUID(uuidString: String(
                 format: "57E0A2D0-6666-0000-0000-%012d", i))!, name: "H\(i)")
@@ -313,7 +313,7 @@ struct StewardTests {
             buildings: [BuildingInstance(
                 id: UUID(uuidString: "57E0A2D0-1111-0000-0000-000000000002")!,
                 definitionID: "granary", count: 9)],
-            storage: [.materials: 480, .food: 480], storageCapacity: 500)
+            storage: [.materials: 480, .food: 480], storageCapacity: .uniform(500))
         for i in 0..<8 {
             var p = Pawn(id: UUID(uuidString: String(
                 format: "57E0A2D0-3333-0000-0000-%012d", i))!, name: "H\(i)")
@@ -338,7 +338,7 @@ struct StewardTests {
             var s = Settlement(
                 id: UUID(uuidString: "57E0A2D0-0000-0000-0000-000000000003")!,
                 name: "Deep", storage: [.materials: 120, .food: 120],
-                storageCapacity: capacity)
+                storageCapacity: .uniform(capacity))
             var p = Pawn(id: UUID(uuidString: "57E0A2D0-4444-0000-0000-000000000001")!,
                          name: "One")
             p.age = 25 * reg.config.ticksPerYear

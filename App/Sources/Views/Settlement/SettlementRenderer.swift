@@ -1382,7 +1382,7 @@ enum SettlementRenderer {
         }
         if def.production[.knowledge] > 0 { return .hall }
         if def.production[.influence] > 0 { return .market }
-        if def.production[.food] > 0 || def.storage > 0 { return .granary }
+        if def.production[.food] > 0 || def.storage.total > 0 { return .granary }
         return .workshop
     }
 

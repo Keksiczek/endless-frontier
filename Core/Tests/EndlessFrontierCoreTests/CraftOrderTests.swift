@@ -25,7 +25,7 @@ struct CraftOrderTests {
             buildings: [BuildingInstance(
                 id: UUID(uuidString: "C4AF7000-1111-0000-0000-000000000001")!,
                 definitionID: "workshop")],
-            storage: [.food: 500, .materials: materials], storageCapacity: 20_000)
+            storage: [.food: 500, .materials: materials], storageCapacity: .uniform(20_000))
         let ticksPerYear = try registry().config.ticksPerYear
         for i in 0..<crafters {
             var p = Pawn(

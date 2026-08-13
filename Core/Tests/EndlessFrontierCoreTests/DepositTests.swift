@@ -16,7 +16,7 @@ struct DepositTests {
         let map = LocalMap(river: RiverShape(baseY: 0.8, amplitude: 0.03, phase: 0),
                            nodes: [forest], pois: [])
         return Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-571ae51886c5")!, name: "Timbertown", kind: .capital, pawns: pawns,
-                          storage: [.food: 500, .materials: 0], storageCapacity: 9999,
+                          storage: [.food: 500, .materials: 0], storageCapacity: .uniform(9999),
                           localMap: map)
     }
 

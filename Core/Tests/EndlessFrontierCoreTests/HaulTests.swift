@@ -12,7 +12,7 @@ struct HaulTests {
         GameDataRegistry(
             buildings: [
                 BuildingDefinition(id: "granary", era: .earlySettlement, name: "Granary",
-                                   cost: [.materials: 20], storage: 200)
+                                   cost: [.materials: 20], storage: [.materials: 200])
             ],
             techs: [], eras: [], biomes: [], events: [], config: .default)
     }

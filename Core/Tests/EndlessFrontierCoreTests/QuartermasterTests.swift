@@ -24,7 +24,7 @@ struct QuartermasterTests {
         var s = Settlement(
             id: UUID(uuidString: "0A47E12A-0000-0000-0000-000000000001")!,
             name: "Bare",
-            storage: [.materials: materials, .food: 400], storageCapacity: 500)
+            storage: [.materials: materials, .food: 400], storageCapacity: .uniform(500))
         for i in 0..<hands {
             var p = Pawn(id: UUID(uuidString: String(
                 format: "0A47E12A-1111-0000-0000-%012d", i))!, name: "Hand \(i)")

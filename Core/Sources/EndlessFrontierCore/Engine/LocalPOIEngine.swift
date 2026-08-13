@@ -575,7 +575,7 @@ public enum LocalPOIEngine {
     /// realm's business and grants globally.
     private static func grant(_ s: inout Settlement, _ rewards: Resources) {
         for resource in ResourceType.allCases where rewards[resource] != 0 {
-            s.storage[resource] = min(s.storageCapacity, s.storage[resource] + rewards[resource])
+            s.storage[resource] = min(s.storageCapacity[resource], s.storage[resource] + rewards[resource])
         }
     }
 

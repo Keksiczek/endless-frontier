@@ -45,7 +45,7 @@ public enum GameWorldFactory {
             pawns: starterPawns(seed: seed),
             buildings: buildings,
             storage: [.food: 200, .materials: 120, .energy: 0, .knowledge: 0, .influence: 20],
-            storageCapacity: registry.config.defaultStorageCapacity,
+            storageCapacity: .uniform(registry.config.defaultStorageCapacity),
             stats: SettlementStats(stability: 60, morale: 60),
             colony: ColonyBuilder.seededLayout(for: buildings, registry: registry),
             // The homeland's own character and danger, not defaults: the

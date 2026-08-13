@@ -16,7 +16,7 @@ struct ColonyPolicyTests {
     private func town(_ adults: Int, work: WorkKind = .farming,
                       policy: ColonyPolicy = ColonyPolicy()) -> Settlement {
         var s = Settlement(id: seat, name: "Town", pawns: [],
-                           storage: [.food: 4000], storageCapacity: 8000)
+                           storage: [.food: 4000], storageCapacity: .uniform(8000))
         s.pawns = (0..<adults).map { i in
             var p = Pawn(
                 id: UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", 100 + i))!,

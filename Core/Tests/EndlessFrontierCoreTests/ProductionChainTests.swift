@@ -117,7 +117,7 @@ struct ProductionChainTests {
     private func colony(biome: String, workers: [WorkKind: Int]) throws -> Settlement {
         let reg = try registry()
         var s = Settlement(id: UUID(uuidString: "EEEEEEEE-0000-0000-0000-000000000001")!,
-                           name: "Pit", storage: [.food: 900], storageCapacity: 2000)
+                           name: "Pit", storage: [.food: 900], storageCapacity: .uniform(2000))
         var index = 0
         for (work, count) in workers.sorted(by: { $0.key.rawValue < $1.key.rawValue }) {
             for _ in 0..<count {
@@ -249,7 +249,7 @@ struct ProductionChainTests {
         let reg = try registry()
         var s = Settlement(id: UUID(uuidString: "EEEEEEEE-0000-0000-0000-000000000009")!,
                            name: "Mill", buildings: [BuildingInstance(definitionID: "lumberyard")],
-                           storage: [.materials: 500], storageCapacity: 2000)
+                           storage: [.materials: 500], storageCapacity: .uniform(2000))
         s.stockpile["wood"] = 6
         var world = WorldState(tick: 0, settlements: [s])
 
@@ -266,7 +266,7 @@ struct ProductionChainTests {
         let reg = try registry()
         var s = Settlement(id: UUID(uuidString: "EEEEEEEE-0000-0000-0000-00000000000A")!,
                            name: "Forge", buildings: [BuildingInstance(definitionID: "workshop")],
-                           storage: [.materials: 500], storageCapacity: 2000)
+                           storage: [.materials: 500], storageCapacity: .uniform(2000))
         s.stockpile["iron_ingot"] = 2
         var world = WorldState(tick: 0, settlements: [s])
         world = BenchTestSupport.craft(world, recipeID: "craft_iron_sword",
@@ -283,7 +283,7 @@ struct ProductionChainTests {
         let reg = try registry()
         var s = Settlement(id: UUID(uuidString: "EEEEEEEE-0000-0000-0000-00000000000B")!,
                            name: "Old", buildings: [BuildingInstance(definitionID: "workshop")],
-                           storage: [.materials: 500], storageCapacity: 2000)
+                           storage: [.materials: 500], storageCapacity: .uniform(2000))
         s.inventory = [ItemInstance(id: UUID(), definitionID: "iron_ingot"),
                        ItemInstance(id: UUID(), definitionID: "iron_ingot")]
         var world = WorldState(tick: 0, settlements: [s])

@@ -22,7 +22,7 @@ struct CaptiveTests {
     /// the conditions under which a prisoner ever comes round.
     private func colony(souls: Int = 27, food: Double = 900, morale: Double = 80) -> Settlement {
         var s = Settlement(id: id(1), name: "Wallside",
-                           storage: [.food: food], storageCapacity: 2000)
+                           storage: [.food: food], storageCapacity: .uniform(2000))
         s.pawns = (0..<souls).map { Pawn(id: id(100 + $0), name: "Hand \($0)") }
         s.stats.morale = morale
         return s

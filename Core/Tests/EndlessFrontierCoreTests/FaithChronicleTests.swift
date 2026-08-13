@@ -9,7 +9,7 @@ struct FaithChronicleTests {
 
     private func town(_ pawns: [Pawn], laws: [LawInstance] = [], faith: FaithState = FaithState()) -> Settlement {
         Settlement(id: Self.townID, name: "Templeton", kind: .capital, pawns: pawns,
-                   storage: [.food: 500], storageCapacity: 9999,
+                   storage: [.food: 500], storageCapacity: .uniform(9999),
                    laws: laws, faith: faith)
     }
 

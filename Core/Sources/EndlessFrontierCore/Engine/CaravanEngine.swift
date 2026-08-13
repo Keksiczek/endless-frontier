@@ -216,7 +216,7 @@ public enum CaravanEngine {
     /// to the origin instead of being destroyed.
     static func deliver(_ caravan: Caravan, into s: inout WorldState) {
         guard let di = s.settlements.firstIndex(where: { $0.id == caravan.destinationID }) else { return }
-        let room = max(0, s.settlements[di].storageCapacity - s.settlements[di].storage[caravan.resource])
+        let room = max(0, s.settlements[di].storageCapacity[caravan.resource] - s.settlements[di].storage[caravan.resource])
         let delivered = min(caravan.cargo, room)
         s.settlements[di].storage[caravan.resource] += delivered
         s.settlements[di].pawns.append(contentsOf: caravan.guards)
@@ -224,7 +224,7 @@ public enum CaravanEngine {
         // Return the undeliverable remainder to the origin rather than losing it.
         let returned = caravan.cargo - delivered
         if returned > 0, let oi = s.settlements.firstIndex(where: { $0.id == caravan.originID }) {
-            let originRoom = max(0, s.settlements[oi].storageCapacity - s.settlements[oi].storage[caravan.resource])
+            let originRoom = max(0, s.settlements[oi].storageCapacity[caravan.resource] - s.settlements[oi].storage[caravan.resource])
             s.settlements[oi].storage[caravan.resource] += min(returned, originRoom)
         }
     }

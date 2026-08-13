@@ -49,7 +49,7 @@ struct DangerProbe {
         ── danger, after 12 000 ticks (200 years) ────────────────────
         deaths        \(capital.deathTallies.sorted { $0.key < $1.key })
         population    \(capital.pawns.count)   morale \(Int(capital.stats.morale))
-        food          \(Int(capital.storage[.food]))/\(Int(capital.storageCapacity))
+        food          \(Int(capital.storage[.food]))/\(Int(capital.storageCapacity[.food]))
         fights        \(fought.count)  (\(repelled) turned back)
         sicknesses    \(plagues.count)
         tribes        \(state.tribes.count)  standings \
@@ -88,7 +88,7 @@ struct DangerProbe {
         deaths        \(capital.deathTallies.sorted { $0.key < $1.key })
         fights        \(fought.count)
         worst wound   −\(Int(worstWound))
-        food          \(Int(capital.storage[.food]))/\(Int(capital.storageCapacity))
+        food          \(Int(capital.storage[.food]))/\(Int(capital.storageCapacity[.food]))
         defence       \(Int(capital.stats.defense))
         ──────────────────────────────────────────────────────────────
 
@@ -104,7 +104,7 @@ struct DangerProbe {
             for defense in [0.0, 20, 50] {
                 var s = Settlement(
                     id: UUID(uuidString: "5E1E6E00-0000-0000-0000-000000000001")!,
-                    name: "Hold", storage: [.food: 1000], storageCapacity: 2000,
+                    name: "Hold", storage: [.food: 1000], storageCapacity: .uniform(2000),
                     stats: SettlementStats(defense: defense))
                 for i in 0..<12 {
                     var p = Pawn(

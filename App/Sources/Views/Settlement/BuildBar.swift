@@ -104,8 +104,11 @@ struct BuildPickerBar: View {
         if def.housing > 0 {
             parts.append("+\(Int(def.housing)) \(cs ? "lůžek" : "beds")")
         }
-        if def.storage > 0 {
-            parts.append("+\(Int(def.storage)) \(cs ? "skladu" : "store")")
+        // Named per resource now that a store holds one good rather than all
+        // five — "+350 materials" says what a warehouse is for, "+350 store"
+        // did not.
+        for resource in ResourceType.allCases where def.storage[resource] > 0 {
+            parts.append("+\(Int(def.storage[resource])) \(resource.displayName) \(cs ? "skladu" : "store")")
         }
         for resource in ResourceType.allCases where def.production[resource] > 0 {
             parts.append("+\(Int(def.production[resource])) \(resource.displayName)")

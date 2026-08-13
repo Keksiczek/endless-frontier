@@ -109,9 +109,9 @@ struct BuildingInspectorCard: View {
                 trait(icon: "house.fill", text: "\(Int(definition.housing))")
                     .accessibilityLabel("\(cs ? "Bydlení" : "Housing") \(Int(definition.housing))")
             }
-            if definition.storage > 0 {
-                trait(icon: "archivebox.fill", text: "\(Int(definition.storage))")
-                    .accessibilityLabel("\(cs ? "Sklad" : "Storage") \(Int(definition.storage))")
+            if definition.storage.total > 0 {
+                trait(icon: "archivebox.fill", text: "\(Int(definition.storage.total))")
+                    .accessibilityLabel("\(cs ? "Sklad" : "Storage") \(Int(definition.storage.total))")
             }
             if definition.defense > 0 {
                 trait(icon: "shield.fill", text: "\(Int(definition.defense))")

@@ -57,7 +57,7 @@ struct CombatEngineTests {
             let capital = Settlement(
                 id: UUID(uuidString: "EEEEEEEE-1111-0000-0000-000000000001")!,
                 name: "C", kind: .capital, pawns: pawns,
-                storage: [.food: 400], storageCapacity: 999,
+                storage: [.food: 400], storageCapacity: .uniform(999),
                 stats: SettlementStats(defense: 0))   // walls out of the equation
             var world = WorldState(settlements: [capital])
             world.tribes = [Tribe(
@@ -88,7 +88,7 @@ struct CombatEngineTests {
         let capital = Settlement(
             id: UUID(uuidString: "EEEEEEEE-1111-0000-0000-000000000002")!,
             name: "C", kind: .capital, pawns: pawns,
-            storage: [.food: 400], storageCapacity: 999)
+            storage: [.food: 400], storageCapacity: .uniform(999))
         var world = WorldState(settlements: [capital])
         world.tribes = [Tribe(
             id: UUID(uuidString: "EEEEEEEE-2222-0000-0000-000000000002")!,
@@ -112,7 +112,7 @@ struct CombatEngineTests {
             var s = Settlement(
                 id: UUID(uuidString: "EEEEEEEE-3333-0000-0000-000000000001")!,
                 name: "C", kind: .capital, pawns: pawns,
-                storage: [.food: 400], storageCapacity: 999)
+                storage: [.food: 400], storageCapacity: .uniform(999))
             s.localMap = LocalMapGenerator.generate(
                 mapSeed: 3, regionID: UUID(uuidString: "EEEEEEEE-3333-0000-0000-000000000002")!,
                 biome: nil)

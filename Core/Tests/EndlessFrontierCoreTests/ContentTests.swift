@@ -169,7 +169,7 @@ struct PollutionTests {
         Settlement(id: UUID(uuidString: "00000000-0000-0000-0F0C-000000000001")!,
                    name: "Town", kind: .capital, pawns: Fixtures.pawns(20),
                    buildings: factories > 0 ? [BuildingInstance(definitionID: "factory", count: factories)] : [],
-                   storage: [.food: 500, .energy: 500], storageCapacity: 9999,
+                   storage: [.food: 500, .energy: 500], storageCapacity: .uniform(9999),
                    stats: SettlementStats(morale: 80))
     }
 

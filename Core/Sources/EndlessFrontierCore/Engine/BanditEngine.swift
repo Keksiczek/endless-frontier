@@ -77,8 +77,11 @@ public enum BanditEngine {
     /// is genuinely less worth robbing, which turns "should I build another
     /// granary" into a question with two sides.
     static func temptation(_ settlement: Settlement) -> Double {
-        let capacity = max(1, settlement.storageCapacity)
-        let full = (settlement.storage[.food] + settlement.storage[.materials]) / (capacity * 2)
+        // The two stores a raider can carry off. Typed capacity means this is
+        // now the roof over food and goods, not over political capital.
+        let capacity = max(1, settlement.storageCapacity[.food]
+                              + settlement.storageCapacity[.materials])
+        let full = (settlement.storage[.food] + settlement.storage[.materials]) / capacity
         guard full > noticedAtShare else { return 0 }
         return min(wealthCeiling, (full - noticedAtShare) / (1 - noticedAtShare) * wealthCeiling)
     }
