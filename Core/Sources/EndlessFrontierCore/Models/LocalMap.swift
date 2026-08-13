@@ -637,6 +637,12 @@ public struct LocalMap: Codable, Sendable, Equatable {
     public var terrainSeed: UInt64
     /// Decorative landscape features, placed by the seed.
     public var scenery: [SceneryProp]
+    /// The country's own shapes — a ravine, an oasis, a mesa, old walls.
+    ///
+    /// Unlike `scenery` these are **in the simulation**: they hold cells, the
+    /// blocking ones are ground a walker has to go round (`ColonyRoute`), and
+    /// the canvas draws them because they are there. See `Landform`.
+    public var landforms: [Landform] = []
     /// The wood as *trees* — individual things that grow for years and are gone
     /// when felled, standing on the ground the forest deposits claim. The
     /// abstract nodes still drive the economy; these are the layer taking it
@@ -714,6 +720,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
         biomeID: String = "plains",
         terrainSeed: UInt64 = 0,
         scenery: [SceneryProp] = [],
+        landforms: [Landform] = [],
         trees: [Tree] = [],
         rocks: [Rock] = [],
         usesEntityLand: Bool = false,
@@ -739,6 +746,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
         self.biomeID = biomeID
         self.terrainSeed = terrainSeed
         self.scenery = scenery
+        self.landforms = landforms
         self.trees = trees
         self.rocks = rocks
         self.usesEntityLand = usesEntityLand
@@ -751,7 +759,7 @@ public struct LocalMap: Codable, Sendable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case river, nodes, pois, wildlife, exploredCells, biomeID, terrainSeed, scenery
-        case trees, rocks, shore, usesEntityLand, stone, piles, visitors
+        case trees, rocks, shore, usesEntityLand, stone, piles, visitors, landforms
         case scoutProgress, scoutFocus, quarryCredit
         case crops, usesEntityFields, harvestCredit
     }
@@ -766,6 +774,8 @@ public struct LocalMap: Codable, Sendable, Equatable {
         biomeID = try c.decodeIfPresent(String.self, forKey: .biomeID) ?? "plains"
         terrainSeed = try c.decodeIfPresent(UInt64.self, forKey: .terrainSeed) ?? 0
         scenery = try c.decodeIfPresent([SceneryProp].self, forKey: .scenery) ?? []
+        // A map made before the country had shapes in it has none.
+        landforms = try c.decodeIfPresent([Landform].self, forKey: .landforms) ?? []
         trees = try c.decodeIfPresent([Tree].self, forKey: .trees) ?? []
         rocks = try c.decodeIfPresent([Rock].self, forKey: .rocks) ?? []
         usesEntityLand = try c.decodeIfPresent(Bool.self, forKey: .usesEntityLand) ?? false

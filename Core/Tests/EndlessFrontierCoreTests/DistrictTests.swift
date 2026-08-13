@@ -107,6 +107,55 @@ struct DistrictTests {
         #expect((s.colony?.width ?? 0) <= ColonyBuilder.maxSide)
     }
 
+    /// …and when the valley *is* full, the wrecks give their ground back
+    /// (§11.21 item 3). A derelict shelters nobody and produces nothing, but it
+    /// stood on tiles — and on a full grid tiles are production, because
+    /// `FarmEngine.reconcile` makes plots out of placements.
+    @Test("A full valley reclaims the ground under its wrecks")
+    func wrecksGiveTheirGroundBack() {
+        var s = Settlement(id: UUID(), name: "Ruinford", regionID: UUID())
+        s.storage[ResourceType.materials] = 10_000
+        s = ColonyBuilder.ensureMap(s, width: 2, height: 2)
+        for _ in 0..<4 {
+            s = ColonyBuilder.placeSiteAtFirstFit(s, definitionID: "hut",
+                                                  registry: registry).settlement
+        }
+        // Pin the grid at its ceiling so growth cannot answer this, and let the
+        // whole town fall to pieces.
+        s.colony?.width = ColonyBuilder.maxSide
+        s.colony?.height = ColonyBuilder.maxSide
+        let standing = s.colony?.placements.count ?? 0
+        #expect(standing > 0, "nothing was built to fall down")
+        for i in (s.colony?.placements.indices ?? (0..<0)) {
+            s.colony?.placements[i].underConstruction = false
+            s.colony?.placements[i].condition = BuildingEngine.derelictBelow - 0.05
+        }
+        let cleared = ColonyBuilder.clearedOfDerelicts(s)
+        #expect(cleared.colony?.placements.isEmpty == true,
+                "\(cleared.colony?.placements.count ?? -1) wrecks still holding ground")
+        #expect(cleared.buildings.allSatisfy { $0.count > 0 },
+                "the ledger kept a building it no longer has")
+    }
+
+    /// A wreck that is still worth mending is not pulled down. `repair` takes
+    /// anything under `repairBelow`, so clearing eagerly would demolish the
+    /// houses the colony was about to fix.
+    @Test("A building that is merely battered keeps its ground")
+    func batteredBuildingsAreNotPulledDown() {
+        var s = Settlement(id: UUID(), name: "Worn", regionID: UUID())
+        s.storage[ResourceType.materials] = 10_000
+        s = ColonyBuilder.ensureMap(s, width: 8, height: 8)
+        s = ColonyBuilder.placeSiteAtFirstFit(s, definitionID: "hut",
+                                              registry: registry).settlement
+        for i in (s.colony?.placements.indices ?? (0..<0)) {
+            s.colony?.placements[i].underConstruction = false
+            s.colony?.placements[i].condition = BuildingEngine.derelictBelow + 0.01
+        }
+        let before = s.colony?.placements.count ?? 0
+        let after = ColonyBuilder.clearedOfDerelicts(s).colony?.placements.count ?? -1
+        #expect(after == before, "a building still worth repairing was pulled down")
+    }
+
     /// …and the valley is not endless. The fuse still has to be there, or a
     /// colony that cannot place a building loops for ever trying.
     @Test("A colony that has taken the whole valley grows no further")

@@ -163,6 +163,11 @@ public enum ColonyBuilder {
         if let map = host.colony, centerFit(def.footprint, in: map) == nil {
             host = grownOutward(host)
         }
+        // Still nowhere to stand — the valley is taken. What is left is the
+        // ground under the wrecks (§11.21 item 3).
+        if let map = host.colony, centerFit(def.footprint, in: map) == nil {
+            host = clearedOfDerelicts(host)
+        }
         guard let map = host.colony,
               let coord = centerFit(def.footprint, in: map) else {
             return (settlement, nil)
@@ -214,6 +219,41 @@ public enum ColonyBuilder {
             ZoneTile(coord: TileCoord($0.coord.x + shift, $0.coord.y + shift), kind: $0.kind)
         }
         s.colony = map
+        return s
+    }
+
+    /// Pulls down the wrecks and gives their ground back to the colony.
+    ///
+    /// A derelict (below `BuildingEngine.derelictBelow`) produces nothing and
+    /// shelters nobody — `BuildingEngine.evictDerelict` has already turned
+    /// everyone out of it — but it still **holds its tiles**. On a full grid
+    /// those tiles are the difference between a farm that grows food and a line
+    /// in a ledger, which is the whole of §11.21: `FarmEngine.reconcile` makes
+    /// plots out of placements, so ground is production.
+    ///
+    /// Deliberately the **last** resort, after `grownOutward` has been tried and
+    /// the valley has nothing more to give. A derelict can still be mended —
+    /// `BuildingEngine.repair` takes anything under `repairBelow`, wrecks
+    /// included — so a colony that pulled its ruins down the moment it fancied
+    /// building something would be demolishing the houses it was about to fix.
+    /// The land has to actually run out first.
+    public static func clearedOfDerelicts(_ settlement: Settlement) -> Settlement {
+        guard let map = settlement.colony else { return settlement }
+        let wrecks = map.placements.filter {
+            !$0.underConstruction && $0.condition < BuildingEngine.derelictBelow
+        }
+        guard !wrecks.isEmpty else { return settlement }
+        var s = settlement
+        let gone = Set(wrecks.map(\.id))
+        // By coordinate, because `remove` looks the placement up by what covers
+        // the tile and the array shifts under each removal.
+        for wreck in wrecks { s = remove(s, at: wreck.coord) }
+        // Anybody still calling a wreck home has no home now. `evictDerelict`
+        // normally gets here first; this covers the tick where it has not.
+        for i in s.pawns.indices
+        where s.pawns[i].homeID.map(gone.contains) == true {
+            s.pawns[i].homeID = nil
+        }
         return s
     }
 

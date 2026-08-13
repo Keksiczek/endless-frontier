@@ -82,13 +82,21 @@ enum SettlementWildlife {
             // beast at grass, and saying so beats reading a stale field.
             switch kept.animal.species {
             case .deer: deer(&context, at: at, s: s, time: time, phase: phase,
-                             doing: .grazing, urgency: 1)
+                             doing: .grazing, urgency: 1, crown: .antlersIfStag)
+            case .elk:  deer(&context, at: at, s: s, time: time, phase: phase,
+                             doing: .grazing, urgency: 1, crown: .heavyAntlers)
+            case .goat: deer(&context, at: at, s: s, time: time, phase: phase,
+                             doing: .grazing, urgency: 1, crown: .curvedHorns)
             case .boar: boar(&context, at: at, s: s, time: time, phase: phase,
                              doing: .grazing, urgency: 1)
-            case .hare: hare(&context, at: at, s: s, time: time, phase: phase,
-                             doing: .grazing)
+            case .hare, .grouse:
+                hare(&context, at: at, s: s, time: time, phase: phase, doing: .grazing)
             case .fox, .wolf, .bear:
                 prowler(&context, at: at, s: s, time: time, hungry: false)
+            case .lynx:
+                lynx(&context, at: at, s: s, time: time, doing: .grazing, urgency: 1)
+            case .badger:
+                badger(&context, at: at, s: s, time: time, doing: .grazing, urgency: 1)
             }
             // The collar: a small ring under it, in the colony's own amber, so
             // a tamed wolf never reads as one that came out of the trees.
@@ -129,11 +137,16 @@ enum SettlementWildlife {
     /// a bear you do not.
     static func size(_ species: AnimalSpecies) -> CGFloat {
         switch species {
+        case .grouse: return 1.3
         case .hare: return 1.5
+        case .badger: return 2.0
         case .fox:  return 2.2
+        case .goat: return 2.6
+        case .lynx: return 2.8
         case .boar: return 3.0
         case .wolf: return 3.2
         case .deer: return 3.4
+        case .elk:  return 4.2
         case .bear: return 4.6
         }
     }
@@ -188,15 +201,31 @@ enum SettlementWildlife {
             switch animal.species {
             case .deer:
                 deer(&context, at: at, s: s, time: beat, phase: phase,
-                     doing: doing, urgency: urgency)
+                     doing: doing, urgency: urgency, crown: .antlersIfStag)
+            case .elk:
+                // Always antlered, and heavy with it — an elk is the thing you
+                // see across the valley and decide not to walk towards.
+                deer(&context, at: at, s: s, time: beat, phase: phase,
+                     doing: doing, urgency: urgency, crown: .heavyAntlers)
+            case .goat:
+                deer(&context, at: at, s: s, time: beat, phase: phase,
+                     doing: doing, urgency: urgency, crown: .curvedHorns)
             case .boar:
                 boar(&context, at: at, s: s, time: beat, phase: phase,
                      doing: doing, urgency: urgency)
             case .hare:
                 hare(&context, at: at, s: s, time: beat, phase: phase, doing: doing)
+            case .grouse:
+                // A bird that sits tight and then breaks cover — which is the
+                // hare's crouch-and-bolt exactly, at a smaller size.
+                hare(&context, at: at, s: s, time: beat, phase: phase, doing: doing)
             case .fox:
                 prowler(&context, at: at, s: s, time: beat, hungry: false,
                         doing: doing, urgency: urgency)
+            case .lynx:
+                lynx(&context, at: at, s: s, time: beat, doing: doing, urgency: urgency)
+            case .badger:
+                badger(&context, at: at, s: s, time: beat, doing: doing, urgency: urgency)
             case .wolf:
                 prowler(&context, at: at, s: s, time: beat, hungry: ailing,
                         doing: doing, urgency: urgency)
@@ -345,9 +374,21 @@ enum SettlementWildlife {
     /// A grazing deer — a stag lifts an antlered head now and then, a doe just
     /// grazes. Filled hide, four legs, a soft shadow, a white scut: an animal,
     /// not a mark on the grass.
+    /// What a grazer carries on its head. Three species share this body — the
+    /// silhouette across a valley is the head, so that is what differs.
+    enum Crown {
+        /// A stag has them, a doe does not — the deer's own rule.
+        case antlersIfStag
+        /// An elk: always, and heavy.
+        case heavyAntlers
+        /// A goat: a swept-back pair, close to the skull.
+        case curvedHorns
+    }
+
     private static func deer(
         _ context: inout GraphicsContext, at p: CGPoint, s: CGFloat,
-        time: Double, phase: Double, doing: AnimalActivity, urgency: Double
+        time: Double, phase: Double, doing: AnimalActivity, urgency: Double,
+        crown: Crown = .antlersIfStag
     ) {
         let hide = Color(red: 0.72, green: 0.62, blue: 0.46)
         let dark = Color(red: 0.53, green: 0.44, blue: 0.32)
@@ -401,17 +442,131 @@ enum SettlementWildlife {
                 e.move(to: CGPoint(x: headX, y: headY - s * 0.2))
                 e.addLine(to: CGPoint(x: headX + s * 0.32, y: headY - s * 0.55))
             }, with: .color(dark), lineWidth: 0.7)
-            if stag {
-                // Branching antlers.
+            switch crown {
+            case .antlersIfStag where stag, .heavyAntlers:
+                // Branching antlers — wider and with an extra tine on an elk,
+                // which is the whole of telling one from the other at distance.
+                let heavy = crown == .heavyAntlers
+                let spread: CGFloat = heavy ? 1.5 : 1.0
                 context.stroke(Path { a in
                     a.move(to: CGPoint(x: headX - s * 0.05, y: headY - s * 0.25))
-                    a.addLine(to: CGPoint(x: headX + s * 0.05, y: headY - s * 0.98))
-                    a.move(to: CGPoint(x: headX, y: headY - s * 0.6))
-                    a.addLine(to: CGPoint(x: headX - s * 0.35, y: headY - s * 0.82))
-                    a.move(to: CGPoint(x: headX + s * 0.02, y: headY - s * 0.8))
-                    a.addLine(to: CGPoint(x: headX + s * 0.42, y: headY - s * 1.02))
-                }, with: .color(dark), style: StrokeStyle(lineWidth: 0.7, lineCap: .round))
+                    a.addLine(to: CGPoint(x: headX + s * 0.05, y: headY - s * 0.98 * spread))
+                    a.move(to: CGPoint(x: headX, y: headY - s * 0.6 * spread))
+                    a.addLine(to: CGPoint(x: headX - s * 0.35 * spread, y: headY - s * 0.82 * spread))
+                    a.move(to: CGPoint(x: headX + s * 0.02, y: headY - s * 0.8 * spread))
+                    a.addLine(to: CGPoint(x: headX + s * 0.42 * spread, y: headY - s * 1.02 * spread))
+                    if heavy {
+                        a.move(to: CGPoint(x: headX - s * 0.02, y: headY - s * 1.05))
+                        a.addLine(to: CGPoint(x: headX - s * 0.55, y: headY - s * 1.28))
+                    }
+                }, with: .color(dark),
+                style: StrokeStyle(lineWidth: heavy ? 0.9 : 0.7, lineCap: .round))
+            case .curvedHorns:
+                // Swept back and close to the skull, so a goat never reads as a
+                // small deer.
+                for side in [-1.0, 1.0] as [CGFloat] {
+                    context.stroke(Path { h in
+                        h.move(to: CGPoint(x: headX + side * s * 0.06, y: headY - s * 0.28))
+                        h.addQuadCurve(
+                            to: CGPoint(x: headX - s * 0.42, y: headY - s * 0.62),
+                            control: CGPoint(x: headX + side * s * 0.30, y: headY - s * 0.78))
+                    }, with: .color(dark),
+                    style: StrokeStyle(lineWidth: 0.7, lineCap: .round))
+                }
+            case .antlersIfStag:
+                break   // a doe
             }
+        }
+    }
+
+    /// A lynx: short in the body, long in the leg, with the ear tufts and the
+    /// stub tail that are the only things you can read at this size.
+    ///
+    /// Drawn apart from the wolf on purpose. Routing every cat and mustelid
+    /// through `prowler` at a different size was honest but lazy — it gave the
+    /// valley two more names and no more animals to look at.
+    private static func lynx(
+        _ context: inout GraphicsContext, at p: CGPoint, s: CGFloat,
+        time: Double, doing: AnimalActivity, urgency: Double
+    ) {
+        let coat = Color(red: 0.66, green: 0.60, blue: 0.48)
+        let dark = Color(red: 0.42, green: 0.37, blue: 0.30)
+        let drive = doing == .resting ? 0 : CGFloat(urgency)
+        let step = CGFloat(sin(time * 2.6)) * s * 0.18 * drive
+
+        context.fill(Path(ellipseIn: CGRect(x: p.x - s * 1.1, y: p.y + s * 0.72,
+                                            width: s * 2.2, height: s * 0.36)),
+                     with: .color(.black.opacity(0.18)))
+        // Long legs — the cat stands tall for its length.
+        for (i, dx) in ([-0.62, -0.30, 0.34, 0.66] as [CGFloat]).enumerated() {
+            let lead = i % 2 == 0 ? step : -step
+            context.fill(Path(CGRect(x: p.x + dx * s - s * 0.08 + lead, y: p.y - s * 0.05,
+                                     width: s * 0.17, height: s * 0.95)),
+                         with: .color(i < 2 ? dark : coat))
+        }
+        // A short, deep body.
+        context.fill(Path(ellipseIn: CGRect(x: p.x - s * 0.85, y: p.y - s * 0.55,
+                                            width: s * 1.7, height: s * 0.95)),
+                     with: .color(coat))
+        // Head, high and round, with the tufts.
+        let head = CGPoint(x: p.x + s * 0.95, y: p.y - s * 0.62)
+        context.fill(Path(ellipseIn: CGRect(x: head.x - s * 0.34, y: head.y - s * 0.32,
+                                            width: s * 0.68, height: s * 0.62)),
+                     with: .color(coat))
+        for side in [-1.0, 1.0] as [CGFloat] {
+            context.stroke(Path { t in
+                t.move(to: CGPoint(x: head.x + side * s * 0.20, y: head.y - s * 0.22))
+                t.addLine(to: CGPoint(x: head.x + side * s * 0.30, y: head.y - s * 0.72))
+            }, with: .color(dark), style: StrokeStyle(lineWidth: 0.7, lineCap: .round))
+        }
+        // The stub tail, which is the other half of "not a wolf".
+        context.fill(Path(roundedRect: CGRect(x: p.x - s * 1.05, y: p.y - s * 0.42,
+                                              width: s * 0.34, height: s * 0.22),
+                          cornerRadius: s * 0.1), with: .color(dark))
+        // Spots, only enough to break the coat up.
+        for k in 0..<3 {
+            let dx = (CGFloat(k) - 1) * s * 0.34
+            context.fill(Path(ellipseIn: CGRect(x: p.x + dx - s * 0.07, y: p.y - s * 0.3,
+                                                width: s * 0.14, height: s * 0.14)),
+                         with: .color(dark.opacity(0.7)))
+        }
+    }
+
+    /// A badger: low, wide and short-legged, and the whole read is the stripe
+    /// down its face. Everything else about it at this size is "grey lump".
+    private static func badger(
+        _ context: inout GraphicsContext, at p: CGPoint, s: CGFloat,
+        time: Double, doing: AnimalActivity, urgency: Double
+    ) {
+        let coat = Color(red: 0.44, green: 0.43, blue: 0.42)
+        let dark = Color(red: 0.20, green: 0.19, blue: 0.19)
+        let drive = doing == .resting ? 0 : CGFloat(urgency)
+        let step = CGFloat(sin(time * 3.2)) * s * 0.12 * drive
+
+        context.fill(Path(ellipseIn: CGRect(x: p.x - s * 1.1, y: p.y + s * 0.40,
+                                            width: s * 2.2, height: s * 0.32)),
+                     with: .color(.black.opacity(0.20)))
+        // Stubby legs, barely clearing the ground.
+        for (i, dx) in ([-0.55, 0.55] as [CGFloat]).enumerated() {
+            let lead = i == 0 ? step : -step
+            context.fill(Path(CGRect(x: p.x + dx * s - s * 0.1 + lead, y: p.y + s * 0.16,
+                                     width: s * 0.2, height: s * 0.42)),
+                         with: .color(dark))
+        }
+        // A long low body.
+        context.fill(Path(roundedRect: CGRect(x: p.x - s * 1.0, y: p.y - s * 0.34,
+                                              width: s * 2.0, height: s * 0.72),
+                          cornerRadius: s * 0.34), with: .color(coat))
+        // The head, and the two black bands with the white between them.
+        let head = CGPoint(x: p.x + s * 1.02, y: p.y - s * 0.02)
+        context.fill(Path(ellipseIn: CGRect(x: head.x - s * 0.36, y: head.y - s * 0.30,
+                                            width: s * 0.76, height: s * 0.58)),
+                     with: .color(Theme.bone.opacity(0.85)))
+        for side in [-1.0, 1.0] as [CGFloat] {
+            context.fill(Path(CGRect(x: head.x - s * 0.06 + side * s * 0.20,
+                                     y: head.y - s * 0.30,
+                                     width: s * 0.14, height: s * 0.58)),
+                         with: .color(dark))
         }
     }
 

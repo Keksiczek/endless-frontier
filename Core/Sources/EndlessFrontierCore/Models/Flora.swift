@@ -16,13 +16,26 @@ import Foundation
 /// have thousands of.
 public enum TreeSpecies: String, Codable, Sendable, CaseIterable {
     case pine, oak, birch, spruce
+    // Four species meant every wood in the world was drawn from the same short
+    // hand, and three of the four are conifers or near enough to read alike at
+    // canvas size. These four are chosen for *contrast*, not for count: a beech
+    // is a slow broadleaf worth felling, a willow is fast and belongs to wet
+    // ground, a juniper is scrub that survives where nothing else does, and a
+    // poplar is a quick column by the water.
+    case beech, willow, juniper, poplar
 
     /// Timber a full-grown one yields when felled.
     public var timber: Double {
         switch self {
         case .oak: return 32
+        case .beech: return 30
         case .pine, .spruce: return 24
+        case .poplar: return 18
         case .birch: return 16
+        case .willow: return 14
+        // Scrub, not timber. A juniper is worth the axe only if there is
+        // nothing else standing, which is exactly the tundra's problem.
+        case .juniper: return 7
         }
     }
 
@@ -32,18 +45,27 @@ public enum TreeSpecies: String, Codable, Sendable, CaseIterable {
     public var maturityTicks: Int {
         switch self {
         case .oak: return 4200
+        case .beech: return 3800
         case .spruce: return 2600
         case .pine: return 2400
+        case .juniper: return 1900
         case .birch: return 1400
+        case .poplar: return 1300
+        case .willow: return 1100
         }
     }
 
     /// How much cold it will take before it stops growing, in °C.
     public var hardiness: Double {
         switch self {
+        // Nothing else stands this high or this far north.
+        case .juniper: return -46
         case .spruce: return -40
         case .pine: return -32
         case .birch: return -28
+        case .poplar: return -26
+        case .willow: return -24
+        case .beech: return -20
         case .oak: return -18
         }
     }
@@ -54,6 +76,10 @@ public enum TreeSpecies: String, Codable, Sendable, CaseIterable {
         case .oak: return LocalizedText(values: [.en: "Oak", .cs: "Dub"])
         case .birch: return LocalizedText(values: [.en: "Birch", .cs: "Bříza"])
         case .spruce: return LocalizedText(values: [.en: "Spruce", .cs: "Smrk"])
+        case .beech: return LocalizedText(values: [.en: "Beech", .cs: "Buk"])
+        case .willow: return LocalizedText(values: [.en: "Willow", .cs: "Vrba"])
+        case .juniper: return LocalizedText(values: [.en: "Juniper", .cs: "Jalovec"])
+        case .poplar: return LocalizedText(values: [.en: "Poplar", .cs: "Topol"])
         }
     }
 }
@@ -243,10 +269,13 @@ public enum FloraFactory {
     /// content ships are few, and an unknown one gets the mixed default.
     public static func species(for biomeID: String) -> [TreeSpecies] {
         switch biomeID {
-        case "tundra", "taiga", "alpine": return [.spruce, .pine]
-        case "desert", "savanna": return [.pine]
-        case "temperate_forest", "forest": return [.oak, .birch, .pine]
-        default: return [.pine, .birch, .oak]
+        case "tundra", "taiga", "alpine": return [.spruce, .pine, .juniper]
+        case "mountains": return [.spruce, .juniper, .pine]
+        case "desert", "savanna": return [.juniper, .pine]
+        case "temperate_forest", "forest": return [.oak, .beech, .birch, .pine]
+        // Wet ground and a shoreline grow what likes its feet wet.
+        case "coast": return [.willow, .poplar, .birch]
+        default: return [.oak, .birch, .poplar, .willow, .pine]
         }
     }
 

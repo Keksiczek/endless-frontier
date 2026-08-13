@@ -39,20 +39,27 @@ public enum TamingEngine {
     public static func wildness(_ species: AnimalSpecies) -> Double {
         switch species {
         case .boar: return 0.55
+        case .goat: return 0.62
         case .deer: return 0.45
+        case .badger: return 0.38
+        case .elk: return 0.30
         case .wolf: return 0.25
         case .fox: return 0.30
         case .bear: return 0.12
+        case .lynx: return 0.18
         case .hare: return 0.60
+        case .grouse: return 0.52
         }
     }
 
     /// What a tamed beast of this kind is *for*.
     public static func calling(_ species: AnimalSpecies) -> TamedRole {
         switch species {
-        case .boar, .deer: return .beastOfBurden
-        case .wolf, .bear: return .guard
-        case .fox, .hare: return .companion
+        // An elk carries more than a deer and a goat carries a pack up ground
+        // nothing else will climb; both earn their keep.
+        case .boar, .deer, .elk, .goat: return .beastOfBurden
+        case .wolf, .bear, .lynx: return .guard
+        case .fox, .hare, .badger, .grouse: return .companion
         }
     }
 

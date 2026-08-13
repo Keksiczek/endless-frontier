@@ -36,7 +36,11 @@ enum SettlementFigures {
         // full size a colonist stood as tall as the hut they came out of, and
         // a household at its hearth was one blob. Small enough now to fit in a
         // room with the furniture, big enough to still read as a person.
-        let scale: CGFloat = (child ? 0.7 : (elder ? 0.94 : 1.0)) * zoom * bodyScale
+        // Who this particular person is: hair, beard, build, height, skin —
+        // derived from their id and their age, never stored (§11.20, `PawnLook`).
+        let look = PawnLook.of(pawn, ageYears: years)
+        let scale: CGFloat = (child ? 0.7 : (elder ? 0.94 : 1.0))
+            * CGFloat(look.height) * zoom * bodyScale
 
         let tunic = Theme.roleShade(pawn.assignedWork)
         var alpha = max(0.45, pawn.health / 100)
@@ -60,17 +64,23 @@ enum SettlementFigures {
             p.y -= CGFloat(abs(sin(gait))) * scale * 0.42
         }
 
-        // The sick and the broken slouch; everyone else stands tall.
-        let slouch: CGFloat = (pose.activity == .resting || pawn.isBroken) ? 1.1 : 0
+        // The sick and the broken slouch — and so, a little, does age. A colony
+        // whose real problem is everybody growing old together should look it
+        // without opening a panel (§11.17, §11.20).
+        let slouch: CGFloat = ((pose.activity == .resting || pawn.isBroken) ? 1.1 : 0)
+            + CGFloat(look.stoop) * 0.9 * scale
         let headY = p.y - 4.9 * scale + slouch
         let shoulderY = p.y - 2.4 * scale + slouch * 0.6
         let hipY = p.y + 1.7 * scale
 
         // Tunic — a small filled coat in the trade's colour, leaning the way
         // they are walking.
+        // Shoulders carry the build: a heavy colonist is wider at the top than
+        // at the hip, a slight one barely tapers.
+        let shoulder = 1.5 * scale * CGFloat(look.build)
         var torso = Path()
-        torso.move(to: CGPoint(x: p.x - 1.5 * scale + lean, y: shoulderY))
-        torso.addLine(to: CGPoint(x: p.x + 1.5 * scale + lean, y: shoulderY))
+        torso.move(to: CGPoint(x: p.x - shoulder + lean, y: shoulderY))
+        torso.addLine(to: CGPoint(x: p.x + shoulder + lean, y: shoulderY))
         torso.addLine(to: CGPoint(x: p.x + 1.1 * scale, y: hipY))
         torso.addLine(to: CGPoint(x: p.x - 1.1 * scale, y: hipY))
         torso.closeSubpath()
@@ -101,12 +111,22 @@ enum SettlementFigures {
         context.stroke(arms, with: .color(tunic.opacity(alpha)),
                        style: StrokeStyle(lineWidth: 1.0 * scale, lineCap: .round))
 
-        // Head — skin, not tunic: a face in the crowd, carried by the lean.
+        // Head — their own skin, not one tone for the whole colony.
         let headX = p.x + lean
         context.fill(
             Path(ellipseIn: CGRect(x: headX - 1.7 * scale, y: headY - 1.7 * scale,
                                    width: 3.4 * scale, height: 3.4 * scale)),
-            with: .color(skin.opacity(alpha)))
+            with: .color(look.skin.opacity(alpha)))
+
+        // Hair and beard, under the helmet if there is one. This is most of
+        // what makes a crowd read as people rather than as one drawing repeated
+        // (§11.20) — and the grey in it is the colony's age, visible.
+        if pawn.equipment[.armor] == nil {
+            hair(look, at: CGPoint(x: headX, y: headY), scale: scale,
+                 alpha: alpha, mirror: mirror, context: &context)
+        }
+        beard(look, at: CGPoint(x: headX, y: headY), scale: scale,
+              alpha: alpha, context: &context)
 
         // A helmet if they wear armor into the day.
         if pawn.equipment[.armor] != nil {
@@ -148,7 +168,8 @@ enum SettlementFigures {
         if pose.activity == .fighting || (working && pawn.assignedWork == .hunting) {
             mirrored(&context, about: handX, by: mirror) { ctx in
                 fightingArms(armed, work: pawn.assignedWork, at: hand,
-                             scale: scale, alpha: alpha, time: time, context: &ctx)
+                             scale: scale, alpha: alpha, time: time,
+                             skin: look.skin, context: &ctx)
             }
         } else if working {
             mirrored(&context, about: handX, by: mirror) { ctx in
@@ -194,6 +215,126 @@ enum SettlementFigures {
                 .font(.system(size: 6, weight: .semibold))
                 .foregroundStyle(Theme.bone)
             context.draw(context.resolve(name), at: CGPoint(x: p.x, y: headY - 8))
+        }
+    }
+
+    /// Hair, drawn over the skull rather than beside it.
+    ///
+    /// The head is a circle of radius `1.7 * scale`, so the cap is an arc a
+    /// little outside it and everything that falls — a length of hair, a braid
+    /// — hangs off the **back**, which is whichever side they are not facing.
+    private static func hair(
+        _ look: PawnLook, at head: CGPoint, scale: CGFloat, alpha: Double,
+        mirror: CGFloat, context: inout GraphicsContext
+    ) {
+        guard look.hair != .bald else { return }
+        let colour = look.hairColour.opacity(alpha)
+        let r = 1.7 * scale
+        let back = -mirror          // the side away from the way they face
+
+        // The cap: an arc over the crown, thicker on the fuller styles.
+        let thickness: CGFloat
+        switch look.hair {
+        case .cropped:  thickness = 0.55
+        case .short:    thickness = 0.8
+        case .tousled:  thickness = 0.85
+        case .long, .braided: thickness = 0.9
+        case .bald:     thickness = 0
+        }
+        context.stroke(Path { cap in
+            cap.addArc(center: head, radius: r * 0.86,
+                       startAngle: .degrees(190), endAngle: .degrees(350),
+                       clockwise: false)
+        }, with: .color(colour),
+        style: StrokeStyle(lineWidth: thickness * scale, lineCap: .round))
+
+        switch look.hair {
+        case .bald, .cropped:
+            break
+        case .short:
+            // A sideburn down the back edge of the jaw.
+            context.stroke(Path { s in
+                s.move(to: CGPoint(x: head.x + back * r * 0.82, y: head.y - r * 0.3))
+                s.addLine(to: CGPoint(x: head.x + back * r * 0.78, y: head.y + r * 0.35))
+            }, with: .color(colour), lineWidth: 0.45 * scale)
+        case .tousled:
+            // Three short tufts off the crown — the difference between hair
+            // and a helmet liner.
+            for (i, angle) in [212.0, 250.0, 292.0].enumerated() {
+                let a = Angle.degrees(angle).radians
+                let from = CGPoint(x: head.x + cos(a) * r * 0.86,
+                                   y: head.y + sin(a) * r * 0.86)
+                let out = r * (0.45 + CGFloat(i % 2) * 0.2)
+                context.stroke(Path { t in
+                    t.move(to: from)
+                    t.addLine(to: CGPoint(x: from.x + cos(a) * out * 0.7,
+                                          y: from.y + sin(a) * out))
+                }, with: .color(colour),
+                style: StrokeStyle(lineWidth: 0.4 * scale, lineCap: .round))
+            }
+        case .long:
+            // A fall of hair down the back of the neck.
+            context.fill(Path { l in
+                l.move(to: CGPoint(x: head.x + back * r * 0.9, y: head.y - r * 0.45))
+                l.addLine(to: CGPoint(x: head.x + back * r * 1.15, y: head.y + r * 1.5))
+                l.addLine(to: CGPoint(x: head.x + back * r * 0.5, y: head.y + r * 1.5))
+                l.addLine(to: CGPoint(x: head.x + back * r * 0.35, y: head.y - r * 0.3))
+                l.closeSubpath()
+            }, with: .color(colour))
+        case .braided:
+            // A braid, with two ties down it.
+            let x = head.x + back * r * 0.85
+            context.stroke(Path { b in
+                b.move(to: CGPoint(x: x, y: head.y - r * 0.2))
+                b.addLine(to: CGPoint(x: x + back * r * 0.2, y: head.y + r * 1.8))
+            }, with: .color(colour),
+            style: StrokeStyle(lineWidth: 0.55 * scale, lineCap: .round))
+            for k in 1...2 {
+                let y = head.y + r * (0.5 + CGFloat(k) * 0.5)
+                context.stroke(Path { t in
+                    t.move(to: CGPoint(x: x - r * 0.18, y: y))
+                    t.addLine(to: CGPoint(x: x + r * 0.18, y: y))
+                }, with: .color(colour.opacity(alpha * 0.7)), lineWidth: 0.3 * scale)
+            }
+        }
+    }
+
+    /// A beard, under the jaw. Adults only — `PawnLook` gives children `.none`.
+    private static func beard(
+        _ look: PawnLook, at head: CGPoint, scale: CGFloat, alpha: Double,
+        context: inout GraphicsContext
+    ) {
+        guard look.beard != .none else { return }
+        let colour = look.hairColour.opacity(alpha)
+        let r = 1.7 * scale
+        switch look.beard {
+        case .none:
+            break
+        case .stubble:
+            context.stroke(Path { j in
+                j.addArc(center: head, radius: r * 0.82,
+                         startAngle: .degrees(25), endAngle: .degrees(155),
+                         clockwise: false)
+            }, with: .color(colour.opacity(alpha * 0.45)), lineWidth: 0.4 * scale)
+        case .short:
+            context.fill(Path { b in
+                b.addArc(center: head, radius: r * 0.95,
+                         startAngle: .degrees(20), endAngle: .degrees(160),
+                         clockwise: false)
+                b.addArc(center: head, radius: r * 0.6,
+                         startAngle: .degrees(160), endAngle: .degrees(20),
+                         clockwise: true)
+                b.closeSubpath()
+            }, with: .color(colour))
+        case .full:
+            context.fill(Path { b in
+                b.move(to: CGPoint(x: head.x - r * 0.9, y: head.y - r * 0.15))
+                b.addQuadCurve(to: CGPoint(x: head.x + r * 0.9, y: head.y - r * 0.15),
+                               control: CGPoint(x: head.x, y: head.y + r * 1.75))
+                b.addQuadCurve(to: CGPoint(x: head.x - r * 0.9, y: head.y - r * 0.15),
+                               control: CGPoint(x: head.x, y: head.y + r * 0.5))
+                b.closeSubpath()
+            }, with: .color(colour))
         }
     }
 
@@ -304,9 +445,13 @@ enum SettlementFigures {
         case none
     }
 
+    /// `skin` is the fighter's *own* tone — bare fists belong to the face above
+    /// them, and drawing every colony's hands one colour was the same "one
+    /// drawing repeated" problem `PawnLook` exists to fix.
     private static func fightingArms(
         _ armed: Armament, work: WorkKind, at hand: CGPoint, scale: CGFloat,
-        alpha: Double, time: Double, context: inout GraphicsContext
+        alpha: Double, time: Double, skin: Color = SettlementFigures.skin,
+        context: inout GraphicsContext
     ) {
         let wood = Color(red: 0.60, green: 0.48, blue: 0.34).opacity(alpha)
         let iron = Color(red: 0.80, green: 0.83, blue: 0.88).opacity(alpha)

@@ -288,6 +288,49 @@ enum SettlementGround {
             path.addLine(to: CGPoint(x: p.x - size * 0.14, y: p.y - size * 0.24))
             path.move(to: CGPoint(x: p.x, y: p.y + size * 0.24))
             path.addLine(to: CGPoint(x: p.x + size * 0.16, y: p.y - size * 0.20))
+        case .fern:
+            // A frond: a stem with fingers off it, fuller than a blade.
+            path.move(to: CGPoint(x: p.x, y: p.y + size * 0.26))
+            path.addLine(to: CGPoint(x: p.x, y: p.y - size * 0.26))
+            for k in 0..<2 {
+                let y = p.y + size * (0.06 - CGFloat(k) * 0.20)
+                path.move(to: CGPoint(x: p.x, y: y))
+                path.addLine(to: CGPoint(x: p.x - size * 0.20, y: y - size * 0.10))
+                path.move(to: CGPoint(x: p.x, y: y))
+                path.addLine(to: CGPoint(x: p.x + size * 0.20, y: y - size * 0.10))
+            }
+        case .heath:
+            // Low woody scrub: a sprig with a couple of stiff shoots.
+            path.move(to: CGPoint(x: p.x, y: p.y + size * 0.22))
+            path.addLine(to: CGPoint(x: p.x - size * 0.06, y: p.y - size * 0.10))
+            path.move(to: CGPoint(x: p.x - size * 0.04, y: p.y + size * 0.02))
+            path.addLine(to: CGPoint(x: p.x - size * 0.22, y: p.y - size * 0.14))
+            path.move(to: CGPoint(x: p.x - size * 0.04, y: p.y + size * 0.02))
+            path.addLine(to: CGPoint(x: p.x + size * 0.18, y: p.y - size * 0.16))
+        case .moss:
+            // Stipple: a cushion rather than anything with a stem.
+            for k in 0..<3 {
+                let a = Double(k) * 2.1 + unit(h >> 12) * 6.28
+                let d = size * 0.16
+                let q = CGPoint(x: p.x + CGFloat(cos(a)) * d, y: p.y + CGFloat(sin(a)) * d * 0.8)
+                path.move(to: q)
+                path.addLine(to: CGPoint(x: q.x + size * 0.06, y: q.y))
+            }
+        case .scree:
+            // Chips: short strokes lying at odds with each other.
+            for k in 0..<2 {
+                let a = unit(h >> UInt64(14 + k * 3)) * 3.14
+                let d = size * 0.18
+                path.move(to: CGPoint(x: p.x - CGFloat(cos(a)) * d,
+                                      y: p.y - CGFloat(sin(a)) * d * 0.7))
+                path.addLine(to: CGPoint(x: p.x + CGFloat(cos(a)) * d,
+                                         y: p.y + CGFloat(sin(a)) * d * 0.7))
+            }
+        case .clay:
+            // A dried crack, smoother and more meandering than rock's.
+            path.move(to: CGPoint(x: p.x - size * 0.24, y: p.y - size * 0.06))
+            path.addQuadCurve(to: CGPoint(x: p.x + size * 0.24, y: p.y + size * 0.06),
+                              control: CGPoint(x: p.x, y: p.y - size * 0.18))
         }
         into[cover] = path
     }
@@ -304,6 +347,16 @@ enum SettlementGround {
         case .rock:   return (0.19, 0.20, 0.23)
         case .snow:   return (0.30, 0.33, 0.39)
         case .marsh:  return (0.15, 0.23, 0.20)
+        // Each of these has to read as a *neighbour* of the band it came off,
+        // or the ground goes back to being confetti: scree is rock gone pale
+        // and loose, heath is grass gone dry and purple, moss is snow with the
+        // life left in it, clay is dirt with water in it, fern is meadow in
+        // shade.
+        case .scree:  return (0.24, 0.24, 0.25)
+        case .heath:  return (0.22, 0.19, 0.21)
+        case .moss:   return (0.17, 0.24, 0.21)
+        case .clay:   return (0.26, 0.19, 0.15)
+        case .fern:   return (0.13, 0.24, 0.16)
         }
     }
 
@@ -341,8 +394,13 @@ enum SettlementGround {
         r += lift; g += lift * 1.15; b += lift * 0.8
         let alpha: Double
         switch cover {
-        case .grass, .meadow: alpha = 0.42
+        // Growing ground takes more grain than bare ground: a fern bed or a
+        // heath is texture all the way down, scree is chips, clay is smooth.
+        case .grass, .meadow, .fern: alpha = 0.42
+        case .heath, .moss: alpha = 0.38
         case .snow: alpha = 0.34
+        case .scree: alpha = 0.36
+        case .clay: alpha = 0.24
         default: alpha = 0.30
         }
         return Color(red: min(1, r), green: min(1, g), blue: min(1, b)).opacity(alpha)

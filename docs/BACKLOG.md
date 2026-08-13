@@ -1306,7 +1306,22 @@ Still open on this one: the **battle log** does not carry the wound kind, so the
 report still says "wounded" where it could say "a stab to the shoulder".
 `BattleMoment` is where that goes.
 
-### 11.23 — the per-tick cost is quadratic in the colony (2026-08-10) — **social half fixed**
+### 11.23 — the per-tick cost is quadratic in the colony (2026-08-10) — **both halves fixed (2026-08-11)**
+
+> **Closed.** The social half went first (`Relationship.joins`,
+> `Settlement.bondCount`, an index-taking `adjustRecreation`), and the hauling
+> half is now gone too — but *not* by making the route cheaper. `HaulEngine`
+> stopped re-planning every tick at all: a walk is decided once when it begins
+> (`WalkPath`, the shape `Errand` already had), so the hundred-odd
+> `crossesABuilding` samples per hauler per tick simply do not happen. The
+> tile→placement map (`ColonyRoute.Occupancy`) is still there and still worth
+> it, because the one route that *is* computed per walk asks the same question
+> a hundred times.
+>
+> The second bug this fixed was not a performance bug at all. Because the route
+> was re-planned every tick, `haulPosition` was a single point that jumped once
+> every two real minutes and the canvas drew it raw — so most of the colony
+> stood still with its legs swinging. See the note under §11.20.
 
 Found by profiling a 12 000-tick probe rather than by a test, and it is the
 ceiling that arrives next now that a colony really does reach a hundred and
@@ -1504,19 +1519,33 @@ problem, and it is the ceiling the game now sits under.
    ghost that eats materials is the worst of both. Do this whichever way (1)
    goes; it is correct on its own.
 3. **Reclaim ground**: derelict buildings (`condition` below `derelictBelow`)
-   hold land they no longer use.
+   hold land they no longer use. **Done 2026-08-11** —
+   `ColonyBuilder.clearedOfDerelicts`, wired into `placeSiteAtFirstFit` *after*
+   `grownOutward`. The ordering is the whole of it: `BuildingEngine.repair`
+   takes anything under `repairBelow`, wrecks included, so a colony that pulled
+   its ruins down the moment it fancied building would be demolishing the
+   houses it was about to mend. The land has to actually run out first.
 
 `ColonyBuilder.grownOutward` does (1): +4 a side, symmetric so the town keeps
 its place in the middle, to a `maxSide` of 64. `GameEngine.build` does (2) —
 sites *before* it pays, and refuses outright when there is nowhere to stand, so
 the materials stay in the store for something the council can actually stand up.
-(3), reclaiming the ground under derelicts, is still open and is the right next
-move if 64×64 ever runs out.
+(3), reclaiming the ground under derelicts, is done as of 2026-08-11 — see the
+item above.
 
 Still to do on this: re-run `GrowthProbe.theCurve` — `plots` against `want` is
 the column that says whether the ground really unblocked the fields.
 
-### 11.20 — colonists who look like different people (asked 2026-08-10)
+### 11.20 — colonists who look like different people (asked 2026-08-10) — **done 2026-08-11**
+
+> **Built.** `PawnLook` in the App beside `AgentMotion`: 6 hair shapes × 5 hair
+> colours × 4 beards × 3 builds × 3 heights × 5 skin tones, a pure function of
+> `(pawn.id, age, genes)` and stored nowhere. Age shows — hair greys from 42,
+> thins from 58, the shoulders come forward from 54 — so a colony that is all
+> growing old together looks it without opening a panel. Genes tilt without
+> deciding: a courageous colonist stands squarer. Each part reads its own slice
+> of the hash, or hair colour would be welded to build and the colony would be
+> five kinds of person. Line art, for the four reasons below.
 
 **Flagged by Keks, not yet specified.** *"Chtěl bych, aby byli kolonisti
 různorodější — vlasy, obličeje, trupy atd. jako v RimWorldu."*

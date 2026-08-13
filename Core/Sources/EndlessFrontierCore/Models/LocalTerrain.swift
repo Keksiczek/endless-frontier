@@ -11,6 +11,22 @@ public enum GroundCover: String, Codable, Sendable, CaseIterable {
     case rock
     case snow
     case marsh
+    // Seven kinds of ground covered the whole surface of every world, and three
+    // of the seven bands in a cold country all answered `snow` — so a tundra
+    // was one white sheet and a mountain was two greys. These are the *edges*
+    // of the bands that were already there, deliberately narrow: a dominant
+    // cover has to stay dominant (`LocalTerrainTests`), so variety comes from
+    // splitting the margins rather than the middle.
+    /// Loose stone below a rock face, where the slope sheds what it breaks.
+    case scree
+    /// Dry upland scrub — heather and gorse on ground too thin for grass.
+    case heath
+    /// Cold damp ground that never quite becomes snow: the tundra's other half.
+    case moss
+    /// Heavy wet lowland short of standing water.
+    case clay
+    /// Deep shade on a damp floor, richer and darker than a meadow.
+    case fern
 }
 
 /// A decorative feature standing on the map: a tree, a boulder, a patch of
@@ -40,6 +56,15 @@ public enum SceneryKind: String, Codable, Sendable, CaseIterable {
     case mushroom       // a cluster in the leaf litter
     case driftwood      // bleached wood above the tideline
     case hotSpring      // steaming water
+    // A second pass, for the same reason as the first: a valley wants things
+    // in it that are *not* another rock. These lean on what people leave
+    // behind and what the ground does on its own.
+    case fallenLog      // a trunk down across the leaf litter
+    case cairn          // stones stacked by somebody who came before
+    case standingStone  // a menhir, older than the colony
+    case brambles       // a thicket you would rather walk round
+    case anthill        // a mound of needles, alive if you look
+    case iceFloe        // a slab of ice on standing water
 
     /// What the land calls this, when you tap it.
     ///
@@ -56,6 +81,13 @@ public enum SceneryKind: String, Codable, Sendable, CaseIterable {
         case .boulder:    return LocalizedText(values: [.en: "A boulder", .cs: "Balvan"])
         case .flowers:    return LocalizedText(values: [.en: "Wildflowers", .cs: "Polní květy"])
         case .reeds:      return LocalizedText(values: [.en: "Reeds", .cs: "Rákosí"])
+        case .fallenLog:  return LocalizedText(values: [.en: "A fallen log", .cs: "Padlý kmen"])
+        case .cairn:      return LocalizedText(values: [.en: "A cairn", .cs: "Mohyla z kamenů"])
+        case .standingStone:
+            return LocalizedText(values: [.en: "A standing stone", .cs: "Vztyčený kámen"])
+        case .brambles:   return LocalizedText(values: [.en: "Brambles", .cs: "Ostružiní"])
+        case .anthill:    return LocalizedText(values: [.en: "An anthill", .cs: "Mraveniště"])
+        case .iceFloe:    return LocalizedText(values: [.en: "An ice floe", .cs: "Ledová kra"])
         case .stump:      return LocalizedText(values: [.en: "A stump", .cs: "Pařez"])
         case .pond:       return LocalizedText(values: [.en: "A pond", .cs: "Tůň"])
         case .cactus:     return LocalizedText(values: [.en: "A cactus", .cs: "Kaktus"])
@@ -87,6 +119,19 @@ public enum SceneryKind: String, Codable, Sendable, CaseIterable {
         case .pond:      return LocalizedText(values: [.en: "water", .cs: "voda"])
         case .stump:     return LocalizedText(values: [.en: "somebody felled this",
                                                        .cs: "tohle někdo pokácel"])
+        case .fallenLog: return LocalizedText(values: [.en: "firewood, and a home for beetles",
+                                                       .cs: "dříví, a domov pro brouky"])
+        case .brambles:  return LocalizedText(values: [.en: "berries, and torn sleeves",
+                                                       .cs: "ostružiny, a roztrhané rukávy"])
+        case .anthill:   return LocalizedText(values: [.en: "the wood is alive",
+                                                       .cs: "les je živý"])
+        case .cairn:     return LocalizedText(values: [.en: "somebody stood here before you",
+                                                       .cs: "někdo tu stál před tebou"])
+        case .standingStone:
+            return LocalizedText(values: [.en: "older than the colony",
+                                          .cs: "starší než osada"])
+        case .iceFloe:   return LocalizedText(values: [.en: "the water is not open yet",
+                                                       .cs: "voda ještě není volná"])
         default:         return nil
         }
     }
@@ -162,17 +207,41 @@ public enum LocalTerrain {
             return weighted(weights(for: biomeID), unit(fine))
         }
 
+        // The bands, high ground down to low. Each new cover sits on the *edge*
+        // of one that was already here — the wettest tail of the meadow, the
+        // dry shoulder under the rock — so the middle of every band, and with
+        // it the biome's character, is untouched.
         switch height {
-        case let h where h > 0.80:
+        case let h where h > 0.86:
             return land.cold ? .snow : .rock
-        case let h where h > 0.64:
+        case let h where h > 0.72:
             return .rock
+        case let h where h > 0.68:
+            // The apron under the crag — and it has to be *thin*. Measured
+            // (`ZZCoverProbe`), the elevation field sits around 0.61 on plains,
+            // not 0.5, so a band opened at 0.58 swallowed half the country and
+            // dethroned grass. Rule 23: print the percentiles first. This is
+            // the sliver between the median and the rock line at 0.64.
+            if wet < 0.40 { return .scree }
+            return land.cold ? .moss : .heath
         case let h where h < 0.30 && wet > 0.58:
             // The bottom of the land, where the water stands.
             return land.cold ? .snow : .marsh
+        case let h where h < 0.34 && wet > 0.48:
+            // Wet bottom land short of standing water.
+            return land.cold ? .moss : .clay
         default:
             if wet < 0.30 { return land.cold ? .rock : .sand }
             if wet < 0.46 { return .dirt }
+            // The wettest tail only — a hair off the meadow and the snow, never
+            // the body of either.
+            // Two thresholds, not one. A cold country carries moss far more
+            // readily than a temperate one carries fern, and sharing a cutoff
+            // meant tuning fern down to keep grass on the plains also flattened
+            // the tundra back to one white sheet — 75% snow, which is the very
+            // thing this set of covers exists to break up.
+            if land.cold, wet > 0.76 { return .moss }
+            if wet > 0.86 { return .fern }
             if wet > 0.70 { return land.cold ? .snow : .meadow }
             return land.cold ? .snow : .grass
         }
@@ -245,18 +314,27 @@ public enum LocalTerrain {
     /// Per-biome cover mix. The dominant cover carries the biome's character.
     public static func weights(for biomeID: String) -> [(GroundCover, Double)] {
         switch biomeID {
+        // The speckle a biome shows through its bands. Every share added here
+        // is taken off the *minor* covers, never off the one that gives the
+        // country its character — a desert that stops being mostly sand is not
+        // a more varied desert, it is a broken one (`LocalTerrainTests`).
         case "forest":
-            return [(.grass, 0.40), (.meadow, 0.20), (.dirt, 0.28), (.rock, 0.12)]
+            return [(.grass, 0.36), (.meadow, 0.18), (.dirt, 0.24),
+                    (.fern, 0.10), (.rock, 0.08), (.moss, 0.04)]
         case "desert":
-            return [(.sand, 0.68), (.dirt, 0.20), (.rock, 0.12)]
+            return [(.sand, 0.66), (.dirt, 0.16), (.rock, 0.10), (.scree, 0.08)]
         case "tundra":
-            return [(.snow, 0.54), (.rock, 0.20), (.dirt, 0.14), (.grass, 0.12)]
+            return [(.snow, 0.50), (.moss, 0.16), (.rock, 0.16),
+                    (.dirt, 0.10), (.grass, 0.08)]
         case "mountains":
-            return [(.rock, 0.54), (.dirt, 0.24), (.grass, 0.14), (.snow, 0.08)]
+            return [(.rock, 0.48), (.dirt, 0.18), (.scree, 0.16),
+                    (.grass, 0.10), (.snow, 0.08)]
         case "coast":
-            return [(.sand, 0.34), (.grass, 0.28), (.marsh, 0.22), (.meadow, 0.16)]
+            return [(.sand, 0.32), (.grass, 0.24), (.marsh, 0.20),
+                    (.meadow, 0.14), (.clay, 0.10)]
         default: // plains & homeland
-            return [(.grass, 0.48), (.meadow, 0.30), (.dirt, 0.16), (.rock, 0.06)]
+            return [(.grass, 0.44), (.meadow, 0.26), (.dirt, 0.14),
+                    (.heath, 0.08), (.rock, 0.05), (.clay, 0.03)]
         }
     }
 
@@ -269,25 +347,29 @@ public enum LocalTerrain {
         // Every kind here answers when it is tapped, so more of them is more
         // world rather than more wallpaper.
         case "forest":
-            return ([(.pine, 0.30), (.tree, 0.20), (.bush, 0.14), (.stump, 0.06),
-                     (.mushroom, 0.11), (.deadTree, 0.05), (.tallGrass, 0.07),
-                     (.flowers, 0.04), (.rock, 0.03)], 74)
+            return ([(.pine, 0.24), (.tree, 0.17), (.bush, 0.11), (.stump, 0.05),
+                     (.mushroom, 0.09), (.deadTree, 0.04), (.tallGrass, 0.06),
+                     (.flowers, 0.03), (.rock, 0.03),
+                     (.fallenLog, 0.08), (.brambles, 0.06), (.anthill, 0.04)], 74)
         case "desert":
             return ([(.cactus, 0.30), (.dune, 0.24), (.rock, 0.18), (.boulder, 0.12),
                      (.crag, 0.08), (.deadTree, 0.05), (.bush, 0.03)], 46)
         case "tundra":
-            return ([(.snowdrift, 0.28), (.rock, 0.17), (.pine, 0.14), (.crag, 0.11),
-                     (.deadTree, 0.09), (.hotSpring, 0.06), (.boulder, 0.09),
-                     (.tallGrass, 0.06)], 50)
+            return ([(.snowdrift, 0.24), (.rock, 0.14), (.pine, 0.12), (.crag, 0.09),
+                     (.deadTree, 0.07), (.hotSpring, 0.05), (.boulder, 0.08),
+                     (.tallGrass, 0.05), (.iceFloe, 0.09), (.cairn, 0.07)], 50)
         case "mountains":
-            return ([(.cliff, 0.22), (.boulder, 0.22), (.crag, 0.19), (.rock, 0.17),
-                     (.pine, 0.09), (.hotSpring, 0.05), (.flowers, 0.06)], 58)
+            return ([(.cliff, 0.20), (.boulder, 0.19), (.crag, 0.17), (.rock, 0.14),
+                     (.pine, 0.08), (.hotSpring, 0.04), (.flowers, 0.05),
+                     (.cairn, 0.08), (.standingStone, 0.05)], 58)
         case "coast":
-            return ([(.reeds, 0.22), (.dune, 0.18), (.driftwood, 0.15), (.bush, 0.13),
-                     (.tree, 0.10), (.cliff, 0.08), (.rock, 0.07), (.flowers, 0.07)], 56)
+            return ([(.reeds, 0.20), (.dune, 0.16), (.driftwood, 0.14), (.bush, 0.11),
+                     (.tree, 0.09), (.cliff, 0.07), (.rock, 0.06), (.flowers, 0.06),
+                     (.fallenLog, 0.06), (.brambles, 0.05)], 56)
         default: // plains & homeland
-            return ([(.tallGrass, 0.23), (.tree, 0.18), (.bush, 0.16), (.flowers, 0.19),
-                     (.rock, 0.09), (.pond, 0.05), (.mushroom, 0.06), (.deadTree, 0.04)], 62)
+            return ([(.tallGrass, 0.20), (.tree, 0.15), (.bush, 0.13), (.flowers, 0.16),
+                     (.rock, 0.07), (.pond, 0.04), (.mushroom, 0.05), (.deadTree, 0.03),
+                     (.standingStone, 0.06), (.brambles, 0.06), (.fallenLog, 0.05)], 62)
         }
     }
 

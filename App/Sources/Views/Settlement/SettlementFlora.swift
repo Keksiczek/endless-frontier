@@ -72,7 +72,13 @@ enum SettlementFlora {
     ) {
         let growth = CGFloat(tree.growth)
         let s = unit * 0.013 * (0.35 + growth * 0.95)
-        let bare = season == .winter && tree.species != .pine && tree.species != .spruce
+        // Evergreens keep their leaves; everything else stands bare in winter.
+        // Listing what *stays* rather than what drops means a species added
+        // later is opaque by default, which is the safer way round: a new
+        // conifer drawn bare is a bug you have to notice, a new broadleaf drawn
+        // bare is simply right.
+        let evergreen: Set<TreeSpecies> = [.pine, .spruce, .juniper]
+        let bare = season == .winter && !evergreen.contains(tree.species)
         let wood = Color(red: 0.34, green: 0.26, blue: 0.19)
         let leaf = canopyColour(tree.species, season: season)
 
@@ -107,7 +113,7 @@ enum SettlementFlora {
                 context.fill(skirt, with: .color(leaf))
                 context.stroke(skirt, with: .color(Theme.bone.opacity(0.30)), lineWidth: 0.5)
             }
-        case .oak, .birch:
+        case .oak, .birch, .beech:
             if bare {
                 // Winter: a bare crown of branches, which is why a birch wood
                 // reads as winter at a glance.
@@ -137,6 +143,69 @@ enum SettlementFlora {
                                            width: s * 1.72, height: s * 1.5)),
                     with: .color(Theme.bone.opacity(0.26)), lineWidth: 0.5)
             }
+
+        case .juniper:
+            // Scrub: wider than it is tall, and it keeps its needles. Drawn low
+            // so a tundra reads as a place where nothing grows *up*.
+            for tier in 0..<2 {
+                let y = c.y - s * (0.25 + CGFloat(tier) * 0.42)
+                let half = s * (0.92 - CGFloat(tier) * 0.30)
+                let skirt = Path { p in
+                    p.move(to: CGPoint(x: c.x - half, y: y))
+                    p.addQuadCurve(to: CGPoint(x: c.x + half, y: y),
+                                   control: CGPoint(x: c.x + sway, y: y - s * 0.72))
+                    p.closeSubpath()
+                }
+                context.fill(skirt, with: .color(leaf))
+                context.stroke(skirt, with: .color(Theme.bone.opacity(0.24)), lineWidth: 0.45)
+            }
+
+        case .poplar:
+            // A column. The whole point of a poplar on a canvas this size is
+            // the silhouette — tall and narrow, so a line of them along a river
+            // reads as a line of them and not as a hedge.
+            if bare {
+                for limb in 0..<4 {
+                    let a = -.pi / 2 + (Double(limb) - 1.5) * 0.16
+                    context.stroke(Path { p in
+                        p.move(to: CGPoint(x: trunkTop.x, y: trunkTop.y + s * 0.5))
+                        p.addLine(to: CGPoint(x: trunkTop.x + CGFloat(cos(a)) * s * 0.9,
+                                              y: trunkTop.y + CGFloat(sin(a)) * s * 0.9))
+                    }, with: .color(wood), lineWidth: max(0.5, s * 0.08))
+                }
+            } else {
+                let crown = Path { p in
+                    p.move(to: CGPoint(x: trunkTop.x - s * 0.34, y: trunkTop.y + s * 0.55))
+                    p.addQuadCurve(to: CGPoint(x: trunkTop.x + sway * 0.6, y: trunkTop.y - s * 1.5),
+                                   control: CGPoint(x: trunkTop.x - s * 0.5, y: trunkTop.y - s * 0.6))
+                    p.addQuadCurve(to: CGPoint(x: trunkTop.x + s * 0.34, y: trunkTop.y + s * 0.55),
+                                   control: CGPoint(x: trunkTop.x + s * 0.5, y: trunkTop.y - s * 0.6))
+                    p.closeSubpath()
+                }
+                context.fill(crown, with: .color(leaf))
+                context.stroke(crown, with: .color(Theme.bone.opacity(0.24)), lineWidth: 0.5)
+            }
+
+        case .willow:
+            // Weeping: a low round crown with strands hanging out of it. Belongs
+            // to wet ground, and says so without a label.
+            if !bare {
+                context.fill(
+                    Path(ellipseIn: CGRect(x: trunkTop.x - s * 0.85, y: trunkTop.y - s * 0.55,
+                                           width: s * 1.7, height: s * 1.05)),
+                    with: .color(leaf))
+            }
+            for strand in 0..<5 {
+                let dx = (CGFloat(strand) - 2) * s * 0.34
+                let drop = s * (0.9 + CGFloat(strand % 2) * 0.35)
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: trunkTop.x + dx, y: trunkTop.y + s * 0.1))
+                    p.addQuadCurve(to: CGPoint(x: trunkTop.x + dx + sway * 0.5,
+                                               y: trunkTop.y + drop),
+                                   control: CGPoint(x: trunkTop.x + dx + s * 0.16,
+                                                    y: trunkTop.y + drop * 0.5))
+                }, with: .color(bare ? wood : leaf), lineWidth: max(0.4, s * 0.08))
+            }
         }
 
         // The axe, if anyone has started: a wedge cut out of the trunk, deeper
@@ -154,10 +223,17 @@ enum SettlementFlora {
 
     private static func canopyColour(_ species: TreeSpecies, season: Season) -> Color {
         switch (species, season) {
+        // Evergreens keep their colour through the autumn, which is half of
+        // what makes an autumn wood read as an autumn wood: the broadleaves
+        // turn *around* them rather than the whole canopy changing at once.
         case (.spruce, _): return Color(red: 0.16, green: 0.30, blue: 0.22)
         case (.pine, _): return Color(red: 0.19, green: 0.34, blue: 0.24)
+        case (.juniper, _): return Color(red: 0.24, green: 0.33, blue: 0.27)
         case (_, .autumn): return Color(red: 0.52, green: 0.34, blue: 0.16)
         case (.birch, _): return Color(red: 0.34, green: 0.48, blue: 0.26)
+        case (.poplar, _): return Color(red: 0.38, green: 0.50, blue: 0.28)
+        case (.willow, _): return Color(red: 0.42, green: 0.52, blue: 0.30)
+        case (.beech, _): return Color(red: 0.30, green: 0.44, blue: 0.22)
         case (.oak, _): return Color(red: 0.25, green: 0.42, blue: 0.24)
         }
     }

@@ -181,7 +181,9 @@ public enum ErrandEngine {
                 // at the fire in the middle of it, so the errand still happens
                 // and still takes time.
                 s.pawns[i].errand = leg(kind, from: start, to: SettlementGeometry.heart,
-                                        tick: tick, placementID: nil, colony: s.colony)
+                                        tick: tick, placementID: nil, colony: s.colony,
+                                        stone: s.localMap?.stone ?? StoneField(),
+                                        landforms: s.localMap?.landforms ?? [])
                 continue
             }
             // Too far to be worth it — unless it has stopped being a matter of
@@ -193,7 +195,9 @@ public enum ErrandEngine {
                     || SiegeField.distance(start, target.at) <= furthestWorthGoing
             else { continue }
             s.pawns[i].errand = leg(kind, from: start, to: target.at,
-                                    tick: tick, placementID: target.id, colony: s.colony)
+                                    tick: tick, placementID: target.id, colony: s.colony,
+                                    stone: s.localMap?.stone ?? StoneField(),
+                                    landforms: s.localMap?.landforms ?? [])
         }
 
         s.storage[.food] = max(0, food)
@@ -250,14 +254,16 @@ public enum ErrandEngine {
 
     private static func leg(
         _ kind: Errand.Kind, from: LocalPoint, to: LocalPoint, tick: Int,
-        placementID: UUID?, colony: ColonyMap? = nil
+        placementID: UUID?, colony: ColonyMap? = nil,
+        stone: StoneField = StoneField(), landforms: [Landform] = []
     ) -> Errand {
         // Round the houses rather than through them, and **pay for it**: the
         // long way is longer, so a town that has built itself into a maze costs
         // its people real minutes. Distance was already the thing that made a
         // far granary expensive; this keeps that honest now that the line is
         // not straight.
-        let via = ColonyRoute.corners(from: from, to: to, in: colony)
+        let via = ColonyRoute.corners(from: from, to: to, in: colony,
+                                      stone: stone, landforms: landforms)
         let walk = ColonyRoute.length(from: from, through: via, to: to)
         let ticks = max(1, Int((walk / pace).rounded(.up)))
         return Errand(kind: kind, from: from, to: to, leftAt: tick,

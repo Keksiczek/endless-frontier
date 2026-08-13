@@ -104,6 +104,50 @@ struct ContentIntegrityTests {
                 "these narrate in English to a Czech player: \(english.joined(separator: ", "))")
     }
 
+    /// …and so does everything else the player reads.
+    ///
+    /// The event guard above covers one file. Buildings and techs were English
+    /// -only for a long time, got translated, and `CLAUDE.md` went on saying
+    /// they had not been — which is the failure mode a note cannot fix: prose
+    /// about content drifts, a test walking the content does not.
+    ///
+    /// Deliberately over the **raw JSON** rather than over the decoded registry:
+    /// a `LocalizedText` field nobody modelled in Swift yet is exactly where a
+    /// half-translated entry hides.
+    @Test("Every line of content reads in Czech as well as English")
+    func allContentIsBilingual() throws {
+        // Every JSON in `GameData`, enumerated rather than listed: a hardcoded
+        // list stops covering the file somebody adds next week, which is the
+        // same drift this test exists to stop.
+        let files = Bundle.module.urls(forResourcesWithExtension: "json",
+                                       subdirectory: "GameData") ?? []
+        #expect(files.count >= 10, "only \(files.count) data files found — is the bundle right?")
+        var english: [String] = []
+        for url in files {
+            let root = try JSONSerialization.jsonObject(with: Data(contentsOf: url))
+            walk(root, path: url.deletingPathExtension().lastPathComponent, into: &english)
+        }
+        #expect(english.isEmpty,
+                "these read in English to a Czech player: \(english.sorted().joined(separator: ", "))")
+    }
+
+    /// Every `{"en": …}` in the tree, and whether it has a Czech twin.
+    private func walk(_ node: Any, path: String, into out: inout [String]) {
+        if let object = node as? [String: Any] {
+            if let en = object["en"] as? String, !en.isEmpty {
+                let cs = object["cs"] as? String
+                if cs == nil || cs?.isEmpty == true { out.append(path) }
+                return
+            }
+            // `id` names the entry, so a failure says *which* one rather than
+            // handing back an array index nobody can look up.
+            let name = (object["id"] as? String).map { "\(path)/\($0)" } ?? path
+            for (key, value) in object { walk(value, path: "\(name).\(key)", into: &out) }
+        } else if let array = node as? [Any] {
+            for item in array { walk(item, path: path, into: &out) }
+        }
+    }
+
     @Test("Content library has grown across eras")
     func contentVolume() throws {
         let reg = try registry()

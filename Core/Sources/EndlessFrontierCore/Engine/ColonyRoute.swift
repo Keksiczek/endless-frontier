@@ -53,11 +53,34 @@ public enum ColonyRoute {
         let height: Int
         /// Tile index → the building standing on it. Nil where the ground is open.
         private let byTile: [UUID?]
+        /// Tiles standing in solid rock.
+        ///
+        /// **A massif is not a building, and routing only ever asked about
+        /// buildings** — so colonists, haulers and errand-runners walked
+        /// straight through the cliff face they were supposed to be mining.
+        /// The stone lives on the *local map's* grid rather than the colony's,
+        /// so each colony tile is tested by where its middle actually falls.
+        private let solid: [Bool]
 
-        public init(_ colony: ColonyMap) {
+        public init(_ colony: ColonyMap, stone: StoneField = StoneField(),
+                    landforms: [Landform] = []) {
             width = max(0, colony.width)
             height = max(0, colony.height)
             var tiles = [UUID?](repeating: nil, count: width * height)
+            var rock = [Bool](repeating: false, count: width * height)
+            // A ravine and a mesa are ground nobody crosses, exactly like a
+            // massif — same question, so the same answer and the same array.
+            let walls = landforms.filter { $0.kind.blocksMovement }
+            if !stone.isEmpty || !walls.isEmpty {
+                for y in 0..<height {
+                    for x in 0..<width {
+                        let middle = SettlementGeometry.canvasPoint(tileX: x, tileY: y, in: colony)
+                        rock[y * width + x] = stone.block(at: middle) != nil
+                            || walls.contains { $0.contains(middle) }
+                    }
+                }
+            }
+            solid = rock
             // `ColonyMap.placement(at:)` answers with the **first** placement
             // that covers a tile, so where two overlap the earlier one wins.
             // Walking the list backwards means `placements[0]` writes last and
@@ -80,6 +103,15 @@ public enum ColonyRoute {
             else { return nil }
             return byTile[coord.y * width + coord.x]
         }
+
+        /// Whether this tile is solid rock — impassable, and belonging to
+        /// nobody, so it can never be in the `allowed` set the way the building
+        /// somebody is walking *into* is.
+        public func isSolidRock(at coord: TileCoord) -> Bool {
+            guard coord.x >= 0, coord.y >= 0, coord.x < width, coord.y < height
+            else { return false }
+            return solid[coord.y * width + coord.x]
+        }
     }
 
     /// The corners of a walk from `a` to `b` that keeps out of the buildings.
@@ -94,13 +126,18 @@ public enum ColonyRoute {
     /// the same colony — building it per walk is the cost this exists to avoid.
     public static func corners(
         from a: LocalPoint, to b: LocalPoint, in colony: ColonyMap?,
+        stone: StoneField = StoneField(), landforms: [Landform] = [],
         occupancy: Occupancy? = nil
     ) -> [LocalPoint] {
-        guard let colony, !colony.placements.isEmpty,
+        // A massif or a ravine blocks a walk even on ground nobody has built
+        // on, so "no buildings" is no longer the same question as "nothing in
+        // the way".
+        let walled = landforms.contains { $0.kind.blocksMovement }
+        guard let colony, !colony.placements.isEmpty || !stone.isEmpty || walled,
               SiegeField.distance(a, b) > worthRouting,
               let start = tile(a, in: colony), let goal = tile(b, in: colony)
         else { return [] }
-        let where_ = occupancy ?? Occupancy(colony)
+        let where_ = occupancy ?? Occupancy(colony, stone: stone, landforms: landforms)
         // The building they are walking *to* is not in the way — they are going
         // inside it. Neither is the one they are stood in.
         let allowed = Set([where_.placementID(at: start),
@@ -147,8 +184,11 @@ public enum ColonyRoute {
         for i in 0...steps {
             let t = Double(i) / Double(steps)
             let p = LocalPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t)
-            guard let coord = tile(p, in: colony),
-                  let standingHere = standing.placementID(at: coord) else { continue }
+            guard let coord = tile(p, in: colony) else { continue }
+            // Rock first: a cliff belongs to nobody, so it can never be the
+            // building they are walking into and is never allowed through.
+            if standing.isSolidRock(at: coord) { return true }
+            guard let standingHere = standing.placementID(at: coord) else { continue }
             if !allowed.contains(standingHere) { return true }
         }
         return false
@@ -162,6 +202,7 @@ public enum ColonyRoute {
         standing: Occupancy, allowing allowed: Set<UUID>
     ) -> [TileCoord]? {
         func blocked(_ c: TileCoord) -> Bool {
+            if standing.isSolidRock(at: c) { return true }
             guard let here = standing.placementID(at: c) else { return false }
             return !allowed.contains(here)
         }

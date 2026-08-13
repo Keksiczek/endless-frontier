@@ -151,10 +151,19 @@ public enum LocalMapGenerator {
         let capacity = herdCapacity(for: biomeID, rng: &rng)
         let herd = capacity * (0.4 + rng.nextUnit() * 0.3)
         let pressure = 8 + rng.nextUnit() * 8 + Double(max(0, hazard)) * 2.5
-        // Real `Animal` entities too — drawn last, so the rest of generation
-        // (deposits, scenery, POIs) keeps its exact seeded outcome.
+        // Real `Animal` entities too — and on **their own stream**.
+        //
+        // This used to share the map's rng, and the comment above it claimed it
+        // was "drawn last" while trees, outcrops and the massif all came after.
+        // So editing the wildlife mix changed how many numbers were drawn and
+        // reshaped the whole valley: adding a goat to the mountains moved the
+        // iron seam and `ProductionChainTests` went red with an ore country
+        // that yielded no ore. A separate salt means the wild can be rebalanced
+        // for ever without a single deposit moving (rule 2).
+        var wildRNG = SeededRNG(
+            seed: seed(mapSeed: mapSeed, regionID: regionID) ^ 0xB3A5_7C0D_1E9F_4472)
         let residents = AnimalFactory.wildPopulation(
-            biomeID: biomeID, hazard: hazard, rng: &rng)
+            biomeID: biomeID, hazard: hazard, rng: &wildRNG)
         let wildlife = WildlifeState(
             deerHerd: herd, deerCapacity: capacity,
             predatorPressure: pressure, animals: residents, usesEntities: true)
@@ -174,12 +183,16 @@ public enum LocalMapGenerator {
         // The mountain, last of all — a new draw inserted anywhere earlier would
         // shift every roll after it and every existing valley with it.
         let stone = StoneEngine.raise(biomeID: biomeID, river: river, shore: shore, rng: &rng)
+        // …and the country's own shapes after it, for the same reason: drawn
+        // last so inserting them shifts no roll that came before, and every
+        // valley generated up to now keeps the land it had.
+        let landforms = LandformFactory.forMap(biomeID: biomeID, rng: &rng)
 
         var map = LocalMap(
             river: river, nodes: nodes, pois: pois, wildlife: wildlife,
             biomeID: biomeID,
             terrainSeed: seed(mapSeed: mapSeed, regionID: regionID) ^ 0x7E_44_A1_04_5E_ED,
-            scenery: scenery, trees: trees, rocks: rocks,
+            scenery: scenery, landforms: landforms, trees: trees, rocks: rocks,
             usesEntityLand: true, shore: shore, stone: stone)
         // The settlement sits at the centre; its surroundings start revealed.
         // Wide enough to cover the whole build grid — a colony that can build

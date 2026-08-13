@@ -22,11 +22,20 @@ public enum AnimalSex: String, Codable, Sendable, CaseIterable {
 /// `ThingDef` is in RimWorld) so an `Animal` instance stays light.
 public enum AnimalSpecies: String, Codable, Sendable, CaseIterable {
     case deer, boar, hare, fox, wolf, bear
+    // Six species meant one valley's wild was every valley's wild, and the
+    // country a colony sat in said almost nothing about what walked through it.
+    // These five are chosen so each biome gets something that is *only* there:
+    // an elk in the cold woods, a goat on the crags, a lynx that hunts them, a
+    // badger in the hedges and a grouse worth a snare.
+    case elk, goat, lynx, badger, grouse
 
     public var isPredator: Bool {
         switch self {
-        case .wolf, .bear, .fox: return true
-        case .deer, .boar, .hare: return false
+        case .wolf, .bear, .fox, .lynx: return true
+        // A badger is an omnivore, but for this simulation what matters is
+        // whether a hunter may take it and whether a herd flees it — and the
+        // answer to both is that it is small game, not a threat.
+        case .deer, .boar, .hare, .elk, .goat, .badger, .grouse: return false
         }
     }
 
@@ -34,10 +43,15 @@ public enum AnimalSpecies: String, Codable, Sendable, CaseIterable {
     public var baseHealth: Double {
         switch self {
         case .bear: return 170
+        case .elk: return 150
         case .boar, .wolf: return 110
         case .deer: return 90
+        case .lynx: return 80
+        case .goat: return 70
+        case .badger: return 60
         case .fox: return 55
         case .hare: return 35
+        case .grouse: return 22
         }
     }
 
@@ -45,18 +59,26 @@ public enum AnimalSpecies: String, Codable, Sendable, CaseIterable {
     /// `comfortHigh` it suffers heat. (Consumed by the temperature layer later.)
     public var comfortLow: Double {
         switch self {
+        case .elk: return -38
         case .bear, .wolf: return -35
+        case .lynx: return -32
+        case .goat, .grouse: return -30
+        case .badger: return -26
+        case .hare: return -25
         case .deer, .fox: return -20
         case .boar: return -15
-        case .hare: return -25
         }
     }
     public var comfortHigh: Double {
         switch self {
         case .boar: return 38
+        case .goat: return 36
         case .deer, .hare, .fox: return 32
-        case .wolf: return 30
-        case .bear: return 28
+        case .wolf, .badger, .grouse: return 30
+        case .bear, .lynx: return 28
+        // The one that cannot take a hot summer, which is why it belongs to
+        // the cold woods and nowhere else.
+        case .elk: return 24
         }
     }
 
@@ -68,6 +90,11 @@ public enum AnimalSpecies: String, Codable, Sendable, CaseIterable {
         case .fox:  return LocalizedText(values: [.en: "Fox", .cs: "Liška"])
         case .wolf: return LocalizedText(values: [.en: "Wolf", .cs: "Vlk"])
         case .bear: return LocalizedText(values: [.en: "Bear", .cs: "Medvěd"])
+        case .elk: return LocalizedText(values: [.en: "Elk", .cs: "Los"])
+        case .goat: return LocalizedText(values: [.en: "Wild goat", .cs: "Koza bezoárová"])
+        case .lynx: return LocalizedText(values: [.en: "Lynx", .cs: "Rys"])
+        case .badger: return LocalizedText(values: [.en: "Badger", .cs: "Jezevec"])
+        case .grouse: return LocalizedText(values: [.en: "Grouse", .cs: "Tetřev"])
         }
     }
 
@@ -267,11 +294,17 @@ public struct Animal: Codable, Sendable, Equatable, Identifiable {
         let size: Double
         switch species {
         case .bear: size = 34
+        // An elk feeds a colony for a week, which is the whole reason to take
+        // one on rather than a deer.
+        case .elk: size = 30
         case .boar: size = 22
         case .deer: size = 20
-        case .wolf: size = 12
+        case .goat: size = 14
+        case .wolf, .lynx: size = 12
+        case .badger: size = 7
         case .fox: size = 6
         case .hare: size = 3
+        case .grouse: size = 2
         }
         // A half-starved beast carries less on it.
         return size * (0.55 + 0.45 * min(1, health / species.baseHealth))
@@ -281,8 +314,10 @@ public struct Animal: Codable, Sendable, Equatable, Identifiable {
     /// hunting is dangerous work and not a harvest.
     public var isDangerous: Bool {
         switch species {
-        case .bear, .boar, .wolf: return true
-        case .deer, .fox, .hare: return false
+        // An elk in rut will put a hunter in the ground, and a cornered lynx
+        // is not a fox. A goat only ever runs.
+        case .bear, .boar, .wolf, .elk, .lynx: return true
+        case .deer, .fox, .hare, .goat, .badger, .grouse: return false
         }
     }
 
@@ -369,17 +404,24 @@ public enum AnimalFactory {
     public static func mix(for biomeID: String) -> [(AnimalSpecies, Int, Int)] {
         switch biomeID {
         case "forest":
-            return [(.deer, 8, 12), (.hare, 5, 8), (.boar, 3, 5), (.fox, 2, 3), (.wolf, 1, 2)]
+            return [(.deer, 7, 10), (.hare, 4, 7), (.boar, 3, 5), (.fox, 2, 3),
+                    (.wolf, 1, 2), (.elk, 2, 3), (.badger, 2, 3), (.grouse, 3, 5),
+                    (.lynx, 1, 2)]
         case "coast":
-            return [(.deer, 5, 8), (.hare, 5, 8), (.fox, 2, 3), (.boar, 1, 2)]
+            return [(.deer, 5, 8), (.hare, 5, 8), (.fox, 2, 3), (.boar, 1, 2),
+                    (.grouse, 2, 4), (.badger, 1, 2)]
         case "tundra":
-            return [(.deer, 6, 9), (.hare, 3, 5), (.wolf, 2, 4), (.fox, 1, 2)]
+            return [(.deer, 5, 8), (.hare, 3, 5), (.wolf, 2, 4), (.fox, 1, 2),
+                    (.elk, 3, 5), (.grouse, 2, 3)]
         case "mountains":
-            return [(.deer, 4, 7), (.hare, 3, 5), (.boar, 2, 3), (.bear, 1, 2), (.wolf, 1, 2)]
+            return [(.deer, 3, 5), (.hare, 3, 5), (.boar, 2, 3), (.bear, 1, 2),
+                    (.wolf, 1, 2), (.goat, 4, 7), (.lynx, 1, 2)]
         case "desert":
-            return [(.hare, 4, 6), (.fox, 2, 3), (.boar, 1, 2), (.deer, 1, 3)]
+            return [(.hare, 4, 6), (.fox, 2, 3), (.boar, 1, 2), (.deer, 1, 3),
+                    (.goat, 2, 4)]
         default: // plains & homeland
-            return [(.deer, 10, 14), (.hare, 6, 9), (.boar, 2, 3), (.fox, 2, 3)]
+            return [(.deer, 10, 14), (.hare, 6, 9), (.boar, 2, 3), (.fox, 2, 3),
+                    (.grouse, 3, 5), (.badger, 1, 3)]
         }
     }
 }

@@ -139,6 +139,10 @@ enum SettlementRenderer {
         // roof it shades.
         // The mountain, before the wood: a tree at the foot of a cliff stands in
         // front of it, and nothing stands on top of solid rock.
+        // The country's own shapes first of all: a ravine is *ground*, so the
+        // rock, the wood and everything standing on it belongs in front.
+        SettlementLandforms.draw(&context, rect: rect, map: map, season: season,
+                                 zoom: zoom, showLabels: showLabels)
         SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
         SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time, sun: sun)
         // The fields, over the ground and under everything standing on it —
@@ -283,6 +287,10 @@ enum SettlementRenderer {
         // roof it shades.
         // The mountain, before the wood: a tree at the foot of a cliff stands in
         // front of it, and nothing stands on top of solid rock.
+        // The country's own shapes first of all: a ravine is *ground*, so the
+        // rock, the wood and everything standing on it belongs in front.
+        SettlementLandforms.draw(&context, rect: rect, map: map, season: season,
+                                 zoom: zoom, showLabels: showLabels)
         SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
         SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time, sun: sun)
         // The fields, over the ground and under everything standing on it —
@@ -928,6 +936,122 @@ enum SettlementRenderer {
                                    control: CGPoint(x: c.x + dx - s * 0.3, y: c.y - s * 0.8))
                 }, with: .color(Theme.bone.opacity(0.22)), lineWidth: 0.8)
             }
+
+        case .fallenLog:
+            // A trunk lying across the litter, with the pale end-grain showing
+            // at the near end — that circle is the whole read: without it a log
+            // is a brown bar and could be anything.
+            let bark = Color(red: 0.36, green: 0.28, blue: 0.20)
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 1.3, y: c.y + s * 0.18,
+                                                width: s * 2.6, height: s * 0.34)),
+                         with: .color(.black.opacity(0.20)))
+            context.fill(Path(roundedRect: CGRect(x: c.x - s * 1.25, y: c.y - s * 0.28,
+                                                  width: s * 2.5, height: s * 0.56),
+                              cornerRadius: s * 0.26), with: .color(bark))
+            context.fill(Path(ellipseIn: CGRect(x: c.x + s * 1.02, y: c.y - s * 0.28,
+                                                width: s * 0.42, height: s * 0.56)),
+                         with: .color(Color(red: 0.62, green: 0.51, blue: 0.36)))
+            // A couple of stubs where branches broke off.
+            for stub in [-0.5, 0.35] as [CGFloat] {
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: c.x + stub * s, y: c.y - s * 0.2))
+                    p.addLine(to: CGPoint(x: c.x + stub * s + s * 0.18, y: c.y - s * 0.62))
+                }, with: .color(bark), lineWidth: 0.9)
+            }
+
+        case .cairn:
+            // Stacked stones, biggest at the bottom. Man-made, so the stones
+            // sit square rather than scattered — that is the whole difference
+            // between this and a pile of rocks.
+            let stone = Color(red: 0.46, green: 0.45, blue: 0.44)
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.8, y: c.y + s * 0.5,
+                                                width: s * 1.6, height: s * 0.3)),
+                         with: .color(.black.opacity(0.22)))
+            for (i, w) in [0.82, 0.60, 0.42, 0.26].enumerated() {
+                let y = c.y + s * (0.42 - CGFloat(i) * 0.38)
+                context.fill(Path(roundedRect: CGRect(x: c.x - s * CGFloat(w), y: y - s * 0.2,
+                                                      width: s * CGFloat(w) * 2, height: s * 0.36),
+                                  cornerRadius: s * 0.08),
+                             with: .color(stone.opacity(0.92 - Double(i) * 0.06)))
+            }
+
+        case .standingStone:
+            // A menhir: tall, leaning a little, lit down one edge. Older than
+            // anything the colony has built, and drawn to say so.
+            let lean = s * 0.16
+            let slab = Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.42, y: c.y + s * 0.75))
+                p.addLine(to: CGPoint(x: c.x - s * 0.30 + lean, y: c.y - s * 1.55))
+                p.addLine(to: CGPoint(x: c.x + s * 0.26 + lean, y: c.y - s * 1.62))
+                p.addLine(to: CGPoint(x: c.x + s * 0.44, y: c.y + s * 0.75))
+                p.closeSubpath()
+            }
+            context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.7, y: c.y + s * 0.62,
+                                                width: s * 1.4, height: s * 0.3)),
+                         with: .color(.black.opacity(0.26)))
+            context.fill(slab, with: .color(Color(red: 0.40, green: 0.39, blue: 0.40)))
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.30 + lean, y: c.y - s * 1.55))
+                p.addLine(to: CGPoint(x: c.x - s * 0.42, y: c.y + s * 0.75))
+            }, with: .color(Theme.bone.opacity(0.40)), lineWidth: 0.8)
+
+        case .brambles:
+            // A low tangle: arcs crossing each other, with berries on it in
+            // the seasons that have them.
+            let cane = Color(red: 0.28, green: 0.30, blue: 0.22)
+            for k in 0..<4 {
+                let dx = (CGFloat(k) - 1.5) * s * 0.44
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: c.x + dx - s * 0.5, y: c.y + s * 0.5))
+                    p.addQuadCurve(to: CGPoint(x: c.x + dx + s * 0.55, y: c.y + s * 0.5),
+                                   control: CGPoint(x: c.x + dx + CGFloat(k % 2) * s * 0.2,
+                                                    y: c.y - s * (0.5 + CGFloat(k % 3) * 0.22)))
+                }, with: .color(cane), lineWidth: 0.85)
+            }
+            if season == .summer || season == .autumn {
+                for k in 0..<3 {
+                    let bx = c.x + (CGFloat(k) - 1) * s * 0.5
+                    context.fill(Path(ellipseIn: CGRect(x: bx - s * 0.09, y: c.y - s * 0.28,
+                                                        width: s * 0.18, height: s * 0.18)),
+                                 with: .color(Color(red: 0.24, green: 0.10, blue: 0.22)))
+                }
+            }
+
+        case .anthill:
+            // A cone of needles with traffic on it. The dots are the point —
+            // a bare mound is a molehill.
+            context.fill(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.78, y: c.y + s * 0.52))
+                p.addQuadCurve(to: CGPoint(x: c.x + s * 0.78, y: c.y + s * 0.52),
+                               control: CGPoint(x: c.x, y: c.y - s * 1.05))
+                p.closeSubpath()
+            }, with: .color(Color(red: 0.38, green: 0.30, blue: 0.18)))
+            for k in 0..<5 {
+                let a = Double(k) * 1.9
+                let r = s * (0.2 + CGFloat(k % 3) * 0.16)
+                context.fill(Path(ellipseIn: CGRect(
+                    x: c.x + CGFloat(cos(a)) * r - s * 0.05,
+                    y: c.y + s * 0.2 + CGFloat(sin(a)) * r * 0.4 - s * 0.05,
+                    width: s * 0.1, height: s * 0.1)),
+                    with: .color(.black.opacity(0.45)))
+            }
+
+        case .iceFloe:
+            // A flat slab with a cracked, lit rim — read as ice rather than as
+            // a pale rock because the top face is bright and the edge is not.
+            let slabRect = CGRect(x: c.x - s * 1.05, y: c.y - s * 0.34,
+                                  width: s * 2.1, height: s * 0.78)
+            context.fill(Path(roundedRect: slabRect, cornerRadius: s * 0.16),
+                         with: .color(Color(red: 0.72, green: 0.81, blue: 0.88).opacity(0.85)))
+            context.stroke(Path(roundedRect: slabRect, cornerRadius: s * 0.16),
+                           with: .color(Color(red: 0.88, green: 0.94, blue: 0.98).opacity(0.8)),
+                           lineWidth: 0.8)
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: c.x - s * 0.5, y: c.y - s * 0.3))
+                p.addLine(to: CGPoint(x: c.x - s * 0.1, y: c.y + s * 0.1))
+                p.addLine(to: CGPoint(x: c.x + s * 0.55, y: c.y - s * 0.08))
+            }, with: .color(Color(red: 0.45, green: 0.58, blue: 0.70).opacity(0.7)),
+            lineWidth: 0.7)
         }
     }
 

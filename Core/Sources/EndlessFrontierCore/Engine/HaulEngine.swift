@@ -91,7 +91,11 @@ public enum HaulEngine {
         let pace = carrySpeed * (1 + TamingEngine.bonuses(s).haul)
         // What stands where, worked out once for the whole colony rather than
         // once per walker per sampled point (§11.23).
-        let standing = s.colony.map(ColonyRoute.Occupancy.init)
+        // …and the rock with it: a cliff is as impassable as a wall, and
+        // routing used to know only about walls.
+        let standing = s.colony.map {
+            ColonyRoute.Occupancy($0, stone: map.stone, landforms: map.landforms)
+        }
 
         // Where a hauler is right now, and the walk that gets them to `target`
         // — the one they are already on if it still goes there, or a fresh one

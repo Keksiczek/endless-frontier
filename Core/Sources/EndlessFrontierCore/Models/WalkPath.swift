@@ -86,9 +86,13 @@ public struct WalkPath: Codable, Sendable, Equatable {
     /// the walker is under way.
     public static func across(
         from: LocalPoint, to: LocalPoint, leavingAt tick: Int, pace: Double,
-        in colony: ColonyMap?, occupancy: ColonyRoute.Occupancy? = nil
+        in colony: ColonyMap?, stone: StoneField = StoneField(),
+        landforms: [Landform] = [],
+        occupancy: ColonyRoute.Occupancy? = nil
     ) -> WalkPath {
-        let via = ColonyRoute.corners(from: from, to: to, in: colony, occupancy: occupancy)
+        let via = ColonyRoute.corners(from: from, to: to, in: colony,
+                                      stone: stone, landforms: landforms,
+                                      occupancy: occupancy)
         let span = ColonyRoute.length(from: from, through: via, to: to)
         // At least one tick: a walk that arrives on the tick it left is a
         // teleport, and `position(at:)` would divide by nothing.

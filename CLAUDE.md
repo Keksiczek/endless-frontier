@@ -112,10 +112,17 @@ What the game is now:
 - **Chronicle**: one `WorldRecord` per in-game year, charted in-app, with
   generated insights (gene drift, inequality, the commonest death).
 
-Remaining content work: **buildings and techs** are still English-only —
-`LocalizedText` is in place, all *new* content (laws, cults, insights, UI)
-ships bilingual, and `events.json` is fully bilingual as of 2026-08-10, guarded
-by "Every event narrates in Czech as well as English" in `ContentTests`.
+**Content is fully bilingual as of 2026-08-11.** Audited across every data file
+— buildings (48), techs (31), eras, biomes, laws, cults, meals, items (76),
+recipes (29), quests — and there are no English-only strings left. `events.json`
+is guarded by "Every event narrates in Czech as well as English" in
+`ContentTests`; the rest is guarded by "Every line of content reads in Czech as
+well as English", which walks all of `GameData` rather than one file, so a new
+entry cannot ship half-translated.
+
+(This section used to say buildings and techs were still English-only. They were
+translated at some point without the note being updated — do not trust a
+"remaining work" line here without checking the files.)
 
 ## Running tests
 
