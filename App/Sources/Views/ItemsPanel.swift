@@ -40,7 +40,7 @@ struct ItemsPanel: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(title: "Relics & Gear")
             if game.viewedInventory.isEmpty {
-                Text("Delve ruins and dungeons on the World map to recover relics and gear.")
+                Text(AppStrings.itemsEmpty)
                     .font(.caption).foregroundStyle(Theme.textDim)
             } else {
                 ForEach(game.viewedInventory) { instance in
@@ -87,13 +87,13 @@ struct ItemsPanel: View {
     private func trailing(_ instance: ItemInstance, _ def: ItemDefinition) -> some View {
         switch def.slot {
         case .material:
-            Text("Material")
+            Text(AppStrings.itemMaterial)
                 .font(.caption2.weight(.bold))
                 .padding(.horizontal, 8).padding(.vertical, 4)
                 .background(Theme.surface, in: Capsule())
                 .foregroundStyle(Theme.textDim)
         case .artifact:
-            Text("Active")
+            Text(AppStrings.itemActive)
                 .font(.caption2.weight(.bold))
                 .padding(.horizontal, 8).padding(.vertical, 4)
                 .background(Theme.good.opacity(0.18), in: Capsule())
@@ -104,7 +104,7 @@ struct ItemsPanel: View {
                     Button(pawn.name) { game.equip(instance.id, toPawn: pawn.id) }
                 }
             } label: {
-                Text("Equip")
+                Text(AppStrings.itemEquip)
                     .font(.caption.weight(.semibold))
                     .padding(.horizontal, 10).padding(.vertical, 6)
                     .background(Theme.accent.opacity(0.18), in: Capsule())

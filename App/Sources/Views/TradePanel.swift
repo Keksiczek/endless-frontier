@@ -37,7 +37,7 @@ struct TradePanel: View {
     private var caravanSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: "Caravans")
-            Text("A one-off escorted shipment. Guards travel with the goods, can be ambushed, and settle at the destination.")
+            Text(AppStrings.caravanBlurb)
                 .font(.caption2)
                 .foregroundStyle(Theme.textDim)
             ForEach(game.caravans) { caravan in
@@ -195,7 +195,7 @@ struct TradePanel: View {
                     .font(.caption2).foregroundStyle(Theme.textDim)
             }
             Spacer()
-            Text("\(Int(route.amountPerTick))/tick").font(.caption.monospacedDigit()).foregroundStyle(Theme.textDim)
+            Text("\(Int(route.amountPerTick))\(AppStrings.perTick)").font(.caption.monospacedDigit()).foregroundStyle(Theme.textDim)
             Button {
                 game.removeTradeRoute(route.id)
             } label: {

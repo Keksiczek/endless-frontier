@@ -81,6 +81,43 @@ enum AppStrings {
           "Jedna výprava je už na cestě. Víc jich naráz nevyrazí.")
     }
 
+    // Panels that were shipping English-only until 2026-08-13. Found by
+    // `UIStringsTests`, which walks the source rather than trusting this file to
+    // be complete — the content JSON has been audited for years and the chrome
+    // in Swift never was.
+    static var mood: String { s("Mood", "Nálada") }
+    static var perTick: String { s("/tick", "/tik") }
+    static var tick: String { s("Tick", "Tik") }
+    static var knowledgeUnit: String { s("knowledge", "znalostí") }
+    static var needsPrefix: String { s("Needs:", "Potřebuje:") }
+    static var noActiveResearch: String { s("No active research", "Nic se nezkoumá") }
+    static var researchUnlocksBuildings: String {
+        s("Research unlocks new buildings.", "Výzkum odemyká nové budovy.")
+    }
+    static var questsCompleted: String { s("completed", "hotovo") }
+    static var questsEmpty: String {
+        s("New quests await as your colony grows.",
+          "Jak kolonie roste, přibývají nové úkoly.")
+    }
+    static var itemsEmpty: String {
+        s("Delve ruins and dungeons on the World map to recover relics and gear.",
+          "Prohledej ruiny a kobky na mapě světa a přines relikvie a výstroj.")
+    }
+    static var itemMaterial: String { s("Material", "Materiál") }
+    static var itemActive: String { s("Active", "Nasazeno") }
+    static var itemEquip: String { s("Equip", "Nasadit") }
+    static var caravanBlurb: String {
+        s("A one-off escorted shipment. Guards travel with the goods, can be ambushed, and settle at the destination.",
+          "Jednorázová zásilka s doprovodem. Stráže jdou se zbožím, můžou padnout do léčky a v cíli se usadí.")
+    }
+    static var exploreAdjacentFirst: String {
+        s("Explore an adjacent region first.", "Nejdřív prozkoumej sousední kraj.")
+    }
+    static func expeditionUnderWay(ticksLeft: Int) -> String {
+        s("Expedition under way — \(ticksLeft) ticks left",
+          "Výprava je na cestě — zbývá \(ticksLeft) tiků")
+    }
+
     // Language
     static var languageTitle: String { s("Language", "Jazyk") }
     static var languageSystem: String { s("Follow the device", "Podle zařízení") }

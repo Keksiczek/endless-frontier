@@ -29,7 +29,7 @@ struct TechBuildPanel: View {
                     StatBar(label: "Progress", value: progress * 100, tint: Theme.accent)
                 }
             } else {
-                Text("No active research").font(.subheadline).foregroundStyle(Theme.textDim)
+                Text(AppStrings.noActiveResearch).font(.subheadline).foregroundStyle(Theme.textDim)
             }
 
             ForEach(game.availableTechs) { tech in
@@ -53,7 +53,7 @@ struct TechBuildPanel: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: buildTitle)
             if game.buildableBuildings.isEmpty {
-                Text("Research unlocks new buildings.")
+                Text(AppStrings.researchUnlocksBuildings)
                     .font(.subheadline).foregroundStyle(Theme.textDim)
             }
             ForEach(game.buildableBuildings) { building in

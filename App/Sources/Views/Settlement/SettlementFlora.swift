@@ -248,7 +248,14 @@ enum SettlementFlora {
     ) {
         let left = CGFloat(rock.remaining)
         let s = unit * 0.014 * (0.45 + left * 0.75)
-        let body = stoneColour(rock.kind)
+        // `SettlementStone` owns what a rock is coloured, for every rock. This
+        // used to be a private copy that answered a *different* grey (granite
+        // 0.34 against 0.34) and took no season at all — and the renderer draws
+        // both files one line apart, so a stone massif and an outcrop of the
+        // same granite stood side by side in two shades, and only the massif
+        // went pale under snow. The snow cap below is an outcrop's own detail
+        // and stays; the body is not its to decide.
+        let body = SettlementStone.stoneColour(rock.kind, season: season)
 
         groundShadow(&context, at: CGPoint(x: c.x, y: c.y + s * 0.2), halfWidth: s * 0.8)
 
@@ -298,15 +305,6 @@ enum SettlementFlora {
                                control: CGPoint(x: c.x, y: c.y - s * 0.72))
                 p.closeSubpath()
             }, with: .color(Theme.bone.opacity(0.34)))
-        }
-    }
-
-    private static func stoneColour(_ kind: RockKind) -> Color {
-        switch kind {
-        case .granite: return Color(red: 0.34, green: 0.34, blue: 0.37)
-        case .limestone: return Color(red: 0.44, green: 0.43, blue: 0.39)
-        case .ironSeam: return Color(red: 0.32, green: 0.29, blue: 0.28)
-        case .clayBank: return Color(red: 0.42, green: 0.32, blue: 0.24)
         }
     }
 

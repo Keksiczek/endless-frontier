@@ -16,12 +16,12 @@ struct QuestsPanel: View {
                     SectionHeader(title: "Quests")
                     Spacer()
                     if game.completedQuestCount > 0 {
-                        Text("\(game.completedQuestCount) completed")
+                        Text("\(game.completedQuestCount) \(AppStrings.questsCompleted)")
                             .font(.caption2.weight(.medium)).foregroundStyle(Theme.textDim)
                     }
                 }
                 if quests.isEmpty {
-                    Text("New quests await as your colony grows.")
+                    Text(AppStrings.questsEmpty)
                         .font(.caption).foregroundStyle(Theme.textDim)
                 }
                 ForEach(quests, id: \.definition.id) { quest in

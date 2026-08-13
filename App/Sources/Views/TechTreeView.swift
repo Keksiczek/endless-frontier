@@ -43,14 +43,14 @@ struct TechTreeView: View {
                                 .foregroundStyle(Theme.good)
                         }
                     }
-                    Text("\(Int(game.knowledgeCost(tech))) knowledge")
+                    Text("\(Int(game.knowledgeCost(tech))) \(AppStrings.knowledgeUnit)")
                         .font(.caption).foregroundStyle(Theme.textDim)
                 }
                 Spacer()
                 trailing(tech, status)
             }
             if !tech.requires.isEmpty {
-                Text("Needs: " + tech.requires.map(game.techName).joined(separator: ", "))
+                Text(AppStrings.needsPrefix + " " + tech.requires.map(game.techName).joined(separator: ", "))
                     .font(.caption2).foregroundStyle(Theme.textDim)
             }
             if let progress = game.researchProgressFraction(tech) {

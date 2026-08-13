@@ -209,7 +209,7 @@ struct RegionDetailCard: View {
                 }
             }
         } else if game.activeExpedition?.targetRegionID == region.id {
-            Text("Expedition under way — \(game.activeExpedition?.ticksRemaining ?? 0) ticks left")
+            Text(AppStrings.expeditionUnderWay(ticksLeft: game.activeExpedition?.ticksRemaining ?? 0))
                 .font(.caption).foregroundStyle(Theme.textDim)
         } else if game.activeExpedition != nil, region.explorationState == .unknown {
             // Only one expedition can be out at a time — say so, rather than
@@ -230,7 +230,7 @@ struct RegionDetailCard: View {
                 actionButton("Found Outpost", systemImage: "house.lodge.fill") { game.foundOutpost(in: region.id) }
             }
             if region.explorationState == .unknown {
-                Text("Explore an adjacent region first.")
+                Text(AppStrings.exploreAdjacentFirst)
                     .font(.caption).foregroundStyle(Theme.textDim)
             }
         }

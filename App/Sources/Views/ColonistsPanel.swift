@@ -249,7 +249,7 @@ struct ColonistsPanel: View {
                     HStack(spacing: 8) {
                         Text("\(age(pawn)) \(AppStrings.years)")
                         Text("·").foregroundStyle(Theme.textDim.opacity(0.5))
-                        Text("Mood \(Int(pawn.mood.rounded()))")
+                        Text("\(AppStrings.mood) \(Int(pawn.mood.rounded()))")
                         Text("·").foregroundStyle(Theme.textDim.opacity(0.5))
                         Label("\(Int(pawn.health.rounded()))", systemImage: "heart.fill")
                             .foregroundStyle(pawn.health < 40 ? Theme.danger : Theme.textDim)

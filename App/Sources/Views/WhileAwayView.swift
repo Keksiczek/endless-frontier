@@ -82,7 +82,7 @@ struct WhileAwayView: View {
                 Text(entry.template?.narrativeHint.resolve(AppStrings.language) ?? systemCopy(entry.templateID).hint)
                     .font(.footnote)
                     .foregroundStyle(Theme.textDim)
-                Text("Tick \(entry.tick)")
+                Text("\(AppStrings.tick) \(entry.tick)")
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(Theme.textDim.opacity(0.7))
             }
