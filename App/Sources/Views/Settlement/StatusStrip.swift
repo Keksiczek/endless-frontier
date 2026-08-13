@@ -9,9 +9,22 @@ struct StatusStrip: View {
 
     /// One sheet, chosen — not two stacked on the same view, which SwiftUI
     /// resolves by honouring one and quietly dropping the other.
-    private enum Sheet: String, Identifiable {
-        case diagnostics, settings
-        var id: String { rawValue }
+    /// Following a store joins this enum rather than adding a second `.sheet`:
+    /// the warning above is load-bearing, and a resource carries which one.
+    private enum Sheet: Identifiable {
+        case diagnostics
+        case settings
+        /// Which store the player asked to follow. The bar used to state five
+        /// numbers and let you follow none of them (§11.24).
+        case store(ResourceType)
+
+        var id: String {
+            switch self {
+            case .diagnostics: return "diagnostics"
+            case .settings: return "settings"
+            case .store(let resource): return "store-\(resource.rawValue)"
+            }
+        }
     }
     @State private var sheet: Sheet?
 
@@ -62,6 +75,10 @@ struct StatusStrip: View {
             case .settings:
                 SettingsView(game: game)
                     .presentationBackground(Theme.surface)
+            case .store(let resource):
+                storeSheet(resource)
+                    .presentationBackground(Theme.surface)
+                    .presentationDetents([.medium])
             }
         }
         .padding(.horizontal, 16)
@@ -69,6 +86,23 @@ struct StatusStrip: View {
         .background(Theme.surface)
         .overlay(alignment: .bottom) {
             Rectangle().fill(Theme.boneFaint.opacity(0.3)).frame(height: 1)
+        }
+    }
+
+    /// The chain behind one store, asked of the Core so the card and the
+    /// simulation cannot disagree (rule 18).
+    @ViewBuilder
+    private func storeSheet(_ resource: ResourceType) -> some View {
+        if let settlement = game.selectedSettlement {
+            ScrollView {
+                StoreBreakdownCard(
+                    resource: resource,
+                    stages: StoreBreakdown.of(resource, in: settlement,
+                                              registry: game.registry),
+                    capacity: settlement.storageCapacity[resource],
+                    onClose: { sheet = nil })
+                .padding(16)
+            }
         }
     }
 
@@ -137,17 +171,25 @@ struct StatusStrip: View {
     private var resourcePills: some View {
         HStack(spacing: 8) {
             ForEach(ResourceType.allCases, id: \.self) { type in
-                HStack(spacing: 4) {
-                    Image(systemName: type.symbolName).font(.caption2)
-                        .foregroundStyle(Theme.accent)
-                    Text("\(Int((game.selectedSettlement?.storage[type] ?? 0).rounded()))")
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(Theme.text)
+                Button {
+                    sheet = .store(type)
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: type.symbolName).font(.caption2)
+                            .foregroundStyle(Theme.accent)
+                        Text("\(Int((game.selectedSettlement?.storage[type] ?? 0).rounded()))")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(Theme.text)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                    .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
-                .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .buttonStyle(.plain)
                 .accessibilityLabel("\(type.displayName) \(Int((game.selectedSettlement?.storage[type] ?? 0).rounded()))")
+                .accessibilityHint(AppStrings.language == .cs
+                                   ? "Ukáže, odkud se bere"
+                                   : "Shows where it comes from")
             }
         }
     }
