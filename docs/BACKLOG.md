@@ -1306,6 +1306,371 @@ Still open on this one: the **battle log** does not carry the wound kind, so the
 report still says "wounded" where it could say "a stab to the shoulder".
 `BattleMoment` is where that goes.
 
+### 11.29 — fuel, and the things that move (asked 2026-08-13)
+
+**Flagged by Keks, not yet built.** *"Taky by tam měla být elektrárna nebo nějaké
+další budovy. Teoreticky v budoucnu může být benzín surovina a mít věci na to,
+nebo i mít motorová vozidla — no, s tím by byly logické koně a karavany
+předtím."*
+
+**First, the correction that changes the ask: the power plant already exists.**
+`buildings.json` has `windmill` (5), `power_plant` (22), `hydro_dam` (40),
+`oil_refinery` (30), `solar_array` (35), `wind_farm` (28) and `fusion_reactor`
+(90). The ladder is *built*. What is broken is that everything above the windmill
+is priced in **knowledge**, and knowledge reads zero for a whole unattended run
+(§11.28 item 4) — so a colony has one generator available to it, for ever, and
+the other six are furniture. Fix the knowledge gate and most of this ask is
+already shipped. Worth checking before building anything new.
+
+**Fuel wants to be an item, not a sixth resource.** `ResourceType` has exactly
+five cases — food, materials, energy, knowledge, influence — and they are the
+*abstract* stores. `charcoal` already exists as an **item**, which is the right
+precedent: fuel is a concrete thing you make, haul in a pile, and burn, in the
+same way `timber_bundle` is. Adding a sixth `ResourceType` would put petrol in
+the same bucket as *influence*, and would inherit the shared-storage-cap bug in
+§11.26 for free. So: charcoal → coal → oil → petrol as items, with the refinery
+turning one into the next, and generators consuming them — which also finally
+gives energy an **input**, instead of buildings that make power out of nothing.
+
+That is the deeper prize here. Right now a windmill produces 5 energy from
+thin air, so the only question about power is how many you own. Fuel-burning
+generators make energy a *chain* — the same shape the food chain already has
+(plot → raw → cook → meal), and the same shape that made food interesting.
+
+**Vehicles need a place to exist, and there is not one yet.** `Caravan` has
+`ticksRemaining` and `totalTicks` — travel time is a **fixed number decided when
+the caravan is created**. Nothing asks what is pulling it, so there is no hook a
+horse or a truck could hang on. Before any vehicle: travel time has to be
+*derived* — from distance, terrain, and what is drawing the load — or a motor
+lorry and a man with a sack will arrive at the same hour.
+
+**Horses first, and they are half-built.** `Animal` is already a pawn-like entity
+with a body, wounds and illnesses, and `TamingEngine` already exists — a tamed
+beast is a thing the game can already hold. What it has no notion of is **draught
+or carriage**: no carry capacity, no speed contribution, nothing that makes owning
+an ox different from owning a deer. That is the missing field, and it is the same
+field a cart, a wagon and a lorry would each fill with a bigger number.
+
+So the honest order is: derive travel time → give animals draught → tame horses
+→ carts → fuel as items → motor vehicles. Each step is worthless without the one
+before it, and the first two are small.
+
+### 11.28 — what the council does with two centuries to itself (2026-08-13)
+
+Measured by `ZZStewardProbe` (`EF_DIAG=1 swift test --filter ZZStewardProbe`),
+which drives **nothing**: `TickEngine.advance` already calls
+`StewardEngine.advanceOneTick` every tick, so an untouched world *is* the shipped
+game left alone.
+
+This matters because `BalanceHarnessTests` — the thing that has been used to
+judge balance — is **not** that. It layers a hand-rolled policy (cheapest tech,
+most productive affordable building, hut when crowded) on top, and because the
+council acts only in the gaps, that policy **preempts and silences the
+autopilot**. Its trace measures a player nobody is, with the shipped autopilot
+switched off. Treat old balance traces accordingly.
+
+| seed 2025 | y60 | y120 | y180 | y190 | y200 |
+|---|---|---|---|---|---|
+| population | 60 | 105 | 134 | **148** | 95 |
+| food | 3500 | 4000 | 5902 | **0** | 20 |
+| energy | 3500 | 4000 | 3978 | 1638 | **0** |
+| E demand / E made | 0.9 / 5.0 | 5.2 / **5.0** | 6.7 / **5.0** | 7.4 / **5.0** | 4.8 / 5.0 |
+| plots / wanted | 42/24 | 98/42 | **126/54** | **140/60** | 140/38 |
+
+Seed 4242 is the same shape and worse: peak 119 at year 150, **50** at year 200,
+food 4082 → 383 → 20 → 0 across the last thirty years.
+
+**1. No energy clause — fixed here.** `Emake` is flat 5.0 from year sixty in
+seed 2025 (one windmill, never a second) and **0.0 for the entire run** in seed
+4242, while demand climbs to 7.4. The word `energy` appeared exactly once in
+`StewardEngine.swift`, in a comment about an old bug. Clause `3c` in
+`nextBuilding` now answers a brownout, guarded so it falls through when nothing
+affordable generates.
+
+**2. Energy does not cause the famine.** Worth stating because it was the first
+guess and it is wrong: seed 4242 ends with **energy 5172 in the store and food
+at zero**. Two independent failures, not a chain.
+
+**3. The land is not the problem, and §11.21 is confirmed.** Plots run at
+**126 standing against 54 wanted** — two and a half times over — and the colony
+starves anyway. This is the `plots`-against-`want` comparison §11.21 asked for,
+answered: the ground unblocked and was never the ceiling.
+
+That makes the council's answer to a thin larder the **wrong lever**. Its clause
+reads: if raw stuff on the shelf ≥ 20 *and kitchens == 0*, build a kitchen;
+otherwise build a farm. With 126 plots and an empty larder it builds another
+farm, every time. The `kitchens == 0` guard also means a second kitchen can
+never be built — though that is moot, because throughput scales with **cooks**
+(`CookingEngine` counts `assignedWork == .cooking`), not with kitchens, and
+`LaborEngine` already scales cooks with population at `(.cooking, 0.07)`.
+
+**So the famine mechanism is still unknown.** What is ruled out: fields, energy,
+cook headcount. What is left: reaping, hauling, or something that stops work
+outright. Next probe should sample the chain *between* the plot and the larder —
+ripe-and-unreaped, reaped-and-unhauled, hauled-and-uncooked — which is the same
+breakdown §11.24 wants to put in front of the player.
+
+**4. Era stalls at `early_industrial` from year 110 in both seeds** — ninety
+years, no advance. Related and mechanical: `power_plant` costs **35 knowledge**
+and knowledge reads zero for the whole run, so every knowledge-priced building
+is unreachable in an unattended game. Rule: a price in a currency the colony
+never banks is not a price, it is a wall.
+
+**5. Energy supply does not scale the way demand does.** `eraEnergyDemand` goes
+`0, 0, 0.3, 1.0, 2.0, 3.5` **multiplied by population**, while supply is a fixed
+5 per windmill and everything better is behind knowledge (see 4). A colony of 240
+in the modern age wants 24 a tick — five windmills — and by `near_future` 42.
+The clause added here will build them, but it is answering a curve with a flat
+number, and that wants either energy buildings that scale or the knowledge gate
+opening. Rule 16 again: build off a rate, not a stock.
+
+### 11.27 — a building is a solid object, and one day something shoots past it (asked 2026-08-13)
+
+**Flagged by Keks, not yet built.** *"Chci ty budovy mít opravdu unikátní proto,
+co jsou — mít třeba v budoucnu turrety. Takže bude důležité, aby bylo vše na svém
+místě, zabíralo plochy, když třeba bude krýt kulky nebo šípy ze zbraní."*
+
+The through-line of the whole RimWorld layer, stated as a requirement rather
+than a look: **a building's footprint is a physical fact, not a picture.** It is
+already half true — `footprint` is real, lots are real, `ColonyRoute.Occupancy`
+answers "what stands on this tile" from a flat array, and `Landform` (new
+2026-08-13) put country on the same footing with `blocksMovement`. What does not
+exist yet is the other half.
+
+**Cover and movement are two different questions, and the code already implies
+it.** `LandformKind.blocksMovement` says a ravine stops a walker and a ruin field
+does not — with the comment *"you walk the streets, not the walls"*. That
+sentence is exactly the distinction a projectile needs and cannot currently ask
+about: the walls of a ruin should stop an arrow while the ruin as a whole stays
+crossable. So cover wants its **own axis**, not a reuse of `blocksMovement`:
+
+- **passable / impassable** — can a body cross this tile
+- **cover / clear** — does this tile stop or slow a shot crossing it
+
+A low wall is passable and covering. A ravine is impassable and *not* covering —
+you shoot straight over it. Collapsing the two would get both wrong.
+
+**The geometry is already paid for.** `ColonyRoute.Occupancy` was built to
+answer tile → placement cheaply enough to run inside routing (§11.23), and a
+line-of-sight trace asks the same question along a line. Whatever ships for
+shooting should read that array rather than growing a second spatial index that
+can disagree with the first — the same discipline that stopped the router
+walking every building per sample.
+
+**Turrets are the reason to do it properly rather than approximately.** A turret
+is the first thing in the game that is a *building which acts*: it holds ground,
+has an arc, needs a line to its target, and is worth attacking because of where
+it stands. Every shortcut taken now — an abstract "defence" number, a battle
+that resolves without positions — is a shortcut that a turret makes visibly
+wrong. Combat already went real-time with fighter positions in the Core, so the
+positions exist; what is missing is the world having an opinion about the line
+between two of them.
+
+**Cover comes from height and from what the thing is** — Keks, refining the
+above: *"věci dle výšky a toho, co to je, poskytují krytí."* So cover is
+**derived, not declared**: no hand-set `providesCover` flag on forty objects
+that will drift apart, but a rule read off the two properties the object already
+has to have. A waist-high wall is partial; a full storey is total; a bush stops
+the eye and not the arrow; a boulder stops both; a ravine is *below* the line
+and stops neither, which is the case that proves the rule is height and not
+"is it solid".
+
+**The height cover needs is not the height the buildings already have.** Keks:
+*"ale my vidíme jen spodní patro, ne storeys?"* — correct, and it kills the
+obvious shortcut. `BuildingDefinition.floors` exists, but it is read by
+**`HouseholdEngine` alone**, to derive how many people a footprint sleeps. The
+canvas is top-down: you see the ground floor, and a tenement reads as a tenement
+because its `look` says so, not because `floors` is three. So `floors` is neither
+drawn nor, for this purpose, meaningful — it measures **upward**, and cover is
+decided at the height of a person standing on the ground. A one-storey wall and a
+five-storey block stop an arrow identically.
+
+Which means the axis is mostly about the *small* things, and none of them have it:
+`Landform`, `Flora`, the rocks, and the piles from §11.26 carry no height at all.
+That is where the interesting values live — ankle, knee, waist, chest, over-head —
+because everything a building does is simply "total". Giving those a height is
+worth doing **for the drawing anyway**: a renderer that knows how tall a thing is
+can size and shade it honestly instead of by a species table, so the cover rule
+rides on something the canvas wanted regardless.
+
+`LocalTerrain.elevation` is a third thing again — the ground's own level, already
+used to pick what a tile looks like — and it is what makes a ravine the case that
+proves the rule: negative relative height, no cover.
+
+The "what it is" half is the second term, and it is why height alone will not do:
+at equal height a hedge, a palisade and a stone wall should behave differently
+against an arrow. Two axes multiplied — **how high** and **how solid** — cover
+that, and both are one field each.
+
+Worth settling before the first turret rather than after: whether cover is
+binary or a fraction, and whether a shot that is stopped hits the thing that
+stopped it — because "arrows chip the palisade" is where this meets the wear
+rule in §11.26, and a wall that soaks fire for ever is the same dead mechanic as
+a sword that never dulls.
+
+### 11.26 — nothing is stored and nothing wears out (asked 2026-08-13)
+
+**Flagged by Keks, not yet built.** *"Chybí sklady, protože materiál a jídlo se
+hromadí venku na hromadách ve vesnici — za co by měla být penalizace v
+durability. Používáním, bojem atd. se věci poškodí, stejně tak když je necháš
+ležet venku v hlíně (kameny ne třeba)."*
+
+One observation with three separate things underneath it, and the first one is
+a bug rather than a missing feature.
+
+**A. There is one storage building in the whole game, and its capacity is not
+typed.** `buildings.json` has exactly one: `granary`, `"storage": 250`,
+described as *"Stores grain against the lean months."* But
+`ResourceLoop.storageCapacity` returns **a single `Double`**, and
+`s.storage.clamped(upper: s.storageCapacity)` applies that one number to every
+`ResourceType` alike. So a granary deepens the store for knowledge and influence
+exactly as much as for grain.
+
+That is not theory — it is visible in the balance trace, where `materials` and
+`influence` sit pinned at the **identical** value (7350) for half a two-century
+run while food and energy go to zero. Two unrelated resources agreeing to four
+digits is one cap wearing five hats.
+
+So the ask is really: **storage should be a kind of building, not a number** —
+a granary for food, a warehouse or timber yard for materials, a treasury or
+archive for the abstract stores — and `storageCapacity` should answer
+*per resource*. Everything else here sits on top of that.
+
+**B. Goods lying in the open should suffer for it.** `HaulPile` already carries
+`droppedTick` (it exists so the oldest heap is fetched first), so **the age of a
+pile is already free** — a weathering rule needs no new state, just a reader.
+Grain and food rot, timber and cloth spoil more slowly, and *stone does not*,
+which Keks called out explicitly and which is right: `rough_stone` and ore have
+no business rotting in a field.
+
+This is also the honest pressure that makes (A) matter. Deeper storage is
+currently a pure upgrade with no opposing force; a colony that leaves its
+harvest in heaps because it has nowhere to put it should lose some of it. That
+is the resource-sink rule again — a sink only bites when it scales with
+something the player cannot simply out-build.
+
+**C. Durability does not exist.** The string `durability` appears **nowhere** in
+`Core/` or `App/`. What does exist is `ItemInstance.quality: ItemQuality`, with
+a `multiplier` and a `label` — and it is written **only in `init`** and never
+mutated anywhere in the codebase. So an item is graded when it is made and
+frozen at that grade for ever: a sword carried through forty battles is exactly
+the sword it was forged as.
+
+The design question to settle before building it: does wear **lower `quality`**,
+or is durability a second axis beside it? Lowering quality is fewer moving parts
+and the label already reads back to the player, but it conflates "made badly"
+with "worn out", and those should probably feel different — a masterwork blade
+with a notched edge is not the same object as a shoddy new one.
+
+Wear should come from the three sources named: **use** (a tool at work),
+**combat** (`BattleResolver` is where the blows already land, so it knows), and
+**exposure** (lying in a pile, sharing the clock from (B)). Stone exempt.
+
+This is also the missing half of §11.22's open note — *"nothing re-arms a colony
+whose gear has gone out of date"*. Gear that never wears out is gear nobody ever
+has a reason to replace, so the quartermaster's full slots stay full for two
+hundred years. Wear gives the "this is worse than what is on the shelf" want
+something to actually measure.
+
+### 11.25 — what an audit of the app layer found (2026-08-13)
+
+Asked for by Keks — *"udělej další rozbor i GUI, features, grafika,
+konzistence"* — so this is a survey, not a complaint. Ordered by whether it is
+visible to a player.
+
+**A. The same rock is two different greys, and only one of them knows it is
+winter.** `SettlementStone.stoneColour` and a private `SettlementFlora.stoneColour`
+both answer for `RockKind`, with different values (granite `0.31/0.31/0.34`
+against `0.34/0.34/0.37`) — and Flora's takes **no `season`**, so it never gets
+the winter wash the other one applies. `SettlementRenderer` calls both, one line
+apart (`SettlementStone.draw` then `SettlementFlora.draw`), so both appear in the
+same frame: two identical boulders, different greys, and in snow only one goes
+pale. Fix is deletion — Flora should call `SettlementStone.stoneColour(_:season:)`.
+
+Two other duplicates, neither a bug: `SettlementRenderer.coverColor` is a
+forwarding shim to `SettlementGround`'s, and `canopyColor(_ season:)` against
+`canopyColour(_ species:season:)` is scenery props (which have no species)
+against flora entities (which do). The second is worth a decision rather than a
+fix — it means a prop tree and a real tree of the same kind do not match.
+
+**B. No light mode, and no way out of the motion.** `colorScheme` appears
+**zero times** in `App/Sources`; `Theme` is fifteen fixed dark tokens. And
+`reduceMotion` appears zero times, in a game that is a `TimelineView` + `Canvas`
+animating continuously — there is no accessibility escape hatch from a screen
+that never stops moving. Thirty-three `.font(.system(size:))` at fixed point
+sizes means Dynamic Type does nothing either.
+
+**C. The UI chrome is not bilingual, and nothing guards it.** `ContentTests`
+walks `GameData/*.json` — which is genuinely clean — but no test looks at
+`Text("…")` in Swift, and there are at least fourteen English-only strings
+sitting in shipped panels: `TradePanel:40`, `ItemsPanel:43/90/96/107`,
+`QuestsPanel:24`, `TechBuildPanel:32/56`, `WorldMapScreen:233`,
+`ColonistsPanel:252`, `TechTreeView:53`. The rule is that languages ship
+together, so this wants a test over `App/Sources/**/*.swift` that fails on a
+`Text` literal with letters in it that did not come from `AppStrings`.
+
+**D. Files past the ceiling.** `SettlementRenderer.swift` is **1969** lines
+against a stated max of 800; `GameViewModel.swift` 1415; `SettlementStructures.swift`
+1003. The renderer already has the seams marked in its own `MARK`s — scenery
+(~520 lines), deposits, buildings/glyphs — and the sibling names to split into
+already exist (`SettlementFlora`, `SettlementStone`, `SettlementPiles`). This is
+mechanical, not a redesign.
+
+**E. Smaller.** 204 hardcoded `Color(red:…)` in `Views/` against 15 `Theme`
+tokens — legitimate inside the drawing files, much less so in the cards. Forty
+files flat in `Views/` with only `Settlement/` grouped. Mixed `Color`/`Colour`
+spelling in one module. Six test files for seventy-two sources, and neither
+`PawnLook` nor `SettlementLandforms` has one — though `BuildingLookTests` is
+exactly the pattern `PawnLook` wants, being a pure function of
+`(id, age, genes)`.
+
+### 11.24 — nothing on the screen is a door (asked 2026-08-13)
+
+**Flagged by Keks, not yet built.** *"byly by fajn prokliky — na pawny, suroviny
+atd. Taky horní panel surovin by mohl být klikatelný, abych věděl, co mám za
+podsuroviny."*
+
+Two asks that are the same ask: **the UI states things it will not let you
+follow.** A name is printed, a number is printed, and neither is a door. The
+game already knows everything behind them — the inspector cards exist, the food
+chain exists — so this is wiring, not new simulation.
+
+**The resource bar is the sharpest case, because it actively lies by omission.**
+`StatusStrip.resourcePills` walks `ResourceType.allCases` and renders each as a
+plain `HStack` of an icon and a `Text` — no `Button`, no `onTapGesture`, nothing
+to press. And `storage[.food]` does not mean "food": CLAUDE.md is explicit that
+it means **meals ready to eat and nothing else**. Everything upstream is
+invisible:
+
+- `Crop.Kind` — grain, roots, greens — ripening in the plots
+- what has been reaped and is lying at the plot waiting for a hauler
+- `meat` from hunting, `berries` from foraging
+- `Settlement.rawProgress`, the part-done work
+- `timber_bundle` and the rest of the bench's output
+
+So a player watching `food: 0` cannot tell whether the colony has no crops, a
+full harvest nobody carried in, or a granary full of grain and no cook — three
+completely different problems with the same number on screen. That is the
+§11.9 kitchen death spiral all over again, except this time it is the *player*
+who cannot see it rather than the council.
+
+A tap on the food pill should open the chain, in the order it actually flows:
+**growing → reaped → hauled → cooked → eaten.** The same treatment fits
+`materials` (timber against bundles), and `knowledge` (what is being studied and
+what it is going toward), which is also the honest place to surface why
+knowledge reads zero for two centuries.
+
+**Prokliky generally.** Anywhere a pawn, a building, an animal or a resource is
+*named*, it should open its card. The cards are already written —
+`PawnInspectorCard`, `BuildingInspectorCard`, `AnimalInspectorCard`,
+`POIInspectorCard` — and the places that name things without linking to them
+include the chronicle, the journal toasts, `ColonistsPanel` rows, battle
+reports, and the event decision cards. Right now the canvas is the only way in:
+you have to find somebody by looking at them.
+
+Worth doing as one shared affordance rather than fourteen tap handlers, or half
+of them will be missed and the other half will disagree about what a tap does.
+
 ### 11.23 — the per-tick cost is quadratic in the colony (2026-08-10) — **both halves fixed (2026-08-11)**
 
 > **Closed.** The social half went first (`Relationship.joins`,

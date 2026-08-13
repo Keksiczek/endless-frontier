@@ -137,7 +137,16 @@ Build the iOS app (regenerate the project first if `project.yml` changed):
 ```bash
 cd App && xcodegen generate
 xcodebuild -project App/EndlessFrontier.xcodeproj -scheme EndlessFrontier \
-  -destination 'platform=iOS Simulator,name=iPhone 16' build
+  -destination 'platform=iOS Simulator,name=iPhone 17' build
+```
+
+The device name goes stale with Xcode. On Xcode 26.2 the only installed iPhone
+runtime is **iPhone 17**, and asking for a device that is not there fails with
+`Unable to find a device matching the provided destination specifier` — which
+reads like a broken project and is not one. Check what exists first:
+
+```bash
+xcrun simctl list devices available | grep iPhone
 ```
 
 ## Coding conventions (Swift)

@@ -463,6 +463,38 @@ public enum StewardEngine {
             }
         }
 
+        // 3c. Light and heat. The council had **no clause for energy at all** —
+        //     the word appeared once in this file, in a comment about an old
+        //     bug — so a colony browned out and never once answered it.
+        //
+        //     Measured, seed 2025 at twelve thousand ticks: population 240 in
+        //     the early industrial age draws `240 * 0.05 * 1.0` = twelve a tick
+        //     (`ResourceLoop.domesticEnergyDemand`), the store went to zero
+        //     around year 167 and stayed there, and morale bled
+        //     `brownoutMoralePenalty` every tick for the rest of the run. Three
+        //     windmills — five each, thirty-five materials each — would have
+        //     covered it, out of a store of seven thousand. The council could
+        //     always afford the answer; nobody ever asked the question.
+        //
+        //     Rule 16 wearing its other face: demand scales with **people** and
+        //     supply with **buildings**, so this gap widens on its own every
+        //     year the colony grows. It cannot be tuned away in
+        //     `eraEnergyDemand`, because the multiplier is what makes an age
+        //     feel different — it has to be *answered*, per tick, by a council
+        //     that looks.
+        //
+        //     Below food and above breadth: a brownout is a standing bleed, not
+        //     a death. Guarded by `best` returning nil when nothing affordable
+        //     generates, so an early colony with no windmill unlocked falls
+        //     straight through rather than starving the clause below it
+        //     (rule 27).
+        let draw = ResourceLoop.domesticEnergyDemand(
+            population: settlement.population, era: state.era, config: registry.config)
+        if draw > 0, generation(of: settlement, registry: registry) < draw,
+           let generator = best(of: affordable, by: { $0.production[.energy] }) {
+            return generator
+        }
+
         // 4. Otherwise — and *only* out of genuine surplus — the cheapest
         //    thing the colony does not have at all. Breadth before depth, so a
         //    town gets a library and a quarry before a second farm.
@@ -491,6 +523,29 @@ public enum StewardEngine {
     /// colony's actual problem rather than "we have no fields". A handful of
     /// berries is not an argument for a cookhouse; a winter's grain is.
     static let sacksWorthCooking = 20
+
+    /// What the colony's standing buildings make in a tick, for one resource.
+    ///
+    /// Deliberately the **nameplate** figure off the definitions rather than
+    /// what `ResourceLoop` actually banked last tick: the council is deciding
+    /// whether to raise another generator, and a windmill idle for want of a
+    /// hand is still a windmill. Asking the banked figure would have the town
+    /// answer "no power" with a second windmill nobody is standing in.
+    public static func production(
+        of settlement: Settlement, _ resource: ResourceType, registry: GameDataRegistry
+    ) -> Double {
+        settlement.buildings.reduce(0.0) { acc, instance in
+            acc + (registry.building(instance.definitionID)?.production[resource] ?? 0)
+                * Double(instance.count)
+        }
+    }
+
+    /// Shorthand for the one the brownout clause asks about.
+    static func generation(
+        of settlement: Settlement, registry: GameDataRegistry
+    ) -> Double {
+        production(of: settlement, .energy, registry: registry)
+    }
 
     /// Whether any store is full enough to be spilling.
     public static func isBrimming(_ settlement: Settlement) -> Bool {
