@@ -93,6 +93,17 @@ struct SettlementScreen: View {
             guard let id, let battle = game.battleReport else { return }
             game.lookAtTheField(approach: battle.approach, id: id)
         }
+        // Somebody asked to be shown a thing — from the chronicle, the colonist
+        // list, a journal line. This screen owns the canvas, so it adopts the
+        // request and clears it: one place decides what is on screen (§11.24).
+        .onChange(of: game.focusRequest) { _, requested in
+            guard let requested else { return }
+            withAnimation(.easeOut(duration: 0.2)) { selection = requested }
+            // …and put the camera on it, or the card describes something the
+            // player cannot see.
+            if case .pawn(let id) = requested { game.lookAt(.pawn(id)) }
+            game.focusRequest = nil
+        }
         .onDisappear { game.stopSiegeLoop() }
     }
 

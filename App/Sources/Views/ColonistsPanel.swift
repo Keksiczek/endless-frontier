@@ -237,7 +237,18 @@ struct ColonistsPanel: View {
                     .frame(width: 22)
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 6) {
-                        Text(pawn.name).font(.subheadline.weight(.semibold))
+                        // The list was nothing but names and not one of them
+                        // was a door: the only way to look at a colonist was to
+                        // find them on the canvas (§11.24).
+                        Button { game.focus(pawn: pawn.id) } label: {
+                            Text(pawn.name)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Theme.text)
+                                .underline(true, pattern: .dot, color: Theme.accent.opacity(0.5))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint(AppStrings.language == .cs
+                                           ? "Ukáže ho v osadě" : "Shows them in the settlement")
                         if pawn.trait != .none {
                             Text(traitLabel(pawn.trait))
                                 .font(.caption2.weight(.medium))

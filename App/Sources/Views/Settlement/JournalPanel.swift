@@ -55,8 +55,22 @@ struct JournalPanel: View {
                     .foregroundStyle(Theme.textDim)
             }
             Spacer(minLength: 0)
+            // A line that names somebody should take you to them. The toast
+            // version of this entry already flies the camera; the written
+            // record was a dead end (§11.24).
+            if entry.subject != nil {
+                Image(systemName: "chevron.right")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.textDim.opacity(0.6))
+            }
         }
         .padding(.vertical, 7)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard let subject = entry.subject else { return }
+            game.lookAt(subject)
+            if case .pawn(let id) = subject { game.focus(pawn: id) }
+        }
     }
 
     private func tint(_ kind: ColonyLogEntry.Kind) -> Color {

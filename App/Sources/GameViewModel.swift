@@ -808,6 +808,31 @@ final class GameViewModel {
 
     var tab: Tab = .settlement
 
+    /// Somebody, somewhere, asked to be shown a thing.
+    ///
+    /// **The one shared affordance** behind §11.24. The inspector cards all
+    /// exist — a colonist, a building, a beast, a landmark — and every one of
+    /// them was reachable *only* by finding the thing on the canvas and tapping
+    /// it. The chronicle names colonists, the journal names them, the colonist
+    /// list is nothing but names, and not one of them was a door. Meanwhile
+    /// `SettlementScreen.selection` is local `@State`, so no other screen could
+    /// reach it even to try.
+    ///
+    /// A request rather than the selection itself: the screen that owns the
+    /// canvas adopts it and clears it, so there is still exactly one place that
+    /// decides what is on screen. Fourteen separate tap handlers would have
+    /// disagreed about what a tap does within a week.
+    var focusRequest: CanvasSelection?
+
+    /// Show this thing, wherever the player is standing.
+    func focus(_ what: CanvasSelection) {
+        tab = .settlement
+        focusRequest = what
+    }
+
+    func focus(pawn id: UUID) { focus(.pawn(id)) }
+    func focus(animal id: UUID) { focus(.animal(id)) }
+
     /// The screen an objective is really about.
     func destination(for objective: Objective) -> Tab {
         switch objective.category {
