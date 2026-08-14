@@ -131,19 +131,44 @@ public enum LandformFactory {
     /// map would wall the colony in, and the fallback for "no way round" is to
     /// walk straight through (rule 22) — which would put the feature back to
     /// being decoration.
-    static let mostCells = 26
+    static let mostCells = 34
+
+    /// The most country one valley stands up.
+    ///
+    /// Was two, and two was chosen when the colony took a 0.58 span of the map:
+    /// with the valley doubled there is genuinely more ground to put things on,
+    /// and a map with one feature on it reads the same as a map with none. Still
+    /// bounded, because a valley with a ravine *and* a mesa *and* old walls
+    /// *and* an oasis is a theme park rather than a place.
+    static let mostForms = 4
 
     /// What a fresh map stands up, given its country.
     ///
-    /// At most two, and often none: a valley with a ravine *and* a mesa *and*
-    /// old walls is a theme park. Scarcity is what makes the one you get worth
-    /// walking to.
+    /// **Two things made every valley look like every other valley**, and
+    /// neither was the number of kinds:
+    ///
+    /// 1. The kinds were asked in `allCases` order and the loop stopped at two.
+    ///    So the *first* kinds in the source file — an oasis, a ravine — took
+    ///    both slots whenever they rolled, and a hollow was very nearly
+    ///    unreachable. The list was a priority queue and nobody meant it to be.
+    /// 2. Every form that was not a ravine was the same round blob of the same
+    ///    ten-to-twenty-six cells. One shape, one size.
+    ///
+    /// So the order is shuffled from the map's own seed, and a form picks a
+    /// *shape* as well as a place. Deterministic throughout: the shuffle is a
+    /// seeded sort, so one seed is one valley for ever (rule 3).
     public static func forMap(biomeID: String, rng: inout SeededRNG) -> [Landform] {
         var forms: [Landform] = []
         var taken: Set<Int> = []
-        // A fixed order so the same seed always asks in the same sequence
-        // (rule 2) — `allCases` is source order, which is stable.
-        for kind in LandformKind.allCases where forms.count < 2 {
+        // A shuffle, not source order — but a *seeded* one, so the sequence is
+        // fixed for a given world and varies between worlds.
+        var rolled: [(kind: LandformKind, roll: Double)] = []
+        for kind in LandformKind.allCases { rolled.append((kind, rng.nextUnit())) }
+        rolled.sort { a, b in
+            a.roll == b.roll ? a.kind.rawValue < b.kind.rawValue : a.roll < b.roll
+        }
+        let order: [LandformKind] = rolled.map(\.kind)
+        for kind in order where forms.count < mostForms {
             guard rng.nextUnit() < kind.chance(in: biomeID) else { continue }
             let form = blob(kind: kind, id: forms.count, avoiding: taken, rng: &rng)
             guard !form.isEmpty else { continue }
@@ -153,36 +178,97 @@ public enum LandformFactory {
         return forms
     }
 
-    /// A blob of cells around a seeded point, grown by walking outward.
+    /// The shape a piece of country takes.
     ///
-    /// Kept off the middle of the map: the colony builds at the heart, and a
-    /// ravine through the settlement's own ground is not a feature, it is a
-    /// bug report.
+    /// Country is not all one shape, and until now it was: a ravine walked in a
+    /// line and everything else was a random-walk blob. These are the four
+    /// shapes that read differently at a glance from across the valley.
+    enum Shape: CaseIterable {
+        /// Long and thin — a cut, a seam, a wall of old stone.
+        case vein
+        /// Round and solid — a bowl, a stand of rock, a pool.
+        case round
+        /// Long *and* thick: a ridge you go round rather than a line you step
+        /// over.
+        case ridge
+        /// Several lobes with gaps between them — a broken field, the shape old
+        /// walls actually leave behind.
+        case scatter
+    }
+
+    /// Which shapes a kind of country comes in. A ravine is always a cut; a
+    /// ruin field is always broken; the rest can be either of two things, which
+    /// is where the variety comes from.
+    static func shapes(for kind: LandformKind) -> [Shape] {
+        switch kind {
+        case .ravine:    return [.vein, .vein, .ridge]      // usually a cut
+        case .ruinField: return [.scatter, .scatter, .vein] // usually broken
+        case .mesa:      return [.round, .ridge]
+        case .oasis:     return [.round, .scatter]
+        case .hollow:    return [.round, .vein]
+        }
+    }
+
+    /// A patch of country around a seeded point, grown by walking outward.
+    ///
+    /// Kept **off the town's ground**. The colony builds outward from the heart
+    /// and its grid now reaches `SettlementGeometry.span / 2` in each direction;
+    /// a ravine through the settlement's own building land is not a feature, it
+    /// is a bug report. The old radius band (0.26…0.42) was clear of a 0.58 span
+    /// and sits squarely inside an 0.82 one, so it moves out with the town.
     static func blob(kind: LandformKind, id: Int, avoiding taken: Set<Int>,
                      rng: inout SeededRNG) -> Landform {
         let angle = rng.nextUnit() * 2 * .pi
-        let radius = 0.26 + rng.nextUnit() * 0.16
+        let clear = SettlementGeometry.span / 2 + 0.04
+        let radius = clear + rng.nextUnit() * (0.60 - clear)
         let centre = LocalPoint(
             x: min(0.94, max(0.06, 0.5 + cos(angle) * radius)),
             y: min(0.92, max(0.08, 0.52 + sin(angle) * radius * 0.8)))
 
-        // A ravine is long and thin; everything else is round. One number, and
-        // it is the difference between a cut in the ground and a puddle.
-        let longways = kind == .ravine
-        let want = 10 + Int(rng.nextUnit() * Double(mostCells - 10))
+        let shapes = shapes(for: kind)
+        let shape = shapes[min(shapes.count - 1, Int(rng.nextUnit() * Double(shapes.count)))]
+        // Size varies with the shape as well as with the roll: a vein is a line
+        // and needs length, a scatter needs enough cells to break into pieces.
+        let floor = shape == .scatter ? 14 : 9
+        let want = floor + Int(rng.nextUnit() * Double(mostCells - floor))
         var cells: Set<Int> = []
         var cursor = LocalMap.cellIndex(centre)
         let drift = rng.nextUnit() < 0.5 ? 1 : -1
+        let fall = rng.nextUnit() < 0.5 ? 1 : -1
+
         for step in 0..<want {
             if !taken.contains(cursor) { cells.insert(cursor) }
             var column = cursor % LocalMap.gridColumns
             var row = cursor / LocalMap.gridColumns
-            if longways {
+            switch shape {
+            case .vein:
                 column += drift
                 if step % 3 == 0 { row += rng.nextUnit() < 0.5 ? 1 : -1 }
-            } else {
+            case .round:
                 column += rng.nextUnit() < 0.5 ? 1 : -1
                 row += rng.nextUnit() < 0.5 ? 1 : -1
+            case .ridge:
+                // A line with width: it walks along, and every other cell it
+                // also claims the one beside it.
+                column += drift
+                if step % 2 == 0 {
+                    let beside = row + fall
+                    if beside >= 0, beside < LocalMap.gridRows {
+                        let index = beside * LocalMap.gridColumns + column
+                        if !taken.contains(index) { cells.insert(index) }
+                    }
+                }
+                if step % 4 == 0 { row += fall }
+            case .scatter:
+                // Lobes: it walks a few cells, then hops a gap and starts
+                // again, which is what a broken field looks like from above.
+                if step % 5 == 4 {
+                    column += drift * 2
+                    row += rng.nextUnit() < 0.5 ? 2 : -2
+                } else {
+                    column += rng.nextUnit() < 0.5 ? 1 : -1
+                    row += rng.nextUnit() < 0.5 ? 1 : -1
+                }
             }
             guard column >= 0, column < LocalMap.gridColumns,
                   row >= 0, row < LocalMap.gridRows else { break }

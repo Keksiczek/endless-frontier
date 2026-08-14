@@ -43,6 +43,12 @@ public enum ActionLoop {
                     laws: SocietyEngine.modifiers(next, registry: registry))
             }
             next = HaulEngine.advanceStep(next, registry: registry, clock: clock)
+            // …and the people walking in from outside the valley. A trader with
+            // mules crossing your fields is a body over ground like any other,
+            // and it was the last one still measured per world tick — thirty-
+            // four real minutes to reach the square. What they came *for* stays
+            // on the tick; see `VisitorEngine.advanceStep`.
+            next = VisitorEngine.advanceStep(next, clock: clock)
             // A raid the player is in the middle of fighting.
             //
             // The app drives a live siege *ahead* of the world clock, at a pace

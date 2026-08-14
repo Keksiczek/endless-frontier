@@ -96,6 +96,15 @@ public enum SiegeEngine {
     static let fortificationCeiling = 0.85
     /// What a wall contributes to *breaking* an assault, beyond soaking.
     static let fortificationBite = 0.05
+    /// The most of a shot that the ground can ever take, however good the cover.
+    ///
+    /// A share, never a subtraction — the same discipline as
+    /// `fortificationCeiling`, and for the same reason: total cover that stops
+    /// a shot *entirely* is a mechanic with a dead end in it, because an archer
+    /// facing a wall would simply never shoot and the fight would stall. Even
+    /// behind a building people lean out, and a volley into a wood still finds
+    /// somebody. Cover is a heavy tax on shooting, not a veto (§11.27).
+    static let coverBite = 0.8
     /// Food carried off per step by raiders who are **standing in the stores**,
     /// as a share of what is there. Giving ground is cheap in blood and dear in
     /// grain — that is the entire trade, and it has to actually bite.
@@ -212,11 +221,17 @@ public enum SiegeEngine {
         guard absoluteStep > siege.advancedTo else { return (settlement, nil) }
         var s = settlement
 
+        // What stands on the ground this fight is happening on, stamped once
+        // for the whole call rather than per step (§11.23's discipline, and
+        // §11.27's mechanic). A raid does not fell trees while it is going on,
+        // so one field answers every step of it.
+        let cover = s.localMap.map { CoverField($0, colony: s.colony) } ?? CoverField()
+
         var reached = siege.advancedTo
         while reached < absoluteStep, !siege.isFinished {
             reached += 1
             siege.advancedTo = reached
-            s = fightOneStep(s, siege: &siege, registry: registry)
+            s = fightOneStep(s, siege: &siege, registry: registry, cover: cover)
         }
         siege.advancedTo = max(siege.advancedTo, min(absoluteStep, reached))
         s.siege = siege
@@ -239,7 +254,8 @@ public enum SiegeEngine {
     /// reach. That is the difference between a fight with rounds and a fight
     /// with a ground to stand on.
     private static func fightOneStep(
-        _ settlement: Settlement, siege: inout Siege, registry: GameDataRegistry
+        _ settlement: Settlement, siege: inout Siege, registry: GameDataRegistry,
+        cover: CoverField = CoverField()
     ) -> Settlement {
         var s = settlement
         let step = siege.step
@@ -259,7 +275,7 @@ public enum SiegeEngine {
         }
 
         let power = weights(of: s.pawns, siege: siege, registry: registry)
-        loose(&siege, power: power, rng: &rng)
+        loose(&siege, power: power, cover: cover, rng: &rng)
         strike(&siege, power: power, met: met, rng: &rng)
         s = answer(s, siege: &siege, met: met, field: field, rng: &rng)
         return ransack(s, siege: &siege, field: field)
@@ -491,7 +507,7 @@ public enum SiegeEngine {
     /// a bow is for: closing fast is what costs you the volleys.
     private static func loose(
         _ siege: inout Siege, power: [UUID: (melee: Double, ranged: Double)],
-        rng: inout SeededRNG
+        cover: CoverField, rng: inout SeededRNG
     ) {
         let raiders = siege.fighters.filter { $0.side == .raider && !$0.down }
         guard !raiders.isEmpty else { return }
@@ -503,8 +519,16 @@ public enum SiegeEngine {
             guard let mark = nearest(to: archer.at, among: raiders) else { continue }
             let gap = SiegeField.distance(archer.at, mark.at)
             guard gap <= bowRange, gap > reach else { continue }
+            // What the world has to say about the line between them (§11.27).
+            // A raider coming on through a wood or behind the old walls is a
+            // harder shot than one crossing open ground, and *where the fight
+            // happens* is now a thing the player can read off the map before it
+            // starts. Derived from height and substance, never declared — see
+            // `Cover`.
+            let sheltered = 1 - cover.between(archer.at, mark.at) * coverBite
             let shot = (power[archer.id]?.ranged ?? 0) * siege.posture.bite
-                * (0.8 + rng.nextUnit() * 0.4) * rangedPerStep
+                * (0.8 + rng.nextUnit() * 0.4) * rangedPerStep * sheltered
+            guard shot > 0 else { continue }
             total += wound(raider: mark.id, by: shot, siege: &siege)
         }
         guard total > 0 else { return }

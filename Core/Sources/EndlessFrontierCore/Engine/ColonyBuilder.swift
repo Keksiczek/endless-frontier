@@ -26,8 +26,16 @@ public enum ColonyBuilder {
     /// there is room left for squares and gardens. The span on screen is
     /// unchanged, so a tile is smaller and a *building* — which is now two to
     /// four tiles across instead of one to three — comes out larger.
-    public static let defaultWidth = 24
-    public static let defaultHeight = 24
+    ///
+    /// **Doubled again on 2026-08-14**, at Keks's asking — *"a taky ji prosím
+    /// zvěts na dvojnásobek"*. 34×34 is 1156 tiles against 576: twice the
+    /// ground, and the linear step (×1.42) is carried by
+    /// `SettlementGeometry.span` so a building keeps exactly the size on screen
+    /// it had before. What grows is the *valley*, not the tiles in it — room
+    /// for the country between the quarters, which is the point of the terrain
+    /// having shapes at all.
+    public static let defaultWidth = 34
+    public static let defaultHeight = 34
 
     /// Ensures the settlement has a colony grid, creating an empty one if needed.
     public static func ensureMap(
@@ -192,7 +200,7 @@ public enum ColonyBuilder {
     public static let growthStep = 4
     /// Where it stops. 64×64 is four thousand tiles — a town of six hundred
     /// buildings — and past that the tiles are too small to be worth drawing.
-    public static let maxSide = 64
+    public static let maxSide = 90
 
     /// Takes in another ring of ground, keeping the town where it stands.
     ///
@@ -426,6 +434,13 @@ public enum ColonyBuilder {
             for dx in 0..<size.width {
                 let tile = TileCoord(coord.x + dx, coord.y + dy)
                 if !map.isInBounds(tile) || map.placement(at: tile) != nil { return false }
+                // The green is not building land. `nearestFit` measures from the
+                // district centre and the first district centre *is* the heart,
+                // so without this the very first building a colony raises goes
+                // on the one piece of ground the game treats as a place — the
+                // square the midday gathering stands on and visitors walk to.
+                // See `SettlementGeometry.greenTiles`.
+                if SettlementGeometry.isGreen(tile, in: map) { return false }
             }
         }
         return true

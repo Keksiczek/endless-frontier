@@ -57,10 +57,13 @@ struct HaulTests {
 
     @Test("It takes walking — distance is a real cost")
     func haulingTakesTime() {
+        // Six steps, because a colony with no storehouse puts its loads down in
+        // the goods yard at the green's edge rather than on the green itself —
+        // so even the near heap is a walk of a few steps each way.
         let near = run(colony(hands: 1, piles: [("wood", 4, LocalPoint(x: 0.52, y: 0.53))]),
-                       steps: 4)
+                       steps: 6)
         let far = run(colony(hands: 1, piles: [("wood", 4, LocalPoint(x: 0.95, y: 0.05))]),
-                      steps: 4)
+                      steps: 6)
         #expect((near.stockpile["wood"] ?? 0) > (far.stockpile["wood"] ?? 0))
     }
 

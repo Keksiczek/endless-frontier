@@ -44,13 +44,22 @@ struct HuntTests {
             Issue.record("a beast moved without leaving a leg behind")
             return
         }
-        // A whole think long, so the crossing fills the gap rather than
-        // finishing in the first instant and standing about for the rest.
-        #expect(walk.arrivesAt - walk.leftAt == AnimalEngine.thinkInterval)
+        // **A beast walks its stride and then stops.** It used to be stretched
+        // over the whole think — ten world ticks, twenty real minutes — which
+        // made a grazing deer a statue and, worse, made a *bolting* one flee
+        // for twenty minutes. How far a think moves an animal and how fast it
+        // moves are two different questions (`WalkPace`, rule 34), and this is
+        // the second one: the crossing takes as long as walking that far takes.
+        let legSteps = walk.arrivesAt - walk.leftAt
+        #expect(legSteps >= 1)
+        #expect(legSteps < AnimalEngine.thinkInterval * WorldClock.actionStepsPerTick,
+                "the beast is still smearing one stride over the whole think")
         let start = Double(walk.leftAt)
-        #expect(walk.position(at: start + 1) != walk.from, "a tick in, still on the spot")
-        #expect(walk.position(at: start + 2) != walk.position(at: start + 1),
-                "a tick later, not a step further")
+        #expect(walk.position(at: start + Double(legSteps) * 0.25) != walk.from,
+                "a quarter of the way in, still on the spot")
+        #expect(walk.position(at: start + Double(legSteps) * 0.5)
+                    != walk.position(at: start + Double(legSteps) * 0.25),
+                "and no further a quarter later")
         #expect(walk.to == map.wildlife.animals.first?.position)
     }
 

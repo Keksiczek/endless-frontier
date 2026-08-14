@@ -194,6 +194,21 @@ public enum AnimalEngine {
     static let stride = 0.012
     /// A frightened one covers this much instead.
     static let bolt = 0.055
+
+    /// How fast a beast crosses that ground, per **action step**.
+    ///
+    /// The distance a think moves an animal and the speed it moves at are two
+    /// different questions, and the code used to answer only the first: the
+    /// walk was stretched over the *whole* think, so a deer covered its twelve
+    /// thousandths of a valley over twenty real minutes — one hundred-thousandth
+    /// of a map width per second, which is a statue — and a **bolting** deer
+    /// fled for twenty minutes, which is not a bolt. Same positions, same
+    /// distances, same balance: what changes is that a beast now walks its
+    /// stride and then stops, the way an animal actually moves (`WalkPace`,
+    /// rule 34).
+    static let amble = WalkPace.perStep * 0.5
+    /// …and a bolt is faster than a person, because that is what a bolt is.
+    static let flight = WalkPace.perStep * 2
     /// How near a predator has to be before prey notice it.
     static let alarmRange = 0.10
     /// How near a hunter has to be before prey bolt.
@@ -281,12 +296,17 @@ public enum AnimalEngine {
             let from = animal.position
             animal.position = step(from: from, toward: target, by: pace)
             // …and the same stride with a beginning and an end, so the canvas
-            // can draw the crossing. It spans a whole think, because that is
-            // exactly how long it is until the beast decides again — twenty
-            // real minutes, which is how long a grazing deer used to hold one
-            // pose before teleporting.
-            animal.walk = WalkPath(from: from, to: animal.position,
-                                   leftAt: tick, arrivesAt: tick + thinkInterval)
+            // can draw the crossing. It takes as long as *walking that far*
+            // takes, not as long as it is until the beast decides again: a deer
+            // ambles a few paces and then puts its head down, and a frightened
+            // one is gone. Stretching it over the whole think was what made the
+            // wild a still life.
+            let leftAt = WorldClock(tick: tick, step: 0).absoluteStep
+            let speed = animal.activity == .fleeing ? flight : amble
+            animal.walk = WalkPath(
+                from: from, to: animal.position, leftAt: leftAt,
+                arrivesAt: leftAt + WalkPace.steps(
+                    for: SiegeField.distance(from, animal.position), pace: speed))
             moved.append(animal)
         }
 

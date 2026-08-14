@@ -201,13 +201,18 @@ struct CenteredPlacementTests {
             for: [BuildingInstance(definitionID: "hut", count: 3)], registry: reg)
         #expect(!map.placements.isEmpty)
         // Derived from the default grid, so widening it doesn't break the test
-        // that only cares about landing near the middle.
+        // that only cares about landing near the middle — and from the green,
+        // which is reserved ground the colony may not build on. "Near the
+        // heart" now means "just off the square", because the square is a
+        // place. See `SettlementGeometry.greenTiles`.
         let heartX = (Double(ColonyBuilder.defaultWidth) - 1) / 2
         let heartY = (Double(ColonyBuilder.defaultHeight) - 1) / 2
+        let nearest = Double(SettlementGeometry.greenTiles) / 2 + 1
         for placement in map.placements {
             let dx = abs(Double(placement.coord.x) - heartX)
             let dy = abs(Double(placement.coord.y) - heartY)
-            #expect(dx <= 2 && dy <= 2, "hut at \(placement.coord) is far from the heart")
+            #expect(dx <= nearest && dy <= nearest,
+                    "hut at \(placement.coord) is far from the heart")
         }
     }
 
@@ -223,7 +228,9 @@ struct CenteredPlacementTests {
         let coord = sited.colony?.placements.first?.coord
         let heartX = (ColonyBuilder.defaultWidth - 1) / 2
         let heartY = (ColonyBuilder.defaultHeight - 1) / 2
-        #expect(coord.map { abs($0.x - heartX) <= 1 && abs($0.y - heartY) <= 1 } == true)
+        // Just off the green, which is reserved ground.
+        let nearest = SettlementGeometry.greenTiles / 2 + 1
+        #expect(coord.map { abs($0.x - heartX) <= nearest && abs($0.y - heartY) <= nearest } == true)
     }
 
     @Test("Big buildings really take ground: university is 4×4 and blocks overlap")

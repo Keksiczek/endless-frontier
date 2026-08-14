@@ -35,10 +35,23 @@ struct VisitorDecisionTests {
         return w
     }
 
+    /// The shape `TickEngine` runs: a party walks on the **action grid**
+    /// (`WalkPace`, rule 34) and the world tick settles what they came for.
+    /// Driving `advanceOneTick` alone is a valley where nobody ever crosses the
+    /// fields, so no party ever reaches the square.
+    private func liveTick(_ world: WorldState, registry: GameDataRegistry) -> WorldState {
+        var w = world
+        for step in 0..<WorldClock.actionStepsPerTick {
+            let clock = WorldClock(tick: w.tick, step: step)
+            w.settlements = w.settlements.map { VisitorEngine.advanceStep($0, clock: clock) }
+        }
+        return VisitorEngine.advanceOneTick(w, registry: registry, mapSeed: w.mapSeed)
+    }
+
     private func run(_ world: WorldState, registry: GameDataRegistry, ticks: Int) -> WorldState {
         var w = world
         for _ in 0..<ticks {
-            w = VisitorEngine.advanceOneTick(w, registry: registry, mapSeed: w.mapSeed)
+            w = liveTick(w, registry: registry)
             w.tick += 1
         }
         return w

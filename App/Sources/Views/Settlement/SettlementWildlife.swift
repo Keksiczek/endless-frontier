@@ -116,11 +116,11 @@ enum SettlementWildlife {
 
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double,
-        continuousTick: Double = 0, zoom: CGFloat = 1
+        continuousStep: Double = 0, zoom: CGFloat = 1
     ) {
         guard map.wildlife.animals.isEmpty else {
             entities(&context, rect: rect, map: map, time: time,
-                     continuousTick: continuousTick, zoom: zoom)
+                     continuousStep: continuousStep, zoom: zoom)
             return
         }
         abstractHerd(&context, rect: rect, map: map, time: time)
@@ -162,13 +162,13 @@ enum SettlementWildlife {
     /// the gait, the head coming up.
     private static func entities(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap, time: Double,
-        continuousTick: Double, zoom: CGFloat
+        continuousStep: Double, zoom: CGFloat
     ) {
         // Back to front, so a beast in front overlaps the one behind it. Sorted
         // on where they *are on this frame*, or a beast crossing in front of
         // another would keep the stacking it had on the last think.
         let standing = map.wildlife.animals
-            .map { (animal: $0, at: $0.position(at: continuousTick)) }
+            .map { (animal: $0, at: $0.position(at: continuousStep)) }
             .sorted { $0.at.y < $1.at.y }
         for (animal, where_) in standing {
             let phase = Double(hash(animal.id) % 6199) / 6199 * 2 * .pi

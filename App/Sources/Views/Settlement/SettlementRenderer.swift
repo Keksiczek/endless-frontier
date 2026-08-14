@@ -151,9 +151,10 @@ enum SettlementRenderer {
         // What has been cut and not yet carried in.
         SettlementPiles.draw(&context, rect: rect, map: map, zoom: zoom)
         // And whoever has come in over the edge to trade or to talk.
-        SettlementVisitors.draw(&context, rect: rect, map: map, time: time,
-                                continuousTick: continuousTick,
-                                zoom: zoom, showLabels: showLabels)
+        SettlementVisitors.draw(
+            &context, rect: rect, map: map, time: time,
+            continuousStep: continuousTick * Double(WorldClock.actionStepsPerTick),
+            zoom: zoom, showLabels: showLabels)
         // Your own carts, on the leg of the road that crosses this valley.
         SettlementConvoys.draw(&context, rect: rect, settlement: settlement,
                                caravans: caravans, map: map, time: time, zoom: zoom)
@@ -164,8 +165,10 @@ enum SettlementRenderer {
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels,
              expeditions: settlement.expeditions)
-        SettlementWildlife.draw(&context, rect: rect, map: map, time: time,
-                                continuousTick: continuousTick, zoom: zoom)
+        SettlementWildlife.draw(
+            &context, rect: rect, map: map, time: time,
+            continuousStep: continuousTick * Double(WorldClock.actionStepsPerTick),
+            zoom: zoom)
 
         let placed = layout(settlement: settlement, registry: registry, rect: rect)
         // Pushed in close, every structure says what it is — the answer to
@@ -299,14 +302,17 @@ enum SettlementRenderer {
         // What has been cut and not yet carried in.
         SettlementPiles.draw(&context, rect: rect, map: map, zoom: zoom)
         // And whoever has come in over the edge to trade or to talk.
-        SettlementVisitors.draw(&context, rect: rect, map: map, time: time,
-                                continuousTick: continuousTick,
-                                zoom: zoom, showLabels: showLabels)
+        SettlementVisitors.draw(
+            &context, rect: rect, map: map, time: time,
+            continuousStep: continuousTick * Double(WorldClock.actionStepsPerTick),
+            zoom: zoom, showLabels: showLabels)
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels)
-        SettlementWildlife.draw(&context, rect: rect, map: map, time: time,
-                                continuousTick: continuousTick, zoom: zoom)
+        SettlementWildlife.draw(
+            &context, rect: rect, map: map, time: time,
+            continuousStep: continuousTick * Double(WorldClock.actionStepsPerTick),
+            zoom: zoom)
         if regionKind == .anomaly {
             anomalyGlow(&context, rect: rect, time: time)
         }
@@ -1472,10 +1478,16 @@ enum SettlementRenderer {
     /// `Camera.opening` — a wider span gives each building more ground and the
     /// opening zoom puts that ground across the screen.
     ///
-    /// Mirrored by `SettlementGeometry.span` in the Core — a colonist must be
-    /// sent to the building that is *drawn*, so the two must agree. Guarded by
-    /// "The Core and the canvas agree about how wide the town is".
-    static let colonySpan: Double = 0.58
+    /// **Taken from `SettlementGeometry.span`, not copied from it.**
+    ///
+    /// This was a literal `0.58` with a comment saying it must agree with the
+    /// Core, and a test guarding that it did. The comment and the test were
+    /// both doing a job that one `=` does better: widening the valley on
+    /// 2026-08-14 changed the Core's number and left this one behind, which
+    /// draws every building in a different place from where colonists are sent
+    /// to work in it. A number that must equal another number should *be* that
+    /// number.
+    static let colonySpan: Double = SettlementGeometry.span
 
     /// Maps a grid tile to the point on the canvas it sits at, centred on the
     /// heart so the built colony always lands inside the cleared ground.

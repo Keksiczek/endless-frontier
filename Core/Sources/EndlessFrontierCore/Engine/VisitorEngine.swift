@@ -65,8 +65,23 @@ public enum VisitorEngine {
     public static let settlerMorale: Double = 55
     /// How long a party stands in the square before starting home.
     public static let stayTicks = 12
-    /// How far they cover per tick.
-    public static let pace: Double = 0.03
+    /// How far a party covers in one **action step**.
+    ///
+    /// Was `0.03` *per world tick*, and the tension that number was defending
+    /// turned out not to exist. The worry was that an approach has to take
+    /// several minutes — you should see a party coming and have time to think
+    /// about it — and that a visible walking speed would have them at the door
+    /// too soon. Work it out: the edge is about half a map from the square, and
+    /// at a hair under a colonist's pace that is seven or eight steps, which is
+    /// **still the better part of two real minutes** of a trader with mules
+    /// visibly crossing your fields. The old number made it thirty-four
+    /// minutes, which is not an approach, it is a fixture. See `WalkPace` and
+    /// rule 34.
+    ///
+    /// Slightly under `WalkPace.perStep` because a laden mule train is slower
+    /// than a colonist crossing his own town, and because the approach is the
+    /// beat that carries the arrival.
+    public static let pace: Double = 0.065
     /// Close enough to the square to be *at* it.
     public static let arrivalRadius: Double = 0.03
 
@@ -139,15 +154,22 @@ public enum VisitorEngine {
 
     // MARK: - Coming and going
 
-    /// Moves every party a step and settles the business of any that have
-    /// reached the square.
-    static func walk(
-        _ settlement: Settlement, world: WorldState, tick: Int
-    ) -> (settlement: Settlement, asks: String?) {
+    /// **Walking is a step thing; the business of a visit is a tick thing.**
+    ///
+    /// A party crossing your fields is a body moving over ground, and a body
+    /// moving over ground belongs on the action grid with everybody else
+    /// (`WalkPace`, rule 34). What they *came for* — the trade settled, the
+    /// decision put to the Leader, the twelve ticks they stand in the square —
+    /// is the civilisation's business and stays on the civilisation's clock.
+    ///
+    /// Only positions and the transitions that positions decide are here:
+    /// reaching the square starts the visit, reaching the edge ends it. Nothing
+    /// in this touches the settlement beyond its own map, so it can run eight
+    /// times a tick without a single thing happening eight times.
+    static func advanceStep(_ settlement: Settlement, clock: WorldClock) -> Settlement {
         guard let existing = settlement.localMap, !existing.visitors.isEmpty else {
-            return (settlement, nil)
+            return settlement
         }
-        var asks: String?
         var s = settlement
         var map = existing
         let square = SettlementGeometry.heart
@@ -157,25 +179,19 @@ public enum VisitorEngine {
         for var visitor in map.visitors {
             switch visitor.phase {
             case .arriving:
-                walkOn(&visitor, toward: square, at: tick)
+                walkOn(&visitor, toward: square, at: clock.absoluteStep)
                 if within(visitor.position, square, arrivalRadius) {
                     visitor.phase = VisitorPhase.visiting
                     visitor.ticksRemaining = stayTicks
                 }
             case .visiting:
-                if !visitor.settled {
-                    s = settle(s, visitor: visitor, world: world, tick: tick)
-                    asks = asks ?? decision(for: visitor.kind)
-                    visitor.settled = true
-                }
-                visitor.ticksRemaining -= 1
-                if visitor.ticksRemaining <= 0 { visitor.phase = VisitorPhase.leaving }
+                break   // standing in the square; the tick settles what they want
             case .leaving:
                 // Settlers are the one party who came to stop. They unpacked in
                 // the square and they are colonists now, so there is nobody left
                 // to walk back out.
                 if visitor.kind == .settler { continue }
-                walkOn(&visitor, toward: visitor.entry, at: tick)
+                walkOn(&visitor, toward: visitor.entry, at: clock.absoluteStep)
                 // Gone off the edge, and out of the save.
                 if within(visitor.position, visitor.entry, arrivalRadius) { continue }
             }
@@ -183,6 +199,35 @@ public enum VisitorEngine {
         }
 
         map.visitors = remaining
+        s.localMap = map
+        return s
+    }
+
+    /// What a party that has reached the square actually came for, and the
+    /// clock that sends them home again. Positions are not touched here — see
+    /// `advanceStep`.
+    static func walk(
+        _ settlement: Settlement, world: WorldState, tick: Int
+    ) -> (settlement: Settlement, asks: String?) {
+        guard let existing = settlement.localMap, !existing.visitors.isEmpty else {
+            return (settlement, nil)
+        }
+        var asks: String?
+        var s = settlement
+        var map = existing
+
+        for index in map.visitors.indices where map.visitors[index].phase == .visiting {
+            if !map.visitors[index].settled {
+                s = settle(s, visitor: map.visitors[index], world: world, tick: tick)
+                asks = asks ?? decision(for: map.visitors[index].kind)
+                map.visitors[index].settled = true
+            }
+            map.visitors[index].ticksRemaining -= 1
+            if map.visitors[index].ticksRemaining <= 0 {
+                map.visitors[index].phase = VisitorPhase.leaving
+            }
+        }
+
         s.localMap = map
         return (s, asks)
     }
@@ -408,21 +453,24 @@ public enum VisitorEngine {
         return dx * dx + dy * dy <= radius * radius
     }
 
-    /// One tick's stride toward a point, and the leg it just walked.
+    /// One action step's stride toward a point, and the leg it just walked.
     ///
-    /// `position` is unchanged — still the simulation's answer on the tick, and
-    /// still what everything reasoning about a visit reads. What is new is
-    /// `walk`: the same stride expressed as a thing with a beginning and an
-    /// end, so the canvas can ask where they are a *third of the way* through
-    /// it. Without it a party stood still for two whole minutes and then
-    /// jumped, which is what made the valley read as a diorama rather than a
-    /// place. The same fix as `Pawn.haulWalk`, in the shape that suits a walker
-    /// whose next target is not known until they get there.
-    static func walkOn(_ visitor: inout Visitor, toward target: LocalPoint, at tick: Int) {
+    /// `position` is unchanged in kind — still the simulation's answer, and
+    /// still what everything reasoning about a visit reads. What `walk` adds is
+    /// the same stride expressed as a thing with a beginning and an end, so the
+    /// canvas can ask where they are a *third of the way* through it. Without
+    /// it a party stood still and then jumped, which is what made the valley
+    /// read as a diorama rather than a place.
+    ///
+    /// The step it spans is an **action** step now, not a world tick: one
+    /// stride is fifteen real seconds of walking rather than two minutes of
+    /// creeping. The same fix as `Pawn.haulWalk`, in the shape that suits a
+    /// walker whose next target is not known until they get there.
+    static func walkOn(_ visitor: inout Visitor, toward target: LocalPoint, at step: Int) {
         let from = visitor.position
-        let to = step(from: from, toward: target, by: pace)
+        let to = Self.step(from: from, toward: target, by: pace)
         visitor.position = to
-        visitor.walk = WalkPath(from: from, to: to, leftAt: tick, arrivesAt: tick + 1)
+        visitor.walk = WalkPath(from: from, to: to, leftAt: step, arrivesAt: step + 1)
     }
 
     static func step(from: LocalPoint, toward: LocalPoint, by distance: Double) -> LocalPoint {

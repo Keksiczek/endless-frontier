@@ -96,7 +96,11 @@ public enum HaulEngine {
 
         var s = settlement
         let step = clock.absoluteStep
-        let store = storePosition(s)
+        // Where a hauler with nothing to their name stands, and the point the
+        // heap search measures from. Not a *destination* any more — a load's
+        // destination depends on what the load is and where it was picked up,
+        // and is decided at the heap (`storePosition(_:for:registry:from:)`).
+        let yard = storePosition(s, registry: registry)
         let ticksPerYear = max(1, registry.config.ticksPerYear)
         // Claims are swept on the tick, not on every step: it is a whole pass
         // over the piles against a set of the living, and nobody dies eight
@@ -134,7 +138,7 @@ public enum HaulEngine {
         // route out of the per-step path (rule 4).
         func walk(of pawn: Pawn, to target: LocalPoint, pace: Double) -> WalkPath {
             if let under = pawn.haulWalk, under.to == target { return under }
-            let here = pawn.haulWalk?.position(at: Double(step)) ?? store
+            let here = pawn.haulWalk?.position(at: Double(step)) ?? yard
             return WalkPath.across(from: here, to: target, leavingAt: step,
                                    pace: pace, in: s.colony, occupancy: occupancy())
         }
@@ -175,19 +179,26 @@ public enum HaulEngine {
             let looking = turnedRound
                 || (clock.tick % JobBoard.interval == 0 && clock.step == 0)
             guard let index = held
-                    ?? (looking ? nearestUnclaimed(in: map, to: store) : nil) else { continue }
+                    ?? (looking ? nearestUnclaimed(in: map, to: yard) : nil) else { continue }
             // Claim it, walk to it, and pick it up when they get there.
             map.piles[index].claimedBy = s.pawns[i].id
             let pilePosition = map.piles[index].position
             let out = walk(of: s.pawns[i], to: pilePosition, pace: emptySpeed * lift)
             if out.hasArrived(at: step) {
                 let pile = map.piles.remove(at: index)
+                // Which store this load goes to is decided **here**, with the
+                // heap in their hands: grain to the granary, timber to the
+                // warehouse, and the nearest one of the right kind measured
+                // from where they are standing rather than from the middle of
+                // town. A colony with two quarters carries to its own quarter.
+                let destination = storePosition(s, for: pile.itemID, registry: registry,
+                                                from: pilePosition)
                 s.pawns[i].carrying = HaulLoad(itemID: pile.itemID, amount: pile.amount,
-                                               destination: store)
+                                               destination: destination)
                 // …and they turn round on the spot: the walk home begins at the
                 // heap, not at the store they set out from.
                 s.pawns[i].haulWalk = WalkPath.across(
-                    from: pilePosition, to: store, leavingAt: step,
+                    from: pilePosition, to: destination, leavingAt: step,
                     pace: carrySpeed * lift, in: s.colony, occupancy: occupancy())
             } else {
                 s.pawns[i].haulWalk = out
@@ -263,19 +274,63 @@ public enum HaulEngine {
         return best
     }
 
-    /// Where goods are put down: the colony's storehouse if it has one, else
-    /// its heart.
-    public static func storePosition(_ settlement: Settlement) -> LocalPoint {
-        guard let colony = settlement.colony else { return SettlementGeometry.heart }
-        // Anything with a granary's job stands in for a warehouse.
+    /// Where a load of `itemID` is put down.
+    ///
+    /// **The nearest building that keeps that kind of thing**, and the goods
+    /// yard if the colony has not built one yet. Three things were wrong with
+    /// the name-matching version this replaces, and they compounded:
+    ///
+    /// 1. It matched on the *id string* — `contains("granary")` — so a store
+    ///    was a store because of what it was called. A new building called
+    ///    `root_cellar` would have kept nothing, silently.
+    /// 2. It took the **first** match in placement order, so a colony with a
+    ///    granary in one quarter and a warehouse in another carried everything
+    ///    to whichever happened to be raised first, however far it was.
+    /// 3. Grain and timber went to the *same* building, because neither the
+    ///    kind of the good nor the kind of the store was ever asked about.
+    ///
+    /// Now the good says what it is (`CookingEngine.foodstuffs` is the same
+    /// list the kitchens read, so there is one answer to "is this food"), the
+    /// building says what it holds (`storage`, which is data and already
+    /// exists), and the walk is to the nearest of the ones that agree. A granary
+    /// takes the harvest, a warehouse takes the timber, a market takes either.
+    ///
+    /// The fallback is the **goods yard, not the green**: a colony with nowhere
+    /// to put its timber used to pile it on the one square people gather in.
+    public static func storePosition(
+        _ settlement: Settlement, for itemID: String? = nil,
+        registry: GameDataRegistry = GameDataRegistry(),
+        from: LocalPoint? = nil
+    ) -> LocalPoint {
+        guard let colony = settlement.colony else { return SettlementGeometry.goodsYard }
+        let wanted: ResourceType = itemID.map {
+            CookingEngine.foodstuffs(registry).contains($0) ? .food : .materials
+        } ?? .materials
+        let origin = from ?? SettlementGeometry.goodsYard
+
+        var best: (at: LocalPoint, distance: Double)?
         for placement in colony.placements where !placement.underConstruction {
-            if placement.definitionID.contains("granary")
-                || placement.definitionID.contains("warehouse")
-                || placement.definitionID.contains("store") {
-                return SettlementGeometry.canvasPoint(for: placement, in: colony)
+            guard let def = registry.building(placement.definitionID),
+                  (def.storage[wanted] ?? 0) > 0 else { continue }
+            let at = SettlementGeometry.canvasPoint(for: placement, in: colony)
+            let distance = SiegeField.distance(origin, at)
+            if distance < (best?.distance ?? .infinity) { best = (at, distance) }
+        }
+        // A colony that has raised no store of the right kind still has to put
+        // the load down somewhere, and the *wrong* store is better than the
+        // middle of the square: a granary will hold sacks of anything at a
+        // pinch. Only a colony with nothing at all uses the yard.
+        if best == nil {
+            for placement in colony.placements where !placement.underConstruction {
+                guard let def = registry.building(placement.definitionID),
+                      ResourceType.allCases.contains(where: { (def.storage[$0] ?? 0) > 0 })
+                else { continue }
+                let at = SettlementGeometry.canvasPoint(for: placement, in: colony)
+                let distance = SiegeField.distance(origin, at)
+                if distance < (best?.distance ?? .infinity) { best = (at, distance) }
             }
         }
-        return SettlementGeometry.heart
+        return best?.at ?? SettlementGeometry.goodsYard
     }
 
     /// Whether this ground's goods arrive by being carried rather than by being

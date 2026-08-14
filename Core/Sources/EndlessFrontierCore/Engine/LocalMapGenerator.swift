@@ -126,7 +126,7 @@ public enum LocalMapGenerator {
             addProps(.ruinPillar, 9, around: heart, spread: 0.16)
             pois.append(LocalPOI(id: poiID, kind: .treasure, position: heart)); poiID += 1
             pois.append(LocalPOI(id: poiID, kind: .ruins,
-                                 position: landPoint(river: river, shore: shore, rng: &rng))); poiID += 1
+                                 position: frontierPoint(river: river, shore: shore, rng: &rng))); poiID += 1
             nodes.append(ResourceNode(id: nodeID, kind: .stone,
                                       position: landPoint(river: river, shore: shore, rng: &rng),
                                       amount: 260, capacity: 260)); nodeID += 1
@@ -138,7 +138,7 @@ public enum LocalMapGenerator {
             addProps(.ruinPillar, 4, around: landPoint(river: river, shore: shore, rng: &rng), spread: 0.2)
         case .dungeon:
             pois.append(LocalPOI(id: poiID, kind: .cave,
-                                 position: landPoint(river: river, shore: shore, rng: &rng))); poiID += 1
+                                 position: frontierPoint(river: river, shore: shore, rng: &rng))); poiID += 1
         default:
             break
         }
@@ -277,8 +277,10 @@ public enum LocalMapGenerator {
         for id in 0..<wanted {
             guard let index = rng.weightedIndex(pool.map(\.1)) else { break }
             let kind = pool.remove(at: index).0
+            // Out past the colony's own charted ground: a landmark is a reason
+            // to walk somewhere, and one under the market square is not one.
             picked.append(LocalPOI(id: id, kind: kind,
-                                   position: landPoint(river: river, shore: shore, rng: &rng)))
+                                   position: frontierPoint(river: river, shore: shore, rng: &rng)))
         }
         return picked
     }
@@ -335,6 +337,26 @@ public enum LocalMapGenerator {
     }
 
     /// A point on dry land (away from the river), biased toward the interior.
+    /// Dry ground **outside the colony's own charted circle**.
+    ///
+    /// A landmark is a reason to walk out of the valley's middle, and a treasure
+    /// under the market square is not one. With the town doubled, `landPoint`
+    /// alone put most landmarks on ground the colony starts with already
+    /// revealed — so the frontier had nothing in it and the fog had nothing to
+    /// hide. Falls back to `landPoint` if the ring is too crowded to land in,
+    /// because a map with no ruins at all is worse than one with a near ruin.
+    static func frontierPoint(
+        river: RiverShape, shore: ShoreShape? = nil, rng: inout SeededRNG
+    ) -> LocalPoint {
+        let charted = SettlementGeometry.cornerReach + 0.06
+        for _ in 0..<24 {
+            let p = landPoint(river: river, shore: shore, rng: &rng)
+            let dx = p.x - 0.5, dy = p.y - 0.5
+            if (dx * dx + dy * dy).squareRoot() >= charted { return p }
+        }
+        return landPoint(river: river, shore: shore, rng: &rng)
+    }
+
     private static func landPoint(
         river: RiverShape, shore: ShoreShape? = nil, rng: inout SeededRNG
     ) -> LocalPoint {

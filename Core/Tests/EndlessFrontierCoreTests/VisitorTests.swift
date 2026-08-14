@@ -34,10 +34,23 @@ struct VisitorTests {
               stores: stores, standing: standing, discovered: discovered)
     }
 
+    /// The shape `TickEngine` runs: a party walks on the **action grid**
+    /// (`WalkPace`, rule 34) and the world tick settles what they came for.
+    /// Driving `advanceOneTick` alone is a valley where nobody ever crosses the
+    /// fields, so no party ever reaches the square.
+    private func liveTick(_ world: WorldState, registry: GameDataRegistry) -> WorldState {
+        var w = world
+        for step in 0..<WorldClock.actionStepsPerTick {
+            let clock = WorldClock(tick: w.tick, step: step)
+            w.settlements = w.settlements.map { VisitorEngine.advanceStep($0, clock: clock) }
+        }
+        return VisitorEngine.advanceOneTick(w, registry: registry, mapSeed: w.mapSeed)
+    }
+
     private func run(_ world: WorldState, ticks: Int) -> WorldState {
         var w = world
         for _ in 0..<ticks {
-            w = VisitorEngine.advanceOneTick(w, registry: registry(), mapSeed: w.mapSeed)
+            w = liveTick(w, registry: registry())
             w.tick += 1
         }
         return w
@@ -58,7 +71,7 @@ struct VisitorTests {
         let crowd = (0..<6).map { i in tribe(name: "T\(i)", standing: 70) }
         var w = run(world(tribes: crowd), ticks: 400)
         for _ in 0..<10 {
-            w = VisitorEngine.advanceOneTick(w, registry: registry(), mapSeed: w.mapSeed)
+            w = liveTick(w, registry: registry())
             w.tick += 1
             #expect((w.settlements[0].localMap?.visitors.count ?? 0)
                     <= VisitorEngine.maxVisitors)
@@ -122,7 +135,7 @@ struct VisitorTests {
         var reached = false
         var paidTwice = false
         for _ in 0..<200 {
-            w = VisitorEngine.advanceOneTick(w, registry: registry(), mapSeed: w.mapSeed)
+            w = liveTick(w, registry: registry())
             w.tick += 1
             let visitors = w.settlements[0].localMap?.visitors ?? []
             if visitors.contains(where: { $0.phase == .visiting }) { reached = true }
@@ -138,10 +151,12 @@ struct VisitorTests {
 
     /// A party crossed the valley one stride per tick, and a tick is two real
     /// minutes — so a visitor stood frozen for two minutes and then jumped.
-    /// `position` is still the tick's answer; the *leg they just walked* is
-    /// what the canvas draws, and it has to move between one tick and the next.
-    /// The same defect, and the same fix, as `Pawn.haulWalk`.
-    @Test("A visitor is somewhere new between one tick and the next")
+    /// `position` is still the simulation's answer; the *leg they just walked*
+    /// is what the canvas draws, and it has to move between one step and the
+    /// next. The same defect, and the same fix, as `Pawn.haulWalk` — and the
+    /// stride is measured on the action grid now, so a party approaching is a
+    /// party you can watch approach (`WalkPace`).
+    @Test("A visitor is somewhere new between one step and the next")
     func theWalkInIsContinuous() {
         var w = world(tribes: [])
         let entry = LocalPoint(x: 0.02, y: 0.5)
@@ -150,7 +165,7 @@ struct VisitorTests {
                     kind: .trader, fromName: "Kamenní",
                     position: entry, entry: entry)
         ]
-        w = VisitorEngine.advanceOneTick(w, registry: registry(), mapSeed: w.mapSeed)
+        w = liveTick(w, registry: registry())
 
         guard let walk = w.settlements[0].localMap?.visitors.first?.walk else {
             Issue.record("the party took a step without leaving a leg behind")
@@ -256,7 +271,7 @@ struct VisitorTests {
                     position: entry, entry: entry)
         ]
         for _ in 0..<200 {
-            w = VisitorEngine.advanceOneTick(w, registry: registry(), mapSeed: w.mapSeed)
+            w = liveTick(w, registry: registry())
             w.tick += 1
         }
         #expect(w.settlements[0].localMap?.visitors.isEmpty == true,

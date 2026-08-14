@@ -292,3 +292,27 @@ fires, do the arithmetic before you rewrite the mechanic.
    that describe the same act (a person walking) must be measured on the same
    clock, or one of them is furniture. Guarded by `WalkPaceTests` and, across
    the layer boundary, `WalkPaceAgreementTests`.
+35. **A number that must equal another number should *be* that number.**
+   `SettlementRenderer.colonySpan` was a literal `0.58` carrying a comment
+   saying it must agree with `SettlementGeometry.span` in the Core, plus a test
+   guarding that it did. Widening the valley changed the Core's number and left
+   the canvas's behind — which draws every building in a different place from
+   where colonists are sent to work in it, the exact failure the comment was
+   written to prevent. The comment and the test were both doing work that one
+   `=` does better and cannot forget. Prose that says "keep these in sync" is a
+   note that the code should have said it instead; reach for the assignment
+   before the assertion, and keep the assertion only for things that genuinely
+   cannot be derived.
+36. **A standing order is read where the work is done, not where the work is
+   handed out.** `LaborEngine` refused to *assign* anybody to a trade the
+   policy had switched off, and that was taken to be the whole of it. It is
+   not: a colony is founded with Nadia already scouting (`GameWorldFactory`), so
+   a player who forbade scouting on day one had a scout walking out anyway
+   until the labour engine got round to reassigning her — and how much ground
+   she charted depended on which tick that landed on, which is to say on
+   nothing the player did. The test that caught it had been passing on an
+   ordering coincidence for months and broke when an unrelated change shifted
+   the order by one tick. Of any policy, permission or prohibition, ask what
+   reads it: gating the *assignment* leaves everybody already holding the job,
+   and "already holding the job" includes every founder, every newcomer and
+   everybody a save was written with.

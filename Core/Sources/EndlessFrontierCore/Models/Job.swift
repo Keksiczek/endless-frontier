@@ -408,7 +408,22 @@ public enum SettlementGeometry {
     /// reveals (`LocalMapGenerator`) and the rock kept off the build grid
     /// (`StoneEngine.colonyClearance`). The grid's far **corner** is at
     /// `span * √2 / 2` from the heart, which is what both have to reach.
-    public static let span: Double = 0.58
+    ///
+    /// **Widened to 0.70 on 2026-08-14** with the grid, which doubled to 34×34.
+    ///
+    /// Matching the grid exactly would have meant 0.82 (×1.42, the same as the
+    /// tiles), and that was tried and is wrong — and the test that caught it is
+    /// worth the note. The founding reveal is `cornerReach + 0.02`, so at 0.82
+    /// the colony starts with **83% of the valley already charted** and every
+    /// landmark on it discovered: "expected at least one undiscovered POI"
+    /// failed, and it was telling the truth about the game rather than about
+    /// the test. A frontier of four corner scraps is not a frontier.
+    ///
+    /// So the town takes twice the *building ground* and rather less than twice
+    /// the *valley*: 0.70 leaves a charted circle of about 0.72 of the map with
+    /// a real dark ring outside it. A tile comes out about a sixth smaller than
+    /// it was, which the camera carries.
+    public static let span: Double = 0.70
 
     /// How far the grid's furthest corner lies from the heart. The one number
     /// the reveal radius and the rock clearance are both derived from, so
@@ -441,5 +456,47 @@ public enum SettlementGeometry {
         let w = Double(max(1, colony.width)), h = Double(max(1, colony.height))
         return LocalPoint(x: heart.x + (tileX / w - 0.5) * span,
                           y: heart.y + (tileY / h - 0.5) * span)
+    }
+
+    // MARK: - The green
+
+    /// **How wide the village green is, in build-grid tiles.**
+    ///
+    /// Keks, watching a town fill up: *"vadí mi že je náves zastavěna když se
+    /// tam hromadí lidé a je tam budova nebo položené věci."* And he is right
+    /// that it is a fault rather than a look — the heart of the colony is the
+    /// one piece of ground the game already treats as a *place*. Visitors walk
+    /// to it. The midday gathering happens on it. A colony with no hearth built
+    /// yet eats at the fire in the middle of it. `ColonyBuilder` then placed the
+    /// very first building on exactly that tile, because `nearestFit` measures
+    /// from the district centre and the district centre is the heart.
+    ///
+    /// So the green is **reserved ground**: a square of tiles at the middle of
+    /// the grid that nothing may be built on. Four rather than three because
+    /// the grid's width is even and its centre therefore falls on a tile
+    /// *boundary* — an odd-sized green cannot sit symmetrically on it, and an
+    /// off-centre village square is a bug that would take a year to notice.
+    public static let greenTiles = 4
+
+    /// The first tile of the green along one axis of a grid of `extent` tiles.
+    static func greenOrigin(_ extent: Int) -> Int { max(0, (extent - greenTiles) / 2) }
+
+    /// Whether a build-grid tile is part of the green, and so unbuildable.
+    public static func isGreen(_ coord: TileCoord, in colony: ColonyMap) -> Bool {
+        let x0 = greenOrigin(colony.width), y0 = greenOrigin(colony.height)
+        return coord.x >= x0 && coord.x < x0 + greenTiles
+            && coord.y >= y0 && coord.y < y0 + greenTiles
+    }
+
+    /// Where goods are put down when the colony has nowhere to put them yet.
+    ///
+    /// **Not the green.** The whole point of keeping the middle clear is undone
+    /// by a colony that piles its timber on it, so unstored goods go to the
+    /// green's edge — a goods yard rather than a square full of sacks. Off to
+    /// one side and downhill of the heart, deterministically, so the yard is
+    /// always in the same place and a player learns where to look.
+    public static var goodsYard: LocalPoint {
+        let offset = span * (Double(greenTiles) / 2 + 0.5) / 24
+        return LocalPoint(x: heart.x + offset, y: heart.y + offset)
     }
 }

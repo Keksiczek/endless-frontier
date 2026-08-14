@@ -576,6 +576,20 @@ public enum ResourceLoop {
         // every offline catch-up.
         guard !map.isFullyCharted || map.scoutFocus != nil else { return settlement }
         let ticksPerYear = max(1, config.ticksPerYear)
+        // A standing order that says nobody scouts means nobody scouts, from
+        // the tick it is given.
+        //
+        // `LaborEngine` already refuses to *assign* anybody to a trade the
+        // policy has switched off, and that was taken to be enough. It is not:
+        // a colony is founded with Nadia already on the job
+        // (`GameWorldFactory`), so a player who forbids scouting on day one had
+        // a scout walking out anyway until the labour engine got round to
+        // moving her. It charted ground, and how much depended on which tick
+        // the reassignment happened to land — which is to say, on nothing the
+        // player did. The order is read *here*, where the work is done, so it
+        // takes effect immediately and does not depend on somebody else's
+        // cadence.
+        guard settlement.policy.stance(.scouting) != .off else { return settlement }
         let scouts = settlement.pawns.filter {
             $0.assignedWork == .scouting && $0.isAdult(ticksPerYear: ticksPerYear)
                 && !$0.isBroken && !$0.isAway

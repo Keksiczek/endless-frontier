@@ -435,13 +435,24 @@ enum AgentMotion {
         let previous = schedule[(index + schedule.count - 1) % schedule.count]
         let nextAt = schedule[(index + 1) % schedule.count].at
 
-        // Travel takes however long the walk *is*, at a pace everyone keeps.
-        // Capped at most of the leg so a colonist with a very long way to go
-        // still arrives and does some work rather than walking all day.
+        // **Travel takes however long the walk is. Always.**
+        //
+        // The cap used to be `leg * 0.8`, and that is what made colonists break
+        // into a trot between things: past that point the same ground was
+        // covered in less time, so the pace rose without limit and a walk that
+        // did not fit its leg became a sprint. The floor is still here — a hop
+        // of nothing has to take *some* time or a figure teleports a foot — but
+        // there is no ceiling, because a ceiling on the time is a licence to
+        // break the pace, and one pace for everybody is the whole point
+        // (`WalkPace`, rule 34).
+        //
+        // Nothing is left walking all day, either: the schedule no longer asks
+        // for trips a walk cannot make (see the midday break in `schedule`), so
+        // the case the cap was defending against does not arise.
         let legStart = current.at
         let legEnd = nextAt <= legStart ? nextAt + 1 : nextAt
         let walk = distance(previous.place, current.place) / walkSpeed
-        let travelSlice = min(max(0.004, walk), (legEnd - legStart) * 0.8)
+        let travelSlice = min(max(0.004, walk), legEnd - legStart)
         let progress = t - legStart
         if previous.place != current.place, progress < travelSlice {
             let u = smoothstep(progress / travelSlice)
@@ -590,6 +601,45 @@ enum AgentMotion {
 
         let work = workplace(for: pawn, map: map, scene: scene, seed: seed, time: time)
         let social = jitter(scene.green, seed: seed &>> 9, radius: 0.045)
+        // **Whether they come in for the midday at all.**
+        //
+        // Keks, on the gait: *"nyní jak chodí tak někdy rychle popoběhnou,
+        // hlavně mezi věcmi."* That is this waypoint, and the cause is the same
+        // shape as rule 34 in a different place — the day used to cap travel at
+        // most of the leg, so a colonist whose field was across the valley
+        // covered the same ground in a fraction of the time and *sprinted*.
+        // Everybody kept the same pace right up until the schedule asked
+        // somebody for more than a pace could give.
+        //
+        // Capping the time was the wrong end of it. A person who cannot get to
+        // the green and back inside the midday break does not run there — they
+        // eat where they are working, which is what a farmer on the far side of
+        // a valley has always actually done. So the trip is dropped instead of
+        // being hurried, and the pace holds for everyone.
+        //
+        // It fixes the crowding too, and that is not a coincidence: the green
+        // was packed at midday because *the whole colony* was dragged onto it
+        // however far away they were.
+        // Only the walk *in* has to fit the break — the walk back out is made
+        // against the long afternoon leg. But a trip that eats the whole break
+        // is not a break, so half of it has to be left to stand about in.
+        let midday = shape.middayEnd - shape.middayStart
+        let comesIn = distance(work, social) / walkSpeed < midday * 0.5
+        guard comesIn else {
+            return [
+                Waypoint(at: 0.0, place: home, doing: .sleeping),
+                Waypoint(at: shape.wake, place: home, doing: .atHome),
+                Waypoint(at: shape.workStart, place: work, doing: .working),
+                // A break taken where the work is: they stop, they eat, they
+                // are not drawn crossing the map twice for it.
+                Waypoint(at: shape.middayStart,
+                         place: jitter(work, seed: seed &>> 13, radius: 0.02),
+                         doing: .socializing),
+                Waypoint(at: shape.middayEnd, place: work, doing: .working),
+                Waypoint(at: shape.workEnd, place: home, doing: .atHome),
+                Waypoint(at: shape.bed, place: home, doing: .sleeping),
+            ]
+        }
         return [
             Waypoint(at: 0.0, place: home, doing: .sleeping),
             Waypoint(at: shape.wake, place: home, doing: .atHome),

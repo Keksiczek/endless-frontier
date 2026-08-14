@@ -19,13 +19,15 @@ enum SettlementVisitors {
 
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap,
-        time: Double, continuousTick: Double = 0, zoom: CGFloat, showLabels: Bool
+        time: Double, continuousStep: Double = 0, zoom: CGFloat, showLabels: Bool
     ) {
         for visitor in map.visitors {
-            // Where they are on *this frame*, not on the last tick: a party
+            // Where they are on *this frame*, not on the last step: a party
             // moved one stride per tick and a tick is two real minutes, so
-            // drawing `position` raw was a party standing still and jumping.
-            let here = visitor.position(at: continuousTick)
+            // drawing `position` raw was a party standing still and jumping —
+            // and drawing the interpolation of a stride that small was a party
+            // that may as well have been standing still anyway (`WalkPace`).
+            let here = visitor.position(at: continuousStep)
             guard map.isExplored(here) else { continue }
             let at = SettlementRenderer.point(here, in: rect)
             party(&context, visitor, at: at, time: time, zoom: zoom)

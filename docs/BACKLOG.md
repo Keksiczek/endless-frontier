@@ -1385,6 +1385,84 @@ neither is what was reported:
    of the valley is not slow, it is stopped. Changing it moves hunting yields
    and predator contact, so it wants `DangerProbe` on it rather than a guess.
 
+### 11.33 — the green, the stores, the gait, and a valley worth walking (2026-08-14)
+
+Four asks in one sitting, and three of them turned out to share a root with
+§11.32 — a number measured against the wrong thing.
+
+**The green.** Keks: *"vadí mi že je náves zastavěna když se tam hromadí lidé a
+je tam budova nebo položené věci, chtělo by to sklady na materiál, itemy atd."*
+The heart of the colony was an **address, not ground**. `ColonyBuilder.nearestFit`
+measures from the district centre and the first district centre *is* the heart,
+so the very first building a colony raised went on the one piece of ground the
+game already treats as a place — the square visitors walk to, the square the
+midday gathering stands on, the fire a colony with no hearth eats at. And
+`HaulEngine` had nowhere else to put a load, so it piled the timber on it too.
+
+Now: `SettlementGeometry.greenTiles` is a 4×4 square of reserved ground that
+`fits` refuses (four, not three, because the grid's width is even and its centre
+falls on a tile *boundary* — an odd green cannot sit symmetrically on it), and
+unstored goods go to `goodsYard` at the green's edge.
+
+**Stores by kind.** The old `storePosition` was wrong three ways at once, and
+they compounded: it matched on the **id string** (`contains("granary")`), so a
+store was a store because of what it was called; it took the **first** match in
+placement order rather than the nearest; and grain and timber went to the same
+building because neither the kind of the good nor the kind of the store was ever
+asked about. Now the good says what it is (`CookingEngine.foodstuffs`, the same
+list the kitchens read), the building says what it holds (`storage`, which is
+data and already existed), and the destination is decided **at the heap** with
+the load in hand — so a town of two quarters carries to its own quarter.
+
+**The gait.** Keks, watching: *"nyní jak chodí tak někdy rychle popoběhnou,
+hlavně mezi věcmi."* `dailyPose` capped travel at `leg * 0.8`, so when the
+schedule asked for a trip longer than its leg the same ground was covered in
+less time and **the pace rose without bound**. Capping the time was the wrong
+end of it. A colonist who cannot reach the green inside the midday break does
+not run there — they eat where they are working, which is what a farmer on the
+far side of a valley has always actually done. The trip is dropped rather than
+hurried, and one pace holds for everybody. It fixes the crowding too, and that
+is not a coincidence: the green was packed because the *whole colony* was
+dragged onto it however far away they were.
+
+**Cover — §11.27, built.** Derived, never declared: `Cover.Stature` (how high it
+stands) × `Cover.Substance` (what it is made of). The three cases that prove it
+is a model rather than a table: a bush stops the eye and not the arrow (0.08), a
+boulder stops both (0.55), and a **ravine stops neither** — impassable and no
+shelter at all, because nothing rises from it. Old walls are the mirror:
+passable *and* covering. `CoverField` stamps the map into one flat array once
+(§11.23's discipline) and a trace takes the **greatest** thing on the line, never
+the sum. Wired into `SiegeEngine.loose` with `coverBite = 0.8` — a heavy tax,
+not a veto, because an archer facing a wall who never shoots is a fight that
+stalls. Not built: a shot that is stopped damaging what stopped it, which wants
+§11.26's wear to record it in.
+
+**A valley twice the size, with more in it.** Grid 24×24 → 34×34 (1156 tiles
+against 576). Span 0.58 → **0.70, not 0.82**: matching the grid exactly was
+tried and the fog test caught it — at 0.82 a colony starts with 83% of the
+valley charted and every landmark discovered, and a frontier of four corner
+scraps is not a frontier. Landmarks now sit past the charted circle
+(`LocalMapGenerator.frontierPoint`), because a treasure under the market square
+is not a reason to go anywhere.
+
+Variety: **two things made every valley look alike, and neither was the number
+of kinds.** The kinds were asked in `allCases` order and the loop stopped at two,
+so the first in the source file took both slots and a hollow was very nearly
+unreachable — the list was a priority queue and nobody meant it to be. And
+everything that was not a ravine was the same round blob of the same size. Now
+the order is a seeded shuffle, up to four forms stand up, and a form picks a
+**shape**: vein, round, ridge (long *and* thick), or scatter (lobes with gaps —
+what old walls actually leave behind).
+
+Two rules came out of it: **35** (a number that must equal another number should
+*be* that number — `colonySpan` was a literal with a comment and a test guarding
+it, and the widening left it behind anyway) and **36** (a standing order is read
+where the work is done — forbidding scouting did not stop the founding scout,
+and the test had been passing on an ordering coincidence).
+
+Verified: 1101 Core tests in 142 suites green; 97 app tests in 15 suites green;
+iOS BUILD SUCCEEDED.
+
 ### 11.30 — the game makes no sound at all (asked 2026-08-13)
 
 **Flagged by Keks, not yet built.** *"Ty bys teoreticky mohl najít na YT nějaké
