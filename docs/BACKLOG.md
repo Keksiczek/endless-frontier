@@ -1763,7 +1763,22 @@ spelling in one module. Six test files for seventy-two sources, and neither
 exactly the pattern `PawnLook` wants, being a pure function of
 `(id, age, genes)`.
 
-### 11.24 — nothing on the screen is a door (asked 2026-08-13)
+### 11.24 — nothing on the screen is a door (asked 2026-08-13) — **done**
+
+> **Built.** The resource pills are buttons; tapping one opens `StoreBreakdown`
+> — the chain in the order goods actually move, with the first empty stage after
+> a full one marked, and **the kinds named at each stage**. That last part was
+> the actual ask (*"myslel jsem druhy jídla, druh materiálu — dřevo, kámen"*),
+> and the crafting bench had been the only screen in the game that named a good.
+>
+> `GameViewModel.focusRequest` is the shared affordance for the click-throughs:
+> `SettlementScreen.selection` is local `@State`, so no other screen could reach
+> it. Colonist rows and journal lines post a *request*; the screen that owns the
+> canvas adopts it, moves the camera, and clears it. Fourteen tap handlers would
+> have disagreed about what a tap does inside a week.
+>
+> Still open: the chronicle, battle reports and event cards name things and do
+> not link yet — same affordance, more call sites.
 
 **Flagged by Keks, not yet built.** *"byly by fajn prokliky — na pawny, suroviny
 atd. Taky horní panel surovin by mohl být klikatelný, abych věděl, co mám za

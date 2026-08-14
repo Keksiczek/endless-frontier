@@ -109,9 +109,58 @@ struct StoreBreakdownCard: View {
                         .font(.caption)
                         .foregroundStyle(Theme.textDim)
                 }
+                // **The kinds**, which is what was actually asked for: grain
+                // against roots, timber against stone. The crafting bench was
+                // the only screen in the game that named them, and that is the
+                // one place you go when you already know what you want.
+                if !stage.items.isEmpty {
+                    FlowingKinds(items: stage.items, language: language)
+                        .padding(.top, 2)
+                }
             }
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// The kinds at one stage, wrapping rather than truncating — a colony late in
+/// the game holds a dozen goods and a single line would hide most of them.
+private struct FlowingKinds: View {
+    let items: [StoreItem]
+    let language: GameLanguage
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            row(items)
+            VStack(alignment: .leading, spacing: 3) {
+                ForEach(chunks, id: \.first?.id) { chunk in row(chunk) }
+            }
+        }
+    }
+
+    /// Three to a line reads as a list; more reads as a paragraph of numbers.
+    private var chunks: [[StoreItem]] {
+        stride(from: 0, to: items.count, by: 3).map {
+            Array(items[$0..<min($0 + 3, items.count)])
+        }
+    }
+
+    private func row(_ some: [StoreItem]) -> some View {
+        HStack(spacing: 6) {
+            ForEach(some) { item in
+                HStack(spacing: 3) {
+                    Text(item.name.resolve(language))
+                        .foregroundStyle(Theme.textDim)
+                    Text("\(item.amount)")
+                        .font(.caption2.monospacedDigit().weight(.medium))
+                        .foregroundStyle(Theme.text)
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(Theme.surfaceInset, in: Capsule())
+            }
+        }
+        .font(.caption2)
     }
 }

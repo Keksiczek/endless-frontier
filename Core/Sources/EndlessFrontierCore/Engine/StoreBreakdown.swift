@@ -1,5 +1,23 @@
 import Foundation
 
+/// One concrete good held at a stage — grain, roots, wood, rough stone.
+///
+/// The kinds were the whole of what Keks asked for: *"myslel jsem druhy jídla,
+/// druh materiálu — dřevo, kámen atd."* Until now the only screen in the game
+/// that named them was the crafting bench, which is the one place you go when
+/// you already know what you are looking for.
+public struct StoreItem: Sendable, Equatable, Identifiable {
+    public let id: String
+    public let name: LocalizedText
+    public let amount: Int
+
+    public init(id: String, name: LocalizedText, amount: Int) {
+        self.id = id
+        self.name = name
+        self.amount = amount
+    }
+}
+
 /// One link of the chain behind a number in the resource bar.
 public struct StoreStage: Sendable, Equatable, Identifiable {
     public let id: String
@@ -9,12 +27,17 @@ public struct StoreStage: Sendable, Equatable, Identifiable {
     /// The sentence that says *why* this stage matters when it is the one that
     /// is empty, or the one that is piling up. `nil` when it is unremarkable.
     public let note: LocalizedText?
+    /// **What kinds** make up `amount`, biggest first. Empty where the stage is
+    /// a single abstract figure with no kinds behind it.
+    public let items: [StoreItem]
 
-    public init(id: String, label: LocalizedText, amount: Double, note: LocalizedText? = nil) {
+    public init(id: String, label: LocalizedText, amount: Double,
+                note: LocalizedText? = nil, items: [StoreItem] = []) {
         self.id = id
         self.label = label
         self.amount = amount
         self.note = note
+        self.items = items
     }
 }
 
@@ -39,6 +62,24 @@ public struct StoreStage: Sendable, Equatable, Identifiable {
 /// (rule 18).
 public enum StoreBreakdown {
 
+    /// The kinds behind a figure, biggest first, named in the player's
+    /// language. Falls back to the raw id rather than dropping a good the item
+    /// table has no entry for — a kind you cannot name is still a kind you have.
+    static func kinds(
+        _ counts: [String: Int], registry: GameDataRegistry
+    ) -> [StoreItem] {
+        counts
+            .filter { $0.value > 0 }
+            .sorted { $0.value == $1.value ? $0.key < $1.key : $0.value > $1.value }
+            .map { id, amount in
+                StoreItem(
+                    id: id,
+                    name: registry.item(id)?.name
+                        ?? LocalizedText(values: [.en: id, .cs: id]),
+                    amount: amount)
+            }
+    }
+
     /// The chain behind the food number, in the order it actually flows:
     /// growing → reaped and lying → on the shelf → cooked.
     public static func food(
@@ -54,11 +95,17 @@ public enum StoreBreakdown {
         let plots = map?.crops.count ?? 0
 
         // Reaped and lying where it fell, waiting for a pair of hands.
-        let lying = map?.piles
-            .filter { kinds.contains($0.itemID) }
-            .reduce(0) { $0 + $1.amount } ?? 0
+        var lyingByKind: [String: Int] = [:]
+        for pile in map?.piles ?? [] where kinds.contains(pile.itemID) {
+            lyingByKind[pile.itemID, default: 0] += pile.amount
+        }
+        let lying = lyingByKind.values.reduce(0, +)
 
-        let shelf = kinds.reduce(0) { $0 + settlement.stockpile[$1, default: 0] }
+        var shelfByKind: [String: Int] = [:]
+        for kind in kinds where settlement.stockpile[kind, default: 0] > 0 {
+            shelfByKind[kind] = settlement.stockpile[kind, default: 0]
+        }
+        let shelf = shelfByKind.values.reduce(0, +)
         let cooks = settlement.pawns.count { $0.assignedWork == .cooking }
         let meals = settlement.storage[.food]
 
@@ -82,7 +129,8 @@ public enum StoreBreakdown {
                     ? LocalizedText(values: [
                         .en: "Lying in the fields until somebody fetches it.",
                         .cs: "Leží na poli, dokud pro to někdo nedojde."])
-                    : nil),
+                    : nil,
+                items: Self.kinds(lyingByKind, registry: registry)),
             StoreStage(
                 id: "shelf",
                 label: LocalizedText(values: [.en: "On the shelf", .cs: "Na polici"]),
@@ -91,7 +139,8 @@ public enum StoreBreakdown {
                     ? LocalizedText(values: [
                         .en: "Raw, and nobody is cooking.",
                         .cs: "Syrové, a nikdo nevaří."])
-                    : nil),
+                    : nil,
+                items: Self.kinds(shelfByKind, registry: registry)),
             StoreStage(
                 id: "meals",
                 label: LocalizedText(values: [.en: "Ready to eat", .cs: "Hotová jídla"]),
@@ -109,12 +158,16 @@ public enum StoreBreakdown {
     ) -> [StoreStage] {
         let foods = CookingEngine.foodstuffs(registry)
         let map = settlement.localMap
-        let lying = map?.piles
-            .filter { !foods.contains($0.itemID) }
-            .reduce(0) { $0 + $1.amount } ?? 0
-        // What the bench has made and the buildings ask for by name.
-        let made = CraftingEngine.materialCounts(settlement)
-            .reduce(0) { $0 + $1.value }
+        var lyingByKind: [String: Int] = [:]
+        for pile in map?.piles ?? [] where !foods.contains(pile.itemID) {
+            lyingByKind[pile.itemID, default: 0] += pile.amount
+        }
+        let lying = lyingByKind.values.reduce(0, +)
+        // What the bench has made and the buildings ask for by name. Foodstuffs
+        // live on the same shelf and belong to the other chain.
+        let madeByKind = CraftingEngine.materialCounts(settlement)
+            .filter { !foods.contains($0.key) && $0.value > 0 }
+        let made = madeByKind.values.reduce(0, +)
 
         return [
             StoreStage(
@@ -125,7 +178,8 @@ public enum StoreBreakdown {
                     ? LocalizedText(values: [
                         .en: "Trunks and blocks still at the stump.",
                         .cs: "Kmeny a bloky pořád u pařezu."])
-                    : nil),
+                    : nil,
+                items: Self.kinds(lyingByKind, registry: registry)),
             StoreStage(
                 id: "made",
                 label: LocalizedText(values: [.en: "Made goods", .cs: "Vyrobené zboží"]),
@@ -134,7 +188,8 @@ public enum StoreBreakdown {
                     ? LocalizedText(values: [
                         .en: "Nothing on the shelf — most buildings need timber bundles.",
                         .cs: "Nic na polici — většina budov chce trámy."])
-                    : nil),
+                    : nil,
+                items: Self.kinds(madeByKind, registry: registry)),
             StoreStage(
                 id: "store",
                 label: LocalizedText(values: [.en: "In store", .cs: "Ve skladu"]),

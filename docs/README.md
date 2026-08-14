@@ -33,10 +33,10 @@ overtaken without being updated, which is exactly how a stale doc does damage.
 |---|---|---|
 | [ROADMAP.md](ROADMAP.md) | 2026-06-01 | "45 tests, phases 0–2 done, next is Phase 3" |
 | [NEXT_STEPS.md](NEXT_STEPS.md) | 2026-06-06 | "179 tests" |
-| [NEXT_PHASE.md](NEXT_PHASE.md) | ~2026-07-28 | The entity-conversion brief. Its **three unconverted rows are still true** — see [CODEMAPS/models.md](CODEMAPS/models.md) |
-| [HANDOFF.md](HANDOFF.md) | 2026-08-10 | A state report, not a plan |
+| [NEXT_PHASE.md](NEXT_PHASE.md) | ~2026-07-28 | The entity-conversion brief. Two of its three unconverted rows still stand; **the buildings row is out of date** — see [CODEMAPS/models.md](CODEMAPS/models.md) |
+| [HANDOFF.md](HANDOFF.md) | 2026-08-13 | A state report, not a plan — but the newest one, and worth reading |
 
-Reality as of 2026-08-13: **1070 Core tests**, 95 App tests, V2 phases A–F
+Reality as of 2026-08-13: **1078 Core tests**, 95 App tests, V2 phases A–F
 complete, and the work is tracked in `BACKLOG.md` §11.
 
 ## The one rule about these docs

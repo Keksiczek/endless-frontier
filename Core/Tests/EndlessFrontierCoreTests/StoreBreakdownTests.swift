@@ -120,4 +120,51 @@ struct StoreBreakdownTests {
             }
         }
     }
+
+    @Test("The shelf names its kinds, biggest first")
+    func shelfNamesTheKinds() throws {
+        let reg = try registry()
+        let kinds = CookingEngine.foodstuffs(reg).sorted()
+        try #require(kinds.count >= 2)
+        let stages = StoreBreakdown.food(
+            town(shelf: [kinds[0]: 30, kinds[1]: 90]), registry: reg)
+
+        let shelf = try #require(stage("shelf", stages))
+        #expect(shelf.amount == 120)
+        // Which is the whole ask: not "120 food" but *what* the 120 is.
+        #expect(shelf.items.count == 2)
+        #expect(shelf.items.first?.id == kinds[1], "biggest first")
+        #expect(shelf.items.first?.amount == 90)
+        #expect(shelf.items.allSatisfy { !$0.name.resolve(.cs).isEmpty })
+    }
+
+    @Test("Timber and stone are told apart where they lie")
+    func materialKindsAreNamed() throws {
+        let reg = try registry()
+        func heap(_ n: Int, _ id: String, _ amount: Int) -> HaulPile {
+            HaulPile(id: UUID(uuidString: String(format: "5709E0A0-9111-0000-0000-%012d", n))!,
+                     position: LocalPoint(x: 0.3, y: 0.3), itemID: id, amount: amount)
+        }
+        var s = town(piles: [heap(10, "wood", 40), heap(11, "rough_stone", 15)])
+        s.storage[.materials] = 900
+        let stages = StoreBreakdown.materials(s, registry: reg)
+
+        let lying = try #require(stage("lying", stages))
+        #expect(lying.amount == 55)
+        #expect(lying.items.map(\.id) == ["wood", "rough_stone"], "biggest first")
+    }
+
+    @Test("Food kinds do not leak into the materials chain")
+    func theTwoChainsDoNotMix() throws {
+        let reg = try registry()
+        let grain = try #require(CookingEngine.foodstuffs(reg).sorted().first)
+        var s = town(shelf: [grain: 500, "timber_bundle": 7])
+        s.storage[.materials] = 100
+
+        let made = try #require(stage("made", StoreBreakdown.materials(s, registry: reg)))
+        // The shelf is one dictionary and the two chains share it, so this is
+        // the join that would quietly count grain as building stock.
+        #expect(made.amount == 7)
+        #expect(made.items.map(\.id) == ["timber_bundle"])
+    }
 }
