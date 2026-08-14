@@ -11,7 +11,7 @@ alphabetically — see [architecture.md](architecture.md) for the running order.
 | Engine | Owns |
 |---|---|
 | `TickEngine` | The tick. Calls everything below in a fixed order. |
-| `ActionLoop` | Sub-tick steps (`WorldClock`) — marches, shifts, blows landing. |
+| `ActionLoop` | Sub-tick steps (`WorldClock`) — marches, shifts, blows landing, **and everybody walking** (`ErrandEngine`, `HaulEngine`). |
 | `ResourceLoop` | Production, consumption, storage caps, morale/stability/defense/pollution drift. The biggest file; read its numbered steps. |
 | `GameEngine` | The player's verbs: build, demand, gift. `build` sites *before* it pays. |
 | `StewardEngine` | **The council** — what runs the colony when nobody taps. Research, materials, buildings, expeditions, founding. Acts only in the gaps. |
@@ -28,7 +28,7 @@ alphabetically — see [architecture.md](architecture.md) for the running order.
 | `HouseholdEngine` | Homes, families, who sleeps where. Derives housing from footprint + `floors`. |
 | `SocialEngine` | Bonds, quarrels, marriages. Was the quadratic (rule 20). |
 | `ComfortEngine`, `MedicineEngine`, `PlagueEngine` | Warmth, wounds, illness. |
-| `ErrandEngine` | A colonist's own business — eat, warm up, rest. `WalkPath` per leg. |
+| `ErrandEngine` | A colonist's own business — eat, warm up, rest. `WalkPath` per leg, on the **action step** (`WalkPace`). |
 
 ## The food chain (a chain, not a number)
 
@@ -55,7 +55,7 @@ raw off the shelf badly.
 | `StoneEngine` | Rock as blocks. |
 | `ColonyBuilder` | Siting a building: fit, `grownOutward`, `clearedOfDerelicts`. |
 | `ColonyRoute` | Pathing. `Occupancy` answers tile → placement from a flat array. |
-| `HaulEngine` | Carrying goods in. Routes once per walk, not per tick (rule 4). |
+| `HaulEngine` | Carrying goods in, per **action step**. Routes once per walk, not per step (rule 4). |
 | `ConstructionEngine`, `BuildingEngine` | Raising and repairing. `condition`, `derelictBelow`. |
 
 ## The wild

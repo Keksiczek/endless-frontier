@@ -282,3 +282,45 @@ struct DayScheduleTests {
         #expect(summer > winter)
     }
 }
+
+/// **Two clocks on one screen, and they disagreed by thirty times.**
+///
+/// A colonist living the drawn day walked at `AgentMotion.walkSpeed` — map
+/// widths per five-minute day. A colonist carrying a load or going for a meal
+/// walked at a rate written per *world tick*, and a world tick is two real
+/// minutes. Converted to the one unit that matters here — map widths per real
+/// second of somebody watching — the first is `0.015` and the second was
+/// `0.0008`. Both were "moving". Only one of them was moving fast enough for
+/// the eye to call it motion, and the other was most of the working town.
+///
+/// This is the guard on that. It does not pin either number; it pins that they
+/// are answers to the same question.
+@Suite("The two walking clocks agree")
+struct WalkPaceAgreementTests {
+
+    /// Map widths a second, as the player sees it.
+    private var drawnDay: Double { AgentMotion.walkSpeed / AgentMotion.dayLength }
+    private var simulated: Double {
+        let secondsPerStep =
+            WorldConfig.default.realSecondsPerTick / Double(WorldClock.actionStepsPerTick)
+        return WalkPace.perStep / secondsPerStep
+    }
+
+    @Test("A hauler and a colonist walking to work cross the screen at comparable speeds")
+    func neitherWalkerIsScenery() {
+        let ratio = max(drawnDay, simulated) / min(drawnDay, simulated)
+        #expect(ratio < 5, """
+            one walker covers \(String(format: "%.4f", drawnDay)) map widths a second \
+            and the other \(String(format: "%.4f", simulated)) — \
+            \(String(format: "%.0f", ratio))× apart, which is one of them reading as furniture
+            """)
+    }
+
+    /// The floor under it: a figure that moves less than a thousandth of the map
+    /// a second is, at any sane zoom, a figure standing still.
+    @Test("Simulated walking is above the eye's threshold for motion")
+    func aWalkerVisiblyMoves() {
+        #expect(simulated > 0.002,
+                "\(String(format: "%.4f", simulated)) map widths a second is not visible motion")
+    }
+}

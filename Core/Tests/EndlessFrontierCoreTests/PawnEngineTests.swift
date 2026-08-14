@@ -27,7 +27,7 @@ struct PawnEngineTests {
         let pawn = Pawn(name: "Bo", needs: PawnNeeds(hunger: 40, rest: 80, recreation: 80))
         var s = settlement(pawns: [pawn], food: 100)
         for tick in 0..<4 {
-            s = ErrandEngine.advanceOneTick(s, tick: tick)
+            s = ErrandEngine.advanceStep(s, clock: .at(absoluteStep: tick))
             s = PawnEngine.advanceOneTick(s, tick: tick)
         }
         #expect(s.pawns[0].needs.hunger > 40)        // ate
@@ -37,7 +37,7 @@ struct PawnEngineTests {
     @Test("A meal is taken at the granary, not out of thin air")
     func eatingIsAnErrand() {
         let pawn = Pawn(name: "Bo", needs: PawnNeeds(hunger: 40, rest: 80, recreation: 80))
-        let posted = ErrandEngine.advanceOneTick(settlement(pawns: [pawn], food: 100), tick: 0)
+        let posted = ErrandEngine.advanceStep(settlement(pawns: [pawn], food: 100), clock: .at(absoluteStep: 0))
         let errand = posted.pawns[0].errand
         #expect(errand?.kind == .eat, "hunger past the threshold sends them somewhere")
         #expect(posted.storage[.food] == 100, "nothing is eaten until they get there")

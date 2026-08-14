@@ -27,6 +27,22 @@ public enum ActionLoop {
         s.settlements = s.settlements.map { settlement in
             var next = LocalPOIEngine.advanceStep(settlement, clock: clock,
                                                   mapSeed: s.mapSeed, registry: registry)
+            // People crossing their own colony: somebody carrying a load in
+            // from the woods, and somebody who has left their work because they
+            // are hungry or cold. Both used to be world-tick things, which made
+            // the shortest possible walk an in-game week long and — at eight
+            // times too coarse and thirty times too slow — turned the whole
+            // working half of the town into scenery. See `WalkPace`.
+            //
+            // Errands before hauling, and both before the tick's own systems,
+            // so a meal eaten on this step is a mood on this tick and a sack
+            // carried in on it is on the shelf for the kitchens.
+            if ErrandEngine.hasBusiness(next) {
+                next = ErrandEngine.advanceStep(
+                    next, registry: registry, clock: clock,
+                    laws: SocietyEngine.modifiers(next, registry: registry))
+            }
+            next = HaulEngine.advanceStep(next, registry: registry, clock: clock)
             // A raid the player is in the middle of fighting.
             //
             // The app drives a live siege *ahead* of the world clock, at a pace

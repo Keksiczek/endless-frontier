@@ -44,9 +44,11 @@ public struct Errand: Codable, Sendable, Equatable {
     public let from: LocalPoint
     /// …and what they are walking to.
     public let to: LocalPoint
+    /// The absolute action step they set off on (`WorldClock.absoluteStep`),
+    /// not the world tick — see `WalkPath` and `WalkPace`.
     public let leftAt: Int
-    /// The tick they get there. Distance made into time, which is the whole
-    /// point: a far granary costs real minutes of nobody working.
+    /// The action step they get there on. Distance made into time, which is the
+    /// whole point: a far granary costs real minutes of nobody working.
     public let arrivesAt: Int
     /// The building they are going to, when it is a building.
     public let placementID: UUID?
@@ -71,8 +73,9 @@ public struct Errand: Codable, Sendable, Equatable {
     /// Where they are on the way, so the canvas draws somebody crossing the
     /// town rather than somebody blinking from a field to a granary.
     ///
-    /// Takes a *continuous* tick, because the canvas runs between ticks and a
-    /// walk that advanced once a minute would be a person teleporting slowly.
+    /// Takes a *continuous* action step, because the canvas runs between steps
+    /// and a walk that advanced once a minute would be a person teleporting
+    /// slowly.
     ///
     /// Walks the corners when there are any. `from → to` used to be a straight
     /// line, which is why colonists went **through the houses** — the shortest
@@ -85,11 +88,11 @@ public struct Errand: Codable, Sendable, Equatable {
         WalkPath(from: from, to: to, leftAt: leftAt, arrivesAt: arrivesAt, via: via)
     }
 
-    public func position(at tick: Double) -> LocalPoint { path.position(at: tick) }
+    public func position(at step: Double) -> LocalPoint { path.position(at: step) }
 
-    public func position(at tick: Int) -> LocalPoint { position(at: Double(tick)) }
+    public func position(at step: Int) -> LocalPoint { position(at: Double(step)) }
 
-    public func hasArrived(at tick: Int) -> Bool { tick >= arrivesAt }
+    public func hasArrived(at step: Int) -> Bool { step >= arrivesAt }
 
     // MARK: - Codable (resilient: walks used to be straight lines)
 

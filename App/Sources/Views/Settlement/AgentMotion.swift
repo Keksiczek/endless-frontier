@@ -181,6 +181,14 @@ enum AgentMotion {
         /// A tick is a real minute; without the fraction a walking party would
         /// cross the valley in half a dozen jumps.
         let continuousTick: Double
+
+        /// The same instant on the **action grid** — `WorldClock.absoluteStep`
+        /// with the fraction kept. Everything a person physically does is
+        /// measured in steps now (`WalkPace`), so this is what a haul, an
+        /// errand and a march are read against. One vocabulary, one answer.
+        var continuousStep: Double {
+            continuousTick * Double(WorldClock.actionStepsPerTick)
+        }
         /// The fight going on right now, if one is. Everyone in its line is
         /// pulled out of their day and sent to it.
         let battle: (log: BattleLog, progress: Double)?
@@ -341,14 +349,16 @@ enum AgentMotion {
         // has to be picked up somewhere and put down somewhere else, and both
         // ends are real. Hauling outranks the day and yields only to a fight.
         if let haul = pawn.haulWalk, scene.battle == nil {
-            // Asked with a *fractional* tick, the same as an errand and a party
-            // on the road. Reading the walk's endpoint once a tick is what made
-            // the village look dead: a tick is two real minutes, so a hauler
-            // stood perfectly still — legs swinging — and then jumped a stride.
-            let at = haul.position(at: scene.continuousTick)
+            // Asked with a *fractional* action step, the same as an errand and
+            // a party on the road. Reading the walk's endpoint once a tick is
+            // what made the village look dead: a tick is two real minutes, so a
+            // hauler stood perfectly still — legs swinging — and then jumped a
+            // stride. Interpolating fixed the jumping; putting the walk itself
+            // on the step grid (`WalkPace`) is what fixed the standing.
+            let at = haul.position(at: scene.continuousStep)
             // They face the way the walk is going, so somebody rounding a barn
             // turns with the corner rather than staring at the store through it.
-            let ahead = haul.heading(at: scene.continuousTick)
+            let ahead = haul.heading(at: scene.continuousStep)
             return Pose(position: at,
                         activity: pawn.carrying == nil ? .walking : .hauling,
                         stride: 1,
@@ -393,7 +403,7 @@ enum AgentMotion {
         // and the same one as a siege — the canvas never invents a position it
         // could ask for.
         if let errand = pawn.errand {
-            let at = errand.position(at: scene.continuousTick)
+            let at = errand.position(at: scene.continuousStep)
             return Pose(position: at, activity: .walking, stride: 1,
                         facing: facing(from: at, to: errand.to))
         }
@@ -468,7 +478,7 @@ enum AgentMotion {
         let gate = scene.heart
         // The same grid the simulation runs on, asked with a fraction so the
         // last gap between two steps is smooth. One vocabulary, one answer.
-        let step = scene.continuousTick * Double(WorldClock.actionStepsPerTick)
+        let step = scene.continuousStep
         let progress = expedition.phaseProgress(atStep: step)
         // A personal offset, so three people on one road read as three people.
         let spread = 0.014

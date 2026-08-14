@@ -1306,6 +1306,85 @@ Still open on this one: the **battle log** does not carry the wound kind, so the
 report still says "wounded" where it could say "a stab to the shoulder".
 `BattleMoment` is where that goes.
 
+### 11.32 — the figures do not move (asked 2026-08-14) — **the colonists, fixed**
+
+Keks, watching the town: *"přijde mi že se postavičky nehýbou, předtím to byl
+mezitick zobrazený, tak nevim jak to je ideálně aby bylo co nejvíc plynulé,
+pohyb i boj"*.
+
+**It was never a smoothness problem.** The canvas runs at 30 fps, `TickClock`
+gives a fractional tick, `WalkPath.position(at:)` takes a `Double` and
+interpolates correctly. All of that was right and none of it was the fault. The
+figures were moving. They were moving *thirty times slower than the colonist
+standing next to them*, which the eye reads as not moving at all.
+
+Four movement rates shared one screen, in three different units:
+
+| who | rate as written | crossing the whole map |
+|---|---|---|
+| a colonist living the drawn day | `AgentMotion.walkSpeed` 4.5 per 300 s day | **67 s** |
+| a hauler | `HaulEngine.carrySpeed` 0.06 **per tick** | **33 min** |
+| somebody on an errand | `ErrandEngine.pace` 0.09 **per tick** | **22 min** |
+| a fighter closing on a raider | `SiegeEngine.pace` 0.030 **per action step** | **47 s** |
+
+A world tick is two real minutes and about six in-game days, so a colonist
+fetching a sack from the far side of the village was spending three in-game
+months on it. In map widths per real second — the only unit the player's eye
+works in — that is `0.0008` against the day walker's `0.015`.
+
+The regression Keks remembers is real and has a shape: `pose` gives `haulWalk`
+and `errand` **priority** over the day clock. So every system that moved a
+colonist onto a simulated walk — the food chain, `HaulEngine`, `ErrandEngine` —
+moved that colonist from the fast clock onto the slow one. The town got more
+alive in the simulation and more frozen on the screen, at the same time, for the
+same reason.
+
+**The answer was already in the codebase, being used by exactly one system.**
+`SiegeEngine` is the only movement that was measured per action step, and combat
+is the only movement that looked alive. So walking moved onto the same grid:
+
+- `WalkPace` — one place that says how fast a person walks, per action step.
+  `0.08` empty-handed, `0.06` with a load. Crossing the valley is twelve and a
+  half steps, an ordinary trip across town is two or three.
+- `WalkPath` and `Errand` count **absolute action steps**, not ticks.
+- `HaulEngine.advanceStep` and `ErrandEngine.advanceStep` run from `ActionLoop`,
+  eight times inside the tick, instead of once from `ResourceLoop`.
+- A hauler who puts a load down looks for the next heap **on the spot** rather
+  than waiting for the ten-tick job board — a walk is a few steps now, so the
+  old cadence would have left them standing in the doorway nine tenths of the
+  day.
+- Cost held to rule 4: the pile sweep stays on the tick, `ColonyRoute.Occupancy`
+  is built lazily, and `ErrandEngine.hasBusiness` returns early for a colony
+  where nobody is hungry, cold or on the road.
+
+Guarded by `WalkPaceTests` (Core) and `WalkPaceAgreementTests` (App), which
+compares the two clocks in map widths per real second across the layer boundary
+— the comparison nobody had ever made. Written up as rule **34**.
+
+**Combat needed nothing.** A live raid steps at 1.4 s (`GameViewModel.siegeLoop`,
+ten times ahead of the world clock) and a finished skirmish replays over
+`SettlementBattle.playSeconds = 20`. Both were already independent of the tick.
+
+#### Still open — the same mistake, in two more places
+
+Found while looking, **not fixed**, because both change simulation balance and
+neither is what was reported:
+
+1. **Visitors crawl.** `VisitorEngine.pace` is `0.03` **per tick** — a trader
+   with mules covers `0.00025` map widths a second, sixty times slower than a
+   colonist. There is a real tension here and it wants a decision rather than a
+   constant: the approach is *supposed* to take several minutes so the player
+   sees a party coming, and at that duration over that distance it cannot also
+   move visibly. The fix is probably to make the beat "waiting at the edge"
+   rather than "walking slowly", or to put visitors on the step grid the way
+   colonists now are. `VisitorEngine.walk` mixes the walking with the
+   `ticksRemaining` phase logic, so it wants splitting first.
+2. **The wild is a still life.** `AnimalEngine.stride` is `0.012` over a
+   `thinkInterval` of 10 ticks — `0.00001` map widths a second, which is a
+   statue. Grazing should be slow, but two in-game months to cross one per cent
+   of the valley is not slow, it is stopped. Changing it moves hunting yields
+   and predator contact, so it wants `DangerProbe` on it rather than a guess.
+
 ### 11.30 — the game makes no sound at all (asked 2026-08-13)
 
 **Flagged by Keks, not yet built.** *"Ty bys teoreticky mohl najít na YT nějaké

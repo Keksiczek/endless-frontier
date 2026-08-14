@@ -210,7 +210,7 @@ struct ColonyPolicyTests {
             for i in s.pawns.indices { s.pawns[i].needs.hunger = 40 }
             let before = s.storage[.food]
             for tick in 0..<40 {
-                s = ErrandEngine.advanceOneTick(s, registry: registry, tick: tick)
+                s = ErrandEngine.advanceStep(s, registry: registry, clock: .at(absoluteStep: tick))
                 s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick)
             }
             return before - s.storage[.food]
@@ -230,7 +230,7 @@ struct ColonyPolicyTests {
             var s = town(12, work: .healing)
             s.policy.ration = ration
             for tick in 0..<20 {
-                s = ErrandEngine.advanceOneTick(s, registry: registry, tick: tick)
+                s = ErrandEngine.advanceStep(s, registry: registry, clock: .at(absoluteStep: tick))
                 s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick)
             }
             return s.pawns.map(\.mood).reduce(0, +) / Double(s.pawns.count)
@@ -255,7 +255,7 @@ struct ColonyPolicyTests {
             s.policy.ration = ration
             for i in s.pawns.indices { s.pawns[i].needs.hunger = 30 }
             for tick in 0..<600 {
-                s = ErrandEngine.advanceOneTick(s, registry: registry, tick: tick)
+                s = ErrandEngine.advanceStep(s, registry: registry, clock: .at(absoluteStep: tick))
                 s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick)
                 if s.pawns.contains(where: { $0.needs.hunger <= 0 }) { return tick }
             }

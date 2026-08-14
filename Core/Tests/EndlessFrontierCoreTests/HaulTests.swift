@@ -35,10 +35,13 @@ struct HaulTests {
         return s
     }
 
-    private func run(_ settlement: Settlement, ticks: Int) -> Settlement {
+    /// Hauling runs on the action grid now (`WalkPace`), so these count steps.
+    /// Eight of them are one world tick.
+    private func run(_ settlement: Settlement, steps: Int) -> Settlement {
         var s = settlement
-        for tick in 0..<ticks {
-            s = HaulEngine.advanceOneTick(s, registry: registry(), tick: tick)
+        for step in 0..<steps {
+            s = HaulEngine.advanceStep(s, registry: registry(),
+                                       clock: .at(absoluteStep: step))
         }
         return s
     }
@@ -46,7 +49,7 @@ struct HaulTests {
     @Test("A heap on the ground ends up in the storehouse")
     func aLoadArrives() {
         let after = run(colony(hands: 1, piles: [("wood", 4, LocalPoint(x: 0.8, y: 0.3))]),
-                        ticks: 80)
+                        steps: 80)
         #expect(after.stockpile["wood"] == 4)
         #expect(after.localMap?.piles.isEmpty == true)
         #expect(after.pawns[0].carrying == nil, "and they put it down when they got there")
@@ -55,20 +58,20 @@ struct HaulTests {
     @Test("It takes walking — distance is a real cost")
     func haulingTakesTime() {
         let near = run(colony(hands: 1, piles: [("wood", 4, LocalPoint(x: 0.52, y: 0.53))]),
-                       ticks: 4)
+                       steps: 4)
         let far = run(colony(hands: 1, piles: [("wood", 4, LocalPoint(x: 0.95, y: 0.05))]),
-                      ticks: 4)
+                      steps: 4)
         #expect((near.stockpile["wood"] ?? 0) > (far.stockpile["wood"] ?? 0))
     }
 
     @Test("Two haulers never walk to the same heap")
     func aHeapIsClaimed() {
         var s = colony(hands: 4, piles: [("wood", 4, LocalPoint(x: 0.75, y: 0.3))])
-        s = HaulEngine.advanceOneTick(s, registry: registry(), tick: 0)
+        s = HaulEngine.advanceStep(s, registry: registry(), clock: .at(absoluteStep: 0))
         let claimed = s.localMap?.piles.filter { $0.claimedBy != nil } ?? []
         #expect(claimed.count <= 1)
         // …and after it is picked up, only one person is carrying it.
-        let after = run(s, ticks: 60)
+        let after = run(s, steps: 60)
         #expect(after.pawns.count { $0.carrying != nil } == 0)
         #expect(after.stockpile["wood"] == 4)
     }
@@ -79,7 +82,7 @@ struct HaulTests {
             ("wood", 4, LocalPoint(x: 0.7, y: 0.3)),
             ("rough_stone", 3, LocalPoint(x: 0.3, y: 0.7)),
             ("wood", 2, LocalPoint(x: 0.6, y: 0.8)),
-        ]), ticks: 120)
+        ]), steps: 120)
         #expect(after.localMap?.piles.isEmpty == true)
         #expect(after.stockpile["wood"] == 6)
         #expect(after.stockpile["rough_stone"] == 3)
@@ -89,7 +92,7 @@ struct HaulTests {
     func theUnchartedIsLeftAlone() {
         var s = colony(hands: 2, piles: [("wood", 4, LocalPoint(x: 0.9, y: 0.9))])
         s.localMap?.exploredCells = []
-        let after = run(s, ticks: 60)
+        let after = run(s, steps: 60)
         #expect(after.stockpile["wood"] == nil)
         #expect(after.localMap?.piles.count == 1)
     }
@@ -99,7 +102,7 @@ struct HaulTests {
         var s = colony(hands: 2, piles: [("wood", 4, LocalPoint(x: 0.7, y: 0.3))])
         let trip = UUID()
         for i in s.pawns.indices { s.pawns[i].expeditionID = trip }
-        let after = run(s, ticks: 60)
+        let after = run(s, steps: 60)
         #expect(after.stockpile["wood"] == nil)
     }
 
@@ -149,22 +152,22 @@ struct HaulTests {
     /// stood perfectly still for two minutes with their legs swinging, then
     /// jumped. `Errand` had already worked this out; hauling had not. The walk
     /// knows when it began and when it ends, so it can be asked for a *fraction*
-    /// of a tick, and the answer has to actually move.
-    @Test("A hauler is somewhere new between one tick and the next")
+    /// of a step, and the answer has to actually move.
+    @Test("A hauler is somewhere new between one step and the next")
     func theWalkIsContinuous() {
         let s = run(colony(hands: 1, piles: [("wood", 10, LocalPoint(x: 0.9, y: 0.1))]),
-                    ticks: JobBoard.interval + 1)
+                    steps: JobBoard.interval + 1)
         guard let walk = s.pawns.compactMap(\.haulWalk).first else {
             Issue.record("nobody set off for the heap")
             return
         }
         // A walk long enough to be worth watching, and one that is under way.
         #expect(walk.arrivesAt > walk.leftAt + 1,
-                "the walk arrives in \(walk.arrivesAt - walk.leftAt) tick(s) — nothing to interpolate")
+                "the walk arrives in \(walk.arrivesAt - walk.leftAt) step(s) — nothing to interpolate")
         let quarter = walk.position(at: Double(walk.leftAt) + 0.25)
         let half = walk.position(at: Double(walk.leftAt) + 0.5)
-        #expect(quarter != walk.from, "a quarter of a tick in, still on the doorstep")
-        #expect(half != quarter, "half a tick later, not a step further")
+        #expect(quarter != walk.from, "a quarter of a step in, still on the doorstep")
+        #expect(half != quarter, "half a step later, not a stride further")
         // …and it ends where it was sent, rather than drifting past it.
         #expect(walk.position(at: Double(walk.arrivesAt)) == walk.to)
     }
@@ -175,12 +178,13 @@ struct HaulTests {
     @Test("A walk under way keeps the route it set off with")
     func theRouteIsSettledOnce() {
         var s = run(colony(hands: 1, piles: [("wood", 10, LocalPoint(x: 0.9, y: 0.1))]),
-                    ticks: JobBoard.interval + 1)
+                    steps: JobBoard.interval + 1)
         guard let before = s.pawns.compactMap(\.haulWalk).first else {
             Issue.record("nobody set off for the heap")
             return
         }
-        s = HaulEngine.advanceOneTick(s, registry: registry(), tick: JobBoard.interval + 1)
+        s = HaulEngine.advanceStep(s, registry: registry(),
+                                   clock: .at(absoluteStep: JobBoard.interval + 1))
         guard let after = s.pawns.compactMap(\.haulWalk).first else {
             Issue.record("the hauler stopped walking")
             return

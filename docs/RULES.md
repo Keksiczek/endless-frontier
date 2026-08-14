@@ -270,3 +270,25 @@ fires, do the arithmetic before you rewrite the mechanic.
    or assignment, ask what clears it when the holder is gone — and note that
    this hides perfectly behind healthy production numbers, because production
    was never the problem.
+34. **Check what a rate is *per* before deciding it is too small.** Everyday
+   walking was `0.06` for a hauler and `0.09` for somebody on an errand, both
+   **per world tick** — and a world tick is two real minutes and about six
+   in-game days. So a colonist fetching a sack from the far side of the village
+   spent sixteen ticks on it: three in-game months, half an hour of real time,
+   to cross a place you can see all of at once. On the canvas that is about one
+   and a half points a second, which is under the eye's threshold for motion.
+   The report was "the figures don't move", and they were moving — **thirty
+   times slower than the colonist standing next to them**, who was drawn from
+   the day clock at 4.5 map widths per five-minute day. Two clocks on one
+   screen, in two units, and nothing in the simulation ever complained: the food
+   still arrived, the store still filled, and the only symptom was that the
+   working half of the town read as scenery. `SiegeEngine.pace` was the single
+   movement rate measured per **action step**, and it was the single movement
+   that looked alive — the answer was in the codebase, being used by one system.
+   So: a rate expressed in the wrong unit is not a balance choice, it is an
+   arithmetic mistake wearing one. Before tuning a number, convert it to the
+   unit the *player experiences* — map widths per real second, deaths per year,
+   loads per day — and compare it to the other things in that unit. Two rates
+   that describe the same act (a person walking) must be measured on the same
+   clock, or one of them is furniture. Guarded by `WalkPaceTests` and, across
+   the layer boundary, `WalkPaceAgreementTests`.

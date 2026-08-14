@@ -59,7 +59,7 @@ struct ErrandTests {
 
     @Test("Hunger past the threshold sends somebody to the granary")
     func hungerPostsAnErrand() {
-        let s = ErrandEngine.advanceOneTick(hungry(town()), registry: registry, tick: 0)
+        let s = ErrandEngine.advanceStep(hungry(town()), registry: registry, clock: .at(absoluteStep: 0))
         let errand = try? #require(s.pawns[0].errand)
         #expect(errand?.kind == .eat)
         #expect(errand?.placementID == id(201), "to the building that holds the food")
@@ -69,16 +69,16 @@ struct ErrandTests {
     @Test("The meal is taken on arrival, not on the tick it was decided")
     func satisfiedOnArrival() {
         var s = hungry(town())
-        s = ErrandEngine.advanceOneTick(s, registry: registry, tick: 0)
+        s = ErrandEngine.advanceStep(s, registry: registry, clock: .at(absoluteStep: 0))
         let arrival = try? #require(s.pawns[0].errand?.arrivesAt)
         #expect((arrival ?? 0) > 0, "the granary is across the town, so it takes time")
 
         // One tick short of it: still walking, still hungry, still nothing gone.
-        s = ErrandEngine.advanceOneTick(s, registry: registry, tick: (arrival ?? 1) - 1)
+        s = ErrandEngine.advanceStep(s, registry: registry, clock: .at(absoluteStep: (arrival ?? 1) - 1))
         #expect(s.pawns[0].errand != nil)
         #expect(s.storage[.food] == 500)
 
-        s = ErrandEngine.advanceOneTick(s, registry: registry, tick: arrival ?? 1)
+        s = ErrandEngine.advanceStep(s, registry: registry, clock: .at(absoluteStep: arrival ?? 1))
         #expect(s.pawns[0].errand == nil, "they got there")
         #expect(s.pawns[0].needs.hunger > 40, "and ate")
         #expect(s.storage[.food] < 500, "out of the store")
@@ -88,8 +88,8 @@ struct ErrandTests {
     @Test("A granary on the far side of town is a longer walk")
     func distanceCostsTime() {
         func walk(_ at: TileCoord) -> Int {
-            let s = ErrandEngine.advanceOneTick(
-                hungry(town(granaryAt: at)), registry: registry, tick: 0)
+            let s = ErrandEngine.advanceStep(
+                hungry(town(granaryAt: at)), registry: registry, clock: .at(absoluteStep: 0))
             let errand = s.pawns[0].errand
             return (errand?.arrivesAt ?? 0) - (errand?.leftAt ?? 0)
         }
@@ -100,8 +100,8 @@ struct ErrandTests {
 
     @Test("A colony with nothing in the store feeds nobody")
     func emptyStoreFeedsNobody() {
-        let s = ErrandEngine.advanceOneTick(
-            hungry(town(food: 0)), registry: registry, tick: 0)
+        let s = ErrandEngine.advanceStep(
+            hungry(town(food: 0)), registry: registry, clock: .at(absoluteStep: 0))
         #expect(s.pawns.allSatisfy { $0.errand == nil },
                 "no trip is worth making to an empty granary")
         #expect(s.pawns[0].needs.hunger == 40, "and nobody is fed out of thin air")
@@ -110,7 +110,7 @@ struct ErrandTests {
     @Test("A colony with no granary yet still eats, at the fire in the middle")
     func youngColonyStillEats() {
         var s = hungry(town(granaryAt: nil))
-        for tick in 0..<6 { s = ErrandEngine.advanceOneTick(s, registry: registry, tick: tick) }
+        for tick in 0..<6 { s = ErrandEngine.advanceStep(s, registry: registry, clock: .at(absoluteStep: tick)) }
         #expect(s.pawns[0].needs.hunger > 40)
         #expect(s.storage[.food] < 500)
     }
@@ -146,12 +146,12 @@ struct ErrandTests {
                                     > ErrandEngine.furthestWorthGoing },
                 "the fixture has to actually put the food out of comfortable reach")
 
-        var out = ErrandEngine.advanceOneTick(s, registry: registry, tick: 0)
+        var out = ErrandEngine.advanceStep(s, registry: registry, clock: .at(absoluteStep: 0))
         let errand = out.pawns[0].errand
         #expect(errand?.kind == .eat, "starving is not a reason to stay put")
 
         let arrival = errand?.arrivesAt ?? 1
-        out = ErrandEngine.advanceOneTick(out, registry: registry, tick: arrival)
+        out = ErrandEngine.advanceStep(out, registry: registry, clock: .at(absoluteStep: arrival))
         #expect(out.pawns[0].needs.hunger > 20, "and they ate when they got there")
         #expect(out.storage[.food] < 500, "out of the store that was full all along")
     }
@@ -166,7 +166,7 @@ struct ErrandTests {
             s.pawns[i].currentJob = Job(id: id(300 + i), kind: .stalkAnimal,
                                         position: LocalPoint(x: 0.98, y: 0.98))
         }
-        let out = ErrandEngine.advanceOneTick(s, registry: registry, tick: 0)
+        let out = ErrandEngine.advanceStep(s, registry: registry, clock: .at(absoluteStep: 0))
         #expect(out.pawns.allSatisfy { $0.errand == nil })
     }
 
@@ -181,7 +181,7 @@ struct ErrandTests {
                                         position: LocalPoint(x: 0.02, y: 0.02))
         }
         // The hut with the hearth in it stands at the far corner of the grid.
-        let out = ErrandEngine.advanceOneTick(s, registry: registry, tick: 0)
+        let out = ErrandEngine.advanceStep(s, registry: registry, clock: .at(absoluteStep: 0))
         #expect(out.pawns[0].errand?.kind == .warmUp)
     }
 
@@ -195,7 +195,7 @@ struct ErrandTests {
         var s = town(souls: 20, food: 4000)
         s.storageCapacity = .uniform(8000)
         for tick in 0..<600 {
-            s = ErrandEngine.advanceOneTick(s, registry: registry, tick: tick)
+            s = ErrandEngine.advanceStep(s, registry: registry, clock: .at(absoluteStep: tick))
             s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick)
         }
         let eaten = 4000 - s.storage[.food]
@@ -217,7 +217,7 @@ struct ErrandTests {
     func famineIsShared() {
         var s = hungry(town(souls: 10, food: 6), to: 20)
         for tick in 0..<40 {
-            s = ErrandEngine.advanceOneTick(s, registry: registry, tick: tick)
+            s = ErrandEngine.advanceStep(s, registry: registry, clock: .at(absoluteStep: tick))
         }
         let fed = s.pawns.count { $0.needs.hunger > 20 }
         #expect(fed >= 5, "only \(fed) of ten got anything at all")
@@ -229,12 +229,12 @@ struct ErrandTests {
     func coldSendsThemToTheHearth() {
         var s = town()
         for i in s.pawns.indices { s.pawns[i].needs.warmth = 20 }
-        var out = ErrandEngine.advanceOneTick(s, registry: registry, tick: 0)
+        var out = ErrandEngine.advanceStep(s, registry: registry, clock: .at(absoluteStep: 0))
         #expect(out.pawns[0].errand?.kind == .warmUp)
         #expect(out.pawns[0].errand?.placementID == id(200), "the hut has the hearth in it")
 
         let arrival = out.pawns[0].errand?.arrivesAt ?? 1
-        out = ErrandEngine.advanceOneTick(out, registry: registry, tick: arrival)
+        out = ErrandEngine.advanceStep(out, registry: registry, clock: .at(absoluteStep: arrival))
         #expect(out.pawns[0].needs.warmth >= ErrandEngine.hearthWarmth)
     }
 
@@ -242,7 +242,7 @@ struct ErrandTests {
     func hungerOutranksCold() {
         var s = hungry(town())
         for i in s.pawns.indices { s.pawns[i].needs.warmth = 20 }
-        let out = ErrandEngine.advanceOneTick(s, registry: registry, tick: 0)
+        let out = ErrandEngine.advanceStep(s, registry: registry, clock: .at(absoluteStep: 0))
         #expect(out.pawns[0].errand?.kind == .eat)
     }
 
@@ -252,7 +252,7 @@ struct ErrandTests {
     func deterministic() {
         func run() -> [Errand?] {
             var s = hungry(town(souls: 12))
-            for tick in 0..<20 { s = ErrandEngine.advanceOneTick(s, registry: registry, tick: tick) }
+            for tick in 0..<20 { s = ErrandEngine.advanceStep(s, registry: registry, clock: .at(absoluteStep: tick)) }
             return s.pawns.map(\.errand)
         }
         #expect(run() == run())

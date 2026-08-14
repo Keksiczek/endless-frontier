@@ -202,7 +202,7 @@ struct FoodChainTests {
 
         let before = s.pawns.map(\.needs.hunger).reduce(0, +)
         for tick in 0..<40 {
-            s = ErrandEngine.advanceOneTick(s, registry: reg, tick: tick)
+            s = ErrandEngine.advanceStep(s, registry: reg, clock: .at(absoluteStep: tick))
         }
         let after = s.pawns.map(\.needs.hunger).reduce(0, +)
 

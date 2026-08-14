@@ -31,9 +31,14 @@ import Foundation
 /// settlement, the registry and the tick.
 public enum ErrandEngine {
 
-    /// How far a colonist covers in one tick, in local-map units. The town is
-    /// `SettlementGeometry.span` across, so crossing it is a few minutes.
-    public static let pace: Double = 0.09
+    /// How far a colonist covers in one **action step**, in local-map units.
+    ///
+    /// Was `0.09` *per world tick* — a walk to the granary that took six ticks,
+    /// which is over a month of in-game time and twelve real minutes of a
+    /// figure creeping across the screen too slowly to see. Same distance, same
+    /// bargain, read against the clock a walk actually happens on. See
+    /// `WalkPace`.
+    public static let pace: Double = WalkPace.perStep
     /// Below this a colonist stops what they are doing and goes to eat. The
     /// same threshold the old inline top-up used, so nobody starts eating at a
     /// different moment than they used to — only somewhere different.
@@ -91,24 +96,54 @@ public enum ErrandEngine {
 
     /// Arrivals first, then departures.
     ///
-    /// In that order because a colonist who arrives this tick should be fed
-    /// *before* `PawnEngine` reads their needs for mood, and because somebody
-    /// who just ate must not be sent straight back out.
-    public static func advanceOneTick(
+    /// In that order because a colonist who arrives should be fed *before*
+    /// `PawnEngine` reads their needs for mood, and because somebody who just
+    /// ate must not be sent straight back out.
+    ///
+    /// On the **action step**, not the world tick: an errand is somebody
+    /// walking two hundred metres, which is a fraction of a tick, and running
+    /// it once a tick meant the walk could not be shorter than an in-game week
+    /// (`WalkPace`). Eating itself is unaffected — a meal happens once, on
+    /// arrival, whichever clock the arrival is counted on.
+    public static func advanceStep(
         _ settlement: Settlement, registry: GameDataRegistry = GameDataRegistry(),
-        tick: Int = 0, laws: LawModifiers = LawModifiers()
+        clock: WorldClock = WorldClock(tick: 0), laws: LawModifiers = LawModifiers()
     ) -> Settlement {
-        guard !settlement.pawns.isEmpty else { return settlement }
+        let step = clock.absoluteStep
+        // Eight times a tick now, so a colony where nothing is happening must
+        // pay nothing for it (rule 4). On the tick's own step that means "is
+        // anybody hungry, cold or on the road"; on the seven that follow, only
+        // arrivals are settled, so only somebody actually walking counts.
+        let opening = clock.step == 0
+        guard opening ? hasBusiness(settlement)
+                      : settlement.pawns.contains(where: { $0.errand != nil })
+        else { return settlement }
         var s = settlement
         var food = s.storage[.food]
         // Mirrors `food`: pulled out, worked on, written back once — so the
         // pawn loop never holds two inout accesses into the same settlement.
         var stockpile = s.stockpile
 
+        // **Arrivals happen on every step; setting off happens once a tick.**
+        //
+        // The split is not tidiness, it is the difference between a finer clock
+        // and a faster world. Arriving is the half that has to be fine-grained
+        // — it is what puts a colonist at the granary door at the moment the
+        // canvas draws them reaching it. Setting off, and eating where you
+        // stand because you are away with a party, are *rates*: run them eight
+        // times inside the tick and a colony in a famine eats its granary eight
+        // times as fast, because `eat` is capped at a head's share and `gnaw`
+        // takes one unit at a time — both are deliberately small enough to be
+        // repeated (rule 14).
+        //
         // Where the colony keeps what it has, and where it keeps a fire. Both
-        // are lists of places rather than a number, which is the point.
-        let larders = places(in: s, registry: registry) { $0.storage[.food] > 0 }
-        let hearths = places(in: s, registry: registry) { $0.housing > 0 || $0.pollution > 0 }
+        // are lists of places rather than a number, which is the point — and
+        // both walk every placement, so they are built on the tick's own step
+        // and not on the seven that follow it (rule 4).
+        let larders = opening
+            ? places(in: s, registry: registry) { $0.storage[.food] > 0 } : []
+        let hearths = opening
+            ? places(in: s, registry: registry) { $0.housing > 0 || $0.pollution > 0 } : []
         let ration = s.policy.ration
         let mealCost = PawnEngine.foodPerMeal * laws.foodUpkeepMultiplier * ration.foodPerMeal
         // A head's worth of what is in the store, so nobody eats the granary.
@@ -131,7 +166,7 @@ public enum ErrandEngine {
             // eleven dead of hunger against a store at 1245 of 1250.
             guard !s.pawns[i].isAway else {
                 s.pawns[i].errand = nil
-                guard s.pawns[i].needs.hunger < hungryBelow else { continue }
+                guard opening, s.pawns[i].needs.hunger < hungryBelow else { continue }
                 if food >= mealCost {
                     food = eat(&s.pawns[i], from: food, mealCost: mealCost,
                                ration: ration, share: share)
@@ -142,7 +177,7 @@ public enum ErrandEngine {
                 continue
             }
             if let errand = s.pawns[i].errand {
-                guard errand.hasArrived(at: tick) else { continue }
+                guard errand.hasArrived(at: step) else { continue }
                 switch errand.kind {
                 case .eat:
                     // A cooked meal if the kitchens managed one; otherwise
@@ -161,7 +196,9 @@ public enum ErrandEngine {
                 s.pawns[i].errand = nil
                 continue
             }
-            // Nothing biting, nothing to do.
+            // Nothing biting, nothing to do — and nobody sets off in the middle
+            // of the tick. See `opening`.
+            guard opening else { continue }
             let hungry = s.pawns[i].needs.hunger < hungryBelow
             let cold = s.pawns[i].needs.warmth < coldBelow
             guard hungry || cold else { continue }
@@ -181,7 +218,7 @@ public enum ErrandEngine {
                 // at the fire in the middle of it, so the errand still happens
                 // and still takes time.
                 s.pawns[i].errand = leg(kind, from: start, to: SettlementGeometry.heart,
-                                        tick: tick, placementID: nil, colony: s.colony,
+                                        step: step, placementID: nil, colony: s.colony,
                                         stone: s.localMap?.stone ?? StoneField(),
                                         landforms: s.localMap?.landforms ?? [])
                 continue
@@ -195,7 +232,7 @@ public enum ErrandEngine {
                     || SiegeField.distance(start, target.at) <= furthestWorthGoing
             else { continue }
             s.pawns[i].errand = leg(kind, from: start, to: target.at,
-                                    tick: tick, placementID: target.id, colony: s.colony,
+                                    step: step, placementID: target.id, colony: s.colony,
                                     stone: s.localMap?.stone ?? StoneField(),
                                     landforms: s.localMap?.landforms ?? [])
         }
@@ -206,6 +243,16 @@ public enum ErrandEngine {
     }
 
     // MARK: - Pieces
+
+    /// Whether anybody in this colony has their own business to be about —
+    /// somebody already walking, or somebody whose need has crossed a
+    /// threshold. One pass over the pawns, and it answers false for a settled
+    /// town on most steps.
+    static func hasBusiness(_ settlement: Settlement) -> Bool {
+        settlement.pawns.contains {
+            $0.errand != nil || $0.needs.hunger < hungryBelow || $0.needs.warmth < coldBelow
+        }
+    }
 
     /// A meal, out of the store.
     ///
@@ -253,7 +300,7 @@ public enum ErrandEngine {
     }
 
     private static func leg(
-        _ kind: Errand.Kind, from: LocalPoint, to: LocalPoint, tick: Int,
+        _ kind: Errand.Kind, from: LocalPoint, to: LocalPoint, step: Int,
         placementID: UUID?, colony: ColonyMap? = nil,
         stone: StoneField = StoneField(), landforms: [Landform] = []
     ) -> Errand {
@@ -265,9 +312,9 @@ public enum ErrandEngine {
         let via = ColonyRoute.corners(from: from, to: to, in: colony,
                                       stone: stone, landforms: landforms)
         let walk = ColonyRoute.length(from: from, through: via, to: to)
-        let ticks = max(1, Int((walk / pace).rounded(.up)))
-        return Errand(kind: kind, from: from, to: to, leftAt: tick,
-                      arrivesAt: tick + ticks, placementID: placementID, via: via)
+        return Errand(kind: kind, from: from, to: to, leftAt: step,
+                      arrivesAt: step + WalkPace.steps(for: walk, pace: pace),
+                      placementID: placementID, via: via)
     }
 
     /// Where a colonist is when the need bites: at their work if they have any,

@@ -148,7 +148,14 @@ struct ProductionChainTests {
             s = ResourceLoop.extractRawMaterials(s, tick: tick, config: reg.config, factors: factors)
             s = ResourceLoop.evolveDeposits(s, registry: reg, tick: tick, config: reg.config,
                                             mapSeed: 5)
-            s = HaulEngine.advanceOneTick(s, registry: reg, tick: tick)
+            // Hauling is an action-step thing (`WalkPace`), so the tick holds
+            // eight of them — the same shape `TickEngine` runs, rather than one
+            // carrying step per harvest and a chain that looks bottlenecked
+            // only because the harness measured it in the wrong unit.
+            for step in 0..<WorldClock.actionStepsPerTick {
+                s = HaulEngine.advanceStep(
+                    s, registry: reg, clock: WorldClock(tick: tick, step: step))
+            }
         }
         return s
     }

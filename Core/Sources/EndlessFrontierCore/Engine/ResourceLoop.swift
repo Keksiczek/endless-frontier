@@ -399,11 +399,12 @@ public enum ResourceLoop {
         if shut < 1 {
             for work in WorkKind.allCases { factors[work] = (factors[work] ?? 1) * shut }
         }
-        // 8c. And their own business. A need past its threshold sends somebody
-        //     to the granary or to a fire, and it is answered when they get
-        //     there — before the pawn tick reads their needs for mood, so a
-        //     meal eaten this minute is a mood this minute.
-        s = ErrandEngine.advanceOneTick(s, registry: registry, tick: tick, laws: laws)
+        // 8c. Their own business — a need past its threshold sending somebody
+        //     to the granary or to a fire — has moved to `ActionLoop`, which
+        //     runs eight times inside this tick and *before* it. So a meal
+        //     eaten on any step of this tick is already a mood by the time the
+        //     pawn tick reads it, which is the ordering that clause wanted and
+        //     could not have while a walk cost whole ticks (`WalkPace`).
         s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick,
                                       gatheringFactors: factors, laws: laws,
                                       climate: climate)
@@ -431,10 +432,9 @@ public enum ResourceLoop {
                            mapSeed: mapSeed,
                            regrowthMultiplier: laws.depositRegrowthMultiplier)
         // 10a. And somebody carries it in. A felled trunk and a broken block
-        //      are heaps on the ground until they are; this walks the haulers
-        //      every tick, because a load has to *move* rather than jump
-        //      between job-board cycles.
-        s = HaulEngine.advanceOneTick(s, registry: registry, tick: tick)
+        //      are heaps on the ground until they are — but the haulers walk in
+        //      `ActionLoop` now, eight times inside this tick, because a load
+        //      has to *move* and a colony is not a week across.
 
         // 10a-ii. The harvest, and then the kitchens — in that order, and both
         //      *after* the haulers, so a sack carried in this tick can be

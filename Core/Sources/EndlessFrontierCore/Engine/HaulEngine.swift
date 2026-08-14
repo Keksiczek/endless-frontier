@@ -20,10 +20,17 @@ import Foundation
 /// the job board's cadence.
 public enum HaulEngine {
 
-    /// How much of a load a colonist gets across the map per tick, in
-    /// normalised units. A pile a quarter of the map away is a few ticks of
-    /// walking, which is the point — distance is a cost now.
-    public static let carrySpeed: Double = 0.06
+    /// How much of a load a colonist gets across the map per **action step**.
+    ///
+    /// Was `0.06` *per tick*, which is the same number against a clock eight
+    /// times coarser: a heap a quarter of the map away was four ticks of
+    /// walking each way — the better part of an in-game month, and eight real
+    /// minutes of a figure that did not visibly move. Distance is still a cost;
+    /// it is now a cost measured in the unit a walk actually happens in. See
+    /// `WalkPace`.
+    public static let carrySpeed: Double = WalkPace.carryingPerStep
+    /// …and empty-handed, on the way out to the heap. Hands free is quicker.
+    public static let emptySpeed: Double = WalkPace.perStep
     /// The most piles a map keeps. Past this the oldest are merged into the
     /// nearest neighbour rather than left to accumulate for ever: a valley
     /// logged flat should not carry two hundred heaps in its save.
@@ -69,60 +76,90 @@ public enum HaulEngine {
 
     // MARK: - Carrying
 
-    /// One tick of hauling for a settlement: pick up, walk, put down.
+    /// One action step of hauling for a settlement: pick up, walk, put down.
     ///
-    /// Runs every tick, unlike the job board, so a load that has arrived is put
-    /// down on the tick it arrives rather than at the next board cycle. The
+    /// Runs every step, unlike the job board, so a load that has arrived is put
+    /// down on the step it arrives rather than at the next board cycle. The
     /// *walk* is not stepped here — it was decided when it began (`WalkPath`)
-    /// and the canvas reads it at a fractional tick — so this only starts walks,
+    /// and the canvas reads it at a fractional step — so this only starts walks,
     /// finishes them, and hands loads over. Linear in the number of carriers.
-    public static func advanceOneTick(
-        _ settlement: Settlement, registry: GameDataRegistry, tick: Int
+    ///
+    /// It used to run once a world tick, which made a walk across the colony a
+    /// whole in-game week at minimum. The eight-fold finer grid is why a hauler
+    /// now reads as a person crossing a town rather than as scenery.
+    public static func advanceStep(
+        _ settlement: Settlement, registry: GameDataRegistry, clock: WorldClock
     ) -> Settlement {
         guard var map = settlement.localMap else { return settlement }
         guard !map.piles.isEmpty || settlement.pawns.contains(where: { $0.carrying != nil })
         else { return settlement }
 
         var s = settlement
+        let step = clock.absoluteStep
         let store = storePosition(s)
         let ticksPerYear = max(1, registry.config.ticksPerYear)
-        map.piles = releasingDeadClaims(map.piles, pawns: s.pawns, ticksPerYear: ticksPerYear)
+        // Claims are swept on the tick, not on every step: it is a whole pass
+        // over the piles against a set of the living, and nobody dies eight
+        // times in two minutes (rule 4).
+        if clock.step == 0 {
+            map.piles = releasingDeadClaims(map.piles, pawns: s.pawns, ticksPerYear: ticksPerYear)
+        }
         // A pack animal takes the weight off: the colony's beasts of burden
         // make every hauler quicker, which is the whole reason to keep one.
-        let pace = carrySpeed * (1 + TamingEngine.bonuses(s).haul)
+        let lift = 1 + TamingEngine.bonuses(s).haul
         // What stands where, worked out once for the whole colony rather than
         // once per walker per sampled point (§11.23).
         // …and the rock with it: a cliff is as impassable as a wall, and
         // routing used to know only about walls.
-        let standing = s.colony.map {
-            ColonyRoute.Occupancy($0, stone: map.stone, landforms: map.landforms)
+        //
+        // Built **lazily**, because this runs eight times as often as it used
+        // to and laying out a 24×24 grid against every landform for a colony
+        // where nobody happens to set off this step is exactly the per-step
+        // cost rule 4 is about.
+        var standing: ColonyRoute.Occupancy??
+        func occupancy() -> ColonyRoute.Occupancy? {
+            if let cached = standing { return cached }
+            let built = s.colony.map {
+                ColonyRoute.Occupancy($0, stone: map.stone, landforms: map.landforms)
+            }
+            standing = .some(built)
+            return built
         }
 
         // Where a hauler is right now, and the walk that gets them to `target`
         // — the one they are already on if it still goes there, or a fresh one
         // from wherever they have got to. Deciding the walk **once** is the
         // whole point: it is what lets the canvas draw them crossing the town
-        // instead of standing still for two minutes and jumping (`WalkPath`),
-        // and it takes the route out of the per-tick path (rule 4).
-        func walk(of pawn: Pawn, to target: LocalPoint) -> WalkPath {
+        // instead of standing still and jumping (`WalkPath`), and it takes the
+        // route out of the per-step path (rule 4).
+        func walk(of pawn: Pawn, to target: LocalPoint, pace: Double) -> WalkPath {
             if let under = pawn.haulWalk, under.to == target { return under }
-            let here = pawn.haulWalk?.position(at: Double(tick)) ?? store
-            return WalkPath.across(from: here, to: target, leavingAt: tick,
-                                   pace: pace, in: s.colony, occupancy: standing)
+            let here = pawn.haulWalk?.position(at: Double(step)) ?? store
+            return WalkPath.across(from: here, to: target, leavingAt: step,
+                                   pace: pace, in: s.colony, occupancy: occupancy())
         }
 
         for i in s.pawns.indices {
+            // Whether this colonist put a load down *this step*, and so has
+            // both empty hands and a reason to look for the next heap now.
+            var turnedRound = false
             // Someone already carrying just walks, and hands it over on arrival.
             if let load = s.pawns[i].carrying {
-                let home = walk(of: s.pawns[i], to: load.destination)
-                if home.hasArrived(at: tick) {
-                    s.stockpile[load.itemID, default: 0] += load.amount
-                    s.pawns[i].carrying = nil
-                    s.pawns[i].haulWalk = nil
-                } else {
+                let home = walk(of: s.pawns[i], to: load.destination,
+                                pace: carrySpeed * lift)
+                guard home.hasArrived(at: step) else {
                     s.pawns[i].haulWalk = home
+                    continue
                 }
-                continue
+                s.stockpile[load.itemID, default: 0] += load.amount
+                s.pawns[i].carrying = nil
+                s.pawns[i].haulWalk = nil
+                turnedRound = true
+                // …and they do **not** stand at the store until the next board
+                // cycle. Falling through to the search below is what "turn
+                // round and fetch the next one" means: a walk is a few steps
+                // now, so a hauler tied to a ten-tick cadence would spend nine
+                // tenths of the colony's day standing in the doorway.
             }
 
             // Otherwise: hands free, and a heap out there with their name on it.
@@ -130,26 +167,28 @@ public enum HaulEngine {
             let held = map.piles.firstIndex(where: { $0.claimedBy == s.pawns[i].id })
             // Looking for *new* work is the expensive half — it walks every
             // heap for every free pair of hands — and it is also the half that
-            // does not need answering every minute. Fetching and carrying stay
-            // per-tick, because a load has to move; picking up a fresh errand
-            // happens on the job board's cadence. Without this an offline
-            // catch-up pays that search forty thousand times over.
+            // does not need answering every step. Fetching and carrying stay
+            // per-step, because a load has to move; a fresh errand is picked up
+            // on the job board's cadence, or the moment a load is put down.
+            // Without this an offline catch-up pays that search forty thousand
+            // times over.
+            let looking = turnedRound
+                || (clock.tick % JobBoard.interval == 0 && clock.step == 0)
             guard let index = held
-                    ?? (tick % JobBoard.interval == 0
-                        ? nearestUnclaimed(in: map, to: store) : nil) else { continue }
+                    ?? (looking ? nearestUnclaimed(in: map, to: store) : nil) else { continue }
             // Claim it, walk to it, and pick it up when they get there.
             map.piles[index].claimedBy = s.pawns[i].id
             let pilePosition = map.piles[index].position
-            let out = walk(of: s.pawns[i], to: pilePosition)
-            if out.hasArrived(at: tick) {
+            let out = walk(of: s.pawns[i], to: pilePosition, pace: emptySpeed * lift)
+            if out.hasArrived(at: step) {
                 let pile = map.piles.remove(at: index)
                 s.pawns[i].carrying = HaulLoad(itemID: pile.itemID, amount: pile.amount,
                                                destination: store)
                 // …and they turn round on the spot: the walk home begins at the
                 // heap, not at the store they set out from.
                 s.pawns[i].haulWalk = WalkPath.across(
-                    from: pilePosition, to: store, leavingAt: tick,
-                    pace: pace, in: s.colony, occupancy: standing)
+                    from: pilePosition, to: store, leavingAt: step,
+                    pace: carrySpeed * lift, in: s.colony, occupancy: occupancy())
             } else {
                 s.pawns[i].haulWalk = out
             }

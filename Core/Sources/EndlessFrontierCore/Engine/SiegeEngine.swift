@@ -28,13 +28,20 @@ public enum SiegeEngine {
 
     // MARK: - Real time, on the ground
 
-    /// How far anybody covers in one action step, in local-map units.
+    /// How far a fighter covers in one action step, in local-map units.
     ///
     /// The warband forms up at `SiegeField.originReach` and the watch turns out
     /// from among the houses, so there is real ground between them and it takes
     /// real steps to cross. That gap is the thing that was missing: the enemy
     /// appears at the edge of the map and *walks in*, and the player has time
     /// to decide what to do about it before anybody is within reach of anybody.
+    ///
+    /// Deliberately slower than `WalkPace.perStep` — a line closing on an enemy
+    /// advances warily, and the approach is the part of a raid the player reads
+    /// and answers. Deliberately *on the same clock*, which is the thing that
+    /// stopped being true everywhere else: this was the only movement in the
+    /// game measured per action step, and it was the only movement that looked
+    /// alive. `WalkPaceTests` pins the two together.
     public static let pace = 0.030
     /// Arm's length. Inside this, two people are fighting each other — which is
     /// what "the ranks are in contact" means now that there is a ground to be

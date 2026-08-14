@@ -158,11 +158,20 @@ struct SocietyTests {
             q.needs = PawnNeeds(hunger: 40, rest: 80, recreation: 70)
             return q
         }
-        // Long enough for them to walk to the food: a meal is an errand now,
-        // and nothing is eaten on the tick the hunger is noticed.
+        // Long enough for them to walk to the food: a meal is an errand, and
+        // the errand is walked on the action grid (`WalkPace`) — so the harness
+        // steps that grid inside each tick, the way `TickEngine` does. The law
+        // is what is under test, so its modifiers are handed to the errand
+        // engine here rather than being re-derived.
         func run(_ start: Settlement) -> Settlement {
             var s = start
             for tick in 0..<6 {
+                let laws = SocietyEngine.modifiers(s, registry: reg)
+                for step in 0..<WorldClock.actionStepsPerTick {
+                    s = ErrandEngine.advanceStep(
+                        s, registry: reg,
+                        clock: WorldClock(tick: tick, step: step), laws: laws)
+                }
                 s = ResourceLoop.advanceSettlement(s, registry: reg, config: reg.config,
                                                    tick: tick, mapSeed: 1)
             }

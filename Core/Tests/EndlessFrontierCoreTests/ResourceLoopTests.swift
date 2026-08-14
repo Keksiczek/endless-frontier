@@ -14,10 +14,19 @@ struct ResourceLoopTests {
         let first = ResourceLoop.advanceOneTick(state, registry: registry)
         #expect(abs(first.settlements[0].storage[.food] - 110) < 1e-9)   // nobody hungry yet
 
-        // The clock has to actually run: a meal is an errand now, and an
-        // errand arrives on a later tick than the one it was posted on.
+        // The clock has to actually run, and it has to run the shape the game
+        // runs: a meal is an errand, an errand is walked on the **action grid**
+        // (`WalkPace`), and `TickEngine` steps that grid eight times before the
+        // civilisation's own systems settle the tick. Driving `ResourceLoop`
+        // alone is a colony where nobody ever leaves their work, so nobody ever
+        // reaches the granary and nothing is ever eaten.
         var world = state
         for _ in 0..<30 {
+            for step in 0..<WorldClock.actionStepsPerTick {
+                world = ActionLoop.advanceStep(
+                    world, clock: WorldClock(tick: world.tick, step: step),
+                    registry: registry)
+            }
             world = ResourceLoop.advanceOneTick(world, registry: registry)
             world.tick += 1
         }
