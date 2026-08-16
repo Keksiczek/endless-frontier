@@ -95,13 +95,36 @@ enum SettlementInterior {
         }
         // Then the clutter that makes it a room rather than a diagram, tucked
         // into the corners the stations left alone.
-        for (i, fitting) in plan.clutter.enumerated() {
-            let corner = corners[(i + Int(h % 4)) % corners.count]
+        //
+        // **Not all of it, and not the same of it.** Keks, at zoom: *"vypadají
+        // uvnitř budovy skoro stejně."* Every room of a kind was furnished from
+        // the same list in the same order, so ten huts were ten copies of one
+        // hut with the furniture jittered a few pixels. A household keeps some
+        // of what it could keep: the seed picks which corners are used and what
+        // stands in them, so two houses on one street are two houses.
+        let corners = shuffled(corners, roll: { roll() })
+        let kept = plan.clutter.isEmpty ? 0
+            : max(1, min(plan.clutter.count, 1 + Int(roll() * Double(plan.clutter.count))))
+        for (i, fitting) in shuffled(plan.clutter, roll: { roll() }).prefix(kept).enumerated() {
+            let corner = corners[i % corners.count]
             slots.append(Slot(dx: corner.dx * (0.80 + roll() * 0.14),
                               dy: corner.dy * (0.80 + roll() * 0.14),
                               fitting: fitting))
         }
         return slots
+    }
+
+    /// A seeded shuffle — deterministic in whatever `roll` is drawing from, so
+    /// a given building is always furnished the same way (rule 3's shape in the
+    /// drawing: the same seed is the same room, every launch).
+    private static func shuffled<T>(_ items: [T], roll: () -> Double) -> [T] {
+        var out = items
+        guard out.count > 1 else { return out }
+        for i in stride(from: out.count - 1, to: 0, by: -1) {
+            let j = min(i, Int(roll() * Double(i + 1)))
+            out.swapAt(i, j)
+        }
+        return out
     }
 
     /// The stations alone, in the order colonists take them.
@@ -157,7 +180,9 @@ enum SettlementInterior {
     ) -> (stations: [Fitting], clutter: [Fitting], minimum: Int, maximum: Int) {
         switch glyph {
         case .house:
-            return ([.bed, .table], [.hearth, .crate], 2, 4)
+            // A home keeps more kinds of thing than a workroom does, and no two
+            // keep the same ones — which is what the seeded pick above is for.
+            return ([.bed, .table], [.hearth, .crate, .barrel, .shelf, .rack], 2, 4)
         case .hall:
             return ([.desk], [.shelf, .shelf, .crate], 1, 5)
         case .market:
@@ -250,17 +275,24 @@ enum SettlementInterior {
     static func draw(
         _ context: inout GraphicsContext,
         glyph: SettlementRenderer.BuildingGlyph,
-        at c: CGPoint, footprint: CGSize, seed: UInt64, era: Era,
+        at c: CGPoint, footprint: CGSize, size: CGFloat, seed: UInt64, era: Era,
         workers: Int, residents: Int = 0, night: Double, time: Double
     ) {
         guard isLegible(footprint: footprint) else { return }
-        let inset = CGSize(width: footprint.width * wallInset,
-                           height: footprint.height * wallInset)
-        let room = CGRect(x: c.x - footprint.width / 2 + inset.width,
-                          y: c.y - footprint.height / 2 + inset.height,
-                          width: footprint.width - inset.width * 2,
-                          height: footprint.height - inset.height * 2)
+        // **Inside the walls that are actually drawn**, not inside the lot.
+        // See `SettlementStructures.bodyRect`: the room used to be sized off
+        // the footprint and the house off `s`, so the floor and its lamplight
+        // spilled past the walls and the building glowed through them at night.
+        let shell = SettlementStructures.bodyRect(glyph, at: c, s: size,
+                                                   seed: seed, footprint: footprint)
+        let room = shell.insetBy(dx: shell.width * wallInset,
+                                 dy: shell.height * wallInset)
         guard room.width > 4, room.height > 4 else { return }
+        // Everything below places its fittings in fractions of `footprint`;
+        // they belong in fractions of the **room**, which is what stops a bed
+        // being drawn in the street.
+        let footprint = CGSize(width: room.width, height: room.height)
+        let c = CGPoint(x: room.midX, y: room.midY)
 
         let palette = palette(era: era, seed: seed)
         floor(&context, room: room, palette: palette, seed: seed)
@@ -290,11 +322,17 @@ enum SettlementInterior {
     /// fittings were drawn at.
     static func stationPoints(
         glyph: SettlementRenderer.BuildingGlyph, at c: CGPoint,
-        footprint: CGSize, seed: UInt64, workers: Int
+        footprint: CGSize, size: CGFloat, seed: UInt64, workers: Int
     ) -> [CGPoint] {
-        stationSlots(for: glyph, seed: seed, stations: workers).map {
-            CGPoint(x: c.x + CGFloat($0.dx) * footprint.width,
-                    y: c.y + CGFloat($0.dy) * footprint.height)
+        // The same room the fittings were drawn in — a worker standing at a
+        // bench that is inside the walls must be inside them too.
+        let shell = SettlementStructures.bodyRect(glyph, at: c, s: size,
+                                                   seed: seed, footprint: footprint)
+        let room = shell.insetBy(dx: shell.width * wallInset,
+                                 dy: shell.height * wallInset)
+        return stationSlots(for: glyph, seed: seed, stations: workers).map {
+            CGPoint(x: room.midX + CGFloat($0.dx) * room.width,
+                    y: room.midY + CGFloat($0.dy) * room.height)
         }
     }
 

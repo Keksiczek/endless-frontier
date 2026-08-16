@@ -140,6 +140,18 @@ public enum BuildingEngine {
         let heart = TileCoord(colony.width / 2, colony.height / 2)
         let reach = max(1.0, Double(min(colony.width, colony.height)) / 2)
 
+        // One lookup per *kind* of building, not per building: this runs on
+        // every interval of an offline catch-up, and `Cover.substance` sorts a
+        // dictionary each time it is asked (rule 4).
+        var madeOf: [String: Double] = [:]
+        func wearOfMaterial(_ definitionID: String) -> Double {
+            if let known = madeOf[definitionID] { return known }
+            let rate = registry.building(definitionID)
+                .map { substanceWear(Cover.substance(of: $0, registry: registry)) } ?? 1
+            madeOf[definitionID] = rate
+            return rate
+        }
+
         var changed = false
         for i in colony.placements.indices where !colony.placements[i].underConstruction {
             let before = colony.placements[i].condition
@@ -148,8 +160,7 @@ public enum BuildingEngine {
             // **What it is made of.** Timber rots, thatch lifts, mortared stone
             // does neither — the third reader of `substance`, after cover and
             // what rots in a heap.
-            let made = registry.building(placement.definitionID)
-                .map { substanceWear(Cover.substance(of: $0, registry: registry)) } ?? 1
+            let made = wearOfMaterial(placement.definitionID)
             // **Where it stands.** A building on the edge of town takes the
             // weather off the open valley; one in the middle of a street has
             // its neighbours' walls around it. This is why a palisade on the

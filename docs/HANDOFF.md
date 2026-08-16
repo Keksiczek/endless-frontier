@@ -92,6 +92,28 @@ přes den, klidně i hodiny k tomu."*
 - **`DayClock`** — one clock for the strip and the canvas: the hour, the named
   part of the day, and a tally of what the colony is doing in it.
 
+## …and the pass that found the frame the valley was eating
+
+§11.36, from *"zkus zda najdeš nějaké chyby"* plus zoom, house variety, and a
+visual check in the simulator.
+
+- **`SettlementGround.Tone.order` was rebuilding two `allCases` arrays per
+  comparison inside a per-frame sort.** Every sample of a running build landed
+  there. Cached; the render path went from 1490 samples to 8. Rule **38**.
+  It also made a colony opening after a long absence *look* hung: catch-up runs
+  off the main actor, and the main actor was the thing that was busy.
+- **`SettlementStructures.bodyRect`** — one rect for the walls, read by the
+  structure, the interior and `AgentMotion`. The interior used to be sized off
+  the lot and the house off `s`, so rooms were bigger than their buildings:
+  furniture in the street and lamplight through the walls.
+- Interiors are furnished by a **seeded shuffle** now, walls show what they are
+  **made of** (`Cover.substance`, third reader), `floors` is **drawn**, zoom
+  goes to **8**, and night **desaturates** before it darkens.
+
+Known and deliberate: only `apartment_block` and `arcology` carry `floors` in
+the data, so everything else is one storey until somebody decides whether a
+longhouse having a loft should also mean it sleeps twice as many.
+
 ## What to pick up next
 
 - **Look at a fight.** The whole point of this batch is that people now stand

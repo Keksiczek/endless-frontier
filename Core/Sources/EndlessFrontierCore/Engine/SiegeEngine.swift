@@ -164,7 +164,7 @@ public enum SiegeEngine {
         var rng = SeededRNG(seed: seed)
         var s = settlement
         let line = BattleResolver.defenders(s.pawns, registry: registry)
-            .prefix(12).map(\.id)
+            .prefix(lineSize(of: s, registry: registry)).map(\.id)
         let id = rng.nextUUID()
         let approach = rng.nextUnit() * 2 * .pi
         // A wall is only a wall on the side it stands. What the colony has
@@ -593,6 +593,9 @@ public enum SiegeEngine {
             $0.side == .colony && !$0.down && (power[$0.id]?.ranged ?? 0) > 0
         }
         var total = 0.0
+        // Where the last shaft of this volley struck — the volley is drawn
+        // there rather than at a fixed point on an imaginary wall.
+        var landed: LocalPoint?
         for archer in archers {
             guard let mark = nearest(to: archer.at, among: raiders) else { continue }
             let gap = SiegeField.distance(archer.at, mark.at)
@@ -619,10 +622,15 @@ public enum SiegeEngine {
                 chips[struck, default: 0] += (loosed - shot) * chipPerShotStopped
             }
             guard shot > 0 else { continue }
+            landed = mark.at
             total += wound(raider: mark.id, by: shot, siege: &siege)
         }
-        guard total > 0 else { return }
-        siege.moments.append(moment(siege, .volley, amount: total))
+        guard total > 0, let landed else { return }
+        // **Where the arrows went.** A volley used to be a bare tally, so the
+        // canvas drew it as arrows off an abstract wall — an effect at a place
+        // nobody was standing. It lands on whoever was shot at, which is a
+        // position the fight already knows.
+        siege.moments.append(moment(siege, .volley, amount: total, spot: landed))
     }
 
     /// The line, where it is in contact.
@@ -755,7 +763,10 @@ public enum SiegeEngine {
         guard taken > 0 else { return s }
         s.storage[.food] -= taken
         siege.plundered += taken
-        siege.moments.append(moment(siege, .plunder, amount: taken))
+        // At the man doing it, not at the middle of town: a sack going over a
+        // shoulder is a thing happening in a place.
+        siege.moments.append(moment(siege, .plunder, amount: taken,
+                                    spot: breaking.first?.at))
         return s
     }
 
@@ -922,6 +933,35 @@ public enum SiegeEngine {
         siege.fighters[index].target = nil
     }
 
+    // MARK: - How many of us turn out
+
+    /// The most people a colony will ever put in the line, whatever its size.
+    ///
+    /// A cap has to exist — a town of three hundred is not three hundred
+    /// bodies on one contact surface, and the field would be a wall of people
+    /// two deep across the whole valley. This is a shield wall's worth.
+    static let lineCeiling = 28
+    /// …and the fewest, so a hamlet still fights rather than being processed.
+    static let lineFloor = 6
+    /// What share of the able-bodied turn out. Not everybody: somebody holds
+    /// the children, somebody is at the far field, somebody is no use with a
+    /// spear and knows it.
+    static let turnout = 0.55
+
+    /// How many defenders this colony fields.
+    ///
+    /// **This was `prefix(12)`, flat.** Keks, watching a raid on a town of
+    /// sixty-seven: *"když je nás hodně, proč nás vykradou a nezabijeme je?"* —
+    /// and the answer was arithmetic rather than tactics. Twelve people held
+    /// the line whether the colony was seven or seventy, so every raider past
+    /// the twelfth walked into the stores unopposed, and the colony's *growth*
+    /// bought it nothing at all in a fight. Population was the one thing a
+    /// player could obviously see and the one thing the defence never read.
+    static func lineSize(of settlement: Settlement, registry: GameDataRegistry) -> Int {
+        let able = BattleResolver.defenders(settlement.pawns, registry: registry).count
+        return max(min(lineFloor, able), min(lineCeiling, Int(Double(able) * turnout)))
+    }
+
     // MARK: - Buildings that fight
 
     /// How much of a tower's `defense` comes out of it as shooting, per step.
@@ -1064,12 +1104,20 @@ public enum SiegeEngine {
         if siege.repelled {
             moments.append(BattleMoment(id: moments.count, at: 0.995, kind: .repelled))
         }
-        s.lastBattle = BattleLog(
+        let record = BattleLog(
             id: siege.id, tick: siege.startTick,
             attackerName: siege.attackerName, defenderName: s.name,
             moments: moments, repelled: siege.repelled,
             attackerLabel: siege.attackerLabel, approach: siege.approach,
             attackers: siege.attackers, line: siege.line)
+        s.lastBattle = record
+        // …and it is kept. A colony that fought four raids has four records,
+        // newest first, and dismissing the card no longer throws one away.
+        s.battleHistory.removeAll { $0.id == record.id }
+        s.battleHistory.insert(record, at: 0)
+        if s.battleHistory.count > Settlement.battlesKept {
+            s.battleHistory.removeLast(s.battleHistory.count - Settlement.battlesKept)
+        }
 
         // The dead leave the roster once the fighting is over, not during it.
         let deaths = s.pawns.filter { $0.health <= 0 }.count

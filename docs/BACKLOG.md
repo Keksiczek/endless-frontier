@@ -1581,6 +1581,103 @@ keeping is `nightIsNeverDrawnAsDay`: it walks the whole day in 240 steps and
 fails on any moment where `SettlementLight` says the sun is down and the
 renderer darkens nothing — the reachability shape of rule 6, applied to light.
 
+### 11.36 — the frame the valley was eating, and rooms that were not rooms (2026-08-16)
+
+Keks: *"zkus zda najdeš nějaké [chyby] jak jsme si psali, kdyžtak větší zoom by
+to chtělo, větší rozmanitost domů"* — then, at zoom: *"vypadají uvnitř budovy
+skoro stejně, taky světlo z nich prosvítá přes stěny"*, *"pořád vidíme jen jedno
+patro"*, and *"můžeš pak udělat vizuál kontrolu celé appky."*
+
+**The bug worth the whole session: the canvas was spending its entire frame
+budget rebuilding two constant arrays.** Sampling a running build put *1490 of
+1490 samples* inside `SettlementGround.draw → sorted(by:)`. The comparator was
+`Tone.order`, and `order` called `GroundCover.allCases.firstIndex(of:)` and
+`Skin.allCases.firstIndex(of:)` — two array allocations and two linear searches
+**per comparison**, and a sort asks O(n log n) times, thirty times a second.
+Cached into two static dictionaries and computed once per key instead of once
+per comparison; the same sample afterwards shows 8 samples in the whole render
+path. It also explains what it looked like from outside: a colony opening after
+a long absence appeared to hang on *"the years passed without you"*, because the
+catch-up runs off the main actor and the main actor was busy sorting the ground.
+
+**Light came through the walls, and the furniture was in the street.**
+`SettlementInterior` sized its room from the **lot** (`footprint`, inset a
+tenth) while `SettlementStructures` draws the body from `s`, which is the lot
+over 2.2. On a 3×3 lot that is a room four fifths of the plot inside a house
+half of it — so the floor, the fittings and the room's lamplight were laid
+*outside* the walls meant to contain them, and after dark the light came with
+them. There is one rect now, `SettlementStructures.bodyRect`, and three callers
+read it: the structure draws it, the interior furnishes inside it, and
+`AgentMotion` stands people at the fittings (in map units, via `bodySize`) —
+which is what makes "the smith is drawn at the anvil that is drawn" true rather
+than approximately true.
+
+**Rooms of a kind were one room repeated.** Every house was furnished from the
+same clutter list in the same order. A seeded shuffle picks which corners are
+used and what stands in them, and a home draws from a longer list than a
+workroom does.
+
+**Walls now show what they are made of.** `Cover.substance` — the field the
+cover model and the weathering already read — decides the wall's courses (log,
+coursed stone, wattle, panel) and biases the roof: nobody thatches a stone house
+they could tile, and a hut of sticks is never shingled. Third reader of one
+field, no new data.
+
+**Storeys are drawn** — `floors` had been in the data since the beginning and
+was read by exactly one thing (`HouseholdEngine`, counting beds), so a building
+that stacks people never looked like one. Note what this does *not* fix: only
+`apartment_block` and `arcology` carry `floors` in `buildings.json`, and raising
+it on a hut or a longhouse would change how many people sleep there, which is a
+balance change and not a drawing one.
+
+**Zoom goes to 8** (was 4). Everything the canvas draws for a close look tops
+out well below it — the roof is off by 2.5, people are individuals from 1.5 —
+so past 4 there was nothing left to reach for.
+
+**Night reads as night.** Darkening alone left an autumn valley glowing orange
+at two in the morning: a wash scales brightness and leaves saturation exactly
+where it was, and the eye reads a saturated field as daylight however dim. A
+saturation blend against grey goes on first — hue goes, shape stays.
+
+### 11.37 — a raid a town can answer (2026-08-16)
+
+Three complaints from one raid, and the third is the one that mattered. Keks:
+*"v soubojích se ukazují efekty a krev na místě, kde postava stála když boj
+začínal, battle logy nejdou nikde zobrazit, a stále nevím, když je nás hodně,
+proč nás vykradou a nezabijeme je."*
+
+**The line was `prefix(12)`, flat.** Twelve people held it whether the colony
+was seven or seventy, so every raider past the twelfth walked into the stores
+unopposed — and the one thing a player can obviously see themselves doing,
+*growing*, bought them nothing at all in a fight. `SiegeEngine.lineSize` now
+turns out `turnout` (0.55) of the able-bodied, floored at what a hamlet has and
+capped at `lineCeiling` (28, a shield wall's worth — a town of three hundred is
+not three hundred bodies on one contact surface). Guarded by a test that fights
+the *same* raid against ten people and against sixty and expects the big town to
+hurt them more and lose no more of its stores.
+
+**Effects happened at the muster post.** A volley was a bare tally with no
+place, so the canvas drew arrows off an imaginary wall; plunder was drawn on the
+line between the muster point and the map edge. Both carry a `spot` now — the
+volley lands where the last shaft struck, the ransack happens at the man doing
+it — and the canvas draws them there. Wounds and deaths already carried their
+impact point; what was missing was everything else.
+
+**The arrow in the tree: closed, not built.** §11.27 left "a shot that is
+stopped damages what stopped it" open for everything that is not a building, and
+the honest answer to the tree half is *nothing*. A `Tree` has exactly one
+mutable field — `chopped`, "axe-work banked in the tree" — so feeding arrow hits
+into it would mean a warband shooting into your wood **pre-chops your timber**
+and the next woodcutter finishes faster. A shaft in a trunk has nothing to take
+from the tree; a shaft in a palisade has a condition and a mason, which is why
+that half exists and this one does not.
+
+**The colony kept one battle and threw it away when you closed the card.**
+`Settlement.battleHistory` keeps the last `battlesKept` (8), newest first, and
+`BattlesPanel` (Details → *Bitvy*) lists them with what each cost and reopens
+any of them — the report card and its replay were reachable exactly once, on the
+way past.
+
 ### 11.30 — the game makes no sound at all (asked 2026-08-13)
 
 **Flagged by Keks, not yet built.** *"Ty bys teoreticky mohl najít na YT nějaké

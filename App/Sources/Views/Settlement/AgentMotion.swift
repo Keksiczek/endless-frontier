@@ -140,10 +140,20 @@ enum AgentMotion {
             center = b.center
             halfW = b.footprintW / 2
             halfH = b.footprintH / 2
+            // Inside the walls the renderer actually draws, not across the whole
+            // lot: the fittings are laid out in the room (see
+            // `SettlementStructures.bodyRect`), so the people at them have to
+            // be measured against the same room or the smith stands in the
+            // yard hammering nothing.
+            let walls = SettlementStructures.bodySize(
+                b.glyph, s: b.size, seed: b.seed,
+                aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1)
+            let roomW = walls.width * (1 - SettlementInterior.wallInset * 2)
+            let roomH = walls.height * (1 - SettlementInterior.wallInset * 2)
             let places = SettlementInterior
                 .stationSlots(for: b.glyph, seed: b.seed, stations: b.assignedPawnIDs.count)
-                .map { LocalPoint(x: b.center.x + $0.dx * b.footprintW,
-                                  y: b.center.y + $0.dy * b.footprintH) }
+                .map { LocalPoint(x: b.center.x + $0.dx * roomW,
+                                  y: b.center.y + $0.dy * roomH) }
             stations = places
             var seating: [UUID: LocalPoint] = [:]
             for (index, id) in b.assignedPawnIDs.enumerated() where !places.isEmpty {

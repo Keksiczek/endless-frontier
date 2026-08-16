@@ -371,7 +371,8 @@ enum SettlementBattle {
             let fade = 1 - age / 0.12
             switch moment.kind {
             case .volley:
-                volley(&context, field: field, rect: rect, fade: fade, zoom: zoom)
+                volley(&context, field: field, rect: rect, fade: fade, zoom: zoom,
+                       landing: moment.spot)
             case .clash, .charge:
                 // Nothing of its own. A clash is a tally of the whole line's
                 // swings for one step, and the swings themselves are already
@@ -386,7 +387,8 @@ enum SettlementBattle {
                     along: blow(of: moment, at: p, field: field, siege: siege),
                     age: age, fatal: moment.kind == .death, unit: unit, seed: moment.id)
             case .plunder:
-                plunder(&context, field: field, rect: rect, fade: fade, unit: unit)
+                plunder(&context, field: field, rect: rect, fade: fade, unit: unit,
+                        at: moment.spot)
             case .repelled:
                 horn(&context, at: SettlementRenderer.point(field.muster, in: rect),
                      fade: fade, unit: unit)
@@ -752,16 +754,28 @@ enum SettlementBattle {
     }
 
     /// Arrows loosed from the colony's side, back down the road.
+    /// Arrows, drawn on the line they actually flew along.
+    ///
+    /// `landing` is where the volley struck (`BattleMoment.spot`). Without it
+    /// the shafts were drawn from the muster point toward the map edge — an
+    /// effect at a place nobody was standing, which is most of what "efekty na
+    /// místě, kde postava stála když boj začínal" was about.
     private static func volley(
         _ context: inout GraphicsContext, field: SiegeField, rect: CGRect,
-        fade: Double, zoom: CGFloat
+        fade: Double, zoom: CGFloat, landing: LocalPoint? = nil
     ) {
+        // The wall end of the flight: back along the axis from where it hit.
+        let target = landing ?? field.origin
+        let source = landing.map {
+            LocalPoint(x: $0.x - field.axisX * SiegeField.openReach * 0.35,
+                       y: $0.y - field.axisY * SiegeField.openReach * 0.35)
+        } ?? field.muster
         for i in 0..<6 {
             let t = 0.15 + Double(i) * 0.12
             let spread = (Double(i) - 2.5) * 0.012
             let px = -field.axisY * spread, py = field.axisX * spread
-            let from = LocalPoint(x: field.muster.x + px, y: field.muster.y + py)
-            let to = LocalPoint(x: field.origin.x + px, y: field.origin.y + py)
+            let from = LocalPoint(x: source.x + px, y: source.y + py)
+            let to = LocalPoint(x: target.x + px, y: target.y + py)
             let a = SettlementRenderer.point(interpolate(from, to, t: t), in: rect)
             let b = SettlementRenderer.point(interpolate(from, to, t: t + 0.06), in: rect)
             context.stroke(Path { p in
@@ -775,12 +789,14 @@ enum SettlementBattle {
     /// Stores going the other way, on somebody's back.
     private static func plunder(
         _ context: inout GraphicsContext, field: SiegeField, rect: CGRect,
-        fade: Double, unit: CGFloat
+        fade: Double, unit: CGFloat, at spot: LocalPoint? = nil
     ) {
+        // Where the sack is actually being filled, when the record says.
+        let start = spot ?? field.muster
         for i in 0..<3 {
             let t = 0.3 + Double(i) * 0.14
             let p = SettlementRenderer.point(
-                interpolate(field.muster, field.origin, t: t), in: rect)
+                interpolate(start, field.origin, t: t), in: rect)
             let s = unit * 0.010
             context.fill(Path(CGRect(x: p.x - s / 2, y: p.y - s / 2, width: s, height: s)),
                          with: .color(Theme.accent.opacity(0.55 * fade)))

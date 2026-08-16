@@ -38,6 +38,11 @@ struct SettlementDetailSheet: View {
                 DrawerSection(label("Quests", "Úkoly"), systemImage: "scroll.fill") {
                     QuestsPanel(game: game)
                 }
+                // Every fight this place has had, and each of them watchable
+                // again — the record used to be openable once and then gone.
+                DrawerSection(label("Battles", "Bitvy"), systemImage: "shield.fill") {
+                    BattlesPanel(game: game)
+                }
                 DrawerSection(label("Objectives", "Cíle"), systemImage: "target") {
                     // Following an objective leaves this sheet behind — it's
                     // covering the tab the player is being sent to.

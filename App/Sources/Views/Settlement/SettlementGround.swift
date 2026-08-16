@@ -159,7 +159,10 @@ enum SettlementGround {
         // than by a hair, which tone is drawn last decides what the ground
         // looks like. Unsorted, the valley would reshuffle its own edges every
         // frame — a shimmer with no cause anywhere in the world.
-        for tone in batches.keys.sorted(by: { $0.order < $1.order }) {
+        // Ordered once each, rather than once per comparison — `order` is
+        // cheap now, but a sort still asks for it O(n log n) times and the
+        // answer cannot change between two of them.
+        for (_, tone) in batches.keys.map({ ($0.order, $0) }).sorted(by: { $0.0 < $1.0 }) {
             guard let path = batches[tone] else { continue }
             context.fill(path, with: .color(colour(tone, season: season, sun: sun)))
         }
@@ -185,11 +188,24 @@ enum SettlementGround {
         /// same sequence. Darkest band first, so a lit tile's overgrown edge
         /// falls *over* the shade beside it rather than under it — light reads
         /// as the thing on top.
+        ///
+        /// **The lookups are cached, and that is not a micro-optimisation.**
+        /// This was `GroundCover.allCases.firstIndex(of:)` and the same for
+        /// `Skin`: two array allocations and two linear searches, *per call* —
+        /// and a sort calls its comparator O(n log n) times, thirty times a
+        /// second, for as long as the settlement is on screen. Sampling a
+        /// running build put **every** sample inside this sort. The valley was
+        /// spending its whole frame budget rebuilding two constant arrays.
         var order: Int {
-            let coverIndex = GroundCover.allCases.firstIndex(of: cover) ?? 0
-            let skinIndex = SettlementSeasons.Skin.allCases.firstIndex(of: skin) ?? 0
-            return (band * 256) + (coverIndex * 16) + (skinIndex * 2) + (dim ? 0 : 1)
+            let cover = Tone.coverOrder[cover] ?? 0
+            let skin = Tone.skinOrder[skin] ?? 0
+            return (band * 256) + (cover * 16) + (skin * 2) + (dim ? 0 : 1)
         }
+
+        private static let coverOrder: [GroundCover: Int] = Dictionary(
+            uniqueKeysWithValues: GroundCover.allCases.enumerated().map { ($1, $0) })
+        private static let skinOrder: [SettlementSeasons.Skin: Int] = Dictionary(
+            uniqueKeysWithValues: SettlementSeasons.Skin.allCases.enumerated().map { ($1, $0) })
     }
 
     /// The earth, the season lying on it and the sun falling on it, resolved

@@ -439,10 +439,132 @@ enum SettlementStructures {
                 center: CGPoint(x: c.x, y: footY), startRadius: 0, endRadius: sw / 2))
     }
 
+    /// What a wall is built of, as something to draw.
+    ///
+    /// The era already decided the *palette* — timber and thatch give way to
+    /// brick, then to panel and glass — and that was the whole of the story, so
+    /// every building raised in the same century was the same drawing in
+    /// different sizes. What a building is actually made of is in its own
+    /// `materialCost`, and `Cover.substance` has been reading it since the
+    /// cover model went in. This is the same fact, drawn: log courses on a
+    /// timber house, coursed blocks on a stone one, a woven wall on a hut of
+    /// sticks and turf.
+    static func fabricLines(
+        _ fabric: Cover.Substance, in body: CGRect, seed: UInt64,
+        ink: Color, context: inout GraphicsContext
+    ) {
+        let faint = ink.opacity(0.30)
+        switch fabric {
+        case .wood:
+            // Horizontal log courses, and the odd one out of true.
+            let courses = max(2, Int(body.height / 5))
+            for course in 1..<courses {
+                let y = body.minY + body.height * CGFloat(course) / CGFloat(courses)
+                let sag = CGFloat((seed >> UInt64(course % 40)) & 3) * 0.25
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: body.minX + 0.5, y: y))
+                    p.addLine(to: CGPoint(x: body.maxX - 0.5, y: y + sag))
+                }, with: .color(faint), lineWidth: 0.5)
+            }
+        case .stone:
+            // Coursed blocks, offset every other row — the whole reason stone
+            // reads as stone from any distance.
+            let courses = max(2, Int(body.height / 4.5))
+            for course in 1..<courses {
+                let y = body.minY + body.height * CGFloat(course) / CGFloat(courses)
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: body.minX + 0.5, y: y))
+                    p.addLine(to: CGPoint(x: body.maxX - 0.5, y: y))
+                }, with: .color(faint), lineWidth: 0.5)
+                let joints = 3
+                for joint in 0..<joints {
+                    let offset = course % 2 == 0 ? 0.5 : 0.0
+                    let x = body.minX + body.width * (CGFloat(joint) + 0.5 + offset) / CGFloat(joints)
+                    guard x > body.minX, x < body.maxX else { continue }
+                    context.stroke(Path { p in
+                        p.move(to: CGPoint(x: x, y: y))
+                        p.addLine(to: CGPoint(x: x, y: y - body.height / CGFloat(courses)))
+                    }, with: .color(faint), lineWidth: 0.4)
+                }
+            }
+        case .foliage:
+            // Wattle and turf: a woven wall, drawn as uprights and a weave.
+            let uprights = max(3, Int(body.width / 5))
+            for post in 1..<uprights {
+                let x = body.minX + body.width * CGFloat(post) / CGFloat(uprights)
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: x, y: body.minY + 1))
+                    p.addLine(to: CGPoint(x: x, y: body.maxY - 1))
+                }, with: .color(faint), lineWidth: 0.4)
+            }
+        case .air:
+            // Panel and glass: one long band, and nothing else.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: body.minX + 1, y: body.midY))
+                p.addLine(to: CGPoint(x: body.maxX - 1, y: body.midY))
+            }, with: .color(faint), lineWidth: 0.6)
+        }
+    }
+
+    /// **The walls, as actually drawn.** One rect, asked for by two callers.
+    ///
+    /// Keks, at zoom: *"vypadají uvnitř budovy skoro stejně, taky světlo z nich
+    /// prosvítá přes stěny."* The second half was a real fault and this is it.
+    /// `SettlementInterior` sized its room off the **lot** — the footprint,
+    /// inset a tenth — while the structure draws its body off `s`, which is the
+    /// lot over 2.2. On a 3×3 lot that is a room four fifths of the plot inside
+    /// a house half of it: the floor, the lamplight and half the furniture were
+    /// laid outside the walls that were supposed to contain them, and after
+    /// dark the light came with them.
+    ///
+    /// So the room comes from the same rect the walls do. Rule 35 in the
+    /// drawing: a number that must equal another number should *be* it.
+    static func bodyRect(
+        _ glyph: SettlementRenderer.BuildingGlyph, at c: CGPoint, s s0: CGFloat,
+        seed: UInt64, footprint: CGSize
+    ) -> CGRect {
+        let aspect = footprint.height > 0
+            ? Double(footprint.width / footprint.height) : 1
+        let size = bodySize(glyph, s: Double(s0), seed: seed, aspect: aspect)
+        return CGRect(x: c.x - CGFloat(size.width) / 2, y: c.y - CGFloat(size.height) / 2,
+                      width: CGFloat(size.width), height: CGFloat(size.height))
+    }
+
+    /// The same walls in whatever units the caller measures in.
+    ///
+    /// Three callers, one formula: the structure draws it, the interior
+    /// furnishes inside it, and `AgentMotion` stands people at the fittings —
+    /// in normalised map units rather than pixels. When these disagreed, the
+    /// smith was drawn hammering an anvil that was somewhere else.
+    static func bodySize(
+        _ glyph: SettlementRenderer.BuildingGlyph, s s0: Double,
+        seed: UInt64, aspect rawAspect: Double
+    ) -> (width: Double, height: Double) {
+        let sizeJ = Double((seed &* 0x9E37_79B9_7F4A_7C15) >> 40 & 0xFFFF) / 65535
+        let s = s0 * (0.9 + sizeJ * 0.2)
+        let aspect = min(1.7, max(0.6, rawAspect))
+        let shape = bodyShape(glyph)
+        return (s * Double(shape.width) * aspect, s * Double(shape.height))
+    }
+
+    /// How wide and tall each kind of building's walls run, in multiples of
+    /// `s`. Most are the house's proportions; the ones that are not are the
+    /// ones you can tell apart from across the valley.
+    static func bodyShape(_ glyph: SettlementRenderer.BuildingGlyph) -> (width: CGFloat, height: CGFloat) {
+        switch glyph {
+        case .tower, .well: return (0.9, 1.5)
+        case .hall, .temple, .market, .barracks: return (1.9, 1.2)
+        case .tenement: return (1.5, 1.6)
+        case .farm: return (1.8, 0.9)
+        default: return (1.6, 1.1)
+        }
+    }
+
     static func building(
         _ glyph: SettlementRenderer.BuildingGlyph, at c: CGPoint, s s0: CGFloat,
         time: Double = 0, night: Double = 0, seed: UInt64 = 0,
         era: Era = .earlySettlement, footprint: CGSize = .zero,
+        fabric: Cover.Substance = .wood, floors: Int = 1,
         context: inout GraphicsContext
     ) {
         // Per-building variation so same-type structures aren't clones: a nudge
@@ -469,16 +591,39 @@ enum SettlementStructures {
             // the same place. A street of them read as a stamp repeated. What a
             // house actually varies by is what it is *made* of, how long it is,
             // and what its household has left lying in the yard.
-            let w = s * 1.6 * aspect, h = s * 1.1
-            let body = CGRect(x: c.x - w / 2, y: c.y - h / 2, width: w, height: h)
+            // **How tall it stands.** `floors` has been in `buildings.json`
+            // since the beginning and was read by one thing — `HouseholdEngine`,
+            // counting beds — so a tenement was a tenement because its `look`
+            // said so and not because it had three storeys. A second storey is
+            // a taller wall and another row of windows, which is what makes a
+            // street of houses and a street of tenements different streets.
+            // The ground floor is the room the interior furnishes; anything
+            // above it is storeys, rising off the same footings. `floors` has
+            // been in the data since the beginning and read by one thing —
+            // `HouseholdEngine`, counting beds — so a building that stacks
+            // people has never *looked* like one.
+            let storeys = max(1, min(3, floors))
+            let shell = bodyRect(glyph, at: c, s: s0, seed: seed, footprint: footprint)
+            let w = shell.width
+            let h = shell.height * (1 + CGFloat(storeys - 1) * 0.62)
+            let body = CGRect(x: shell.minX, y: shell.maxY - h, width: w, height: h)
             groundShadow(at: c, halfWidth: w / 2, footY: body.maxY + s * 0.08, context: &context)
             context.fill(Path(body), with: .color(wall))
+            // What the wall is made of, before anything is drawn on it.
+            fabricLines(fabric, in: body, seed: seed, ink: ink, context: &context)
 
             // How steeply it is roofed, and whether the ridge is thatched or
             // shingled. Fixed per house, so a street has variety and a house
-            // does not change its own roof between frames.
+            // does not change its own roof between frames — and **weighted by
+            // what the house is built of**: nobody thatches a stone house they
+            // could tile, and a hut of sticks and turf is never shingled.
             let pitch = 0.58 + Double((seed >> 18) & 7) / 20      // 0.58…0.93
-            let thatched = (seed >> 9) & 1 == 0
+            let thatched: Bool
+            switch fabric {
+            case .stone, .air: thatched = (seed >> 9) & 7 == 0    // rarely
+            case .foliage: thatched = true
+            case .wood: thatched = (seed >> 9) & 1 == 0
+            }
             let ridgeY = body.minY - h * CGFloat(pitch)
             let eaves = s * 0.16
             let roofShape = Path { p in
@@ -512,23 +657,36 @@ enum SettlementStructures {
             // one door and as many windows as it has rooms behind them.
             let bays = max(1, min(4, Int((w / (s * 0.72)).rounded(.down))))
             let doorBay = Int((seed >> 3) % UInt64(bays))
-            for bay in 0..<bays {
-                let mid = body.minX + body.width * (CGFloat(bay) + 0.5) / CGFloat(bays)
-                if bay == doorBay {
-                    let dw = min(s * 0.32, body.width / CGFloat(bays) * 0.5)
-                    let door = CGRect(x: mid - dw / 2, y: c.y + s * 0.02,
-                                      width: dw, height: body.maxY - c.y - s * 0.02)
-                    context.fill(Path(door), with: .color(roof))
-                    context.stroke(Path(door), with: .color(ink), lineWidth: 0.8)
-                    continue
+            let storeyHeight = body.height / CGFloat(storeys)
+            for storey in 0..<storeys {
+                // Counted from the ground up, so the door is always on the
+                // storey somebody can walk into.
+                let floorTop = body.maxY - storeyHeight * CGFloat(storey + 1)
+                for bay in 0..<bays {
+                    let mid = body.minX + body.width * (CGFloat(bay) + 0.5) / CGFloat(bays)
+                    if storey == 0, bay == doorBay {
+                        let dw = min(s * 0.32, body.width / CGFloat(bays) * 0.5)
+                        let doorTop = max(floorTop + storeyHeight * 0.35,
+                                          body.maxY - storeyHeight * 0.75)
+                        let door = CGRect(x: mid - dw / 2, y: doorTop,
+                                          width: dw, height: body.maxY - doorTop)
+                        context.fill(Path(door), with: .color(roof))
+                        context.stroke(Path(door), with: .color(ink), lineWidth: 0.8)
+                        continue
+                    }
+                    // Whether this window has a light behind it is fixed per
+                    // house, storey and bay — a home does not blink at you, and
+                    // the upper floor of a tenement is not lit in lockstep with
+                    // the shop under it.
+                    let lamp = UInt64(20 + bay + storey * 5) % 60
+                    let awake = ((seed >> lamp) & 3) != 0
+                    let paneH = min(s * 0.3, storeyHeight * 0.45)
+                    let pane = CGRect(x: mid - s * 0.17,
+                                      y: floorTop + storeyHeight * 0.28,
+                                      width: s * 0.34, height: paneH)
+                    context.fill(Path(pane), with: .color(awake ? lit : stone.opacity(0.75)))
+                    context.stroke(Path(pane), with: .color(ink), lineWidth: 0.6)
                 }
-                // Whether this window has a light behind it is fixed per house
-                // and bay — a home does not blink at you.
-                let awake = ((seed >> UInt64(20 + bay)) & 3) != 0
-                let pane = CGRect(x: mid - s * 0.17, y: c.y - s * 0.08,
-                                  width: s * 0.34, height: s * 0.3)
-                context.fill(Path(pane), with: .color(awake ? lit : stone.opacity(0.75)))
-                context.stroke(Path(pane), with: .color(ink), lineWidth: 0.6)
             }
 
             // A chimney, on the gable end, with smoke on it after dark.
@@ -555,7 +713,38 @@ enum SettlementStructures {
             // And what a household leaves in its own yard. One of these, never
             // all of them: a colony of woodpiles is as much of a stamp as a
             // colony of bare walls.
-            switch (seed >> 13) % 4 {
+            switch (seed >> 13) % 7 {
+            case 4:
+                // A water butt under the eaves, which is where one goes.
+                let r = s * 0.16
+                let butt = CGRect(x: body.maxX + s * 0.1, y: body.maxY - r * 2,
+                                  width: r * 1.6, height: r * 2)
+                context.fill(Path(butt), with: .color(stone.opacity(0.8)))
+                context.stroke(Path(butt), with: .color(ink), lineWidth: 0.6)
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: butt.minX, y: butt.midY))
+                    p.addLine(to: CGPoint(x: butt.maxX, y: butt.midY))
+                }, with: .color(Theme.boneDim.opacity(0.5)), lineWidth: 0.4)
+            case 5:
+                // A handcart tipped on its shafts against the gable.
+                let cart = CGRect(x: body.minX - s * 0.5, y: body.maxY - s * 0.22,
+                                  width: s * 0.42, height: s * 0.18)
+                context.stroke(Path(cart), with: .color(Theme.boneDim.opacity(0.55)),
+                               lineWidth: 0.7)
+                let wheel = s * 0.09
+                context.stroke(Path(ellipseIn: CGRect(
+                    x: cart.midX - wheel, y: cart.maxY - wheel * 0.6,
+                    width: wheel * 2, height: wheel * 2)),
+                    with: .color(Theme.boneDim.opacity(0.5)), lineWidth: 0.6)
+            case 6:
+                // A kitchen patch: three rows of something coming up.
+                for row in 0..<3 {
+                    let ry = body.maxY + s * (0.06 + CGFloat(row) * 0.07)
+                    context.stroke(Path { p in
+                        p.move(to: CGPoint(x: body.minX + s * 0.1, y: ry))
+                        p.addLine(to: CGPoint(x: body.minX + s * 0.7, y: ry))
+                    }, with: .color(Theme.good.opacity(0.28)), lineWidth: 0.6)
+                }
             case 0:
                 // A stack of firewood against the wall.
                 for log in 0..<3 {

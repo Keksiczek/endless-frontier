@@ -370,3 +370,134 @@ struct RampartTests {
                 >= SiegeField.distance(post, field.origin) - 1e-9)
     }
 }
+
+/// The three things a player watching a raid complained about, pinned.
+///
+/// Keks: *"v soubojích se ukazují efekty a krev na místě, kde postava stála
+/// když boj začínal"*, *"battle logy nejdou nikde zobrazit"*, and — the one
+/// that matters most — *"když je nás hodně, proč nás vykradou a nezabijeme
+/// je?"*
+@Suite("A raid a town can answer")
+struct RaidAnswerTests {
+
+    private func registry() throws -> GameDataRegistry { try GameDataRegistry.bundled() }
+
+    private func town(people: Int) -> Settlement {
+        var s = Settlement(
+            id: UUID(uuidString: "B00B0000-0000-0000-0000-000000000001")!,
+            name: "Hold",
+            storage: [.food: 2000], storageCapacity: .uniform(4000))
+        s.colony = ColonyMap(width: 34, height: 34)
+        for i in 0..<people {
+            var p = Pawn(id: UUID(uuidString: String(
+                format: "B00B0000-0000-0000-0000-%012d", i + 10))!, name: "Hand \(i)")
+            p.age = 25 * 60
+            s.pawns.append(p)
+        }
+        return s
+    }
+
+    // MARK: - Numbers count
+
+    /// **The bug, in one line.** The line was `prefix(12)` whatever the colony
+    /// was, so growth bought nothing at all in a fight and every raider past
+    /// the twelfth walked into the stores unopposed.
+    @Test("A bigger town puts more people in the line")
+    func theLineGrowsWithTheColony() throws {
+        let r = try registry()
+        let small = SiegeEngine.lineSize(of: town(people: 8), registry: r)
+        let big = SiegeEngine.lineSize(of: town(people: 60), registry: r)
+        #expect(big > small, "sixty people held the same line as eight: \(big) against \(small)")
+        #expect(big > 12, "…and more than the old flat twelve")
+    }
+
+    @Test("…but a town does not put three hundred bodies on one line")
+    func theLineHasACeiling() throws {
+        let r = try registry()
+        #expect(SiegeEngine.lineSize(of: town(people: 400), registry: r)
+                == SiegeEngine.lineCeiling)
+    }
+
+    @Test("A hamlet still turns out")
+    func theLineHasAFloor() throws {
+        let r = try registry()
+        let tiny = town(people: 4)
+        // Four able bodies cannot make six, so everybody who can stand, stands.
+        #expect(SiegeEngine.lineSize(of: tiny, registry: r) == 4)
+    }
+
+    @Test("Numbers show up where it counts: the same raid costs a big town less")
+    func moreDefendersMeanLessTakenAndMoreRaidersDown() throws {
+        let r = try registry()
+        func fight(people: Int) throws -> (left: Double, food: Double) {
+            var s = try SiegeEngine.begin(
+                town(people: people), attackerStrength: 120,
+                attackerName: "The Ashfolk", fortification: 0, tick: 100,
+                registry: r, seed: 0xB00B)
+            let end = (s.siege?.openedAt ?? 0) + Siege.stepsTotal / 2
+            s = SiegeEngine.advance(s, to: end, registry: r)
+            return (s.siege?.strength ?? 0, s.storage[.food])
+        }
+        let few = try fight(people: 10)
+        let many = try fight(people: 60)
+        #expect(many.left < few.left, "a town of sixty should be hurting them more")
+        #expect(many.food >= few.food, "…and losing no more of its stores")
+    }
+
+    // MARK: - Where the effects happen
+
+    @Test("A volley and a ransack are recorded where they happened")
+    func momentsCarryTheirPlace() throws {
+        let r = try registry()
+        var s = try SiegeEngine.begin(
+            town(people: 30), attackerStrength: 200, attackerName: "The Ashfolk",
+            fortification: 0, tick: 100, registry: r, seed: 0x5A17)
+        let end = (s.siege?.openedAt ?? 0) + Siege.stepsTotal
+        s = SiegeEngine.advance(s, to: end, registry: r)
+        let log = try #require(s.lastBattle)
+        // Every beat that happens *to somebody somewhere* carries the somewhere.
+        for moment in log.moments where moment.kind == .wound || moment.kind == .death {
+            #expect(moment.spot != nil, "a blow with no place lands at the muster post")
+        }
+        if let volley = log.moments.first(where: { $0.kind == .volley }) {
+            #expect(volley.spot != nil, "arrows land on somebody, not on the wall")
+        }
+        if let plunder = log.moments.first(where: { $0.kind == .plunder }) {
+            #expect(plunder.spot != nil, "a sack is filled in a place")
+        }
+    }
+
+    // MARK: - The colony remembers
+
+    @Test("A fought raid goes into the colony's record, newest first")
+    func battlesAreKept() throws {
+        let r = try registry()
+        var s = town(people: 20)
+        for i in 0..<3 {
+            s = try SiegeEngine.begin(
+                s, attackerStrength: 60, attackerName: "Raid \(i)",
+                fortification: 0, tick: 100 + i * 10, registry: r,
+                seed: UInt64(0xBEEF + i))
+            s = SiegeEngine.advance(s, to: (s.siege?.openedAt ?? 0) + Siege.stepsTotal,
+                                    registry: r)
+        }
+        #expect(s.battleHistory.count == 3)
+        #expect(s.battleHistory.first?.attackerName == "Raid 2", "newest first")
+        #expect(s.battleHistory.first?.id == s.lastBattle?.id)
+    }
+
+    @Test("The record is a chronicle, not an archive")
+    func historyIsCapped() throws {
+        let r = try registry()
+        var s = town(people: 20)
+        for i in 0..<(Settlement.battlesKept + 3) {
+            s = try SiegeEngine.begin(
+                s, attackerStrength: 40, attackerName: "Raid \(i)",
+                fortification: 0, tick: 100 + i * 10, registry: r,
+                seed: UInt64(0xC0DE + i))
+            s = SiegeEngine.advance(s, to: (s.siege?.openedAt ?? 0) + Siege.stepsTotal,
+                                    registry: r)
+        }
+        #expect(s.battleHistory.count == Settlement.battlesKept)
+    }
+}

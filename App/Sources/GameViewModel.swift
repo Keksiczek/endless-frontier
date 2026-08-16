@@ -392,16 +392,35 @@ final class GameViewModel {
     /// impossible to miss even if you looked away. Reactive: when a tick lands a
     /// new `lastBattle`, the observed `world` change surfaces this card.
     var battleReport: BattleLog? {
+        // A fight the player asked to see again outranks the unread one: they
+        // went and found it.
+        if let reopened { return reopened }
         guard let battle = selectedSettlement?.lastBattle,
               !acknowledgedBattleIDs.contains(battle.id) else { return nil }
         return battle
     }
 
+    /// A past fight the player opened out of the colony's record.
+    ///
+    /// The report card used to be reachable exactly once, on the way past —
+    /// dismissing it dropped the only copy the game had. `battleHistory` keeps
+    /// the last eight and this is how one of them is put back on screen.
+    private(set) var reopened: BattleLog?
+
+    func reopenBattle(_ log: BattleLog) { reopened = log }
+
     /// Puts the battle report away for good.
     func dismissBattleReport() {
+        // Closing a reopened record just closes it — the colony still has it.
+        if reopened != nil { reopened = nil; return }
         if let id = selectedSettlement?.lastBattle?.id {
             acknowledgedBattleIDs.insert(id)
         }
+    }
+
+    /// Which in-game year a tick falls in, for anything that lists the past.
+    func year(ofTick tick: Int) -> Int {
+        tick / max(1, registry.config.ticksPerYear) + 1
     }
 
     static func icon(for kind: ColonyLogEntry.Kind) -> String {

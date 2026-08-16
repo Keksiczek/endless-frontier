@@ -46,7 +46,17 @@ enum SettlementRenderer {
         /// screen is seeing what people are doing rather than counting roofs.
         static let opening: CGFloat = 2.0
         static let minScale: CGFloat = 1
-        static let maxScale: CGFloat = 4
+        /// How far in the camera will go.
+        ///
+        /// Was 4, and 4 is the whole town from a rooftop. Everything the canvas
+        /// draws for a close look tops out well below it — the roof is off by
+        /// 2.5, people are individuals from 1.5, labels from 1.6 — so past 4
+        /// there was nothing left to reach *for*, and Keks asked for the reach.
+        /// Doubling it is the difference between looking at a street and
+        /// standing in one: at 8 a one-tile house is most of a phone's width,
+        /// its wall shows what it is built of, and the people at its door are
+        /// the size of people.
+        static let maxScale: CGFloat = 8
 
         /// How close the camera goes when it is *taken* somewhere — a fight, a
         /// roof that just went on, the colonist a disaster picked out.
@@ -260,11 +270,22 @@ enum SettlementRenderer {
         //
         // A near-neutral slate at two thirds the strength reads as the light
         // going out, which is what it is.
-        // …and it has to actually go dark. At 0.20 the deepest midnight was a
-        // fifth of a wash over a fully-lit valley, which is an evening filter,
-        // not a night — the second half of "vypadá to stejně jako přes den".
-        // Deep enough that a lit window and a fire are the brightest things on
-        // the screen, shallow enough that the line art still reads.
+        // **Night takes the colour out first.** Darkening alone left an autumn
+        // valley glowing orange at two in the morning, because a wash scales
+        // brightness and leaves saturation exactly where it was — and the eye
+        // reads a saturated field as daylight however dim it is (the same
+        // reason night photography looks wrong when it is only underexposed).
+        // A saturation blend against grey is the honest version of what happens
+        // at low light: hue goes, shape stays.
+        var colourless = context
+        colourless.blendMode = .saturation
+        colourless.fill(Path(rect), with: .color(Color(white: 0.5).opacity(night * 0.8)))
+
+        // …and then it has to actually go dark. At 0.20 the deepest midnight
+        // was a fifth of a wash over a fully-lit valley, which is an evening
+        // filter, not a night — the second half of "vypadá to stejně jako přes
+        // den". Deep enough that a lit window and a fire are the brightest
+        // things on the screen, shallow enough that the line art still reads.
         context.fill(Path(rect),
                      with: .color(Color(red: 0.05, green: 0.06, blue: 0.10).opacity(night * 0.46)))
     }
@@ -1446,6 +1467,15 @@ enum SettlementRenderer {
         /// The era that raised it — timber and thatch give way to brick, then
         /// to panel and glass, so a data centre is not a wattle hut in a hat.
         let era: Era
+        /// **What this one is built of**, off its own `materialCost`. The era
+        /// says what the age can make; this says what *this* building is, so a
+        /// timber granary and a brick one in the same year are not the same
+        /// drawing. Same field the cover model and the weathering read.
+        let fabric: Cover.Substance
+        /// How many storeys it has. `floors` has been in the data since the
+        /// beginning and was read by exactly one thing (`HouseholdEngine`, to
+        /// count beds); a tenement was a tenement because its `look` said so.
+        let floors: Int
         /// The colonists the *simulation* has posted here
         /// (`BuildingPlacement.assignedPawnIDs`). The canvas stands them on
         /// this lot rather than guessing a workplace from their trade, so what
@@ -1472,6 +1502,9 @@ enum SettlementRenderer {
         let progress: Double
         let seed: UInt64
         let era: Era
+        /// What it is built of, and how tall it stands. See `NormalizedBuilding`.
+        let fabric: Cover.Substance
+        let floors: Int
         /// How many colonists the engine posted here — the room is furnished
         /// with a station apiece, and they are drawn standing at them.
         let workers: Int
@@ -1570,7 +1603,8 @@ enum SettlementRenderer {
                            center: point(b.center, in: rect), size: unit * b.size,
                            footprint: CGSize(width: b.footprintW * unit, height: b.footprintH * unit),
                            underConstruction: b.underConstruction, progress: b.progress,
-                           seed: b.seed, era: b.era, workers: b.assignedPawnIDs.count,
+                           seed: b.seed, era: b.era, fabric: b.fabric, floors: b.floors,
+                           workers: b.assignedPawnIDs.count,
                            residents: b.placementID.map { household[$0] ?? 0 } ?? 0,
                            condition: b.condition)
         }
@@ -1618,6 +1652,8 @@ enum SettlementRenderer {
                 progress: placement.underConstruction ? (progress ?? 0) : 1,
                 seed: buildingSeed(placement.id),
                 era: def?.era ?? .earlySettlement,
+                fabric: def.map { Cover.substance(of: $0, registry: registry) } ?? .wood,
+                floors: max(1, def?.floors ?? 1),
                 assignedPawnIDs: placement.assignedPawnIDs,
                 placementID: placement.id,
                 condition: placement.condition)
@@ -1630,14 +1666,17 @@ enum SettlementRenderer {
     private static func ringLayout(
         settlement: Settlement, registry: GameDataRegistry
     ) -> [NormalizedBuilding] {
-        var expanded: [(id: String, name: String, glyph: BuildingGlyph, era: Era)] = []
+        var expanded: [(id: String, name: String, glyph: BuildingGlyph, era: Era,
+                        fabric: Cover.Substance, floors: Int)] = []
         for instance in settlement.buildings {
             let def = registry.building(instance.definitionID)
             let g = def.map(glyph(for:)) ?? .house
             for _ in 0..<instance.count where expanded.count < maxVisibleBuildings {
                 expanded.append((instance.definitionID,
                                  def?.name.resolve(AppStrings.language) ?? instance.definitionID,
-                                 g, def?.era ?? .earlySettlement))
+                                 g, def?.era ?? .earlySettlement,
+                                 def.map { Cover.substance(of: $0, registry: registry) } ?? .wood,
+                                 max(1, def?.floors ?? 1)))
             }
         }
         guard !expanded.isEmpty else { return [] }
@@ -1662,6 +1701,7 @@ enum SettlementRenderer {
                     underConstruction: false, progress: 1,
                     seed: buildingSeed(expanded[drawn].id, drawn),
                     era: expanded[drawn].era,
+                    fabric: expanded[drawn].fabric, floors: expanded[drawn].floors,
                     assignedPawnIDs: [], placementID: nil, condition: 1))
                 drawn += 1
             }
@@ -1732,7 +1772,8 @@ enum SettlementRenderer {
             for building in placed where !building.underConstruction {
                 SettlementInterior.draw(
                     &context, glyph: building.glyph, at: building.center,
-                    footprint: building.footprint, seed: building.seed, era: building.era,
+                    footprint: building.footprint, size: building.size,
+                    seed: building.seed, era: building.era,
                     workers: building.workers, residents: building.residents,
                     night: night, time: time)
             }
@@ -1748,7 +1789,9 @@ enum SettlementRenderer {
                 SettlementStructures.building(building.glyph, at: building.center,
                                               s: building.size, time: time, night: night,
                                               seed: building.seed, era: building.era,
-                                              footprint: building.footprint, context: &roofContext)
+                                              footprint: building.footprint,
+                                              fabric: building.fabric, floors: building.floors,
+                                              context: &roofContext)
             }
             // What time and trouble have done to it, over whatever is drawn —
             // a ruin has to read as one whether its roof is on or off.

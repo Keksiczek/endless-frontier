@@ -163,6 +163,17 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     /// play a raid out over real seconds instead of the player being handed a
     /// finished result — see `BattleLog`.
     public var lastBattle: BattleLog?
+    /// The fights before that one, newest first.
+    ///
+    /// Keks: *"battle logy nejdou nikde zobrazit."* True, and worse than it
+    /// sounds — the colony kept exactly **one** record, the report card was the
+    /// only thing that could open it, and dismissing the card put it away *for
+    /// good*. A raid you looked away from was a raid the game no longer had.
+    /// Capped at `battlesKept`: a chronicle, not an archive.
+    public var battleHistory: [BattleLog] = []
+
+    /// How many fights a colony remembers in full.
+    public static let battlesKept = 8
 
     /// What the colony has been told to make, oldest first.
     ///
@@ -302,7 +313,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         case laws, leaderID, society, strikeTicksRemaining, faith
         case constructions, constructionSequence, journal, relationships, expeditions
         case tamed
-        case stockpile, rawProgress, lastBattle, policy, siege, craftOrders, kitchenProgress
+        case stockpile, rawProgress, lastBattle, battleHistory, policy, siege
+        case craftOrders, kitchenProgress
         case outbreak, lastOutbreakTick, captives
     }
 
@@ -351,6 +363,9 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         stockpile = try c.decodeIfPresent([String: Int].self, forKey: .stockpile) ?? [:]
         rawProgress = try c.decodeIfPresent([String: Double].self, forKey: .rawProgress) ?? [:]
         lastBattle = try c.decodeIfPresent(BattleLog.self, forKey: .lastBattle)
+        // Saves written before the colony kept a history have none, and the
+        // fight they were in the middle of is still `lastBattle` (rule 37).
+        battleHistory = try c.decodeIfPresent([BattleLog].self, forKey: .battleHistory) ?? []
         siege = try c.decodeIfPresent(Siege.self, forKey: .siege)
         outbreak = try c.decodeIfPresent(Outbreak.self, forKey: .outbreak)
         // Every save written before anybody was ever taken alive holds nobody.

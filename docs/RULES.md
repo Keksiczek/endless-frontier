@@ -328,3 +328,19 @@ fires, do the arithmetic before you rewrite the mechanic.
    is written to disk gets a hand-written `init(from:)` with `decodeIfPresent`,
    or it gets no default at all so the omission is loud. `Siege` itself already
    did this, one type up, for the same reason — the precedent was in the file.
+38. **A derived property is computed once per comparison, and a sort compares
+   n log n times.** `SettlementGround.Tone.order` read
+   `GroundCover.allCases.firstIndex(of:)` and the same for `Skin` — two array
+   allocations and two linear searches, per call, inside the comparator of a
+   sort that runs **thirty times a second** for as long as the settlement is on
+   screen. Sampling a running build put *every single sample* inside that sort.
+   Nothing about it looked expensive: `allCases` reads like a constant and
+   `firstIndex` like a lookup, and the whole thing is four lines in a struct
+   that exists to keep drawing order stable. Two lessons, and the second is the
+   one that costs sessions: a computed property used by a comparator is on the
+   hottest path in the program, so cache what it reads and map-then-sort rather
+   than sorting on the property; and **a frozen UI is not always a stuck
+   simulation** — the catch-up here was running perfectly on its own thread
+   while the main actor, which is the only thing that can *end* the overlay,
+   was busy rebuilding two constant arrays. Sample the process before believing
+   the symptom.

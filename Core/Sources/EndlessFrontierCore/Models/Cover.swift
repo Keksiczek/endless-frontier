@@ -157,16 +157,19 @@ public enum Cover {
     /// What a building is mostly made of. The commonest material by count wins,
     /// because a watchtower of three bundles and two bricks is a timber tower
     /// with a brick footing and not a keep.
-    static func substance(of definition: BuildingDefinition,
-                          registry: GameDataRegistry) -> Substance {
-        var best: (substance: Substance, count: Int)?
+    public static func substance(of definition: BuildingDefinition,
+                                 registry: GameDataRegistry) -> Substance {
+        var best: Substance?
+        var most = 0
         // Sorted, because two materials in equal quantity must not resolve by
         // dictionary order — that is rule 2 in the quietest place there is.
         for (itemID, count) in definition.materialCost.sorted(by: { $0.key < $1.key }) {
-            guard count > 0, let substance = registry.item(itemID)?.substance else { continue }
-            if best == nil || count > best!.count { best = (substance, count) }
+            guard count > 0, count > most,
+                  let substance = registry.item(itemID)?.substance else { continue }
+            best = substance
+            most = count
         }
-        return best?.substance ?? building.substance
+        return best ?? building.substance
     }
 }
 
