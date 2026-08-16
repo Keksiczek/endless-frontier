@@ -35,19 +35,24 @@ public enum CombatEngine {
     /// moment it left the workshop, and training anybody was purely about
     /// throughput.
     public static func weaponProfile(_ pawn: Pawn, registry: GameDataRegistry) -> CombatProfile? {
-        guard let item = pawn.equipment[.weapon],
+        guard let item = pawn.equipment[.weapon], !item.isBroken,
               let def = registry.item(item.definitionID),
               let combat = def.combat else { return nil }
-        return CombatProfile(damage: combat.damage * item.quality.multiplier, kind: combat.kind)
+        // Made well **and** kept well: `effectiveness` is quality times what is
+        // left of the piece, so a blade that has been through four raids hits
+        // like the cheaper blade it has become (§11.26 C).
+        return CombatProfile(damage: combat.damage * item.effectiveness, kind: combat.kind)
     }
 
     /// How hard a wound lands on a colonist, given the armour they are wearing
     /// and how well it was made.
     public static func woundMultiplier(_ pawn: Pawn) -> Double {
-        guard let armor = pawn.equipment[.armor] else { return 1 }
+        guard let armor = pawn.equipment[.armor], !armor.isBroken else { return 1 }
         // Plain armour halves a blow; a masterwork harness turns more aside,
-        // and a shoddy one rather less.
-        return min(0.9, max(0.2, 0.5 / armor.quality.multiplier))
+        // and a shoddy one rather less. A battered harness turns aside what is
+        // left of it — the straps go, the plates split, and the blow that
+        // finishes the coat is the one that reaches the person inside it.
+        return min(0.9, max(0.2, 0.5 / armor.effectiveness))
     }
 
     /// Everyone able to stand on the wall, weighed by health, heart and arms.

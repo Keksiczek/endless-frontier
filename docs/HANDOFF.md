@@ -72,6 +72,26 @@ the fault was one alphabetical strip of everything the colony can raise.
    synthesised decoder calls `decode`, not `decodeIfPresent`, so `kind` would
    have cost every in-progress raid its save.
 
+## And then, the same day: everything wears, and night looks like one
+
+§11.35, from two more asks — *"poškození by mělo být od všeho, co to poškodí, ne
+jen šípy, ale i vlivy okolo"* and *"všichni chodí spát, ale vypadá to stejně jako
+přes den, klidně i hodiny k tomu."*
+
+- **`ItemInstance.wear`** — the second axis §11.26 C asked for, beside `quality`
+  rather than instead of it. Worn by swinging, by being swung at, and by a day's
+  work; read by `CombatEngine` and by `QuartermasterEngine`, which is what
+  finally gives a colony a reason to re-arm itself (§11.22's open note).
+- **`BuildingEngine.weather` multiplies three things it could already ask
+  about**: what the building is made of, what the sky is doing (the same
+  `Climate` the colonists freeze in), and how far out it stands.
+- **Raiders in the stores wreck them**, not only empty them.
+- **Night is derived from sunset** instead of from midnight. `nightness` used to
+  start darkening 0.09 of a day *after* the sun went down, so the first third of
+  every night was drawn as noon. Rule 35, in the light.
+- **`DayClock`** — one clock for the strip and the canvas: the hour, the named
+  part of the day, and a tally of what the colony is doing in it.
+
 ## What to pick up next
 
 - **Look at a fight.** The whole point of this batch is that people now stand

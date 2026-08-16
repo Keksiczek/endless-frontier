@@ -221,8 +221,8 @@ public enum QuartermasterEngine {
             .filter { registry.item($0.definitionID)?.slot == .equipment }
         guard !shelf.isEmpty else { return s }
         shelf.sort { a, b in
-            let wa = registry.item(a.definitionID).map { worth(of: $0, quality: a.quality) } ?? 0
-            let wb = registry.item(b.definitionID).map { worth(of: $0, quality: b.quality) } ?? 0
+            let wa = registry.item(a.definitionID).map { worth(of: $0, piece: a) } ?? 0
+            let wb = registry.item(b.definitionID).map { worth(of: $0, piece: b) } ?? 0
             return wa == wb ? a.id.uuidString < b.id.uuidString : wa > wb
         }
 
@@ -233,7 +233,7 @@ public enum QuartermasterEngine {
             let hands = settlement.pawns.filter {
                 $0.isAdult(ticksPerYear: ticksPerYear) && $0.health > 0
             }
-            let offered = worth(of: def, quality: item.quality)
+            let offered = worth(of: def, piece: item)
             func pick(_ eligible: [Pawn]) -> Pawn? {
                 eligible.max { a, b in
                     let wa = worth(of: def, to: a), wb = worth(of: def, to: b)
@@ -247,7 +247,7 @@ public enum QuartermasterEngine {
                 taker = pick(hands.filter { holder in
                     guard let held = holder.equipment[slot],
                           let heldDef = registry.item(held.definitionID) else { return false }
-                    let carrying = worth(of: heldDef, quality: held.quality)
+                    let carrying = worth(of: heldDef, piece: held)
                     return offered >= carrying * worthTradingUp
                 })
             }
@@ -265,8 +265,17 @@ public enum QuartermasterEngine {
     /// What a piece is worth with the maker's hand counted in — a masterwork
     /// spear beats a plain one, and beats a plain sword by enough that nobody
     /// puts it down for one.
-    static func worth(of item: ItemDefinition, quality: ItemQuality) -> Double {
-        worth(of: item) * quality.multiplier
+    /// What a **particular piece** is worth: what it is, times how well it was
+    /// made, times how much of it is left.
+    ///
+    /// The wear half is what closes §11.22's open note — *"nothing re-arms a
+    /// colony whose gear has gone out of date"*. Gear that never wore out was
+    /// gear nobody ever had a reason to replace, so the quartermaster's full
+    /// slots stayed full for two hundred years. A blade that is half used up is
+    /// now visibly worse than the new one on the shelf, and the swap happens
+    /// for the ordinary reason.
+    static func worth(of item: ItemDefinition, piece: ItemInstance) -> Double {
+        piece.isBroken ? 0 : worth(of: item) * piece.effectiveness
     }
 
     /// How much better a thing has to be before somebody puts down what they

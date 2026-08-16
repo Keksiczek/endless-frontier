@@ -357,8 +357,11 @@ public enum ResourceLoop {
             // nobody keeps up stops working and stops sheltering anyone, which
             // is what makes the mason's trade outlive the building of the
             // thing.
-            s = BuildingEngine.weather(s, registry: registry, tick: tick)
+            s = BuildingEngine.weather(s, registry: registry, tick: tick, climate: climate)
             s = BuildingEngine.repair(s, registry: registry)
+            // …and what people are holding wears out with it. Same cadence and
+            // for the same reason: this walks every colonist (rule 4).
+            s = ItemEngine.wearTools(s, registry: registry, tick: tick)
         }
         if tick % LaborEngine.staffingInterval == 0 {
             // The colony's standing orders, moving one person at a time. Before

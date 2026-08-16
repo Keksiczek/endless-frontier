@@ -251,19 +251,63 @@ public struct ItemInstance: Codable, Sendable, Identifiable, Equatable {
     /// How well *this one* was made. Old saves and everything the world hands
     /// out rather than makes are plain (rule 3).
     public var quality: ItemQuality
+    /// How far **this** piece has been used up, `0…1`.
+    ///
+    /// A second axis beside `quality`, deliberately, and §11.26 C says why: a
+    /// masterwork blade with a notched edge is not the same object as a shoddy
+    /// new one. Quality is *whose hands made it* and never changes; wear is
+    /// *what has happened to it since* and only ever goes up.
+    ///
+    /// Before this, `quality` was written in `init` and never again anywhere in
+    /// the codebase — a sword carried through forty battles was exactly the
+    /// sword it was forged as, which is also why a colony's quartermaster had
+    /// no reason to ever re-arm anybody (§11.22).
+    public var wear: Double
 
-    public init(id: UUID = UUID(), definitionID: String, quality: ItemQuality = .plain) {
+    public init(id: UUID = UUID(), definitionID: String,
+                quality: ItemQuality = .plain, wear: Double = 0) {
         self.id = id
         self.definitionID = definitionID
         self.quality = quality
+        self.wear = min(1, max(0, wear))
     }
 
-    private enum CodingKeys: String, CodingKey { case id, definitionID, quality }
+    /// What is left of it, `0…1`.
+    public var soundness: Double { 1 - wear }
+
+    /// Past this it is scrap: it is not worth carrying and it does not fight.
+    public static let brokenAt = 0.95
+    public var isBroken: Bool { wear >= Self.brokenAt }
+
+    /// What this particular piece is worth in the hand, against a plain new one.
+    ///
+    /// Made-well times kept-well, and the wear half never falls to nothing:
+    /// a ruined sword is a club, not a feather. What it *does* do is take a
+    /// masterwork down to about where a plain piece started, which is the whole
+    /// argument for keeping the smith busy.
+    public var effectiveness: Double {
+        quality.multiplier * (1 - wear * Self.wearBite)
+    }
+    /// How much of a piece's worth wear can take. See `effectiveness`.
+    public static let wearBite = 0.6
+
+    /// The same piece, `amount` more used up. Immutable, like everything else
+    /// in the models: this returns a new one rather than ageing this one.
+    public func worn(by amount: Double) -> ItemInstance {
+        guard amount > 0 else { return self }
+        return ItemInstance(id: id, definitionID: definitionID,
+                            quality: quality, wear: min(1, wear + amount))
+    }
+
+    private enum CodingKeys: String, CodingKey { case id, definitionID, quality, wear }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(UUID.self, forKey: .id)
         definitionID = try c.decode(String.self, forKey: .definitionID)
         quality = try c.decodeIfPresent(ItemQuality.self, forKey: .quality) ?? .plain
+        // Everything made before wear existed is as good as the day it was
+        // made, which is what it has been pretending all along (rule 37).
+        wear = try c.decodeIfPresent(Double.self, forKey: .wear) ?? 0
     }
 }

@@ -212,12 +212,37 @@ enum SettlementRenderer {
     /// 1 = the dead of night). Synced to `AgentMotion.dayLength`, so the world
     /// darkens exactly while the figures are in their beds — the day cycle the
     /// motion always had, finally *visible*.
+    /// **Derived from when the sun is actually down** — rule 35, and the whole
+    /// of what was wrong with it.
+    ///
+    /// Keks: *"teď všichni chodí spát, ale vypadá to stejně jako přes den."* He
+    /// was right, and the arithmetic says so. `SettlementLight` sets the sun in
+    /// the sky between `dawn` (0.25) and `dusk` (0.75), and the colonists' day
+    /// puts them in bed from about 0.88 to about 0.22 — but this darkened only
+    /// within 0.16 of midnight and reached full dark inside 0.06 of it. So from
+    /// sunset at 0.75 until 0.84 the sun was down, the shadows were gone, the
+    /// windows were lit, and the valley was painted **in broad daylight**. A
+    /// third of the night was drawn as noon.
+    ///
+    /// Now there is one number for one thing: the sky is dark whenever the sun
+    /// is under the horizon, ramping over `nightFall` at each end so dusk is a
+    /// dusk and not a switch.
     static func nightness(time: Double) -> Double {
         let t = (time / AgentMotion.dayLength).truncatingRemainder(dividingBy: 1)
-        let phase = t < 0.5 ? t : t - 1          // −0.5…0.5, midnight at 0
-        let fromMidnight = abs(phase)
-        return max(0, min(1, (0.16 - fromMidnight) / 0.10))
+        let day = t < 0 ? t + 1 : t
+        // Daylight is daylight; the ramps live at its two edges.
+        guard day >= SettlementLight.dusk || day <= SettlementLight.dawn else { return 0 }
+        // How long the sun has been down, and how long until it is up — the
+        // **nearer** of the two is how dark it is, so both edges ramp and the
+        // middle of the night is fully dark.
+        let sinceDusk = (day - SettlementLight.dusk + 1).truncatingRemainder(dividingBy: 1)
+        let untilDawn = (SettlementLight.dawn - day + 1).truncatingRemainder(dividingBy: 1)
+        return max(0, min(1, min(sinceDusk, untilDawn) / nightFall))
     }
+
+    /// How long dusk takes to become night, as a share of the day. About an
+    /// hour and a half at the drawn day's length.
+    static let nightFall = 0.06
 
     /// A cool veil over the lens at night. The fog stays darker still, and
     /// warm windows and fires read brighter against it.
@@ -235,8 +260,13 @@ enum SettlementRenderer {
         //
         // A near-neutral slate at two thirds the strength reads as the light
         // going out, which is what it is.
+        // …and it has to actually go dark. At 0.20 the deepest midnight was a
+        // fifth of a wash over a fully-lit valley, which is an evening filter,
+        // not a night — the second half of "vypadá to stejně jako přes den".
+        // Deep enough that a lit window and a fire are the brightest things on
+        // the screen, shallow enough that the line art still reads.
         context.fill(Path(rect),
-                     with: .color(Color(red: 0.06, green: 0.07, blue: 0.10).opacity(night * 0.20)))
+                     with: .color(Color(red: 0.05, green: 0.06, blue: 0.10).opacity(night * 0.46)))
     }
 
     /// Maps a normalised model point to a pixel point in `rect`.

@@ -331,8 +331,15 @@ public enum SiegeEngine {
         strike(&siege, power: power, met: met, rng: &rng)
         s = answer(s, siege: &siege, met: met, field: field, cover: cover,
                    chips: &chips, rng: &rng)
-        s = BuildingEngine.chip(s, by: chips)
-        return ransack(s, siege: &siege, field: field)
+        // What the fighting did to what people were holding. A blade that has
+        // been through four raids should be the cheaper blade it has become,
+        // and a coat that stopped forty blows should be a coat somebody wants
+        // replacing (§11.26 C).
+        s = wearGear(s, met: met)
+        // Ransacking is harm too, so it goes into the same tally and the town
+        // is charged **once**, at the end of the step.
+        s = ransack(s, siege: &siege, field: field, chips: &chips, registry: registry)
+        return BuildingEngine.chip(s, by: chips)
     }
 
     // MARK: - The step, in pieces
@@ -721,18 +728,71 @@ public enum SiegeEngine {
 
     /// Anybody who got in among the stores helps themselves.
     private static func ransack(
-        _ settlement: Settlement, siege: inout Siege, field: SiegeField
+        _ settlement: Settlement, siege: inout Siege, field: SiegeField,
+        chips: inout [UUID: Double], registry: GameDataRegistry
     ) -> Settlement {
         var s = settlement
-        let inside = siege.fighters.contains {
+        let breaking = siege.fighters.filter {
             $0.side == .raider && !$0.down && field.isInside($0.at)
         }
-        guard inside else { return s }
+        guard !breaking.isEmpty else { return s }
+
+        // **Taking things is not the only thing they do to the place.** A store
+        // being emptied by people who did not build it comes out of it worse:
+        // doors off, thatch pulled about, whatever would not go in a sack
+        // broken on the way past. Charged to the building they are standing on,
+        // so which building suffers is a fact about where they got in.
+        if let colony = s.colony {
+            for raider in breaking {
+                guard let tile = SettlementGeometry.tile(at: raider.at, in: colony),
+                      let placement = colony.placement(at: tile),
+                      !placement.underConstruction else { continue }
+                chips[placement.id, default: 0] += ransackDamagePerStep
+            }
+        }
+
         let taken = s.storage[.food] * plunderPerStep
         guard taken > 0 else { return s }
         s.storage[.food] -= taken
         siege.plundered += taken
         siege.moments.append(moment(siege, .plunder, amount: taken))
+        return s
+    }
+
+    /// Condition a raider takes out of the building they are ransacking, per
+    /// step. Small: a raid should leave a town needing work, not a ruin.
+    static let ransackDamagePerStep = 0.006
+
+    /// How much a swing takes out of the thing doing the swinging, and how much
+    /// a blow takes out of what stopped it.
+    ///
+    /// Sized against a raid rather than a blow: somebody in contact for a whole
+    /// fight comes out of it with a piece about a tenth more used up, so gear
+    /// lasts roughly ten hard raids. Armour wears faster than weapons because
+    /// armour is what the blows are landing on.
+    static let weaponWearPerBlow = 0.004
+    static let armourWearPerBlow = 0.006
+
+    /// Wears what the people in contact were holding.
+    ///
+    /// Both ends of a blow: whoever swung wears their weapon, whoever was
+    /// swung at wears their coat. A piece that has nothing left of it is
+    /// scrapped rather than carried — `ItemEngine.scrapBroken`.
+    static func wearGear(_ settlement: Settlement, met: Melee) -> Settlement {
+        guard !met.isEmpty else { return settlement }
+        var s = settlement
+        // Sorted, so the same fight wears the same gear in the same order and
+        // a replay comes out with the same kit (rule 2).
+        for pair in met.colony.sorted(by: { $0.colonist.uuidString < $1.colonist.uuidString }) {
+            guard let index = s.pawns.firstIndex(where: { $0.id == pair.colonist }),
+                  let weapon = s.pawns[index].equipment[.weapon] else { continue }
+            s.pawns[index].equipment[.weapon] = weapon.worn(by: weaponWearPerBlow)
+        }
+        for pair in met.raiders.sorted(by: { $0.on.uuidString < $1.on.uuidString }) {
+            guard let index = s.pawns.firstIndex(where: { $0.id == pair.on }),
+                  let coat = s.pawns[index].equipment[.armor] else { continue }
+            s.pawns[index].equipment[.armor] = coat.worn(by: armourWearPerBlow)
+        }
         return s
     }
 

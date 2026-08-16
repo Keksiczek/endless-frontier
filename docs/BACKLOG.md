@@ -1517,6 +1517,70 @@ height and substance, stamped into one field, read by a trace. What was still a
   not a list — and the bar filters by it: *Bydlení · Jídlo · Sklady · Obrana ·
   Práce · Věda*.
 
+### 11.35 — everything wears, and the night looks like one (2026-08-16)
+
+Two asks in one sitting. Keks: *"poškození by mělo být od všeho, co to poškodí,
+ne jen šípy, ale i vlivy okolo, když na to přijde"* — and, watching a town go to
+bed: *"teď všichni chodí spát, ale vypadá to stejně jako přes den, klidně i
+hodiny k tomu, ať je přehled co se děje a lidé dělají."*
+
+**Things wear out now** (§11.26 C, the half that was still open). `ItemInstance`
+gained `wear`, a **second axis** beside `quality` rather than a worse grade of
+it — quality is whose hands made it and never changes, wear is what has happened
+since and only goes up, so a notched masterwork is still not a shoddy new one.
+
+| Source | What it wears |
+|---|---|
+| swinging | the weapon in the hand (`SiegeEngine.wearGear`) |
+| being swung at | the coat on the back |
+| a day's work | tools that carry a `skillBonus` (`ItemEngine.wearTools`, on the building interval — this walks every colonist) |
+| coming apart | `scrapBroken` takes it out of their hands and writes a line; a broken piece already fought like nothing and helped nobody |
+
+Read by `CombatEngine.weaponProfile` and `woundMultiplier` (through
+`ItemInstance.effectiveness` = made-well × kept-well) and by
+`QuartermasterEngine.worth`, which is what closes §11.22's open note: gear that
+never wore out was gear nobody ever had a reason to replace, so the
+quartermaster's full slots stayed full for two centuries.
+
+**Buildings are worn by what is around them**, which is the *"vlivy okolo"*
+half. `BuildingEngine.weather` was one flat rate for every roof in the colony;
+it now multiplies three things it can already ask about:
+
+- **what it is made of** — `Cover.substance` again, its third reader: thatch and
+  timber age half again as fast as mortared stone;
+- **what the sky is doing** — `skyWear` off the same `Climate` the colonists are
+  freezing in, so the hard year everybody remembers takes roofs off too, at both
+  ends (frost splits, heat lifts);
+- **where it stands** — a building on the rim takes the weather off the open
+  valley; one in a street has its neighbours around it. Which is why a palisade
+  is the thing a colony is always mending.
+
+And harm in a fight comes from more than arrows: raiders **in** the stores wreck
+the building they are standing in (`ransackDamagePerStep`), on top of what they
+carry off, charged to the building their way in went through.
+
+**The night.** The drawn day was all there — five real minutes, a schedule that
+puts people to bed, a sun that sets at `SettlementLight.dusk` = 0.75 — and
+`nightness` darkened only within 0.16 of *midnight*, reaching full dark inside
+0.06 of it. So from sunset until 0.84 the sun was down, the shadows were gone,
+the windows were lit, and the valley was painted in broad daylight: **a third of
+every night was drawn as noon.** It is derived from `dusk`/`dawn` now (rule 35),
+ramping over `nightFall` at each end, and the wash went 0.20 → 0.46 so a lit
+window and a fire are the brightest things on the screen.
+
+**And an hour you can read.** `DayClock` — one clock for the strip and the
+canvas, off the same epoch, because two clocks for one day would put the strip's
+midnight in the middle of the canvas's afternoon. The status strip carries the
+time, the named part of the day (*Noc · Svítání · Dopoledne · Poledne ·
+Odpoledne · Soumrak*), and a tally of what the colony is at — in a fight, at
+work, hauling, on errands, away, asleep — read off the simulation and the hour,
+never assigned by it (rule 5).
+
+Guarded by `WearTests` (Core) and `NightTests` (App). The night test worth
+keeping is `nightIsNeverDrawnAsDay`: it walks the whole day in 240 steps and
+fails on any moment where `SettlementLight` says the sun is down and the
+renderer darkens nothing — the reachability shape of rule 6, applied to light.
+
 ### 11.30 — the game makes no sound at all (asked 2026-08-13)
 
 **Flagged by Keks, not yet built.** *"Ty bys teoreticky mohl najít na YT nějaké

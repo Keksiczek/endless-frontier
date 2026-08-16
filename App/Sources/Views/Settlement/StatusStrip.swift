@@ -45,6 +45,7 @@ struct StatusStrip: View {
                     .font(.caption)
                     .foregroundStyle(Theme.textDim)
                     .accessibilityElement(children: .combine)
+                    clock
                 }
                 Spacer()
                 Button {
@@ -150,6 +151,49 @@ struct StatusStrip: View {
             Text(year)
                 .font(.caption2.italic())
                 .foregroundStyle(Theme.accent.opacity(0.9))
+        }
+    }
+
+    /// **The hour, and what the town is doing in it.**
+    ///
+    /// The drawn day has always been there — five real minutes, a schedule that
+    /// puts people to bed, a sun that sets — and there was nowhere on the screen
+    /// that said so. Keks, watching a night: *"klidně i hodiny k tomu, ať je
+    /// přehled co se děje a lidé dělají."*
+    ///
+    /// Its own `TimelineView` at one tick a second: a clock that only moves
+    /// every minute of drawn time still has to be *asked*, and the strip is
+    /// outside the canvas's animation timeline. One second is far below the
+    /// rate anything here changes at and costs a text layout.
+    private var clock: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { timeline in
+            let time = DayClock.time(at: timeline.date)
+            let phase = DayClock.phase(at: time, season: game.season)
+            let doing = game.selectedSettlement.map {
+                DayClock.doing($0, at: time, season: game.season,
+                               language: AppStrings.language)
+            } ?? []
+            HStack(spacing: 4) {
+                Image(systemName: phase.symbol)
+                    .font(.caption2)
+                Text(DayClock.clockText(at: time))
+                    .font(.caption.monospacedDigit())
+                Text(AppStrings.language == .cs ? phase.czech : phase.english)
+                    .font(.caption2)
+                // What the colony is at, worst-news-first as `doing` orders it:
+                // a fight before a shift, a shift before a nap.
+                if let first = doing.first {
+                    Text("· \(first.count) \(first.what)")
+                        .font(.caption2)
+                }
+                if doing.count > 1 {
+                    Text("· \(doing[1].count) \(doing[1].what)")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.textDim.opacity(0.75))
+                }
+            }
+            .foregroundStyle(phase == .night ? Theme.frost.opacity(0.9) : Theme.textDim)
+            .accessibilityElement(children: .combine)
         }
     }
 

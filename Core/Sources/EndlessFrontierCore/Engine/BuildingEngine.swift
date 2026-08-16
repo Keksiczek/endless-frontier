@@ -118,7 +118,8 @@ public enum BuildingEngine {
     /// Weathers every standing building a little. On the interval, so offline
     /// catch-up is not paying for a per-tick pass over the whole colony.
     public static func weather(
-        _ settlement: Settlement, registry: GameDataRegistry, tick: Int
+        _ settlement: Settlement, registry: GameDataRegistry, tick: Int,
+        climate: Climate = .temperate
     ) -> Settlement {
         guard var colony = settlement.colony, !colony.placements.isEmpty else {
             return settlement
@@ -130,11 +131,33 @@ public enum BuildingEngine {
         case .autumn: multiplier = autumnWear
         default: multiplier = 1
         }
+        // What the *sky* is doing, over and above the season — the hard winter
+        // everybody remembers takes roofs off, and a desert summer splits
+        // timber. Read from the same `Climate` the colonists are freezing in,
+        // so a bad year is a bad year for the buildings too and nobody had to
+        // be told about it.
+        let sky = skyWear(climate.temperature(season))
+        let heart = TileCoord(colony.width / 2, colony.height / 2)
+        let reach = max(1.0, Double(min(colony.width, colony.height)) / 2)
+
         var changed = false
         for i in colony.placements.indices where !colony.placements[i].underConstruction {
             let before = colony.placements[i].condition
             guard before > 0 else { continue }
-            colony.placements[i].condition = max(0, before - wearPerInterval * multiplier)
+            let placement = colony.placements[i]
+            // **What it is made of.** Timber rots, thatch lifts, mortared stone
+            // does neither — the third reader of `substance`, after cover and
+            // what rots in a heap.
+            let made = registry.building(placement.definitionID)
+                .map { substanceWear(Cover.substance(of: $0, registry: registry)) } ?? 1
+            // **Where it stands.** A building on the edge of town takes the
+            // weather off the open valley; one in the middle of a street has
+            // its neighbours' walls around it. This is why a palisade on the
+            // ring is the thing a colony is always mending.
+            let out = (ColonyBuilder.squaredDistance(placement.coord, heart)).squareRoot() / reach
+            let exposed = 1 + exposureWear * min(1, out)
+            colony.placements[i].condition =
+                max(0, before - wearPerInterval * multiplier * sky * made * exposed)
             changed = true
         }
         guard changed else { return settlement }
@@ -142,6 +165,30 @@ public enum BuildingEngine {
         s.colony = colony
         return s
     }
+
+    /// How much harder the weather is on a building than an ordinary day.
+    ///
+    /// Both ends: frost gets into everything and splits it, and heat opens
+    /// seams and lifts shingles. A mild day is 1 and does nothing extra.
+    static func skyWear(_ degrees: Double) -> Double {
+        let frost = max(0, -degrees) / 30      // −30° is a doubling
+        let heat = max(0, degrees - 30) / 40   // +70° would be, and never happens
+        return 1 + frost + heat
+    }
+
+    /// Timber against stone. A thatched hut and a mortared vault do not age at
+    /// the same rate, and the data already says which is which.
+    static func substanceWear(_ substance: Cover.Substance) -> Double {
+        switch substance {
+        case .wood: return 1.35
+        case .foliage: return 1.6      // hides, thatch, anything grown
+        case .stone: return 0.65
+        case .air: return 1
+        }
+    }
+
+    /// How much more the edge of town weathers than the middle of it.
+    static let exposureWear = 0.5
 
     // MARK: - Damage
 

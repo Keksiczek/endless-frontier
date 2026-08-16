@@ -122,7 +122,7 @@ struct SettlementCanvasView: View {
     /// A fixed, *absolute* epoch so the animation clock is stable across
     /// redraws — and so anyone else (the pawn inspector's "right now" line)
     /// can derive the same clock without holding a reference to this view.
-    private let start = Date(timeIntervalSinceReferenceDate: 0)
+    private let start = DayClock.epoch
     @State private var camera = SettlementRenderer.Camera()
     /// The camera as it was when the current gesture began, so pinch and drag
     /// compose from a fixed base instead of accumulating drift.

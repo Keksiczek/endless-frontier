@@ -447,6 +447,20 @@ public enum SettlementGeometry {
         reach * tilesPerMapUnit(in: colony)
     }
 
+    /// Which build-grid tile a point on the map falls on, or `nil` if it falls
+    /// outside the town altogether.
+    ///
+    /// The exact inverse of `canvasPoint(tileX:tileY:in:)`, and the thing
+    /// anything standing *on the ground* needs in order to ask what it is
+    /// standing on — a raider in the stores, for one.
+    public static func tile(at point: LocalPoint, in colony: ColonyMap) -> TileCoord? {
+        let w = Double(max(1, colony.width)), h = Double(max(1, colony.height))
+        let x = Int(((point.x - heart.x) / span + 0.5) * w)
+        let y = Int(((point.y - heart.y) / span + 0.5) * h)
+        guard x >= 0, y >= 0, x < colony.width, y < colony.height else { return nil }
+        return TileCoord(x, y)
+    }
+
     public static func canvasPoint(for placement: BuildingPlacement, in colony: ColonyMap) -> LocalPoint {
         let w = Double(max(1, colony.width)), h = Double(max(1, colony.height))
         // The footprint's middle, not its top-left corner.
