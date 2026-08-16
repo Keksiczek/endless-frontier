@@ -431,6 +431,22 @@ public enum SettlementGeometry {
     /// mountain.
     public static var cornerReach: Double { span * 0.70710678 }
 
+    /// How many build-grid tiles one map unit is worth, on this colony's grid.
+    ///
+    /// The inverse of `canvasPoint`, and the thing anything reasoning about the
+    /// colony in *map* units needs: a wall belongs at `SiegeField.wallReach`
+    /// from the heart, and the grid has to be able to say which tiles those
+    /// are. Rule 35 — the ring is not a tile count somebody wrote down next to
+    /// a comment, it **is** the reach the fight is fought at.
+    public static func tilesPerMapUnit(in colony: ColonyMap) -> Double {
+        Double(max(1, colony.width)) / span
+    }
+
+    /// The ring of tiles standing `reach` map units out from the heart.
+    public static func ringRadiusInTiles(atReach reach: Double, in colony: ColonyMap) -> Double {
+        reach * tilesPerMapUnit(in: colony)
+    }
+
     public static func canvasPoint(for placement: BuildingPlacement, in colony: ColonyMap) -> LocalPoint {
         let w = Double(max(1, colony.width)), h = Double(max(1, colony.height))
         // The footprint's middle, not its top-left corner.

@@ -177,7 +177,7 @@ public enum ColonyBuilder {
             host = clearedOfDerelicts(host)
         }
         guard let map = host.colony,
-              let coord = centerFit(def.footprint, in: map) else {
+              let coord = fit(for: def, in: map, registry: registry) else {
             return (settlement, nil)
         }
         let sited = placeSite(host, definitionID: definitionID, at: coord, registry: registry)
@@ -381,9 +381,14 @@ public enum ColonyBuilder {
     ) -> ColonyMap {
         var map = ColonyMap(width: width, height: height)
         for instance in buildings {
-            let size = registry.building(instance.definitionID)?.footprint ?? TileSize()
+            let def = registry.building(instance.definitionID)
+            let size = def?.footprint ?? TileSize()
             for _ in 0..<max(1, instance.count) {
-                guard let coord = centerFit(size, in: map) else { return map }
+                // A wall laid out with the rest of the founding buildings still
+                // belongs on the ring, or a colony restored from a save would
+                // have its palisade in the middle of its own square.
+                let spot = def.flatMap { fit(for: $0, in: map, registry: registry) }
+                guard let coord = spot ?? centerFit(size, in: map) else { return map }
                 map.placements.append(
                     BuildingPlacement(
                         id: placementID(instance.definitionID, coord),
@@ -523,6 +528,98 @@ public enum ColonyBuilder {
             if let spot = nearestFit(size, to: centres[index], in: map) { return spot }
         }
         return nil
+    }
+
+    // MARK: - Where a given kind of building belongs
+
+    /// Whether this is a thing built to stand **between** the colony and what
+    /// is coming at it, rather than a thing that happens to be defended.
+    ///
+    /// `look == "wall"` is the archetype that describes a shape instead of a
+    /// trade, and `defense` is what the data already says it is for. A barracks
+    /// has soldiers in it and belongs among the houses; a palisade with houses
+    /// on both sides of it is a fence in the middle of a field.
+    static func isRampart(_ def: BuildingDefinition) -> Bool {
+        def.defense > 0 && def.look == "wall"
+    }
+
+    /// The spot this particular building should take — which is not the same
+    /// question for every building.
+    ///
+    /// A wall goes on the **edge**, on the ring the fighting happens at
+    /// (`SiegeField.wallReach`), and as far round from the walls that already
+    /// stand as it can get, so a colony that keeps building them ends up
+    /// enclosed rather than with one very thick side. Everything else fills the
+    /// quarters from the middle out, exactly as before.
+    static func fit(for def: BuildingDefinition, in map: ColonyMap,
+                    registry: GameDataRegistry) -> TileCoord? {
+        guard isRampart(def) else { return centerFit(def.footprint, in: map) }
+        return perimeterFit(def.footprint, in: map,
+                            taken: rampartBearings(in: map, registry: registry))
+            ?? centerFit(def.footprint, in: map)
+    }
+
+    /// Which way round the town the walls that already stand are facing.
+    static func rampartBearings(in map: ColonyMap, registry: GameDataRegistry) -> [Double] {
+        map.placements.compactMap { placement in
+            guard let def = registry.building(placement.definitionID), isRampart(def)
+            else { return nil }
+            return bearingFromHeart(of: placement, in: map)
+        }
+    }
+
+    /// The bearing of a placement from the middle of the grid, in radians.
+    static func bearingFromHeart(of placement: BuildingPlacement, in map: ColonyMap) -> Double {
+        let cx = Double(map.width) / 2, cy = Double(map.height) / 2
+        let x = Double(placement.coord.x) + Double(placement.width) / 2
+        let y = Double(placement.coord.y) + Double(placement.height) / 2
+        return atan2(y - cy, x - cx)
+    }
+
+    /// How far a wall may sit off the ring before the spot is not worth having.
+    static let ringSlack = 3.0
+    /// How many tiles of ring error the colony will accept to put a new wall on
+    /// an *unwalled* side, per radian of gap. A wall on the open side is worth
+    /// more than a neat circle.
+    static let ringSpreadPull = 2.5
+
+    /// The free spot nearest the wall ring, preferring the side nothing guards.
+    static func perimeterFit(_ size: TileSize, in map: ColonyMap,
+                             taken: [Double]) -> TileCoord? {
+        guard map.width >= size.width, map.height >= size.height else { return nil }
+        let ring = SettlementGeometry.ringRadiusInTiles(atReach: SiegeField.wallReach, in: map)
+        let cx = Double(map.width) / 2, cy = Double(map.height) / 2
+        var best: (coord: TileCoord, score: Double)?
+        for y in 0...(map.height - size.height) {
+            for x in 0...(map.width - size.width) {
+                let coord = TileCoord(x, y)
+                // Distance first, `fits` second, and the order matters: `fits`
+                // walks every placement in the colony, while a ring holds about
+                // a tenth of the grid. Asking the dear question about the nine
+                // tenths that were never candidates is what made a long trace
+                // noticeably slower (rule 4).
+                let mx = Double(x) + Double(size.width) / 2
+                let my = Double(y) + Double(size.height) / 2
+                let dx = mx - cx, dy = my - cy
+                let out = (dx * dx + dy * dy).squareRoot()
+                let error = abs(out - ring)
+                guard error <= ringSlack, fits(size, at: coord, in: map) else { continue }
+                let gap = taken.isEmpty ? .pi : taken
+                    .map { abs(angleDifference(atan2(dy, dx), $0)) }
+                    .min() ?? .pi
+                let score = error - gap * ringSpreadPull
+                if score < (best?.score ?? .infinity) { best = (coord, score) }
+            }
+        }
+        return best?.coord
+    }
+
+    /// The signed shortest way round from one bearing to another, `-π…π`.
+    static func angleDifference(_ a: Double, _ b: Double) -> Double {
+        var delta = (a - b).truncatingRemainder(dividingBy: 2 * .pi)
+        if delta > .pi { delta -= 2 * .pi }
+        if delta < -.pi { delta += 2 * .pi }
+        return delta
     }
 
     /// The free spot closest to a given point on the grid.

@@ -327,6 +327,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "wood",
     "description": {
       "en": "Seasoned wood, ready for the workshop.",
       "cs": "Nařezané a svázané dřevo, připravené ke stavbě."
@@ -340,6 +341,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "stone",
     "description": {
       "en": "A bar of smelted iron — the backbone of good gear.",
       "cs": "Houba železa protlučená do podoby, se kterou se dá pracovat."
@@ -353,6 +355,7 @@
     },
     "rarity": "rare",
     "slot": "material",
+    "substance": "stone",
     "description": {
       "en": "A metal whose making was lost to time. Stronger than steel.",
       "cs": "Kov, jehož recept se ztratil. Nikdo ho neumí vytavit znovu."
@@ -366,6 +369,7 @@
     },
     "rarity": "epic",
     "slot": "material",
+    "substance": "air",
     "description": {
       "en": "A captured wisp of something not entirely of this world.",
       "cs": "Drží světlo i ve tmě. Učenci se neshodnou proč."
@@ -497,6 +501,7 @@
     },
     "rarity": "uncommon",
     "slot": "material",
+    "substance": "stone",
     "description": {
       "en": "Carbon-tempered iron — stronger, lighter, the stuff of modern industry.",
       "cs": "Železo, které prošlo ohněm ještě jednou."
@@ -510,6 +515,7 @@
     },
     "rarity": "rare",
     "slot": "material",
+    "substance": "stone",
     "description": {
       "en": "Etched copper and silicon — the nervous system of every modern machine.",
       "cs": "Cesty tenčí než vlas, a všechny někam vedou."
@@ -523,6 +529,7 @@
     },
     "rarity": "epic",
     "slot": "material",
+    "substance": "stone",
     "description": {
       "en": "A sealed sliver of caged starfire, humming with contained power.",
       "cs": "Drží v sobě kus hvězdy."
@@ -983,6 +990,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "wood",
     "description": {
       "en": "Felled timber, still green. The start of everything built.",
       "cs": "Čerstvě skácené, ještě syrové. Začátek všeho postaveného."
@@ -996,6 +1004,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "stone",
     "description": {
       "en": "Broken from the quarry face, unshaped.",
       "cs": "Vylámaný ze stěny, neotesaný."
@@ -1009,6 +1018,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "stone",
     "description": {
       "en": "Rusty rock from the seam. Useless until it meets a fire.",
       "cs": "Rezavý kámen ze žíly. K ničemu, dokud nepotká oheň."
@@ -1022,6 +1032,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "stone",
     "description": {
       "en": "Heavy grey clay, dug wet from the pit.",
       "cs": "Těžký šedý jíl, vykopaný mokrý z jámy."
@@ -1035,6 +1046,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "foliage",
     "description": {
       "en": "Bound stems and roots, dried for the healer.",
       "cs": "Svázané stonky a kořeny, usušené pro léčitele."
@@ -1048,6 +1060,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "foliage",
     "description": {
       "en": "Taken with the meat, and worth as much.",
       "cs": "Bere se s masem a stojí za stejně tolik."
@@ -1061,6 +1074,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "wood",
     "description": {
       "en": "Wood burned slow and starved of air. The forge cannot do without it.",
       "cs": "Dřevo pálené pomalu a bez vzduchu. Bez něj kovárna nehne."
@@ -1074,6 +1088,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "foliage",
     "description": {
       "en": "Hide cured until it will take a stitch.",
       "cs": "Vyčiněná tak, aby udržela steh."
@@ -1087,6 +1102,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "stone",
     "description": {
       "en": "Clay fired hard. It will outlast the people who laid it.",
       "cs": "Vypálený jíl. Přežije ty, kdo ji kladli."
@@ -1125,6 +1141,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "stone",
     "description": {
       "en": "The difference between meat and meat that keeps until spring.",
       "cs": "Rozdíl mezi masem a masem, které vydrží do jara."
@@ -1265,6 +1282,7 @@
     },
     "rarity": "rare",
     "slot": "material",
+    "substance": "stone",
     "description": {
       "en": "Heavier than it looks and warm in the hand long after the crater cooled.",
       "cs": "Těžší, než vypadá, a v dlani hřeje dlouho poté, co kráter vychladl."
@@ -1306,6 +1324,7 @@
     },
     "rarity": "uncommon",
     "slot": "material",
+    "substance": "stone",
     "description": {
       "en": "Sand the heat turned to glass in a single afternoon. Sharper than anything anyone can knap.",
       "cs": "Písek, který žár za jedno odpoledne proměnil ve sklo. Ostřejší, než kdo dokáže otlouct."
@@ -1379,6 +1398,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "foliage",
     "description": {
       "en": "Threshed off the ear and dry. Not food until somebody cooks it.",
       "cs": "Vymlácené z klasu a suché. Jídlo z toho bude, až to někdo uvaří."
@@ -1392,6 +1412,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "foliage",
     "description": {
       "en": "Lifted out of the cold ground. Keeps all winter in a cellar.",
       "cs": "Vytahané ze studené země. Ve sklepě vydrží celou zimu."
@@ -1405,6 +1426,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "foliage",
     "description": {
       "en": "Cut from the beds. Good for a week and no longer.",
       "cs": "Sklizená ze záhonů. Dobrá týden a ani o den víc."
@@ -1418,6 +1440,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "foliage",
     "description": {
       "en": "Butchered where it fell, carried home over a shoulder.",
       "cs": "Vyvržené tam, kde zvíře padlo, a doneseno domů na rameni."
@@ -1431,6 +1454,7 @@
     },
     "rarity": "common",
     "slot": "material",
+    "substance": "foliage",
     "description": {
       "en": "Picked off the bushes at the wood's edge by whoever had a basket.",
       "cs": "Natrhané z keřů na kraji lesa každým, kdo měl košík."

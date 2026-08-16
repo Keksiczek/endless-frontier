@@ -145,6 +145,38 @@ public enum BuildingEngine {
 
     // MARK: - Damage
 
+    /// Takes condition out of **named** buildings, by id.
+    ///
+    /// `damage` is harm arriving from outside and choosing its own targets — a
+    /// storm, a fire, a raid going through the town. This is the other half: a
+    /// specific thing being worn by a specific event that already knows what it
+    /// hit. An arrow that thudded into the palisade knows it was the palisade
+    /// (`CoverField.struck`), and a wall that turns a blow aside was there when
+    /// it did (`CoverField.shelter`).
+    ///
+    /// Sums are handed in rather than applied one at a time, because a step of
+    /// a fight produces dozens of tiny bites and walking the placements once is
+    /// the difference between free and quadratic (rule 4).
+    public static func chip(_ settlement: Settlement, by amounts: [UUID: Double]) -> Settlement {
+        guard !amounts.isEmpty, var colony = settlement.colony else { return settlement }
+        var ruined = false
+        for (id, amount) in amounts.sorted(by: { $0.key.uuidString < $1.key.uuidString }) {
+            guard amount > 0,
+                  let index = colony.placements.firstIndex(where: { $0.id == id }),
+                  !colony.placements[index].underConstruction,
+                  colony.placements[index].condition > 0 else { continue }
+            let before = colony.placements[index].condition
+            colony.placements[index].condition = max(0, before - amount)
+            if before >= derelictBelow, colony.placements[index].condition < derelictBelow {
+                ruined = true
+            }
+        }
+        var s = settlement
+        s.colony = colony
+        // A building nobody can work in is a building nobody is posted to.
+        return ruined ? evictDerelict(s) : s
+    }
+
     /// Hurts the colony's buildings.
     ///
     /// `severity` is 0…1 and scales both how many are reached and how hard.

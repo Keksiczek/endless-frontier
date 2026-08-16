@@ -1463,6 +1463,60 @@ and the test had been passing on an ordering coincidence).
 Verified: 1101 Core tests in 142 suites green; 97 app tests in 15 suites green;
 iOS BUILD SUCCEEDED.
 
+### 11.34 — the wall stands somewhere, and the heap rots (2026-08-16)
+
+Keks, picking the plan back up: *"mělo by to být krytí footprinty budov"* — and
+then, watching it: *"jde mi o to aby co je na plátně je simulaci a naopak, aby to
+bylo jako živá hra, lidi chodí, bojují, kryjí se za věci"*, plus *"sklady jsem
+taky nenašel jako budovu kam se itemy a materiál nosí aby neleželo na zemi a
+nenicilo se"*.
+
+Cover itself was built in §11.33 and every part of it was right — derived from
+height and substance, stamped into one field, read by a trace. What was still a
+**number** was everything the cover was supposed to be *about*:
+
+| Was | Is |
+|---|---|
+| all 49 buildings covered identically (`(.overhead, .stone)`) | `Cover.body(of:registry:)` — a wall is chest-high, a roof is total, and the substance is whatever the thing was built out of |
+| `nearestFit` put a palisade wherever there was room, which is the middle of town | ramparts are placed on the ring the fighting happens at, and each new one goes round to the side nothing guards |
+| `fortification` = one scalar off `stats.defense`, whatever side the attack came from | `SiegeEngine.facingShare` — a wall counts where it stands, down to `strayRampartShare` behind you. Garrisons are people and have no side |
+| a defender was sheltered by *distance from the middle of town* | `CoverField.shelter` — the parapet at your shoulder, on the side they are coming from |
+| people stood where the geometry put them | `SiegeEngine.sheltering` — a colonist with a wall, a boulder or the old walls within a stride of their post puts it between themselves and the attack, and the canvas draws them there because the canvas draws what the Core says |
+| arrows fell into a palisade that never noticed | `CoverField.struck` names what stopped a shot, and `BuildingEngine.chip` wears it. A battered wall then turns aside less, so a fight's damage is a cost the *next* fight collects |
+| a watchtower was 20 points of `defense` | `Siege.Combatant.Kind.emplacement` — the first building in the game that **acts**: it stands where it was built, shoots further than a bow in a hand, stops when it is a wreck, and can be pulled down by raiders who would rather be in the stores |
+
+**Three things this turned over**, each found by running it rather than reading:
+
+1. **The cover grid is 40 × 25, not square.** A "step" of one column (0.025) never
+   leaves the row a person is standing in (0.04), so cover to the north or south
+   was invisible and a defender could never move to it. Both the shelter sample
+   and `coverSearch` are floored at the larger cell dimension now — a stride
+   that cannot reach different ground is not a stride.
+2. **Seeking cover against a distant origin moves nobody.** The first cut
+   measured shelter along the line to `SiegeField.origin`, half a map away; every
+   candidate within a stride looks at the *same two cells* as the post it came
+   from, so the search always returned the post. It is measured against the
+   **bearing** the attack comes in on instead.
+3. **A default value does not make a `Codable` field optional** — rule **37**,
+   and it would have cost a live raid its save.
+
+**The stores half.** The buildings were there the whole time: `warehouse`
+(*Sklad*, `materials: 350`) has been an early-settlement building for months, and
+`granary`, `library`, `trade_post` and the rest each hold their own kinds since
+§11.33. Two real faults under the report:
+
+- **Nothing pushed the other way.** Deeper storage was a pure upgrade, and goods
+  left in a heap in the mud were as safe as goods under a roof — so the store
+  was optional for ever. `HaulEngine.weathered` rots what is lying about, at a
+  rate read off `ItemDefinition.substance`: the harvest goes quickly, timber
+  slowly, and **stone not at all**, because stone is stone rather than because
+  anybody remembered to exempt it. On the tick, never the step (rule 34's tail).
+- **It could not be found.** The build bar is one alphabetical strip of every
+  building the colony can raise, so looking for the warehouse means scrolling
+  past eleven things that are not it. `BuildingDefinition.purpose` — derived,
+  not a list — and the bar filters by it: *Bydlení · Jídlo · Sklady · Obrana ·
+  Práce · Věda*.
+
 ### 11.30 — the game makes no sound at all (asked 2026-08-13)
 
 **Flagged by Keks, not yet built.** *"Ty bys teoreticky mohl najít na YT nějaké

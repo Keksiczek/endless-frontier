@@ -139,6 +139,13 @@ public struct ItemDefinition: Codable, Sendable, Identifiable, Equatable {
     public let name: LocalizedText
     public let rarity: ItemRarity
     public let slot: ItemSlot
+    /// What the stuff physically **is** — timber, masonry, hide, nothing at
+    /// all. Materials carry it; a sword does not need to.
+    ///
+    /// Read by `Cover.body(of:registry:)`, so a building is made of what it was
+    /// actually built out of rather than of one constant, and by anything else
+    /// that has to know the difference between a plank and a brick.
+    public let substance: Cover.Substance?
     public let equipSlot: EquipmentSlot?   // which body slot, for equipment items
     public let effects: [ItemEffect]
     /// How the item fights, when it can (weapons and weapon-slot tools).
@@ -146,12 +153,14 @@ public struct ItemDefinition: Codable, Sendable, Identifiable, Equatable {
     public let description: LocalizedText
 
     public init(id: String, name: LocalizedText, rarity: ItemRarity, slot: ItemSlot,
+                substance: Cover.Substance? = nil,
                 equipSlot: EquipmentSlot? = nil, effects: [ItemEffect] = [],
                 combat: CombatProfile? = nil, description: LocalizedText = "") {
         self.id = id
         self.name = name
         self.rarity = rarity
         self.slot = slot
+        self.substance = substance
         self.equipSlot = equipSlot
         self.effects = effects
         self.combat = combat
@@ -159,7 +168,7 @@ public struct ItemDefinition: Codable, Sendable, Identifiable, Equatable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, rarity, slot, equipSlot, effects, combat, description
+        case id, name, rarity, slot, substance, equipSlot, effects, combat, description
     }
 
     public init(from decoder: Decoder) throws {
@@ -168,6 +177,7 @@ public struct ItemDefinition: Codable, Sendable, Identifiable, Equatable {
         name = try c.decode(LocalizedText.self, forKey: .name)
         rarity = try c.decode(ItemRarity.self, forKey: .rarity)
         slot = try c.decode(ItemSlot.self, forKey: .slot)
+        substance = try c.decodeIfPresent(Cover.Substance.self, forKey: .substance)
         equipSlot = try c.decodeIfPresent(EquipmentSlot.self, forKey: .equipSlot)
         effects = try c.decodeIfPresent([ItemEffect].self, forKey: .effects) ?? []
         combat = try c.decodeIfPresent(CombatProfile.self, forKey: .combat)

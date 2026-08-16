@@ -21,6 +21,32 @@ struct BuildPickerBar: View {
     private var cs: Bool { AppStrings.language == .cs }
     private func s(_ en: String, _ cz: String) -> String { cs ? cz : en }
 
+    /// Which kind of building the strip is showing, or all of them.
+    ///
+    /// The bar was one alphabetical strip of everything the colony could raise,
+    /// so a player looking for the warehouse — which has existed since the first
+    /// era — had to scroll past eleven things that were not it, and reasonably
+    /// concluded there was no such building. The purpose comes off the
+    /// definition itself (`BuildingDefinition.purpose`), so a new building lands
+    /// in the right place without anybody maintaining a list.
+    @State private var showing: BuildingDefinition.Purpose?
+
+    private var shown: [BuildingDefinition] {
+        guard let showing else { return game.placeableBuildings }
+        return game.placeableBuildings.filter { $0.purpose == showing }
+    }
+
+    private func label(_ purpose: BuildingDefinition.Purpose) -> String {
+        switch purpose {
+        case .home:    return s("Homes", "Bydlení")
+        case .food:    return s("Food", "Jídlo")
+        case .store:   return s("Stores", "Sklady")
+        case .defence: return s("Defence", "Obrana")
+        case .work:    return s("Work", "Práce")
+        case .study:   return s("Study", "Věda")
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -35,9 +61,10 @@ struct BuildPickerBar: View {
                 }
                 .accessibilityLabel(s("Close", "Zavřít"))
             }
+            kinds
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    ForEach(game.placeableBuildings, id: \.id) { def in
+                    ForEach(shown, id: \.id) { def in
                         button(for: def)
                     }
                 }
@@ -47,6 +74,38 @@ struct BuildPickerBar: View {
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14)
             .strokeBorder(Theme.boneFaint.opacity(0.35), lineWidth: 1))
+    }
+
+    /// The kinds a colony can actually build right now — an empty category is
+    /// worse than no category, because it reads as "there are none of these"
+    /// when the truth is "not yet".
+    private var kinds: some View {
+        let available = BuildingDefinition.Purpose.allCases.filter { purpose in
+            game.placeableBuildings.contains { $0.purpose == purpose }
+        }
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                chip(s("All", "Vše"), on: showing == nil) { showing = nil }
+                ForEach(available, id: \.self) { purpose in
+                    chip(label(purpose), on: showing == purpose) {
+                        showing = showing == purpose ? nil : purpose
+                    }
+                }
+            }
+        }
+    }
+
+    private func chip(_ text: String, on: Bool, tap: @escaping () -> Void) -> some View {
+        Button(action: tap) {
+            Text(text)
+                .font(.system(size: 10, weight: on ? .semibold : .regular))
+                .foregroundStyle(on ? Theme.ink : Theme.textDim)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(on ? Theme.bone : Theme.boneFaint.opacity(0.18),
+                            in: Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     private func button(for def: BuildingDefinition) -> some View {

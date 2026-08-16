@@ -162,6 +162,30 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
     /// Non-zero only for a building whose `work` is farming — the food chain
     /// starts at ground somebody tills, and a granary is a roof over grain, not
     /// a place grain comes from.
+    /// **What this building is for**, as one word a player can sort by.
+    ///
+    /// Keks, having played it: *"sklady jsem taky nenašel jako budovu kam se
+    /// itemy a materiál nosí."* The warehouse has been in the game since the
+    /// early settlement era and is called *Sklad* — the fault was that the build
+    /// bar is one alphabetical strip of every building the colony can raise, so
+    /// finding the store means scrolling past eleven things that are not it.
+    ///
+    /// Derived from what the definition already says rather than a hand-kept
+    /// list, in the order a player would ask: a granary is a store even though
+    /// it also lifts morale, a palisade is defence even though it costs timber.
+    public enum Purpose: String, Codable, Sendable, CaseIterable {
+        case home, food, store, defence, work, study
+    }
+
+    public var purpose: Purpose {
+        if defense > 0 { return .defence }
+        if !storage.amounts.filter({ $0.value > 0 }).isEmpty { return .store }
+        if housing > 0 { return .home }
+        if plots > 0 || production[.food] > 0 { return .food }
+        if production[.knowledge] > 0 { return .study }
+        return .work
+    }
+
     public var plots: Int {
         guard work == .farming else { return 0 }
         return max(1, footprint.width * footprint.height / Self.tilesPerPlot)

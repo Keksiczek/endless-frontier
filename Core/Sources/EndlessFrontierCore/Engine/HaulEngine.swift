@@ -107,6 +107,13 @@ public enum HaulEngine {
         // times in two minutes (rule 4).
         if clock.step == 0 {
             map.piles = releasingDeadClaims(map.piles, pawns: s.pawns, ticksPerYear: ticksPerYear)
+            // …and what the weather took off the heaps nobody has carried in
+            // yet. On the tick, not the step: rot is a rate per unit time and
+            // running it eight times a tick would rot the valley eight times as
+            // fast — the exact mistake `ErrandEngine` made when it moved onto
+            // this clock (rule 34's tail).
+            map.piles = weathered(map.piles, tick: clock.tick,
+                                  seed: map.terrainSeed, registry: registry)
         }
         // A pack animal takes the weight off: the colony's beasts of burden
         // make every hauler quicker, which is the whole reason to keep one.
@@ -249,6 +256,75 @@ public enum HaulEngine {
             freed.claimedBy = nil
             return freed
         }
+    }
+
+    // MARK: - Lying in the mud
+
+    /// What a year in the open costs a heap, by what the stuff **is**.
+    ///
+    /// Keks: *"chybí sklady, protože materiál a jídlo se hromadí venku na
+    /// hromadách ve vesnici — za co by měla být penalizace… stejně tak když je
+    /// necháš ležet venku v hlíně (kameny ne třeba)."* Which is exactly right,
+    /// and it is also the reason a store was worth building and never was: a
+    /// granary and a warehouse deepen a cap that a colony rarely reaches, and
+    /// nothing at all happened to goods left where they fell. A sink only bites
+    /// when there is a force pushing the other way.
+    ///
+    /// Read off `ItemDefinition.substance` rather than a list of item ids, so a
+    /// new material rots correctly on the day it is added and stone is exempt
+    /// because stone *is* stone — not because somebody remembered to exempt it.
+    static func spoilPerTick(_ substance: Cover.Substance?) -> Double {
+        switch substance {
+        // Grain, roots, greens, meat, berries, hide, herbs. Six in-game days
+        // in the rain is a real bite: about half of an unclaimed heap is gone
+        // inside a season, which is what makes a granary a building and not a
+        // number.
+        case .foliage: return 0.015
+        // Timber and charcoal go slowly — they warp and they rot at the ends.
+        case .wood: return 0.004
+        // Stone, ore, brick, iron. Nothing the weather does to these matters.
+        case .stone, .air, .none: return 0
+        }
+    }
+
+    /// Weathers the heaps lying about the valley, and clears the ones that have
+    /// gone entirely.
+    ///
+    /// Deterministic per `(seed, pile, tick)` — rule 3. Whole units, because a
+    /// pile is a countable thing: the expected loss is spent as whole units and
+    /// the remainder is the chance of one more, so a heap of two hundred rots
+    /// smoothly and a heap of three rots as luck has it.
+    static func weathered(
+        _ piles: [HaulPile], tick: Int, seed: UInt64, registry: GameDataRegistry
+    ) -> [HaulPile] {
+        var out: [HaulPile] = []
+        out.reserveCapacity(piles.count)
+        for pile in piles {
+            let rate = spoilPerTick(registry.item(pile.itemID)?.substance)
+            guard rate > 0, pile.amount > 0 else { out.append(pile); continue }
+            let expected = Double(pile.amount) * rate
+            var rng = SeededRNG(seed: spoilSeed(seed, pile: pile.id, tick: tick))
+            var lost = Int(expected)
+            if rng.nextUnit() < expected - Double(lost) { lost += 1 }
+            guard lost > 0 else { out.append(pile); continue }
+            var worse = pile
+            worse.amount = max(0, pile.amount - lost)
+            guard worse.amount > 0 else { continue }   // gone into the ground
+            out.append(worse)
+        }
+        return out
+    }
+
+    /// `(map seed, this heap, this tick)` — never `UUID.hashValue`, which Swift
+    /// seeds per process and which would give a different valley every launch
+    /// (rule 3, and §10.7's founder bug in miniature).
+    static func spoilSeed(_ mapSeed: UInt64, pile: UUID, tick: Int) -> UInt64 {
+        var h = mapSeed &* 0x9E37_79B9_7F4A_7C15
+        let b = pile.uuid
+        h ^= UInt64(b.0) << 56 | UInt64(b.1) << 48 | UInt64(b.2) << 40 | UInt64(b.3) << 32
+            | UInt64(b.4) << 24 | UInt64(b.5) << 16 | UInt64(b.6) << 8 | UInt64(b.7)
+        h = (h ^ UInt64(bitPattern: Int64(tick))) &* 0xD1B5_4A32_D192_ED03
+        return (h ^ (h >> 29)) | 1
     }
 
     /// Whether this colonist's hands are free for a heap.

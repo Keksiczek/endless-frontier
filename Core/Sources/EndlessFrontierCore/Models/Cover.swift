@@ -120,11 +120,54 @@ public enum Cover {
     /// arrow, as the pair that decides it.
     public typealias Body = (stature: Stature, substance: Substance)
 
-    /// A building. Every one of them, whatever it is: you see the ground floor,
-    /// and the ground floor is a wall.
-    public static let building: Body = (.overhead, .stone)
+    /// A building whose content says nothing about what it is made of: a roof
+    /// over your head, of timber, which is what a frontier shack is.
+    ///
+    /// The fallback, never the answer — see `body(of:registry:)`. It exists so
+    /// a definition that names no materials still stands in the way of an
+    /// arrow, not so anything can skip asking.
+    public static let building: Body = (.overhead, .wood)
     /// A face of the massif, and the loose rock at its foot.
     public static let massif: Body = (.overhead, .stone)
+
+    /// What a **building** is, as a thing standing in the way of a shot.
+    ///
+    /// Derived from the same two facts as everything else, and both of them are
+    /// already in the data:
+    ///
+    /// - **how high** — a wall is something you stand *behind*, chest-high and
+    ///   roofless; everything else has a roof on it and is total. This is the
+    ///   only case where `look` decides anything mechanical, and it does so
+    ///   because "wall" is the one archetype that describes a *shape* rather
+    ///   than a trade.
+    /// - **what of** — whatever the thing was actually built out of, taken from
+    ///   `materialCost`: a palisade of six timber bundles is wood and stone
+    ///   walls of eight bricks are stone. A shaft knows the difference and the
+    ///   player already reads it off the building.
+    ///
+    /// Before this every one of the forty-nine buildings was `(.overhead,
+    /// .stone)` — a granary of green timber stopped an arrow exactly as well as
+    /// mortared ramparts, which is the sort of thing that makes the whole
+    /// footprint layer decorative.
+    public static func body(of definition: BuildingDefinition,
+                            registry: GameDataRegistry) -> Body {
+        (definition.look == "wall" ? .chest : .overhead, substance(of: definition, registry: registry))
+    }
+
+    /// What a building is mostly made of. The commonest material by count wins,
+    /// because a watchtower of three bundles and two bricks is a timber tower
+    /// with a brick footing and not a keep.
+    static func substance(of definition: BuildingDefinition,
+                          registry: GameDataRegistry) -> Substance {
+        var best: (substance: Substance, count: Int)?
+        // Sorted, because two materials in equal quantity must not resolve by
+        // dictionary order — that is rule 2 in the quietest place there is.
+        for (itemID, count) in definition.materialCost.sorted(by: { $0.key < $1.key }) {
+            guard count > 0, let substance = registry.item(itemID)?.substance else { continue }
+            if best == nil || count > best!.count { best = (substance, count) }
+        }
+        return best?.substance ?? building.substance
+    }
 }
 
 // MARK: - What each thing on the map is

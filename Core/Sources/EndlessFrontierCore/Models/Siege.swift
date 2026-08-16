@@ -107,9 +107,25 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
     public struct Combatant: Codable, Sendable, Equatable, Identifiable {
         public enum Side: String, Codable, Sendable { case colony, raider }
 
-        /// A colonist's pawn id, or a raider's own stable id.
+        /// Whether this is somebody standing on the field or something the
+        /// colony built that fights from where it stands.
+        ///
+        /// **The first thing in the game that is a building which acts.** A
+        /// watchtower holds ground, has a line to what it is shooting at, and
+        /// is worth attacking because of where it stands — none of which an
+        /// abstract `defense` number can express (§11.27). It is a combatant
+        /// rather than a special case in the resolver because everything the
+        /// field already does — position, targeting, reach, the canvas reading
+        /// where things are — is exactly what a turret needs.
+        public enum Kind: String, Codable, Sendable { case person, emplacement }
+
+        /// A colonist's pawn id, a raider's own stable id, or — for an
+        /// emplacement — the id of the building itself.
         public let id: UUID
         public let side: Side
+        /// What it is. Old saves have none and are people, which is what
+        /// everything on a field before this was.
+        public var kind: Kind = .person
         /// Where they are, in local-map coordinates.
         public var at: LocalPoint
         /// What a raider is still worth — their share of the warband, spent as
@@ -122,13 +138,34 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         public var down: Bool
 
         public init(id: UUID, side: Side, at: LocalPoint, strength: Double,
-                    target: UUID? = nil, down: Bool = false) {
+                    target: UUID? = nil, down: Bool = false,
+                    kind: Kind = .person) {
             self.id = id
             self.side = side
+            self.kind = kind
             self.at = at
             self.strength = strength
             self.target = target
             self.down = down
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case id, side, kind, at, strength, target, down
+        }
+
+        /// Written by hand because a synthesised decoder does **not** fall back
+        /// to a property's default value: a raid saved before turrets existed
+        /// carries no `kind`, and the synthesised one would refuse to load it —
+        /// which is a battle in progress lost to an app update.
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(UUID.self, forKey: .id)
+            side = try c.decode(Side.self, forKey: .side)
+            kind = try c.decodeIfPresent(Kind.self, forKey: .kind) ?? .person
+            at = try c.decode(LocalPoint.self, forKey: .at)
+            strength = try c.decode(Double.self, forKey: .strength)
+            target = try c.decodeIfPresent(UUID.self, forKey: .target)
+            down = try c.decodeIfPresent(Bool.self, forKey: .down) ?? false
         }
     }
 
@@ -269,7 +306,16 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
     // MARK: - The field, read
 
     public var raiders: [Combatant] { fighters.filter { $0.side == .raider } }
-    public var defenders: [Combatant] { fighters.filter { $0.side == .colony } }
+    /// The **people** holding the line. A tower is not one of them: it is not in
+    /// the roster, it is not counted as somebody still standing, and it does not
+    /// leave a body when it falls. See `emplacements`.
+    public var defenders: [Combatant] {
+        fighters.filter { $0.side == .colony && $0.kind == .person }
+    }
+    /// …and the things the colony built that fight from where they stand.
+    public var emplacements: [Combatant] {
+        fighters.filter { $0.kind == .emplacement }
+    }
 
     /// Whether anybody is close enough to anybody to be fighting them. What
     /// "the ranks are in contact" means now that there is a ground to be on —

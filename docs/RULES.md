@@ -316,3 +316,15 @@ fires, do the arithmetic before you rewrite the mechanic.
    reads it: gating the *assignment* leaves everybody already holding the job,
    and "already holding the job" includes every founder, every newcomer and
    everybody a save was written with.
+37. **A synthesised `Codable` decoder does not fall back to a property's default
+   value.** `Siege.Combatant` gained `kind` (a person, or a tower that fights
+   from where it was built) with `= .person` written next to it, which reads
+   exactly like "old saves get a person". It is not: Swift's synthesised
+   `init(from:)` calls `decode`, not `decodeIfPresent`, so every raid saved
+   before turrets existed would have failed to load — and a battle in progress
+   is the one piece of state a player cannot shrug off, because the app is
+   showing it to them when the update lands. The default value silences the
+   *compiler*, which is what makes it convincing. Any new field on a type that
+   is written to disk gets a hand-written `init(from:)` with `decodeIfPresent`,
+   or it gets no default at all so the omission is loud. `Siege` itself already
+   did this, one type up, for the same reason — the precedent was in the file.

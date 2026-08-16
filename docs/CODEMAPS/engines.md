@@ -53,10 +53,10 @@ raw off the shelf badly.
 | `MapGenerator` | The hex world beyond it. |
 | `FloraEngine` | Trees as entities — growth, felling, **reseeding**. |
 | `StoneEngine` | Rock as blocks. |
-| `ColonyBuilder` | Siting a building: fit, `grownOutward`, `clearedOfDerelicts`. |
+| `ColonyBuilder` | Siting a building: fit, `grownOutward`, `clearedOfDerelicts`. **Ramparts go on the ring** (`perimeterFit`), everything else fills the quarters. |
 | `ColonyRoute` | Pathing. `Occupancy` answers tile → placement from a flat array. |
-| `HaulEngine` | Carrying goods in, per **action step**. Routes once per walk, not per step (rule 4). |
-| `ConstructionEngine`, `BuildingEngine` | Raising and repairing. `condition`, `derelictBelow`. |
+| `HaulEngine` | Carrying goods in, per **action step**. Routes once per walk, not per step (rule 4). `weathered` rots what is left lying about, on the tick, by `ItemDefinition.substance` — stone never. |
+| `ConstructionEngine`, `BuildingEngine` | Raising and repairing. `condition`, `derelictBelow`. `chip` wears a **named** building (an arrow into the palisade); `damage` is harm that picks its own targets. |
 
 ## The wild
 
@@ -76,6 +76,12 @@ raw off the shelf badly.
 `CraftingEngine` (the bench; recipes), `QuartermasterEngine` (arms and coats —
 publishes its own material wants, rule 32), `ItemEngine`, `CombatEngine`,
 `BattleResolver`, `SiegeEngine`.
+
+`SiegeEngine` reads the ground the fight is on: `CoverField` (one stamped array,
+built once per call) decides what a shot crosses and what shelters a defender,
+`sheltering` moves people behind it, `facingShare` decides how much of the wall
+faces this attack, and `Siege.Combatant.Kind.emplacement` is a **tower that
+shoots** — the first building in the game that acts.
 
 ## Progression and record
 

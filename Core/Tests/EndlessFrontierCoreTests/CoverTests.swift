@@ -49,10 +49,14 @@ struct CoverTests {
         #expect(palisade < wall)
     }
 
-    @Test("Nothing on the map gives more shelter than a building")
+    /// A roofed building of masonry is the most there is — and note what this
+    /// is **not** any more: the fallback for a building whose materials say
+    /// nothing is a timber shack, not mortared stone (see `RampartTests`).
+    @Test("Nothing on the map gives more shelter than a building of stone")
     func aBuildingIsTotal() {
-        let building = Cover.fraction(Cover.building.stature, Cover.building.substance)
+        let building = Cover.fraction(.overhead, .stone)
         #expect(building == 1)
+        #expect(Cover.fraction(Cover.building.stature, Cover.building.substance) < building)
         for kind in SceneryKind.allCases {
             #expect(Cover.fraction(kind.body.stature, kind.body.substance) <= building)
         }
