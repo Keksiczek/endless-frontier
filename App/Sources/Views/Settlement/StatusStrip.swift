@@ -168,6 +168,10 @@ struct StatusStrip: View {
     private var clock: some View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
             let time = DayClock.time(at: timeline.date)
+            // The valley's sound is handed over on the same beat the clock
+            // reads: once a second is far more often than weather changes, and
+            // the generator glides between mixes rather than stepping.
+            let _ = AudioEngine.shared.apply(game.soundscape(at: time))
             let phase = DayClock.phase(at: time, season: game.season)
             let doing = game.selectedSettlement.map {
                 DayClock.doing($0, at: time, season: game.season,

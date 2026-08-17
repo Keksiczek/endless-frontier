@@ -83,11 +83,14 @@ with `GrowthProbe` over 200 years *before* writing any content for the late
 eras. If they are out of reach, that is the whole late game sitting behind a
 door that does not open.
 
-### 2.5 The world is silent
+### 2.5 ~~The world is silent~~ — **done 2026-08-17**
 
-No `AVFoundation` anywhere. Wind, rain, a hammer, a bell at midday, a horn when
-a raid comes. This is the cheapest large gain in perceived quality in the
-project, and it is the oldest open ask (§11.30).
+Built, generated rather than recorded: `Soundscape` (pure mapping, tested) plus
+`AudioEngine` (an `AVAudioSourceNode` doing the DSP). Wind, rain, crickets, the
+village, fire; five stings; a volume in Settings. No assets, no licences.
+
+What is left of it: **music.** A theme wants a real track from a clean source —
+a generator does texture well and melody badly. See §11.30.
 
 ---
 
@@ -151,8 +154,8 @@ decode failure.
 1. **Batch one — what a player hits today**: on-screen culling instead of
    `prefix(30)`; catch-up progress; `GrowthProbe` + `DangerProbe` re-run to see
    what the last three sessions did; decide `floors`.
-2. **Batch two — sound.** Ambience per season and time of day, a handful of
-   event stings, a volume control in Settings. Offline assets only.
+2. ~~**Batch two — sound.**~~ Done. What remains is a music track, which needs
+   a licence rather than code.
 3. **Batch three — the era ladder and the late game**, informed by (1)'s
    numbers: either bring the thresholds into reach or move what is behind them.
 4. **Batch four — onboarding and saves.** First-run guidance that teaches by

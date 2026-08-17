@@ -15,6 +15,42 @@ struct SettingsView: View {
 
     private var cs: Bool { AppStrings.language == .cs }
 
+    /// **Sound.** Every noise the game makes is generated — filtered noise for
+    /// wind and rain, partials for a bell — so there is nothing to download and
+    /// nothing to keep in sync with a licence file. The one thing a player
+    /// needs from Settings is how loud it is and whether it happens at all.
+    @AppStorage("audio.enabled") private var audioEnabled = true
+    @AppStorage("audio.volume") private var audioVolume = 0.7
+
+    private var soundCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: cs ? "Zvuk" : "Sound")
+            Toggle(isOn: $audioEnabled) {
+                Text(cs ? "Zvuky osady" : "Colony sound")
+                    .font(.callout)
+                    .foregroundStyle(Theme.text)
+            }
+            .tint(Theme.accent)
+            .onChange(of: audioEnabled) { _, on in AudioEngine.shared.enabled = on }
+            HStack(spacing: 8) {
+                Image(systemName: "speaker.fill")
+                    .font(.caption2).foregroundStyle(Theme.textDim)
+                Slider(value: $audioVolume, in: 0...1)
+                    .tint(Theme.accent)
+                    .disabled(!audioEnabled)
+                    .onChange(of: audioVolume) { _, level in AudioEngine.shared.volume = level }
+                Image(systemName: "speaker.wave.3.fill")
+                    .font(.caption2).foregroundStyle(Theme.textDim)
+            }
+            Text(cs
+                 ? "Vítr, déšť, cvrčci, oheň a ruch vsi se řídí ročním obdobím, počasím a tím, kolik lidí je vzhůru. Hra respektuje vypínač zvuku a nepřeruší, co posloucháš."
+                 : "Wind, rain, crickets, fire and the murmur of the village follow the season, the sky and how many people are up. The game respects the silent switch and will not stop what you are already listening to.")
+                .font(.caption).foregroundStyle(Theme.textDim)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frontierCard()
+    }
+
     /// The game's content is bilingual but was chosen purely by device locale,
     /// so a Czech player on an English phone had no way to reach the Czech —
     /// it was written, shipped, and unreachable.
@@ -135,6 +171,7 @@ struct SettingsView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    soundCard
                     languageCard
                     notificationCard
                     thisWorld

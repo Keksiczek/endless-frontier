@@ -18,6 +18,12 @@ struct EndlessFrontierApp: App {
                 .task {
                     await game.openSession()
                     game.startLiveLoop()
+                    // Whatever the player left it at last time.
+                    AudioEngine.shared.enabled =
+                        UserDefaults.standard.object(forKey: "audio.enabled") as? Bool ?? true
+                    AudioEngine.shared.volume =
+                        UserDefaults.standard.object(forKey: "audio.volume") as? Double ?? 0.7
+                    AudioEngine.shared.start()
                 }
                 .task(id: notificationTick) {
                     // The permission sheet has to go up while the game is on
@@ -42,8 +48,12 @@ struct EndlessFrontierApp: App {
                         NotificationScheduler.clearDelivered()
                         Task { await game.openSession() }
                         game.startLiveLoop()
+                        AudioEngine.shared.start()
                     default:
                         game.stopLiveLoop()
+                        // A game in the background makes no noise, whatever the
+                        // audio session would otherwise allow.
+                        AudioEngine.shared.stop()
                         // The queue is already armed from the foreground; this
                         // is only a top-up with the state as it stands right
                         // now, and it is fine if the system cuts it short.

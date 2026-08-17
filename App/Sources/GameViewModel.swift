@@ -375,6 +375,10 @@ final class GameViewModel {
 
     /// Puts a toast up and takes it down again a few breaths later.
     private func show(_ toast: LiveToast) {
+        // …and says it out loud, when the news is the kind that has a sound.
+        // This is the one place everything that happens passes through, which
+        // is why the audio hangs off it rather than off forty call sites.
+        if let sting = Sting.of(toast.kind) { AudioEngine.shared.play(sting) }
         toasts.append(toast)
         if toasts.count > maxVisibleToasts {
             toasts.removeFirst(toasts.count - maxVisibleToasts)
@@ -684,6 +688,40 @@ final class GameViewModel {
     }
 
     var temperature: Double { climate.temperature(season) }
+
+    /// What the valley should sound like at this instant.
+    ///
+    /// Assembled from the same facts the canvas draws with — the season, the
+    /// sky, how far into the night it is, who is up — so the sound and the
+    /// picture can never disagree about what is happening. Presentation reading
+    /// presentation and the simulation; nothing here writes anything (rule 5).
+    func soundscape(at time: Double) -> Soundscape {
+        guard let settlement = selectedSettlement else { return .quiet }
+        let night = Double(SettlementRenderer.nightness(time: time))
+        let asleep = DayClock.phase(at: time, season: season) == .night
+        let living = settlement.pawns.count { $0.health > 0 }
+        let awake = asleep
+            ? settlement.pawns.count { $0.health > 0 && ($0.carrying != nil || $0.errand != nil) }
+            : living
+        // Anything with a fire in it. A cookhouse is a fire, a forge is a fire,
+        // and a colony with no hearth at all eats round the one on the green.
+        let hearths = settlement.colony.map { colony in
+            colony.placements.count { placement in
+                guard BuildingEngine.isWorking(placement),
+                      let def = registry.building(placement.definitionID) else { return false }
+                return def.look == "cookhouse" || def.look == "forge" || def.look == "temple"
+            } + 1
+        } ?? 1
+        return Soundscape.mix(Soundscape.World(
+            season: season,
+            temperature: temperature,
+            weather: climate.weather(season),
+            night: night,
+            population: living,
+            awake: awake,
+            underAttack: settlement.siege != nil,
+            hearths: hearths))
+    }
 
     /// Why one colonist is as warm as they are: the day, the roof, the coat and
     /// the fires, out of the same engine that decides whether they freeze.

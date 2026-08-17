@@ -1678,9 +1678,48 @@ that half exists and this one does not.
 any of them — the report card and its replay were reachable exactly once, on the
 way past.
 
-### 11.30 — the game makes no sound at all (asked 2026-08-13)
+### 11.30 — the game makes no sound at all — **built 2026-08-17**
 
-**Flagged by Keks, not yet built.** *"Ty bys teoreticky mohl najít na YT nějaké
+**Done, and with no audio files at all.** Every sound is generated a sample at a
+time: wind and rain are filtered noise through a wandering band, a cricket is a
+short burst of two beating sines, fire is noise with pops in it, and a bell is
+three inharmonic partials ringing out. Nothing was downloaded and there is no
+licence to keep — which also settles the sourcing question below by making it
+moot for everything except music.
+
+Why generated rather than looped, beyond the licence: the world is *continuous*.
+The weather moves, the day turns, the colony grows. A recording can only be
+crossfaded between states; a generator can be told the state and follow it, so
+the wind genuinely rises as the cold comes on and the crickets genuinely stop
+when the season turns.
+
+- `Soundscape` — the whole mapping from world to mix, as a **pure function** of
+  the same facts the canvas draws with (season, `Climate.weather`, nightness,
+  who is awake, whether a raid is on, how many fires are lit). Tested: crickets
+  in January, a loud village at three in the morning, snow that is as loud as
+  rain — every complaint anybody will have about the ambience is an assertion
+  about this type.
+- `AudioEngine` — an `AVAudioSourceNode` doing the DSP, `.ambient` session so
+  the game respects the silent switch and does not stop the player's music.
+- Five stings, and deliberately only five: hammer, bell, horn, chime, knell,
+  mapped off `ColonyLogEntry.Kind` at the one place every piece of news already
+  passes through (`GameViewModel.show(_:)`). A sound per journal line is a game
+  that gets muted.
+- Settings: on/off and a volume, remembered.
+
+**One trap, and it cost a crash loop before the app could finish launching.** A
+closure formed inside a `@MainActor` method is *itself* main-actor isolated, so
+Swift plants an executor check in it — and that check runs on the audio thread,
+hits `dispatch_assert_queue` and takes the process out with SIGILL. The render
+block has to be built in a `nonisolated` context. The stack said
+`swift_task_checkIsolated` under `AudioSourceNode`, which is the whole diagnosis
+if you have seen it once.
+
+Still open: **music.** A theme wants a real track from a clean licence — a
+generator does texture well and melody badly. The sourcing note below stands for
+that, and for it alone.
+
+**Original ask, kept for the licence analysis.** *"Ty bys teoreticky mohl najít na YT nějaké
 vhodné royalty free audio a zvukové skladby, co bychom tam mohli dát."*
 
 There is no audio anywhere in the project — no `AVFoundation`, no assets, no
