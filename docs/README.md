@@ -6,9 +6,10 @@ Read in this order when picking work up cold:
 
 | # | Doc | What it is |
 |---|---|---|
-| 1 | [CODEMAPS/architecture.md](CODEMAPS/architecture.md) | The three layers, the tick order, where a decision flows |
-| 2 | [RULES.md](RULES.md) | **35 rules, each of which cost a session.** Read before writing a threshold |
-| 3 | [BACKLOG.md](BACKLOG.md) | **The living plan.** What is open, what was measured, what Keks asked for |
+| 1 | [NEXT.md](NEXT.md) | **Start here.** Where the game stands and what to work on next, with the evidence for each |
+| 2 | [CODEMAPS/architecture.md](CODEMAPS/architecture.md) | The three layers, the tick order, where a decision flows |
+| 3 | [RULES.md](RULES.md) | **38 rules, each of which cost a session.** Read before writing a threshold |
+| 4 | [BACKLOG.md](BACKLOG.md) | **The living record.** What was measured, what was built, what Keks asked for |
 
 ## Reference, by question
 
@@ -36,8 +37,9 @@ overtaken without being updated, which is exactly how a stale doc does damage.
 | [NEXT_PHASE.md](NEXT_PHASE.md) | ~2026-07-28 | The entity-conversion brief. Two of its three unconverted rows still stand; **the buildings row is out of date** — see [CODEMAPS/models.md](CODEMAPS/models.md) |
 | [HANDOFF.md](HANDOFF.md) | 2026-08-13 | A state report, not a plan — but the newest one, and worth reading |
 
-Reality as of 2026-08-13: **1078 Core tests**, 95 App tests, V2 phases A–F
-complete, and the work is tracked in `BACKLOG.md` §11.
+Reality as of 2026-08-17: **1145 Core tests in 146 suites**, App tests green,
+V2 phases A–F complete. History lives in `BACKLOG.md` §11; the plan lives in
+[NEXT.md](NEXT.md).
 
 ## The one rule about these docs
 
