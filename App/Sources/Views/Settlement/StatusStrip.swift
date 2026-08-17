@@ -180,11 +180,17 @@ struct StatusStrip: View {
                                language: AppStrings.language)
             } ?? []
             HStack(spacing: 4) {
-                Image(systemName: phase.symbol)
+                // At night the symbol is the **moon it actually is** — the
+                // phase decides how dark the valley goes, so it is worth being
+                // able to read it rather than inferring it from the ground.
+                Image(systemName: phase == .night
+                      ? MoonPhase.phase(at: time).symbol : phase.symbol)
                     .font(.caption2)
                 Text(DayClock.clockText(at: time))
                     .font(.caption.monospacedDigit())
-                Text(AppStrings.language == .cs ? phase.czech : phase.english)
+                Text(phase == .night
+                     ? MoonPhase.phase(at: time).name(AppStrings.language)
+                     : (AppStrings.language == .cs ? phase.czech : phase.english))
                     .font(.caption2)
                 // What the colony is at, worst-news-first as `doing` orders it:
                 // a fight before a shift, a shift before a nap.

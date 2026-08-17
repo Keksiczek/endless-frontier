@@ -22,7 +22,16 @@ struct UIStringsTests {
     /// would add indirection and no translation. Keep this list short and make
     /// each entry argue for itself.
     static let sameInBothLanguages: Set<String> = [
-        "Gini"   // the coefficient is "Gini" in Czech too
+        "Gini",   // the coefficient is "Gini" in Czech too
+        // **The music credit, which must not be translated.** CC BY 4.0 asks
+        // for this attribution in this wording, and a licence is not satisfied
+        // by a paraphrase — translating it would be the one change here that
+        // actually breaks something legal rather than merely reading oddly.
+        // The sentence *around* it is translated; the credit itself is a
+        // quotation. See docs/AUDIO-LICENCES.md.
+        // Listed as it appears **in the source**, escapes and all: the scanner
+        // reads the literal between the quotes without unescaping it.
+        "\\\"Ambiment\\\" Kevin MacLeod (incompetech.com)"
     ]
 
     @Test("No panel greets a Czech player in English")

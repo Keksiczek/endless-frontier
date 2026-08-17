@@ -96,6 +96,9 @@ struct SettlementCanvasView: View {
     let map: LocalMap
     let registry: GameDataRegistry
     let season: Season
+    /// What the sky is doing (`Climate.weather`). The renderer needs it for one
+    /// thing: cloud is what decides whether the moon lights anything.
+    var weather: Double = 0
     /// Shipments on the road right now. The legs that cross this valley are
     /// drawn; the rest of the journey is out in country this map does not show.
     var caravans: [Caravan] = []
@@ -144,6 +147,7 @@ struct SettlementCanvasView: View {
                         camera: camera, continuousTick: now,
                         caravans: caravans,
                         seasonProgress: seasonProgress(at: now),
+                        weather: weather,
                         battleReplay: battleReplay,
                         selectedPawnID: selectedPawnID,
                         selectedBuildingID: selectedBuildingID)

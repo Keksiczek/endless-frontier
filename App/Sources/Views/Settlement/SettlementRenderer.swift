@@ -113,6 +113,9 @@ enum SettlementRenderer {
         /// How far through its season the year has got, 0…1. Snow lies deeper
         /// at midwinter than on its first day, and spring's mud dries.
         seasonProgress: Double = 0.5,
+        /// What the sky is doing, from `Climate.weather(_:)`. Cloud is what
+        /// decides whether the moon is lighting anything.
+        weather: Double = 0,
         /// A fight the player asked to see again. Overrides the live one while
         /// it runs, so "watch it again" is the same choreography on its own
         /// clock rather than a second, separate picture of a battle.
@@ -213,7 +216,8 @@ enum SettlementRenderer {
         // so it stays in view space and doesn't slide when you pan.
         seasonWash(&context, rect: viewRect, size: size, season: season, time: time)
         SettlementLight.wash(&context, rect: viewRect, sun: sun)
-        nightWash(&context, rect: viewRect, night: night)
+        nightWash(&context, rect: viewRect, night: night,
+                  moonlight: MoonPhase.moonlight(at: time, weather: weather))
     }
 
     // MARK: - Day & night
@@ -257,7 +261,8 @@ enum SettlementRenderer {
     /// A cool veil over the lens at night. The fog stays darker still, and
     /// warm windows and fires read brighter against it.
     private static func nightWash(
-        _ context: inout GraphicsContext, rect: CGRect, night: Double
+        _ context: inout GraphicsContext, rect: CGRect, night: Double,
+        moonlight: Double = 0
     ) {
         guard night > 0.01 else { return }
         // Night **darkens**; it does not paint the valley blue.
@@ -286,8 +291,30 @@ enum SettlementRenderer {
         // filter, not a night — the second half of "vypadá to stejně jako přes
         // den". Deep enough that a lit window and a fire are the brightest
         // things on the screen, shallow enough that the line art still reads.
+        // **How dark it goes is the moon's business.** Every night used to be
+        // exactly as dark as every other one — the only input was how far past
+        // sunset the clock stood, so a fortnight of play was one night repeated
+        // (Keks: *"noc je dost tmavá a jednotvárná"*). A full moon is genuinely
+        // bright enough to cross a field by and a new moon is black, which is a
+        // two-and-a-half-fold swing arriving on its own every twenty-nine days.
+        let depth = darkness(moonlight: moonlight)
         context.fill(Path(rect),
-                     with: .color(Color(red: 0.05, green: 0.06, blue: 0.10).opacity(night * 0.46)))
+                     with: .color(Color(red: 0.05, green: 0.06, blue: 0.10).opacity(night * depth)))
+        // Moonlight is *cold*: what little it leaves you is blue. A hair of it,
+        // so a bright night reads as moonlit rather than as tinted.
+        if moonlight > 0.25 {
+            context.fill(Path(rect),
+                         with: .color(Color(red: 0.42, green: 0.52, blue: 0.78)
+                            .opacity(night * (moonlight - 0.25) * 0.10)))
+        }
+    }
+
+    /// How heavy the night wash goes, given the moon. Pulled out so a test can
+    /// state the thing that matters — a full moon night is markedly brighter
+    /// than a new moon night — without rendering anything.
+    static func darkness(moonlight: Double) -> Double {
+        let lit = min(1, max(0, moonlight))
+        return 0.62 - lit * 0.26
     }
 
     /// Maps a normalised model point to a pixel point in `rect`.

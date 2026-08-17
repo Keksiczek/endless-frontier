@@ -114,6 +114,14 @@ enum DayClock {
                       season: Season, language: GameLanguage) -> [(count: Int, what: String)] {
         let cs = language == .cs
         let asleep = phase(at: time, season: season) == .night
+        // **Posted counts as working.** `currentJob` is the *concrete* piece of
+        // work — this tree, this plot, this bench — and most of a colony never
+        // has one: a smith seated in a workshop and a farmer on a farm's roster
+        // are employed by `BuildingPlacement.assignedPawnIDs` and nothing else.
+        // Counting only `currentJob` read a town of sixty-nine as "17 at work ·
+        // 52 resting" at half past nine in the morning, which is a tally
+        // describing the data structure rather than the colony.
+        let posted = Set(settlement.colony?.placements.flatMap(\.assignedPawnIDs) ?? [])
         var fighting = 0, carrying = 0, onErrands = 0, working = 0, resting = 0, away = 0
         for pawn in settlement.pawns where pawn.health > 0 {
             if settlement.siege?.line.contains(pawn.id) == true { fighting += 1; continue }
@@ -121,7 +129,7 @@ enum DayClock {
             if pawn.carrying != nil { carrying += 1; continue }
             if pawn.errand != nil { onErrands += 1; continue }
             if asleep || pawn.isBroken { resting += 1; continue }
-            if pawn.currentJob != nil { working += 1; continue }
+            if pawn.currentJob != nil || posted.contains(pawn.id) { working += 1; continue }
             resting += 1
         }
         var out: [(Int, String)] = []

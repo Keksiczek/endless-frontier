@@ -150,3 +150,82 @@ struct NightTests {
         #expect(tally.contains { $0.what == "hauling" })
     }
 }
+
+/// The moon, and the night it makes.
+///
+/// Keks, after dark: *"noc je dost tmavá a jednotvárná, možná přidat fáze
+/// měsíce."* Both halves are one fault — every night was exactly as dark as
+/// every other one, because the only input was how far past sunset the clock
+/// stood. These pin the cycle and, more importantly, that it **reaches the
+/// picture**: a full moon night has to be visibly lighter than a new moon one,
+/// or the phase is a label on a status bar and nothing else.
+@Suite("The moon")
+struct MoonTests {
+
+    private func day(_ n: Double) -> Double { AgentMotion.dayLength * n }
+
+    @Test("New at the start of the cycle, full in the middle of it")
+    func theCycleRunsNewToFull() {
+        #expect(MoonPhase.illumination(at: day(0)) < 0.01)
+        #expect(MoonPhase.illumination(at: day(MoonPhase.synodicDays / 2)) > 0.99)
+        #expect(MoonPhase.illumination(at: day(MoonPhase.synodicDays)) < 0.01,
+                "and it comes back round")
+    }
+
+    @Test("The quarters are half lit")
+    func quartersAreHalfLit() {
+        let quarter = MoonPhase.illumination(at: day(MoonPhase.synodicDays / 4))
+        #expect(abs(quarter - 0.5) < 0.01)
+    }
+
+    @Test("Every phase is named in both languages and carries a symbol")
+    func phasesAreNamedAndDrawn() {
+        for phase in MoonPhase.Phase.allCases {
+            #expect(!phase.czech.isEmpty)
+            #expect(!phase.english.isEmpty)
+            #expect(phase.czech != phase.english, "\(phase) was never translated")
+            #expect(phase.symbol.hasPrefix("moonphase."))
+        }
+    }
+
+    @Test("The named phase follows the cycle, and the whole set turns up")
+    func everyPhaseHappens() {
+        var seen: Set<String> = []
+        for step in 0..<300 {
+            let t = day(Double(step) * MoonPhase.synodicDays / 300)
+            seen.insert(MoonPhase.phase(at: t).english)
+        }
+        #expect(seen.count == MoonPhase.Phase.allCases.count)
+        #expect(MoonPhase.phase(at: day(0)) == .new)
+        #expect(MoonPhase.phase(at: day(MoonPhase.synodicDays / 2)) == .full)
+    }
+
+    // MARK: - …and it has to reach the picture
+
+    /// The point of the whole thing: a full moon night is **markedly** lighter
+    /// than a new moon one. If this ever stops being true the phase is a label
+    /// and the night is monotonous again.
+    @Test("A full moon night is lighter than a new moon night")
+    func theMoonChangesHowDarkItGets() {
+        let dark = SettlementRenderer.darkness(moonlight: 0)
+        let lit = SettlementRenderer.darkness(moonlight: 1)
+        #expect(lit < dark)
+        #expect(dark - lit > 0.2, "a difference nobody can see is not a difference")
+        #expect(lit > 0.25, "…and a full moon is still night")
+    }
+
+    @Test("Cloud puts the moon out")
+    func stormyNightsAreTheDarkest() {
+        let full = day(MoonPhase.synodicDays / 2)
+        let clear = MoonPhase.moonlight(at: full, weather: 0)
+        let storm = MoonPhase.moonlight(at: full, weather: -6)
+        #expect(clear > 0.9)
+        #expect(storm < clear / 3, "a full moon behind a storm lights nothing")
+    }
+
+    @Test("A thin crescent is worth almost nothing")
+    func crescentsAreNearlyDark() {
+        let crescent = MoonPhase.moonlight(at: day(MoonPhase.synodicDays * 0.08), weather: 0)
+        #expect(crescent < 0.15)
+    }
+}

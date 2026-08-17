@@ -112,7 +112,8 @@ struct SettlementScreen: View {
             if let map = game.viewedLocalMap, let settlement = game.selectedSettlement {
                 SettlementCanvasView(
                     settlement: settlement, map: map, registry: game.registry,
-                    season: game.season, caravans: game.world.caravans,
+                    season: game.season, weather: game.climate.weather(game.season),
+                    caravans: game.world.caravans,
                     clock: game.tickClock, selection: $selection,
                     buildPlan: $buildPlan, battleReplay: battleReplay,
                     focus: game.spotlight,

@@ -75,6 +75,25 @@ struct SettingsView: View {
                  : "The piece plays out, then the valley is left alone for a few minutes before it comes back — music that never stops is music nobody hears after an hour. It ducks under a raid.")
                 .font(.caption).foregroundStyle(Theme.textDim)
                 .fixedSize(horizontal: false, vertical: true)
+
+            // **The credit CC BY 4.0 asks for, in the product.** Not a
+            // courtesy and not satisfied by a line in the repository: the
+            // licence requires it where a player can read it, in this wording.
+            // If it ever stops being displayed, the licence stops covering the
+            // track. See docs/AUDIO-LICENCES.md.
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\"Ambiment\" Kevin MacLeod (incompetech.com)")
+                Text(cs
+                     ? "Licencováno pod Creative Commons: By Attribution 4.0"
+                     : "Licensed under Creative Commons: By Attribution 4.0 License")
+                Link("creativecommons.org/licenses/by/4.0/",
+                     destination: URL(string: "http://creativecommons.org/licenses/by/4.0/")!)
+                    .foregroundStyle(Theme.accent)
+            }
+            .font(.system(size: 10))
+            .foregroundStyle(Theme.textDim)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityElement(children: .combine)
         }
         .frontierCard()
     }

@@ -20,13 +20,21 @@ the App Store listing, not for whoever uploaded it.
 
 | File | Title | Author | Source | Licence | Attribution required |
 |---|---|---|---|---|---|
-| `App/Resources/Audio/ambiment.m4a` | Ambiment | **TBD** | **TBD** | **TBD** | **TBD** |
+| `App/Resources/Audio/ambiment.m4a` | Ambiment | Kevin MacLeod | [incompetech.com](https://incompetech.com) | [CC BY 4.0](http://creativecommons.org/licenses/by/4.0/) | **Yes** |
 
-> **`ambiment.m4a` is not cleared yet.** It was handed over as
-> `Ambiment.mp3` on 2026-08-17 and transcoded (see below); who wrote it, where
-> it came from and under what terms are unknown to this repository. Fill the row
-> in before any build leaves the machine, and if the licence turns out to
-> require credit, add it to Settings as well as here.
+**Cleared 2026-08-17.** The attribution CC BY 4.0 requires is not a courtesy and
+not satisfied by this file — it has to be **in the product**, where a player can
+read it. It is in Settings, under the sound controls, in the wording the licence
+asks for:
+
+```
+"Ambiment" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+```
+
+Do not paraphrase it, do not shorten it, and do not drop the link. If the credit
+ever stops being displayed, the licence stops covering the track.
 
 ### What is safe to add
 
