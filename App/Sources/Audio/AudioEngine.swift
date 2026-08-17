@@ -67,6 +67,81 @@ final class AudioEngine {
         voices.enqueue(sting)
     }
 
+    // MARK: - Music
+
+    /// How loud the music sits under everything else, 0…1.
+    ///
+    /// Below the ambience on purpose: the wind and the village are what the
+    /// player is *watching*, and a score that competes with them is a score
+    /// that gets turned off.
+    var musicVolume: Double = 0.45 {
+        didSet { music.volume = Float(min(1, max(0, musicVolume)) * 0.6) }
+    }
+    /// Whether a track plays at all. Separate from `enabled`, because "I like
+    /// the world but not the music" is the commonest thing anybody wants from a
+    /// sound menu.
+    var musicEnabled: Bool = true {
+        didSet { musicEnabled ? startMusic() : stopMusic() }
+    }
+
+    private let music = AVAudioPlayerNode()
+    private var track: AVAudioFile?
+    private var musicAttached = false
+    private var restTimer: Task<Void, Never>?
+
+    /// How long the valley is left alone between plays.
+    ///
+    /// A twenty-three minute piece on a loop with no gap is a piece nobody
+    /// hears after the first hour. It comes back when you have had time to
+    /// forget it was there.
+    private let restBetweenPlays: Duration = .seconds(300)
+
+    /// Puts the music on, if there is any and the player wants it.
+    private func startMusic() {
+        guard enabled, musicEnabled, running else { return }
+        guard let url = Bundle.main.url(forResource: "ambiment", withExtension: "m4a"),
+              let file = try? AVAudioFile(forReading: url) else { return }
+        track = file
+        if !musicAttached {
+            engine.attach(music)
+            engine.connect(music, to: engine.mainMixerNode, format: file.processingFormat)
+            musicAttached = true
+        }
+        music.volume = Float(min(1, max(0, musicVolume)) * 0.6)
+        schedule(file)
+        music.play()
+    }
+
+    /// Plays it once, then waits, then plays it again — for as long as the game
+    /// is in front of somebody.
+    private func schedule(_ file: AVAudioFile) {
+        file.framePosition = 0
+        music.scheduleFile(file, at: nil) { [weak self] in
+            Task { @MainActor in
+                guard let self, self.musicEnabled, self.enabled, self.running else { return }
+                self.restTimer?.cancel()
+                self.restTimer = Task { [weak self] in
+                    try? await Task.sleep(for: self?.restBetweenPlays ?? .seconds(300))
+                    guard !Task.isCancelled, let self, let track = self.track else { return }
+                    self.schedule(track)
+                }
+            }
+        }
+    }
+
+    private func stopMusic() {
+        restTimer?.cancel()
+        restTimer = nil
+        music.stop()
+    }
+
+    /// A raid is not background music. Ducked rather than cut, so the piece is
+    /// still there when the fighting stops.
+    func duckMusic(_ ducked: Bool) {
+        guard musicAttached else { return }
+        music.volume = Float(min(1, max(0, musicVolume)) * (ducked ? 0.15 : 0.6))
+    }
+
     // MARK: - The device
 
     func start() {
@@ -98,6 +173,7 @@ final class AudioEngine {
         do {
             try engine.start()
             running = true
+            startMusic()
         } catch {
             engine.detach(node)
             source = nil
@@ -106,6 +182,7 @@ final class AudioEngine {
 
     func stop() {
         guard running else { return }
+        stopMusic()
         engine.stop()
         if let source { engine.detach(source) }
         source = nil

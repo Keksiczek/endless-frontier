@@ -21,6 +21,8 @@ struct SettingsView: View {
     /// needs from Settings is how loud it is and whether it happens at all.
     @AppStorage("audio.enabled") private var audioEnabled = true
     @AppStorage("audio.volume") private var audioVolume = 0.7
+    @AppStorage("audio.music") private var musicEnabled = true
+    @AppStorage("audio.musicVolume") private var musicVolume = 0.45
 
     private var soundCard: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -45,6 +47,32 @@ struct SettingsView: View {
             Text(cs
                  ? "Vítr, déšť, cvrčci, oheň a ruch vsi se řídí ročním obdobím, počasím a tím, kolik lidí je vzhůru. Hra respektuje vypínač zvuku a nepřeruší, co posloucháš."
                  : "Wind, rain, crickets, fire and the murmur of the village follow the season, the sky and how many people are up. The game respects the silent switch and will not stop what you are already listening to.")
+                .font(.caption).foregroundStyle(Theme.textDim)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Divider().overlay(Theme.boneFaint.opacity(0.3))
+
+            // Music is its own switch: "I like the world but not the score" is
+            // the commonest thing anybody wants out of a sound menu.
+            Toggle(isOn: $musicEnabled) {
+                Text(cs ? "Hudba" : "Music")
+                    .font(.callout)
+                    .foregroundStyle(Theme.text)
+            }
+            .tint(Theme.accent)
+            .disabled(!audioEnabled)
+            .onChange(of: musicEnabled) { _, on in AudioEngine.shared.musicEnabled = on }
+            HStack(spacing: 8) {
+                Image(systemName: "music.note")
+                    .font(.caption2).foregroundStyle(Theme.textDim)
+                Slider(value: $musicVolume, in: 0...1)
+                    .tint(Theme.accent)
+                    .disabled(!audioEnabled || !musicEnabled)
+                    .onChange(of: musicVolume) { _, level in AudioEngine.shared.musicVolume = level }
+            }
+            Text(cs
+                 ? "Skladba dohraje a pak je pár minut ticho, než se vrátí — hudba, co nikdy neustane, je hudba, kterou po hodině nikdo neslyší. Při nájezdu se ztlumí."
+                 : "The piece plays out, then the valley is left alone for a few minutes before it comes back — music that never stops is music nobody hears after an hour. It ducks under a raid.")
                 .font(.caption).foregroundStyle(Theme.textDim)
                 .fixedSize(horizontal: false, vertical: true)
         }

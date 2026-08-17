@@ -172,6 +172,8 @@ struct StatusStrip: View {
             // reads: once a second is far more often than weather changes, and
             // the generator glides between mixes rather than stepping.
             let _ = AudioEngine.shared.apply(game.soundscape(at: time))
+            // A raid is not background music.
+            let _ = AudioEngine.shared.duckMusic(game.selectedSettlement?.siege != nil)
             let phase = DayClock.phase(at: time, season: game.season)
             let doing = game.selectedSettlement.map {
                 DayClock.doing($0, at: time, season: game.season,

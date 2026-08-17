@@ -16,6 +16,9 @@ targets:
     sources:
       - path: Sources
       - path: Assets.xcassets
+      # Music. The rest of the game's audio is generated at run time and needs
+      # no files at all; a melody is the one thing a generator does badly.
+      - path: Resources
     dependencies:
       - package: EndlessFrontierCore
         product: EndlessFrontierCore

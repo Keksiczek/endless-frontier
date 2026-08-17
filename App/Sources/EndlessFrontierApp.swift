@@ -23,6 +23,10 @@ struct EndlessFrontierApp: App {
                         UserDefaults.standard.object(forKey: "audio.enabled") as? Bool ?? true
                     AudioEngine.shared.volume =
                         UserDefaults.standard.object(forKey: "audio.volume") as? Double ?? 0.7
+                    AudioEngine.shared.musicVolume =
+                        UserDefaults.standard.object(forKey: "audio.musicVolume") as? Double ?? 0.45
+                    AudioEngine.shared.musicEnabled =
+                        UserDefaults.standard.object(forKey: "audio.music") as? Bool ?? true
                     AudioEngine.shared.start()
                 }
                 .task(id: notificationTick) {
