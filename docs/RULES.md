@@ -1,6 +1,6 @@
 # Rules — what has already gone wrong, and must not again
 
-<!-- Extracted from BACKLOG.md 2026-08-13 | 36 rules -->
+<!-- Extracted from BACKLOG.md 2026-08-13 | 39 rules -->
 
 **Every one of these cost a session at least once.** They are the project's
 troubleshooting guide and its lessons learned in one list: when something in the
@@ -344,3 +344,88 @@ fires, do the arithmetic before you rewrite the mechanic.
    while the main actor, which is the only thing that can *end* the overlay,
    was busy rebuilding two constant arrays. Sample the process before believing
    the symptom.
+39. **The work that keeps a thing has to outlive the making of it — and a budget
+   charged per colony cannot answer a cost charged per entity.** `LaborEngine`
+   opened the mason's trade only while `constructions` was non-empty, so the
+   moment a colony finished building, it drained its builders to zero and never
+   staffed them again. `BuildingEngine.repair` went on asking for masons every
+   interval and taking `max(1, 0)`. Fifty years later: thirty-three of
+   fifty-five buildings below `derelictBelow`, six empty dwellings, thirty-four
+   colonists sleeping rough beside them, four thousand materials in store and
+   thirteen adults idle. `needingRepair`, commented "everything that wants a
+   mason", **had no callers at all** — the same fault written down twice, and
+   the cheapest thing that would have caught it. Two halves, and fixing only the
+   first leaves the bug: *who* (a trade whose work is upkeep must be open while
+   anything needs upkeep) and *how many* (wear is charged per building, so the
+   hands undoing it are counted per building — a flat 9 % share is the right
+   answer at exactly one ratio of roofs to townsfolk, and the game grows
+   straight through it). Rule 14 from the other side. Measured, not guessed:
+   break-even is about ten roofs to the mason, so `roofsPerMason` is six.
+   Found by looking at a night with no lights in it, which is worth its own
+   note — **a rendering feature that shows the world honestly is a probe**, and
+   the dark houses were the sim telling the truth.
+40. **A generated draft is not a file until the run that writes it has stopped.**
+   `generate.py draft` rewrites its output after every batch, on purpose: a run
+   that dies keeps everything it had collected. That safeguard has a second
+   face — while the run is alive the file is a moving target, and `merge` read
+   one at 30 entries while the generator carried on to 40. Nothing was
+   corrupted, and that is the trap: the merge was clean, the tests were green,
+   and ten entries simply were not there. Anything that consumes a file some
+   other process is appending to has to prove it has settled first
+   (`still_being_written`: same size *and* same mtime after a pause), because
+   "the data looked fine" is not evidence when the question is whether all of
+   it arrived.
+41. **A vocabulary collected from content can only ever be too small, and it
+   fails silently in the one direction nobody checks.** The generator learns the
+   legal values of a closed field by reading what the shipped content uses —
+   which cannot invent a value the game rejects, and cannot offer a value the
+   game accepts and the content has never reached for. `crafting` is a real
+   `WorkKind`; not one of 76 items used it; so a model asked for a tanning
+   bonus was shown a list without it and wrote `work: "materials"` instead. The
+   check caught the invention, but only after it was written and paid for, and
+   the *legal* word was never on the table. Where the enum is small and settled,
+   name the values that the code knows and the content has not used yet
+   (`SUPPLEMENTS` in `content_kinds.py`) — a model offered the real word writes
+   the real word. Building glyph `temple` was sitting in the same hole:
+   drawable, and unreachable by anything a generator would write.
+42. **`try?` on a whole-file decode turns three bad lines into a dead
+   subsystem, and it will hide the next bug too.** Rule 9b named this trap for
+   `items.json` and it was never fixed, so it fired again: three generated items
+   claimed an `equipSlot` the game does not have (`body`, `tool`, `leg` — only
+   `weapon`, `armor`, `trinket` exist), one `DecodingError` emptied the entire
+   item table, and 218 tests failed without the word "item" anywhere near the
+   cause. Recipes pointed at nothing; an armed garrison fought exactly as well
+   as an unarmed one. **Absent and malformed are different questions**:
+   `bundled(from:)` now returns the fallback only for `missingResource` and
+   rethrows anything else. Within a minute of that landing it caught a second
+   one nobody knew about — `MotionDefinition.Wave` used the synthesised decoder,
+   so `{"amplitude": 1.7, "frequency": 1}` threw `keyNotFound("phase")` and the
+   *entire motion bank had been loading as empty* while the build was green.
+   Every optional-with-defaults field needs `decodeIfPresent`; the synthesised
+   decoder demands all of them.
+43. **"It builds" and "ContentTests pass" do not mean the registry loaded it.**
+   Both were true of a motion bank that was decoding to zero entries.
+   `ContentTests` walks the JSON files directly; the build only proves the Swift
+   compiles. Nothing between them asks the one question that matters — *does
+   `GameDataRegistry.bundled()` come back with the rows in it* — so a new data
+   file needs a test that counts what the registry actually holds, the way
+   `itemTableIsActuallyLoaded` does for items. Claiming a system works on the
+   strength of a green build is claiming more than the evidence carries.
+44. **A hand-kept list of closed vocabularies is the same mistake as a
+   hand-kept schema, and it fails in the direction nobody looks.** `ENUM_KEYS`
+   in the content checker was wrong three times in one day. `equipSlot` was not
+   in it, so `body`/`tool`/`leg` sailed through and emptied the item table.
+   `class` was not in it, so `combat.class: "armor_bonus"` did the same thing an
+   hour later. The fix is to stop listing and start measuring: a key whose
+   content uses **few distinct values, many times over** is closed, whoever
+   remembered to say so. The hand list survives as a floor, because it covers
+   the keys with *many* legal values (`type`, `look`) that measurement cannot
+   see; reference keys are excluded, because `references.py` judges those by
+   whether the thing exists. Measuring found three nobody had listed —
+   `class`, `era_from`, `mode`.
+44b. **Then make sure the check asks the vocabulary it was given.**
+   `strange_values` took `allowed` as an argument and still gated on
+   `ENUM_KEYS`, so the measured half was computed, passed in, and thrown away
+   at the point of use. `class: armor_bonus` passed a check that had the right
+   answer sitting in front of it. Widening a source of truth is only half the
+   job; the other half is grepping for every place the old one is still named.

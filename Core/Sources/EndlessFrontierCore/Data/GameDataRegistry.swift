@@ -31,18 +31,24 @@ public struct GameDataRegistry: Sendable {
     /// What cooks can make. Never read directly — go through `cookableMeals`,
     /// which is what guarantees a colony can always eat something.
     public let meals: [String: MealDefinition]
+    /// How a body moves while it is doing something. Presentation reads this;
+    /// the simulation never does, which is why a missing entry costs nothing
+    /// but a plain stand.
+    public let motions: [String: MotionDefinition]
     public let config: WorldConfig
     public let mapGen: MapGenConfig
 
     /// Every meal a cook may consider, in a stable order.
     ///
     /// Falls back to a single hardcoded pot of gruel when the table is empty.
-    /// `meals.json` is loaded with `try?` like every other optional data file,
-    /// and rule 9b is the standing reminder of what that costs: one malformed
-    /// entry silently empties the whole table. For items that means no loot;
-    /// for meals it would mean **the colony cannot cook and everybody starves
-    /// with a full granary**, which is not a failure worth shipping. A world
-    /// with no meal data eats badly instead of dying.
+    /// A world with no meal data eats badly instead of dying.
+    ///
+    /// This belt stays even though the braces were fixed: `bundled(from:)` no
+    /// longer swallows a malformed `meals.json` (a decode error is thrown now,
+    /// not turned into `[]`), so the empty table this guards against should be
+    /// unreachable. It is kept because of what it guards *against* — a colony
+    /// that cannot cook starves with a full granary, and rule 9b is the note
+    /// saying that outcome must never be one bad line away.
     ///
     /// Sorted once at load rather than on every read. This is the per-tick
     /// path — `CookingEngine.best` re-chooses a meal inside a `while` loop,
@@ -84,6 +90,7 @@ public struct GameDataRegistry: Sendable {
         plagues: [PlagueDefinition] = [],
         cults: [CultDefinition] = [],
         meals: [MealDefinition] = [],
+        motions: [MotionDefinition] = [],
         config: WorldConfig = .default,
         mapGen: MapGenConfig = .default
     ) {
@@ -92,6 +99,7 @@ public struct GameDataRegistry: Sendable {
             ? [MealDefinition.fallback]
             : mealTable.values.sorted { $0.id < $1.id }
         self.meals = mealTable
+        self.motions = Dictionary(uniqueKeysWithValues: motions.map { ($0.id, $0) })
         self.cookableMeals = cookable
         self.foodstuffs = Set(cookable.flatMap(\.ingredients.keys))
         self.dearestMealWork = cookable.map(\.work).max() ?? 1
@@ -118,6 +126,31 @@ public struct GameDataRegistry: Sendable {
     public func law(_ id: String) -> LawDefinition? { laws[id] }
     public func plague(_ id: String) -> PlagueDefinition? { plagues[id] }
     public func cult(_ id: String) -> CultDefinition? { cults[id] }
+    /// Never nil: a body with no clip stands there, rather than failing to draw.
+    public func motion(_ id: String) -> MotionDefinition {
+        motions[id] ?? .standing
+    }
+
+    /// The clip that best fits what somebody is doing and what they do for a
+    /// living — a farmer at work sows, a hunter at work stalks, and both fall
+    /// back to the plain work clip if the bank has nothing more specific.
+    ///
+    /// Most specific wins, and ties are broken by id so the same colonist doing
+    /// the same thing is drawn the same way twice. Dictionary order is not
+    /// stable across runs, and a figure that changes gait every frame because
+    /// two clips both matched is worse than no clip at all.
+    public func motion(activity: String, work: String?) -> MotionDefinition {
+        if let work {
+            let fitted = motions.values
+                .filter { $0.servesWork.contains(work) && $0.servesActivities.contains(activity) }
+                .sorted { $0.id < $1.id }
+            if let best = fitted.first { return best }
+        }
+        let byActivity = motions.values
+            .filter { $0.servesWork.isEmpty && $0.servesActivities.contains(activity) }
+            .sorted { $0.id < $1.id }
+        return byActivity.first ?? motion(activity)
+    }
     public func eraDefinition(_ era: Era) -> EraDefinition? { eras[era] }
 
     /// Techs whose prerequisites are all met and that aren't yet researched.
@@ -152,15 +185,37 @@ public struct GameDataRegistry: Sendable {
                 throw GameDataError.decodingFailed(name, underlying: error)
             }
         }
-        // map-gen, items and recipes are optional: fall back if absent.
-        let mapGen = (try? load(MapGenConfig.self, "map-gen")) ?? .default
-        let items = (try? load([ItemDefinition].self, "items")) ?? []
-        let recipes = (try? load([RecipeDefinition].self, "recipes")) ?? []
-        let quests = (try? load([QuestDefinition].self, "quests")) ?? []
-        let laws = (try? load([LawDefinition].self, "laws")) ?? []
-        let plagues = (try? load([PlagueDefinition].self, "plagues")) ?? []
-        let cults = (try? load([CultDefinition].self, "cults")) ?? []
-        let meals = (try? load([MealDefinition].self, "meals")) ?? []
+        /// Absent is allowed. **Malformed is not.**
+        ///
+        /// These files used to be loaded with a bare `try?`, which collapsed
+        /// two completely different situations into the same empty array: a
+        /// file that is not there (fine — the game runs without recipes), and a
+        /// file that is there and does not parse (catastrophic, and silent).
+        ///
+        /// Three generated items named an `equipSlot` the game does not
+        /// have. One `DecodingError` later, `items` was `[]` — every recipe
+        /// pointed at nothing, every weapon vanished, an armed garrison fought
+        /// exactly as well as an unarmed one, and 218 tests failed without one
+        /// word about items anywhere in the output. The data was three lines
+        /// wrong; the *silence* was the bug.
+        func optional<T: Decodable>(_ type: T.Type, _ name: String,
+                                    else fallback: T) throws -> T {
+            do {
+                return try load(type, name)
+            } catch GameDataError.missingResource {
+                return fallback
+            }
+            // Anything else — a malformed file — is rethrown and stops the world.
+        }
+        let mapGen = try optional(MapGenConfig.self, "map-gen", else: .default)
+        let items = try optional([ItemDefinition].self, "items", else: [])
+        let recipes = try optional([RecipeDefinition].self, "recipes", else: [])
+        let quests = try optional([QuestDefinition].self, "quests", else: [])
+        let laws = try optional([LawDefinition].self, "laws", else: [])
+        let plagues = try optional([PlagueDefinition].self, "plagues", else: [])
+        let cults = try optional([CultDefinition].self, "cults", else: [])
+        let meals = try optional([MealDefinition].self, "meals", else: [])
+        let motions = try optional([MotionDefinition].self, "motions", else: [])
         return GameDataRegistry(
             buildings: try load([BuildingDefinition].self, "buildings"),
             techs: try load([TechDefinition].self, "techs"),
@@ -174,6 +229,7 @@ public struct GameDataRegistry: Sendable {
             plagues: plagues,
             cults: cults,
             meals: meals,
+            motions: motions,
             config: try load(WorldConfig.self, "world-config"),
             mapGen: mapGen
         )

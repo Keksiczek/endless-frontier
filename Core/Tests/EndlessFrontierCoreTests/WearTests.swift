@@ -208,3 +208,148 @@ struct WearTests {
                 < (mild.colony?.placements[0].condition ?? 0))
     }
 }
+
+/// **Who mends the town.**
+///
+/// Found in a fifty-year-old save, by looking at a night with no lights in it:
+/// thirty-three of fifty-five buildings were below `derelictBelow`, six of the
+/// nine dwellings held nobody because a wreck sleeps nobody, and thirty-four
+/// colonists slept rough beside their own empty houses. The stores were full —
+/// three and a half thousand materials — and thirteen adults were **idle**.
+///
+/// The cause was one line in `LaborEngine`: `if work == .building,
+/// !hasConstruction { continue }`. The mason's trade only existed while a
+/// scaffold stood, so the moment the last building was finished the colony
+/// drained it to zero and never staffed it again — while `BuildingEngine.repair`
+/// went on asking for masons every interval and getting `max(1, 0)`. One
+/// notional pair of hands puts back `repairPerBuilder` a interval; fifty-five
+/// buildings take about five times that off. The town could not stop rotting.
+///
+/// `needingRepair` — commented "everything that wants a mason" — had **no
+/// callers at all**, which is the same fault written down twice.
+///
+/// This is rule 14 from the other side: wear is charged per building and repair
+/// was budgeted per colony, so the bigger the town the further behind it fell.
+@Suite("A colony keeps its own roofs up")
+struct RoofUpkeepTests {
+
+    private func registry() throws -> GameDataRegistry { try GameDataRegistry.bundled() }
+
+    private func town(hands: Int) -> Settlement {
+        var s = Settlement(
+            id: UUID(uuidString: "3EA33EA3-0000-0000-0000-0000000000B1")!,
+            name: "Mendham",
+            pawns: (0..<hands).map { i in
+                var p = Pawn(
+                    id: UUID(uuidString: String(format: "3EA33EA3-0000-0000-0000-%012d", 500 + i))!,
+                    name: "Hand \(i)")
+                p.age = 25 * 60
+                return p
+            },
+            storage: [.food: 900, .materials: 4000],
+            storageCapacity: .uniform(9000))
+        s.colony = ColonyMap(width: 34, height: 34)
+        return s
+    }
+
+    /// A town of standing buildings that have been let go, and no scaffold
+    /// anywhere — the state every colony reaches the moment it stops expanding.
+    ///
+    /// Built at a real colony's *size*, because size is the whole fault: wear is
+    /// charged per building and the repair budget was not, so six huts hid the
+    /// bug and fifty-five showed it.
+    private func wornTown(hands: Int, roofs: Int = 40,
+                          condition: Double = 0.4) throws -> Settlement {
+        let r = try registry()
+        var s = town(hands: hands)
+        var placed = 0
+        for row in 0..<8 where placed < roofs {
+            for col in 0..<8 where placed < roofs {
+                s = ColonyBuilder.place(s, definitionID: "hut",
+                                        at: TileCoord(3 + col * 4, 3 + row * 4), registry: r)
+                placed = s.colony?.placements.count ?? 0
+            }
+        }
+        #expect((s.colony?.placements.count ?? 0) >= roofs, "the town did not get built")
+        for i in s.colony!.placements.indices {
+            s.colony!.placements[i].underConstruction = false
+            s.colony!.placements[i].condition = condition
+        }
+        #expect(s.constructions.isEmpty, "nothing is being raised — that is the point")
+        return s
+    }
+
+    @Test("A roof that leaks is work, even when nothing is being built")
+    func repairIsBuildingWork() throws {
+        let r = try registry()
+        let worn = try wornTown(hands: 20)
+        #expect(!BuildingEngine.needingRepair(worn).isEmpty)
+
+        let staffed = LaborEngine.assignIdleAdults(worn, registry: r)
+        let masons = staffed.pawns.count { $0.assignedWork == .building }
+        #expect(masons > 0, "nobody was put on the town's own upkeep")
+    }
+
+    @Test("A town in good repair does not keep masons standing about")
+    func soundTownsNeedNoMasons() throws {
+        let r = try registry()
+        var sound = try wornTown(hands: 20, condition: 1)
+        sound = LaborEngine.assignIdleAdults(sound, registry: r)
+        #expect(sound.pawns.count { $0.assignedWork == .building } == 0,
+                "there is nothing to build and nothing to mend")
+    }
+
+    /// How many hands the upkeep is worth has to follow the **roofs**, not the
+    /// headcount: that is the half of this the open trade alone did not fix.
+    @Test("A bigger town puts more of itself on its own roofs")
+    func upkeepScalesWithTheTown() throws {
+        let small = try wornTown(hands: 40, roofs: 12)
+        let large = try wornTown(hands: 40, roofs: 55)
+        let sSmall = LaborEngine.masonShare(small, adultCount: 40)
+        let sLarge = LaborEngine.masonShare(large, adultCount: 40)
+        #expect(sSmall == LaborEngine.baseBuildingShare,
+                "a dozen roofs is what the plain share was written for")
+        #expect(sLarge > sSmall)
+        #expect(sLarge <= LaborEngine.maxBuildingShare,
+                "never so many that the town is all scaffolds and no dinner")
+    }
+
+    @Test("A town in good repair asks for no more masons than the plain share")
+    func soundTownsAskForNothingExtra() throws {
+        let sound = try wornTown(hands: 40, condition: 1)
+        #expect(LaborEngine.masonShare(sound, adultCount: 40) == LaborEngine.baseBuildingShare)
+    }
+
+    /// The one that matters, and the shape of the save it was found in: forty
+    /// roofs, forty adults, everything let go to 0.4, materials in the store.
+    /// Before the fix this fell to 0.26 over the same stretch and kept going.
+    @Test("Left alone with hands and materials, a town mends faster than it rots")
+    func theTownStopsRotting() throws {
+        let r = try registry()
+        var s = try wornTown(hands: 40)
+        let before = BuildingEngine.upkeepFraction(s)
+        for tick in 1...(25 * r.config.ticksPerYear) {
+            s = LaborEngine.assignIdleAdults(s, registry: r)
+            if tick % BuildingEngine.interval == 0 {
+                s = BuildingEngine.weather(s, registry: r, tick: tick, climate: Climate(shift: 0))
+                s = BuildingEngine.repair(s, registry: r)
+            }
+        }
+        let after = BuildingEngine.upkeepFraction(s)
+        #expect(after > before, "the town went on falling down with masons and materials to hand")
+        #expect(after > 0.6, "and a quarter-century of upkeep should show")
+        #expect(after > BuildingEngine.derelictBelow,
+                "nothing a colony lives in should be left derelict by default")
+    }
+
+    /// …and the colony still has to eat while it mends. A mason share that
+    /// outranked the floors would answer a leaking roof by taking the cook.
+    @Test("Mending the town never takes its last cook")
+    func upkeepNeverStarvesTheColony() throws {
+        let r = try registry()
+        var s = try wornTown(hands: 12, roofs: 55, condition: 0.2)
+        for _ in 1...20 { s = LaborEngine.assignIdleAdults(s, registry: r) }
+        #expect(s.pawns.contains { $0.assignedWork == .cooking })
+        #expect(s.pawns.contains { $0.assignedWork == .farming })
+    }
+}

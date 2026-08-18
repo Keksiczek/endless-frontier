@@ -1,8 +1,13 @@
 [
   {
     "id": "gruel",
-    "name": { "en": "Gruel", "cs": "Kaše" },
-    "ingredients": { "grain": 3 },
+    "name": {
+      "en": "Gruel",
+      "cs": "Kaše"
+    },
+    "ingredients": {
+      "grain": 3
+    },
     "food": 6,
     "work": 1.0,
     "description": {
@@ -12,8 +17,13 @@
   },
   {
     "id": "roast",
-    "name": { "en": "Roast Meat", "cs": "Pečeně" },
-    "ingredients": { "meat": 3 },
+    "name": {
+      "en": "Roast Meat",
+      "cs": "Pečeně"
+    },
+    "ingredients": {
+      "meat": 3
+    },
     "food": 9,
     "work": 1.2,
     "description": {
@@ -23,8 +33,14 @@
   },
   {
     "id": "forage_board",
-    "name": { "en": "Forager's Board", "cs": "Co les dal" },
-    "ingredients": { "greens": 2, "berries": 2 },
+    "name": {
+      "en": "Forager's Board",
+      "cs": "Co les dal"
+    },
+    "ingredients": {
+      "greens": 2,
+      "berries": 2
+    },
     "food": 7,
     "work": 0.8,
     "description": {
@@ -34,8 +50,13 @@
   },
   {
     "id": "greens_pot",
-    "name": { "en": "Pot of Greens", "cs": "Hrnec zeleniny" },
-    "ingredients": { "greens": 4 },
+    "name": {
+      "en": "Pot of Greens",
+      "cs": "Hrnec zeleniny"
+    },
+    "ingredients": {
+      "greens": 4
+    },
     "food": 6,
     "work": 0.9,
     "description": {
@@ -45,8 +66,13 @@
   },
   {
     "id": "root_mash",
-    "name": { "en": "Root Mash", "cs": "Kaše z okopanin" },
-    "ingredients": { "roots": 4 },
+    "name": {
+      "en": "Root Mash",
+      "cs": "Kaše z okopanin"
+    },
+    "ingredients": {
+      "roots": 4
+    },
     "food": 7,
     "work": 1.0,
     "description": {
@@ -56,8 +82,14 @@
   },
   {
     "id": "pottage",
-    "name": { "en": "Pottage", "cs": "Polévka" },
-    "ingredients": { "grain": 2, "roots": 2 },
+    "name": {
+      "en": "Pottage",
+      "cs": "Polévka"
+    },
+    "ingredients": {
+      "grain": 2,
+      "roots": 2
+    },
     "food": 11,
     "work": 1.5,
     "requires_building": "cookhouse",
@@ -68,8 +100,15 @@
   },
   {
     "id": "stew",
-    "name": { "en": "Stew", "cs": "Guláš" },
-    "ingredients": { "grain": 1, "roots": 1, "meat": 2 },
+    "name": {
+      "en": "Stew",
+      "cs": "Guláš"
+    },
+    "ingredients": {
+      "grain": 1,
+      "roots": 1,
+      "meat": 2
+    },
     "food": 17,
     "work": 2.0,
     "requires_building": "cookhouse",
@@ -80,14 +119,754 @@
   },
   {
     "id": "preserved_stores",
-    "name": { "en": "Preserved Stores", "cs": "Zavařenina" },
-    "ingredients": { "roots": 2, "berries": 2, "grain": 1 },
+    "name": {
+      "en": "Preserved Stores",
+      "cs": "Zavařenina"
+    },
+    "ingredients": {
+      "roots": 2,
+      "berries": 2,
+      "grain": 1
+    },
     "food": 13,
     "work": 1.8,
     "requires_building": "cookhouse",
     "description": {
       "en": "Put up in jars against the months when nothing grows.",
       "cs": "Zavařené do sklenic na měsíce, kdy nic neroste."
+    }
+  },
+  {
+    "id": "hunters_fry",
+    "name": {
+      "en": "Hunter's Fry",
+      "cs": "Lovecká směs"
+    },
+    "ingredients": {
+      "greens": 2,
+      "meat": 2
+    },
+    "food": 13,
+    "work": 1.5,
+    "description": {
+      "en": "Quick fried greens and game. A hunter's simple reward after a long day.",
+      "cs": "Rychle osmažená zelenina se zvěřinou. Prostá odměna lovce po dlouhém dnu."
+    }
+  },
+  {
+    "id": "meat_grain_loaf",
+    "name": {
+      "en": "Meat and Grain Loaf",
+      "cs": "Maso-obilný bochník"
+    },
+    "ingredients": {
+      "grain": 2,
+      "meat": 2
+    },
+    "food": 15,
+    "work": 1.8,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Minced meat and ground grain, baked into a hearty loaf. Good for hungry mouths.",
+      "cs": "Mleté maso a mleté obilí, zapečené do vydatného bochníku. Dobré pro hladové krky."
+    }
+  },
+  {
+    "id": "mushroom_stew",
+    "name": {
+      "en": "Mushroom Stew",
+      "cs": "Houbová polévka"
+    },
+    "ingredients": {
+      "greens": 3,
+      "roots": 2
+    },
+    "food": 10,
+    "work": 1.3,
+    "description": {
+      "en": "Foraged mushrooms and wild roots, simmered. A taste of the forest.",
+      "cs": "Nasbírané houby a divoké kořínky, pomalu vařené. Chuť lesa."
+    }
+  },
+  {
+    "id": "berry_conserve",
+    "name": {
+      "en": "Berry Conserve",
+      "cs": "Zavařenina z lesních plodů"
+    },
+    "ingredients": {
+      "greens": 5,
+      "grain": 1
+    },
+    "food": 12,
+    "work": 1.8,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Wild berries, cooked down and sweetened. A welcome treat, especially in winter.",
+      "cs": "Divoké bobule, povařené a oslazené. Vítaná pochoutka, zvláště v zimě."
+    }
+  },
+  {
+    "id": "smoked_venison",
+    "name": {
+      "en": "Smoked Venison",
+      "cs": "Uzená zvěřina"
+    },
+    "ingredients": {
+      "meat": 4
+    },
+    "food": 14,
+    "work": 2.0,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Strips of game meat, slowly smoked to preserve and enhance flavor. A sturdy travel meal.",
+      "cs": "Proužky zvěřiny, pomalu uzené pro konzervaci a lepší chuť. Výživné jídlo na cesty."
+    }
+  },
+  {
+    "id": "river_fish_fry",
+    "name": {
+      "en": "River Fish Fry",
+      "cs": "Smažené říční ryby"
+    },
+    "ingredients": {
+      "meat": 2,
+      "greens": 1
+    },
+    "food": 10,
+    "work": 1.3,
+    "description": {
+      "en": "Freshly caught river fish, quickly fried with wild herbs. Simple, but satisfying.",
+      "cs": "Čerstvě ulovené říční ryby, rychle osmažené s divokými bylinkami. Prosté, ale syté."
+    }
+  },
+  {
+    "id": "hard_biscuits",
+    "name": {
+      "en": "Hard Biscuits",
+      "cs": "Suchary"
+    },
+    "ingredients": {
+      "grain": 4
+    },
+    "food": 8,
+    "work": 1.1,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Baked grain and water, made to last. Not pleasant, but keeps hunger at bay on long journeys.",
+      "cs": "Pečené obilí s vodou, určené k dlouhému skladování. Není to labužnické, ale zažene hlad na dlouhých cestách."
+    }
+  },
+  {
+    "id": "root_and_meat_pie",
+    "name": {
+      "en": "Root and Meat Pie",
+      "cs": "Koláč s kořínky a masem"
+    },
+    "ingredients": {
+      "grain": 3,
+      "roots": 2,
+      "meat": 2
+    },
+    "food": 20,
+    "work": 2.5,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "A rich pie, combining ground meat and tender roots in a flaky crust. A true feast.",
+      "cs": "Bohatý koláč, spojující mleté maso a měkké kořínky v křehkém těstě. Opravdová hostina."
+    }
+  },
+  {
+    "id": "wild_greens_salad",
+    "name": {
+      "en": "Wild Greens Salad",
+      "cs": "Salát z divokých bylin"
+    },
+    "ingredients": {
+      "greens": 3
+    },
+    "food": 5,
+    "work": 0.7,
+    "description": {
+      "en": "A quick mix of fresh foraged greens and edible leaves. Light and refreshing.",
+      "cs": "Rychlá směs čerstvě nasbíraných divokých bylin a jedlých listů. Lehké a osvěžující."
+    }
+  },
+  {
+    "id": "traveler_jerky",
+    "name": {
+      "en": "Traveler's Jerky",
+      "cs": "Cestovatelské sušené maso"
+    },
+    "ingredients": {
+      "meat": 5
+    },
+    "food": 15,
+    "work": 1.8,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Thin strips of meat, seasoned and air-dried. Perfect for expeditions and long patrols.",
+      "cs": "Tenké plátky masa, okořeněné a sušené na vzduchu. Ideální pro expedice a dlouhé hlídky."
+    }
+  },
+  {
+    "id": "herbal_infusion",
+    "name": {
+      "en": "Herbal Infusion",
+      "cs": "Bylinný nálev"
+    },
+    "ingredients": {
+      "greens": 2
+    },
+    "food": 3,
+    "work": 0.5,
+    "description": {
+      "en": "Warm water steeped with fragrant wild herbs. Little sustenance, but comforting.",
+      "cs": "Teplá voda s vonnými divokými bylinami. Málo sytící, ale uklidňující."
+    }
+  },
+  {
+    "id": "stuffed_poultry",
+    "name": {
+      "en": "Stuffed Poultry",
+      "cs": "Plněná drůbež"
+    },
+    "ingredients": {
+      "meat": 3,
+      "grain": 2,
+      "greens": 1
+    },
+    "food": 22,
+    "work": 3.0,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "A whole fowl, expertly stuffed with seasoned grains and herbs, then roasted. For special occasions.",
+      "cs": "Celá drůbež, mistrně plněná kořeněným obilím a bylinkami, poté pečená. Pro zvláštní příležitosti."
+    }
+  },
+  {
+    "id": "mushroom_fry",
+    "name": {
+      "en": "Mushroom Fry",
+      "cs": "Houbová smaženice"
+    },
+    "ingredients": {
+      "greens": 3
+    },
+    "food": 8,
+    "work": 1.0,
+    "description": {
+      "en": "Wild mushrooms, quickly fried. A surprisingly good meal from the forest's bounty.",
+      "cs": "Lesní houby, rychle osmažené. Překvapivě dobré jídlo z darů lesa."
+    }
+  },
+  {
+    "id": "root_porridge",
+    "name": {
+      "en": "Root Porridge",
+      "cs": "Kořenová kaše"
+    },
+    "ingredients": {
+      "roots": 3
+    },
+    "food": 7,
+    "work": 1.0,
+    "description": {
+      "en": "Boiled roots, mashed and served warm. Filling, if a bit bland.",
+      "cs": "Vařené kořeny, rozmačkané a podávané teplé. Syté, i když trochu mdlé."
+    }
+  },
+  {
+    "id": "meat_greens_skewers",
+    "name": {
+      "en": "Meat & Greens Skewers",
+      "cs": "Špízy s masem a zeleninou"
+    },
+    "ingredients": {
+      "meat": 2,
+      "greens": 1
+    },
+    "food": 11,
+    "work": 1.4,
+    "description": {
+      "en": "Small cuts of game and garden greens, roasted over an open fire.",
+      "cs": "Kousky zvěřiny a zahradní zeleniny, opečené na otevřeném ohni."
+    }
+  },
+  {
+    "id": "grain_patties",
+    "name": {
+      "en": "Grain Patties",
+      "cs": "Obilné placky"
+    },
+    "ingredients": {
+      "grain": 4
+    },
+    "food": 10,
+    "work": 1.3,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Ground grain mixed with water and herbs, fried until golden. A sturdy meal for the field.",
+      "cs": "Mleté obilí smíchané s vodou a bylinkami, osmažené dozlatova. Pořádné jídlo do pole."
+    }
+  },
+  {
+    "id": "root_grain_bake",
+    "name": {
+      "en": "Root & Grain Bake",
+      "cs": "Zapékané kořeny s obilím"
+    },
+    "ingredients": {
+      "roots": 2,
+      "grain": 2
+    },
+    "food": 12,
+    "work": 1.6,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Hearty roots and grain baked together until tender. A comforting dish on a cold day.",
+      "cs": "Syté kořeny a obilí zapečené dohromady doměkka. Utěšující jídlo za chladného dne."
+    }
+  },
+  {
+    "id": "spicy_meat_broth",
+    "name": {
+      "en": "Spicy Meat Broth",
+      "cs": "Kořeněný masový vývar"
+    },
+    "ingredients": {
+      "meat": 1,
+      "greens": 1
+    },
+    "food": 9,
+    "work": 1.3,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "A warming broth made with game and wild herbs. Good for body and soul.",
+      "cs": "Zahřívací vývar ze zvěřiny a divokých bylin. Dobrý pro tělo i duši."
+    }
+  },
+  {
+    "id": "dried_greens_cakes",
+    "name": {
+      "en": "Dried Greens Cakes",
+      "cs": "Koláčky ze sušených bylin"
+    },
+    "ingredients": {
+      "greens": 3,
+      "grain": 1
+    },
+    "food": 9,
+    "work": 1.2,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Pressed and dried greens, bound with a little grain. Lasts long on a journey.",
+      "cs": "Lisované a sušené byliny, spojené trochou obilí. Vydrží dlouho na cestách."
+    }
+  },
+  {
+    "id": "hearty_stewed_roots",
+    "name": {
+      "en": "Hearty Stewed Roots",
+      "cs": "Syté dušené kořeny"
+    },
+    "ingredients": {
+      "roots": 4
+    },
+    "food": 10,
+    "work": 1.4,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Roots simmered for hours, becoming soft and full of flavor. A winter favorite.",
+      "cs": "Kořeny dušené celé hodiny, dokud nezměknou a nezískají plnou chuť. Oblíbené v zimě."
+    }
+  },
+  {
+    "id": "grain_meat_hash",
+    "name": {
+      "en": "Grain & Meat Hash",
+      "cs": "Sekaná s obilím"
+    },
+    "ingredients": {
+      "grain": 1,
+      "meat": 1
+    },
+    "food": 10,
+    "work": 1.5,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Leftover grain mixed with minced game. Not fancy, but gets the job done.",
+      "cs": "Zbytky obilí smíchané s mletou zvěřinou. Nic nóbl, ale zasytí."
+    }
+  },
+  {
+    "id": "rich_game_bake",
+    "name": {
+      "en": "Rich Game Bake",
+      "cs": "Bohatý zvěřinový nákyp"
+    },
+    "ingredients": {
+      "meat": 3,
+      "roots": 2,
+      "grain": 1
+    },
+    "food": 20,
+    "work": 2.5,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "A celebration dish, with tender game, sweet roots, and a rich grain binder. A true feast.",
+      "cs": "Slavnostní jídlo s křehkou zvěřinou, sladkými kořeny a bohatou obilnou zálivkou. Pravá hostina."
+    }
+  },
+  {
+    "id": "grilled_fish",
+    "name": {
+      "en": "Grilled Fish",
+      "cs": "Grilovaná ryba"
+    },
+    "ingredients": {
+      "fish": 3
+    },
+    "food": 10,
+    "work": 1.3,
+    "description": {
+      "en": "Fresh river fish, grilled over an open flame. Simple, but satisfying.",
+      "cs": "Čerstvá říční ryba, grilovaná na otevřeném ohni. Jednoduché, ale syté."
+    }
+  },
+  {
+    "id": "root_greens_medley",
+    "name": {
+      "en": "Root and Greens Medley",
+      "cs": "Směs kořenů a zeleniny"
+    },
+    "ingredients": {
+      "roots": 2,
+      "greens": 3
+    },
+    "food": 9,
+    "work": 1.1,
+    "description": {
+      "en": "A colorful mix of boiled roots and foraged greens. Healthy and filling.",
+      "cs": "Pestrá směs vařených kořenů a nasbírané zeleniny. Zdravé a syté."
+    }
+  },
+  {
+    "id": "meat_greens_hash",
+    "name": {
+      "en": "Meat and Greens Hash",
+      "cs": "Haše z masa a zeleniny"
+    },
+    "ingredients": {
+      "meat": 2,
+      "greens": 2
+    },
+    "food": 14,
+    "work": 1.6,
+    "description": {
+      "en": "Chopped game meat and garden greens, fried until tender. A hearty meal for any time.",
+      "cs": "Nasekané maso a zahradní zelenina, smažené doměkka. Syté jídlo pro jakoukoli denní dobu."
+    }
+  },
+  {
+    "id": "berry_jam_tarts",
+    "name": {
+      "en": "Berry Jam Tarts",
+      "cs": "Koláčky s lesní marmeládou"
+    },
+    "ingredients": {
+      "berries": 2,
+      "grain": 1
+    },
+    "food": 8,
+    "work": 1.5,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Sweet wild berries baked into small pastry tarts. A rare delight.",
+      "cs": "Sladké lesní plody zapečené v malých koláčcích. Vzácná pochoutka."
+    }
+  },
+  {
+    "id": "mushroom_grain_pilaf",
+    "name": {
+      "en": "Mushroom and Grain Pilaf",
+      "cs": "Houbové krupoto"
+    },
+    "ingredients": {
+      "mushrooms": 2,
+      "grain": 3
+    },
+    "food": 12,
+    "work": 1.7,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Wild mushrooms and grains cooked together until fluffy. A forest staple.",
+      "cs": "Lesní houby a obilí vařené dohromady do nadýchané podoby. Základní lesní pokrm."
+    }
+  },
+  {
+    "id": "smoked_fish_rations",
+    "name": {
+      "en": "Smoked Fish Rations",
+      "cs": "Uzené rybí dávky"
+    },
+    "ingredients": {
+      "fish": 2
+    },
+    "food": 7,
+    "work": 1.4,
+    "description": {
+      "en": "River fish slowly smoked to preserve it. Good for journeys or lean times.",
+      "cs": "Říční ryby pomalu uzené k zakonzervování. Dobré na cesty nebo pro horší časy."
+    }
+  },
+  {
+    "id": "hearty_root_bake",
+    "name": {
+      "en": "Hearty Root Bake",
+      "cs": "Vydatný kořenový nákyp"
+    },
+    "ingredients": {
+      "roots": 4,
+      "meat": 1
+    },
+    "food": 15,
+    "work": 1.9,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Root vegetables and a touch of meat, slow-baked until caramelized. A winter warmer.",
+      "cs": "Kořenová zelenina s trochou masa, pomalu pečená do zkaramelizování. Zahřeje v zimě."
+    }
+  },
+  {
+    "id": "greens_grain_stirfry",
+    "name": {
+      "en": "Greens and Grain Stir-fry",
+      "cs": "Osmažená zelenina s obilím"
+    },
+    "ingredients": {
+      "greens": 2,
+      "grain": 2
+    },
+    "food": 10,
+    "work": 1.3,
+    "description": {
+      "en": "Quickly cooked fresh greens and grains. A light but energizing meal.",
+      "cs": "Rychle osmažená čerstvá zelenina s obilím. Lehké, ale povzbuzující jídlo."
+    }
+  },
+  {
+    "id": "meat_berry_sausage",
+    "name": {
+      "en": "Meat and Berry Sausage",
+      "cs": "Klobása s bobulemi"
+    },
+    "ingredients": {
+      "meat": 3,
+      "berries": 1
+    },
+    "food": 18,
+    "work": 2.2,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "Ground game meat mixed with foraged berries and spices, then cooked. A hunter's delicacy.",
+      "cs": "Mletá zvěřina smíchaná s lesními plody a kořením, poté uvařená. Lovecká lahůdka."
+    }
+  },
+  {
+    "id": "farmers_lunch",
+    "name": {
+      "en": "Farmer's Lunch",
+      "cs": "Rolnický oběd"
+    },
+    "ingredients": {
+      "grain": 2,
+      "roots": 1,
+      "greens": 1
+    },
+    "food": 12,
+    "work": 1.6,
+    "description": {
+      "en": "A simple, filling meal of grain, roots, and greens, perfect for a long day in the fields.",
+      "cs": "Jednoduché, syté jídlo z obilí, kořenů a zeleniny, ideální pro dlouhý den na polích."
+    }
+  },
+  {
+    "id": "baked_fish",
+    "name": {
+      "en": "Baked Fish",
+      "cs": "Pečená ryba"
+    },
+    "ingredients": {
+      "meat": 2,
+      "greens": 1
+    },
+    "food": 10,
+    "work": 1.3,
+    "description": {
+      "en": "Fresh catch wrapped in wild leaves and baked in the coals. Simple, but satisfying.",
+      "cs": "Čerstvý úlovek zabalený do divokých listů a upečený v žhavém uhlí. Jednoduché, ale syté."
+    }
+  },
+  {
+    "id": "root_mushroom_stew",
+    "name": {
+      "en": "Root and Mushroom Stew",
+      "cs": "Dušené kořeny s houbami"
+    },
+    "ingredients": {
+      "roots": 3,
+      "greens": 2,
+      "grain": 1
+    },
+    "food": 15,
+    "work": 1.8,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "A thick, earthy stew, slow-cooked to draw out the flavors of the forest floor.",
+      "cs": "Hustá, zemitá dušenina, pomalu vařená, aby se uvolnily chutě lesní půdy."
+    }
+  },
+  {
+    "id": "hunters_grain_wraps",
+    "name": {
+      "en": "Hunter's Grain Wraps",
+      "cs": "Lovecké obilné placky"
+    },
+    "ingredients": {
+      "meat": 1,
+      "grain": 2
+    },
+    "food": 8,
+    "work": 1.1,
+    "description": {
+      "en": "Ground meat mixed with grains, cooked on a hot stone. Easy to carry.",
+      "cs": "Mleté maso smíchané s obilím, upečené na horkém kameni. Snadné na přenášení."
+    }
+  },
+  {
+    "id": "greens_root_fritters",
+    "name": {
+      "en": "Greens and Root Fritters",
+      "cs": "Zeleninové placky s kořeny"
+    },
+    "ingredients": {
+      "greens": 2,
+      "roots": 2,
+      "grain": 1
+    },
+    "food": 9,
+    "work": 1.2,
+    "description": {
+      "en": "A frugal meal, but filling. Wild greens and roots, bound with a little grain.",
+      "cs": "Skromné, ale syté jídlo. Divoká zelenina a kořeny spojené trochou obilí."
+    }
+  },
+  {
+    "id": "smoked_meat_porridge",
+    "name": {
+      "en": "Smoked Meat Porridge",
+      "cs": "Kaše s uzeným masem"
+    },
+    "ingredients": {
+      "meat": 2,
+      "grain": 3
+    },
+    "food": 14,
+    "work": 1.6,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "A hearty, smoky porridge, a warming meal on cold days.",
+      "cs": "Vydatná, kouřová kaše, hřejivé jídlo v chladných dnech."
+    }
+  },
+  {
+    "id": "field_rations",
+    "name": {
+      "en": "Field Rations",
+      "cs": "Polní dávka"
+    },
+    "ingredients": {
+      "grain": 3,
+      "meat": 1
+    },
+    "food": 10,
+    "work": 1.0,
+    "description": {
+      "en": "A compact, dry meal for those on the move. Doesn't spoil easily.",
+      "cs": "Kompaktní, suché jídlo pro ty, kdo jsou na cestách. Nekazí se snadno."
+    }
+  },
+  {
+    "id": "mushroom_meat_skewers",
+    "name": {
+      "en": "Mushroom and Meat Skewers",
+      "cs": "Houbové špízy s masem"
+    },
+    "ingredients": {
+      "greens": 2,
+      "meat": 2
+    },
+    "food": 12,
+    "work": 1.4,
+    "description": {
+      "en": "Wild mushrooms and lean meat, roasted over an open flame. A hunter's treat.",
+      "cs": "Divoké houby a libové maso, pečené na otevřeném ohni. Lovecká pochoutka."
+    }
+  },
+  {
+    "id": "sweet_root_pudding",
+    "name": {
+      "en": "Sweet Root Pudding",
+      "cs": "Sladký kořenový nákyp"
+    },
+    "ingredients": {
+      "roots": 3,
+      "grain": 2
+    },
+    "food": 12,
+    "work": 1.5,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "A rare treat, sweetened roots baked with grain. A comfort from home.",
+      "cs": "Vzácná pochoutka, oslazené kořeny pečené s obilím. Kousek domova."
+    }
+  },
+  {
+    "id": "river_stew",
+    "name": {
+      "en": "River Stew",
+      "cs": "Říční guláš"
+    },
+    "ingredients": {
+      "meat": 2,
+      "roots": 2,
+      "greens": 1
+    },
+    "food": 16,
+    "work": 1.9,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "A comforting stew made with the bounty of the river and riverside plants.",
+      "cs": "Uklidňující guláš připravený z darů řeky a říčních rostlin."
+    }
+  },
+  {
+    "id": "greens_grain_bread",
+    "name": {
+      "en": "Greens and Grain Bread",
+      "cs": "Zeleninový chléb s obilím"
+    },
+    "ingredients": {
+      "grain": 3,
+      "greens": 2
+    },
+    "food": 10,
+    "work": 1.3,
+    "requires_building": "cookhouse",
+    "description": {
+      "en": "A humble loaf, baked with foraged greens mixed into the dough. A dependable staple.",
+      "cs": "Skromný bochník, pečený s nasbíranou zeleninou vmíchanou do těsta. Spolehlivá základní potravina."
     }
   }
 ]

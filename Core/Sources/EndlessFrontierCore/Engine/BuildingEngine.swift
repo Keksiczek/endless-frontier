@@ -113,6 +113,31 @@ public enum BuildingEngine {
         } ?? []
     }
 
+    /// Whether anything in the colony is asking to be mended.
+    ///
+    /// The cheap form of `needingRepair`: staffing asks this on every interval
+    /// of an offline catch-up and has no use for the array (rule 4).
+    ///
+    /// This is what makes the mason's trade outlive the raising of the last
+    /// building. It used to be nothing — `needingRepair` had no callers at all,
+    /// and `LaborEngine` opened the trade only while a scaffold stood — so a
+    /// colony that finished building drained its masons to zero and then watched
+    /// every roof it owned go to pieces with full stores and idle hands.
+    public static func needsRepair(_ settlement: Settlement) -> Bool {
+        settlement.colony?.placements.contains {
+            !$0.underConstruction && $0.condition < repairBelow
+        } ?? false
+    }
+
+    /// How many buildings are asking for a mason. What decides how much of the
+    /// town's labour its own upkeep is worth — see `LaborEngine.masonShare`.
+    /// Counts rather than collecting, for the same reason as `needsRepair`.
+    public static func countNeedingRepair(_ settlement: Settlement) -> Int {
+        settlement.colony?.placements.count {
+            !$0.underConstruction && $0.condition < repairBelow
+        } ?? 0
+    }
+
     // MARK: - Wear
 
     /// Weathers every standing building a little. On the interval, so offline

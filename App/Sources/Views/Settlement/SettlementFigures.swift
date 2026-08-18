@@ -22,6 +22,10 @@ enum SettlementFigures {
         pawn: Pawn, pose: AgentMotion.Pose, at anchor: CGPoint,
         time: Double, ticksPerYear: Int, selected: Bool, zoom: CGFloat = 1,
         armed: Armament = .none,
+        // How this body moves, out of `motions.json`. Defaulted so a caller
+        // without the registry still draws a person; `.standing` is a body at
+        // rest rather than a body that failed.
+        motion: MotionDefinition = .standing,
         context: inout GraphicsContext
     ) {
         var p = anchor
@@ -44,12 +48,15 @@ enum SettlementFigures {
 
         let tunic = Theme.roleShade(pawn.assignedWork)
         var alpha = max(0.45, pawn.health / 100)
-        if pose.activity == .sleeping { alpha *= 0.6 }
-        if pose.activity == .resting { alpha *= 0.8 }
+        alpha *= motion.opacity
 
-        // Walk cycle: legs swing only in proportion to how much they move.
+        // Walk cycle: legs swing only in proportion to how much they move, and
+        // how far they swing at full stride is the motion's to say. A hauler's
+        // step is shorter than a walker's because their arms are full, and that
+        // is now a number in `motions.json` rather than a branch in here.
         let gait = AgentMotion.gaitPhase(for: pawn, time: time)
-        let swing = CGFloat(sin(gait) * pose.stride) * 1.7 * scale
+        let swing = CGFloat(sin(gait * motion.legs.frequency + motion.legs.phase)
+                            * pose.stride) * CGFloat(motion.legs.amplitude) * scale
 
         // Which way they are going. Everything that hangs off one side of the
         // body — the tool arm, the blade at the hip, an elder's stick — is
@@ -58,16 +65,19 @@ enum SettlementFigures {
         // A walker leans into the walk and rises on each step. Two strokes'
         // worth of work, and the difference between someone walking and
         // someone being slid across the ground.
+        // Still gated on actually being under way: a body leans *into* a
+        // movement, and a figure standing at a bench that tips over because its
+        // clip says `lean` reads as a person falling.
         let travelling = pose.stride > 0.5
-        let lean = travelling ? CGFloat(pose.facing) * scale * 0.55 : 0
+        let lean = travelling ? CGFloat(pose.facing) * scale * CGFloat(motion.lean) : 0
         if travelling {
-            p.y -= CGFloat(abs(sin(gait))) * scale * 0.42
+            p.y -= CGFloat(abs(sin(gait))) * scale * CGFloat(motion.bob)
         }
 
         // The sick and the broken slouch — and so, a little, does age. A colony
         // whose real problem is everybody growing old together should look it
         // without opening a panel (§11.17, §11.20).
-        let slouch: CGFloat = ((pose.activity == .resting || pawn.isBroken) ? 1.1 : 0)
+        let slouch: CGFloat = CGFloat(motion.slouch) + (pawn.isBroken ? 1.1 : 0)
             + CGFloat(look.stoop) * 0.9 * scale
         let headY = p.y - 4.9 * scale + slouch
         let shoulderY = p.y - 2.4 * scale + slouch * 0.6
@@ -99,13 +109,16 @@ enum SettlementFigures {
         // against the legs. Stiff arms on a moving body is the tell that a
         // figure is a picture rather than a person.
         let working = pose.activity == .working
-        let toolSwing = working ? sin(time * 5 + Double(AgentMotion.hash(pawn.id) % 7)) * 0.35 : 0
-        let armSwing = travelling ? -swing * 0.55 : 0
+        // The tool hand runs on its own clock, offset per colonist so a row of
+        // people at the same bench are not one person drawn five times.
+        let toolSwing = motion.toolArm.offset(
+            at: time + Double(AgentMotion.hash(pawn.id) % 7))
+        let armSwing = travelling ? -swing * CGFloat(motion.freeArmCounterSwing) : 0
         var arms = Path()
         arms.move(to: CGPoint(x: p.x - 1.3 * scale + lean * 0.6, y: shoulderY + 0.3))
         arms.addLine(to: CGPoint(x: p.x - 2.0 * scale - armSwing, y: p.y + 0.8 * scale))
-        let handX = p.x + (2.1 + CGFloat(toolSwing)) * scale * mirror + armSwing
-        let handY = p.y + (working ? -0.6 : 0.8) * scale
+        let handX = p.x + (CGFloat(motion.reach) + CGFloat(toolSwing)) * scale * mirror + armSwing
+        let handY = p.y + CGFloat(motion.handHeight) * scale
         arms.move(to: CGPoint(x: p.x + 1.3 * scale + lean * 0.6, y: shoulderY + 0.3))
         arms.addLine(to: CGPoint(x: handX, y: handY))
         context.stroke(arms, with: .color(tunic.opacity(alpha)),

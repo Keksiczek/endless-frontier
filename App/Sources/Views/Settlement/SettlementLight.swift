@@ -280,4 +280,73 @@ enum SettlementLight {
                 startPoint: CGPoint(x: mid.x + toSun.x * reach, y: mid.y + toSun.y * reach),
                 endPoint: CGPoint(x: mid.x - toSun.x * reach, y: mid.y - toSun.y * reach)))
     }
+
+    // MARK: - Lamplight
+
+    /// **What burns after dark.**
+    ///
+    /// The moon decided how dark a night goes; this decides whether there is
+    /// anything to look at once it does. Both halves of *"noc je dost tmavá a
+    /// jednotvárná"* are separate faults, and this is the second one.
+    ///
+    /// The windows were lit the whole time — `SettlementStructures.building`
+    /// paints a lamp behind two panes in three at `night` — and not one of them
+    /// reached the screen, because `nightWash` runs afterwards and its first act
+    /// is a **saturation blend over the entire canvas**. That is the right thing
+    /// to do to a valley (the eye reads a saturated field as daylight however
+    /// dim it is) and exactly the wrong thing to do to a lamp: at night the
+    /// light sources are the *only* saturated things left. Everything warm was
+    /// being ground to the same grey as the mud it stood on, so a town of
+    /// seventy asleep looked like a town of nobody.
+    ///
+    /// So the lamps are drawn again, over the wash, in `.plusLighter` — light
+    /// added to a dark valley rather than paint laid on top of it, which keeps
+    /// the line art underneath readable. And the moon has a say here too: a full
+    /// moon lifts the whole valley, so a window has less to say against it.
+    struct Lamp {
+        var at: CGPoint
+        /// How far the pool of light reaches, in pixels.
+        var radius: CGFloat
+        /// How hard it burns, 0…1.
+        var strength: Double
+        var colour: Color
+        /// Where in its own breath it stands, so a street does not pulse in
+        /// unison — a town twinkles, it does not throb.
+        var phase: Double
+    }
+
+    /// Amber, and about as warm as tallow gets.
+    static let hearth = Color(red: 1.0, green: 0.74, blue: 0.36)
+    /// A banked forge is redder and lower than a hearth.
+    static let ember = Color(red: 1.0, green: 0.50, blue: 0.22)
+
+    static func lamps(
+        _ context: inout GraphicsContext, _ lamps: [Lamp],
+        night: Double, moonlight: Double, time: Double
+    ) {
+        guard night > 0.02, !lamps.isEmpty else { return }
+        let moon = min(1, max(0, moonlight))
+        let bite = night * (1 - moon * 0.35)
+        var glow = context
+        glow.blendMode = .plusLighter
+        for lamp in lamps {
+            let breath = 0.90 + 0.10 * sin(time * 1.7 + lamp.phase)
+            let strength = lamp.strength * bite * breath
+            guard strength > 0.004 else { continue }
+            let r = lamp.radius
+            glow.fill(
+                Path(ellipseIn: CGRect(x: lamp.at.x - r, y: lamp.at.y - r,
+                                       width: r * 2, height: r * 2)),
+                with: .radialGradient(
+                    Gradient(colors: [lamp.colour.opacity(strength * 0.45), .clear]),
+                    center: lamp.at, startRadius: 0, endRadius: r))
+            // And the source itself: small, and the brightest thing on the
+            // screen, because that is what a lit window is at two in the morning.
+            let core = max(1.2, r * 0.16)
+            glow.fill(
+                Path(ellipseIn: CGRect(x: lamp.at.x - core, y: lamp.at.y - core,
+                                       width: core * 2, height: core * 2)),
+                with: .color(lamp.colour.opacity(min(0.85, strength * 1.5))))
+        }
+    }
 }

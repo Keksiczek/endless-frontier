@@ -1459,5 +1459,4503 @@
       "en": "Picked off the bushes at the wood's edge by whoever had a basket.",
       "cs": "Natrhané z keřů na kraji lesa každým, kdo měl košík."
     }
+  },
+  {
+    "id": "crude_harness",
+    "name": {
+      "en": "Crude Harness",
+      "cs": "Hrubý postroj"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Makes a draft animal useful for plowing or hauling. Simple, but effective.",
+      "cs": "Umožní zápřah zvířete pro orbu nebo tahání. Jednoduché, ale účinné."
+    }
+  },
+  {
+    "id": "leather_packsaddle",
+    "name": {
+      "en": "Leather Pack Saddle",
+      "cs": "Kožené nákladní sedlo"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "trade",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Allows a pack animal to carry more goods for trading or expeditions.",
+      "cs": "Pomůže zvířeti nést více zboží na obchod nebo výpravy."
+    }
+  },
+  {
+    "id": "waxed_rain_cloak",
+    "name": {
+      "en": "Waxed Rain Cloak",
+      "cs": "Voskovaná pláštěnka"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "Thick wool and wax keep the worst of the valley downpours at bay. A dry colonist is a happy colonist.",
+      "cs": "Silná vlna a vosk odrazí ty nejhorší lijáky. Suchý osadník je šťastný osadník."
+    }
+  },
+  {
+    "id": "barbed_fishing_spear",
+    "name": {
+      "en": "Barbed Fishing Spear",
+      "cs": "Zoubkovaný rybářský oštěp"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A simple spear with a barbed tip, perfect for catching fish in the shallow river bends.",
+      "cs": "Jednoduchý oštěp s ostnatým hrotem, ideální pro chytání ryb v mělkých ohybech řeky."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 3
+    }
+  },
+  {
+    "id": "smoked_fish",
+    "name": {
+      "en": "Smoked Fish",
+      "cs": "Uzená ryba"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Fish preserved through smoking. A valuable trade good or emergency ration.",
+      "cs": "Ryby konzervované uzením. Cenné obchodní zboží nebo nouzová zásoba."
+    }
+  },
+  {
+    "id": "smooth_lucky_stone",
+    "name": {
+      "en": "Smooth Lucky Stone",
+      "cs": "Hladký kámen pro štěstí"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A perfectly smooth river stone, said to bring good fortune to its owner.",
+      "cs": "Dokonale hladký říční kámen, prý přináší štěstí svému majiteli."
+    }
+  },
+  {
+    "id": "braided_sling",
+    "name": {
+      "en": "Braided Sling",
+      "cs": "Pletený prak"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "Crude but effective, good for scaring off pests or hunting small game from a distance.",
+      "cs": "Hrubý, ale účinný, dobrý na plašení škůdců nebo lov drobné zvěře z dálky."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 4
+    }
+  },
+  {
+    "id": "leather_waterskin",
+    "name": {
+      "en": "Leather Waterskin",
+      "cs": "Kožený měch na vodu"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "health_regen",
+        "amount": 0.5
+      }
+    ],
+    "description": {
+      "en": "An essential item for any journey beyond the settlement's spring. Keeps you hydrated and healthy.",
+      "cs": "Nezbytná věc na každou cestu za pramen osady. Udrží vás hydratované a zdravé."
+    }
+  },
+  {
+    "id": "simple_harness",
+    "name": {
+      "en": "Simple Harness",
+      "cs": "Jednoduchý postroj"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Roughly cut leather straps to put an animal to work in the fields.",
+      "cs": "Hrubě řezané kožené řemeny, aby se zvíře dalo do práce na polích."
+    }
+  },
+  {
+    "id": "hide_cape",
+    "name": {
+      "en": "Hide Cape",
+      "cs": "Kožený plášť"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      },
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A heavy cape of cured animal hide, offering basic protection from the elements.",
+      "cs": "Těžký plášť z vyčiněné kůže, poskytující základní ochranu před živly."
+    }
+  },
+  {
+    "id": "stone_adze",
+    "name": {
+      "en": "Stone Adze",
+      "cs": "Kamenná motyka"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "mining",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A sharpened stone head lashed to a stout branch, crude but effective for breaking soft rock.",
+      "cs": "Ostře broušená kamenná hlava přivázaná k silné větvi, hrubá, ale účinná pro lámání měkké skály."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 3
+    }
+  },
+  {
+    "id": "staff_sling",
+    "name": {
+      "en": "Staff Sling",
+      "cs": "Prakoštěp"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A simple rope sling attached to a short staff, allowing greater range and power than a hand sling.",
+      "cs": "Jednoduchá provazová smyčka připevněná ke krátké holi, umožňující větší dostřel a sílu než ruční prak."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 4
+    }
+  },
+  {
+    "id": "carved_bone_figurine",
+    "name": {
+      "en": "Carved Bone Figurine",
+      "cs": "Vyřezávaná kostěná figurka"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A small, intricately carved figure from bone, passed down through generations. It brings a quiet sense of comfort.",
+      "cs": "Malá, složitě vyřezávaná figurka z kosti, předávaná z generace na generaci. Přináší tichý pocit klidu."
+    }
+  },
+  {
+    "id": "rendered_animal_fat",
+    "name": {
+      "en": "Rendered Animal Fat",
+      "cs": "Vyškvařený zvířecí tuk"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Clarified animal fat, useful for cooking, making candles, or waterproofing leather. Smells a bit.",
+      "cs": "Vyčištěný zvířecí tuk, užitečný na vaření, výrobu svíček nebo impregnaci kůže. Trochu páchne."
+    }
+  },
+  {
+    "id": "woven_clan_banner",
+    "name": {
+      "en": "Woven Clan Banner",
+      "cs": "Tkaný klanový prapor"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "colony_morale",
+        "amount": 5
+      },
+      {
+        "type": "colony_production",
+        "resource": "influence",
+        "perTick": 1
+      }
+    ],
+    "description": {
+      "en": "A crude but colourful banner, woven with symbols representing the colony's founding families. Inspires unity.",
+      "cs": "Hrubý, ale barevný prapor, utkán se symboly zakládajících rodin kolonie. Inspiruje k jednotě."
+    }
+  },
+  {
+    "id": "rough_wooden_wheel",
+    "name": {
+      "en": "Rough Wooden Wheel",
+      "cs": "Hrubé dřevěné kolo"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "wood",
+    "description": {
+      "en": "A sturdy, if uneven, wheel carved from a single tree trunk. Essential for building a basic cart.",
+      "cs": "Pevné, byť nerovné kolo vyřezané z jediného kmene stromu. Nezbytné pro stavbu základního vozíku."
+    }
+  },
+  {
+    "id": "flint_knife",
+    "name": {
+      "en": "Flint Knife",
+      "cs": "Pazourkový nůž"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [],
+    "description": {
+      "en": "A sharp shard of flint, carefully hafted. Good for skinning game or as a last-ditch weapon.",
+      "cs": "Ostrý úlomek pazourku pečlivě zasazený do rukojeti. Dobrý na stahování zvěře nebo jako poslední zbraň."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 3
+    }
+  },
+  {
+    "id": "rough_bridle",
+    "name": {
+      "en": "Rough Bridle",
+      "cs": "Hrubá uzda"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Braided leather and rope, simple but effective for guiding a beast of burden.",
+      "cs": "Splétaná kůže a provaz, jednoduchá, ale účinná k vedení tažného zvířete."
+    }
+  },
+  {
+    "id": "woolen_cloak",
+    "name": {
+      "en": "Woolen Cloak",
+      "cs": "Vlněná kápě"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 5
+      },
+      {
+        "type": "health_regen",
+        "amount": 0.5
+      }
+    ],
+    "description": {
+      "en": "Thick, hand-spun wool, dyed with local berries. Keeps the cold at bay during long nights.",
+      "cs": "Tlustá, ručně spředená vlna, obarvená místními bobulemi. Chrání před chladem během dlouhých nocí."
+    }
+  },
+  {
+    "id": "wooden_figurine",
+    "name": {
+      "en": "Wooden Figurine",
+      "cs": "Dřevěná figurka"
+    },
+    "rarity": "uncommon",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "colony_morale",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A small, carefully carved figure, perhaps depicting a forgotten spirit or a beloved ancestor.",
+      "cs": "Malá, pečlivě vyřezaná postava, snad zpodobnění zapomenutého ducha nebo milovaného předka."
+    }
+  },
+  {
+    "id": "heavy_club",
+    "name": {
+      "en": "Heavy Club",
+      "cs": "Těžký kyj"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [],
+    "description": {
+      "en": "A stout branch, hardened by fire and weighted with a heavy stone. Simple, brutal, effective.",
+      "cs": "Silná větev, zpevněná ohněm a zatížená těžkým kamenem. Jednoduchá, brutální, účinná."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 4
+    }
+  },
+  {
+    "id": "tallow_candle",
+    "name": {
+      "en": "Tallow Candle",
+      "cs": "Lojová svíce"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "effects": [
+      {
+        "type": "colony_morale",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A flickering beacon against the dark, made from rendered animal fat and a twisted fiber wick.",
+      "cs": "Blikající světlo proti temnotě, vyrobené z vyškvařeného zvířecího tuku a zatočeného knotu."
+    }
+  },
+  {
+    "id": "leather_pouch",
+    "name": {
+      "en": "Leather Pouch",
+      "cs": "Kožený váček"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A small, well-worn pouch for carrying herbs, flint, or other small necessities on the trail.",
+      "cs": "Malý, ošoupaný váček na bylinky, pazourek nebo jiné drobné nezbytnosti na cestách."
+    }
+  },
+  {
+    "id": "wooden_cart_axle",
+    "name": {
+      "en": "Wooden Cart Axle",
+      "cs": "Dřevěná vozová náprava"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "substance": "wood",
+    "description": {
+      "en": "A robust piece of timber, carefully shaped and greased, ready to bear the weight of a cart.",
+      "cs": "Robustní kus dřeva, pečlivě opracovaný a namazaný tukem, připravený nést váhu vozu."
+    }
+  },
+  {
+    "id": "wooden_packframe",
+    "name": {
+      "en": "Wooden Packframe",
+      "cs": "Dřevěná nůše"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "trade",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A simple frame for carrying heavy loads, often used by scout Elara to haul back rare furs.",
+      "cs": "Jednoduchý rám na nošení těžkých břemen. Průzkumnice Elara ho často používá k přenosu vzácných kožešin."
+    }
+  },
+  {
+    "id": "rough_leather_pouch",
+    "name": {
+      "en": "Rough Leather Pouch",
+      "cs": "Hrubá kožená brašna"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "Big enough for a few coins or dried berries. Elder Goran keeps his lucky stone in it.",
+      "cs": "Dost velká na pár mincí nebo sušených bobulí. Starší Goran v ní nosí svůj šťastný kámen."
+    }
+  },
+  {
+    "id": "tanning_tools",
+    "name": {
+      "en": "Tanning Tools",
+      "cs": "Nářadí na činění"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Scrapers and awls for preparing hides. Essential for the fur trade, and old Mara's speciality.",
+      "cs": "Škrabáky a šídla na přípravu kůží. Nepostradatelné pro obchod s kožešinami a specialita staré Mary."
+    }
+  },
+  {
+    "id": "weathered_tracking_boots",
+    "name": {
+      "en": "Weathered Tracking Boots",
+      "cs": "Ošlapané stopařské boty"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Well-worn boots that have seen many trails. They say Master Tracker Kaelen can read a story from every scuff.",
+      "cs": "Dobře nošené boty, které už viděly mnoho stezek. Říká se, že mistr stopař Kaelen umí z každého škrábance vyčíst příběh."
+    }
+  },
+  {
+    "id": "flint_arrowheads",
+    "name": {
+      "en": "Flint Arrowheads",
+      "cs": "Pazourkové hroty šípů"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "stone",
+    "description": {
+      "en": "Sharpened flint, ready to be fletched onto shafts. A basic necessity for hunters like Finn.",
+      "cs": "Naostřený pazourek, připravený k nasazení na dříky. Základní potřeba pro lovce, jako je Finn."
+    }
+  },
+  {
+    "id": "crude_fishing_net",
+    "name": {
+      "en": "Crude Fishing Net",
+      "cs": "Hrubá rybářská síť"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Woven reeds and plant fibers. It takes patience to use, but feeds the family of young Liam.",
+      "cs": "Spletené rákosí a rostlinná vlákna. Používání vyžaduje trpělivost, ale uživí rodinu mladého Liama."
+    }
+  },
+  {
+    "id": "stone_hammer",
+    "name": {
+      "en": "Stone Hammer",
+      "cs": "Kamenné kladivo"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "mining",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A basic but sturdy hammer, good for breaking rocks and... other things. Often seen in the hands of Miner Borin.",
+      "cs": "Základní, ale pevné kladivo, dobré na rozbíjení kamenů a... jiných věcí. Často ho má v rukou horník Borin."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 3
+    }
+  },
+  {
+    "id": "hunting_sling",
+    "name": {
+      "en": "Hunting Sling",
+      "cs": "Lovecký prak"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Simple to make, hard to master. A favorite of the younger hunters, like young Anya, for small game.",
+      "cs": "Jednoduchý na výrobu, těžký na ovládnutí. Oblíbená zbraň mladších lovců, třeba mladé Ani, na drobnou zvěř."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 4
+    }
+  },
+  {
+    "id": "bone_awl",
+    "name": {
+      "en": "Bone Awl",
+      "cs": "Kostěné šídlo"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "materials",
+        "perTick": 0.5
+      }
+    ],
+    "description": {
+      "en": "A sharpened bone, useful for piercing hides and weaving tough fibers. Often found near Tanner's hut.",
+      "cs": "Ostrá kost, co propíchne kůži i pevná vlákna. Často se válí u koželuhovy chýše."
+    }
+  },
+  {
+    "id": "woven_reins",
+    "name": {
+      "en": "Woven Reins",
+      "cs": "Pletené otěže"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Strong, braided ropes for guiding draft animals or mounts. Elara often used these to break in new ponies.",
+      "cs": "Pevná, pletená lana k vedení tažných zvířat nebo koní. Elara s nimi často zajížděla nové poníky."
+    }
+  },
+  {
+    "id": "clay_storage_jar",
+    "name": {
+      "en": "Clay Storage Jar",
+      "cs": "Hliněná zásobnice"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "stone",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "food",
+        "perTick": 0.3
+      }
+    ],
+    "description": {
+      "en": "A simple, fire-hardened vessel. Keeps grains and dried foods safe from pests for longer.",
+      "cs": "Prostá, v ohni vypálená nádoba. Udrží obilí a sušené jídlo déle v bezpečí před škůdci."
+    }
+  },
+  {
+    "id": "flint_axe",
+    "name": {
+      "en": "Flint Axe",
+      "cs": "Pazourková sekera"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "logging",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Roughly chipped stone, hafted to a sturdy branch. It's crude, but effective for felling small trees in the Old Woods.",
+      "cs": "Nahrubo opracovaný pazourek, nasazený na pevnou větev. Je sice hrubá, ale účinná na kácení malých stromů ve Starém lese."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 3
+    }
+  },
+  {
+    "id": "cured_hide_vest",
+    "name": {
+      "en": "Cured Hide Vest",
+      "cs": "Vesta z vyčiněné kůže"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Treated animal hides, roughly stitched together for basic protection. The first real armor crafted by the colony's tailor, Old Griselda.",
+      "cs": "Vyčiněná zvířecí kůže, nahrubo sešitá pro základní ochranu. První skutečná zbroj z dílny kolonijní švadleny, staré Griseldy."
+    }
+  },
+  {
+    "id": "wild_honeycomb",
+    "name": {
+      "en": "Wild Honeycomb",
+      "cs": "Divoká plástev medu"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "substance": "foliage",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "food",
+        "perTick": 1
+      }
+    ],
+    "description": {
+      "en": "Sweet, sticky, and full of energy. A rare find in the old woods, usually requiring a perilous climb.",
+      "cs": "Sladká, lepkavá a plná energie. Vzácný nález ve starém lese, obvykle vyžaduje nebezpečný výstup."
+    }
+  },
+  {
+    "id": "bone_hunting_whistle",
+    "name": {
+      "en": "Bone Hunting Whistle",
+      "cs": "Kostěná lovecká píšťalka"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Carved from a hollow bone, its sharp call helps coordinate hunting parties and lure prey. Old Man Tiber swears by his.",
+      "cs": "Vyřezaná z duté kosti, její ostrý zvuk pomáhá koordinovat lovecké výpravy a lákat kořist. Starý Tiber na ni nedá dopustit."
+    }
+  },
+  {
+    "id": "simple_wooden_cart",
+    "name": {
+      "en": "Simple Wooden Cart",
+      "cs": "Jednoduchý dřevěný vozík"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "trade",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A basic wooden frame on two wobbly wheels, pulled by a harnessed animal. Makes hauling harvested crops or trade goods much easier.",
+      "cs": "Základní dřevěná kostra na dvou vratkých kolech, tažená zapřaženým zvířetem. Značně usnadňuje převoz sklizených plodin nebo obchodního zboží."
+    }
+  },
+  {
+    "id": "bone_fishing_hook",
+    "name": {
+      "en": "Bone Fishing Hook",
+      "cs": "Kostěný rybářský háček"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A small, sharpened hook fashioned from a rib bone. It makes fishing a little less about luck.",
+      "cs": "Malý, naostřený háček z žebra. Rybaření je s ním o něco spolehlivější."
+    }
+  },
+  {
+    "id": "woven_grass_mat",
+    "name": {
+      "en": "Woven Grass Mat",
+      "cs": "Pletená rohož z trávy"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "Roughly woven but provides some warmth and comfort to a cold floor. Better than sleeping directly on dirt.",
+      "cs": "Hrubě upletená, ale dodá trochu tepla a pohodlí studené podlaze. Lepší než spát přímo na hlíně."
+    }
+  },
+  {
+    "id": "crude_animal_bell",
+    "name": {
+      "en": "Crude Animal Bell",
+      "cs": "Hrubý zvířecí zvon"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A hollowed gourd with a clapper inside. Helps keep track of wandering livestock or tamed beasts.",
+      "cs": "Vydlabaná tykev s tlukátkem uvnitř. Pomáhá sledovat zatoulaná hospodářská zvířata nebo ochočené šelmy."
+    }
+  },
+  {
+    "id": "bark_tanning_solution",
+    "name": {
+      "en": "Bark Tanning Solution",
+      "cs": "Roztok na činění kůží"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "A dark, pungent liquid made from tree bark. Essential for transforming raw hides into usable leather.",
+      "cs": "Tmavá, štiplavá kapalina z kůry stromů. Nezbytná pro přeměnu syrových kůží na použitelnou kůži."
+    }
+  },
+  {
+    "id": "flint_grinding_stone",
+    "name": {
+      "en": "Flint Grinding Stone",
+      "cs": "Křemenný mlecí kámen"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A heavy, flat stone and a smaller hand-stone, used for grinding grain into meal. A vital step for bread.",
+      "cs": "Těžký, plochý kámen a menší ruční kámen, používané k mletí obilí na mouku. Zásadní pro chléb."
+    }
+  },
+  {
+    "id": "woven_reed_basket",
+    "name": {
+      "en": "Woven Reed Basket",
+      "cs": "Pletený rákosový koš"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "materials",
+        "perTick": 1
+      }
+    ],
+    "description": {
+      "en": "Lightweight and surprisingly sturdy, perfect for gathering berries or carrying small game. Doesn't hold much, but it's more than hands alone.",
+      "cs": "Lehký a překvapivě pevný, ideální pro sběr bobulí nebo přenášení drobné zvěře. Moc se do něj nevejde, ale je to víc než jen holé ruce."
+    }
+  },
+  {
+    "id": "smoked_meat_strip",
+    "name": {
+      "en": "Smoked Meat Strip",
+      "cs": "Pruh uzeného masa"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "A thin strip of meat, dried and smoked over a fire. Keeps well on long journeys and is surprisingly filling.",
+      "cs": "Tenký proužek masa, sušený a uzený nad ohněm. Dobře se drží na dlouhých cestách a je překvapivě sytý."
+    },
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "leather_leggings",
+    "name": {
+      "en": "Leather Leggings",
+      "cs": "Kožené kamaše"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "Roughly stitched leather strips, offering some protection against thorns and scrapes. Better than bare legs in the wilderness.",
+      "cs": "Hrubě sešité kožené pásy, poskytující ochranu proti trnům a odřeninám. Lepší než holé nohy v divočině."
+    }
+  },
+  {
+    "id": "braided_hide_harness",
+    "name": {
+      "en": "Braided Hide Harness",
+      "cs": "Pletený kožený postroj"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "materials",
+        "perTick": 1
+      }
+    ],
+    "description": {
+      "en": "A simple harness for beasts of burden, made from tough hide strips. Allows for basic transport.",
+      "cs": "Jednoduchý postroj pro tažná zvířata, upletený z pevných kožených pásů. Umožňuje základní přepravu."
+    }
+  },
+  {
+    "id": "woven_reed_pack",
+    "name": {
+      "en": "Woven Reed Pack",
+      "cs": "Proutěný nůš"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "trade",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A light but sturdy pack, good for carrying small amounts of goods to the next settlement or campsite.",
+      "cs": "Lehký, ale pevný nůš, dobrý k přenášení malého množství zboží do další osady nebo tábora."
+    }
+  },
+  {
+    "id": "thick_wool_poncho",
+    "name": {
+      "en": "Thick Wool Poncho",
+      "cs": "Tlusté vlněné pončo"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A heavy wool poncho, offering decent protection against the mountain rains and chill.",
+      "cs": "Těžké vlněné pončo, které slušně chrání před horskými dešti a chladem."
+    }
+  },
+  {
+    "id": "polished_river_stone",
+    "name": {
+      "en": "Polished River Stone",
+      "cs": "Hladký říční oblázek"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A perfectly smooth stone, worn round by years in the river. Brings a quiet calm to its owner.",
+      "cs": "Dokonale hladký kámen, po léta omílaný řekou. Přináší svému majiteli tichý klid."
+    }
+  },
+  {
+    "id": "bone_tipped_atlatl",
+    "name": {
+      "en": "Bone-Tipped Atlatl",
+      "cs": "Vrhací kopí s kostěným hrotem"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A spear-thrower that greatly increases the range and power of a simple hunting spear.",
+      "cs": "Vrhací hůl, která značně zvyšuje dostřel a sílu loveckého kopí."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 5
+    }
+  },
+  {
+    "id": "dried_berry_pemmican",
+    "name": {
+      "en": "Dried Berry Pemmican",
+      "cs": "Sušený bobulový pemmican"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "description": {
+      "en": "A nutritious mix of dried meat, berries, and rendered fat. Ideal for long journeys and trade.",
+      "cs": "Výživná směs sušeného masa, bobulí a sádla. Ideální na dlouhé cesty a obchod."
+    }
+  },
+  {
+    "id": "rough_valley_map",
+    "name": {
+      "en": "Rough Valley Map",
+      "cs": "Hrubá mapa údolí"
+    },
+    "rarity": "rare",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "A hand-drawn map of the local valleys, with some key landmarks and paths marked. Aids in exploration.",
+      "cs": "Ručně kreslená mapa místních údolí s několika důležitými orientačními body a stezkami. Pomáhá při průzkumu."
+    }
+  },
+  {
+    "id": "spiked_pitfall_trap",
+    "name": {
+      "en": "Spiked Pitfall Trap",
+      "cs": "Past s kůly"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A cunningly disguised pit, lined with sharpened stakes. Effective against small to medium threats approaching the settlement.",
+      "cs": "Chytře zamaskovaná jáma, vyložená ostrými kůly. Účinná proti menším a středním hrozbám blížícím se k osadě."
+    }
+  },
+  {
+    "id": "leather_saddlebag",
+    "name": {
+      "en": "Leather Saddlebag",
+      "cs": "Kožená brašna na sedlo"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "trade",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A sturdy leather bag, designed to be slung over a beast of burden to carry more goods for trade. Old Elara patched hers countless times.",
+      "cs": "Pevná kožená brašna, určená k přehození přes soumara. Zvyšuje kapacitu pro obchodní cesty. Stará Elara si tu svou zašila nesčetněkrát."
+    }
+  },
+  {
+    "id": "fur_lined_cloak",
+    "name": {
+      "en": "Fur-Lined Cloak",
+      "cs": "Plášť s kožešinou"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 5
+      },
+      {
+        "type": "health_regen",
+        "amount": 1.0
+      }
+    ],
+    "description": {
+      "en": "A heavy cloak lined with soft furs, providing much-needed warmth during cold nights and journeys. Young Jarek rarely takes his off.",
+      "cs": "Těžký plášť podšitý hebkou kožešinou, který v krutých zimách i za studených nocí dodá tolik potřebné teplo. Mladý Jarek ho ze sebe málokdy sundá."
+    }
+  },
+  {
+    "id": "bone_needle_set",
+    "name": {
+      "en": "Bone Needle Set",
+      "cs": "Sada kostěných jehel"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "materials",
+        "perTick": 0.8
+      }
+    ],
+    "description": {
+      "en": "A small collection of sharp bone needles and sinew thread, essential for mending clothes or preparing hides. Old Anya's hands are never still.",
+      "cs": "Malá sada ostrých kostěných jehel a šlachových vláken, nepostradatelná při spravování oděvů nebo zpracovávání kůží. Ruce staré Anyi nikdy nestojí."
+    }
+  },
+  {
+    "id": "sharpened_stone_axe",
+    "name": {
+      "en": "Sharpened Stone Axe",
+      "cs": "Naostřená kamenná sekera"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "logging",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A crude but effective axe, good for felling small trees and defending oneself. Pavel the logger swears by its edge.",
+      "cs": "Hrubá, ale překvapivě účinná sekera. Dobře poslouží při kácení menších stromů i při obraně. Dřevorubec Pavel na ni nedá dopustit."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 4
+    }
+  },
+  {
+    "id": "carved_wooden_spoon",
+    "name": {
+      "en": "Carved Wooden Spoon",
+      "cs": "Vyřezávaná dřevěná lžíce"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A simple, hand-carved wooden spoon, a small comfort from home. Always makes a colonist feel a little more at ease.",
+      "cs": "Jednoduchá, ručně vyřezávaná dřevěná lžíce. Malá, ale cenná připomínka domova, která vždy zlepší náladu."
+    }
+  },
+  {
+    "id": "crude_pack_harness",
+    "name": {
+      "en": "Crude Pack Harness",
+      "cs": "Hrubý soumarský postroj"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Roughly made from hide and rope, this harness allows a trained animal to carry more on expeditions. Helps the scout Lyra bring back more finds.",
+      "cs": "Nahrubo vyrobený z kůže a provazů. Díky tomuto postroji unese vycvičené zvíře na výpravách o kus víc nákladu. Pomáhá zvědovi Lyře přinést víc nálezů."
+    }
+  },
+  {
+    "id": "dried_foragers_satchel",
+    "name": {
+      "en": "Dried Forager's Satchel",
+      "cs": "Vysušená sběračská torba"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A tightly woven basket or leather bag, treated to be waterproof, ideal for collecting berries and herbs. Vital for gathering during the wet season.",
+      "cs": "Pevně utkaná kožená brašna, ošetřená proti vlhkosti. Ideální pro sběr bobulí a bylin. Nepostradatelná pro sběr během deštivé sezóny."
+    }
+  },
+  {
+    "id": "clay_preserving_pot",
+    "name": {
+      "en": "Clay Preserving Pot",
+      "cs": "Hliněná zavařovací nádoba"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "food",
+        "perTick": 0.7
+      }
+    ],
+    "description": {
+      "en": "A sturdy clay pot with a tight-fitting lid, perfect for storing and preserving food for longer periods. Old Mariam fills hers every harvest.",
+      "cs": "Robustní hliněný hrnec s dobře těsnící pokličkou. Skvělý na uskladnění a konzervaci potravin na delší dobu. Stará Mariam si ty své plní každou sklizeň."
+    }
+  },
+  {
+    "id": "stiff_bristle_brush",
+    "name": {
+      "en": "Stiff Bristle Brush",
+      "cs": "Kartáč z tuhých štětin"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Made from tough animal hair and a wood handle, keeps beasts healthy and coats shiny. Old Man Jed likes to keep his oxen spotless.",
+      "cs": "Vyrobeno z tuhých zvířecích chlupů a dřevěné rukojeti, udržuje zvířata zdravá a srst lesklou. Starý Jed si potrpí na to, aby jeho volci byli bez poskvrnky."
+    }
+  },
+  {
+    "id": "oiled_hide_mantle",
+    "name": {
+      "en": "Oiled Hide Mantle",
+      "cs": "Plášť z olejované kůže"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Treated hide, sheds water surprisingly well. Keeps the chill out on long watches.",
+      "cs": "Ošetřená kůže, překvapivě dobře odpuzuje vodu. Chrání před chladem během dlouhých hlídek."
+    }
+  },
+  {
+    "id": "braided_flax_line",
+    "name": {
+      "en": "Braided Flax Line",
+      "cs": "Splétaná lněná šňůra"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Strong, thin line made from plant fibers. Essential for any serious fisher at the river's edge.",
+      "cs": "Silná, tenká šňůra z rostlinných vláken. Nezbytná pro každého rybáře u říčního břehu."
+    }
+  },
+  {
+    "id": "wooden_cart_bed",
+    "name": {
+      "en": "Wooden Cart Bed",
+      "cs": "Dřevěná korba vozu"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "substance": "wood",
+    "description": {
+      "en": "The main platform of a simple cart. Needs wheels and an axle to move heavy loads from the quarry.",
+      "cs": "Hlavní plošina jednoduchého vozu. Potřebuje kola a nápravu, aby převezla těžké náklady z lomu."
+    }
+  },
+  {
+    "id": "flint_and_tinder_kit",
+    "name": {
+      "en": "Flint and Tinder Kit",
+      "cs": "Křesadlo s trouchem"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A reliable way to get a fire going, even when conditions are damp. Crucial for any explorer venturing past the valley's ridge.",
+      "cs": "Spolehlivý způsob, jak rozdělat oheň, i za vlhkých podmínek. Pro každého průzkumníka za hřebenem údolí je to klíčové."
+    }
+  },
+  {
+    "id": "sharpened_hunting_stick",
+    "name": {
+      "en": "Sharpened Hunting Stick",
+      "cs": "Ostrý lovecký kyj"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A sturdy branch, sharpened to a point. Good for fending off small beasts or for an unexpected hunt in the thickets.",
+      "cs": "Pevná větev, zaostřená do špičky. Dobrá na odehnání menších zvířat nebo pro nečekaný lov v houštinách."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 4
+    }
+  },
+  {
+    "id": "carved_bone_comb",
+    "name": {
+      "en": "Carved Bone Comb",
+      "cs": "Vyřezávaný kostěný hřeben"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Intricately carved, used for grooming and as a small personal adornment. A sign of care, passed down from Elara's grandmother.",
+      "cs": "Složitě vyřezávaný, používaný k úpravě vlasů a jako malá osobní ozdoba. Znak péče, který Elara zdědila po babičce."
+    }
+  },
+  {
+    "id": "dried_meat_jerky",
+    "name": {
+      "en": "Dried Meat Jerky",
+      "cs": "Sušené maso"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Lean meat, salted and dried over a slow fire. A staple for long journeys, light and nourishing, keeps well in a scout's pack.",
+      "cs": "Libové maso, nasolené a usušené nad pomalým ohněm. Základ pro dlouhé cesty, lehké a výživné, dobře se uchovává v batohu průzkumníka."
+    }
+  },
+  {
+    "id": "wooden_yoke",
+    "name": {
+      "en": "Wooden Yoke",
+      "cs": "Dřevěné jařmo"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Simple but sturdy, allows an animal to pull a plow or cart more efficiently.",
+      "cs": "Jednoduché, ale pevné. Zvíře s ním táhne pluh nebo vůz účinněji."
+    }
+  },
+  {
+    "id": "tanned_leather_boots",
+    "name": {
+      "en": "Tanned Leather Boots",
+      "cs": "Kožené boty"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      },
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "Well-made boots that protect feet from rough terrain and cold. Made by old Elara for her son, Ben.",
+      "cs": "Dobře ušité boty chrání nohy před drsným terénem a zimou. Stará Elara je ušila pro svého syna Bena."
+    }
+  },
+  {
+    "id": "woven_fish_trap",
+    "name": {
+      "en": "Woven Fish Trap",
+      "cs": "Proutěná past na ryby"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "food",
+        "perTick": 0.5
+      }
+    ],
+    "description": {
+      "en": "A simple basket left in the river to catch fish, first designed by the twins, Lia and Finn.",
+      "cs": "Jednoduchý koš, který Lia a Finn jako první nechali v řece, aby chytal ryby."
+    }
+  },
+  {
+    "id": "simple_saddle",
+    "name": {
+      "en": "Simple Saddle",
+      "cs": "Jednoduché sedlo"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 2
+      },
+      {
+        "type": "skill_bonus",
+        "work": "trade",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "Makes riding much more comfortable and allows carrying a bit more. A basic design from before the Great Collapse.",
+      "cs": "Jízda je s ním mnohem pohodlnější a unese se i trochu víc. Základní design z doby před Velkým kolapsem."
+    }
+  },
+  {
+    "id": "dried_river_clay",
+    "name": {
+      "en": "Dried River Clay",
+      "cs": "Vysušená říční hlína"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "stone",
+    "description": {
+      "en": "Clay from the riverbanks, left to dry in the sun, ready for shaping into pots or bricks.",
+      "cs": "Hlína z říčních břehů, vysušená na slunci, připravená k tvarování do hrnců nebo cihel."
+    }
+  },
+  {
+    "id": "bone_fishing_lure",
+    "name": {
+      "en": "Bone Fishing Lure",
+      "cs": "Kostěná rybářská nástraha"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A small, carved bone shaped like a fish. Old Man Tiber used one to catch the largest pike ever seen in the valley.",
+      "cs": "Malá vyřezávaná kost ve tvaru ryby. Stařec Tiber na ni chytil největší štiku, jaká kdy byla v údolí spatřena."
+    }
+  },
+  {
+    "id": "improved_foragers_satchel",
+    "name": {
+      "en": "Improved Forager's Satchel",
+      "cs": "Vylepšená brašna pro sběrače"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 1
+      },
+      {
+        "type": "colony_production",
+        "resource": "food",
+        "perTick": 0.2
+      }
+    ],
+    "description": {
+      "en": "A sturdier satchel with more pockets, allowing foragers to bring back a larger variety of plants and roots.",
+      "cs": "Pevnější brašna s více kapsami, která sběračům umožňuje přinést zpět větší množství rostlin a kořenů."
+    }
+  },
+  {
+    "id": "flint_fire_starter",
+    "name": {
+      "en": "Flint Fire Starter",
+      "cs": "Křesadlo"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A shard of hard flint and a piece of iron for striking, carefully prepared by the quiet blacksmith, Kael. Simple, but effective for creating sparks.",
+      "cs": "Kousek tvrdého křemene a kus železa k úderu, pečlivě připravené tichým kovářem Kaelem. Jednoduché, ale účinné pro jiskry."
+    }
+  },
+  {
+    "id": "simple_fishing_rod",
+    "name": {
+      "en": "Simple Fishing Rod",
+      "cs": "Jednoduchý rybářský prut"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "foraging",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A basic rod fashioned from a sturdy branch, sinew, and a bone hook. Good for a quiet afternoon by the river, especially for young Elara.",
+      "cs": "Základní prut z pevné větve, šlach a kostěného háčku. Dobrý na klidné odpoledne u řeky, zvláště pro mladou Elaru."
+    }
+  },
+  {
+    "id": "fur_lined_mittens",
+    "name": {
+      "en": "Fur-Lined Mittens",
+      "cs": "Rukavice s kožešinou"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Thick leather mittens, lined with soft rabbit fur. Old Man Jorik swore by them during the harsh winters.",
+      "cs": "Tlusté kožené palčáky, vyložené měkkou králičí kožešinou. Starý Jorik na ně nedal dopustit během krutých zim."
+    }
+  },
+  {
+    "id": "stone_tipped_spear",
+    "name": {
+      "en": "Stone-Tipped Spear",
+      "cs": "Oštěp s kamenným hrotem"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "combat": {
+      "class": "melee",
+      "damage": 4
+    },
+    "description": {
+      "en": "A heavy wooden shaft topped with a crudely chipped stone point. Effective enough for defending the settlement perimeter, as Kael learned.",
+      "cs": "Těžká dřevěná žerď s hrubě opracovaným kamenným hrotem. Dostatečně účinný pro obranu osady, jak zjistil Kael."
+    }
+  },
+  {
+    "id": "cured_animal_hide",
+    "name": {
+      "en": "Cured Animal Hide",
+      "cs": "Vydělaná zvířecí kůže"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "A supple piece of treated hide, ready for crafting into clothing or tools. A staple for the colony's growing needs.",
+      "cs": "Pružný kus zpracované kůže, připravený k výrobě oděvů nebo nástrojů. Základ pro rostoucí potřeby osady."
+    }
+  },
+  {
+    "id": "peculiar_root",
+    "name": {
+      "en": "Peculiar Root",
+      "cs": "Zvláštní kořen"
+    },
+    "rarity": "uncommon",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A gnarled root, naturally twisted into a vaguely familiar shape. Some believe it brings good fortune to its owner, like young Lyra found.",
+      "cs": "Pokroucený kořen, který se přirozeně stočil do neurčitého, ale známého tvaru. Někteří věří, že svému majiteli přináší štěstí, jak zjistila mladá Lyra."
+    }
+  },
+  {
+    "id": "crude_halter",
+    "name": {
+      "en": "Crude Halter",
+      "cs": "Hrubá ohlávka"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "description": {
+      "en": "Woven from sturdy plant fibers and rough leather scraps, this halter allows for basic control of a pack animal. Essential for Master Borin's expeditions.",
+      "cs": "Upletená z pevných rostlinných vláken a hrubých kožených zbytků. Tato ohlávka umožňuje základní kontrolu nad soumarem. Nezbytná pro expedice mistra Borina."
+    }
+  },
+  {
+    "id": "thick_wool_socks",
+    "name": {
+      "en": "Thick Wool Socks",
+      "cs": "Tlusté vlněné ponožky"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Hand-knitted socks made from thick, unprocessed wool. Keep the feet warm even in the dampest conditions. A small comfort, but a welcome one for anyone tending fields like Old Man Grigor.",
+      "cs": "Ručně pletené ponožky z hrubé, nezpracované vlny. Udrží nohy v teple i v nejvlhčích podmínkách. Malá útěcha, ale vítaná pro každého, kdo pracuje na polích jako stařec Grigor."
+    }
+  },
+  {
+    "id": "bone_carving_set",
+    "name": {
+      "en": "Bone Carving Set",
+      "cs": "Sada na vyřezávání z kosti"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A collection of small, sharpened bone tools for detailed work. Allows for more intricate designs on wood or bone, a favorite of skilled artisan Lena.",
+      "cs": "Sada malých, naostřených kostěných nástrojů pro detailní práci. Umožňuje složitější vzory na dřevě nebo kosti, oblíbená u zručné řemeslnice Leny."
+    }
+  },
+  {
+    "id": "unglazed_pottery_bowl",
+    "name": {
+      "en": "Unglazed Pottery Bowl",
+      "cs": "Neglazovaná hliněná miska"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "stone",
+    "description": {
+      "en": "A simple, hand-formed bowl, fired in an open pit. Useful for eating, mixing, or as a small trade item. Master potter Karel makes dozens each day.",
+      "cs": "Jednoduchá, ručně tvarovaná miska, vypálená v otevřené jámě. Užitečná k jídlu, míchání nebo jako drobný obchodní předmět. Mistr hrnčíř Karel jich denně vyrobí desítky."
+    }
+  },
+  {
+    "id": "childrens_wooden_doll",
+    "name": {
+      "en": "Child's Wooden Doll",
+      "cs": "Dětská dřevěná panenka"
+    },
+    "rarity": "common",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A small, crudely carved wooden figure, well-loved by its young owner. A simple comfort in a harsh world, especially for little Anna.",
+      "cs": "Malá, hrubě vyřezaná dřevěná figurka, velmi milovaná svým mladým majitelem. Jednoduchá útěcha v drsném světě, hlavně pro malou Annu."
+    }
+  },
+  {
+    "id": "crude_hide_mallet",
+    "name": {
+      "en": "Crude Hide Mallet",
+      "cs": "Hrubá palička na kůže"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A heavy wooden club, used for softening hides and pounding bark. Helps in tanning.",
+      "cs": "Těžká dřevěná palička, slouží ke změkčování kůží a tlučení kůry. Pomáhá při činění."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 2
+    }
+  },
+  {
+    "id": "woven_bark_sandals",
+    "name": {
+      "en": "Woven Bark Sandals",
+      "cs": "Sandály z kůry"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "Simple footwear woven from tree bark. Keeps feet cool, but offers little protection from thorns or sharp stones.",
+      "cs": "Jednoduchá obuv upletená z kůry. Udrží nohy v chladu, ale nabízí malou ochranu před trny nebo ostrými kameny."
+    }
+  },
+  {
+    "id": "hardwood_cudgel",
+    "name": {
+      "en": "Hardwood Cudgel",
+      "cs": "Dřevěný kyj"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A heavy, knotty branch, surprisingly effective in a pinch. Good for driving away small pests or defending the henhouse.",
+      "cs": "Těžká, sukovitá větev, překvapivě účinná v nouzi. Dobrá na odhánění drobných škůdců nebo obranu kurníku."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 3
+    }
+  },
+  {
+    "id": "petrified_wood_fragment",
+    "name": {
+      "en": "Petrified Wood Fragment",
+      "cs": "Zkamenělý úlomek dřeva"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "substance": "stone",
+    "description": {
+      "en": "A piece of ancient wood, turned to stone over countless seasons. The patterns are mesmerizing, a true valley curiosity.",
+      "cs": "Kus prastarého dřeva, zkamenělý během nesčetných období. Vzory jsou fascinující, skutečná údolní kuriozita."
+    }
+  },
+  {
+    "id": "woven_fodder_sack",
+    "name": {
+      "en": "Woven Fodder Sack",
+      "cs": "Pletený vak na pícniny"
+    },
+    "rarity": "common",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "food",
+        "perTick": 1
+      }
+    ],
+    "description": {
+      "en": "A rough sack woven from reeds, used to carry feed for the colony's draft animals or livestock. Saves some effort for Josef and his goats.",
+      "cs": "Hrubý vak upletený z rákosí, slouží k přenášení krmiva pro tažná zvířata nebo dobytek kolonie. Josefovi a jeho kozám ušetří námahu."
+    }
+  },
+  {
+    "id": "rough_fur_cap",
+    "name": {
+      "en": "Rough Fur Cap",
+      "cs": "Hrubá kožešinová čepice"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A simple cap made from cured animal fur, offering decent warmth against the valley's chill winds. Elara says it keeps her ears from freezing during morning patrols.",
+      "cs": "Jednoduchá čepice vyrobená z vydělané zvířecí kožešiny, poskytuje slušné teplo proti chladným větrům údolí. Elara říká, že jí to chrání uši před zmrznutím během ranních hlídek."
+    }
+  },
+  {
+    "id": "clay_shaping_paddle",
+    "name": {
+      "en": "Clay Shaping Paddle",
+      "cs": "Dřevěná lopatka na tvarování hlíny"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A flat, smooth piece of wood, ideal for shaping and finishing pottery. Old Klára swears by hers, making her pots a little sturdier.",
+      "cs": "Plochý, hladký kus dřeva, ideální pro tvarování a dokončování keramiky. Stará Klára na ni nedá dopustit, díky ní jsou její hrnce o něco pevnější."
+    }
+  },
+  {
+    "id": "strong_plant_fibers",
+    "name": {
+      "en": "Strong Plant Fibers",
+      "cs": "Pevná rostlinná vlákna"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "Bundles of tough, dried plant fibers, ready to be twisted into cordage or woven into mats. Essential for many early crafts, like fishing nets or baskets.",
+      "cs": "Svazky pevných, usušených rostlinných vláken, připravených k pletení provazů nebo tkaní rohoží. Nezbytné pro mnoho raných řemesel, jako jsou rybářské sítě nebo koše."
+    }
+  },
+  {
+    "id": "faded_constellation_chart",
+    "name": {
+      "en": "Faded Constellation Chart",
+      "cs": "Vybledlá mapa souhvězdí"
+    },
+    "rarity": "rare",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "research",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A brittle, water-stained parchment depicting ancient constellations. While not always accurate for the current sky, it inspires contemplation and boosts our understanding of the world. Young Jakub pores over it for hours.",
+      "cs": "Křehký, vodou poničený pergamen znázorňující prastará souhvězdí. I když není vždy přesný pro aktuální oblohu, inspiruje k zamyšlení a posiluje naše chápání světa. Mladý Jakub nad ním tráví hodiny."
+    }
+  },
+  {
+    "id": "communal_story_drum",
+    "name": {
+      "en": "Communal Story Drum",
+      "cs": "Společenský vypravěčský buben"
+    },
+    "rarity": "uncommon",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "colony_morale",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "A large, hide-covered drum kept in the common hall. Its rhythmic beats accompany stories and songs, binding the community together and lifting spirits during hard times.",
+      "cs": "Velký buben potažený kůží, uchovávaný ve společenské síni. Jeho rytmické údery doprovázejí příběhy a písně, stmelují komunitu a pozvedají náladu v těžkých časech."
+    }
+  },
+  {
+    "id": "bone_chisel",
+    "name": {
+      "en": "Bone Chisel",
+      "cs": "Kostěné dláto"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A sharpened bone shard, useful for fine work on wood or stone.",
+      "cs": "Naostřený úlomek kosti, užitečný pro jemnou práci se dřevem nebo kamenem."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 1
+    }
+  },
+  {
+    "id": "stone_pestle_mortar",
+    "name": {
+      "en": "Stone Pestle and Mortar",
+      "cs": "Kamenný tlouček s hmoždířem"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "cooking",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "For grinding herbs and grains. Essential for preparing meals and simple remedies.",
+      "cs": "Na drcení bylin a zrní. Nepostradatelný pro přípravu jídel a jednoduchých léků."
+    }
+  },
+  {
+    "id": "woven_grass_hat",
+    "name": {
+      "en": "Woven Grass Hat",
+      "cs": "Pletený travní klobouk"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Keeps the sun off your brow during long days in the fields.",
+      "cs": "Chrání čelo před sluncem během dlouhých dnů na poli."
+    }
+  },
+  {
+    "id": "obsidian_shard",
+    "name": {
+      "en": "Obsidian Shard",
+      "cs": "Obsidiánový střep"
+    },
+    "rarity": "rare",
+    "slot": "material",
+    "substance": "stone",
+    "description": {
+      "en": "A piece of volcanic glass, incredibly sharp. Prized for making fine cutting edges.",
+      "cs": "Kus sopečného skla, neuvěřitelně ostrý. Ceněný pro výrobu jemných řezných hran."
+    }
+  },
+  {
+    "id": "thick_leather_gloves",
+    "name": {
+      "en": "Thick Leather Gloves",
+      "cs": "Silné kožené rukavice"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Protects hands from splinters and rough work. Favored by carpenters like Elias.",
+      "cs": "Chrání ruce před třískami a hrubou prací. Oblíbené mezi tesaři, jako je Eliáš."
+    }
+  },
+  {
+    "id": "dried_mushroom_assortment",
+    "name": {
+      "en": "Dried Mushroom Assortment",
+      "cs": "Sušený houbový sortiment"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "A varied collection of dried fungi, some for eating, some for tinctures.",
+      "cs": "Různorodá sbírka sušených hub, některé k jídlu, jiné na tinktury."
+    }
+  },
+  {
+    "id": "woven_reed_flute",
+    "name": {
+      "en": "Woven Reed Flute",
+      "cs": "Pletená rákosová flétna"
+    },
+    "rarity": "uncommon",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 7
+      }
+    ],
+    "description": {
+      "en": "Simple melodies lift spirits after a long day. Even the animals seem to listen.",
+      "cs": "Jednoduché melodie pozvednou náladu po dlouhém dni. Zdá se, že i zvířata naslouchají."
+    }
+  },
+  {
+    "id": "simple_travois",
+    "name": {
+      "en": "Simple Travois",
+      "cs": "Jednoduché travois"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "materials",
+        "perTick": 5
+      }
+    ],
+    "description": {
+      "en": "A basic drag-sled made of poles and hide, allowing a single person or animal to haul more.",
+      "cs": "Základní vlečné saně z tyčí a kůže, umožňující jedné osobě nebo zvířeti táhnout více nákladu."
+    }
+  },
+  {
+    "id": "crude_animal_snare",
+    "name": {
+      "en": "Crude Animal Snare",
+      "cs": "Hrubá zvířecí past"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A loop of strong plant fiber and a springy branch, set to catch small game.",
+      "cs": "Smyčka ze silných rostlinných vláken a pružná větev, nastražená na drobnou zvěř."
+    }
+  },
+  {
+    "id": "polished_obsidian_knife",
+    "name": {
+      "en": "Polished Obsidian Knife",
+      "cs": "Leštěný obsidiánový nůž"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A razor-sharp blade crafted from volcanic glass. Excellent for hunting and butchering.",
+      "cs": "Ostří jako břitva, vyrobené ze sopečného skla. Vynikající pro lov a porcování zvěře."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 3
+    }
+  },
+  {
+    "id": "simple_stone_mortar",
+    "name": {
+      "en": "Simple Stone Mortar",
+      "cs": "Jednoduchý kamenný hmoždíř"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "cooking",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A basic mortar for grinding herbs and grains. Elara often uses it to prepare tinctures.",
+      "cs": "Základní hmoždíř na drcení bylin a zrní. Elara jej často používá k přípravě tinktur."
+    }
+  },
+  {
+    "id": "woven_reed_rain_hat",
+    "name": {
+      "en": "Woven Reed Rain Hat",
+      "cs": "Pletený rákosový klobouk"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A wide-brimmed hat woven from river reeds, offering decent protection from the rain. Keeps one's spirits up even on a gloomy day.",
+      "cs": "Klobouk s širokou krempou, upletený z říčního rákosu, poskytuje slušnou ochranu před deštěm. Udrží dobrou náladu i v pošmourný den."
+    }
+  },
+  {
+    "id": "heavy_leather_apron",
+    "name": {
+      "en": "Heavy Leather Apron",
+      "cs": "Těžká kožená zástěra"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A thick leather apron, scorched in places, offering protection from sparks and stray tools. Theron wears his every day.",
+      "cs": "Zástěra z tlusté kůže, místy ožehnutá, chrání před jiskrami a zatoulanými nástroji. Theron ji nosí každý den."
+    }
+  },
+  {
+    "id": "dried_fish_rations",
+    "name": {
+      "en": "Dried Fish Rations",
+      "cs": "Sušené rybí příděly"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "effects": [],
+    "description": {
+      "en": "Strips of dried river fish, cured with salt. A lightweight and nutritious food source for journeys or trade.",
+      "cs": "Plátky sušených říčních ryb, nasolené a zakonzervované. Lehký a výživný zdroj potravy na cesty nebo k obchodu."
+    }
+  },
+  {
+    "id": "crude_wooden_flute",
+    "name": {
+      "en": "Crude Wooden Flute",
+      "cs": "Hrubá dřevěná flétna"
+    },
+    "rarity": "uncommon",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "colony_morale",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "Carved from a branch, this simple flute might not be perfectly tuned, but its melodies still bring comfort to the community after a long day.",
+      "cs": "Vyřezaná z větve, tahle jednoduchá flétna možná není dokonale laděná, ale její melodie po dlouhém dni přinášejí společenství útěchu."
+    }
+  },
+  {
+    "id": "pack_of_river_clay",
+    "name": {
+      "en": "Pack of River Clay",
+      "cs": "Balík říčního jílu"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "stone",
+    "description": {
+      "en": "A carefully collected and dried block of clay from the riverbanks. Essential for potters like old Kael, or for building.",
+      "cs": "Pečlivě sebraný a vysušený blok jílu z říčních břehů. Nepostradatelný pro hrnčíře jako starý Kael, nebo pro stavby."
+    }
+  },
+  {
+    "id": "bone_fishing_gorge",
+    "name": {
+      "en": "Bone Fishing Gorge",
+      "cs": "Kostěná rybářská past"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "foraging",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A small, double-pointed bone attached to a line. Swallowed by fish, it turns sideways, making it harder to escape. A clever invention of young Anya.",
+      "cs": "Malá dvojhrotá kost připevněná na vlasci. Ryba ji spolkne a ona se otočí napříč, čímž jí ztěžuje únik. Chytrý vynález mladé Anyi."
+    }
+  },
+  {
+    "id": "woven_fiber_rope",
+    "name": {
+      "en": "Woven Fiber Rope",
+      "cs": "Pletené vláknové lano"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Strong rope woven from plant fibers, essential for construction, hunting traps, and climbing the steeper parts of the valley.",
+      "cs": "Silné lano upletené z rostlinných vláken, nezbytné pro stavbu, lovecké pasti a zdolávání strmějších částí údolí."
+    }
+  },
+  {
+    "id": "herbal_compress",
+    "name": {
+      "en": "Herbal Compress",
+      "cs": "Bylinný obklad"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "effects": [
+      {
+        "type": "health_regen",
+        "amount": 10
+      }
+    ],
+    "description": {
+      "en": "A poultice of crushed healing herbs, bound in linen. Applied to wounds, it helps soothe pain and promote recovery. Old Elara's specialty.",
+      "cs": "Obklad z drcených léčivých bylin, zabalený v plátně. Přiložený na rány pomáhá utišit bolest a podporuje zotavení. Specialita staré Elary."
+    }
+  },
+  {
+    "id": "rough_stone_handaxe",
+    "name": {
+      "en": "Rough Stone Handaxe",
+      "cs": "Hrubá kamenná sekyra"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "logging",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A heavy, unrefined stone lashed to a sturdy handle. Crude, but effective for felling smaller trees or as a last-ditch weapon.",
+      "cs": "Těžký, neopracovaný kámen přivázaný k pevné rukojeti. Hrubá, ale účinná k kácení menších stromů nebo jako zbraň v nouzi."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 3
+    }
+  },
+  {
+    "id": "bone_needle_kit",
+    "name": {
+      "en": "Bone Needle Kit",
+      "cs": "Sada kostěných jehel"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A collection of fine bone needles, essential for mending hides and weaving sturdy fabrics, often used by Anya.",
+      "cs": "Sada tenkých kostěných jehel, nezbytná pro spravování kůží a tkaní pevných látek, často ji používá Aňa."
+    }
+  },
+  {
+    "id": "thick_leather_gauntlets",
+    "name": {
+      "en": "Thick Leather Gauntlets",
+      "cs": "Těžké kožené rukavice"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 1
+      },
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Heavy gauntlets offering protection for the hands. Useful for handling hot metal or rough materials, cherished by the blacksmith.",
+      "cs": "Těžké rukavice chrání ruce. Hodí se při práci s horkým kovem nebo drsnými materiály, kovář si jich váží."
+    }
+  },
+  {
+    "id": "stone_throwing_axe",
+    "name": {
+      "en": "Stone Throwing Axe",
+      "cs": "Kamenná vrhací sekera"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A small, well-balanced axe suitable for throwing. Not much for chopping, but can surprise an enemy or stun small game.",
+      "cs": "Malá, vyvážená sekyrka vhodná k házení. Moc se s ní neseká, ale dokáže překvapit nepřítele nebo omráčit drobnou zvěř."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 3
+    }
+  },
+  {
+    "id": "woven_grass_pouch",
+    "name": {
+      "en": "Woven Grass Pouch",
+      "cs": "Pletený travní váček"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "foraging",
+        "amount": 1
+      },
+      {
+        "type": "mood_bonus",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A simple pouch woven from sturdy grasses, useful for carrying forage or small tools found by the river.",
+      "cs": "Jednoduchá brašna upletená z pevných travin, vhodná na sběr plodin nebo drobné nářadí nalezené u řeky."
+    }
+  },
+  {
+    "id": "woven_reed_bridle",
+    "name": {
+      "en": "Woven Reed Bridle",
+      "cs": "Rákosová uzda"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A basic bridle fashioned from woven reeds, allowing for some control over tamed beasts, favored by old farmer Bohumil.",
+      "cs": "Jednoduchá uzda z pletených rákosů, která umožňuje alespoň nějakou kontrolu nad ochočenými zvířaty, oblíbená u starého farmáře Bohumila."
+    }
+  },
+  {
+    "id": "crude_bark_rain_hat",
+    "name": {
+      "en": "Crude Bark Rain Hat",
+      "cs": "Hrubý klobouk z kůry"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Roughly shaped bark, crudely stitched together to form a wide-brimmed hat. Keeps the rain out of one's eyes during a storm.",
+      "cs": "Nahrubo tvarovaná kůra, sešitá do klobouku se širokou krempou. Chrání oči před deštěm během bouře."
+    }
+  },
+  {
+    "id": "carved_wooden_totem",
+    "name": {
+      "en": "Carved Wooden Totem",
+      "cs": "Vyřezávaný dřevěný totem"
+    },
+    "rarity": "rare",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "A small, intricately carved wooden figure. Perhaps an ancestor, or a spirit protector for the owner, old Elara.",
+      "cs": "Malá, složitě vyřezávaná dřevěná figurka. Možná předek nebo duchovní ochránce pro majitelku, starou Elaru."
+    }
+  },
+  {
+    "id": "bundled_dried_reeds",
+    "name": {
+      "en": "Bundled Dried Reeds",
+      "cs": "Svazek sušených rákosů"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "A tight bundle of dried river reeds, ready for weaving into baskets, mats, or even shelter components for the new hut.",
+      "cs": "Pevný svazek sušených říčních rákosů, připravený k pletení košů, rohoží nebo dokonce k výrobě přístřešků pro novou chýši."
+    }
+  },
+  {
+    "id": "simple_bird_trap",
+    "name": {
+      "en": "Simple Bird Trap",
+      "cs": "Jednoduchá past na ptáky"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "food",
+        "perTick": 3
+      }
+    ],
+    "description": {
+      "en": "A small, spring-loaded trap designed to catch birds for their meat or feathers. Best set by the old oak near the river.",
+      "cs": "Malá, pružinová past určená k chytání ptáků pro jejich maso nebo peří. Nejlépe se umisťuje u starého dubu blízko řeky."
+    }
+  },
+  {
+    "id": "stone_weighted_club",
+    "name": {
+      "en": "Stone-Weighted Club",
+      "cs": "Kamenný kyj"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A heavy wooden club with a river stone firmly bound to its striking end, giving it more heft for defense.",
+      "cs": "Těžký dřevěný kyj s říčním kamenem pevně přivázaným k údernému konci, což mu dodává větší váhu pro obranu."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 4
+    }
+  },
+  {
+    "id": "hardwood_digging_stick",
+    "name": {
+      "en": "Hardwood Digging Stick",
+      "cs": "Dřevěná rycí hůl"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "foraging",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A sturdy stick, sharpened and fire-hardened. Good for loosening soil and unearthing roots.",
+      "cs": "Pevná hůl, naostřená a zpevněná ohněm. Dobrá k uvolňování půdy a vyhrabávání kořenů."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 2
+    }
+  },
+  {
+    "id": "thick_wool_scarf",
+    "name": {
+      "en": "Thick Wool Scarf",
+      "cs": "Tlustá vlněná šála"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Knitted from rough valley wool, it offers decent protection from the cold winds. Keeps you warm.",
+      "cs": "Upletená z hrubé údolní vlny, nabízí slušnou ochranu před studenými větry. Udrží tě v teple."
+    }
+  },
+  {
+    "id": "weighted_throwing_cord",
+    "name": {
+      "en": "Weighted Throwing Cord",
+      "cs": "Vrhací lano se závažím"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A length of strong cord with a heavy stone tied to one end. Useful for snaring small, fast-moving game.",
+      "cs": "Kus pevné šňůry s těžkým kamenem uvázaným na jednom konci. Hodí se k lapání malé, rychle se pohybující zvěře."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 3
+    }
+  },
+  {
+    "id": "dried_wild_mushrooms",
+    "name": {
+      "en": "Dried Wild Mushrooms",
+      "cs": "Sušené divoké houby"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "Collected from the forest floor and carefully dried. A savory addition to stews and a good item for trade.",
+      "cs": "Sesbírané z lesní půdy a pečlivě usušené. Chutný doplněk k dušeným pokrmům a dobrá položka pro obchod."
+    }
+  },
+  {
+    "id": "carved_wooden_bird_figurine",
+    "name": {
+      "en": "Carved Wooden Bird Figurine",
+      "cs": "Vyřezávaná dřevěná figurka ptáka"
+    },
+    "rarity": "uncommon",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A small, carefully carved bird, perhaps a blue jay. It brings a quiet comfort to its owner.",
+      "cs": "Malá, pečlivě vyřezávaná figurka ptáka, možná sojky. Svou majiteli přináší tiché uklidnění."
+    }
+  },
+  {
+    "id": "woven_reed_pannier",
+    "name": {
+      "en": "Woven Reed Pannier",
+      "cs": "Proutěný nůš"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "trade",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A sturdy, lightweight basket designed to be slung over a pack animal's back, increasing carrying capacity for trade goods.",
+      "cs": "Pevný, lehký koš určený k zavěšení přes hřbet soumara, zvyšující nosnost pro obchodní zboží."
+    }
+  },
+  {
+    "id": "broad_brim_straw_hat",
+    "name": {
+      "en": "Broad-Brim Straw Hat",
+      "cs": "Široký slaměný klobouk"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Woven from dried grasses, this hat protects against the harsh midday sun, making field work more bearable.",
+      "cs": "Upletený ze sušených travin, tento klobouk chrání před ostrým poledním sluncem a usnadňuje práci na poli."
+    }
+  },
+  {
+    "id": "sharpened_stone_chisel",
+    "name": {
+      "en": "Sharpened Stone Chisel",
+      "cs": "Naostřené kamenné dláto"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A carefully flaked and ground piece of hard stone, useful for more precise carving and shaping of wood or soft rock.",
+      "cs": "Pečlivě oštípaný a broušený kus tvrdého kamene, užitečný pro přesnější řezbářské a tvarovací práce se dřevem nebo měkkou horninou."
+    }
+  },
+  {
+    "id": "straight_timber_log",
+    "name": {
+      "en": "Straight Timber Log",
+      "cs": "Rovný dřevěný kmen"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "wood",
+    "description": {
+      "en": "A large, straight log, skillfully cut and debarked. Essential for constructing robust buildings or crafting larger tools.",
+      "cs": "Velký, rovný kmen, dovedně nařezaný a zbavený kůry. Nezbytný pro stavbu pevných budov nebo výrobu větších nástrojů."
+    }
+  },
+  {
+    "id": "foraged_wild_berries",
+    "name": {
+      "en": "Foraged Wild Berries",
+      "cs": "Nasbírané lesní plody"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "A handful of freshly picked wild berries. Sweet, juicy, and a pleasant treat after a long day of foraging.",
+      "cs": "Hrst čerstvě natrhaných lesních plodů. Sladké, šťavnaté a příjemná pochoutka po dlouhém dni hledání potravy."
+    }
+  },
+  {
+    "id": "crude_wooden_shovel",
+    "name": {
+      "en": "Crude Wooden Shovel",
+      "cs": "Hrubá dřevěná lopata"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 2
+      },
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A simple, yet essential tool for digging and moving earth. Helps with early farming efforts of the valley newcomers.",
+      "cs": "Jednoduchá, přesto nepostradatelná lopata pro kopání a přenášení zeminy. Pomáhá s ranými zemědělskými pracemi nováčků v údolí."
+    }
+  },
+  {
+    "id": "rabbit_fur_mittens",
+    "name": {
+      "en": "Rabbit Fur Mittens",
+      "cs": "Králičí palčáky"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Soft rabbit fur sewn into warm mittens, perfect for cold valley mornings. Keeps hands nimble for work outside.",
+      "cs": "Měkká králičí kožešina sešitá do teplých palčáků, ideální pro chladná údolní rána. Udrží ruce obratné pro práci venku."
+    }
+  },
+  {
+    "id": "dried_fish_necklace",
+    "name": {
+      "en": "Dried Fish Necklace",
+      "cs": "Náhrdelník ze sušených ryb"
+    },
+    "rarity": "common",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A necklace fashioned from small dried fish, often worn by river folk as a charm for good catches. Young Elara loves to wear hers to the river.",
+      "cs": "Náhrdelník z malých sušených rybek, často ho nosí říční lidé jako amulet pro dobrý úlovek. Malá Elara svůj ráda nosí k řece."
+    }
+  },
+  {
+    "id": "flint_skinning_knife",
+    "name": {
+      "en": "Flint Skinning Knife",
+      "cs": "Pazourkový stahovací nůž"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 2
+      },
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A sharp flint blade hafted to a wooden handle, ideal for skinning game and preparing hides after a successful hunt by Elias.",
+      "cs": "Ostrá pazourková čepel zasazená do dřevěné rukojeti, ideální na stahování zvěře a přípravu kůží po úspěšném lovu Eliášem."
+    }
+  },
+  {
+    "id": "woven_reed_mat",
+    "name": {
+      "en": "Woven Reed Mat",
+      "cs": "Rohož z rákosí"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "A large, tightly woven mat made from river reeds, used for sleeping, drying herbs, or even as a simple floor covering in homes.",
+      "cs": "Velká, pevně upletená rohož z říčního rákosí. Slouží k ležení, sušení bylin, nebo jako jednoduchá podlaha v obydlích."
+    }
+  },
+  {
+    "id": "fine_bone_carving_tool",
+    "name": {
+      "en": "Fine Bone Carving Tool",
+      "cs": "Jemný nástroj na řezbu z kosti"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A delicate tool crafted from a sharpened bone shard, allowing for intricate carvings and detailed work on other bone and wood items. Master crafter Kaelen prefers these.",
+      "cs": "Jemný nástroj z naostřeného kousku kosti, umožňuje vytvářet složité řezby a detailní práce na dalších kostěných a dřevěných předmětech. Mistr řezbář Kaelen je upřednostňuje."
+    }
+  },
+  {
+    "id": "simple_leather_bridle",
+    "name": {
+      "en": "Simple Leather Bridle",
+      "cs": "Jednoduchá kožená uzda"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "description": {
+      "en": "A basic bridle made from strips of cured leather, suitable for guiding docile pack animals like those used by the Miller family for hauling timber.",
+      "cs": "Základní uzda z pásků vyčiněné kůže, vhodná pro vedení poslušných tažných zvířat, jaká používá rodina Millerů k tahání dřeva."
+    }
+  },
+  {
+    "id": "river_stone_axe_head",
+    "name": {
+      "en": "River Stone Axe Head",
+      "cs": "Hlava sekery z říčního kamene"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "stone",
+    "description": {
+      "en": "A smooth, oblong river stone, partially flaked and ground into a rough axe head shape. Ready for hafting onto a strong wooden handle.",
+      "cs": "Hladký, podlouhlý říční kámen, částečně opracovaný do tvaru hrubé sekery. Připravený k nasazení na silné dřevěné topůrko."
+    }
+  },
+  {
+    "id": "dried_mushroom_powder",
+    "name": {
+      "en": "Dried Mushroom Powder",
+      "cs": "Sušený houbový prášek"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "substance": "foliage",
+    "effects": [
+      {
+        "type": "colony_morale",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "Finely ground wild mushrooms, adding a rich, earthy flavor to stews and improving the morale of those eating it. A favorite ingredient of Cook Anya.",
+      "cs": "Jemně mleté divoké houby, dodávají gulášům bohatou, zemitou chuť a zlepšují náladu strávníků. Oblíbená přísada kuchařky Anyi."
+    }
+  },
+  {
+    "id": "woven_fiber_rope_ladder",
+    "name": {
+      "en": "Woven Fiber Rope Ladder",
+      "cs": "Žebřík z vláken"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 2
+      },
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A lightweight ladder woven from strong plant fibers, useful for reaching higher ledges or aiding in construction efforts, especially for the new watchtower.",
+      "cs": "Lehký žebřík upletený ze silných rostlinných vláken, užitečný pro dosažení vyšších říms nebo pomoc při stavebních pracích, zvláště na nové strážní věži."
+    }
+  },
+  {
+    "id": "crude_stone_mallet",
+    "name": {
+      "en": "Crude Stone Mallet",
+      "cs": "Hrubé kamenné kladivo"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A heavy, unrefined stone lashed to a sturdy stick. Basic, but effective for pounding stakes or shaping mud for Elder Borin's new hut.",
+      "cs": "Těžký, neopracovaný kámen připevněný k pevné rukojeti. Jednoduché, ale pro zatloukání kůlů nebo tvarování bláta na novou chatu Staršího Borina docela účinné."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 3
+    }
+  },
+  {
+    "id": "woven_nettle_tunic",
+    "name": {
+      "en": "Woven Nettle Tunic",
+      "cs": "Tkaná kopřivová tunika"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Rough fibers of nettle, woven into a simple tunic. Keeps the chill at bay, if a bit scratchy, especially during a cold night watch.",
+      "cs": "Hrubá vlákna kopřivy, utkaná do jednoduché tuniky. Zahřeje, i když trochu škrábe, zvláště během chladné noční hlídky."
+    }
+  },
+  {
+    "id": "flint_tipped_javelin",
+    "name": {
+      "en": "Flint Tipped Javelin",
+      "cs": "Pazourkový oštěp"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A lightweight spear with a sharp flint head, good for throwing at smaller game or for a quick defense against unexpected threats in the woods.",
+      "cs": "Lehký oštěp s ostrým pazourkovým hrotem, dobrý pro házení na menší zvěř nebo pro rychlou obranu proti nečekaným hrozbám v lese."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 4
+    }
+  },
+  {
+    "id": "clay_bead_necklace",
+    "name": {
+      "en": "Clay Bead Necklace",
+      "cs": "Hliněný korálkový náhrdelník"
+    },
+    "rarity": "uncommon",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "Simple, hand-rolled clay beads strung on a fiber cord. A small touch of beauty in a harsh land, often traded as gifts among families.",
+      "cs": "Jednoduché, ručně tvarované hliněné korálky navlečené na vláknité šňůrce. Drobný dotek krásy v drsné krajině, často se jím obdarovávají rodiny."
+    }
+  },
+  {
+    "id": "raw_beeswax_lump",
+    "name": {
+      "en": "Raw Beeswax Lump",
+      "cs": "Kus surového včelího vosku"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "A sticky, fragrant chunk of raw beeswax, useful for waterproofing a cloak, making candles, or for trade with folk downriver.",
+      "cs": "Lepkavý, voňavý kus surového včelího vosku, užitečný pro impregnaci pláště, výrobu svíček nebo pro obchod s lidmi po řece."
+    }
+  },
+  {
+    "id": "woven_reed_muzzle",
+    "name": {
+      "en": "Woven Reed Muzzle",
+      "cs": "Pletený rákosový náhubek"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "food",
+        "perTick": 3
+      }
+    ],
+    "description": {
+      "en": "A simple muzzle crafted from woven reeds, used to keep pack animals like Old Bess from grazing on young crops in the fields near the settlement.",
+      "cs": "Jednoduchý náhubek z pletených rákosí, používaný k zabránění soumarům, jako je stará Běta, v okusování mladých plodin na polích poblíž osady."
+    }
+  },
+  {
+    "id": "crude_hide_leg_wraps",
+    "name": {
+      "en": "Crude Hide Leg Wraps",
+      "cs": "Hrubé kožené návleky na nohy"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Strips of raw hide wrapped around the lower legs. Offers basic protection from thorns and cold during long treks, especially for scout Elara.",
+      "cs": "Pásy surové kůže omotané kolem lýtek. Nabízí základní ochranu před trním a chladem během dlouhých pochodů, zejména pro průzkumnici Elaru."
+    }
+  },
+  {
+    "id": "polished_bone_needle",
+    "name": {
+      "en": "Polished Bone Needle",
+      "cs": "Leštěná kostěná jehla"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A finely sharpened and polished needle made from a bird bone. Essential for intricate sewing and mending, a favorite of Tailor Kael.",
+      "cs": "Jemně naostřená a vyleštěná jehla z ptačí kosti. Nezbytná pro jemné šití a opravy, oblíbená u krejčího Kaela."
+    }
+  },
+  {
+    "id": "bundled_dried_fish",
+    "name": {
+      "en": "Bundled Dried Fish",
+      "cs": "Svazek sušených ryb"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "description": {
+      "en": "Several small, dried fish tied together with plant fibers. A valuable, lightweight food source for journeys or for trading with passing wanderers.",
+      "cs": "Několik malých, sušených ryb svázaných dohromady rostlinnými vlákny. Cenný, lehký zdroj potravy na cesty nebo k obchodu s procházejícími poutníky."
+    }
+  },
+  {
+    "id": "shard_of_ancient_pottery",
+    "name": {
+      "en": "Shard of Ancient Pottery",
+      "cs": "Střep starověké keramiky"
+    },
+    "rarity": "rare",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "research",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A fragment of intricately decorated pottery, much older than any known settlements. It hints at forgotten peoples of the valley, a puzzle for Elder Lyra to ponder.",
+      "cs": "Úlomek složitě zdobené keramiky, mnohem starší než jakákoli známá osada. Naznačuje zapomenuté národy údolí, hádanka k zamyšlení pro starší Lyru."
+    }
+  },
+  {
+    "id": "bone_hand_drill",
+    "name": {
+      "en": "Bone Hand Drill",
+      "cs": "Kostní ruční vrták"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A simple tool for boring holes, made from a sharpened bone and wood. Useful for intricate crafting.",
+      "cs": "Jednoduchý nástroj na vrtání děr, vyrobený z naostřené kosti a dřeva. Užitečný pro jemné řemeslné práce."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 1
+    }
+  },
+  {
+    "id": "woven_reed_shield",
+    "name": {
+      "en": "Woven Reed Shield",
+      "cs": "Proutěný rákosový štít"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Layers of tightly woven reeds and stiff branches form a surprisingly effective lightweight shield.",
+      "cs": "Vrsty pevně spleteného rákosu a tuhých větví tvoří překvapivě účinný lehký štít."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 1
+    }
+  },
+  {
+    "id": "beeswax_block",
+    "name": {
+      "en": "Beeswax Block",
+      "cs": "Blok včelího vosku"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "A dense block of rendered beeswax, excellent for waterproofing, candle making, or trade.",
+      "cs": "Hustý blok vyčištěného včelího vosku, vynikající pro hydroizolaci, výrobu svíček nebo obchod."
+    }
+  },
+  {
+    "id": "thick_reed_rain_mantle",
+    "name": {
+      "en": "Thick Reed Rain Mantle",
+      "cs": "Silný rákosový plášť do deště"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Coarsely woven reeds layered to shed water. Not stylish, but it keeps you dry in a downpour.",
+      "cs": "Nahrubo spletený rákos vrstvený tak, aby odváděl vodu. Není stylový, ale udrží vás v suchu za lijáku."
+    }
+  },
+  {
+    "id": "crude_wooden_bit",
+    "name": {
+      "en": "Crude Wooden Bit",
+      "cs": "Hrubé dřevěné udidlo"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A simple wooden bit, carved to fit a beast's mouth, for basic control and guidance.",
+      "cs": "Jednoduché dřevěné udidlo, vyřezané tak, aby se vešlo do tlamy zvířete, pro základní ovládání a vedení."
+    }
+  },
+  {
+    "id": "odd_shaped_root",
+    "name": {
+      "en": "Odd Shaped Root",
+      "cs": "Podivně tvarovaný kořen"
+    },
+    "rarity": "rare",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A gnarled root, found deep in the forest, resembling a small animal or a strange face. A curious find.",
+      "cs": "Sukatý kořen, nalezený hluboko v lese, připomínající malé zvíře nebo podivnou tvář. Zvláštní nález."
+    }
+  },
+  {
+    "id": "hide_working_scrapers",
+    "name": {
+      "en": "Hide Working Scrapers",
+      "cs": "Škrabky na kůži"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A set of various bone and stone scrapers, essential for preparing and tanning animal hides.",
+      "cs": "Sada různých kostěných a kamenných škrabek, nezbytných pro přípravu a činění zvířecích kůží."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 1
+    }
+  },
+  {
+    "id": "weighted_leather_sling",
+    "name": {
+      "en": "Weighted Leather Sling",
+      "cs": "Zatížený kožený prak"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A sturdy leather sling with a small stone sewn into the pouch, allowing for heavier projectiles and better accuracy.",
+      "cs": "Pevný kožený prak s malým kamenem zašitým do váčku, umožňující těžší projektily a lepší přesnost."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 4
+    }
+  },
+  {
+    "id": "simple_hide_moccasins",
+    "name": {
+      "en": "Simple Hide Moccasins",
+      "cs": "Jednoduché kožené mokasíny"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Soft, well-worn hide sewn into simple footwear. Better than bare feet for long treks.",
+      "cs": "Měkká, dobře nošená kůže sešitá do jednoduché obuvi. Lepší než bosé nohy na dlouhé cesty."
+    }
+  },
+  {
+    "id": "clay_pigment_pot",
+    "name": {
+      "en": "Clay Pigment Pot",
+      "cs": "Hliněná nádoba na pigment"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "substance": "stone",
+    "description": {
+      "en": "A small, sealed clay pot containing finely ground earth pigments, used for decoration, art, or tribal markings.",
+      "cs": "Malá, zapečetěná hliněná nádoba s jemně mletými zemitými pigmenty, používaná k dekoraci, umění nebo kmenovým značením."
+    }
+  },
+  {
+    "id": "whittling_knife",
+    "name": {
+      "en": "Whittling Knife",
+      "cs": "Řezbářský nůž"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A small, sharp knife fashioned from flint and a sturdy wooden handle, perfect for shaping wood or bone. A favorite of Elara for carving small figures.",
+      "cs": "Malý, ostrý nůž z pazourku s pevnou dřevěnou rukojetí, ideální pro tvarování dřeva nebo kosti. Oblíbený nástroj Elary pro vyřezávání figurek."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 2
+    }
+  },
+  {
+    "id": "woven_grass_rope",
+    "name": {
+      "en": "Woven Grass Rope",
+      "cs": "Pletený travní provaz"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "Twisted strands of tough valley grass, surprisingly strong for binding or climbing. Essential for securing loads on a travois.",
+      "cs": "Stočené prameny houževnaté údolní trávy, překvapivě pevné na vázání nebo šplhání. Nezbytné pro upevnění nákladu na travoji."
+    }
+  },
+  {
+    "id": "small_clay_pot",
+    "name": {
+      "en": "Small Clay Pot",
+      "cs": "Malý hliněný hrnec"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "stone",
+    "description": {
+      "en": "A small, unglazed pot fired from river clay, useful for holding water or small provisions. Often used by the foragers for carrying berries.",
+      "cs": "Malý neglazovaný hrnec vypálený z říčního jílu, užitečný pro uchovávání vody nebo malých zásob. Často ho používají sběrači na bobule."
+    }
+  },
+  {
+    "id": "bone_spearhead",
+    "name": {
+      "en": "Bone Spearhead",
+      "cs": "Kostěný hrot oštěpu"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "description": {
+      "en": "A sharpened piece of animal bone, carefully notched and ready to be hafted onto a sturdy pole for a spear. Finn prefers these for smaller game.",
+      "cs": "Naostřený kus zvířecí kosti, pečlivě opatřený zářezy a připravený k nasazení na pevnou tyč pro oštěp. Finn je preferuje pro menší zvěř."
+    }
+  },
+  {
+    "id": "dried_berry_paste",
+    "name": {
+      "en": "Dried Berry Paste",
+      "cs": "Sušená bobulová pasta"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "Crushed and dried wild berries, pressed into a dense paste. A sweet and long-lasting food source, often traded with nomads from the high passes.",
+      "cs": "Rozmačkané a usušené divoké bobule, slisované do husté pasty. Sladký a trvanlivý zdroj potravy, často obchodovaný s nomády z vysokých průsmyků."
+    }
+  },
+  {
+    "id": "rough_leather_bracers",
+    "name": {
+      "en": "Rough Leather Bracers",
+      "cs": "Hrubé kožené chrániče předloktí"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Simple strips of cured hide wrapped around the forearms, offering basic protection against scrapes and impacts during foraging or light combat. Gives a colonist peace of mind.",
+      "cs": "Jednoduché pásy vyčiněné kůže omotané kolem předloktí, poskytující základní ochranu proti oděrkám a nárazům při sběru potravy nebo lehkém boji. Dává osadníkovi klid v duši."
+    }
+  },
+  {
+    "id": "bird_bone_whistle",
+    "name": {
+      "en": "Bird Bone Whistle",
+      "cs": "Ptačí kostní píšťalka"
+    },
+    "rarity": "rare",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A small, hollowed bird bone, carefully pierced to produce a surprisingly clear, high-pitched sound. Useful for signaling over distance, especially for scouts like Elara when she's ranging far.",
+      "cs": "Malá, vyhloubená ptačí kost, pečlivě provrtaná, aby vydávala překvapivě čistý, vysoký zvuk. Užitečné pro signalizaci na dálku, zejména pro zvědy jako je Elara, když se toulá daleko."
+    }
+  },
+  {
+    "id": "dried_gourd_canteen",
+    "name": {
+      "en": "Dried Gourd Canteen",
+      "cs": "Usušená tykvová čutora"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A hollowed-out and dried gourd, sealed with resin, perfect for carrying water on long treks. Keeps a colonist refreshed and prevents thirst on the trail.",
+      "cs": "Vydlabaná a usušená tykev, utěsněná pryskyřicí, ideální pro přenášení vody na dlouhých cestách. Udržuje osadníka svěžího a zabraňuje žízni na stezce."
+    }
+  },
+  {
+    "id": "crude_wooden_mallet",
+    "name": {
+      "en": "Crude Wooden Mallet",
+      "cs": "Hrubé dřevěné kladivo"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A simple heavy wooden club, crudely shaped but effective for driving stakes or breaking tough soil. Useful for builders like Borislav when clearing new ground.",
+      "cs": "Jednoduchý těžký dřevěný kyj, hrubě opracovaný, ale účinný pro zatloukání kůlů nebo rozbíjení tvrdé půdy. Užitečné pro stavitele jako Borislav při čištění nové půdy."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 3
+    }
+  },
+  {
+    "id": "polished_stone_amulet",
+    "name": {
+      "en": "Polished Stone Amulet",
+      "cs": "Leštěný kamenný amulet"
+    },
+    "rarity": "uncommon",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A smooth, unusually colored river stone, carefully polished and strung on a sinew cord. Many believe it brings good fortune or calms the spirit, especially when worn by someone like young Lyra.",
+      "cs": "Hladký, neobvykle zbarvený říční kámen, pečlivě vyleštěný a navlečený na šlachové šňůře. Mnozí věří, že přináší štěstí nebo uklidňuje ducha, zvláště když ho nosí někdo jako mladá Lyra."
+    }
+  },
+  {
+    "id": "bone_digging_hoe",
+    "name": {
+      "en": "Bone Digging Hoe",
+      "cs": "Kopáč z kosti"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A simple hoe fashioned from a large bone and a sturdy branch. Basic, but effective for turning soil.",
+      "cs": "Jednoduchá motyka vyrobená z velké kosti a pevné větve. Základní, ale účinná k obdělávání půdy."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 1
+    }
+  },
+  {
+    "id": "woven_grass_rain_cape",
+    "name": {
+      "en": "Woven Grass Rain Cape",
+      "cs": "Plášť z tkané trávy"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Carefully woven reeds and tough grasses shed water surprisingly well. Offers decent protection from light rain.",
+      "cs": "Pečlivě utkané rákosí a odolné trávy překvapivě dobře odvádí vodu. Poskytuje slušnou ochranu před slabým deštěm."
+    }
+  },
+  {
+    "id": "smooth_river_throwing_stone",
+    "name": {
+      "en": "Smooth River Throwing Stone",
+      "cs": "Hladký říční vrhací kámen"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A perfectly shaped stone, worn smooth by the river. Feels balanced in the hand, good for fending off small pests.",
+      "cs": "Dokonale tvarovaný kámen, ohlazený řekou. Dobře padne do ruky, vhodný k odehnání menších škůdců."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 2
+    }
+  },
+  {
+    "id": "raw_beeswax_chunk",
+    "name": {
+      "en": "Raw Beeswax Chunk",
+      "cs": "Kus surového včelího vosku"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "A fragrant chunk of beeswax, sticky and golden. Useful for waterproofing, candle making, and many other crafts.",
+      "cs": "Voňavý kus včelího vosku, lepkavý a zlatavý. Užitečný k impregnaci, výrobě svíček a mnoha dalším řemeslům."
+    }
+  },
+  {
+    "id": "fossilized_fern_imprint",
+    "name": {
+      "en": "Fossilized Fern Imprint",
+      "cs": "Zkamenělý otisk kapradí"
+    },
+    "rarity": "rare",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "research",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A clear impression of an ancient fern leaf on a smooth rock. A silent testament to the valley's deep past.",
+      "cs": "Jasný otisk prastarého listu kapradí na hladkém kameni. Němý svědek dávné minulosti údolí."
+    }
+  },
+  {
+    "id": "woven_reed_leading_rope",
+    "name": {
+      "en": "Woven Reed Leading Rope",
+      "cs": "Ohlávka z tkaného rákosí"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "trade",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A sturdy rope, expertly woven from tough reeds. Essential for guiding docile pack animals or livestock.",
+      "cs": "Pevné lano, zručně utkané z odolného rákosí. Nezbytné pro vedení krotkých zvířat nebo dobytka."
+    }
+  },
+  {
+    "id": "bone_sewing_kit",
+    "name": {
+      "en": "Bone Sewing Kit",
+      "cs": "Šitíčko z kostí"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A collection of bone needles, awls, and sinew thread, all kept in a small hide pouch. Perfect for mending or crafting new garments.",
+      "cs": "Sbírka kostěných jehel, šídel a šlachových nití, vše uložené v malém koženém váčku. Ideální pro opravy nebo výrobu nových oděvů."
+    }
+  },
+  {
+    "id": "crude_hide_mitts",
+    "name": {
+      "en": "Crude Hide Mitts",
+      "cs": "Hrubé kožené palčáky"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Roughly stitched pieces of cured hide, offering basic protection and warmth for hands in chilly weather.",
+      "cs": "Nahrubo sešité kusy zpracované kůže, poskytující základní ochranu a teplo rukou v chladném počasí."
+    }
+  },
+  {
+    "id": "flint_tipped_hunting_spear",
+    "name": {
+      "en": "Flint Tipped Hunting Spear",
+      "cs": "Lovecké kopí s pazourkovým hrotem"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A straight, strong wooden shaft fitted with a carefully flaked flint point. Designed for bringing down larger game.",
+      "cs": "Přímá, silná dřevěná tyč osazená pečlivě opracovaným pazourkovým hrotem. Určena k lovu větší zvěře."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 4
+    }
+  },
+  {
+    "id": "polished_driftwood_piece",
+    "name": {
+      "en": "Polished Driftwood Piece",
+      "cs": "Ohlazený kus naplaveného dřeva"
+    },
+    "rarity": "uncommon",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A beautiful piece of driftwood, smoothed by years in the river. Its unique shape and texture make it a pleasant decoration.",
+      "cs": "Krásný kus naplaveného dřeva, ohlazený lety v řece. Jeho jedinečný tvar a textura z něj činí příjemnou dekoraci."
+    }
+  },
+  {
+    "id": "bone_saw",
+    "name": {
+      "en": "Bone Saw",
+      "cs": "Kostní pila"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A jagged bone shard hafted to a sturdy handle, useful for rough cuts and preparing hides. Often used by Old Elara for precise cuts on wood.",
+      "cs": "Zubatý úlomek kosti připevněný k pevné rukojeti, užitečný pro hrubé řezy a přípravu kůží. Stará Elara ji často používá k přesným řezům do dřeva."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 3
+    }
+  },
+  {
+    "id": "thick_fur_hood",
+    "name": {
+      "en": "Thick Fur Hood",
+      "cs": "Huňatá kožešinová kukla"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 8
+      }
+    ],
+    "description": {
+      "en": "Made from the thickest parts of a winter bear hide, this hood offers excellent protection against the biting valley winds. Keeps one warm and focused.",
+      "cs": "Ušitá z nejhuňatějších částí kůže zimního medvěda, tato kukla nabízí vynikající ochranu před kousavými větry údolí. Udrží člověka v teple a soustředěného."
+    }
+  },
+  {
+    "id": "stone_hafted_axe",
+    "name": {
+      "en": "Stone-hafted Axe",
+      "cs": "Sekera s kamennou hlavicí"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "logging",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A heavy, sharp stone bound securely to a resilient hardwood handle. Good for felling smaller trees and a dependable deterrent for predators.",
+      "cs": "Těžký, ostrý kámen pevně připevněný k pružné rukojeti z tvrdého dřeva. Dobrý na kácení menších stromů a spolehlivý odstrašující prostředek proti predátorům."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 5
+    }
+  },
+  {
+    "id": "dried_mushroom_strings",
+    "name": {
+      "en": "Dried Mushroom Strings",
+      "cs": "Šňůry sušených hub"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "Wild mushrooms, carefully sliced and dried on strings, a common sight hanging in the colonist's homes. Provides flavor and sustenance.",
+      "cs": "Lesní houby, pečlivě nakrájené a sušené na šňůrách, běžný pohled visící v domech osadníků. Poskytují chuť i obživu."
+    }
+  },
+  {
+    "id": "peculiar_smooth_stone",
+    "name": {
+      "en": "Peculiar Smooth Stone",
+      "cs": "Podivný hladký kámen"
+    },
+    "rarity": "rare",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 7
+      }
+    ],
+    "description": {
+      "en": "Found by little Ada by the riverbend, this stone is perfectly smooth and has an unusual swirl of colors. Holding it brings a sense of calm.",
+      "cs": "Tento kámen, nalezený malou Adou u říčního ohybu, je dokonale hladký a má neobvyklý vír barev. Držet ho přináší pocit klidu."
+    }
+  },
+  {
+    "id": "simple_leather_halter",
+    "name": {
+      "en": "Simple Leather Halter",
+      "cs": "Jednoduchá kožená ohlávka"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "description": {
+      "en": "A basic halter crafted from cured hide, used to guide and tether smaller pack animals. Essential for tasks like gathering wood with a donkey.",
+      "cs": "Základní ohlávka vyrobená z upravené kůže, používaná k vedení a uvazování menších soumarů. Nezbytná pro úkoly jako sběr dřeva s oslem."
+    }
+  },
+  {
+    "id": "clay_shaping_tools",
+    "name": {
+      "en": "Clay Shaping Tools",
+      "cs": "Nářadí na tvarování hlíny"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A set of simple wooden and bone tools for working with clay, allowing for more intricate pottery and sculptures. Martha's specialty.",
+      "cs": "Sada jednoduchých dřevěných a kostěných nástrojů pro práci s hlínou, umožňující složitější keramiku a sochy. Specialita Marthy."
+    }
+  },
+  {
+    "id": "thick_hide_bracers",
+    "name": {
+      "en": "Thick Hide Bracers",
+      "cs": "Silné kožené nátepníky"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "Bracers fashioned from several layers of tough animal hide, providing decent protection to the forearms during skirmishes or heavy work.",
+      "cs": "Nátepníky zhotovené z několika vrstev tuhé zvířecí kůže, poskytující slušnou ochranu předloktí při šarvátkách nebo těžké práci."
+    }
+  },
+  {
+    "id": "woven_snare_trap",
+    "name": {
+      "en": "Woven Snare Trap",
+      "cs": "Pletená nástražná past"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A cleverly woven loop of strong plant fibers, designed to catch small game like rabbits or pheasants without damaging their meat. A favorite of old Silas.",
+      "cs": "Chytře upletená smyčka ze silných rostlinných vláken, navržená k chytání malé zvěře, jako jsou králíci nebo bažanti, aniž by poškodila jejich maso. Oblíbená u starého Silase."
+    }
+  },
+  {
+    "id": "flax_fiber_bundle",
+    "name": {
+      "en": "Flax Fiber Bundle",
+      "cs": "Svazek lněných vláken"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "Carefully harvested and processed flax stems, yielding strong, versatile fibers perfect for weaving cloth or making sturdy ropes. A valuable trade item.",
+      "cs": "Pečlivě sklizené a zpracované lněné stonky, poskytující silná, všestranná vlákna ideální pro tkaní látek nebo výrobu pevných provazů. Cenný obchodní artikl."
+    }
+  },
+  {
+    "id": "simple_wooden_hammer",
+    "name": {
+      "en": "Simple Wooden Hammer",
+      "cs": "Jednoduché dřevěné kladivo"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A basic, sturdy hammer made from a piece of hardwood and twine. Useful for construction tasks.",
+      "cs": "Základní, pevné kladivo vyrobené z kusu tvrdého dřeva a provazu. Užitečné pro stavební práce."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 1
+    }
+  },
+  {
+    "id": "dried_berry_cakes",
+    "name": {
+      "en": "Dried Berry Cakes",
+      "cs": "Sušené lesní placky"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "Sweetened mashed berries, dried into compact cakes. A good source of quick energy for travelers.",
+      "cs": "Sladké rozmačkané lesní plody, usušené do kompaktních placek. Dobrý zdroj rychlé energie pro cestovatele."
+    }
+  },
+  {
+    "id": "sharpened_bone_splinter",
+    "name": {
+      "en": "Sharpened Bone Splinter",
+      "cs": "Ostří z úlomku kosti"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A carefully sharpened sliver of bone, perfect for delicate carving or precise repairs.",
+      "cs": "Pečlivě nabroušený úlomek kosti, ideální pro jemné řezbářství nebo přesné opravy."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 1
+    }
+  },
+  {
+    "id": "rough_wool_blanket",
+    "name": {
+      "en": "Rough Wool Blanket",
+      "cs": "Hrubá vlněná deka"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Coarsely spun wool, woven into a thick blanket. Provides warmth and comfort on cold nights.",
+      "cs": "Hrubě spředená vlna utkaná do tlusté deky. Poskytuje teplo a pohodlí v chladných nocích."
+    }
+  },
+  {
+    "id": "woven_fiber_sling",
+    "name": {
+      "en": "Woven Fiber Sling",
+      "cs": "Pletený prak z vláken"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A simple sling crafted from strong plant fibers. Capable of launching small stones with surprising force.",
+      "cs": "Jednoduchý prak upletený ze silných rostlinných vláken. Schopný vrhat malé kameny s překvapivou silou."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 3
+    }
+  },
+  {
+    "id": "tanned_rabbit_hide",
+    "name": {
+      "en": "Tanned Rabbit Hide",
+      "cs": "Vydělaná králičí kůže"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "Soft and supple rabbit hide, carefully tanned. Useful for clothing repairs or small craft projects.",
+      "cs": "Měkká a poddajná králičí kůže, pečlivě vydělaná. Hodí se na opravy oděvů nebo drobné rukodělné projekty."
+    }
+  },
+  {
+    "id": "small_fishing_net",
+    "name": {
+      "en": "Small Fishing Net",
+      "cs": "Malá rybářská síť"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "foraging",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A finely woven net, sized for catching small fish in shallow waters.",
+      "cs": "Jemně utkaná síť, určená pro chytání malých ryb v mělkých vodách."
+    }
+  },
+  {
+    "id": "carved_wooden_flute",
+    "name": {
+      "en": "Carved Wooden Flute",
+      "cs": "Vyřezávaná dřevěná flétna"
+    },
+    "rarity": "uncommon",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A simple wooden flute, patiently carved. Its tunes can bring a moment of peace to the valley.",
+      "cs": "Jednoduchá dřevěná flétna, trpělivě vyřezávaná. Její melodie dokážou přinést na chvíli klid do údolí."
+    }
+  },
+  {
+    "id": "rough_pack_saddle",
+    "name": {
+      "en": "Rough Pack Saddle",
+      "cs": "Hrubé nákladní sedlo"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "trade",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A sturdy, albeit basic, pack saddle designed to help beasts of burden carry more supplies during trade expeditions.",
+      "cs": "Pevné, byť základní, nákladní sedlo navržené tak, aby pomohlo zvířatům utáhnout více zásob během obchodních výprav."
+    }
+  },
+  {
+    "id": "flint_scraper",
+    "name": {
+      "en": "Flint Scraper",
+      "cs": "Pazourková škrabka"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A sharp piece of flint bound to a handle, ideal for scraping hides, shaping wood, or preparing fibers.",
+      "cs": "Ostrý kus pazourku připevněný k rukojeti, ideální pro škrabání kůží, tvarování dřeva nebo přípravu vláken."
+    }
+  },
+  {
+    "id": "woven_reed_fishing_net",
+    "name": {
+      "en": "Woven Reed Fishing Net",
+      "cs": "Pletená rákosová síť"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "foraging",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A simple net woven from sturdy reeds, suitable for catching small fish in calm waters. Ondřej finds his catch improves significantly.",
+      "cs": "Pletená síť z rákosu, ideální pro chytání menších ryb v klidných vodách. Rybář Ondřej s ní má podstatně lepší úlovek."
+    }
+  },
+  {
+    "id": "thick_hide_rain_boots",
+    "name": {
+      "en": "Thick Hide Rain Boots",
+      "cs": "Holínky ze silné kůže"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "Rugged boots made from treated hide, keeping feet dry and warm through the valley's frequent downpours and marshy terrain.",
+      "cs": "Robusní boty z upravené kůže, které udrží nohy v suchu a teple i v častých lijácích a v bažinatém terénu údolí."
+    }
+  },
+  {
+    "id": "bone_hide_awl",
+    "name": {
+      "en": "Bone Hide Awl",
+      "cs": "Kostěné šídlo na kůži"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A sharp awl crafted from bone, essential for piercing tough hides and leather. Klára values it for all her sewing projects.",
+      "cs": "Ostré šídlo z kosti, nepostradatelné pro propichování tuhých kůží a usní. Klára si bez něj neumí představit šití."
+    }
+  },
+  {
+    "id": "polished_river_pearl",
+    "name": {
+      "en": "Polished River Pearl",
+      "cs": "Leštěná říční perla"
+    },
+    "rarity": "rare",
+    "slot": "material",
+    "substance": "stone",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "influence",
+        "perTick": 3
+      }
+    ],
+    "description": {
+      "en": "A smooth, iridescent pearl found in the deeper riverbeds. Highly sought after by passing traders, it subtly boosts the colony's influence.",
+      "cs": "Hladká, duhově lesklá perla nalezená v hlubších částech říčního koryta. Je vyhledávaná kolemjdoucími obchodníky a diskrétně posiluje vliv osady."
+    }
+  },
+  {
+    "id": "simple_load_harness",
+    "name": {
+      "en": "Simple Load Harness",
+      "cs": "Jednoduchý nákladní postroj"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "trade",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A basic harness designed to distribute weight, allowing beasts of burden to carry more goods efficiently. Essential for longer trading expeditions.",
+      "cs": "Základní postroj navržený k rozložení váhy, který umožňuje tažným zvířatům efektivně nést více zboží. Nezbytný pro delší obchodní výpravy."
+    }
+  },
+  {
+    "id": "hardwood_throwing_spear",
+    "name": {
+      "en": "Hardwood Throwing Spear",
+      "cs": "Kopí z tvrdého dřeva"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [],
+    "description": {
+      "en": "A light, well-balanced spear carved from dense hardwood. Effective for hunting small to medium game from a distance.",
+      "cs": "Lehké, dobře vyvážené kopí vyřezané z tvrdého dřeva. Účinné pro lov malé až střední zvěře na dálku."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 3
+    }
+  },
+  {
+    "id": "fossilized_fish_print",
+    "name": {
+      "en": "Fossilized Fish Print",
+      "cs": "Zkamenělý otisk ryby"
+    },
+    "rarity": "uncommon",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "research",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "The clear imprint of an ancient fish in stone, a silent testament to the valley's deep past. Aneta finds it fuels her curiosity and research.",
+      "cs": "Jasný otisk dávné ryby v kameni, tiché svědectví o hluboké historii údolí. Aneta v něm nachází inspiraci pro svůj výzkum."
+    }
+  },
+  {
+    "id": "processed_resin_block",
+    "name": {
+      "en": "Processed Resin Block",
+      "cs": "Zpracovaný pryskyřicový blok"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "substance": "wood",
+    "description": {
+      "en": "A solid block of refined tree resin, useful for sealing, waterproofing, and as a potent adhesive in various crafting applications.",
+      "cs": "Pevný blok rafinované stromové pryskyřice, užitečný pro tmelení, vodotěsnost a jako silné lepidlo v různých řemeslných aplikacích."
+    }
+  },
+  {
+    "id": "woven_reed_gatherers_hat",
+    "name": {
+      "en": "Woven Reed Gatherer's Hat",
+      "cs": "Pletený rákosový klobouk sběrače"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "foraging",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A wide-brimmed hat woven from reeds, providing shade from the sun and light protection from brush. Eva wears hers on every trip into the woods.",
+      "cs": "Klobouk s širokou krempou upletený z rákosu, poskytující stín před sluncem a lehkou ochranu před křovím. Eva ho nosí při každé výpravě do lesa."
+    }
+  },
+  {
+    "id": "wild_root_poultice",
+    "name": {
+      "en": "Wild Root Poultice",
+      "cs": "Obklad z divokých kořenů"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "substance": "foliage",
+    "effects": [
+      {
+        "type": "health_regen",
+        "amount": 10
+      }
+    ],
+    "description": {
+      "en": "A medicinal paste made from crushed wild roots and herbs, applied to wounds to speed healing and alleviate pain.",
+      "cs": "Léčivá pasta z rozdrcených divokých kořenů a bylin, která se přikládá na rány pro urychlení hojení a zmírnění bolesti."
+    }
+  },
+  {
+    "id": "bone_carving_chisels",
+    "name": {
+      "en": "Bone Carving Chisels",
+      "cs": "Kostěná řezbářská dláta"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A small set of sharpened bone chisels, perfect for detailed work on wood or softer stone. Elara often uses these for her totems.",
+      "cs": "Malá sada ostrých kostěných dlát, ideální pro detailní práci se dřevem nebo měkčím kamenem. Elara je často používá na své totemy."
+    }
+  },
+  {
+    "id": "woven_reed_rain_cloak",
+    "name": {
+      "en": "Woven Reed Rain Cloak",
+      "cs": "Pláštěnka z proplétaných rákosů"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Coarsely woven reeds provide some protection against light drizzle, keeping the chill away. Better than nothing, as old Jaromír always says.",
+      "cs": "Nahrubo propletené rákosy poskytují ochranu před lehkým mrholením a brání prochladnutí. Lepší než nic, jak vždycky říká starý Jaromír."
+    }
+  },
+  {
+    "id": "sharpened_deer_antler",
+    "name": {
+      "en": "Sharpened Deer Antler",
+      "cs": "Naostřený jelení paroh"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A naturally shed antler, sharpened to a dangerous point. Young Kolya uses his to finish off snared rabbits.",
+      "cs": "Přirozeně shozený paroh, naostřený do nebezpečné špičky. Mladý Kolja s ním dobíjí chycené králíky."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 3
+    }
+  },
+  {
+    "id": "cured_rabbit_pelt",
+    "name": {
+      "en": "Cured Rabbit Pelt",
+      "cs": "Ošetřená králičí kožešina"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "A soft rabbit hide, carefully scraped and dried to prevent rot. Ready for further processing into warm clothing or simple pouches.",
+      "cs": "Měkká králičí kůže, pečlivě oškrábaná a usušená, aby se zabránilo hnilobě. Připravená k dalšímu zpracování na teplé oblečení nebo jednoduché váčky."
+    }
+  },
+  {
+    "id": "polished_petrified_leaf",
+    "name": {
+      "en": "Polished Petrified Leaf",
+      "cs": "Leštěný zkamenělý list"
+    },
+    "rarity": "rare",
+    "slot": "artifact",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 7
+      }
+    ],
+    "description": {
+      "en": "A fossilized leaf, smooth and cool to the touch, polished by the river's flow. Anya found it near the old sycamore and keeps it for luck.",
+      "cs": "Zkamenělý list, hladký a chladný na dotek, vyleštěný tokem řeky. Anya ho našla u starého javoru a chová si ho pro štěstí."
+    }
+  },
+  {
+    "id": "simple_animal_lead_rope",
+    "name": {
+      "en": "Simple Animal Lead Rope",
+      "cs": "Jednoduché vodítko pro zvířata"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "farming",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A sturdy rope, braided from strong valley grasses and plant fibers. Essential for leading goats or teaching young pack-lizards.",
+      "cs": "Pevné lano, spletené ze silných trav a rostlinných vláken z údolí. Nezbytné pro vedení koz nebo výcvik mladých batohových ještěrek."
+    }
+  },
+  {
+    "id": "clay_shaping_rib",
+    "name": {
+      "en": "Clay Shaping Rib",
+      "cs": "Hrnčířská žebra"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A smooth piece of bone or hard wood, used by Marija to refine the curves of her pots and bowls.",
+      "cs": "Hladký kus kosti nebo tvrdého dřeva, který Marija používá k vylepšování křivek svých hrnců a misek."
+    }
+  },
+  {
+    "id": "thick_hide_apron",
+    "name": {
+      "en": "Thick Hide Apron",
+      "cs": "Zástěra z tlusté kůže"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A heavy apron made from cured animal hide, providing good protection against sparks, spills, or accidental cuts in the workshop.",
+      "cs": "Těžká zástěra vyrobená z vyčiněné zvířecí kůže, poskytující dobrou ochranu před jiskrami, rozlitými tekutinami nebo náhodnými řezy v dílně."
+    }
+  },
+  {
+    "id": "pouch_of_smooth_stones",
+    "name": {
+      "en": "Pouch of Smooth Stones",
+      "cs": "Váček s hladkými kameny"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "stone",
+    "description": {
+      "en": "A small leather pouch filled with river stones, perfectly sized and weighted for a sling. Favored by the colony's younger defenders.",
+      "cs": "Malý kožený váček plný říčních kamenů, perfektně velikostně a váhově vhodných pro prak. Oblíbený mezi mladšími obránci kolonie."
+    }
+  },
+  {
+    "id": "wild_root_basket",
+    "name": {
+      "en": "Wild Root Basket",
+      "cs": "Koš divokých kořenů"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "food",
+        "perTick": 2
+      }
+    ],
+    "description": {
+      "en": "A tightly woven basket overflowing with nutrient-rich roots, gathered from the deeper parts of the valley. Enough to feed a few mouths for a day.",
+      "cs": "Pevně pletený koš plný výživných kořenů, nasbíraných z hlubších částí údolí. Dost na nakrmení několika úst na jeden den."
+    }
   }
 ]

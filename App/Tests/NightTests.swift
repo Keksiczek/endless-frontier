@@ -229,3 +229,82 @@ struct MoonTests {
         #expect(crescent < 0.15)
     }
 }
+
+/// **The other half of a monotonous night: nothing was burning in it.**
+///
+/// The windows have been lit since houses were drawn — and every one of them
+/// was ground to grey by the saturation blend `nightWash` opens with, which
+/// runs afterwards and over everything. A town of seventy asleep looked like an
+/// empty one. These pin the rule that decides who burns, because "the whole
+/// colony is floodlit" and "the colony is dark" are the same bug twice.
+@Suite("The lamps")
+struct LampTests {
+
+    private func building(
+        _ glyph: SettlementRenderer.BuildingGlyph, residents: Int = 0,
+        underConstruction: Bool = false, condition: Double = 1
+    ) -> SettlementRenderer.PlacedBuilding {
+        SettlementRenderer.PlacedBuilding(
+            id: 1, definitionID: "x", name: "X", glyph: glyph,
+            center: CGPoint(x: 100, y: 100), size: 30,
+            footprint: CGSize(width: 40, height: 40),
+            underConstruction: underConstruction, progress: 0.5, seed: 12345,
+            era: .earlySettlement, fabric: .wood, floors: 1,
+            workers: 2, residents: residents, condition: condition)
+    }
+
+    @Test("A home with somebody in it burns; an empty one does not")
+    func onlyOccupiedHomesBurn() {
+        #expect(SettlementRenderer.nightLamps(placed: [building(.house, residents: 3)]).count == 1)
+        #expect(SettlementRenderer.nightLamps(placed: [building(.house, residents: 0)]).isEmpty)
+    }
+
+    @Test("A full house throws more light than a nearly empty one")
+    func fullerHomesBurnHarder() {
+        let one = SettlementRenderer.nightLamps(placed: [building(.house, residents: 1)])[0]
+        let four = SettlementRenderer.nightLamps(placed: [building(.house, residents: 4)])[0]
+        #expect(four.strength > one.strength)
+    }
+
+    @Test("Most of the colony sleeps unlit")
+    func storesAndFieldsStayDark() {
+        for glyph in [SettlementRenderer.BuildingGlyph.granary, .market, .well,
+                      .farm, .mine, .sawmill, .wall, .vault] {
+            #expect(SettlementRenderer.nightLamps(placed: [building(glyph)]).isEmpty,
+                    "\(glyph) has no business burning at 2am")
+        }
+    }
+
+    @Test("A banked fire glows whatever the hour, and redder than a hearth")
+    func forgesAreBankedNotLit() {
+        let forge = SettlementRenderer.nightLamps(placed: [building(.forge)])
+        #expect(forge.count == 1, "a forge keeps its fire in overnight")
+        #expect(forge[0].colour == SettlementLight.ember)
+        let home = SettlementRenderer.nightLamps(placed: [building(.house, residents: 4)])[0]
+        #expect(home.colour == SettlementLight.hearth)
+    }
+
+    @Test("A half-built house has no fire in it")
+    func buildingSitesAreDark() {
+        #expect(SettlementRenderer.nightLamps(
+            placed: [building(.house, residents: 3, underConstruction: true)]).isEmpty)
+    }
+
+    @Test("A ruin does not keep its fire in")
+    func ruinsBurnLower() {
+        let sound = SettlementRenderer.nightLamps(placed: [building(.house, residents: 4)])[0]
+        let ruin = SettlementRenderer.nightLamps(
+            placed: [building(.house, residents: 4, condition: 0.1)])[0]
+        #expect(ruin.strength < sound.strength)
+    }
+
+    /// The point of the whole thing: after dark, a town looks like a town.
+    @Test("A settlement after dark has lights in it")
+    func aTownIsVisibleAtNight() {
+        let town = (0..<8).map { _ in building(.house, residents: 3) }
+            + [building(.forge), building(.granary), building(.well)]
+        let lamps = SettlementRenderer.nightLamps(placed: town)
+        #expect(lamps.count == 9, "eight homes and a forge; the store and the well are dark")
+        #expect(lamps.allSatisfy { $0.strength > 0.1 && $0.radius > 0 })
+    }
+}

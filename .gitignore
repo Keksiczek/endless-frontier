@@ -1,4 +1,10 @@
 .DS_Store
+
+# The generation tools read an API key from here. Never committed.
+.env
+# Model drafts are read and merged by hand; only the merged content is content.
+Tools/drafts/
+__pycache__/
 *.xcodeproj
 *.xcworkspace
 xcuserdata/

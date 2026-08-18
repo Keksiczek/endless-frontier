@@ -1,109 +1,199 @@
 [
   {
     "id": "rationing",
-    "name": { "en": "Rationing", "cs": "Přídělový systém" },
+    "name": {
+      "en": "Rationing",
+      "cs": "Přídělový systém"
+    },
     "summary": {
       "en": "Stores are locked and portions measured. The colony eats far less — and likes it far less.",
       "cs": "Sýpky se zamykají a porce se odměřují. Osada spotřebuje mnohem méně — a mnohem méně se jí to líbí."
     },
     "duration_years": 10,
     "weight": 2.0,
-    "conditions": [{ "stat": "settlement:any.morale", "max": 100 }],
-    "modifiers": { "food_upkeep_multiplier": 0.62, "morale_flat": -6 },
-    "vote_bias": { "sociability": -0.2, "poor_favour": 0.15 }
+    "conditions": [
+      {
+        "stat": "settlement:any.morale",
+        "max": 100
+      }
+    ],
+    "modifiers": {
+      "food_upkeep_multiplier": 0.62,
+      "morale_flat": -6
+    },
+    "vote_bias": {
+      "sociability": -0.2,
+      "poor_favour": 0.15
+    }
   },
   {
     "id": "feast",
-    "name": { "en": "Feast of Plenty", "cs": "Slavnost hojnosti" },
+    "name": {
+      "en": "Feast of Plenty",
+      "cs": "Slavnost hojnosti"
+    },
     "summary": {
       "en": "Open the granaries for a night. The colony remembers it for years.",
       "cs": "Na jednu noc otevřít sýpky. Osada na to bude vzpomínat léta."
     },
     "duration_years": 2,
     "weight": 1.0,
-    "modifiers": { "morale_flat": 6 },
-    "vote_bias": { "sociability": 0.35 },
+    "modifiers": {
+      "morale_flat": 6
+    },
+    "vote_bias": {
+      "sociability": 0.35
+    },
     "effects": [
-      { "type": "resource_delta", "resource": "food", "delta": -60, "scope": "global" },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 14 }
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -60,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 14
+      }
     ]
   },
   {
     "id": "family_support",
-    "name": { "en": "Support for Families", "cs": "Podpora rodin" },
+    "name": {
+      "en": "Support for Families",
+      "cs": "Podpora rodin"
+    },
     "summary": {
       "en": "Households with children get a larger share. The cradles fill.",
       "cs": "Domácnosti s dětmi dostávají větší díl. Kolébky se plní."
     },
     "duration_years": 12,
     "weight": 1.2,
-    "modifiers": { "birth_rate_multiplier": 1.8, "morale_flat": 2 },
-    "vote_bias": { "fertility": 0.4, "sociability": 0.1 }
+    "modifiers": {
+      "birth_rate_multiplier": 1.8,
+      "morale_flat": 2
+    },
+    "vote_bias": {
+      "fertility": 0.4,
+      "sociability": 0.1
+    }
   },
   {
     "id": "school",
-    "name": { "en": "Found a School", "cs": "Zřízení školy" },
+    "name": {
+      "en": "Found a School",
+      "cs": "Zřízení školy"
+    },
     "summary": {
       "en": "The children are taught letters. Knowledge accrues half again as fast.",
       "cs": "Děti se učí písmenům. Znalosti přibývají o polovinu rychleji."
     },
     "duration_years": 20,
     "weight": 1.3,
-    "modifiers": { "knowledge_multiplier": 1.5, "morale_flat": 2 },
-    "vote_bias": { "industry": 0.3, "sociability": 0.1 }
+    "modifiers": {
+      "knowledge_multiplier": 1.5,
+      "morale_flat": 2
+    },
+    "vote_bias": {
+      "industry": 0.3,
+      "sociability": 0.1
+    }
   },
   {
     "id": "night_watch",
-    "name": { "en": "Night Watches", "cs": "Noční hlídky" },
+    "name": {
+      "en": "Night Watches",
+      "cs": "Noční hlídky"
+    },
     "summary": {
       "en": "Lanterns on the perimeter, spears by the door. Beasts and raiders think twice.",
       "cs": "Lucerny na hranicích, oštěpy u dveří. Šelmy i nájezdníci si to rozmyslí."
     },
     "duration_years": 10,
     "weight": 1.4,
-    "conditions": [{ "stat": "global.threatLevel", "min": 15 }],
-    "modifiers": { "defense_flat": 12, "morale_flat": -2 },
-    "vote_bias": { "courage": -0.25 }
+    "conditions": [
+      {
+        "stat": "global.threatLevel",
+        "min": 15
+      }
+    ],
+    "modifiers": {
+      "defense_flat": 12,
+      "morale_flat": -2
+    },
+    "vote_bias": {
+      "courage": -0.25
+    }
   },
   {
     "id": "trade_road",
-    "name": { "en": "The Trade Road", "cs": "Obchodní stezka" },
+    "name": {
+      "en": "The Trade Road",
+      "cs": "Obchodní stezka"
+    },
     "summary": {
       "en": "Clear a road to the outside world. Coin and rumour both flow in.",
       "cs": "Prosekat cestu k okolnímu světu. Přitečou mince i zvěsti."
     },
     "duration_years": 15,
     "weight": 1.0,
-    "modifiers": { "influence_per_tick": 0.4 },
-    "vote_bias": { "sociability": 0.25, "poor_favour": -0.1 }
+    "modifiers": {
+      "influence_per_tick": 0.4
+    },
+    "vote_bias": {
+      "sociability": 0.25,
+      "poor_favour": -0.1
+    }
   },
   {
     "id": "forest_protection",
-    "name": { "en": "Protection of the Woods", "cs": "Ochrana lesů" },
+    "name": {
+      "en": "Protection of the Woods",
+      "cs": "Ochrana lesů"
+    },
     "summary": {
       "en": "Felling is limited so the forest can grow back. The land recovers twice as fast.",
       "cs": "Kácení se omezuje, aby les stačil dorůst. Krajina se zotavuje dvakrát rychleji."
     },
     "duration_years": 12,
     "weight": 1.1,
-    "modifiers": { "deposit_regrowth_multiplier": 2.0, "morale_flat": -1 },
-    "vote_bias": { "industry": -0.2, "sociability": 0.15 }
+    "modifiers": {
+      "deposit_regrowth_multiplier": 2.0,
+      "morale_flat": -1
+    },
+    "vote_bias": {
+      "industry": -0.2,
+      "sociability": 0.15
+    }
   },
   {
     "id": "tithe",
-    "name": { "en": "The Tithe", "cs": "Desátek do pokladny" },
+    "name": {
+      "en": "The Tithe",
+      "cs": "Desátek do pokladny"
+    },
     "summary": {
       "en": "A quarter of every wage goes to the common purse. The poor gain, the wealthy grumble.",
       "cs": "Čtvrtina každé mzdy putuje do obecní pokladny. Chudí získají, zámožní reptají."
     },
     "duration_years": 15,
     "weight": 1.1,
-    "modifiers": { "wage_tax_fraction": 0.25, "influence_per_tick": 0.2, "morale_flat": -2 },
-    "vote_bias": { "poor_favour": 0.4 }
+    "modifiers": {
+      "wage_tax_fraction": 0.25,
+      "influence_per_tick": 0.2,
+      "morale_flat": -2
+    },
+    "vote_bias": {
+      "poor_favour": 0.4
+    }
   },
   {
     "id": "expedition",
-    "name": { "en": "Expedition for Fields", "cs": "Expedice za poli" },
+    "name": {
+      "en": "Expedition for Fields",
+      "cs": "Expedice za poli"
+    },
     "summary": {
       "en": "Send a party beyond the known world to break new ground.",
       "cs": "Vyslat výpravu za obzor známého světa a zorat novou půdu."
@@ -111,26 +201,538 @@
     "duration_years": 6,
     "weight": 1.2,
     "modifiers": {},
-    "vote_bias": { "courage": 0.35, "industry": 0.15 },
+    "vote_bias": {
+      "courage": 0.35,
+      "industry": 0.15
+    },
     "effects": [
-      { "type": "resource_delta", "resource": "food", "delta": 220, "scope": "global" },
-      { "type": "stat_delta", "stat": "settlement:all.morale", "delta": 4 }
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": 220,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 4
+      }
     ]
   },
   {
     "id": "temple",
-    "name": { "en": "Raise a Temple", "cs": "Stavba chrámu" },
+    "name": {
+      "en": "Raise a Temple",
+      "cs": "Stavba chrámu"
+    },
     "summary": {
       "en": "Cut stone for the gods. Comfort in disaster, and a cult is born.",
       "cs": "Vytesat kámen bohům. Útěcha v pohromách — a zrodí se kult."
     },
     "duration_years": 40,
     "weight": 0.9,
-    "conditions": [{ "stat": "global.prosperity", "min": 35 }],
-    "modifiers": { "morale_flat": 5, "influence_per_tick": 0.15 },
-    "vote_bias": { "sociability": 0.3, "courage": -0.1 },
+    "conditions": [
+      {
+        "stat": "global.prosperity",
+        "min": 35
+      }
+    ],
+    "modifiers": {
+      "morale_flat": 5,
+      "influence_per_tick": 0.15
+    },
+    "vote_bias": {
+      "sociability": 0.3,
+      "courage": -0.1
+    },
     "effects": [
-      { "type": "resource_delta", "resource": "materials", "delta": -90, "scope": "global" }
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -90,
+        "scope": "global"
+      }
     ]
+  },
+  {
+    "id": "elders_rest",
+    "name": {
+      "en": "The Elders' Rest",
+      "cs": "Stařecký odpočinek"
+    },
+    "summary": {
+      "en": "Those past sixty years no longer need to work. The colony provides for them, but some of the young resent the extra burden.",
+      "cs": "Ti, jimž je přes šedesát, už nemusí pracovat. Osada se o ně postará, ale někteří mladí vnímají novou povinnost jako břemeno."
+    },
+    "duration_years": 20,
+    "weight": 1.2,
+    "modifiers": {
+      "food_upkeep_multiplier": 1.15,
+      "morale_flat": 2
+    },
+    "vote_bias": {
+      "sociability": 0.2,
+      "industry": -0.2
+    }
+  },
+  {
+    "id": "land_inheritance",
+    "name": {
+      "en": "Land Inheritance",
+      "cs": "Dědění půdy"
+    },
+    "summary": {
+      "en": "Fields and workshops may now be passed down within a family. Some prosper, but the landless now have little hope of gaining their own.",
+      "cs": "Pole a dílny se nyní smějí dědit v rodině. Někteří zbohatnou, ale bezzemci teď mají jen malou naději, že se kdy dopracují k vlastnímu."
+    },
+    "duration_years": 25,
+    "weight": 1.0,
+    "modifiers": {
+      "influence_per_tick": 0.2,
+      "morale_flat": -2
+    },
+    "vote_bias": {
+      "poor_favour": -0.3,
+      "industry": 0.15
+    }
+  },
+  {
+    "id": "strict_observance",
+    "name": {
+      "en": "Strict Observance",
+      "cs": "Přísné obřady"
+    },
+    "summary": {
+      "en": "The Assembly decrees more frequent rituals and offerings to the valley's spirits. The faithful are pleased, but the extra food offerings are a burden on all.",
+      "cs": "Sněm nařizuje častější rituály a obětiny duchům údolí. Věřící to těší, ale obětované jídlo navíc je břemenem pro všechny."
+    },
+    "duration_years": 12,
+    "weight": 1.1,
+    "modifiers": {
+      "food_upkeep_multiplier": 1.1,
+      "morale_flat": 3
+    },
+    "vote_bias": {
+      "sociability": 0.1,
+      "poor_favour": -0.1
+    }
+  },
+  {
+    "id": "open_doors",
+    "name": {
+      "en": "Open Doors Policy",
+      "cs": "Politika otevřených dveří"
+    },
+    "summary": {
+      "en": "Any newcomer who finds their way to the valley will be given shelter and a place. Some colonists fear the strangers, but new ideas are always welcome.",
+      "cs": "Každý příchozí, který najde cestu do údolí, dostane přístřeší a své místo. Někteří osadníci se cizinců bojí, ale nové myšlenky se vždycky hodí."
+    },
+    "duration_years": 15,
+    "weight": 1.2,
+    "modifiers": {
+      "knowledge_multiplier": 1.2,
+      "morale_flat": -2
+    },
+    "vote_bias": {
+      "sociability": 0.3,
+      "courage": -0.15
+    }
+  },
+  {
+    "id": "childrens_freedom",
+    "name": {
+      "en": "Children's Freedom",
+      "cs": "Svoboda pro děti"
+    },
+    "summary": {
+      "en": "A law is passed forbidding children from heavy labour. They have more time for school and play, but there are fewer hands to help with the harvest.",
+      "cs": "Schválí se zákon, který dětem zakazuje těžkou práci. Mají víc času na školu a hry, ale při sklizni teď chybí pomocné ruce."
+    },
+    "duration_years": 18,
+    "weight": 1.3,
+    "modifiers": {
+      "knowledge_multiplier": 1.25,
+      "food_upkeep_multiplier": 1.1,
+      "morale_flat": 1
+    },
+    "vote_bias": {
+      "industry": -0.3,
+      "sociability": 0.2
+    }
+  },
+  {
+    "id": "wealth_levy",
+    "name": {
+      "en": "Wealth Levy",
+      "cs": "Majetková dávka"
+    },
+    "summary": {
+      "en": "An emergency levy on the 'hoarded' wealth of the most prosperous families. The resources will help the whole colony through a hard time, but the act creates bitter resentment.",
+      "cs": "Mimořádná dávka z „nahoromaděného“ jmění nejzámožnějších rodin. Získané zásoby pomůžou celé osadě překonat zlé časy, ale tenhle čin plodí hořkou zášť."
+    },
+    "duration_years": 2,
+    "weight": 0.9,
+    "conditions": [
+      {
+        "stat": "settlement:any.morale",
+        "max": 70
+      }
+    ],
+    "modifiers": {},
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": 150,
+        "scope": "global"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": 150,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -10
+      }
+    ],
+    "vote_bias": {
+      "poor_favour": 0.4,
+      "industry": -0.2
+    }
+  },
+  {
+    "id": "common_granary",
+    "name": {
+      "en": "Common Granary",
+      "cs": "Společná sýpka"
+    },
+    "summary": {
+      "en": "Private stores are pooled into a common granary, from which all are fed equally. No one will feast while another starves, but the most productive farmers resent it.",
+      "cs": "Soukromé zásoby se slévají do společné sýpky, z níž se všem sytí stejně. Nikdo nebude hodovat, dokud jiný hladoví, ale nejvýkonnějším hospodářům se to nelíbí."
+    },
+    "duration_years": 10,
+    "weight": 1.4,
+    "modifiers": {
+      "food_upkeep_multiplier": 0.9,
+      "morale_flat": -3
+    },
+    "vote_bias": {
+      "poor_favour": 0.4,
+      "industry": -0.3
+    }
+  },
+  {
+    "id": "great_hewing",
+    "name": {
+      "en": "The Great Hewing",
+      "cs": "Velké kácení"
+    },
+    "summary": {
+      "en": "For one season, the colony will set aside other work to fell timber and quarry stone. The stores will be full, but the people's spirits will suffer from the toil.",
+      "cs": "Na jedno roční období osada odloží jinou práci, aby kácela dříví a lámala kámen. Sklady se naplní, ale duch lidí utrpí tou dřinou."
+    },
+    "duration_years": 4,
+    "weight": 1.0,
+    "modifiers": {
+      "morale_flat": -4
+    },
+    "vote_bias": {
+      "industry": 0.4,
+      "sociability": -0.2
+    },
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": 250,
+        "scope": "global"
+      }
+    ]
+  },
+  {
+    "id": "outsider_rights",
+    "name": {
+      "en": "Charter of Outsiders",
+      "cs": "Listina pro příchozí"
+    },
+    "summary": {
+      "en": "Newcomers shall be granted the same standing and property rights as the founders' kin. Our community may grow, but some of the old families are unsettled.",
+      "cs": "Příchozí získají stejné postavení a majetková práva jako potomci zakladatelů. Naše obec se může rozrůst, ale některé staré rody to znepokojuje."
+    },
+    "duration_years": 15,
+    "weight": 1.2,
+    "modifiers": {
+      "influence_per_tick": 0.3,
+      "morale_flat": -1
+    },
+    "vote_bias": {
+      "sociability": 0.3,
+      "poor_favour": 0.1
+    }
+  },
+  {
+    "id": "elders_council",
+    "name": {
+      "en": "Elders' Council",
+      "cs": "Rada starších"
+    },
+    "summary": {
+      "en": "The elders will form a council to advise the assembly. Their wisdom will guide us, but they must be well-fed to provide it.",
+      "cs": "Nejstarší z osady utvoří radu, která bude radit shromáždění. Jejich moudrost nás povede, ale aby nám mohli radit, musí se dobře najíst."
+    },
+    "duration_years": 20,
+    "weight": 1.4,
+    "modifiers": {
+      "knowledge_multiplier": 1.3,
+      "food_upkeep_multiplier": 1.15
+    },
+    "vote_bias": {
+      "sociability": 0.2,
+      "industry": -0.1
+    }
+  },
+  {
+    "id": "consecrated_ground",
+    "name": {
+      "en": "Consecrated Ground",
+      "cs": "Zasvěcená půda"
+    },
+    "summary": {
+      "en": "The Old Grove by the river is declared sacred. This pleases the faithful, but with less land to work, the valley's forests and quarries recover more slowly.",
+      "cs": "Starý háj u řeky se prohlašuje za posvátný. To těší věřící, ale s menším kusem země k obdělávání se lesy a lomy v údolí zotavují pomaleji."
+    },
+    "duration_years": 18,
+    "weight": 1.1,
+    "modifiers": {
+      "morale_flat": 3,
+      "deposit_regrowth_multiplier": 0.7
+    },
+    "vote_bias": {
+      "sociability": 0.25,
+      "industry": -0.3
+    }
+  },
+  {
+    "id": "formal_apprenticeships",
+    "name": {
+      "en": "Formal Apprenticeships",
+      "cs": "Učňovský řád"
+    },
+    "summary": {
+      "en": "Every youth will be apprenticed to a master craftsman. It will cost a great deal of materials to supply them, but the colony's skills will grow.",
+      "cs": "Každý mladý člověk bude přidělen do učení k mistru řemeslníkovi. Bude stát spoustu materiálu je zaopatřit, ale dovednosti osady díky tomu porostou."
+    },
+    "duration_years": 15,
+    "weight": 1.3,
+    "modifiers": {
+      "knowledge_multiplier": 1.4
+    },
+    "vote_bias": {
+      "industry": 0.3,
+      "poor_favour": -0.1
+    },
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -150,
+        "scope": "global"
+      }
+    ]
+  },
+  {
+    "id": "ancestors_wisdom",
+    "name": {
+      "en": "Wisdom of the Ancestors",
+      "cs": "Moudrost předků"
+    },
+    "summary": {
+      "en": "The elders are to be consulted on all matters. They cease their labours, but their wisdom guides the colony.",
+      "cs": "Starším se naslouchá ve všech věcech. Přestávají pracovat, ale jejich moudrost vede osadu."
+    },
+    "duration_years": 15,
+    "weight": 1.2,
+    "modifiers": {
+      "knowledge_multiplier": 1.3,
+      "food_upkeep_multiplier": 1.1,
+      "morale_flat": 1
+    },
+    "vote_bias": {
+      "industry": -0.2,
+      "sociability": 0.2
+    }
+  },
+  {
+    "id": "private_plots",
+    "name": {
+      "en": "Private Plots",
+      "cs": "Soukromé záhony"
+    },
+    "summary": {
+      "en": "Each family is granted a small plot to farm for themselves. They work harder on their own soil, but some will have more than others.",
+      "cs": "Každá rodina dostane malý kus země, aby na něm hospodařila pro sebe. Na svém se lidé víc snaží, ale někteří budou mít víc než druzí."
+    },
+    "duration_years": 20,
+    "weight": 1.4,
+    "modifiers": {
+      "food_upkeep_multiplier": 0.9,
+      "morale_flat": -2
+    },
+    "vote_bias": {
+      "poor_favour": -0.2,
+      "industry": 0.3
+    }
+  },
+  {
+    "id": "day_of_rest",
+    "name": {
+      "en": "Day of Rest",
+      "cs": "Den odpočinku"
+    },
+    "summary": {
+      "en": "One day in seven is dedicated to prayer and reflection. Less work gets done, but souls are eased.",
+      "cs": "Jeden den v týdnu je vyhrazen modlitbě a rozjímání. Méně se pracuje, ale duše dojdou klidu."
+    },
+    "duration_years": 10,
+    "weight": 1.0,
+    "modifiers": {
+      "morale_flat": 4
+    },
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -150,
+        "scope": "global"
+      }
+    ],
+    "vote_bias": {
+      "industry": -0.3,
+      "sociability": 0.15
+    }
+  },
+  {
+    "id": "guarding_the_pass",
+    "name": {
+      "en": "Guarding the Pass",
+      "cs": "Stráž v průsmyku"
+    },
+    "summary": {
+      "en": "The pass is watched day and night. We are safer, but also more alone.",
+      "cs": "Průsmyk se hlídá dnem i nocí. Jsme ve větším bezpečí, ale také sami."
+    },
+    "duration_years": 12,
+    "weight": 1.1,
+    "modifiers": {
+      "influence_per_tick": -0.3,
+      "morale_flat": 1
+    },
+    "vote_bias": {
+      "sociability": -0.4,
+      "courage": -0.1
+    }
+  },
+  {
+    "id": "work_quotas",
+    "name": {
+      "en": "Work Quotas",
+      "cs": "Pracovní normy"
+    },
+    "summary": {
+      "en": "The assembly sets a daily quota of wood and stone. The storehouses fill, but backs ache and spirits fall.",
+      "cs": "Rada stanoví denní normu dřeva a kamene. Sklady se plní, ale záda bolí a nálada klesá."
+    },
+    "duration_years": 8,
+    "weight": 1.5,
+    "modifiers": {
+      "morale_flat": -5
+    },
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": 300,
+        "scope": "global"
+      }
+    ],
+    "vote_bias": {
+      "industry": 0.3,
+      "poor_favour": -0.15
+    }
+  },
+  {
+    "id": "children_at_work",
+    "name": {
+      "en": "Children to Work",
+      "cs": "Děti do práce"
+    },
+    "summary": {
+      "en": "Children old enough to carry a bundle are put to work. We gain more hands, but they will grow up knowing little else.",
+      "cs": "Děti, které už unesou otep, se zapojí do práce. Získáme ruce navíc, ale vyrostou a nebudou umět nic jiného."
+    },
+    "duration_years": 15,
+    "weight": 1.3,
+    "modifiers": {
+      "knowledge_multiplier": 0.7,
+      "food_upkeep_multiplier": 0.88,
+      "morale_flat": -3
+    },
+    "vote_bias": {
+      "industry": 0.25,
+      "sociability": -0.2
+    }
+  },
+  {
+    "id": "elders_knowledge",
+    "name": {
+      "en": "Elders' Knowledge",
+      "cs": "Vědomosti starších"
+    },
+    "summary": {
+      "en": "The elders are excused from manual labor to focus on teaching. Knowledge grows, but morale suffers from the extra burden on the young.",
+      "cs": "Starší jsou zproštěni manuální práce, aby se mohli soustředit na učení. Vědomosti se množí, ale morálka trpí kvůli břemenu navíc na bedrech mladých."
+    },
+    "duration_years": 15,
+    "weight": 1.2,
+    "modifiers": {
+      "knowledge_multiplier": 1.3,
+      "morale_flat": -2
+    },
+    "vote_bias": {
+      "industry": -0.2,
+      "sociability": 0.2
+    }
+  },
+  {
+    "id": "land_survey",
+    "name": {
+      "en": "The Great Survey",
+      "cs": "Velké vyměřování"
+    },
+    "summary": {
+      "en": "All fields and plots are measured and marked, settling boundary disputes for a generation at a great cost in materials.",
+      "cs": "Všechna pole a pozemky se vyměří a označí, což za cenu velkých nákladů na materiál na generaci urovná spory o hranice."
+    },
+    "duration_years": 20,
+    "weight": 1.1,
+    "modifiers": {
+      "morale_flat": 4
+    },
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -150,
+        "scope": "global"
+      }
+    ],
+    "vote_bias": {
+      "poor_favour": 0.2,
+      "industry": -0.1,
+      "sociability": 0.15
+    }
   }
 ]

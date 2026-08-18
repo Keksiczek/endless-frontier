@@ -1,0 +1,1191 @@
+[
+  {
+    "id": "standing",
+    "name": {
+      "en": "Standing",
+      "cs": "Stání"
+    },
+    "description": {
+      "en": "On their feet, doing nothing in particular.",
+      "cs": "Na nohou, zrovna nic zvláštního."
+    }
+  },
+  {
+    "id": "walking",
+    "name": {
+      "en": "Walking",
+      "cs": "Chůze"
+    },
+    "legs": {
+      "amplitude": 1.7,
+      "frequency": 1
+    },
+    "free_arm_counter_swing": 0.55,
+    "lean": 0.55,
+    "bob": 0.42,
+    "description": {
+      "en": "Crossing the valley on foot. The legs swing, the arms answer them, and the body rises on every step.",
+      "cs": "Přes údolí po svých. Nohy jdou, ruce jim odpovídají a tělo se na každém kroku nadnese."
+    },
+    "serves_activities": [
+      "walking"
+    ],
+    "serves_work": []
+  },
+  {
+    "id": "working",
+    "name": {
+      "en": "Working",
+      "cs": "Práce"
+    },
+    "tool_arm": {
+      "amplitude": 0.35,
+      "frequency": 5
+    },
+    "hand_height": -0.6,
+    "description": {
+      "en": "At the bench, the face or the furrow: the feet are planted and the tool hand does the work.",
+      "cs": "U verpánku, u stěny nebo v brázdě: nohy stojí, dělá ruka s nářadím."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": []
+  },
+  {
+    "id": "hauling",
+    "name": {
+      "en": "Hauling",
+      "cs": "Nošení"
+    },
+    "legs": {
+      "amplitude": 1.35,
+      "frequency": 1
+    },
+    "lean": 0.7,
+    "bob": 0.3,
+    "slouch": 0.35,
+    "reach": 1.6,
+    "hand_height": 0.2,
+    "speed": 0.85,
+    "description": {
+      "en": "A load in both arms. The arms cannot swing because they are full, so the walk shortens and the back takes it.",
+      "cs": "Náklad v obou rukou. Ruce se rozejít nemůžou, tak se krok zkrátí a nese to záda."
+    },
+    "serves_activities": [
+      "hauling"
+    ],
+    "serves_work": []
+  },
+  {
+    "id": "travelling",
+    "name": {
+      "en": "Travelling",
+      "cs": "Na cestě"
+    },
+    "legs": {
+      "amplitude": 1.7,
+      "frequency": 1
+    },
+    "free_arm_counter_swing": 0.55,
+    "lean": 0.55,
+    "bob": 0.42,
+    "speed": 1,
+    "description": {
+      "en": "Out on the road to somewhere beyond the valley, or coming back from it.",
+      "cs": "Po cestě někam za údolí, nebo zpátky odtamtud."
+    },
+    "serves_activities": [
+      "travelling"
+    ],
+    "serves_work": []
+  },
+  {
+    "id": "expedition",
+    "name": {
+      "en": "Working the site",
+      "cs": "Práce na místě"
+    },
+    "tool_arm": {
+      "amplitude": 0.3,
+      "frequency": 4
+    },
+    "lean": 0.2,
+    "hand_height": -0.4,
+    "description": {
+      "en": "At the far landmark, working it — digging out a ruin, sounding a cave, reading what is written on a stone.",
+      "cs": "U dalekého místa a v práci — rozhrabat ruinu, proklepat jeskyni, přečíst, co je psáno na kameni."
+    },
+    "serves_activities": [
+      "expedition"
+    ],
+    "serves_work": []
+  },
+  {
+    "id": "fighting",
+    "name": {
+      "en": "Fighting",
+      "cs": "Boj"
+    },
+    "legs": {
+      "amplitude": 0.6,
+      "frequency": 2
+    },
+    "tool_arm": {
+      "amplitude": 0.8,
+      "frequency": 6
+    },
+    "lean": 0.45,
+    "reach": 2.4,
+    "hand_height": -0.9,
+    "description": {
+      "en": "Called out of the day and into the line. The weapon comes up the same way whether the thing in front of them is a raider or a boar.",
+      "cs": "Vytržený ze dne do řady. Zbraň jde nahoru stejně, ať před ním stojí nájezdník nebo kanec."
+    },
+    "serves_activities": [
+      "fighting"
+    ],
+    "serves_work": []
+  },
+  {
+    "id": "socializing",
+    "name": {
+      "en": "Talking",
+      "cs": "Hovor"
+    },
+    "tool_arm": {
+      "amplitude": 0.22,
+      "frequency": 1.6
+    },
+    "reach": 1.5,
+    "hand_height": 0.3,
+    "description": {
+      "en": "Midday on the green, with somebody. A hand moves while they talk.",
+      "cs": "Poledne na návsi, s někým. Ruka se při řeči hýbe."
+    },
+    "serves_activities": [
+      "socializing"
+    ],
+    "serves_work": []
+  },
+  {
+    "id": "playing",
+    "name": {
+      "en": "Playing",
+      "cs": "Hra"
+    },
+    "legs": {
+      "amplitude": 1.9,
+      "frequency": 1.6
+    },
+    "free_arm_counter_swing": 0.35,
+    "bob": 0.75,
+    "speed": 1.2,
+    "description": {
+      "en": "A child, going nowhere in particular and going there fast.",
+      "cs": "Dítě, co nikam konkrétně nejde a jde tam rychle."
+    },
+    "serves_activities": [
+      "playing"
+    ],
+    "serves_work": []
+  },
+  {
+    "id": "at_home",
+    "name": {
+      "en": "At home",
+      "cs": "Doma"
+    },
+    "tool_arm": {
+      "amplitude": 0.15,
+      "frequency": 1.1
+    },
+    "reach": 1.4,
+    "hand_height": 0.5,
+    "opacity": 0.95,
+    "description": {
+      "en": "Indoors, morning or evening — the hour that is theirs rather than the colony's.",
+      "cs": "Uvnitř, ráno nebo večer — hodina, která patří jim a ne osadě."
+    },
+    "serves_activities": [
+      "at_home"
+    ],
+    "serves_work": []
+  },
+  {
+    "id": "resting",
+    "name": {
+      "en": "Resting",
+      "cs": "Odpočinek"
+    },
+    "slouch": 1.1,
+    "reach": 1.3,
+    "hand_height": 0.6,
+    "opacity": 0.8,
+    "speed": 0.4,
+    "description": {
+      "en": "Home all day, because there is nothing else they can do today.",
+      "cs": "Celý den doma, protože na víc dnes nejsou."
+    },
+    "serves_activities": [
+      "resting"
+    ],
+    "serves_work": []
+  },
+  {
+    "id": "sleeping",
+    "name": {
+      "en": "Sleeping",
+      "cs": "Spánek"
+    },
+    "opacity": 0.6,
+    "speed": 0,
+    "description": {
+      "en": "Down for the night, under a roof the colony raised.",
+      "cs": "Složený na noc, pod střechou, kterou osada postavila."
+    },
+    "serves_activities": [
+      "sleeping"
+    ],
+    "serves_work": []
+  },
+  {
+    "id": "hunting_stalk",
+    "name": {
+      "en": "Stalking",
+      "cs": "Plížení"
+    },
+    "description": {
+      "en": "Low to the ground, closing on prey one slow step at a time. The body is a held breath.",
+      "cs": "Nízko u země, krok za krokem blíž ke kořisti. Tělo je jeden zadržený dech."
+    },
+    "legs": {
+      "amplitude": 0.8,
+      "frequency": 0.6
+    },
+    "slouch": 0.9,
+    "lean": 0.6,
+    "bob": 0.1,
+    "speed": 0.5,
+    "reach": 1.8,
+    "hand_height": -0.5,
+    "serves_activities": [
+      "walking",
+      "working"
+    ],
+    "serves_work": [
+      "hunting"
+    ]
+  },
+  {
+    "id": "hunting_chase",
+    "name": {
+      "en": "The Chase",
+      "cs": "Štvanice"
+    },
+    "description": {
+      "en": "A sudden burst of speed to close the last distance to the prey. A runner's lean, arms pumping.",
+      "cs": "Náhlý výbuch rychlosti na poslední metry ke kořisti. Běžecký náklon, ruce pumpují."
+    },
+    "legs": {
+      "amplitude": 1.9,
+      "frequency": 1.5
+    },
+    "free_arm_counter_swing": 0.7,
+    "lean": 0.8,
+    "bob": 0.5,
+    "speed": 1.4,
+    "reach": 2.0,
+    "hand_height": -0.2,
+    "serves_activities": [
+      "walking",
+      "working"
+    ],
+    "serves_work": [
+      "hunting"
+    ]
+  },
+  {
+    "id": "butchering",
+    "name": {
+      "en": "Butchering",
+      "cs": "Porcování"
+    },
+    "description": {
+      "en": "Kneeling over the kill. The quick, practiced work of a knife to field-dress the animal before carrying it back.",
+      "cs": "V kleče nad úlovkem. Rychlá, naučená práce nožem, aby se zvíře připravilo na cestu domů."
+    },
+    "tool_arm": {
+      "amplitude": 0.6,
+      "frequency": 4
+    },
+    "slouch": 1.2,
+    "reach": 1.2,
+    "hand_height": -1.0,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "hunting",
+      "cooking"
+    ]
+  },
+  {
+    "id": "carrying_carcass",
+    "name": {
+      "en": "Carrying Carcass",
+      "cs": "Nesení úlovku"
+    },
+    "description": {
+      "en": "The heavy, awkward weight of a deer over the shoulders. A slow, determined trudge back to the village.",
+      "cs": "Těžká, neskladná váha jelena přes ramena. Pomalá, odhodlaná dřina na cestě zpátky do vsi."
+    },
+    "legs": {
+      "amplitude": 1.1,
+      "frequency": 0.9
+    },
+    "lean": 0.8,
+    "bob": 0.2,
+    "slouch": 0.6,
+    "speed": 0.6,
+    "reach": 0.5,
+    "hand_height": 1.2,
+    "serves_activities": [
+      "hauling",
+      "working"
+    ],
+    "serves_work": [
+      "hunting"
+    ]
+  },
+  {
+    "id": "sowing",
+    "name": {
+      "en": "Sowing",
+      "cs": "Setí"
+    },
+    "description": {
+      "en": "Walking the furrows in spring. One arm holds the seed bag, the other casts the grain in a wide, rhythmic arc.",
+      "cs": "Jarní chůze po brázdách. V jedné ruce mošna s osivem, druhá rozhazuje zrní v širokém, rytmickém oblouku."
+    },
+    "legs": {
+      "amplitude": 1.6,
+      "frequency": 1
+    },
+    "tool_arm": {
+      "amplitude": 1.5,
+      "frequency": 1,
+      "phase": 1.57
+    },
+    "lean": 0.3,
+    "bob": 0.4,
+    "speed": 0.9,
+    "reach": 1.8,
+    "hand_height": -0.2,
+    "serves_activities": [
+      "working",
+      "walking"
+    ],
+    "serves_work": [
+      "farming"
+    ]
+  },
+  {
+    "id": "digging",
+    "name": {
+      "en": "Digging",
+      "cs": "Kopání"
+    },
+    "description": {
+      "en": "The hard, repeated shock of a pickaxe or a spade striking the earth. The whole body is in every swing.",
+      "cs": "Tvrdý, opakovaný náraz krumpáče nebo rýče do země. V každém máchnutí je celé tělo."
+    },
+    "legs": {
+      "amplitude": 0.2,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 2.0,
+      "frequency": 1.2
+    },
+    "slouch": 0.5,
+    "reach": 2.2,
+    "hand_height": -0.5,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "mining",
+      "building",
+      "farming"
+    ]
+  },
+  {
+    "id": "stalking_prey",
+    "name": {
+      "en": "Stalking Prey",
+      "cs": "Plížení ke kořisti"
+    },
+    "serves_activities": [
+      "walking",
+      "working"
+    ],
+    "serves_work": [
+      "hunting"
+    ],
+    "legs": {
+      "amplitude": 0.8,
+      "frequency": 0.6
+    },
+    "lean": 0.2,
+    "slouch": 0.8,
+    "speed": 0.5,
+    "reach": 1.8,
+    "hand_height": -0.5,
+    "description": {
+      "en": "Creeping forward, low to the ground, trying to stay unseen and unheard.",
+      "cs": "Plíží se vpřed, nízko u země, aby nebyl vidět ani slyšet."
+    }
+  },
+  {
+    "id": "field_dressing",
+    "name": {
+      "en": "Field Dressing",
+      "cs": "Vyvrhování"
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "hunting"
+    ],
+    "tool_arm": {
+      "amplitude": 0.6,
+      "frequency": 4.5
+    },
+    "slouch": 1.0,
+    "reach": 1.5,
+    "hand_height": -1.2,
+    "description": {
+      "en": "Kneeling over the kill, working with a knife. A messy but necessary job before the haul back.",
+      "cs": "Klečí nad úlovkem a pracuje s nožem. Špinavá, ale nutná práce před cestou zpátky."
+    }
+  },
+  {
+    "id": "carrying_game",
+    "name": {
+      "en": "Carrying Game",
+      "cs": "Nesení zvěřiny"
+    },
+    "serves_activities": [
+      "hauling"
+    ],
+    "serves_work": [
+      "hunting"
+    ],
+    "legs": {
+      "amplitude": 1.1,
+      "frequency": 0.9
+    },
+    "lean": 0.6,
+    "bob": 0.2,
+    "slouch": 0.9,
+    "speed": 0.75,
+    "description": {
+      "en": "The long walk home, a deer or a boar heavy on the shoulders. The steps are short and the back is bowed.",
+      "cs": "Dlouhá cesta domů, jelen nebo divočák tíží ramena. Krok je krátký a záda sehnutá."
+    }
+  },
+  {
+    "id": "reaping_scythe",
+    "name": {
+      "en": "Reaping",
+      "cs": "Žnutí"
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "farming"
+    ],
+    "legs": {
+      "amplitude": 0.4,
+      "frequency": 0.8
+    },
+    "tool_arm": {
+      "amplitude": 1.9,
+      "frequency": 1.1,
+      "phase": 1.57
+    },
+    "slouch": 0.4,
+    "reach": 2.2,
+    "hand_height": -0.8,
+    "description": {
+      "en": "Swinging a scythe in a wide, rhythmic arc. Step, swing, step, swing through the ripe grain.",
+      "cs": "Široký, rytmický oblouk kosou. Krok, máchnutí, krok, máchnutí ve zralém obilí."
+    }
+  },
+  {
+    "id": "sawing_log",
+    "name": {
+      "en": "Sawing",
+      "cs": "Řezání"
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "logging",
+      "building"
+    ],
+    "tool_arm": {
+      "amplitude": 1.2,
+      "frequency": 3
+    },
+    "slouch": 0.6,
+    "reach": 1.8,
+    "hand_height": 0.1,
+    "description": {
+      "en": "At the sawbuck, pushing and pulling a saw. The whole body rocks with the effort.",
+      "cs": "U kozy na dříví, tlačí a táhne pilu. Celé tělo se houpe s námahou."
+    }
+  },
+  {
+    "id": "kneading_dough",
+    "name": {
+      "en": "Kneading",
+      "cs": "Hnětení těsta"
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "cooking"
+    ],
+    "tool_arm": {
+      "amplitude": 0.5,
+      "frequency": 2.5
+    },
+    "slouch": 0.7,
+    "reach": 1.4,
+    "hand_height": -0.2,
+    "description": {
+      "en": "Bent over the board, pushing and folding the dough. The baker's day starts here.",
+      "cs": "Nad válem, tlačí a překládá těsto. Tady začíná pekařův den."
+    }
+  },
+  {
+    "id": "felling_axe",
+    "name": {
+      "en": "Felling",
+      "cs": "Kácení"
+    },
+    "description": {
+      "en": "Bringing a tree down with an axe. A wide stance, a deep breath, and a swing from the heels.",
+      "cs": "Srazit strom sekerou. Široký postoj, hluboký nádech a švih od paty."
+    },
+    "legs": {
+      "amplitude": 0.3,
+      "frequency": 0.6
+    },
+    "tool_arm": {
+      "amplitude": 2,
+      "frequency": 0.8
+    },
+    "slouch": 0.4,
+    "reach": 1.8,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "logging"
+    ]
+  },
+  {
+    "id": "threshing_flail",
+    "name": {
+      "en": "Threshing",
+      "cs": "Mlácení"
+    },
+    "description": {
+      "en": "Separating grain from chaff with a flail. A strong, rhythmic motion that fills the barn with dust and the sound of work.",
+      "cs": "Oddělování zrna od plev cepem. Silný, rytmický pohyb, který plní stodolu prachem a zvukem práce."
+    },
+    "legs": {
+      "amplitude": 0.1,
+      "frequency": 1.5
+    },
+    "tool_arm": {
+      "amplitude": 1.8,
+      "frequency": 1.2
+    },
+    "slouch": 0.2,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "farming"
+    ]
+  },
+  {
+    "id": "hammering_build",
+    "name": {
+      "en": "Hammering",
+      "cs": "Zatloukání"
+    },
+    "description": {
+      "en": "Driving a wooden peg into a frame. The sound of a colony rising.",
+      "cs": "Zatloukání dřevěného kolíku do trámu. Zvuk rostoucí osady."
+    },
+    "tool_arm": {
+      "amplitude": 0.6,
+      "frequency": 4.5
+    },
+    "slouch": 0.1,
+    "reach": 1.7,
+    "hand_height": 0.8,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "building"
+    ]
+  },
+  {
+    "id": "hauling_water",
+    "name": {
+      "en": "Hauling Water",
+      "cs": "Nošení vody"
+    },
+    "description": {
+      "en": "Two full buckets from the well. A careful, balanced walk to avoid spilling a single drop.",
+      "cs": "Dvě plná vědra od studny. Opatrná, vyvážená chůze, aby neukápla ani kapka."
+    },
+    "legs": {
+      "amplitude": 1.1,
+      "frequency": 1
+    },
+    "bob": 0.1,
+    "slouch": 0.1,
+    "speed": 0.75,
+    "reach": 1.2,
+    "hand_height": -0.4,
+    "serves_activities": [
+      "hauling"
+    ],
+    "serves_work": [
+      "farming",
+      "cooking",
+      "building",
+      "crafting"
+    ]
+  },
+  {
+    "id": "stirring_pot",
+    "name": {
+      "en": "Stirring a Pot",
+      "cs": "Míchání v hrnci"
+    },
+    "description": {
+      "en": "Keeping the evening meal from catching on the bottom. A slow, steady motion, back and forth.",
+      "cs": "Aby se večeře nepřipálila. Pomalý, jistý pohyb, tam a zpátky."
+    },
+    "tool_arm": {
+      "amplitude": 0.4,
+      "frequency": 1.1
+    },
+    "slouch": 0.5,
+    "reach": 1.3,
+    "hand_height": -0.2,
+    "serves_activities": [
+      "working",
+      "at_home"
+    ],
+    "serves_work": [
+      "cooking"
+    ]
+  },
+  {
+    "id": "tending_sick",
+    "name": {
+      "en": "Tending the Sick",
+      "cs": "Péče o nemocné"
+    },
+    "description": {
+      "en": "A cool cloth on a hot forehead. A quiet, gentle presence in the sickroom.",
+      "cs": "Studený obklad na horké čelo. Tichá, jemná přítomnost v lazaretu."
+    },
+    "tool_arm": {
+      "amplitude": 0.15,
+      "frequency": 0.9
+    },
+    "slouch": 0.6,
+    "reach": 1.2,
+    "hand_height": 0.3,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "healing"
+    ]
+  },
+  {
+    "id": "hunting_kill_spear",
+    "name": {
+      "en": "Spear Kill",
+      "cs": "Zabití kopím"
+    },
+    "description": {
+      "en": "The final moment of a hunt. A low, braced stance and a quick, fatal thrust with a spear.",
+      "cs": "Poslední chvíle lovu. Nízký, pevný postoj a rychlý, smrtící výpad kopím."
+    },
+    "legs": {
+      "amplitude": 0.5,
+      "frequency": 1.5
+    },
+    "tool_arm": {
+      "amplitude": 1.8,
+      "frequency": 2
+    },
+    "lean": 0.6,
+    "slouch": 0.2,
+    "reach": 2.5,
+    "hand_height": -0.5,
+    "serves_activities": [
+      "working",
+      "fighting"
+    ],
+    "serves_work": [
+      "hunting"
+    ]
+  },
+  {
+    "id": "garrison_watch",
+    "name": {
+      "en": "On Watch",
+      "cs": "Na hlídce"
+    },
+    "description": {
+      "en": "Standing watch on the palisade. A slow, patient scan of the horizon, looking for movement.",
+      "cs": "Na palisádě, na stráži. Pomalé, trpělivé přejíždění obzoru pohledem, pátrání po pohybu."
+    },
+    "tool_arm": {
+      "amplitude": 0.3,
+      "frequency": 0.2
+    },
+    "slouch": 0.1,
+    "reach": 1.2,
+    "hand_height": -0.2,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "garrison"
+    ]
+  },
+  {
+    "id": "mining_pickaxe",
+    "name": {
+      "en": "Mining with Pickaxe",
+      "cs": "Těžba krumpáčem"
+    },
+    "description": {
+      "en": "A two-handed swing with a pickaxe. The whole body lifts and falls with the tool, breaking rock in the dark.",
+      "cs": "Rozmach krumpáčem obouruč. Celé tělo se zvedá a klesá s nástrojem, který ve tmě láme skálu."
+    },
+    "legs": {
+      "amplitude": 0.4,
+      "frequency": 1
+    },
+    "tool_arm": {
+      "amplitude": 2,
+      "frequency": 1
+    },
+    "slouch": 0.5,
+    "reach": 1.8,
+    "hand_height": -1,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "mining"
+    ]
+  },
+  {
+    "id": "tanning_scrape",
+    "name": {
+      "en": "Scraping Hide",
+      "cs": "Škrábání kůže"
+    },
+    "description": {
+      "en": "At the tanning rack, scraping a hide clean. A repetitive, forceful motion, leaning into the work.",
+      "cs": "Na koželužském rámu škrábe kůži dočista. Opakovaný, silový pohyb, celou vahou do práce."
+    },
+    "tool_arm": {
+      "amplitude": 0.8,
+      "frequency": 3
+    },
+    "slouch": 0.9,
+    "reach": 1.7,
+    "hand_height": 0,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ]
+  },
+  {
+    "id": "foraging_gather",
+    "name": {
+      "en": "Gathering",
+      "cs": "Sběr"
+    },
+    "description": {
+      "en": "Bent low over a patch of herbs or a mushroom ring, fingers quickly picking and adding to the basket.",
+      "cs": "Nízko skloněný nad trsem bylin nebo kruhem hub, prsty rychle sbírají a přidávají do košíku."
+    },
+    "tool_arm": {
+      "amplitude": 0.5,
+      "frequency": 4
+    },
+    "slouch": 1.2,
+    "reach": 1.5,
+    "hand_height": -1.2,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "foraging"
+    ]
+  },
+  {
+    "id": "priest_sermon",
+    "name": {
+      "en": "Sermon",
+      "cs": "Kázání"
+    },
+    "description": {
+      "en": "Speaking to the gathered villagers. Not a conversation, but a sermon. The hands move slowly, emphasizing the words.",
+      "cs": "Mluví ke shromážděným vesničanům. Ne rozhovor, ale kázání. Ruce se pomalu pohybují, aby zdůraznily slova."
+    },
+    "tool_arm": {
+      "amplitude": 0.4,
+      "frequency": 0.8
+    },
+    "reach": 1.6,
+    "hand_height": 0.4,
+    "serves_activities": [
+      "working",
+      "socializing"
+    ],
+    "serves_work": [
+      "priest"
+    ]
+  },
+  {
+    "id": "hunting_kill_bow",
+    "name": {
+      "en": "Bow Shot",
+      "cs": "Výstřel z luku"
+    },
+    "legs": {
+      "amplitude": 0.1,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 1.5,
+      "frequency": 0.5,
+      "phase": 1.57
+    },
+    "slouch": 0.2,
+    "reach": 2.2,
+    "hand_height": 0.1,
+    "description": {
+      "en": "The final moment of the hunt. Drawing the string, holding the breath, and letting the arrow fly.",
+      "cs": "Poslední chvíle lovu. Nátah tětivy, zadržený dech a šíp konečně letí."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "hunting"
+    ]
+  },
+  {
+    "id": "skinning_hide",
+    "name": {
+      "en": "Skinning",
+      "cs": "Stahování kůže"
+    },
+    "tool_arm": {
+      "amplitude": 0.4,
+      "frequency": 3.5
+    },
+    "slouch": 0.9,
+    "reach": 1.4,
+    "hand_height": -1.2,
+    "description": {
+      "en": "Kneeling over the kill, a careful knife separating hide from flesh. A slow, practiced job.",
+      "cs": "Vkleče nad úlovkem, opatrný nůž odděluje kůži od masa. Pomalá, zkušená práce."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "hunting"
+    ]
+  },
+  {
+    "id": "tilling_hoe",
+    "name": {
+      "en": "Tilling",
+      "cs": "Okopávání"
+    },
+    "legs": {
+      "amplitude": 0.2,
+      "frequency": 0.8
+    },
+    "tool_arm": {
+      "amplitude": 1.8,
+      "frequency": 1.2
+    },
+    "slouch": 0.6,
+    "reach": 1.9,
+    "hand_height": -1.0,
+    "description": {
+      "en": "Breaking up the soil with a hoe. A rhythmic chop, pull, and step that prepares the field for seed.",
+      "cs": "Motykou kypří půdu. Rytmický sek, tah a krok, kterým se pole připravuje na setí."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "farming"
+    ]
+  },
+  {
+    "id": "weaving_loom",
+    "name": {
+      "en": "Weaving",
+      "cs": "Tkaní"
+    },
+    "tool_arm": {
+      "amplitude": 1.2,
+      "frequency": 2.0
+    },
+    "free_arm_counter_swing": 0.8,
+    "slouch": 0.3,
+    "reach": 1.2,
+    "hand_height": -0.2,
+    "description": {
+      "en": "At the loom, throwing the shuttle back and forth, beating the weft tight. The slow creation of new cloth.",
+      "cs": "U stavu, prohazování člunku ze strany na stranu, přirážení útku. Pomalý zrod nové látky."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ]
+  },
+  {
+    "id": "chopping_vegetables",
+    "name": {
+      "en": "Chopping",
+      "cs": "Krájení"
+    },
+    "tool_arm": {
+      "amplitude": 0.3,
+      "frequency": 5.5
+    },
+    "slouch": 0.4,
+    "reach": 1.1,
+    "hand_height": -0.1,
+    "description": {
+      "en": "At the kitchen block, a knife a blur of motion. The sound is the promise of dinner.",
+      "cs": "U kuchyňského špalku se nůž jen míhá. Ten zvuk je příslibem večeře."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "cooking"
+    ]
+  },
+  {
+    "id": "plastering_wall",
+    "name": {
+      "en": "Plastering",
+      "cs": "Omítání"
+    },
+    "tool_arm": {
+      "amplitude": 1.4,
+      "frequency": 1.1
+    },
+    "slouch": 0.1,
+    "reach": 1.6,
+    "hand_height": 0.4,
+    "description": {
+      "en": "Applying plaster with a trowel. A wide, smooth motion that seals the wall against the wind.",
+      "cs": "Nanášení omítky hladítkem. Široký, plynulý pohyb, který utěsní zeď proti větru."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "building"
+    ]
+  },
+  {
+    "id": "tracking_animal",
+    "name": {
+      "en": "Tracking",
+      "cs": "Sledování stop"
+    },
+    "legs": {
+      "amplitude": 0.9,
+      "frequency": 0.8
+    },
+    "slouch": 1.2,
+    "lean": 0.3,
+    "speed": 0.6,
+    "description": {
+      "en": "Following the signs, not the animal itself. A slow, careful walk, eyes fixed on the ground.",
+      "cs": "Po stopách, ne za zvířetem samotným. Pomalá, opatrná chůze, s očima na zemi."
+    },
+    "serves_activities": [
+      "walking",
+      "working"
+    ],
+    "serves_work": [
+      "hunting",
+      "scouting"
+    ]
+  },
+  {
+    "id": "grinding_grain_quern",
+    "name": {
+      "en": "Grinding Grain",
+      "cs": "Mletí na žernovu"
+    },
+    "tool_arm": {
+      "amplitude": 1.1,
+      "frequency": 1.2
+    },
+    "slouch": 0.8,
+    "reach": 1.2,
+    "hand_height": -0.5,
+    "description": {
+      "en": "Turning the quern to make flour. A steady, circling push, over and over, until the sun is high.",
+      "cs": "Otáčet kamenem, dokud není mouka. Jistý, krouživý pohyb, pořád dokola, než je slunce vysoko."
+    },
+    "serves_activities": [
+      "working",
+      "at_home"
+    ],
+    "serves_work": [
+      "cooking",
+      "farming"
+    ]
+  },
+  {
+    "id": "sharpening_tool_grindstone",
+    "name": {
+      "en": "Sharpening Tool",
+      "cs": "Ostření na brusu"
+    },
+    "legs": {
+      "amplitude": 0.2,
+      "frequency": 2.5
+    },
+    "slouch": 0.9,
+    "reach": 1.7,
+    "hand_height": -0.8,
+    "description": {
+      "en": "Putting an edge back on a tool. The foot pumps the wheel, the hands hold the steel to the stone, perfectly still.",
+      "cs": "Vrátit nástroji ostří. Noha šlape do pedálu, ruce drží ocel na kameni, úplně bez hnutí."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting",
+      "logging",
+      "farming",
+      "building"
+    ]
+  },
+  {
+    "id": "laying_stone_wall",
+    "name": {
+      "en": "Laying Stone",
+      "cs": "Kladení kamene"
+    },
+    "tool_arm": {
+      "amplitude": 1.5,
+      "frequency": 0.8
+    },
+    "slouch": 0.4,
+    "reach": 1.3,
+    "hand_height": -1.2,
+    "description": {
+      "en": "One stone at a time. A slow lift from the ground, a careful placement. The wall rises by inches.",
+      "cs": "Kámen po kameni. Pomalý zdvih od země, opatrné usazení. Zeď je o kousek výš."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "building"
+    ]
+  },
+  {
+    "id": "grinding_herbs_mortar",
+    "name": {
+      "en": "Grinding Herbs",
+      "cs": "Tlučení bylin v hmoždíři"
+    },
+    "tool_arm": {
+      "amplitude": 0.3,
+      "frequency": 4.5
+    },
+    "slouch": 0.4,
+    "reach": 1.1,
+    "hand_height": 0.2,
+    "description": {
+      "en": "The healer at their table, grinding leaves and roots into a poultice. A quick, practiced motion of the wrist.",
+      "cs": "Léčitel u stolu, drtí listy a kořeny na kaši. Rychlý, naučený pohyb v zápěstí."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "healing",
+      "research"
+    ]
+  },
+  {
+    "id": "picking_berries",
+    "name": {
+      "en": "Picking Berries",
+      "cs": "Sběr bobulí"
+    },
+    "tool_arm": {
+      "amplitude": 0.4,
+      "frequency": 5
+    },
+    "reach": 1.8,
+    "hand_height": 0.8,
+    "description": {
+      "en": "A quick hand among the thorns, picking out the ripe berries one by one before the birds get them.",
+      "cs": "Rychlá ruka mezi trny, vybírá zralé plody jeden po druhém, než je sezobou ptáci."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "foraging"
+    ]
+  }
+]

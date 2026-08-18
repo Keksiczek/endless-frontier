@@ -79,6 +79,28 @@ enum AgentMotion {
         case expedition    // at the landmark, working it
         case fighting      // called out of the day and into the line
         case hauling       // carrying a load home
+
+        /// Which clip in `motions.json` draws this.
+        ///
+        /// The enum stays: what a colonist is *doing* is the simulation's
+        /// answer and belongs in code. How the body moves while doing it is
+        /// content, and lives in the bank — so a richer hunt is new entries
+        /// rather than new cases in here.
+        var motionID: String {
+            switch self {
+            case .sleeping:    return "sleeping"
+            case .atHome:      return "at_home"
+            case .walking:     return "walking"
+            case .working:     return "working"
+            case .socializing: return "socializing"
+            case .playing:     return "playing"
+            case .resting:     return "resting"
+            case .travelling:  return "travelling"
+            case .expedition:  return "expedition"
+            case .fighting:    return "fighting"
+            case .hauling:     return "hauling"
+            }
+        }
     }
 
     /// A colonist's place and doing at an instant.

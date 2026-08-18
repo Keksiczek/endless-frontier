@@ -252,3 +252,87 @@ struct NewPOIKindTests {
         #expect(registry.items.values.contains { !$0.effects.isEmpty })
     }
 }
+
+@Suite("Motion bank")
+struct MotionBankTests {
+
+    /// The counterpart to `itemTableIsActuallyLoaded`, and it exists for the
+    /// same reason twice over: the bank shipped 48 clips and loaded **none** of
+    /// them for a while, because `Wave` used the synthesised decoder and every
+    /// clip omits `phase`. The build was green throughout, and so was
+    /// `ContentTests`, which reads the JSON rather than the registry. Only a
+    /// test that asks the registry can see this (rule 43).
+    @Test("The motion bank actually reaches the registry")
+    func motionBankIsActuallyLoaded() throws {
+        let registry = try GameDataRegistry.bundled()
+        #expect(registry.motions.count >= 40,
+                "motions.json failed to decode — one malformed clip takes the lot")
+        // The clips the drawing code needs by name.
+        for id in ["walking", "working", "hauling", "sleeping"] {
+            #expect(registry.motions[id] != nil, "the bank is missing \(id)")
+        }
+    }
+
+    /// A clip nothing can select is content that loads and is never seen —
+    /// the oldest bug in this repository, and the reason `serves_*` exists.
+    @Test("Every clip but the fallback can be chosen by something")
+    func everyClipIsReachable() throws {
+        let registry = try GameDataRegistry.bundled()
+        for clip in registry.motions.values where clip.id != "standing" {
+            #expect(!clip.servesActivities.isEmpty,
+                    "\(clip.id) serves no activity, so nothing will ever pick it")
+        }
+    }
+
+    /// What the renderer actually asks, for every trade a colonist can have.
+    @Test("Every trade at work gets a clip, and the same one twice")
+    func selectionIsTotalAndStable() throws {
+        let registry = try GameDataRegistry.bundled()
+        for work in WorkKind.allCases {
+            let first = registry.motion(activity: "working", work: work.rawValue)
+            let again = registry.motion(activity: "working", work: work.rawValue)
+            #expect(first.id == again.id,
+                    "\(work.rawValue) is drawn differently on two identical asks")
+        }
+    }
+}
+
+@Suite("Motion bank — the trades look different")
+struct MotionDistinctionTests {
+
+    /// The whole point, stated as an assertion: a hunter at work and a builder
+    /// at work must not be handed the same clip. This is the thing a screenshot
+    /// cannot settle — two figures on a canvas at different phases of the same
+    /// wave look different, and two figures on *different* waves can happen to
+    /// look alike for a frame.
+    @Test("A hunter at work is not drawn like a builder at work")
+    func tradesGetTheirOwnClips() throws {
+        let registry = try GameDataRegistry.bundled()
+        let hunter = registry.motion(activity: "working", work: "hunting")
+        let builder = registry.motion(activity: "working", work: "building")
+        let farmer = registry.motion(activity: "working", work: "farming")
+        let generic = registry.motion(activity: "working", work: nil)
+
+        #expect(hunter.id != generic.id, "the hunter fell back to the generic work clip")
+        #expect(farmer.id != generic.id, "the farmer fell back to the generic work clip")
+        #expect(hunter.id != builder.id)
+        #expect(hunter.id != farmer.id)
+    }
+
+    /// A clip is only visible if some number in it differs from the fallback.
+    /// A bank of forty entries that all say the same thing is forty ways of
+    /// drawing one person.
+    @Test("The clips actually differ in the numbers the renderer reads")
+    func clipsDifferInSubstance() throws {
+        let registry = try GameDataRegistry.bundled()
+        var shapes = Set<String>()
+        for clip in registry.motions.values {
+            shapes.insert("\(clip.legs.amplitude)/\(clip.legs.frequency)/"
+                          + "\(clip.toolArm.amplitude)/\(clip.toolArm.frequency)/"
+                          + "\(clip.lean)/\(clip.bob)/\(clip.slouch)/\(clip.reach)")
+        }
+        let summary = "\(shapes.count) distinct shapes across \(registry.motions.count) clips"
+        #expect(shapes.count >= registry.motions.count - 2,
+                "clips are duplicating each other's numbers: \(summary)")
+    }
+}

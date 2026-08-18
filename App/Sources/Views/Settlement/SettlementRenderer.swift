@@ -216,8 +216,12 @@ enum SettlementRenderer {
         // so it stays in view space and doesn't slide when you pan.
         seasonWash(&context, rect: viewRect, size: size, season: season, time: time)
         SettlementLight.wash(&context, rect: viewRect, sun: sun)
-        nightWash(&context, rect: viewRect, night: night,
-                  moonlight: MoonPhase.moonlight(at: time, weather: weather))
+        let moonlight = MoonPhase.moonlight(at: time, weather: weather)
+        nightWash(&context, rect: viewRect, night: night, moonlight: moonlight)
+        // And then the lamps, **over** the wash — the one layer night is not
+        // allowed to grey out, because at night the lights are the picture.
+        SettlementLight.lamps(&context, nightLamps(placed: placed),
+                              night: night, moonlight: moonlight, time: time)
     }
 
     // MARK: - Day & night
@@ -300,12 +304,23 @@ enum SettlementRenderer {
         let depth = darkness(moonlight: moonlight)
         context.fill(Path(rect),
                      with: .color(Color(red: 0.05, green: 0.06, blue: 0.10).opacity(night * depth)))
-        // Moonlight is *cold*: what little it leaves you is blue. A hair of it,
-        // so a bright night reads as moonlit rather than as tinted.
+        // Moonlight is *cold*: what little it leaves you is blue.
+        //
+        // At 0.10 this was arithmetic nobody could see — a gibbous moon put six
+        // hundredths of an alpha over the valley, so the picture went *lighter*
+        // without going moonlit, and an autumn night read as a dimmed afternoon
+        // rather than as a night with a moon over it. Colour is how the eye
+        // tells moonlight from underexposure.
+        //
+        // This is not the mistake the wash above is a note about. That one
+        // painted **every** night blue at 0.30 and turned autumn violet every
+        // evening; this one is paid for by the moon and by nothing else, so a
+        // new moon is still black, a storm still puts it out, and the blue only
+        // arrives on the nights that have a moon to justify it.
         if moonlight > 0.25 {
             context.fill(Path(rect),
-                         with: .color(Color(red: 0.42, green: 0.52, blue: 0.78)
-                            .opacity(night * (moonlight - 0.25) * 0.10)))
+                         with: .color(Color(red: 0.46, green: 0.56, blue: 0.82)
+                            .opacity(night * (moonlight - 0.25) * 0.24)))
         }
     }
 
@@ -315,6 +330,63 @@ enum SettlementRenderer {
     static func darkness(moonlight: Double) -> Double {
         let lit = min(1, max(0, moonlight))
         return 0.62 - lit * 0.26
+    }
+
+    /// **Which roofs have a light under them.**
+    ///
+    /// A dark valley with nothing burning in it is a dark valley; the town has
+    /// to be visible as a town after sunset, and the way a town is visible at
+    /// night is that its windows are. Three kinds, and the rest of the colony
+    /// sleeps unlit — a granary at two in the morning is a black shed, and it
+    /// should look like one, or the whole place reads as floodlit.
+    ///
+    /// - **Homes burn brightest**, and by *who is in them*: an empty hut is
+    ///   dark, a full longhouse throws light out of every bay. This is the one
+    ///   that matters, because dwellings are what a colony is mostly made of.
+    /// - **A fire that is never let out** — forge, cookhouse, kiln, works — is
+    ///   banked overnight rather than lit, so it glows low and red whatever the
+    ///   hour.
+    /// - **A light somebody sits up with**: the watchtower's beacon, a lamp in
+    ///   the hall, the clinic, a votive candle in the temple. Weak, and steady.
+    ///
+    /// Pure, and derived from the same `placed` the buildings were drawn from,
+    /// so a lamp cannot end up standing where its house is not.
+    static func nightLamps(placed: [PlacedBuilding]) -> [SettlementLight.Lamp] {
+        placed.compactMap { building in
+            guard !building.underConstruction else { return nil }
+            let s = building.size
+            // What burns here, how hard, and how far the pool of it reaches.
+            let burn: (strength: Double, radius: CGFloat, colour: Color)
+            switch building.glyph {
+            case .house, .tenement:
+                // Nobody home, no fire lit.
+                guard building.residents > 0 else { return nil }
+                // Four to a dwelling is a full house; past that it is not any
+                // brighter, it is just fuller.
+                let full = min(1.0, Double(building.residents) / 4)
+                burn = (0.45 + full * 0.45, s * 1.25, SettlementLight.hearth)
+            case .forge, .plant, .cookhouse, .tanks:
+                burn = (0.55, s * 1.05, SettlementLight.ember)
+            case .tower:
+                burn = (0.60, s * 1.10, SettlementLight.hearth)
+            case .hall, .clinic, .temple, .lab:
+                burn = (0.28, s * 0.85, SettlementLight.hearth)
+            default:
+                return nil
+            }
+            // A ruin does not keep its fire in.
+            let sound = 0.45 + building.condition * 0.55
+            return SettlementLight.Lamp(
+                // Where a window is: on the wall, not on the roof-ridge above it
+                // and not on the ground in front.
+                at: CGPoint(x: building.center.x, y: building.center.y - s * 0.06),
+                radius: burn.radius,
+                strength: burn.strength * sound,
+                colour: burn.colour,
+                // Off the building's own seed, so its fire breathes on its own
+                // beat and keeps that beat between frames.
+                phase: Double(building.seed % 628) / 100)
+        }
     }
 
     /// Maps a normalised model point to a pixel point in `rect`.
@@ -1994,6 +2066,8 @@ enum SettlementRenderer {
                             pawn: pawn, pose: pose, at: point(pose.position, in: rect),
                             time: time, ticksPerYear: ticksPerYear,
                             selected: pawn.id == selectedPawnID, zoom: zoom,
+                            motion: registry.motion(activity: pose.activity.motionID,
+                                        work: pawn.assignedWork.rawValue),
                             context: &context)
                     }
                     continue
@@ -2024,6 +2098,8 @@ enum SettlementRenderer {
                 pawn: pawn, pose: pose, at: point(pose.position, in: rect),
                 time: time, ticksPerYear: ticksPerYear,
                 selected: pawn.id == selectedPawnID, zoom: zoom, armed: armed,
+                motion: registry.motion(activity: pose.activity.motionID,
+                                        work: pawn.assignedWork.rawValue),
                 context: &context)
         }
     }

@@ -1,17 +1,23 @@
 [
   {
     "id": "river",
-    "name": { "en": "Cult of the River", "cs": "Kult Řeky" },
+    "name": {
+      "en": "Cult of the River",
+      "cs": "Kult Řeky"
+    },
     "creed": {
       "en": "The water came before us and will remain after. To give is to flow.",
       "cs": "Voda tu byla před námi a zůstane po nás. Dávat znamená plynout."
     },
     "morale_at_full_faith": 8,
-    "solace": 0.30
+    "solace": 0.3
   },
   {
     "id": "sun",
-    "name": { "en": "Cult of the Sun", "cs": "Kult Slunce" },
+    "name": {
+      "en": "Cult of the Sun",
+      "cs": "Kult Slunce"
+    },
     "creed": {
       "en": "Every morning is a promise kept. Work while the light lasts.",
       "cs": "Každé ráno je dodržený slib. Pracuj, dokud svítí."
@@ -21,17 +27,23 @@
   },
   {
     "id": "moon",
-    "name": { "en": "Cult of the Moon", "cs": "Kult Měsíce" },
+    "name": {
+      "en": "Cult of the Moon",
+      "cs": "Kult Měsíce"
+    },
     "creed": {
       "en": "What waxes must wane. Grief passes as surely as joy.",
       "cs": "Co roste, musí ubývat. Žal pomine stejně jistě jako radost."
     },
     "morale_at_full_faith": 7,
-    "solace": 0.40
+    "solace": 0.4
   },
   {
     "id": "ancestors",
-    "name": { "en": "Cult of the Ancestors", "cs": "Kult Předků" },
+    "name": {
+      "en": "Cult of the Ancestors",
+      "cs": "Kult Předků"
+    },
     "creed": {
       "en": "The dead are not gone; they are the ground we stand on.",
       "cs": "Mrtví neodešli; jsou půdou, na níž stojíme."
@@ -41,22 +53,223 @@
   },
   {
     "id": "wolf",
-    "name": { "en": "Cult of the Wolf", "cs": "Kult Vlka" },
+    "name": {
+      "en": "Cult of the Wolf",
+      "cs": "Kult Vlka"
+    },
     "creed": {
       "en": "The pack eats or the pack dies. Be neither prey nor alone.",
       "cs": "Smečka se nasytí, nebo zhyne. Nebuď kořistí ani sám."
     },
     "morale_at_full_faith": 6,
-    "solace": 0.20
+    "solace": 0.2
   },
   {
     "id": "stars",
-    "name": { "en": "Cult of the Stars", "cs": "Kult Hvězd" },
+    "name": {
+      "en": "Cult of the Stars",
+      "cs": "Kult Hvězd"
+    },
     "creed": {
       "en": "Our fires are small. Look up, and know how far we may yet go.",
       "cs": "Naše ohně jsou malé. Pohlédni vzhůru a věz, kam až můžeme dojít."
     },
     "morale_at_full_faith": 7,
     "solace": 0.28
+  },
+  {
+    "id": "hearthfire",
+    "name": {
+      "en": "Cult of the Hearthfire",
+      "cs": "Kult Domácího Krbu"
+    },
+    "creed": {
+      "en": "One log burns out. A circle of stones holds the heat. Together, we are a fire that will not die.",
+      "cs": "Jedno poleno dohoří. Kruh kamenů udrží žár. Spolu jsme oheň, který nezemře."
+    },
+    "morale_at_full_faith": 8,
+    "solace": 0.35
+  },
+  {
+    "id": "stone_sleepers",
+    "name": {
+      "en": "Faith of the Stone Sleepers",
+      "cs": "Víra v Kamenné Spáče"
+    },
+    "creed": {
+      "en": "We are fleeting guests upon an ancient bed. Tread lightly and build to last, lest we wake what slumbers.",
+      "cs": "Jsme prchaví hosté na prastarém lůžku. Našlapuj zlehka a stavěj navěky, ať neprobudíme, co dřímá."
+    },
+    "morale_at_full_faith": 7,
+    "solace": 0.38
+  },
+  {
+    "id": "bitter_root",
+    "name": {
+      "en": "Cult of the Bitter Root",
+      "cs": "Kult Hořkého Kořene"
+    },
+    "creed": {
+      "en": "The full belly forgets. The hungry soul remembers. Hardship is the truest teacher.",
+      "cs": "Plné břicho zapomíná. Hladová duše si pamatuje. Nouze je ten nejopravdovější učitel."
+    },
+    "morale_at_full_faith": 6,
+    "solace": 0.4
+  },
+  {
+    "id": "unfurrowed_way",
+    "name": {
+      "en": "The Unfurrowed Way",
+      "cs": "Cesta bez brázd"
+    },
+    "creed": {
+      "en": "The wild earth provides for its own. To tear the soil is to invite hunger.",
+      "cs": "Divoká země se o své postará. Rozrývat půdu znamená přivolávat hlad."
+    },
+    "morale_at_full_faith": 6,
+    "solace": 0.25
+  },
+  {
+    "id": "weavers_of_fate",
+    "name": {
+      "en": "Weavers of Fate",
+      "cs": "Tkalci Osudu"
+    },
+    "creed": {
+      "en": "Each life is a thread; each choice a knot. We are woven together in one cloth. Do not pull a thread loose, for it may unravel us all.",
+      "cs": "Každý život je nit; každá volba uzel. Jsme utkáni v jedno plátno. Netahej za volnou nitku, můžeš nás všechny rozpárat."
+    },
+    "morale_at_full_faith": 9,
+    "solace": 0.22
+  },
+  {
+    "id": "silent_watchers",
+    "name": {
+      "en": "The Silent Watchers",
+      "cs": "Tiší Strážci"
+    },
+    "creed": {
+      "en": "The mountains see all. Your life is an offering laid at their feet. Make it worthy.",
+      "cs": "Hory všechno vidí. Tvůj život je oběť položená k jejich nohám. Ať je jí hodna."
+    },
+    "morale_at_full_faith": 8,
+    "solace": 0.3
+  },
+  {
+    "id": "the_forge",
+    "name": {
+      "en": "Cult of the Forge",
+      "cs": "Kult Kovárny"
+    },
+    "creed": {
+      "en": "We are the iron, the fire our trial, the hammer our will. What is broken may be remade stronger.",
+      "cs": "Jsme železo, oheň naše zkouška, kladivo naše vůle. Co se zlomilo, lze znovu zformovat, a bude to silnější."
+    },
+    "morale_at_full_faith": 9,
+    "solace": 0.22
+  },
+  {
+    "id": "sown_seed",
+    "name": {
+      "en": "Way of the Sown Seed",
+      "cs": "Cesta Zasetého Semínka"
+    },
+    "creed": {
+      "en": "We bury our hope in the dark earth, and trust it will rise again in the light.",
+      "cs": "Pohřbíváme svou naději do tmavé země a věříme, že znovu povstane ve světle."
+    },
+    "morale_at_full_faith": 7,
+    "solace": 0.35
+  },
+  {
+    "id": "mountain_heart",
+    "name": {
+      "en": "Faith of the Mountain's Heart",
+      "cs": "Víra Srdce Hory"
+    },
+    "creed": {
+      "en": "The mountain does not hurry. It watches, it waits, it endures. Let us be as the stone.",
+      "cs": "Hora nespěchá. Dívá se, čeká, přetrvá. Buďme jako kámen."
+    },
+    "morale_at_full_faith": 6,
+    "solace": 0.4
+  },
+  {
+    "id": "shared_loaf",
+    "name": {
+      "en": "The Shared Loaf",
+      "cs": "Společný Chléb"
+    },
+    "creed": {
+      "en": "No one eats until everyone eats. Our strength is not in our arms, but in the arms we link.",
+      "cs": "Nikdo nejí, dokud nejedí všichni. Naše síla není v našich pažích, ale v pažích, do nichž se zavěsíme."
+    },
+    "morale_at_full_faith": 8,
+    "solace": 0.33
+  },
+  {
+    "id": "first_flame",
+    "name": {
+      "en": "The First Flame",
+      "cs": "První Plamen"
+    },
+    "creed": {
+      "en": "From a single spark, our world was born. Tend the flame, remember the dark, and welcome all to the circle.",
+      "cs": "Z jediné jiskry se zrodil náš svět. Opatruj plamen, pamatuj na tmu a vítej všechny v kruhu."
+    },
+    "morale_at_full_faith": 8,
+    "solace": 0.3
+  },
+  {
+    "id": "mycelial_web",
+    "name": {
+      "en": "Keepers of the Mycelial Web",
+      "cs": "Strážci Podhoubí"
+    },
+    "creed": {
+      "en": "Life is not the tree, but the roots that bind all trees. In darkness and decay, the true work is done.",
+      "cs": "Život není strom, ale kořeny, které spojují všechny stromy. Ve tmě a rozkladu se odehrává ta pravá práce."
+    },
+    "morale_at_full_faith": 7,
+    "solace": 0.36
+  },
+  {
+    "id": "scarred_land",
+    "name": {
+      "en": "Keepers of the Scarred Land",
+      "cs": "Strážci zjizvené země"
+    },
+    "creed": {
+      "en": "The fire took the forest, but the flowers that bloom in the ash are brighter. What is broken can be made stronger.",
+      "cs": "Oheň vzal les, ale květy, jež kvetou v popelu, jsou jasnější. Co je zlomené, může zesílit."
+    },
+    "morale_at_full_faith": 7,
+    "solace": 0.4
+  },
+  {
+    "id": "last_jar",
+    "name": {
+      "en": "Order of the Last Jar",
+      "cs": "Řád Poslední sklenice"
+    },
+    "creed": {
+      "en": "In the deepest winter, one jar of pickled beets saved the children of the valley. To preserve is to love the future.",
+      "cs": "V nejhlubší zimě zachránila děti údolí jediná sklenice naložené řepy. Zavařovat znamená milovat budoucnost."
+    },
+    "morale_at_full_faith": 6,
+    "solace": 0.3
+  },
+  {
+    "id": "silent_quarrel",
+    "name": {
+      "en": "The Way of the Silent Quarrel",
+      "cs": "Cesta Tichého sváru"
+    },
+    "creed": {
+      "en": "Two of the First Seven never spoke again, but they worked side-by-side until their deaths. Some words are better left unsaid, for the village to live.",
+      "cs": "Dva z Prvních Sedmi spolu už nikdy nepromluvili, ale bok po boku pracovali až do smrti. Některá slova je lepší nevyřknout, aby vesnice mohla žít."
+    },
+    "morale_at_full_faith": 6,
+    "solace": 0.35
   }
 ]

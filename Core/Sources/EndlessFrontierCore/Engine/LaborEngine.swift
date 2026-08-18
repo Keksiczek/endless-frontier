@@ -79,6 +79,71 @@ public enum LaborEngine {
     /// often, too expensive to do every tick on a full grid.
     public static let staffingInterval = 10
 
+    /// **Whether the mason's trade has anything to do.**
+    ///
+    /// This used to read `!settlement.constructions.isEmpty` — building work was
+    /// *raising* something and nothing else — and it is the reason a fifty-year
+    /// colony was found with thirty-three of its fifty-five buildings derelict,
+    /// six empty dwellings, thirty-four colonists sleeping rough beside them,
+    /// four thousand materials in store and thirteen adults idle. The last
+    /// scaffold had come down decades earlier, so the trade closed, so nobody
+    /// swung a hammer at anything ever again.
+    ///
+    /// `BuildingEngine.repair` never stopped asking for masons — it just took
+    /// `max(1, 0)` and did what one notional pair of hands could, which is about
+    /// a fifth of what a town that size sheds to the weather. Wear is charged
+    /// **per building** and the repair budget is charged per colony, so this got
+    /// worse the more the colony built (rule 14, from the other side).
+    ///
+    /// A roof that leaks is work. Cheap enough for the staffing interval.
+    static func hasBuildingWork(_ settlement: Settlement) -> Bool {
+        !settlement.constructions.isEmpty || BuildingEngine.needsRepair(settlement)
+    }
+
+    /// How many roofs one mason can keep ahead of the weather.
+    ///
+    /// **Measured, not chosen** (rule 23). A worn town left to itself with hands
+    /// and materials breaks even at about *ten* buildings to the mason and falls
+    /// apart past it: fifty-five roofs and four masons went 0.40 → 0.06 in forty
+    /// years, which is the save this was found in. Six leaves margin, so a hard
+    /// winter — 2.6× the wear of a summer — costs ground that the next summer
+    /// puts back instead of starting a slide that nothing ever stops.
+    static let roofsPerMason = 6
+
+    /// The share the mason's trade is worth at its idlest: a town in good repair
+    /// still wants a few hands who know how a wall goes up.
+    static let baseBuildingShare = 0.09
+    /// …and the most of a town that may ever be on scaffolds. A colony that has
+    /// let everything go mends itself slowly rather than putting everybody on
+    /// the roofs and starving under them.
+    static let maxBuildingShare = 0.25
+
+    /// **What share of the town its own upkeep is asking for.**
+    ///
+    /// `floors` exists because a share is a useless way to divide a *village*.
+    /// This exists because a share is a useless way to size a job whose size is
+    /// set by something other than people: how much mending a colony needs is
+    /// decided by how many roofs it owns. A flat 9 % is the right answer at
+    /// exactly one ratio of roofs to townsfolk — and the ratio the game actually
+    /// grows into (roughly a building per adult) sits just the wrong side of it,
+    /// so a colony that was keeping up at forty buildings is losing at fifty-five
+    /// and has no way to notice.
+    ///
+    /// This is rule 14 answered rather than merely named: wear is charged per
+    /// building, so the hands that undo it are counted per building too.
+    ///
+    /// It rides in the quota table rather than in `floors` on purpose. A floor
+    /// outranks every ordinary deficit, so a mason floor big enough to matter
+    /// would take the colony's last cook the first hard winter; a share is
+    /// renormalised against the rest of the table, which means masonry takes a
+    /// bigger slice of the same town instead of the whole town.
+    static func masonShare(_ settlement: Settlement, adultCount: Int) -> Double {
+        let wanting = BuildingEngine.countNeedingRepair(settlement)
+        guard wanting > 0, adultCount > 0 else { return baseBuildingShare }
+        let wanted = Double(wanting) / Double(roofsPerMason) / Double(adultCount)
+        return min(maxBuildingShare, max(baseBuildingShare, wanted))
+    }
+
     /// Puts every idle adult in the settlement to work, each filling whatever
     /// role is furthest below its quota at that moment.
     public static func assignIdleAdults(_ settlement: Settlement, registry: GameDataRegistry) -> Settlement {
@@ -111,8 +176,11 @@ public enum LaborEngine {
             !$0.underConstruction
                 && (registry.building($0.definitionID)?.defense ?? 0) > 0
         } ?? false
-        // Builders are only a trade while something is actually being raised.
-        let hasConstruction = !settlement.constructions.isEmpty
+        // Builders are a trade while there is building work — a scaffold to
+        // raise **or** a roof to mend. See `hasBuildingWork`.
+        let hasBuildWork = hasBuildingWork(settlement)
+        // …and how much of a trade depends on how many roofs are asking.
+        let masons = masonShare(settlement, adultCount: adultCount)
         // …and crafters only while there is something on the bench to make.
         let hasCraftWork = settlement.craftOrders.contains { !$0.paused }
         // Ground left to chart keeps one pair of boots on the job.
@@ -121,9 +189,10 @@ public enum LaborEngine {
         for index in idleIndices {
             let best = neediestRole(counts: counts, adultCount: adultCountD,
                                     population: adultCount, hasTemple: hasTemple,
-                                    hasConstruction: hasConstruction,
+                                    hasBuildWork: hasBuildWork,
                                     needsScouts: needsScouts, hasWalls: hasWalls,
                                     hasCraftWork: hasCraftWork,
+                                    masonShare: masons,
                                     policy: settlement.policy)
             s.pawns[index].assignedWork = best
             counts[best, default: 0] += 1
@@ -184,10 +253,12 @@ public enum LaborEngine {
             !$0.underConstruction
                 && (registry.building($0.definitionID)?.defense ?? 0) > 0
         } ?? false
-        let hasConstruction = !settlement.constructions.isEmpty
+        let hasBuildWork = hasBuildingWork(settlement)
         let hasCraftWork = settlement.craftOrders.contains { !$0.paused }
         let table = quotaTable(hasTemple: hasTemple, hasWalls: hasWalls,
-                               hasCraftWork: hasCraftWork, policy: policy)
+                               hasCraftWork: hasCraftWork,
+                               masonShare: masonShare(settlement, adultCount: adultCount),
+                               policy: policy)
 
         var overWork: WorkKind?, overBy = 0.0
         var underWork: WorkKind?, underBy = 0.0
@@ -214,7 +285,7 @@ public enum LaborEngine {
         }
         for (work, share) in table {
             let idleTrade = (work == .healing && adultCount < healingMinPopulation)
-                || (work == .building && !hasConstruction)
+                || (work == .building && !hasBuildWork)
                 || (work == .crafting && !hasCraftWork)
             let current = Double(counts[work, default: 0]) / Double(adultCount)
             let gap = share - current
@@ -372,9 +443,9 @@ public enum LaborEngine {
     /// resumes and scouting has to earn its second body like anything else.
     static func neediestRole(
         counts: [WorkKind: Int], adultCount: Double, population: Int,
-        hasTemple: Bool = false, hasConstruction: Bool = true,
+        hasTemple: Bool = false, hasBuildWork: Bool = true,
         needsScouts: Bool = false, hasWalls: Bool = false,
-        hasCraftWork: Bool = false,
+        hasCraftWork: Bool = false, masonShare: Double? = nil,
         policy: ColonyPolicy = ColonyPolicy()
     ) -> WorkKind {
         // Scouting's floor still applies — unless the orders say nobody scouts.
@@ -389,12 +460,13 @@ public enum LaborEngine {
         }
 
         let table = quotaTable(hasTemple: hasTemple, hasWalls: hasWalls,
-                               hasCraftWork: hasCraftWork, policy: policy)
+                               hasCraftWork: hasCraftWork, masonShare: masonShare,
+                               policy: policy)
         var best: WorkKind?
         var bestDeficit = -Double.infinity
         for (work, share) in table {
             if work == .healing, population < healingMinPopulation { continue }
-            if work == .building, !hasConstruction { continue }
+            if work == .building, !hasBuildWork { continue }
             if work == .crafting, !hasCraftWork { continue }
             let current = Double(counts[work, default: 0]) / adultCount
             let deficit = share - current
@@ -420,9 +492,16 @@ public enum LaborEngine {
     /// town rather than the whole town.
     static func quotaTable(
         hasTemple: Bool, hasWalls: Bool, hasCraftWork: Bool = false,
+        masonShare: Double? = nil,
         policy: ColonyPolicy
     ) -> [(work: WorkKind, share: Double)] {
         var table = quotas
+        // What the town's own roofs are asking for, if anybody worked it out.
+        // Left alone the base share stands, so nothing that does not care about
+        // upkeep sees a different table than it used to.
+        if let masonShare, let i = table.firstIndex(where: { $0.work == .building }) {
+            table[i].share = masonShare
+        }
         if hasTemple { table.append((.priest, priestShare)) }
         if hasWalls { table.append((.garrison, garrisonShare)) }
         if hasCraftWork { table.append((.crafting, craftingShare)) }
