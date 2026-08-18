@@ -51,7 +51,8 @@ struct RegionCanvasView: View {
                         SettlementRenderer.drawWilderness(
                             &context, size: size, map: map,
                             season: game.season, time: t, camera: camera,
-                            regionKind: region.kind, tribe: residentTribe)
+                            regionKind: region.kind, tribe: residentTribe,
+                            registry: game.registry)
                     }
                 }
                 .contentShape(Rectangle())

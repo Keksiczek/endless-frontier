@@ -4856,5 +4856,6189 @@
         ]
       }
     ]
+  },
+  {
+    "id": "river_pollution",
+    "type": "disaster",
+    "name": {
+      "en": "River Pollution",
+      "cs": "Znečištění řeky"
+    },
+    "era": [
+      "early_industrial",
+      "modern"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 200,
+    "conditions": [
+      {
+        "techResearched": "chemistry"
+      },
+      {
+        "worldFlag": "biome:plains_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_health",
+        "delta": -12,
+        "selector": "all"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -60,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -7
+      }
+    ],
+    "choices": [
+      {
+        "id": "build_filters",
+        "label": {
+          "en": "Build filtration systems",
+          "cs": "Vybudovat filtrační systém"
+        },
+        "description": {
+          "en": "Spend materials and knowledge to clean the water source and raise morale.",
+          "cs": "Investovat materiál a znalosti do vyčištění zdroje vody a zlepšení nálady."
+        },
+        "cost": {
+          "materials": 60,
+          "knowledge": 25
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 10
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "ignore_runoff",
+        "label": {
+          "en": "Restrict access to the river",
+          "cs": "Omezit přístup k řece"
+        },
+        "description": {
+          "en": "Do the minimum. The settlement's stability will suffer.",
+          "cs": "Udělat jen to nejnutnější. Stabilita osady utrpí."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": -8
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "Careless handling of industrial byproducts has contaminated the river. The water runs grey and foul-smelling, and people who drink from it are falling ill.",
+      "cs": "Neopatrné nakládání s průmyslovými odpady znečistilo řeku. Voda je šedá, páchne a lidé, kteří se z ní napili, onemocněli."
+    }
+  },
+  {
+    "id": "lost_miner",
+    "type": "threat",
+    "name": {
+      "en": "Lost Miner",
+      "cs": "Ztracený horník"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 160,
+    "conditions": [
+      {
+        "techResearched": "masonry"
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -8
+      }
+    ],
+    "choices": [
+      {
+        "id": "rescue",
+        "label": {
+          "en": "Mount a rescue operation",
+          "cs": "Uspořádat záchrannou operaci"
+        },
+        "description": {
+          "en": "A costly and dangerous effort. If they succeed, the community will rejoice.",
+          "cs": "Drahé a nebezpečné úsilí. Pokud se podaří, celá komunita si oddychne."
+        },
+        "cost": {
+          "materials": 40
+        },
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": -30,
+            "selector": "lowest_health"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 15
+          }
+        ]
+      },
+      {
+        "id": "abandon",
+        "label": {
+          "en": "Abandon the search",
+          "cs": "Ukončit pátrání"
+        },
+        "description": {
+          "en": "The risks are too great. The miner is lost, and the colony must live with the choice.",
+          "cs": "Rizika jsou příliš velká. Horník je ztracen a osada s tím rozhodnutím musí žít."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "remove_pawn"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -12
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": -10
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A collapse in the western tunnels has trapped a miner. Their lamp went out hours ago. Without help, they won't survive.",
+      "cs": "Zával v západních štolách uvěznil horníka. Lampa mu zhasla před několika hodinami. Bez pomoci nepřežije."
+    }
+  },
+  {
+    "id": "bumper_harvest",
+    "type": "flavor",
+    "name": {
+      "en": "Bumper Harvest",
+      "cs": "Rekordní sklizeň"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 16,
+    "cooldown_ticks": 100,
+    "conditions": [
+      {
+        "techResearched": "agriculture"
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": 60,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 6
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "A perfect combination of rain and sun has led to a bumper harvest. The grain silos are overflowing, and every family has more than enough.",
+      "cs": "Dokonalá kombinace deště a slunce přinesla rekordní sklizeň. Sila na obilí přetékají a každá rodina má víc než dost."
+    }
+  },
+  {
+    "id": "old_rivalry_flares_up",
+    "type": "flavor",
+    "name": {
+      "en": "Old Rivalry Flares Up",
+      "cs": "Stará rivalita znovu vzplála"
+    },
+    "era": [],
+    "weight": 20,
+    "cooldown_ticks": 60,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 15
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": -8,
+        "selector": "lowest_health"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": -4
+      }
+    ],
+    "choices": [
+      {
+        "id": "intervene",
+        "label": {
+          "en": "Mediate the dispute",
+          "cs": "Vstoupit do sporu"
+        },
+        "description": {
+          "en": "Spend influence to calm tempers and restore order.",
+          "cs": "Věnovat vliv na uklidnění situace a obnovení pořádku."
+        },
+        "cost": {
+          "influence": 15
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 6
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 3
+          }
+        ]
+      },
+      {
+        "id": "let_them_be",
+        "label": {
+          "en": "Let them sort it out",
+          "cs": "Nechat je, ať si to vyřídí"
+        },
+        "description": {
+          "en": "Don't get involved. The bad blood will linger for a while.",
+          "cs": "Neplést se do toho. Zlá krev ještě nějakou dobu potrvá."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -5
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "The old feud between the Nowak and Sedlák families has flared up again, this time over a misplaced shovel. Their shouting match in the town square has unsettled everyone.",
+      "cs": "Starý spor mezi rodinou Novákových a Sedlákových znovu vzplál, tentokrát kvůli ztracené lopatě. Jejich hádka na návsi všechny znepokojila."
+    }
+  },
+  {
+    "id": "ancient_artifact",
+    "type": "opportunity",
+    "name": {
+      "en": "Ancient Artifact",
+      "cs": "Dávný artefakt"
+    },
+    "era": [],
+    "weight": 5,
+    "cooldown_ticks": 350,
+    "conditions": [
+      {
+        "worldFlag": "cleared:ruins",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 20,
+        "scope": "global"
+      }
+    ],
+    "choices": [
+      {
+        "id": "study_it",
+        "label": {
+          "en": "Dedicate researchers to study it",
+          "cs": "Pověřit badatele jeho studiem"
+        },
+        "description": {
+          "en": "A significant investment of knowledge could lead to a breakthrough.",
+          "cs": "Značná investice znalostí by mohla vést k průlomu."
+        },
+        "cost": {
+          "knowledge": 50
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 120,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "display_it",
+        "label": {
+          "en": "Put it on display",
+          "cs": "Vystavit ho"
+        },
+        "description": {
+          "en": "Make it a symbol for the settlement, boosting morale.",
+          "cs": "Učinit z něj symbol osady a pozvednout morálku."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 7
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 4,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "sell_it",
+        "label": {
+          "en": "Sell it to a traveling collector",
+          "cs": "Prodat ho potulnému sběrateli"
+        },
+        "description": {
+          "en": "Gain a quick and substantial sum of influence.",
+          "cs": "Získat rychlý a podstatný obnos vlivu."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 75,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "An expedition returns from the ruins bearing a strange, intricate object of unknown material and purpose. It hums faintly when touched.",
+      "cs": "Výprava se vrací z trosek a nese podivný, spletitý předmět z neznámého materiálu a neznámého účelu. Při dotyku slabě hučí."
+    }
+  },
+  {
+    "id": "talented_youth",
+    "type": "opportunity",
+    "name": {
+      "en": "A Talented Youth",
+      "cs": "Nadaná mládež"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 14,
+    "cooldown_ticks": 140,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 10
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 3,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "sponsor_education",
+        "label": {
+          "en": "Sponsor their education",
+          "cs": "Financovat jejich vzdělání"
+        },
+        "description": {
+          "en": "Invest influence to cultivate their talent for a future payoff in knowledge.",
+          "cs": "Investovat vliv do rozvoje jejich talentu pro budoucí zisk znalostí."
+        },
+        "cost": {
+          "influence": 35
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 80,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 4
+          }
+        ]
+      },
+      {
+        "id": "put_to_work",
+        "label": {
+          "en": "Put their hands to work",
+          "cs": "Zapojit je do práce"
+        },
+        "description": {
+          "en": "The colony needs workers now, not scholars later. Gain immediate materials.",
+          "cs": "Osada potřebuje dělníky teď, ne učence později. Získat okamžitý materiál."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 50,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A young colonist, Eliska, has been seen sketching complex gear systems in the dirt. Her mind is sharp, and she could become a brilliant engineer or scholar, given the chance.",
+      "cs": "Mladou osadnici, Elišku, viděli, jak do hlíny kreslí složité převodové systémy. Má bystrou mysl a mohla by se stát skvělou inženýrkou nebo badatelkou, pokud dostane příležitost."
+    }
+  },
+  {
+    "id": "land_dispute",
+    "type": "threat",
+    "name": {
+      "en": "Land Dispute",
+      "cs": "Spor o půdu"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 12,
+    "cooldown_ticks": 120,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 20
+      },
+      {
+        "techResearched": "agriculture"
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": -8
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -6,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "mediate",
+        "label": {
+          "en": "Mediate a compromise",
+          "cs": "Zprostředkovat kompromis"
+        },
+        "description": {
+          "en": "Spend influence to restore stability. This will cost you political capital.",
+          "cs": "Vložit vliv a obnovit stabilitu. Bude vás to stát politický kapitál."
+        },
+        "cost": {
+          "influence": 25
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 10
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 8,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "side_with_one",
+        "label": {
+          "en": "Side with the family that offers more",
+          "cs": "Přidat se na stranu rodiny, která víc nabízí"
+        },
+        "description": {
+          "en": "Gain a resource boon, but alienate the other family and deepen the conflict.",
+          "cs": "Získáte suroviny, ale znepřátelíte si druhou rodinu a prohloubíte konflikt."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 50,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": -6
+          },
+          {
+            "type": "pawn_health",
+            "delta": -10,
+            "selector": "lowest_health"
+          }
+        ]
+      },
+      {
+        "id": "ignore",
+        "label": {
+          "en": "Let them sort it out themselves",
+          "cs": "Nechat je, ať si to vyřeší sami"
+        },
+        "description": {
+          "en": "Doing nothing may lead to violence.",
+          "cs": "Nedělat nic může vést k násilí."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": -25,
+            "selector": "lowest_health"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": -3
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "The Petrov and Novak families are in a bitter dispute over the boundary between their fields. It's dividing the settlement.",
+      "cs": "Rodiny Petrových a Novákových vedou hořký spor o hranici mezi svými poli. Rozděluje to celou osadu."
+    }
+  },
+  {
+    "id": "tainted_water",
+    "type": "disaster",
+    "name": {
+      "en": "Tainted Water",
+      "cs": "Zkažená voda"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 150,
+    "conditions": [
+      {
+        "worldFlag": "biome:mountains_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_health",
+        "delta": -15,
+        "selector": "lowest_health"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -30,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -10
+      }
+    ],
+    "choices": [
+      {
+        "id": "boil_water",
+        "label": {
+          "en": "Order all water to be boiled",
+          "cs": "Nařídit převařování veškeré vody"
+        },
+        "description": {
+          "en": "This will consume materials (firewood), but protect the people's health.",
+          "cs": "Spotřebuje to materiál (dříví), ale ochrání zdraví lidí."
+        },
+        "cost": {
+          "materials": 25
+        },
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": 10,
+            "selector": "all"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 3
+          }
+        ]
+      },
+      {
+        "id": "wait_it_out",
+        "label": {
+          "en": "Hope the stream clears on its own",
+          "cs": "Doufat, že se potok vyčistí sám"
+        },
+        "description": {
+          "en": "The cheapest and most dangerous option.",
+          "cs": "Nejlevnější a nejnebezpečnější možnost."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": -10,
+            "selector": "lowest_health"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A mineral seam has broken open upstream, tainting the creek with a sickly yellow colour. The water is unsafe to drink.",
+      "cs": "Proti proudu se protrhla minerální žíla a zbarvila potok do nezdravě žluté. Voda se nedá pít."
+    }
+  },
+  {
+    "id": "traveling_artisan",
+    "type": "opportunity",
+    "name": {
+      "en": "Traveling Artisan",
+      "cs": "Putující řemeslník"
+    },
+    "era": [
+      "ancient",
+      "medieval"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 300,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 15
+      },
+      {
+        "techResearched": "basic_tools"
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 3,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "persuade_to_stay",
+        "label": {
+          "en": "Offer them a workshop and a home",
+          "cs": "Nabídnout mu dílnu a domov"
+        },
+        "description": {
+          "en": "They will join the colony. Costs significant materials and influence.",
+          "cs": "Přidá se k osadě. Stojí značný materiál a vliv."
+        },
+        "cost": {
+          "materials": 30,
+          "influence": 20
+        },
+        "effects": [
+          {
+            "type": "add_pawn",
+            "count": 1
+          },
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 20,
+            "duration_ticks": 80
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "trade_for_goods",
+        "label": {
+          "en": "Trade for some of their wares",
+          "cs": "Vyměnit s ním zboží"
+        },
+        "description": {
+          "en": "Gain some materials, but the artisan will move on.",
+          "cs": "Získáte nějaký materiál, ale řemeslník půjde dál."
+        },
+        "cost": {
+          "food": 25
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 50,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "wish_them_well",
+        "label": {
+          "en": "Wish them well on their journey",
+          "cs": "Popřát mu šťastnou cestu"
+        },
+        "description": {
+          "en": "Let them pass through without incident.",
+          "cs": "Nechat ho projít bez dalších okolků."
+        },
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": {
+      "en": "A master blacksmith, known for their uniquely durable tools, is passing through the valley. They seem weary of the road.",
+      "cs": "Mistr kovář, proslulý svými neobyčejně trvanlivými nástroji, prochází údolím. Zdá se, že je unavený z cest."
+    }
+  },
+  {
+    "id": "rich_clay_deposit",
+    "type": "opportunity",
+    "name": {
+      "en": "Rich Clay Deposit",
+      "cs": "Bohaté naleziště jílu"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 300,
+    "conditions": [
+      {
+        "techResearched": "pottery"
+      },
+      {
+        "worldFlag": "biome:plains_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 2,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "establish_brickworks",
+        "label": {
+          "en": "Establish a dedicated brickworks",
+          "cs": "Založit cihelnu"
+        },
+        "description": {
+          "en": "Invest materials to create a lasting source of building supplies.",
+          "cs": "Investovat materiál a vytvořit trvalý zdroj stavebních zásob."
+        },
+        "cost": {
+          "materials": 40
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 30,
+            "duration_ticks": 100
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 6
+          }
+        ]
+      },
+      {
+        "id": "focus_on_pottery",
+        "label": {
+          "en": "Focus on crafting fine pottery for trade",
+          "cs": "Soustředit se na výrobu jemné keramiky pro obchod"
+        },
+        "description": {
+          "en": "Use the clay to generate influence through masterwork crafts.",
+          "cs": "Použít jíl k výrobě mistrovských děl, která přinesou vliv."
+        },
+        "cost": {
+          "knowledge": 10
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 25,
+            "duration_ticks": 80
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 4
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A colonist has uncovered a deposit of exceptionally fine, pure clay by the riverbank.",
+      "cs": "Osadník odkryl u břehu řeky naleziště výjimečně jemného, čistého jílu."
+    }
+  },
+  {
+    "id": "child_of_portent",
+    "type": "flavor",
+    "name": {
+      "en": "Child of Portent",
+      "cs": "Dítě znamení"
+    },
+    "era": [
+      "early_settlement",
+      "ancient"
+    ],
+    "weight": 5,
+    "cooldown_ticks": 600,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "add_pawn",
+        "count": 1
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 2
+      }
+    ],
+    "choices": [
+      {
+        "id": "good_omen",
+        "label": {
+          "en": "It is a sign of good fortune.",
+          "cs": "Je to znamení štěstí."
+        },
+        "description": {
+          "en": "Celebrate the birth and gain a boost to morale.",
+          "cs": "Oslavit narození a získat povzbuzení morálky."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 4
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 5,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "bad_omen",
+        "label": {
+          "en": "It is a warning.",
+          "cs": "Je to varování."
+        },
+        "description": {
+          "en": "Urge caution. Gain a little knowledge, but morale will suffer.",
+          "cs": "Nabádat k opatrnosti. Získáte trochu vědění, ale morálka utrpí."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 15,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -3
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A newborn has a strange birthmark, shaped like a soaring bird. The elders are divided on what it means.",
+      "cs": "Novorozeně má podivné znaménko ve tvaru letícího ptáka. Starší se přou o to, co to znamená."
+    }
+  },
+  {
+    "id": "childrens_game",
+    "type": "flavor",
+    "name": {
+      "en": "A New Game",
+      "cs": "Nová hra"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 15,
+    "cooldown_ticks": 80,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 10
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "let_them_play",
+        "label": {
+          "en": "Let them play. A few scrapes build character.",
+          "cs": "Nechat je hrát. Pár škrábanců buduje charakter."
+        },
+        "description": {
+          "en": "A small risk of injury for a boost to colony-wide morale.",
+          "cs": "Malé riziko zranění výměnou za povzbuzení morálky v celé osadě."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 4
+          },
+          {
+            "type": "pawn_health",
+            "delta": -8,
+            "selector": "lowest_health"
+          }
+        ]
+      },
+      {
+        "id": "forbid_the_game",
+        "label": {
+          "en": "Forbid the game. It's too dangerous.",
+          "cs": "Tu hru zakázat. Je příliš nebezpečná."
+        },
+        "description": {
+          "en": "Prevents any accidents, but it will make everyone a bit glum.",
+          "cs": "Zabrání nehodám, ale všechny to trochu otráví."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -3
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "The children have invented a new game involving chasing each other over the rooftops. Some parents are amused, others are worried.",
+      "cs": "Děti si vymyslely novou hru: navzájem se honí po střechách. Některé rodiče to baví, jiní mají strach."
+    }
+  },
+  {
+    "id": "sickly_livestock",
+    "type": "threat",
+    "name": {
+      "en": "Sickly Livestock",
+      "cs": "Nemocný dobytek"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 14,
+    "cooldown_ticks": 100,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 12
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -80,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -7,
+        "selector": "all"
+      },
+      {
+        "type": "pawn_health",
+        "delta": -10,
+        "selector": "lowest_health"
+      }
+    ],
+    "choices": [
+      {
+        "id": "seek_herbalist",
+        "label": {
+          "en": "Seek an herbalist's knowledge",
+          "cs": "Vyhledat pomoc bylinkáře"
+        },
+        "description": {
+          "en": "Spend knowledge to try and save the animals and recover some food.",
+          "cs": "Vynaložit vědění na záchranu zvířat a části zásob."
+        },
+        "cost": {
+          "knowledge": 30
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 40,
+            "scope": "global"
+          },
+          {
+            "type": "pawn_health",
+            "delta": 5,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "cull_and_burn",
+        "label": {
+          "en": "Cull and burn the carcasses",
+          "cs": "Poraž a spal zdechliny"
+        },
+        "description": {
+          "en": "A grim task to stop the spread. It will prevent further disease but deepens the gloom.",
+          "cs": "Ponurý úkol k zastavení nákazy. Zabrání šíření nemoci, ale prohloubí trudomyslnost."
+        },
+        "cost": {
+          "materials": 20
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -5
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.threatLevel",
+            "delta": -4
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A wasting sickness spreads through the settlement's livestock, threatening the food stores and sickening the unwary.",
+      "cs": "Chřadnoucí nemoc se šíří mezi dobytkem v osadě, ohrožuje zásoby jídla a přináší chorobu neopatrným."
+    }
+  },
+  {
+    "id": "childrens_hideout",
+    "type": "flavor",
+    "name": {
+      "en": "Children's Hideout",
+      "cs": "Dětská zašívárna"
+    },
+    "era": [],
+    "weight": 20,
+    "cooldown_ticks": 50,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 15
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 3
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "A group of children have built an elaborate 'fort' in a grove, complete with a secret password and a crudely drawn flag. Their parents pretend not to know where they are.",
+      "cs": "Skupina dětí si v hájku postavila propracovanou ‚pevnost‘, i s tajným heslem a hrubě načmáranou vlajkou. Jejich rodiče předstírají, že neví, kde jsou."
+    }
+  },
+  {
+    "id": "strange_spores",
+    "type": "opportunity",
+    "name": {
+      "en": "Strange Spores",
+      "cs": "Podivné spory"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 150,
+    "conditions": [
+      {
+        "worldFlag": "biome:forest_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 2,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "cultivate_spores",
+        "label": {
+          "en": "Try to cultivate them",
+          "cs": "Zkusit je pěstovat"
+        },
+        "description": {
+          "en": "This could be a new food source. A calculated risk for a great reward.",
+          "cs": "Může to být nový zdroj jídla. Vypočítaný risk pro velkou odměnu."
+        },
+        "cost": {
+          "knowledge": 20
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 100,
+            "scope": "global"
+          },
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 50,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "destroy_spores",
+        "label": {
+          "en": "Destroy them as a precaution",
+          "cs": "Pro jistotu je zničit"
+        },
+        "description": {
+          "en": "It's better to be safe than sorry. We have other things to eat.",
+          "cs": "Jistota je jistota. Máme co jíst."
+        },
+        "cost": {
+          "materials": 10
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 5
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "Foragers have found an unusual, glowing fungus deep in the forest. Its spores are unlike anything known, and it seems edible... perhaps.",
+      "cs": "Hledači našli hluboko v lese neobvyklou, světélkující houbu. Její spory se nepodobají ničemu známému a zdá se jedlá… snad."
+    }
+  },
+  {
+    "id": "dam_breach",
+    "type": "disaster",
+    "name": {
+      "en": "Dam Breach",
+      "cs": "Protržení hráze"
+    },
+    "era": [
+      "early_industrial",
+      "modern",
+      "near_future"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 250,
+    "conditions": [
+      {
+        "techResearched": "engineering"
+      },
+      {
+        "worldFlag": "biome:mountains_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "damage_buildings",
+        "delta": -35
+      },
+      {
+        "type": "resource_delta",
+        "resource": "energy",
+        "delta": -80,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_health",
+        "selector": "lowest_health",
+        "delta": -25
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": -15
+      }
+    ],
+    "choices": [
+      {
+        "id": "emergency_repairs",
+        "label": {
+          "en": "Organize emergency repairs",
+          "cs": "Zorganizovat nouzové opravy"
+        },
+        "description": {
+          "en": "A massive effort of materials and labor can mitigate the damage.",
+          "cs": "Masivní nasazení materiálu a práce může zmírnit škody."
+        },
+        "cost": {
+          "materials": 100
+        },
+        "effects": [
+          {
+            "type": "damage_buildings",
+            "delta": 20
+          },
+          {
+            "type": "resource_delta",
+            "resource": "energy",
+            "delta": 40,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 10
+          }
+        ]
+      },
+      {
+        "id": "evacuate_flood_zone",
+        "label": {
+          "en": "Evacuate the flood zone",
+          "cs": "Evakuovat záplavovou zónu"
+        },
+        "description": {
+          "en": "Save the people but write off the infrastructure. We'll rebuild later.",
+          "cs": "Zachránit lidi, ale odepsat infrastrukturu. Přestavíme ji později."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": 15,
+            "selector": "all"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -8
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "With a groan of tortured metal and stone, the main reservoir dam has failed. A wall of water is rushing towards the valley floor.",
+      "cs": "Se skřípotem mučeného kovu a kamene selhala hráz hlavní nádrže. Zeď vody se řítí do údolí."
+    }
+  },
+  {
+    "id": "masters_legacy",
+    "type": "opportunity",
+    "name": {
+      "en": "A Master's Legacy",
+      "cs": "Odkaz mistra"
+    },
+    "era": [
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 9,
+    "cooldown_ticks": 180,
+    "conditions": [
+      {
+        "techResearched": "guilds"
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 3,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "found_a_school",
+        "label": {
+          "en": "Use the inheritance to found a school",
+          "cs": "Z dědictví založit školu"
+        },
+        "description": {
+          "en": "Turn the master's wealth into a lasting source of knowledge for the colony.",
+          "cs": "Proměnit mistrovo bohatství v trvalý zdroj vědění pro kolonii."
+        },
+        "cost": {
+          "influence": 40
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 60,
+            "duration_ticks": 40,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "distribute_the_wealth",
+        "label": {
+          "en": "Distribute the wealth among the people",
+          "cs": "Rozdělit bohatství mezi lid"
+        },
+        "description": {
+          "en": "A popular move for an immediate boost to morale and materials.",
+          "cs": "Populární krok, který okamžitě zvedne náladu a poskytne materiál."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 120,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 10
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A master artisan has passed away, leaving no heir but a lifetime's accumulated wealth and a will stating it should be used for the good of the settlement.",
+      "cs": "Zemřel mistr řemeslník. Nezanechal dědice, jen celoživotní bohatství a závěť, podle níž má být použito pro blaho osady."
+    }
+  },
+  {
+    "id": "first_snowfall",
+    "type": "flavor",
+    "name": {
+      "en": "First Snowfall",
+      "cs": "První sníh"
+    },
+    "era": [],
+    "weight": 25,
+    "cooldown_ticks": 30,
+    "conditions": [
+      {
+        "worldFlag": "biome:tundra_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 6,
+        "selector": "all"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 4
+      },
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -15,
+        "scope": "global"
+      }
+    ],
+    "choices": [
+      {
+        "id": "day_of_rest",
+        "label": {
+          "en": "Declare a day of rest",
+          "cs": "Vyhlásit den odpočinku"
+        },
+        "description": {
+          "en": "Let the colonists enjoy the moment. A small cost to production for a bigger morale boost.",
+          "cs": "Nechat osadníky, ať si ten okamžik užijí. Malá ztráta na výrobě za cenu větší nálady."
+        },
+        "cost": {
+          "materials": 15
+        },
+        "effects": [
+          {
+            "type": "pawn_mood",
+            "delta": 5,
+            "selector": "all"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 3
+          }
+        ]
+      },
+      {
+        "id": "keep_working",
+        "label": {
+          "en": "Winter is coming. Keep working.",
+          "cs": "Zima se blíží. Pokračovat v práci."
+        },
+        "description": {
+          "en": "There's no time to waste admiring the scenery.",
+          "cs": "Není čas ztrácet čas obdivováním krajiny."
+        },
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": {
+      "en": "The first snow of the year has begun to fall, thick, silent flakes blanketing the valley in white.",
+      "cs": "Začal padat první sníh letošního roku. Husté, tiché vločky pokrývají údolí bílou peřinou."
+    }
+  },
+  {
+    "id": "landslide",
+    "type": "disaster",
+    "name": {
+      "en": "Landslide",
+      "cs": "Sesuv půdy"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 150,
+    "conditions": [
+      {
+        "worldFlag": "biome:mountains_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "damage_buildings",
+        "delta": 15
+      },
+      {
+        "type": "pawn_health",
+        "delta": -12,
+        "selector": "lowest_health"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.stability",
+        "delta": -6
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -7,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "clear_rubble",
+        "label": {
+          "en": "Organize clearing parties",
+          "cs": "Zorganizovat odklízecí práce"
+        },
+        "description": {
+          "en": "Spend materials to clear the debris and restore morale.",
+          "cs": "Vynaložit materiál na odklizení sutin a obnovu morálky."
+        },
+        "cost": {
+          "materials": 40
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 8
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 4
+          }
+        ]
+      },
+      {
+        "id": "reinforce_slopes",
+        "label": {
+          "en": "Reinforce the slopes",
+          "cs": "Zpevnit svahy"
+        },
+        "description": {
+          "en": "A significant investment of materials and knowledge to prevent a recurrence.",
+          "cs": "Významná investice materiálu a vědění, aby se to neopakovalo."
+        },
+        "cost": {
+          "materials": 70,
+          "knowledge": 25
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 10
+          }
+        ]
+      },
+      {
+        "id": "wait_it_out",
+        "label": {
+          "en": "Wait for the ground to settle",
+          "cs": "Počkat, až se půda usadí"
+        },
+        "description": {
+          "en": "Do nothing. The damage is done, but the uncertainty will hurt morale.",
+          "cs": "Neudělat nic. Škoda se stala, ale nejistota poškodí morálku."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -5
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "Persistent rains in the mountains have loosened a mass of rock and mud. Several buildings are damaged and there are cries for help.",
+      "cs": "Vytrvalé deště v horách uvolnily masu kamení a bahna. Několik budov je poškozeno a ozývají se volání o pomoc."
+    }
+  },
+  {
+    "id": "strange_meteorite",
+    "type": "opportunity",
+    "name": {
+      "en": "Strange Meteorite",
+      "cs": "Podivný meteorit"
+    },
+    "era": [],
+    "weight": 5,
+    "cooldown_ticks": 250,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "region_kind",
+        "kind": "anomaly",
+        "selector": "any_unknown"
+      }
+    ],
+    "choices": [
+      {
+        "id": "mount_expedition",
+        "label": {
+          "en": "Mount an expedition immediately",
+          "cs": "Okamžitě vyslat výpravu"
+        },
+        "description": {
+          "en": "Spend food and influence to organize a swift survey, gaining some initial knowledge.",
+          "cs": "Vynaložit jídlo a vliv na rychlý průzkum a získat tak prvotní poznatky."
+        },
+        "cost": {
+          "food": 20,
+          "influence": 10
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 30,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "observe_from_afar",
+        "label": {
+          "en": "Mark the location for later",
+          "cs": "Zaznamenat polohu na později"
+        },
+        "description": {
+          "en": "The anomaly will be there when you're ready.",
+          "cs": "Anomálie tam bude, až budete připraveni."
+        },
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": {
+      "en": "A streak of light, a distant rumble. Something has fallen from the sky in the uncharted lands, creating a strange, localized anomaly.",
+      "cs": "Pruh světla, vzdálené dunění. V neprobádaných končinách něco spadlo z nebe a vytvořilo podivnou, lokalizovanou anomálii."
+    }
+  },
+  {
+    "id": "first_poem",
+    "type": "flavor",
+    "name": {
+      "en": "The First Poem",
+      "cs": "První báseň"
+    },
+    "era": [
+      "early_settlement",
+      "ancient"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 180,
+    "conditions": [
+      {
+        "techResearched": "writing"
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 20,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 4
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "One of the colonists, quiet and thoughtful, has composed a poem about life in the valley. It's not a masterpiece, but it's theirs, and it is shared around the hearth fires.",
+      "cs": "Jeden z osadníků, tichý a přemýšlivý, složil báseň o životě v údolí. Není to veledílo, ale je jejich, a lidé si ji předčítají u ohňů."
+    }
+  },
+  {
+    "id": "industrial_sabotage",
+    "type": "threat",
+    "name": {
+      "en": "Industrial Sabotage",
+      "cs": "Průmyslová sabotáž"
+    },
+    "era": [
+      "early_industrial",
+      "modern"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 200,
+    "conditions": [
+      {
+        "techResearched": "machining"
+      },
+      {
+        "stat": "settlement:all.morale",
+        "max": 40
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "energy",
+        "delta": -80,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.stability",
+        "delta": -10
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -8,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "find_culprit",
+        "label": {
+          "en": "Launch a full investigation",
+          "cs": "Zahájit úplné vyšetřování"
+        },
+        "description": {
+          "en": "Spend influence to find the saboteur and make an example of them. This will restore stability.",
+          "cs": "Vynaložit vliv na nalezení sabotéra a učinit z něj odstrašující příklad. Obnoví to stabilitu."
+        },
+        "cost": {
+          "influence": 50
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 12
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "repair_and_move_on",
+        "label": {
+          "en": "Repair and increase security",
+          "cs": "Opravit a zvýšit ostrahu"
+        },
+        "description": {
+          "en": "Spend materials on repairs and guards. The culprit remains at large.",
+          "cs": "Vynaložit materiál na opravy a stráže. Viník zůstane na svobodě."
+        },
+        "cost": {
+          "materials": 50
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 5
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "Someone deliberately damaged a key generator. Production is crippled, people are angry, and accusations fly.",
+      "cs": "Někdo úmyslně poškodil klíčový generátor. Výroba je ochromená, lidé se zlobí a obviňují se navzájem."
+    }
+  },
+  {
+    "id": "folk_hero_emerges",
+    "type": "opportunity",
+    "name": {
+      "en": "A Hero Emerges",
+      "cs": "Zrodil se hrdina"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 220,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 10,
+        "selector": "all"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 8
+      },
+      {
+        "type": "resource_delta",
+        "resource": "influence",
+        "delta": 30,
+        "scope": "global"
+      }
+    ],
+    "choices": [
+      {
+        "id": "celebrate_hero",
+        "label": {
+          "en": "Hold a feast in their honor",
+          "cs": "Uspořádat hostinu na jejich počest"
+        },
+        "description": {
+          "en": "Spend food to throw a grand celebration, greatly boosting morale.",
+          "cs": "Vynaložit jídlo na velkolepou oslavu, která výrazně zvedne morálku."
+        },
+        "cost": {
+          "food": 40
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 10
+          }
+        ]
+      },
+      {
+        "id": "exploit_fame",
+        "label": {
+          "en": "Use their fame for political gain",
+          "cs": "Využít jejich slávu k politickému zisku"
+        },
+        "description": {
+          "en": "Parade the hero around. It feels cynical, but it will significantly increase our influence. The hero is not pleased.",
+          "cs": "Vozit hrdinu na odiv. Je to cynické, ale výrazně to zvýší náš vliv. Hrdina z toho nemá radost."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 40,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -5
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "One of your own has performed a great deed—rescuing a child from the river, fending off a wild beast. Stories of their courage spread through the settlement, inspiring everyone.",
+      "cs": "Jeden z vašich vykonal velký čin – zachránil dítě z řeky, zahnal divokou šelmu. Příběhy o jeho odvaze se šíří osadou a všechny inspirují."
+    }
+  },
+  {
+    "id": "old_traditions_revived",
+    "type": "flavor",
+    "name": {
+      "en": "Old Traditions Revived",
+      "cs": "Oživení starých tradic"
+    },
+    "era": [
+      "ancient",
+      "medieval"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 200,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 50
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 4,
+        "selector": "all"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": 2
+      },
+      {
+        "type": "resource_delta",
+        "resource": "influence",
+        "delta": 15,
+        "scope": "global"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "The elders have revived a festival from the homelands, a tradition many thought was lost. It is a moment of connection to the past, strengthening the community's bonds.",
+      "cs": "Nejstarší oživili svátek z domoviny, tradici, o které si mnozí mysleli, že je ztracená. Je to chvíle spojení s minulostí, která posiluje pouta komunity."
+    }
+  },
+  {
+    "id": "unusual_bloom",
+    "type": "flavor",
+    "name": {
+      "en": "Unusual Bloom",
+      "cs": "Nezvyklé květy"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 200,
+    "conditions": [
+      {
+        "worldFlag": "biome:forest_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 15,
+        "scope": "global"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "Out of season, the forest floor is carpeted with phosphorescent flowers. A sign of good fortune, the elders say.",
+      "cs": "Mimo sezónu pokryl lesní půdu koberec fosforeskujících květů. Starší říkají, že je to dobré znamení."
+    }
+  },
+  {
+    "id": "contaminated_well",
+    "type": "threat",
+    "name": {
+      "en": "Contaminated Well",
+      "cs": "Zkažená studna"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 9,
+    "cooldown_ticks": 160,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 15
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_health",
+        "delta": -18,
+        "selector": "lowest_health"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -7
+      }
+    ],
+    "choices": [
+      {
+        "id": "purify",
+        "label": {
+          "en": "Organize a clean-up",
+          "cs": "Zorganizovat čištění"
+        },
+        "description": {
+          "en": "Spend materials to clean the well and surrounding area.",
+          "cs": "Vynaložit materiál na vyčištění studny a okolí."
+        },
+        "cost": {
+          "materials": 30
+        },
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": 15,
+            "selector": "all"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "endure",
+        "label": {
+          "en": "Let it pass",
+          "cs": "Nechat to odeznít"
+        },
+        "description": {
+          "en": "Do nothing; the weak may suffer.",
+          "cs": "Nedělat nic; slabší to nemusí přežít."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": -10,
+            "selector": "lowest_health"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -5
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A foul sickness, a 'gut-rot,' is spreading through the settlement. The healers trace it to the Old Mill Well.",
+      "cs": "Osadou se šíří ošklivá nemoc, „střevní hniloba“. Léčitelé vystopovali její původ ke studni u starého mlýna."
+    }
+  },
+  {
+    "id": "ancient_archive_found",
+    "type": "opportunity",
+    "name": {
+      "en": "Ancient Archive Found",
+      "cs": "Nález dávného archivu"
+    },
+    "era": [
+      "ancient",
+      "medieval"
+    ],
+    "weight": 5,
+    "cooldown_ticks": 300,
+    "conditions": [
+      {
+        "techResearched": "writing"
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 4,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "study_texts",
+        "label": {
+          "en": "Study the texts",
+          "cs": "Prostudovat texty"
+        },
+        "description": {
+          "en": "Commit people to translating the archive. A huge gain in knowledge.",
+          "cs": "Pověřit lidi překladem archivu. Obrovský přínos pro vědění."
+        },
+        "cost": {
+          "influence": 20
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 120,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "salvage_scrolls",
+        "label": {
+          "en": "Salvage for materials",
+          "cs": "Vzít si materiál"
+        },
+        "description": {
+          "en": "The scrolls are old and dry. They'll make excellent kindling. Some will disapprove.",
+          "cs": "Svitky jsou staré a suché. Budou z nich skvělé podpalovače. Někteří nebudou souhlasit."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 50,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -6
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "Scouts following a dry riverbed found a cave entrance, sealed with primitive masonry. Inside: a library from a long-forgotten age.",
+      "cs": "Průzkumníci sledující vyschlé řečiště našli vchod do jeskyně, zapečetěný primitivním zdivem. Uvnitř: knihovna z dávno zapomenutého věku."
+    }
+  },
+  {
+    "id": "bridge_collapse",
+    "type": "disaster",
+    "name": {
+      "en": "Bridge Collapse",
+      "cs": "Zřícení mostu"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 250,
+    "conditions": [
+      {
+        "worldFlag": "biome:plains_present",
+        "present": true
+      },
+      {
+        "stat": "global.population",
+        "min": 25
+      }
+    ],
+    "effects": [
+      {
+        "type": "remove_pawn",
+        "count": 1
+      },
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -40,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.stability",
+        "delta": -5
+      }
+    ],
+    "choices": [
+      {
+        "id": "rebuild_stronger",
+        "label": {
+          "en": "Rebuild it stronger",
+          "cs": "Postavit ho pevnější"
+        },
+        "description": {
+          "en": "A significant investment of materials, but a symbol of resilience.",
+          "cs": "Značná investice materiálu, ale i symbol odolnosti."
+        },
+        "cost": {
+          "materials": 80
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 8
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "make_do_with_ford",
+        "label": {
+          "en": "Make do with the ford",
+          "cs": "Spokojit se s brodem"
+        },
+        "description": {
+          "en": "Crossing the river will be harder, but we can't spare the resources.",
+          "cs": "Překračování řeky bude těžší, ale nemůžeme si dovolit takový výdaj."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": -25,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": -3
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "The Old Mill Bridge, weakened by years of floods, has finally given way. A supply cart and its driver were lost.",
+      "cs": "Most u starého mlýna, oslabený léty povodní, se konečně zřítil. Ztratil se zásobovací vůz i s kočím."
+    }
+  },
+  {
+    "id": "game_of_stones",
+    "type": "flavor",
+    "name": {
+      "en": "A Game of Stones",
+      "cs": "Hra s kameny"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 9,
+    "cooldown_ticks": 120,
+    "conditions": [
+      {
+        "techResearched": "scholarship"
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 20,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 3,
+        "selector": "all"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "Two of the sharpest minds, old Valerius and young Kael, are often seen hunched over a grid of black and white stones. Their game has become a quiet obsession for the whole settlement.",
+      "cs": "Dvě z nejbystřejších hlav osady, starý Valerius a mladý Kael, jsou často vidět shrbení nad mřížkou s černými a bílými kameny. Jejich hra se stala tichou posedlostí pro celou vesnici."
+    }
+  },
+  {
+    "id": "wandering_artisan",
+    "type": "opportunity",
+    "name": {
+      "en": "Wandering Artisan",
+      "cs": "Potulný řemeslník"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 6,
+    "cooldown_ticks": 250,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 20
+      }
+    ],
+    "effects": [],
+    "choices": [
+      {
+        "id": "hire_artisan",
+        "label": {
+          "en": "Hire them",
+          "cs": "Najmout ho"
+        },
+        "description": {
+          "en": "Pay their fee. They will join the settlement and bring their skills.",
+          "cs": "Zaplatit mu. Přidá se k osadě a přinese své dovednosti."
+        },
+        "cost": {
+          "materials": 50
+        },
+        "effects": [
+          {
+            "type": "add_pawn",
+            "count": 1
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "refuse_artisan",
+        "label": {
+          "en": "Send them away",
+          "cs": "Odmítnout ho"
+        },
+        "description": {
+          "en": "We cannot afford such an expense.",
+          "cs": "Takový výdaj si nemůžeme dovolit."
+        },
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": {
+      "en": "An artisan, their workshop destroyed in a landslide, has arrived in the valley seeking work. They are skilled but demand a high price to stay.",
+      "cs": "Do údolí dorazil řemeslník, jehož dílnu zničil sesuv půdy. Hledá práci. Je zručný, ale za to, aby zůstal, si žádá vysokou cenu."
+    }
+  },
+  {
+    "id": "mine_collapse",
+    "type": "disaster",
+    "name": {
+      "en": "Mine Collapse",
+      "cs": "Zával v dole"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 180,
+    "conditions": [
+      {
+        "worldFlag": "biome:mountains_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -20,
+        "scope": "global",
+        "duration_ticks": 24
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -8
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -10,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "rescue_miners",
+        "label": {
+          "en": "Launch a rescue effort",
+          "cs": "Zahájit záchrannou operaci"
+        },
+        "description": {
+          "en": "A costly effort to save the trapped miners. Their survival is not guaranteed.",
+          "cs": "Nákladná snaha o záchranu zavalených horníků. Jejich přežití není zaručeno."
+        },
+        "cost": {
+          "materials": 50
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 15
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 8
+          },
+          {
+            "type": "pawn_health",
+            "delta": -15,
+            "selector": "lowest_health"
+          }
+        ]
+      },
+      {
+        "id": "seal_shaft",
+        "label": {
+          "en": "Seal the shaft. It's too dangerous.",
+          "cs": "Uzavřít šachtu. Je to příliš nebezpečné."
+        },
+        "description": {
+          "en": "Declare the miners lost. A grim decision that avoids further risk but devastates morale.",
+          "cs": "Prohlásit horníky za ztracené. Ponuré rozhodnutí, které zabrání dalšímu riziku, ale zničí morálku."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "remove_pawn",
+            "count": 1
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -15
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": -10
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A tunnel in one of the mountain mines has collapsed, trapping miners. The settlement holds its breath.",
+      "cs": "V jednom z dolů v horách se zřítil tunel a uvěznil několik horníků. Osada trne hrůzou."
+    }
+  },
+  {
+    "id": "old_songs_remembered",
+    "type": "flavor",
+    "name": {
+      "en": "Old Songs Remembered",
+      "cs": "Vzpomínka na staré písně"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 15,
+    "cooldown_ticks": 80,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 4
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": 3
+      },
+      {
+        "type": "resource_delta",
+        "resource": "influence",
+        "delta": 15,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 3,
+        "selector": "all"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "One of the elders, Elara, has begun teaching the children the songs of their ancestors, long thought forgotten. It strengthens the community's sense of identity.",
+      "cs": "Jedna ze starších, Elara, si vzpomněla na písně svých předků a začala je učit děti. Posiluje to ducha celé komunity."
+    }
+  },
+  {
+    "id": "masters_apprentice",
+    "type": "opportunity",
+    "name": {
+      "en": "A Master's Apprentice",
+      "cs": "Mistrův učeň"
+    },
+    "era": [
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 150,
+    "conditions": [
+      {
+        "techResearched": "guilds"
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "sponsor_apprentice",
+        "label": {
+          "en": "Sponsor the apprenticeship",
+          "cs": "Podpořit učedníka"
+        },
+        "description": {
+          "en": "Invest materials and knowledge to train a skilled individual.",
+          "cs": "Investovat materiál a vědění do výchovy schopného jedince."
+        },
+        "cost": {
+          "materials": 30,
+          "knowledge": 25
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 5,
+            "scope": "global",
+            "duration_ticks": 120
+          },
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 5,
+            "scope": "global",
+            "duration_ticks": 120
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "refuse_apprentice",
+        "label": {
+          "en": "The cost is too high",
+          "cs": "Náklady jsou příliš vysoké"
+        },
+        "description": {
+          "en": "The opportunity is missed. A talented youth is disappointed.",
+          "cs": "Příležitost je ztracena. Talentovaný mladík je zklamán."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -3
+          },
+          {
+            "type": "pawn_mood",
+            "delta": -8,
+            "selector": "all"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A renowned artisan is getting old and wants to pass on their skills. They see potential in a young colonist and are looking for a sponsor.",
+      "cs": "Uznávaný řemeslník stárne a chce předat své umění. V jednom z mladých osadníků vidí potenciál a hledá pro něj patrona."
+    }
+  },
+  {
+    "id": "anomalous_signal",
+    "type": "opportunity",
+    "name": {
+      "en": "Anomalous Signal",
+      "cs": "Anomální signál"
+    },
+    "era": [
+      "modern",
+      "near_future"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 300,
+    "conditions": [
+      {
+        "techResearched": "electronics"
+      }
+    ],
+    "effects": [
+      {
+        "type": "region_kind",
+        "kind": "anomaly",
+        "selector": "any_unknown"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 30,
+        "scope": "global"
+      }
+    ],
+    "choices": [
+      {
+        "id": "fund_signal_expedition",
+        "label": {
+          "en": "Fund an expedition to investigate",
+          "cs": "Financovat průzkumnou expedici"
+        },
+        "description": {
+          "en": "Spend resources to find the source. High risk, high reward.",
+          "cs": "Vynaložit zdroje na nalezení zdroje. Vysoké riziko, vysoká odměna."
+        },
+        "cost": {
+          "materials": 60,
+          "energy": 40
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 3
+          }
+        ]
+      },
+      {
+        "id": "monitor_signal",
+        "label": {
+          "en": "Monitor it, but don't approach",
+          "cs": "Sledovat ho, ale nepřibližovat se"
+        },
+        "description": {
+          "en": "A cautious approach. Gain knowledge over time, but the mystery remains.",
+          "cs": "Opatrný přístup. Postupně získáme vědění, ale záhada zůstane."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 4,
+            "scope": "global",
+            "duration_ticks": 60
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 2
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A strange, repeating signal is detected from an unexplored region of the valley. It seems artificial.",
+      "cs": "Naše přístroje zachytily podivný, opakující se signál z neprozkoumané části údolí. Zdá se být umělého původu."
+    }
+  },
+  {
+    "id": "contested_border",
+    "type": "threat",
+    "name": {
+      "en": "Contested Border",
+      "cs": "Spor o hranici"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial",
+      "modern"
+    ],
+    "weight": 9,
+    "cooldown_ticks": 160,
+    "conditions": [
+      {
+        "stat": "global.influence",
+        "min": 30
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "global.threatLevel",
+        "delta": 5
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": -4
+      },
+      {
+        "type": "damage_buildings",
+        "delta": -15,
+        "selector": "any_explored"
+      }
+    ],
+    "choices": [
+      {
+        "id": "negotiate_border",
+        "label": {
+          "en": "Negotiate a settlement",
+          "cs": "Vyjednat dohodu"
+        },
+        "description": {
+          "en": "Spend influence to resolve the dispute peacefully.",
+          "cs": "Vynaložit vliv na mírové řešení sporu."
+        },
+        "cost": {
+          "influence": 50
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.threatLevel",
+            "delta": -5
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "defend_border",
+        "label": {
+          "en": "Assert our claim",
+          "cs": "Trvat na našem nároku"
+        },
+        "description": {
+          "en": "Prepare for a confrontation. It will cost materials, but may increase influence.",
+          "cs": "Připravit se na střet. Bude to stát materiál, ale může to zvýšit náš vliv."
+        },
+        "cost": {
+          "materials": 40
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.threatLevel",
+            "delta": 3
+          },
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 25,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": -3
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A neighboring faction lays claim to a patch of your territory near the Korin Ridge. Tensions rise.",
+      "cs": "Sousední frakce si začala nárokovat část vašeho území poblíž Korinského hřebene. Napětí roste."
+    }
+  },
+  {
+    "id": "unusual_aurora",
+    "type": "flavor",
+    "name": {
+      "en": "Unusual Aurora",
+      "cs": "Neobvyklá záře"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 5,
+    "cooldown_ticks": 600,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 5
+      },
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 20,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "A beautiful, strange aurora appears in the night sky, painting the valley in shifting colors. Everyone is in awe.",
+      "cs": "Na noční obloze se zjevila podivná, nádherná záře a vymalovala údolí měňavými barvami. Všichni oněměli úžasem."
+    }
+  },
+  {
+    "id": "cave_in",
+    "type": "disaster",
+    "name": {
+      "en": "Mine Collapse",
+      "cs": "Zával v dole"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 150,
+    "conditions": [
+      {
+        "worldFlag": "biome:mountains_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -70,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_health",
+        "delta": -30,
+        "selector": "lowest_health"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": -5
+      }
+    ],
+    "choices": [
+      {
+        "id": "rescue",
+        "label": {
+          "en": "Organize a rescue party",
+          "cs": "Uspořádat záchrannou výpravu"
+        },
+        "description": {
+          "en": "A risky and costly effort to save the trapped miners.",
+          "cs": "Riskantní a nákladná snaha o záchranu zavalených horníků."
+        },
+        "cost": {
+          "food": 30,
+          "influence": 15
+        },
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": 35,
+            "selector": "lowest_health"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 8
+          }
+        ]
+      },
+      {
+        "id": "abandon_shaft",
+        "label": {
+          "en": "Abandon the shaft",
+          "cs": "Opustit šachtu"
+        },
+        "description": {
+          "en": "The shaft is too unstable. The loss is tragic, but we must be pragmatic.",
+          "cs": "Šachta je příliš nestabilní. Je to tragédie, ale musíme být pragmatičtí."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "remove_pawn",
+            "count": 1
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -20
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A deep rumble, then silence. A section of the main mine has collapsed, trapping miners and halting the flow of materials.",
+      "cs": "Hluboké zadunění a pak ticho. Část hlavního dolu se zřítila, uvěznila horníky a zastavila přísun materiálu."
+    }
+  },
+  {
+    "id": "secrets_of_the_observatory",
+    "type": "opportunity",
+    "name": {
+      "en": "Secrets of the Observatory",
+      "cs": "Tajemství observatoře"
+    },
+    "era": [],
+    "weight": 8,
+    "cooldown_ticks": 9999,
+    "conditions": [
+      {
+        "worldFlag": "cleared:ruins",
+        "present": true
+      },
+      {
+        "techResearched": "scholarship"
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "study_charts",
+        "label": {
+          "en": "Study the ancient star-charts",
+          "cs": "Prostudovat dávné hvězdné mapy"
+        },
+        "description": {
+          "en": "Devote scholars to deciphering the celestial maps found within.",
+          "cs": "Pověřit učence, aby rozluštili nebeské mapy nalezené uvnitř."
+        },
+        "cost": {
+          "influence": 25
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 120,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 3
+          }
+        ]
+      },
+      {
+        "id": "repurpose_structure",
+        "label": {
+          "en": "Repurpose the structure",
+          "cs": "Využít stavbu jinak"
+        },
+        "description": {
+          "en": "The observatory's high vantage point would make a fine watchtower.",
+          "cs": "Z vyvýšeného místa observatoře by byla skvělá strážní věž."
+        },
+        "cost": {
+          "materials": 50
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 8
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "Explorers returning from the cleared ruins speak of intricate bronze mechanisms and charts of unknown constellations. What will you do with this discovery?",
+      "cs": "Průzkumníci, kteří se vrátili z vyčištěných ruin, mluví o spletitých bronzových mechanismech a mapách neznámých souhvězdí. Jak s tímto objevem naložíte?"
+    }
+  },
+  {
+    "id": "first_child_born_in_valley",
+    "type": "opportunity",
+    "name": {
+      "en": "First Child of the Valley",
+      "cs": "První dítě údolí"
+    },
+    "era": [
+      "early_settlement"
+    ],
+    "weight": 50,
+    "cooldown_ticks": 9999,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "max": 10
+      }
+    ],
+    "effects": [
+      {
+        "type": "add_pawn",
+        "count": 1
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 15
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 10,
+        "selector": "all"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "The cry of a newborn cuts through the quiet of the settlement. The first child born in this valley is a living promise of a future.",
+      "cs": "Ticho osady prořízl pláč novorozence. První dítě narozené v tomto údolí je živoucím příslibem budoucnosti."
+    }
+  },
+  {
+    "id": "pernicious_rust",
+    "type": "threat",
+    "name": {
+      "en": "Pernicious Rust",
+      "cs": "Všudypřítomná rez"
+    },
+    "era": [
+      "ancient",
+      "medieval"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 120,
+    "conditions": [
+      {
+        "worldFlag": "biome:coast_present",
+        "present": true
+      },
+      {
+        "techResearched": "bronze_tools"
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_health",
+        "delta": -10,
+        "selector": "lowest_health"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -50,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": -4
+      }
+    ],
+    "choices": [
+      {
+        "id": "maintenance",
+        "label": {
+          "en": "Assign maintenance crews",
+          "cs": "Pověřit údržbářské čety"
+        },
+        "description": {
+          "en": "Spend Influence to have smiths constantly clean and oil the tools.",
+          "cs": "Za Vliv nechat kováře neustále čistit a olejovat nářadí."
+        },
+        "cost": {
+          "influence": 20
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 40,
+            "scope": "global"
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 5,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "ignore",
+        "label": {
+          "en": "We'll produce more tools",
+          "cs": "Vyrobíme prostě víc nářadí"
+        },
+        "description": {
+          "en": "Accept the material losses and hope the damp season passes.",
+          "cs": "Smířit se se ztrátami materiálu a doufat, že vlhké období pomine."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -5
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A strange, damp air hangs over the settlement, causing metal tools to corrode at an alarming rate. Breakages and accidents are becoming more frequent.",
+      "cs": "Nad osadou visí podivný vlhký vzduch, kvůli kterému kovové nářadí znepokojivě rychle rezne. Poruchy a nehody jsou stále častější."
+    }
+  },
+  {
+    "id": "talented_cartographer_arrives",
+    "type": "opportunity",
+    "name": {
+      "en": "A Cartographer Seeks Refuge",
+      "cs": "Kartograf hledá útočiště"
+    },
+    "era": [
+      "ancient",
+      "medieval"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 250,
+    "conditions": [
+      {
+        "techResearched": "writing"
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "selector": "all",
+        "delta": 2
+      }
+    ],
+    "choices": [
+      {
+        "id": "welcome",
+        "label": {
+          "en": "Welcome them in",
+          "cs": "Přivítat ho"
+        },
+        "description": {
+          "en": "Their skills would be a great asset to the growing colony.",
+          "cs": "Jeho dovednosti budou pro rostoucí kolonii velkým přínosem."
+        },
+        "cost": {
+          "food": 20
+        },
+        "effects": [
+          {
+            "type": "add_pawn",
+            "count": 1
+          },
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 40,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "refuse",
+        "label": {
+          "en": "We can't support another",
+          "cs": "Dalšího neuživíme"
+        },
+        "description": {
+          "en": "Turn them away. We must look after our own first.",
+          "cs": "Odmítnout ho. Musíme se nejprve postarat o své."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -5
+          },
+          {
+            "type": "pawn_mood",
+            "selector": "lowest_health",
+            "delta": -15
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A lone figure approaches the settlement. They introduce themselves as a cartographer, fleeing a dispute in their homeland, and offer their skills in exchange for a home.",
+      "cs": "K osadě se blíží osamělá postava. Představí se jako kartograf, který prchá před sporem ve své domovině, a nabízí své dovednosti výměnou za nový domov."
+    }
+  },
+  {
+    "id": "storytelling_night",
+    "type": "flavor",
+    "name": {
+      "en": "A Night of Stories",
+      "cs": "Večer vyprávění"
+    },
+    "era": [
+      "early_settlement",
+      "ancient"
+    ],
+    "weight": 15,
+    "cooldown_ticks": 80,
+    "conditions": [
+      {
+        "stat": "settlement:any.morale",
+        "max": 30
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 5
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 8,
+        "selector": "all"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "influence",
+        "delta": 10,
+        "scope": "global"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "As darkness falls, the colonists gather around the central fire. One of them begins to tell an old story, and for a few hours, the shared warmth holds the fears of the frontier at bay.",
+      "cs": "Když padne tma, osadníci se shromáždí kolem hlavního ohně. Jeden z nich začne vyprávět starý příběh a na pár hodin společné teplo zažene strach z divočiny."
+    }
+  },
+  {
+    "id": "naming_constellations",
+    "type": "flavor",
+    "name": {
+      "en": "Naming the Constellations",
+      "cs": "Pojmenování souhvězdí"
+    },
+    "era": [
+      "early_settlement",
+      "ancient"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 120,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 15,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 2
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "People gather on clear nights, finding shapes in the starfield and giving them names: the Great Plough, the Hunter, the River of Souls.",
+      "cs": "Za jasných nocí se lidé scházejí, hledají ve hvězdách tvary a dávají jim jména: Velký pluh, Lovec, Řeka duší."
+    }
+  },
+  {
+    "id": "masters_final_work",
+    "type": "opportunity",
+    "name": {
+      "en": "The Master's Final Work",
+      "cs": "Poslední dílo mistra"
+    },
+    "era": [
+      "ancient",
+      "medieval"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 300,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 25
+      },
+      {
+        "techResearched": "guilds"
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": -2,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "fund_project",
+        "label": {
+          "en": "Provide the necessary materials.",
+          "cs": "Poskytnout potřebný materiál."
+        },
+        "description": {
+          "en": "Commission a masterpiece that will inspire for generations, boosting influence and prosperity.",
+          "cs": "Nechat vytvořit mistrovské dílo, které bude inspirací pro celé generace. Zvýší to vliv a prosperitu."
+        },
+        "cost": {
+          "materials": 50
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 60,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 5
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 10,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "refuse_project",
+        "label": {
+          "en": "The resources are needed elsewhere.",
+          "cs": "Zdroje jsou potřeba jinde."
+        },
+        "description": {
+          "en": "The opportunity is lost, and morale suffers.",
+          "cs": "Příležitost bude ztracena a morálka utrpí."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -5
+          },
+          {
+            "type": "pawn_mood",
+            "delta": -5,
+            "selector": "all"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "An old, respected artisan wishes to create one last great work. They have the skill, but not the materials.",
+      "cs": "Starý, vážený řemeslník si přeje vytvořit své poslední velké dílo. Má dovednosti, ale chybí mu materiál."
+    }
+  },
+  {
+    "id": "tainted_spring",
+    "type": "threat",
+    "name": {
+      "en": "Tainted Spring",
+      "cs": "Zkažený pramen"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 9,
+    "cooldown_ticks": 150,
+    "conditions": [
+      {
+        "worldFlag": "biome:forest_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_health",
+        "delta": -15,
+        "selector": "lowest_health"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -6
+      }
+    ],
+    "choices": [
+      {
+        "id": "boil_water",
+        "label": {
+          "en": "Order all water to be boiled",
+          "cs": "Přikázat převařovat veškerou vodu"
+        },
+        "description": {
+          "en": "Uses materials but mitigates the sickness, at a cost to overall productivity.",
+          "cs": "Spotřebuje materiál, ale zmírní nemoc. Bude to na úkor celkové produktivity."
+        },
+        "cost": {
+          "materials": 20
+        },
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": 10,
+            "selector": "all"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": -2
+          }
+        ]
+      },
+      {
+        "id": "do_nothing",
+        "label": {
+          "en": "Risk it and do nothing",
+          "cs": "Riskovat a nedělat nic"
+        },
+        "description": {
+          "en": "The sickness may pass, but it could get worse before it gets better.",
+          "cs": "Nemoc možná přejde, ale nejdřív se může zhoršit."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": -10,
+            "selector": "lowest_health",
+            "duration_ticks": 20
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A carcass has fallen into a local spring, fouling the water. Sickness is beginning to spread through the settlement.",
+      "cs": "Do místního pramene spadla zdechlina a zkazila vodu. Osadou se začíná šířit nemoc."
+    }
+  },
+  {
+    "id": "strange_skies",
+    "type": "flavor",
+    "name": {
+      "en": "Strange Skies",
+      "cs": "Podivná obloha"
+    },
+    "era": [],
+    "weight": 5,
+    "cooldown_ticks": 400,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 8,
+        "selector": "all"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 10,
+        "scope": "global"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "For a whole day, the sky is filled with iridescent, rippling clouds unlike anything seen before. It is beautiful, and a little unnerving.",
+      "cs": "Celý den je obloha plná duhových, vlnících se mraků, jaké ještě nikdo neviděl. Je to krásné a trochu znepokojivé."
+    }
+  },
+  {
+    "id": "tool_surplus",
+    "type": "opportunity",
+    "name": {
+      "en": "Tool Surplus",
+      "cs": "Přebytek nástrojů"
+    },
+    "era": [
+      "ancient",
+      "medieval"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 250,
+    "conditions": [
+      {
+        "techResearched": "bronze_tools"
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 3,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "trade_surplus",
+        "label": {
+          "en": "Trade the surplus",
+          "cs": "Vyměnit přebytek"
+        },
+        "description": {
+          "en": "Trade the extra tools with outsiders for influence.",
+          "cs": "Vyměnit nástroje navíc s cizinci za vliv."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 40,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "equip_populace",
+        "label": {
+          "en": "Equip the populace",
+          "cs": "Vybavit obyvatele"
+        },
+        "description": {
+          "en": "Distribute the tools to the colonists, improving their homesteads and boosting prosperity.",
+          "cs": "Rozdat nástroje kolonistům, aby si vylepšili usedlosti a podpořili prosperitu."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 3,
+            "duration_ticks": 40
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "The smithy has been unusually productive, creating a surplus of valuable axes, saws and hammers. What should be done with them?",
+      "cs": "Kovárna byla neobvykle produktivní a vyrobila přebytek cenných seker, pil a kladiv. Co s nimi?"
+    }
+  },
+  {
+    "id": "structural_failure",
+    "type": "disaster",
+    "name": {
+      "en": "Structural Failure",
+      "cs": "Zřícení stavby"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 400,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 15
+      }
+    ],
+    "effects": [
+      {
+        "type": "damage_buildings",
+        "delta": 15
+      },
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -60,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_health",
+        "delta": -10,
+        "selector": "lowest_health"
+      }
+    ],
+    "choices": [
+      {
+        "id": "rescue_efforts",
+        "label": {
+          "en": "Organize rescue efforts",
+          "cs": "Zorganizovat záchranné práce"
+        },
+        "description": {
+          "en": "Spend influence to lead the rescue, saving some lives and materials.",
+          "cs": "Věnovat vliv na vedení záchrany, zachránit nějaké životy a materiál."
+        },
+        "cost": {
+          "influence": 20
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 30,
+            "scope": "global"
+          },
+          {
+            "type": "pawn_health",
+            "delta": 5,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "focus_rebuilding",
+        "label": {
+          "en": "Focus on rebuilding",
+          "cs": "Soustředit se na obnovu"
+        },
+        "description": {
+          "en": "Spend materials to immediately begin repairs.",
+          "cs": "Věnovat materiál na okamžité zahájení oprav."
+        },
+        "cost": {
+          "materials": 40
+        },
+        "effects": [
+          {
+            "type": "damage_buildings",
+            "delta": -10
+          }
+        ]
+      },
+      {
+        "id": "abandon_structure",
+        "label": {
+          "en": "Abandon the structure",
+          "cs": "Opustit stavbu"
+        },
+        "description": {
+          "en": "The building is a write-off. The loss hits morale hard.",
+          "cs": "Budova je na odpis. Ztráta těžce zasáhne morálku."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -10
+          },
+          {
+            "type": "pawn_mood",
+            "delta": -8,
+            "selector": "all"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "With a groan of tortured timber and a cloud of dust, a vital building collapses. People are trapped in the rubble.",
+      "cs": "Se zaskřípěním trápeného dřeva a v oblaku prachu se hroutí životně důležitá budova. V troskách jsou uvězněni lidé."
+    }
+  },
+  {
+    "id": "boundary_stones",
+    "type": "flavor",
+    "name": {
+      "en": "Boundary Stones",
+      "cs": "Hraniční kameny"
+    },
+    "era": [
+      "early_settlement",
+      "ancient"
+    ],
+    "weight": 15,
+    "cooldown_ticks": 100,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": 5
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 4,
+        "selector": "all"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "The settlers gather to drive carved stones into the earth, marking the edges of their land. This valley is home now, and its borders are known.",
+      "cs": "Osadníci se shromáždili, aby do země zarazili vyřezávané kameny a vyznačili tak hranice své země. Toto údolí je teď domovem a jeho hranice jsou známé."
+    }
+  },
+  {
+    "id": "first_brew",
+    "type": "flavor",
+    "name": {
+      "en": "The First Brew",
+      "cs": "První várka"
+    },
+    "era": [
+      "ancient",
+      "medieval"
+    ],
+    "weight": 12,
+    "cooldown_ticks": 80,
+    "conditions": [
+      {
+        "techResearched": "agriculture"
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -15,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 8
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 10,
+        "selector": "all"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "After many failed attempts, a colonist has managed to ferment local grain into a potent, if rough, ale. Tonight, the village celebrates its new drink.",
+      "cs": "Po mnoha nezdarech se jednomu z osadníků podařilo z místního obilí vykvasit silné, i když poněkud drsné pivo. Dnes večer osada slaví svůj nový nápoj."
+    }
+  },
+  {
+    "id": "unusual_fossil",
+    "type": "opportunity",
+    "name": {
+      "en": "Unusual Fossil",
+      "cs": "Nezvyklá fosilie"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 250,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 30,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 2,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "study",
+        "label": {
+          "en": "Study the skeleton",
+          "cs": "Prozkoumat kostru"
+        },
+        "description": {
+          "en": "Dedicate research time to unlock a greater understanding.",
+          "cs": "Věnovat čas výzkumu a získat tak hlubší porozumění."
+        },
+        "cost": {
+          "knowledge": 10
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 50,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "display",
+        "label": {
+          "en": "Mount it for display",
+          "cs": "Vystavit ji"
+        },
+        "description": {
+          "en": "Use materials to create an inspiring public exhibit.",
+          "cs": "Použít materiál k vytvoření inspirujícího veřejného exponátu."
+        },
+        "cost": {
+          "materials": 25
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 7
+          },
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 20,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "While digging new foundations, a settler unearthed the complete skeleton of a creature unlike any known. Its staggering size inspires awe and curiosity.",
+      "cs": "Při kopání nových základů odkryl osadník kompletní kostru tvora, který se nepodobá ničemu, co známe. Její ohromná velikost vzbuzuje úžas a zvědavost."
+    }
+  },
+  {
+    "id": "geothermal_vent",
+    "type": "opportunity",
+    "name": {
+      "en": "Geothermal Vent",
+      "cs": "Geotermální průduch"
+    },
+    "era": [
+      "early_industrial",
+      "modern",
+      "near_future"
+    ],
+    "weight": 5,
+    "cooldown_ticks": 400,
+    "conditions": [
+      {
+        "worldFlag": "biome:mountains_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "harness",
+        "label": {
+          "en": "Build a geothermal plant",
+          "cs": "Postavit geotermální elektrárnu"
+        },
+        "description": {
+          "en": "Invest materials to gain a significant, long-term energy surplus.",
+          "cs": "Investovat materiál a získat významný a dlouhodobý přebytek energie."
+        },
+        "cost": {
+          "materials": 80
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "energy",
+            "delta": 30,
+            "scope": "global",
+            "duration_ticks": 120
+          }
+        ]
+      },
+      {
+        "id": "observe",
+        "label": {
+          "en": "Study it from a distance",
+          "cs": "Studovat jej z dálky"
+        },
+        "description": {
+          "en": "A safer, cheaper option that provides a small, immediate grant of knowledge.",
+          "cs": "Bezpečnější a levnější možnost, která přinese malý, okamžitý zisk znalostí."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 40,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "An expedition to the mountains found a steady plume of steam issuing from a fissure in the rock. It is a raw source of power waiting to be tamed.",
+      "cs": "Výprava do hor objevila stálý proud páry, který uniká ze skalní trhliny. Je to nespoutaný zdroj energie, který čeká na zkrocení."
+    }
+  },
+  {
+    "id": "unstable_ground",
+    "type": "threat",
+    "name": {
+      "en": "Unstable Ground",
+      "cs": "Nestabilní podloží"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 9,
+    "cooldown_ticks": 150,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "damage_buildings",
+        "damage": 15,
+        "count": 2
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": -10
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -8,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "reinforce",
+        "label": {
+          "en": "Reinforce foundations",
+          "cs": "Zpevnit základy"
+        },
+        "description": {
+          "en": "A costly project to shore up the ground and restore stability.",
+          "cs": "Nákladný projekt, který zpevní podloží a obnoví stabilitu."
+        },
+        "cost": {
+          "materials": 70
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 15
+          }
+        ]
+      },
+      {
+        "id": "relocate",
+        "label": {
+          "en": "Relocate affected structures",
+          "cs": "Přemístit dotčené stavby"
+        },
+        "description": {
+          "en": "Cheaper, but the disruption will hurt morale.",
+          "cs": "Levnější, ale narušení chodu osady poškodí morálku."
+        },
+        "cost": {
+          "materials": 30
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -10
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "The ground beneath the western quarter has become waterlogged and soft. Walls are cracking, and the surveyor fears a building could collapse.",
+      "cs": "Půda pod západní čtvrtí nasákla vodou a změkla. Zdi praskají a zeměměřič se obává, že by se některá z budov mohla zřítit."
+    }
+  },
+  {
+    "id": "hoarding_dispute",
+    "type": "threat",
+    "name": {
+      "en": "Hoarding Dispute",
+      "cs": "Spor o zásoby"
+    },
+    "era": [],
+    "weight": 10,
+    "cooldown_ticks": 120,
+    "conditions": [
+      {
+        "stat": "settlement:any.food",
+        "max": 30
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": -15
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -12
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -10,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "redistribute",
+        "label": {
+          "en": "Seize the food for the settlement",
+          "cs": "Zabavit jídlo pro osadu"
+        },
+        "description": {
+          "en": "Use your authority to redistribute the hoarded food, restoring stability.",
+          "cs": "Použít svou autoritu k přerozdělení nahromaděného jídla a obnovit stabilitu."
+        },
+        "cost": {
+          "influence": 20
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 10
+          },
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 30,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "hands_off",
+        "label": {
+          "en": "Let them sort it out themselves",
+          "cs": "Nechat je, ať si to vyřídí sami"
+        },
+        "description": {
+          "en": "Allowing the community to handle it avoids spending your influence, but someone might get hurt.",
+          "cs": "Nechat to na komunitě šetří váš vliv, ale někdo by mohl přijít k úhoně."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": -25,
+            "selector": "lowest_health"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 5
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "With food stores low, accusations fly. The Novak family is said to be hiding a private stash. Neighbours are watching their house with envy and anger.",
+      "cs": "Zásoby jídla jsou tenké a vzduchem létají obvinění. Říká se, že rodina Novákových skrývá vlastní zásoby. Sousedé jejich dům sledují se závistí a hněvem."
+    }
+  },
+  {
+    "id": "local_art_exhibition",
+    "type": "flavor",
+    "name": {
+      "en": "Local Art Exhibition",
+      "cs": "Místní výstava umění"
+    },
+    "era": [
+      "medieval",
+      "early_industrial",
+      "modern"
+    ],
+    "weight": 15,
+    "cooldown_ticks": 90,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 4
+      },
+      {
+        "type": "resource_delta",
+        "resource": "influence",
+        "delta": 15,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "One of the colonists is exhibiting their paintings and sculptures depicting life in the valley. It has become a popular gathering.",
+      "cs": "Jeden z osadníků vystavil své obrazy a sochy zachycující život v údolí. Výstava se stala oblíbeným místem setkání."
+    }
+  },
+  {
+    "id": "unusual_migration",
+    "type": "flavor",
+    "name": {
+      "en": "Unusual Migration",
+      "cs": "Neobvyklá migrace"
+    },
+    "era": [],
+    "weight": 8,
+    "cooldown_ticks": 250,
+    "conditions": [
+      {
+        "worldFlag": "biome:forest_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 20,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 3,
+        "selector": "all"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "Flocks of birds, a species no one remembers seeing before, have flown through the valley. Their song filled the air for days.",
+      "cs": "Hejna ptáků, jaké tu nikdo nepamatuje, přeletěla údolí. Jejich zpěv se nesl vzduchem po celé dny a zanechal v lidech pocit úžasu."
+    }
+  },
+  {
+    "id": "abandoned_mine_found",
+    "type": "opportunity",
+    "name": {
+      "en": "Abandoned Mine Found",
+      "cs": "Nalezen opuštěný důl"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 300,
+    "conditions": [
+      {
+        "worldFlag": "biome:mountains_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 4,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "reopen_mine",
+        "label": {
+          "en": "Reopen the mine",
+          "cs": "Znovu otevřít důl"
+        },
+        "description": {
+          "en": "Spend materials to secure a new, long-term source of raw materials.",
+          "cs": "Investovat materiál a zajistit si tak nový, dlouhodobý zdroj surovin."
+        },
+        "cost": {
+          "materials": 60
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 20,
+            "scope": "global",
+            "duration_ticks": 120
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 3
+          }
+        ]
+      },
+      {
+        "id": "study_remains",
+        "label": {
+          "en": "Study the remains",
+          "cs": "Prozkoumat pozůstatky"
+        },
+        "description": {
+          "en": "The old structures and tools could yield significant knowledge.",
+          "cs": "Staré konstrukce a nástroje by mohly poskytnout významné poznatky."
+        },
+        "cost": {
+          "influence": 20
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 75,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "Explorers in the mountains have stumbled upon an old mineshaft, long since abandoned. It seems structurally sound.",
+      "cs": "Průzkumníci v horách narazili na starou, dávno opuštěnou důlní šachtu. Zdá se, že je staticky v pořádku."
+    }
+  },
+  {
+    "id": "scholarship_contest",
+    "type": "opportunity",
+    "name": {
+      "en": "Scholarship Contest",
+      "cs": "Soutěž o stipendium"
+    },
+    "era": [
+      "medieval",
+      "early_industrial",
+      "modern"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 150,
+    "conditions": [
+      {
+        "techResearched": "scholarship"
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 2
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 2,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "grand_prize",
+        "label": {
+          "en": "Fund a grand prize",
+          "cs": "Financovat velkolepou cenu"
+        },
+        "description": {
+          "en": "A significant prize will attract the brightest, yielding more knowledge and even a new colonist.",
+          "cs": "Významná cena přiláká ty nejbystřejší, což přinese více vědomostí a dokonce nového osadníka."
+        },
+        "cost": {
+          "influence": 50
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 60,
+            "scope": "global"
+          },
+          {
+            "type": "add_pawn",
+            "count": 1
+          }
+        ]
+      },
+      {
+        "id": "modest_reward",
+        "label": {
+          "en": "Offer a modest reward",
+          "cs": "Nabídnout skromnou odměnu"
+        },
+        "description": {
+          "en": "A smaller prize will still encourage study and yield some knowledge.",
+          "cs": "I menší cena podpoří studium a přinese nějaké vědomosti."
+        },
+        "cost": {
+          "influence": 15
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 25,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "To encourage learning, the council announces a contest. The brightest minds will compete for a prestigious scholarship.",
+      "cs": "Aby se podpořila vzdělanost, rada vyhlásila soutěž. Nejbystřejší mysli budou soupeřit o prestižní stipendium."
+    }
+  },
+  {
+    "id": "faulty_construction",
+    "type": "threat",
+    "name": {
+      "en": "Faulty Construction",
+      "cs": "Vadná stavba"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 9,
+    "cooldown_ticks": 180,
+    "conditions": [
+      {
+        "techResearched": "masonry"
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": -5
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.threatLevel",
+        "delta": 2
+      }
+    ],
+    "choices": [
+      {
+        "id": "reinforce_buildings",
+        "label": {
+          "en": "Reinforce the buildings",
+          "cs": "Zpevnit budovy"
+        },
+        "description": {
+          "en": "Immediately spend materials to fix the faulty structures, restoring stability and confidence.",
+          "cs": "Okamžitě investovat materiál do opravy vadných konstrukcí, což obnoví stabilitu a důvěru."
+        },
+        "cost": {
+          "materials": 70
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 7
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 3,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "risk_it",
+        "label": {
+          "en": "Risk it and hope for the best",
+          "cs": "Riskovat to a doufat v nejlepší"
+        },
+        "description": {
+          "en": "Do nothing and accept the consequences. Some damage is inevitable, and morale will suffer.",
+          "cs": "Nedělat nic a přijmout následky. Určité škody jsou nevyhnutelné a morálka utrpí."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "damage_buildings",
+            "damage": 15,
+            "selector": "any_explored"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -6
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "An engineer's report shows that a recent batch of building materials was subpar. Several key structures are now unsafe.",
+      "cs": "Zpráva inženýra ukázala, že nedávná várka stavebních materiálů byla nekvalitní. Několik klíčových budov teď není bezpečných."
+    }
+  },
+  {
+    "id": "instrument_failure",
+    "type": "disaster",
+    "name": {
+      "en": "Instrument Failure",
+      "cs": "Selhání přístrojů"
+    },
+    "era": [
+      "early_industrial",
+      "modern",
+      "near_future"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 220,
+    "conditions": [
+      {
+        "techResearched": "electronics"
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": -80,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -7
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -8,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "blame_researchers",
+        "label": {
+          "en": "Blame the researchers",
+          "cs": "Svalit vinu na výzkumníky"
+        },
+        "description": {
+          "en": "Finding a scapegoat may restore some morale, but at the cost of even more lost knowledge.",
+          "cs": "Nalezení obětního beránka může obnovit část morálky, ale za cenu ještě větších ztrát vědomostí."
+        },
+        "cost": {
+          "influence": 10
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 4
+          },
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": -40,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "invest_in_redundancy",
+        "label": {
+          "en": "Invest in redundant systems",
+          "cs": "Investovat do záložních systémů"
+        },
+        "description": {
+          "en": "Spend materials to build better, more resilient instruments, recovering some of the lost data.",
+          "cs": "Investovat materiál do lepších a odolnějších přístrojů a obnovit tak část ztracených dat."
+        },
+        "cost": {
+          "materials": 50
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 50,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 3
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "Critical scientific instruments have failed during an experiment, losing irreplaceable data and setting back research.",
+      "cs": "Klíčové vědecké přístroje během experimentu selhaly. Nenahraditelná data jsou ztracena a výzkum se vrací o roky zpět."
+    }
+  },
+  {
+    "id": "family_feud",
+    "type": "threat",
+    "name": {
+      "en": "Family Feud",
+      "cs": "Rodový spor"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 150,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 20
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": -10
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -8,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "mediate",
+        "label": {
+          "en": "Force a mediation",
+          "cs": "Vynutit si smírčí jednání"
+        },
+        "description": {
+          "en": "Spend influence to broker a peace. It will calm tensions.",
+          "cs": "Uklidnit napětí za cenu vlivu."
+        },
+        "cost": {
+          "influence": 20
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 8
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "punish_both",
+        "label": {
+          "en": "Punish both families",
+          "cs": "Potrestat oba rody"
+        },
+        "description": {
+          "en": "A harsh public punishment will restore order, but breed resentment.",
+          "cs": "Tvrdý veřejný trest obnoví pořádek, ale zanechá zášť."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 4
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -6
+          }
+        ]
+      },
+      {
+        "id": "let_them_be",
+        "label": {
+          "en": "Let them settle it themselves",
+          "cs": "Nechat je, ať si to vyřídí"
+        },
+        "description": {
+          "en": "Doing nothing will let the conflict escalate. Someone will get hurt.",
+          "cs": "Nečinnost nechá konflikt eskalovat. Někdo přijde k úhoně."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": -15,
+            "selector": "lowest_health"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": -5
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A simmering dispute between two prominent families over land rights has erupted into open conflict, dividing the settlement.",
+      "cs": "Tlející spor mezi dvěma významnými rody o pozemky přerostl v otevřený konflikt a rozdělil osadu."
+    }
+  },
+  {
+    "id": "tainted_fodder",
+    "type": "disaster",
+    "name": {
+      "en": "Tainted Fodder",
+      "cs": "Zkažené krmivo"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 9,
+    "cooldown_ticks": 180,
+    "conditions": [
+      {
+        "techResearched": "agriculture"
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "food",
+        "delta": -80,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -5,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "cull_herds",
+        "label": {
+          "en": "Cull the affected herds",
+          "cs": "Utratit zasažená stáda"
+        },
+        "description": {
+          "en": "A drastic but necessary measure to stop the spread and save what remains. Costs a significant amount of food.",
+          "cs": "Drastické, ale nutné opatření k zastavení nákazy a záchraně toho, co zbývá. Stojí značné množství jídla."
+        },
+        "cost": {
+          "food": 50
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          },
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 40,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "seek_remedy",
+        "label": {
+          "en": "Task healers to find a remedy",
+          "cs": "Pověřit léčitele hledáním nápravy"
+        },
+        "description": {
+          "en": "Use knowledge to try and find a cure for the livestock's ailment.",
+          "cs": "Využít vědění a pokusit se najít lék na nemoc dobytka."
+        },
+        "cost": {
+          "knowledge": 30
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 60,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A mold has grown on the stored fodder, and the livestock that ate it are falling gravely ill. The food supply is threatened.",
+      "cs": "Na uskladněném krmivu vyrostla plíseň a dobytek, který ho sežral, vážně onemocněl. Zásoby jídla jsou v ohrožení."
+    }
+  },
+  {
+    "id": "forgotten_cache",
+    "type": "opportunity",
+    "name": {
+      "en": "Forgotten Cache",
+      "cs": "Zapomenutá skrýš"
+    },
+    "era": [
+      "early_settlement",
+      "ancient"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 250,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 10
+      }
+    ],
+    "effects": [
+      {
+        "type": "region_kind",
+        "kind": "anomaly",
+        "selector": "any_unknown"
+      }
+    ],
+    "choices": [
+      {
+        "id": "mount_expedition",
+        "label": {
+          "en": "Mount an expedition",
+          "cs": "Vyslat výpravu"
+        },
+        "description": {
+          "en": "Spend food and materials to investigate the cache immediately.",
+          "cs": "Vynaložit jídlo a materiál na okamžité prozkoumání skrýše."
+        },
+        "cost": {
+          "food": 25,
+          "materials": 15
+        },
+        "effects": [
+          {
+            "type": "pawn_mood",
+            "delta": 5,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "wait_for_later",
+        "label": {
+          "en": "Mark the location for later",
+          "cs": "Zaznamenat polohu na později"
+        },
+        "description": {
+          "en": "The cache isn't going anywhere. We can deal with it when we have more resources.",
+          "cs": "Skrýš nikam neuteče. Můžeme se k ní vrátit, až budeme mít víc prostředků."
+        },
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": {
+      "en": "A forager found a weathered container half-buried in the earth. It seems to be a supply cache from a previous, unknown attempt to settle this valley.",
+      "cs": "Jeden ze sběračů našel zvětralý kontejner napůl zabořený v zemi. Zdá se, že jde o skrýš se zásobami z dřívějšího, neznámého pokusu o osídlení tohoto údolí."
+    }
+  },
+  {
+    "id": "plea_for_aid",
+    "type": "opportunity",
+    "name": {
+      "en": "Plea for Aid",
+      "cs": "Prosba o pomoc"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 300,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 30
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": -3,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "send_generously",
+        "label": {
+          "en": "Send a generous shipment",
+          "cs": "Poslat štědrou zásilku"
+        },
+        "description": {
+          "en": "Helping our neighbors generously will cost us, but earn significant influence.",
+          "cs": "Štědrá pomoc sousedům nás bude něco stát, ale získáme za ni značný vliv."
+        },
+        "cost": {
+          "food": 100
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 80,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "send_what_we_can",
+        "label": {
+          "en": "Send what we can spare",
+          "cs": "Poslat, co můžeme postrádat"
+        },
+        "description": {
+          "en": "A smaller shipment will still help them and earn us some goodwill.",
+          "cs": "Menší zásilka jim stále pomůže a získá nám trochu dobré vůle."
+        },
+        "cost": {
+          "food": 40
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 30,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "refuse",
+        "label": {
+          "en": "Look to our own stores",
+          "cs": "Hledět si vlastních zásob"
+        },
+        "description": {
+          "en": "We cannot afford charity. Refusing will hurt our standing and morale.",
+          "cs": "Dobročinnost si nemůžeme dovolit. Odmítnutí poškodí naši pověst i náladu."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -5
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A haggard messenger has arrived from a small settlement across the hills. They are facing starvation and beg for our help.",
+      "cs": "Zpoza kopců dorazil vyhublý posel z malé osady. Hrozí jim hladomor a prosí nás o pomoc."
+    }
+  },
+  {
+    "id": "birth_of_a_song",
+    "type": "flavor",
+    "name": {
+      "en": "Birth of a Song",
+      "cs": "Zrodila se píseň"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 12,
+    "cooldown_ticks": 100,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 8,
+        "selector": "all"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 5
+      },
+      {
+        "type": "resource_delta",
+        "resource": "influence",
+        "delta": 10,
+        "scope": "global"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "A colonist has composed a song about the founding of the settlement. It has caught on, and now everyone can be heard humming it. It is the first true anthem of your people.",
+      "cs": "Jeden z osadníků složil píseň o založení osady. Chytla se a teď si ji pobroukává každý. Je to první skutečná hymna vašeho lidu."
+    }
+  },
+  {
+    "id": "unusual_rainbow",
+    "type": "flavor",
+    "name": {
+      "en": "Unusual Rainbow",
+      "cs": "Nezvyklá duha"
+    },
+    "era": [],
+    "weight": 10,
+    "cooldown_ticks": 180,
+    "conditions": [
+      {
+        "worldFlag": "biome:mountains_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "good_omen",
+        "label": {
+          "en": "It is a good omen",
+          "cs": "Je to dobré znamení"
+        },
+        "description": {
+          "en": "The sight lifts everyone's spirits.",
+          "cs": "Ten pohled všem zvedl náladu."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 4
+          }
+        ]
+      },
+      {
+        "id": "study_phenomenon",
+        "label": {
+          "en": "Study the phenomenon",
+          "cs": "Prostudovat ten jev"
+        },
+        "description": {
+          "en": "The spectacle inspires scientific curiosity.",
+          "cs": "Ta podívaná probouzí vědeckou zvědavost."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 25,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "After a brief shower, a brilliant double rainbow arcs over the valley, its colors so vivid they seem almost solid. It lingers for hours, a breathtaking spectacle.",
+      "cs": "Po krátké přeháňce se nad údolím klene oslnivá dvojitá duha, jejíž barvy jsou tak živé, že se zdají být téměř hmotné. Drží na obloze celé hodiny, dechberoucí podívaná."
+    }
+  },
+  {
+    "id": "unstable_explosives",
+    "type": "threat",
+    "name": {
+      "en": "Unstable Explosives",
+      "cs": "Nestabilní výbušniny"
+    },
+    "era": [
+      "early_industrial",
+      "modern"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 160,
+    "conditions": [
+      {
+        "techResearched": "chemistry"
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "global.threatLevel",
+        "delta": 6
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -6,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "dispose_safely",
+        "label": {
+          "en": "Dispose of them safely",
+          "cs": "Bezpečně je zlikvidovat"
+        },
+        "description": {
+          "en": "A team of experts will neutralize the explosives. This is the safest, but most expensive option.",
+          "cs": "Tým odborníků výbušniny zneškodní. Je to nejbezpečnější, ale nejdražší možnost."
+        },
+        "cost": {
+          "materials": 40
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.threatLevel",
+            "delta": -10
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 5,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "use_it_fast",
+        "label": {
+          "en": "Use for emergency quarrying",
+          "cs": "Urychleně je spotřebovat v lomu"
+        },
+        "description": {
+          "en": "Rush the explosives to the quarry. It's risky and may damage equipment, but we won't waste the materials.",
+          "cs": "Rychle odvézt výbušniny do lomu. Je to riskantní a může to poškodit vybavení, ale nepřijdeme o materiál."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "damage_buildings",
+            "delta": -20
+          },
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 70,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A batch of blasting powder in the main storehouse has become dangerously unstable. It needs to be dealt with before it detonates.",
+      "cs": "Zásoba střelného prachu v hlavním skladišti se stala nebezpečně nestabilní. Je třeba se jí zbavit, než vybuchne."
+    }
+  },
+  {
+    "id": "naming_the_river",
+    "type": "flavor",
+    "name": {
+      "en": "Naming the River",
+      "cs": "Pojmenování řeky"
+    },
+    "era": [
+      "early_settlement"
+    ],
+    "weight": 15,
+    "cooldown_ticks": 9999,
+    "conditions": [
+      {
+        "worldFlag": "biome:plains_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": 3
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "influence",
+        "delta": 10,
+        "scope": "global"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "After years of just calling it 'the river,' the settlers have finally agreed on a name. It feels like another piece of this valley is truly theirs.",
+      "cs": "Po letech, kdy jí říkali prostě „řeka“, se osadníci konečně shodli na jméně. Člověk má pocit, že další kousek údolí je opravdu jejich."
+    }
+  },
+  {
+    "id": "wandering_herbalist",
+    "type": "opportunity",
+    "name": {
+      "en": "Wandering Herbalist",
+      "cs": "Potulná bylinkářka"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 9,
+    "cooldown_ticks": 180,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 2,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "welcome_her",
+        "label": {
+          "en": "Welcome her into the settlement",
+          "cs": "Přivítat ji v osadě"
+        },
+        "description": {
+          "en": "She will join the colony, sharing her knowledge of healing plants.",
+          "cs": "Přidá se ke kolonii a podělí se o své znalosti léčivých rostlin."
+        },
+        "cost": {
+          "food": 20
+        },
+        "effects": [
+          {
+            "type": "add_pawn",
+            "count": 1
+          },
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 40,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "buy_remedies",
+        "label": {
+          "en": "Buy a stock of her remedies",
+          "cs": "Koupit zásobu jejích léků"
+        },
+        "description": {
+          "en": "Gain a one-time boost to the health of your most unwell colonist.",
+          "cs": "Jednorázově vylepšit zdraví nejpotřebnějšího osadníka."
+        },
+        "cost": {
+          "materials": 30
+        },
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": 40,
+            "selector": "lowest_health"
+          }
+        ]
+      },
+      {
+        "id": "send_away",
+        "label": {
+          "en": "We have no need of her",
+          "cs": "Nepotřebujeme ji"
+        },
+        "description": {
+          "en": "Send the herbalist on her way.",
+          "cs": "Poslat bylinkářku pryč."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "pawn_mood",
+            "delta": -3,
+            "selector": "all"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A woman with a pack full of dried herbs and a deep knowledge of the valley's flora has arrived. She offers her skills, for a price.",
+      "cs": "Dorazila žena s nůší plnou sušených bylin a hlubokou znalostí květeny zdejšího údolí. Nabízí své umění, za jistou cenu."
+    }
+  },
+  {
+    "id": "scavenger_conflict",
+    "type": "threat",
+    "name": {
+      "en": "Scavenger Conflict",
+      "cs": "Spor o nález"
+    },
+    "era": [],
+    "weight": 9,
+    "cooldown_ticks": 120,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 20
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": -4
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -5,
+        "selector": "all"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -15,
+        "scope": "global"
+      }
+    ],
+    "choices": [
+      {
+        "id": "mediate_dispute",
+        "label": {
+          "en": "Mediate the dispute",
+          "cs": "Spor urovnat"
+        },
+        "description": {
+          "en": "Spend influence to have a respected elder arbitrate and calm things down.",
+          "cs": "Obětovat vliv a nechat spor rozsoudit váženého staršího. To by mělo situaci uklidnit."
+        },
+        "cost": {
+          "influence": 20
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 6
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 4,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "let_winner_take_all",
+        "label": {
+          "en": "Let the stronger family take it",
+          "cs": "Přiznat nález silnější rodině"
+        },
+        "description": {
+          "en": "This will end the argument, but will be seen as unfair and breed resentment.",
+          "cs": "Tím se hádka ukončí, ale bude to vnímáno jako nespravedlnost a zrodí se zášť."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": -5
+          },
+          {
+            "type": "pawn_mood",
+            "delta": -6,
+            "selector": "all"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "Two families are in a bitter dispute over who has rights to a valuable stash of scrap metal they found. It's getting ugly.",
+      "cs": "Dvě rodiny se ostře přou o to, kdo má právo na cenný materiál, který našly. Začíná to být ošklivé."
+    }
+  },
+  {
+    "id": "unexpected_remission",
+    "type": "flavor",
+    "name": {
+      "en": "Unexpected Remission",
+      "cs": "Nečekané uzdravení"
+    },
+    "era": [],
+    "weight": 7,
+    "cooldown_ticks": 200,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 10
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_health",
+        "delta": 50,
+        "selector": "lowest_health"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 7
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 6,
+        "selector": "all"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "A colonist long thought to be on their deathbed has made a startling recovery. It feels like a miracle.",
+      "cs": "Osadník, o kterém si všichni mysleli, že je na smrtelné posteli, se znenadání uzdravil. Je to jako zázrak."
+    }
+  },
+  {
+    "id": "old_world_atlas",
+    "type": "opportunity",
+    "name": {
+      "en": "Old World Atlas",
+      "cs": "Atlas starého světa"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 5,
+    "cooldown_ticks": 300,
+    "conditions": [
+      {
+        "techResearched": "writing"
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 3,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "restore_and_complete",
+        "label": {
+          "en": "Fund an effort to complete the maps",
+          "cs": "Financovat dokončení map"
+        },
+        "description": {
+          "en": "This will take significant resources, but could reveal long-lost locations.",
+          "cs": "Bude to stát hodně prostředků, ale mohlo by to odhalit dávno ztracená místa."
+        },
+        "cost": {
+          "knowledge": 40,
+          "materials": 25
+        },
+        "effects": [
+          {
+            "type": "region_kind",
+            "kind": "ruins",
+            "selector": "any_unknown"
+          },
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 80,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "study_the_fragments",
+        "label": {
+          "en": "Study the fragments we have",
+          "cs": "Prostudovat nalezené zlomky"
+        },
+        "description": {
+          "en": "A safe option that will still grant a good amount of knowledge.",
+          "cs": "Bezpečná volba, která i tak přinese slušné množství vědomostí."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 50,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "trade_it",
+        "label": {
+          "en": "Trade it for supplies",
+          "cs": "Vyměnit ho za zásoby"
+        },
+        "description": {
+          "en": "The atlas is a beautiful object. A passing merchant would surely pay well for it.",
+          "cs": "Ten atlas je nádherný. Nějaký kupec na cestách by za něj jistě dobře zaplatil."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 40,
+            "scope": "global"
+          },
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 30,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "Tucked away in a dry cave, a prospector found a metal tube containing a partial atlas of the region from a forgotten age.",
+      "cs": "V suché jeskyni našel prospektor kovový tubus, který ukrýval neúplný atlas zdejšího kraje ze zapomenutých časů."
+    }
+  },
+  {
+    "id": "rotten_lumber",
+    "type": "threat",
+    "name": {
+      "en": "Rotten Lumber",
+      "cs": "Shnilé dříví"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 100,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 15
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -30,
+        "scope": "global"
+      },
+      {
+        "type": "damage_buildings",
+        "delta": 15
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": -5
+      }
+    ],
+    "choices": [
+      {
+        "id": "replace_all",
+        "label": {
+          "en": "Replace it all",
+          "cs": "Všechno vyměnit"
+        },
+        "description": {
+          "en": "Spend more materials to ensure structural safety.",
+          "cs": "Vynaložit další materiál a zajistit bezpečnost staveb."
+        },
+        "cost": {
+          "materials": 50
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 8
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 3,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "risk_it",
+        "label": {
+          "en": "Use it and hope for the best",
+          "cs": "Riskovat a doufat v nejlepší"
+        },
+        "description": {
+          "en": "No extra cost, but stability will suffer and buildings may fail.",
+          "cs": "Žádné další náklady, ale utrpí stabilita a budovy mohou selhat."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": -8
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A shipment of lumber is found to be riddled with a fast-acting rot. It's already been used in several new constructions.",
+      "cs": "Zjistilo se, že dodávku dřeva prolezla rychlá hniloba. Už se z něj staví několik nových budov."
+    }
+  },
+  {
+    "id": "meteor_shower",
+    "type": "flavor",
+    "name": {
+      "en": "Meteor Shower",
+      "cs": "Meteorický roj"
+    },
+    "era": [],
+    "weight": 5,
+    "cooldown_ticks": 400,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 5
+      },
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 20,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "The night sky is filled with falling stars. The whole settlement gathers to watch, sharing a moment of quiet wonder.",
+      "cs": "Noční obloha je plná padajících hvězd. Celá osada se sešla, aby je sledovala, a sdílela chvíli tichého úžasu."
+    }
+  },
+  {
+    "id": "archaeological_dig",
+    "type": "opportunity",
+    "name": {
+      "en": "Archaeological Dig",
+      "cs": "Archeologický průzkum"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial",
+      "modern"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 300,
+    "conditions": [
+      {
+        "techResearched": "scholarship"
+      },
+      {
+        "worldFlag": "cleared:ruins",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 2,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "fund_dig",
+        "label": {
+          "en": "Fund a major excavation",
+          "cs": "Financovat velký průzkum"
+        },
+        "description": {
+          "en": "A significant investment for a trove of knowledge.",
+          "cs": "Značná investice za pokladnici vědomostí."
+        },
+        "cost": {
+          "influence": 30,
+          "materials": 25
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 150,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "cursory_survey",
+        "label": {
+          "en": "Perform a cursory survey",
+          "cs": "Provést zběžný průzkum"
+        },
+        "description": {
+          "en": "A smaller investment for a smaller return.",
+          "cs": "Menší investice pro menší zisk."
+        },
+        "cost": {
+          "influence": 10
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 50,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "leave_buried",
+        "label": {
+          "en": "Leave the past buried",
+          "cs": "Nechat minulost pohřbenou"
+        },
+        "description": {
+          "en": "Our resources are needed elsewhere.",
+          "cs": "Naše zdroje jsou zapotřebí jinde."
+        },
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": {
+      "en": "Now that the nearby ruins are clear of danger, scholars are petitioning for a proper excavation.",
+      "cs": "Teď, když už v nedalekých zříceninách nehrozí nebezpečí, žádají učenci o řádný archeologický průzkum."
+    }
+  },
+  {
+    "id": "sabotaged_water_pump",
+    "type": "threat",
+    "name": {
+      "en": "Sabotaged Water Pump",
+      "cs": "Sabotáž vodní pumpy"
+    },
+    "era": [
+      "early_industrial",
+      "modern"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 180,
+    "conditions": [
+      {
+        "techResearched": "sanitation"
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": -10
+      },
+      {
+        "type": "pawn_health",
+        "delta": -15,
+        "selector": "lowest_health"
+      }
+    ],
+    "choices": [
+      {
+        "id": "repair_and_secure",
+        "label": {
+          "en": "Repair and increase security",
+          "cs": "Opravit a zvýšit ostrahu"
+        },
+        "description": {
+          "en": "Fix the pump and post guards to prevent a repeat incident.",
+          "cs": "Opravit čerpadlo a rozmístit stráže, aby se incident neopakoval."
+        },
+        "cost": {
+          "materials": 40,
+          "influence": 10
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 12
+          },
+          {
+            "type": "pawn_health",
+            "delta": 10,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "public_investigation",
+        "label": {
+          "en": "Launch a public investigation",
+          "cs": "Zahájit veřejné vyšetřování"
+        },
+        "description": {
+          "en": "Try to find the culprit. This may sow paranoia but reveal something.",
+          "cs": "Pokusit se najít viníka. Může to zasít paranoiu, ale něco odhalit."
+        },
+        "cost": {
+          "influence": 20
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 30,
+            "scope": "global"
+          },
+          {
+            "type": "pawn_mood",
+            "delta": -8,
+            "selector": "all"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "The main water pump has been deliberately broken. Sand in the gears. Who would do this? Paranoia begins to spread.",
+      "cs": "Hlavní vodní čerpadlo bylo úmyslně poškozeno. Písek v převodech. Kdo by to udělal? Začíná se šířit paranoia."
+    }
+  },
+  {
+    "id": "local_folktale",
+    "type": "flavor",
+    "name": {
+      "en": "A New Folktale",
+      "cs": "Nová pověst"
+    },
+    "era": [
+      "early_settlement",
+      "ancient",
+      "medieval"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 120,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 6
+      },
+      {
+        "type": "resource_delta",
+        "resource": "influence",
+        "delta": 15,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 3,
+        "selector": "all"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "One of the colonists made up a story about a grumpy mountain and a clever river. The children love it, and now adults are telling it too. It's become part of this place.",
+      "cs": "Jeden z osadníků si vymyslel příběh o mrzuté hoře a chytré říčce. Děti ho milují a teď si ho vyprávějí i dospělí. Stal se součástí tohoto místa."
+    }
+  },
+  {
+    "id": "mysterious_benefactor",
+    "type": "opportunity",
+    "name": {
+      "en": "Mysterious Benefactor",
+      "cs": "Tajemný mecenáš"
+    },
+    "era": [
+      "medieval",
+      "early_industrial",
+      "modern"
+    ],
+    "weight": 4,
+    "cooldown_ticks": 600,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 50
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "accept_knowledge",
+        "label": {
+          "en": "Accept the gift of knowledge",
+          "cs": "Přijmout dar vědění"
+        },
+        "description": {
+          "en": "The crate contains books and schematics.",
+          "cs": "V bedně jsou knihy a schémata."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 100,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "accept_materials",
+        "label": {
+          "en": "Accept the gift of materials",
+          "cs": "Přijmout dar materiálu"
+        },
+        "description": {
+          "en": "The crate contains refined alloys and tools.",
+          "cs": "V bedně jsou ušlechtilé slitiny a nástroje."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 100,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "accept_influence",
+        "label": {
+          "en": "Accept the gift of influence",
+          "cs": "Přijmout dar vlivu"
+        },
+        "description": {
+          "en": "The crate contains gold and works of art.",
+          "cs": "V bedně je zlato a umělecká díla."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 100,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "refuse_gift",
+        "label": {
+          "en": "Refuse the gift. It's a trap.",
+          "cs": "Odmítnout dar. Je to past."
+        },
+        "description": {
+          "en": "Destroy the crate. We trust no one.",
+          "cs": "Zničit bednu. Nikomu nevěříme."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "pawn_mood",
+            "delta": -10,
+            "selector": "all"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 5
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A carefully packed crate is found at the edge of the settlement. No one saw who left it. It is addressed simply: 'To the People of the Valley'.",
+      "cs": "Na hranici osady se našla pečlivě zabalená bedna. Nikdo neviděl, kdo ji tam nechal. Je na ní jen nápis: „Lidem z údolí“."
+    }
+  },
+  {
+    "id": "demagogue_stirs_unrest",
+    "type": "threat",
+    "name": {
+      "en": "Demagogue Stirs Unrest",
+      "cs": "Demagog podněcuje nepokoje"
+    },
+    "era": [
+      "ancient",
+      "medieval",
+      "early_industrial"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 150,
+    "conditions": [
+      {
+        "stat": "settlement:all.stability",
+        "max": 40
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.stability",
+        "delta": -15
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -10
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -8,
+        "selector": "all"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.threatLevel",
+        "delta": 5
+      }
+    ],
+    "choices": [
+      {
+        "id": "discredit",
+        "label": {
+          "en": "Use influence to discredit them",
+          "cs": "Použít vliv a zdiskreditovat ho"
+        },
+        "description": {
+          "en": "Spend influence to counter their narrative and restore some stability.",
+          "cs": "Utratit vliv, vyvrátit jeho lži a obnovit část stability."
+        },
+        "cost": {
+          "influence": 40
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 10
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "make_example",
+        "label": {
+          "en": "Make an example of them",
+          "cs": "Udělat z něj exemplární příklad"
+        },
+        "description": {
+          "en": "A show of force will restore stability but deeply damage morale.",
+          "cs": "Ukázka síly obnoví stabilitu, ale hluboce poškodí morálku."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.stability",
+            "delta": 15
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -20
+          }
+        ]
+      },
+      {
+        "id": "let_speak",
+        "label": {
+          "en": "Let them have their say",
+          "cs": "Nechat ho mluvit"
+        },
+        "description": {
+          "en": "Hope that their words will eventually lose their power.",
+          "cs": "Doufat, že jeho slova časem ztratí na síle."
+        },
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": {
+      "en": "A charismatic speaker is gaining followers by blaming one of the founding families for the colony's hardships. Their words are turning neighbour against neighbour.",
+      "cs": "Charismatický řečník si získává stoupence tím, že z útrap kolonie viní jednu ze zakladatelských rodin. Jeho slova obrací souseda proti sousedovi."
+    }
+  },
+  {
+    "id": "medicinal_herb_found",
+    "type": "opportunity",
+    "name": {
+      "en": "Medicinal Herb Found",
+      "cs": "Nález léčivé byliny"
+    },
+    "era": [
+      "early_settlement",
+      "ancient"
+    ],
+    "weight": 15,
+    "cooldown_ticks": 120,
+    "conditions": [
+      {
+        "worldFlag": "biome:forest_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_health",
+        "delta": 10,
+        "selector": "lowest_health"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 20,
+        "scope": "global"
+      }
+    ],
+    "choices": [
+      {
+        "id": "cultivate",
+        "label": {
+          "en": "Begin cultivating the herb",
+          "cs": "Začít bylinu pěstovat"
+        },
+        "description": {
+          "en": "Spend food to create a lasting source of healing, improving overall health.",
+          "cs": "Obětovat jídlo pro vytvoření trvalého zdroje léčení, který zlepší celkové zdraví."
+        },
+        "cost": {
+          "food": 30
+        },
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": 5,
+            "selector": "all"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "harvest_all",
+        "label": {
+          "en": "Harvest it all immediately",
+          "cs": "Všechno hned sklidit"
+        },
+        "description": {
+          "en": "Gain a large, one-time health boost, but destroy the wild patch.",
+          "cs": "Získat velký jednorázový bonus ke zdraví, ale zničit divoké naleziště."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": 25,
+            "selector": "lowest_health"
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 3,
+            "selector": "all"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A forager, out in the woods near the old oaks, has returned with a plant previously unknown to the colony. Its properties are remarkable; poultices made from its leaves seem to speed healing.",
+      "cs": "Hledač, který byl v lesích u starých dubů, se vrátil s rostlinou dosud v osadě neznámou. Její vlastnosti jsou pozoruhodné; zdá se, že obklady z jejích listů urychlují hojení."
+    }
   }
 ]

@@ -336,3 +336,77 @@ struct MotionDistinctionTests {
                 "clips are duplicating each other's numbers: \(summary)")
     }
 }
+
+@Suite("The hunt is legible")
+struct HuntPhaseTests {
+
+    /// Each phase the engine can report must reach a *different* clip. Four
+    /// hunting clips separated by nothing but the alphabet is what this
+    /// replaces: whichever sorted first was drawn for every moment of the hunt,
+    /// so a colonist creeping through the wood and one standing over a carcass
+    /// were the same figure.
+    @Test("Every hunt phase draws a different body")
+    func phasesReachDifferentClips() throws {
+        let registry = try GameDataRegistry.bundled()
+        var chosen: [String: String] = [:]
+        for phase in ["stalking", "closing", "killed"] {
+            let clip = registry.motion(activity: "working", work: "hunting", phase: phase)
+            #expect(clip.servesPhases.contains(phase),
+                    "phase \(phase) fell through to \(clip.id), which is not written for it")
+            chosen[phase] = clip.id
+        }
+        #expect(Set(chosen.values).count == chosen.count,
+                "two phases share a clip: \(chosen)")
+    }
+
+    /// A hunter with no phase — nothing has hunted yet this save — still gets a
+    /// hunter's clip rather than the generic work animation.
+    @Test("A hunter with no phase yet is still a hunter")
+    func absentPhaseFallsBackWithinTheTrade() throws {
+        let registry = try GameDataRegistry.bundled()
+        let noPhase = registry.motion(activity: "working", work: "hunting", phase: nil)
+        let generic = registry.motion(activity: "working", work: nil)
+        #expect(noPhase.id != generic.id)
+        #expect(noPhase.servesWork.contains("hunting"))
+    }
+}
+
+@Suite("Ground bank")
+struct GroundBankTests {
+
+    /// Same guard as the motion bank, for the same reason: a data file the
+    /// registry decodes to nothing is invisible to the build and to
+    /// `ContentTests`, and the canvas quietly falls back to plain earth
+    /// everywhere (rule 43).
+    @Test("Every ground cover the map can lay down has an entry")
+    func everyCoverIsDescribed() throws {
+        let registry = try GameDataRegistry.bundled()
+        for cover in GroundCover.allCases {
+            #expect(registry.ground[cover.rawValue] != nil,
+                    "\(cover.rawValue) has no entry, so it draws as bare dirt")
+        }
+    }
+
+    /// Twelve covers all painted the same colour is one country in twelve
+    /// costumes — the thing splitting the margins was meant to prevent.
+    @Test("The covers are actually different colours")
+    func coversDiffer() throws {
+        let registry = try GameDataRegistry.bundled()
+        let shades = Set(registry.ground.values.map { "\($0.red)/\($0.green)/\($0.blue)" })
+        #expect(shades.count == registry.ground.count)
+    }
+
+    /// A texture name the renderer does not know draws nothing, which reads as
+    /// smooth ground — survivable, and silent, which is why it is checked.
+    @Test("Every texture names a mark the renderer can draw")
+    func texturesAreReal() throws {
+        let known: Set<String> = ["blades", "pebbles", "ripples", "crack", "glint",
+                                  "reed", "frond", "sprig", "stipple", "chips",
+                                  "driedCrack"]
+        let registry = try GameDataRegistry.bundled()
+        for def in registry.ground.values {
+            #expect(known.contains(def.texture),
+                    "\(def.id) asks for '\(def.texture)', which nothing draws")
+        }
+    }
+}

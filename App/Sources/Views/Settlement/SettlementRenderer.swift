@@ -137,7 +137,8 @@ enum SettlementRenderer {
         let zoom = camera.scale
         let showLabels = zoom >= 1.6
         SettlementGround.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
-                              sun: sun, seasonProgress: seasonProgress)
+                              sun: sun, seasonProgress: seasonProgress,
+                              registry: registry)
         zones(&context, rect: rect, settlement: settlement, season: season)
         paths(&context, rect: rect, settlement: settlement, registry: registry,
               map: map, zoom: zoom)
@@ -420,7 +421,8 @@ enum SettlementRenderer {
         regionKind: RegionKind,
         tribe: Tribe?,
         seasonProgress: Double = 0.5,
-        continuousTick: Double = 0
+        continuousTick: Double = 0,
+        registry: GameDataRegistry
     ) {
         let viewRect = CGRect(origin: .zero, size: size)
         let rect = worldRect(viewRect: viewRect, camera: camera)
@@ -429,7 +431,8 @@ enum SettlementRenderer {
         let zoom = camera.scale
         let showLabels = zoom >= 1.6
         SettlementGround.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
-                              sun: sun, seasonProgress: seasonProgress)
+                              sun: sun, seasonProgress: seasonProgress,
+                              registry: registry)
         // The sea, before the river and the landscape: everything else stands
         // on the land it leaves.
         sea(&context, rect: rect, shore: map.shore, season: season, time: time)
@@ -513,8 +516,9 @@ enum SettlementRenderer {
     /// The earth, drawn by `SettlementGround` — a square grain over the fog
     /// grid rather than the fog grid itself, which on a phone is three times
     /// taller than it is wide and made every meadow a green column.
-    static func coverColor(_ cover: GroundCover, season: Season) -> Color {
-        SettlementGround.coverColor(cover, season: season)
+    static func coverColor(_ cover: GroundCover, season: Season,
+                           registry: GameDataRegistry) -> Color {
+        SettlementGround.coverColor(cover, season: season, registry: registry)
     }
 
     // MARK: - Zones
@@ -2067,7 +2071,11 @@ enum SettlementRenderer {
                             time: time, ticksPerYear: ticksPerYear,
                             selected: pawn.id == selectedPawnID, zoom: zoom,
                             motion: registry.motion(activity: pose.activity.motionID,
-                                        work: pawn.assignedWork.rawValue),
+                                        work: pawn.assignedWork.rawValue,
+                                        phase: AgentMotion.huntPhase(
+                                            for: pawn,
+                                            reported: settlement.huntPhases[pawn.id],
+                                            map: map, at: pose.position)),
                             context: &context)
                     }
                     continue
@@ -2099,7 +2107,11 @@ enum SettlementRenderer {
                 time: time, ticksPerYear: ticksPerYear,
                 selected: pawn.id == selectedPawnID, zoom: zoom, armed: armed,
                 motion: registry.motion(activity: pose.activity.motionID,
-                                        work: pawn.assignedWork.rawValue),
+                                        work: pawn.assignedWork.rawValue,
+                                        phase: AgentMotion.huntPhase(
+                                            for: pawn,
+                                            reported: settlement.huntPhases[pawn.id],
+                                            map: map, at: pose.position)),
                 context: &context)
         }
     }

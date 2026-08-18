@@ -23,8 +23,11 @@ draft that passes `check` does not fail `swift test` half an hour later:
     used — an effect type `EffectApplier` has never heard of loads fine and
     then quietly does nothing, which is the worst failure available.
 
-`merge` runs `swift test --filter ContentTests` afterwards and **puts the file
-back** if they fail, so a bad batch cannot leave the repository broken.
+`merge` runs the content-facing suites afterwards — `ContentTests`,
+`CraftingTests`, `ProductionChainTests`, `FoodChainTests`, `ItemTests` — and
+**puts the file back** if they fail, so a bad batch cannot leave the repository
+broken. Running only `ContentTests` was not enough: it judges the *shape* of an
+entry and never asks whether the things it names can be reached.
 """
 
 from __future__ import annotations
@@ -597,7 +600,16 @@ def do_merge(draft_path: Path) -> None:
     print(f"merged {len(draft)} into {target.name} ({len(merged)} total) — running the tests")
 
     result = subprocess.run(
-        ["swift", "test", "--filter", "ContentTests"],
+        # **Not just `ContentTests`.** That suite checks the shape of the
+        # content — bilingual text, ids, era gates — and says nothing about
+        # whether a recipe's ingredients exist or a meal can ever be cooked.
+        # Sixty recipes merged "tests green" and then failed three other suites:
+        # six asked for `flint`, which is not an item, and for a stone mortar,
+        # which is a tool rather than something you use up. A gate that runs a
+        # narrower suite than the content can break is a gate that says yes to
+        # the breakage.
+        ["swift", "test", "--filter",
+         "ContentTests|CraftingTests|ProductionChainTests|FoodChainTests|ItemTests"],
         cwd=ROOT / "Core", capture_output=True, text=True,
     )
     if result.returncode != 0:

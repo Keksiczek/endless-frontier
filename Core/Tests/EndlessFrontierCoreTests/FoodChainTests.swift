@@ -88,13 +88,21 @@ struct FoodChainTests {
         let cooks = share(.cooking) * 1000
         #expect(cooks > 0, "somebody has to make dinner")
 
-        let dearest = try #require(reg.cookableMeals.map(\.work).max())
-        let foodCooked = cooks * (CookingEngine.effortPerCook + CookingEngine.skillEffort * 0.5)
-            / dearest * (reg.cookableMeals.map(\.food).min() ?? 0)
+        // The worst meal on the table, measured the way a cook is actually paid:
+        // food per unit of work. **Not** `min(food) / max(work)` — that pairs
+        // the dearest pot with the thinnest one, a combination no meal in the
+        // file has, and it only ever passed because the first eight meals
+        // happened to sit in a narrow band. Forty-seven meals later the band is
+        // wider at both ends while every single ratio is *tighter* than before
+        // (6.0…8.8), and the old formula failed content that is fine.
+        let effort = CookingEngine.effortPerCook + CookingEngine.skillEffort * 0.5
+        let leanest = try #require(reg.cookableMeals.map { $0.food / $0.work }.min())
+        let foodCooked = cooks * effort * leanest
         let eaten = 1000 / 0.65 * reg.config.foodPerPersonPerTick   // adults are ~65% of a town
 
-        #expect(foodCooked > eaten,
-                "cooks at \(share(.cooking)) of the town make \(foodCooked) a tick against \(eaten) eaten")
+        let summary = "cooks at \(share(.cooking)) of the town make \(foodCooked) a tick "
+            + "against \(eaten) eaten, on the leanest meal in the file (\(leanest) food per work)"
+        #expect(foodCooked > eaten, "\(summary)")
     }
 
     /// The question the quota arithmetic above never asks: `cooksKeepUpWith

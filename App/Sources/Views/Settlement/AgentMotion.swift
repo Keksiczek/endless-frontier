@@ -126,6 +126,36 @@ enum AgentMotion {
         }
     }
 
+    /// Which moment of the hunt to draw, at *frame* resolution.
+    ///
+    /// A split, and the line matters. **A kill is the simulation's to report**:
+    /// only `HuntEngine` knows a beast went down this tick, and no amount of
+    /// looking at positions will tell you. **Closing is the canvas's to see**:
+    /// the hunter's position and the animals' are both already on screen, and
+    /// the distance between them is a fact about the picture.
+    ///
+    /// Left to the engine alone this changed twice a minute, because a hunt
+    /// resolves once a tick and a tick is two real minutes — a chase drawn as
+    /// a slideshow. Moving the *hunt* to the eight-step action clock instead
+    /// would have multiplied every kill roll by eight (rule 34: a rate in the
+    /// wrong unit), so the resolution the eye wants is taken where it is free.
+    static func huntPhase(for pawn: Pawn, reported: HuntEngine.Phase?,
+                          map: LocalMap, at position: LocalPoint) -> String? {
+        guard pawn.assignedWork == .hunting else { return nil }
+        // A kill stands until the engine says otherwise: the carcass has to be
+        // carried home, and that is the one moment worth holding on screen.
+        if reported == .killed { return HuntEngine.Phase.killed.rawValue }
+        let quarry = map.wildlife.animals.filter { !$0.species.isPredator }
+        guard !quarry.isEmpty else { return HuntEngine.Phase.stalking.rawValue }
+        let nearest = quarry.map { animal -> Double in
+            let dx = animal.position.x - position.x, dy = animal.position.y - position.y
+            return (dx * dx + dy * dy).squareRoot()
+        }.min() ?? .greatestFiniteMagnitude
+        return nearest <= HuntEngine.reach
+            ? HuntEngine.Phase.closing.rawValue
+            : HuntEngine.Phase.stalking.rawValue
+    }
+
     /// The x-component of a heading from `a` to `b`, normalised — what `Pose`
     /// carries as `facing`. Zero for two points on top of each other, so a
     /// colonist who has arrived does not spin.

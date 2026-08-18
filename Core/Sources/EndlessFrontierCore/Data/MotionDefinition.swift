@@ -81,6 +81,10 @@ public struct MotionDefinition: Codable, Sendable, Identifiable, Equatable {
     /// which is the oldest bug in this repository.
     public let servesActivities: [String]
     public let servesWork: [String]
+    /// Narrower still: the moment within the work. A hunter is stalking, or
+    /// closing, or standing over a kill, and those are three different bodies.
+    /// A clip that names no phase serves every phase of the work it names.
+    public let servesPhases: [String]
 
     /// The legs, driven by the walk cycle and scaled by how much the colonist
     /// is actually moving.
@@ -120,6 +124,7 @@ public struct MotionDefinition: Codable, Sendable, Identifiable, Equatable {
         name: LocalizedText,
         servesActivities: [String] = [],
         servesWork: [String] = [],
+        servesPhases: [String] = [],
         legs: Wave = .still,
         toolArm: Wave = .still,
         freeArmCounterSwing: Double = 0,
@@ -136,6 +141,7 @@ public struct MotionDefinition: Codable, Sendable, Identifiable, Equatable {
         self.name = name
         self.servesActivities = servesActivities
         self.servesWork = servesWork
+        self.servesPhases = servesPhases
         self.legs = legs
         self.toolArm = toolArm
         self.freeArmCounterSwing = freeArmCounterSwing
@@ -153,6 +159,7 @@ public struct MotionDefinition: Codable, Sendable, Identifiable, Equatable {
         case id, name, legs, description, lean, bob, slouch, reach, opacity, speed
         case servesActivities = "serves_activities"
         case servesWork = "serves_work"
+        case servesPhases = "serves_phases"
         case toolArm = "tool_arm"
         case freeArmCounterSwing = "free_arm_counter_swing"
         case handHeight = "hand_height"
@@ -164,6 +171,7 @@ public struct MotionDefinition: Codable, Sendable, Identifiable, Equatable {
         name = try c.decode(LocalizedText.self, forKey: .name)
         servesActivities = try c.decodeIfPresent([String].self, forKey: .servesActivities) ?? []
         servesWork = try c.decodeIfPresent([String].self, forKey: .servesWork) ?? []
+        servesPhases = try c.decodeIfPresent([String].self, forKey: .servesPhases) ?? []
         legs = try c.decodeIfPresent(Wave.self, forKey: .legs) ?? .still
         toolArm = try c.decodeIfPresent(Wave.self, forKey: .toolArm) ?? .still
         freeArmCounterSwing = try c.decodeIfPresent(Double.self, forKey: .freeArmCounterSwing) ?? 0

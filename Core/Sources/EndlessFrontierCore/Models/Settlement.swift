@@ -138,6 +138,16 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public var constructionSequence: Int
     /// The settlement's living diary of small moments (see `ColonyLog`).
     public var journal: ColonyLog
+
+    /// What each hunter was doing when the hunt last resolved.
+    ///
+    /// **Presentation only.** Nothing in the simulation reads this back; it
+    /// exists so the canvas can draw a hunt that already happens — a colonist
+    /// creeping, a colonist closing, a colonist standing over a carcass —
+    /// instead of one arm going up and down at a deer. Replaced whole every
+    /// time `WildlifeEngine` runs a hunt, so it is never stale by more than a
+    /// tick, and small enough to save.
+    public var huntPhases: [UUID: HuntEngine.Phase] = [:]
     /// Bonds between colonists — friendships, rivalries, marriages.
     public var relationships: [Relationship]
     /// Parties currently out working the local map's points of interest.
@@ -312,6 +322,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         case buildings, storage, storageCapacity, stats, inventory, specialization, colony, localMap
         case laws, leaderID, society, strikeTicksRemaining, faith
         case constructions, constructionSequence, journal, relationships, expeditions
+        case huntPhases
         case tamed
         case stockpile, rawProgress, lastBattle, battleHistory, policy, siege
         case craftOrders, kitchenProgress
@@ -357,6 +368,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         constructions = try c.decodeIfPresent([ConstructionProject].self, forKey: .constructions) ?? []
         constructionSequence = try c.decodeIfPresent(Int.self, forKey: .constructionSequence) ?? 0
         journal = try c.decodeIfPresent(ColonyLog.self, forKey: .journal) ?? ColonyLog()
+        huntPhases = try c.decodeIfPresent([UUID: HuntEngine.Phase].self, forKey: .huntPhases) ?? [:]
         relationships = try c.decodeIfPresent([Relationship].self, forKey: .relationships) ?? []
         expeditions = try c.decodeIfPresent([POIExpedition].self, forKey: .expeditions) ?? []
         tamed = try c.decodeIfPresent([TamedAnimal].self, forKey: .tamed) ?? []

@@ -52,8 +52,29 @@ public enum HuntEngine {
     }
 
     /// What one tick of hunting did.
+    /// What a hunter is visibly doing, so the canvas can show the hunt the
+    /// simulation has always run.
+    ///
+    /// The hunt resolves inside one tick — find the quarry, roll, kill or
+    /// wound — so there is no phase to *hold*; there is only what just
+    /// happened. That is enough: the canvas needs to know whether this
+    /// colonist is creeping, sprinting or walking home under a carcass, and
+    /// those are the three answers the roll already produces.
+    /// `quarry` only ever returns a beast already within `reach`, so "found
+    /// something" and "close enough to try" are the same fact. That makes the
+    /// three phases fall straight out of the loop rather than needing a second
+    /// distance test that would always answer the same way.
+    public enum Phase: String, Codable, Sendable {
+        case stalking   // out in the wood with nothing within reach yet
+        case closing    // a beast in front of them, about to try for it
+        case killed     // took it this tick
+    }
+
     public struct Bag: Sendable {
         public var map: LocalMap
+        /// What each hunter did this tick. Presentation-only: nothing in the
+        /// simulation reads it back.
+        public var phases: [UUID: Phase] = [:]
         /// The beasts taken, whole — so the yield can be read off the carcass.
         public var kills: [Animal] = []
         /// Hunters hurt by something that fought back, and by how much.
@@ -73,7 +94,10 @@ public enum HuntEngine {
     /// The odds a dangerous animal that survives turns on the hunter.
     static let retaliationChance = 0.45
     /// How near a hunter has to be to have an encounter at all.
-    static let reach = 0.16
+    /// How close a hunter has to be to try for a beast. Public because the
+    /// canvas judges "closing" against the same number the roll does — two
+    /// answers to one question is how a picture starts lying about the game.
+    public static let reach = 0.16
 
     /// Runs one tick of hunting for a settlement's hunters.
     ///
@@ -93,8 +117,14 @@ public enum HuntEngine {
 
         for hunter in hunters {
             let from = posts[hunter.id] ?? LocalPoint(x: 0.5, y: 0.52)
-            guard let index = quarry(in: animals, from: from, taken: taken) else { continue }
+            guard let index = quarry(in: animals, from: from, taken: taken) else {
+                // Nothing within reach: still out there, still looking.
+                bag.phases[hunter.id] = .stalking
+                continue
+            }
             var beast = animals[index]
+
+            bag.phases[hunter.id] = .closing
 
             let fromCover = hunter.shootsFromCover
             let odds = fromCover ? rangedKillChance : meleeKillChance
@@ -107,6 +137,7 @@ public enum HuntEngine {
                 taken.insert(beast.id)
                 animals[index] = beast
                 bag.kills.append(beast)
+                bag.phases[hunter.id] = .killed
                 continue
             }
 
@@ -125,6 +156,7 @@ public enum HuntEngine {
                 taken.insert(beast.id)
                 animals[index] = beast
                 bag.kills.append(beast)
+                bag.phases[hunter.id] = .killed
                 continue
             }
             // And if it is something that fights back, and the hunter had to

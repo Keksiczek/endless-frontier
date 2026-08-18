@@ -1,0 +1,122 @@
+[
+  {
+    "id": "grass",
+    "name": { "en": "Grass", "cs": "Tráva" },
+    "red": 0.15, "green": 0.22, "blue": 0.15,
+    "texture": "blades", "texture_alpha": 0.42,
+    "description": {
+      "en": "Ordinary pasture — what the valley returns to when nothing else claims it.",
+      "cs": "Obyčejná pastvina — to, k čemu se údolí vrátí, když si ho nic jiného nevezme."
+    }
+  },
+  {
+    "id": "meadow",
+    "name": { "en": "Meadow", "cs": "Louka" },
+    "red": 0.19, "green": 0.26, "blue": 0.16,
+    "texture": "blades", "texture_alpha": 0.42,
+    "description": {
+      "en": "Grass gone tall and mixed, the kind that is cut rather than grazed.",
+      "cs": "Tráva vzrostlá a smíšená, ta, co se seče a nespásá."
+    }
+  },
+  {
+    "id": "dirt",
+    "name": { "en": "Bare earth", "cs": "Holá zem" },
+    "red": 0.23, "green": 0.19, "blue": 0.14,
+    "texture": "pebbles", "texture_alpha": 0.30,
+    "description": {
+      "en": "Ground walked bare, or turned and not yet sown.",
+      "cs": "Zem prošlapaná došeda, nebo zoraná a ještě neosetá."
+    }
+  },
+  {
+    "id": "sand",
+    "name": { "en": "Sand", "cs": "Písek" },
+    "red": 0.29, "green": 0.26, "blue": 0.17,
+    "texture": "ripples", "texture_alpha": 0.30,
+    "description": {
+      "en": "Loose and blown, holding whatever shape the last wind left.",
+      "cs": "Sypký a navátý, drží tvar, co po sobě nechal poslední vítr."
+    }
+  },
+  {
+    "id": "rock",
+    "name": { "en": "Rock", "cs": "Skála" },
+    "red": 0.19, "green": 0.20, "blue": 0.23,
+    "texture": "crack", "texture_alpha": 0.30,
+    "description": {
+      "en": "The bone of the country, where the soil has worn off it.",
+      "cs": "Kost té země, tam, kde z ní sešla půda."
+    }
+  },
+  {
+    "id": "snow",
+    "name": { "en": "Snow", "cs": "Sníh" },
+    "red": 0.30, "green": 0.33, "blue": 0.39,
+    "texture": "glint", "texture_alpha": 0.34,
+    "description": {
+      "en": "Lying deep enough to keep, and to show every track across it.",
+      "cs": "Leží dost hluboko, aby vydržel — a aby na něm byla vidět každá stopa."
+    }
+  },
+  {
+    "id": "marsh",
+    "name": { "en": "Marsh", "cs": "Mokřina" },
+    "red": 0.15, "green": 0.23, "blue": 0.20,
+    "texture": "reed", "texture_alpha": 0.30,
+    "description": {
+      "en": "Standing water with ground somewhere under it.",
+      "cs": "Stojatá voda, někde pod ní zem."
+    }
+  },
+  {
+    "id": "scree",
+    "name": { "en": "Scree", "cs": "Suť" },
+    "red": 0.24, "green": 0.24, "blue": 0.25,
+    "texture": "chips", "texture_alpha": 0.36,
+    "description": {
+      "en": "Rock gone pale and loose, shed off the slope above it.",
+      "cs": "Kámen zesvětlalý a uvolněný, spadaný ze svahu nad ním."
+    }
+  },
+  {
+    "id": "heath",
+    "name": { "en": "Heath", "cs": "Vřesoviště" },
+    "red": 0.22, "green": 0.19, "blue": 0.21,
+    "texture": "sprig", "texture_alpha": 0.38,
+    "description": {
+      "en": "Grass gone dry and purple — heather on ground too thin for anything better.",
+      "cs": "Tráva vyschlá do fialova — vřes na půdě příliš chudé na cokoliv lepšího."
+    }
+  },
+  {
+    "id": "moss",
+    "name": { "en": "Moss", "cs": "Mech" },
+    "red": 0.17, "green": 0.24, "blue": 0.21,
+    "texture": "stipple", "texture_alpha": 0.38,
+    "description": {
+      "en": "Snow with the life left in it: a cushion over cold stone.",
+      "cs": "Sníh, ve kterém zůstal život: polštář přes studený kámen."
+    }
+  },
+  {
+    "id": "clay",
+    "name": { "en": "Clay", "cs": "Jíl" },
+    "red": 0.26, "green": 0.19, "blue": 0.15,
+    "texture": "driedCrack", "texture_alpha": 0.24,
+    "description": {
+      "en": "Dirt with water in it, and the cracks of every time it dried out.",
+      "cs": "Hlína s vodou v sobě a trhliny po každém vyschnutí."
+    }
+  },
+  {
+    "id": "fern",
+    "name": { "en": "Fern", "cs": "Kapradí" },
+    "red": 0.13, "green": 0.24, "blue": 0.16,
+    "texture": "frond", "texture_alpha": 0.42,
+    "description": {
+      "en": "Meadow in shade — deeper and cooler, growing where the light does not reach.",
+      "cs": "Louka ve stínu — tmavší a chladnější, roste tam, kam nedosáhne světlo."
+    }
+  }
+]

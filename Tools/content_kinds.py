@@ -50,6 +50,17 @@ SUPPLEMENTS: dict[str, set[str]] = {
         "crafting", "cooking", "idle",
     },
     "look": {"temple"},
+    # Every string `EventEffect.init(from:)` switches on. The content uses ten
+    # of these thirteen, so measurement alone hid `remove_pawn`, `unlock_tech`
+    # and `trigger_event` — three of the most *interesting* things an event can
+    # do, invisible to the generator purely because nobody had written one yet.
+    # A vocabulary taken from content can only ever narrow; the code is the
+    # authority on what is legal.
+    "type": {
+        "add_pawn", "damage_buildings", "pawn_health", "pawn_mood", "raid",
+        "region_hazard", "region_kind", "remove_pawn", "resource_delta",
+        "set_world_flag", "stat_delta", "trigger_event", "unlock_tech",
+    },
 }
 
 # `stat` is deliberately **not** in the list above, because collecting its
@@ -177,6 +188,24 @@ motion of a real action — closing on an animal, gutting it, carrying it home �
 not an emotion.""",
         "wants": "the hunt (stalking, closing, the kill, the carcass carried home), "
                  "and the trades that currently all look like the same arm going up and down",
+    },
+    "ground": {
+        "file": "ground.json",
+        "brief": """What one kind of ground looks like. `red`/`green`/`blue` are the raw
+earth before the season passes over it (0…1, and these are *dark* — the canvas is
+a night-leaning line-art world, so nothing here goes above about 0.35).
+`texture_alpha` is how much grain shows: growing ground takes more than bare
+ground, a fern bed is grain all the way down at 0.42 and clay is nearly smooth at
+0.24.
+
+`texture` names a mark the renderer already knows how to draw. It is a closed
+list and you may not invent one: blades, pebbles, ripples, crack, glint, reed,
+frond, sprig, stipple, chips, driedCrack.
+
+A new ground has to read as a *neighbour* of the ones beside it, or the map turns
+into confetti — scree is rock gone pale and loose, heath is grass gone dry and
+purple, fern is meadow in shade.""",
+        "wants": "country the twelve covers cannot currently make — salt flat, ash, shingle, peat",
     },
     "biomes": {
         "file": "biomes.json",

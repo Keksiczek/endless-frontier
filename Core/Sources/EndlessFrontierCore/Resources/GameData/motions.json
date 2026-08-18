@@ -275,6 +275,9 @@
     ],
     "serves_work": [
       "hunting"
+    ],
+    "serves_phases": [
+      "stalking"
     ]
   },
   {
@@ -303,6 +306,9 @@
     ],
     "serves_work": [
       "hunting"
+    ],
+    "serves_phases": [
+      "closing"
     ]
   },
   {
@@ -328,6 +334,9 @@
     "serves_work": [
       "hunting",
       "cooking"
+    ],
+    "serves_phases": [
+      "killed"
     ]
   },
   {
@@ -356,6 +365,9 @@
     ],
     "serves_work": [
       "hunting"
+    ],
+    "serves_phases": [
+      "killed"
     ]
   },
   {
@@ -469,7 +481,10 @@
     "description": {
       "en": "Kneeling over the kill, working with a knife. A messy but necessary job before the haul back.",
       "cs": "Klečí nad úlovkem a pracuje s nožem. Špinavá, ale nutná práce před cestou zpátky."
-    }
+    },
+    "serves_phases": [
+      "killed"
+    ]
   },
   {
     "id": "carrying_game",
@@ -757,6 +772,9 @@
     ],
     "serves_work": [
       "hunting"
+    ],
+    "serves_phases": [
+      "closing"
     ]
   },
   {
@@ -910,6 +928,9 @@
     ],
     "serves_work": [
       "hunting"
+    ],
+    "serves_phases": [
+      "closing"
     ]
   },
   {

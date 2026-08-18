@@ -35,6 +35,9 @@ public struct GameDataRegistry: Sendable {
     /// the simulation never does, which is why a missing entry costs nothing
     /// but a plain stand.
     public let motions: [String: MotionDefinition]
+    /// What each kind of ground looks like. Presentation reads this; the
+    /// simulation decides *where* the covers lie and never what colour.
+    public let ground: [String: GroundDefinition]
     public let config: WorldConfig
     public let mapGen: MapGenConfig
 
@@ -91,6 +94,7 @@ public struct GameDataRegistry: Sendable {
         cults: [CultDefinition] = [],
         meals: [MealDefinition] = [],
         motions: [MotionDefinition] = [],
+        ground: [GroundDefinition] = [],
         config: WorldConfig = .default,
         mapGen: MapGenConfig = .default
     ) {
@@ -100,6 +104,7 @@ public struct GameDataRegistry: Sendable {
             : mealTable.values.sorted { $0.id < $1.id }
         self.meals = mealTable
         self.motions = Dictionary(uniqueKeysWithValues: motions.map { ($0.id, $0) })
+        self.ground = Dictionary(uniqueKeysWithValues: ground.map { ($0.id, $0) })
         self.cookableMeals = cookable
         self.foodstuffs = Set(cookable.flatMap(\.ingredients.keys))
         self.dearestMealWork = cookable.map(\.work).max() ?? 1
@@ -131,6 +136,12 @@ public struct GameDataRegistry: Sendable {
         motions[id] ?? .standing
     }
 
+    /// Never nil: ground the bank has nothing to say about is plain earth,
+    /// not a hole.
+    public func ground(_ id: String) -> GroundDefinition {
+        ground[id] ?? .plain
+    }
+
     /// The clip that best fits what somebody is doing and what they do for a
     /// living — a farmer at work sows, a hunter at work stalks, and both fall
     /// back to the plain work clip if the bank has nothing more specific.
@@ -139,12 +150,22 @@ public struct GameDataRegistry: Sendable {
     /// the same thing is drawn the same way twice. Dictionary order is not
     /// stable across runs, and a figure that changes gait every frame because
     /// two clips both matched is worse than no clip at all.
-    public func motion(activity: String, work: String?) -> MotionDefinition {
+    public func motion(activity: String, work: String?,
+                       phase: String? = nil) -> MotionDefinition {
         if let work {
             let fitted = motions.values
                 .filter { $0.servesWork.contains(work) && $0.servesActivities.contains(activity) }
                 .sorted { $0.id < $1.id }
-            if let best = fitted.first { return best }
+            // Most specific first: a clip written for *this* moment of the work
+            // beats one written for the work in general. Without this the four
+            // hunting clips were separated by nothing but the alphabet, so a
+            // hunter creeping and a hunter over a carcass were drawn the same.
+            if let phase, let matched = fitted.first(where: { $0.servesPhases.contains(phase) }) {
+                return matched
+            }
+            if let best = fitted.first(where: { $0.servesPhases.isEmpty }) ?? fitted.first {
+                return best
+            }
         }
         let byActivity = motions.values
             .filter { $0.servesWork.isEmpty && $0.servesActivities.contains(activity) }
@@ -216,6 +237,7 @@ public struct GameDataRegistry: Sendable {
         let cults = try optional([CultDefinition].self, "cults", else: [])
         let meals = try optional([MealDefinition].self, "meals", else: [])
         let motions = try optional([MotionDefinition].self, "motions", else: [])
+        let ground = try optional([GroundDefinition].self, "ground", else: [])
         return GameDataRegistry(
             buildings: try load([BuildingDefinition].self, "buildings"),
             techs: try load([TechDefinition].self, "techs"),
@@ -230,6 +252,7 @@ public struct GameDataRegistry: Sendable {
             cults: cults,
             meals: meals,
             motions: motions,
+            ground: ground,
             config: try load(WorldConfig.self, "world-config"),
             mapGen: mapGen
         )

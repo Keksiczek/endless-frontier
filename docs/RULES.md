@@ -429,3 +429,20 @@ fires, do the arithmetic before you rewrite the mechanic.
    at the point of use. `class: armor_bonus` passed a check that had the right
    answer sitting in front of it. Widening a source of truth is only half the
    job; the other half is grepping for every place the old one is still named.
+45. **A merge gate that runs a narrower suite than the content can break is a
+   gate that says yes to the breakage.** `merge` ran `swift test --filter
+   ContentTests` and reported "tests green" on sixty recipes that then failed
+   `CraftingTests`, `ProductionChainTests` and `FoodChainTests`. `ContentTests`
+   judges an entry's *shape* — bilingual text, ids, era gates — and never asks
+   whether the things it names can be reached. Six recipes asked for `flint`,
+   which is not an item, and for a stone mortar, which exists and is a tool
+   rather than something you use up. The gate now runs every suite the content
+   can break.
+46. **A reference can hide in a dictionary's keys.** `references.py` walked
+   values and so never looked at `{"materials": {"flint": 2}}` — the ingredient
+   list of every recipe and every meal, where the id is the *key*. Same hole
+   found three meals that could never be cooked: `fish` and `mushrooms` are
+   perfectly good words and nothing in the game produces either, so those pots
+   would have sat in the table for ever. The rule generalises past JSON:
+   whenever a check walks a structure, ask which half of each pair it is
+   reading.

@@ -55,7 +55,8 @@ enum SettlementGround {
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap,
         season: Season, zoom: CGFloat,
         sun: SettlementLight.Sun = SettlementLight.sun(time: 0),
-        seasonProgress: Double = 0.5
+        seasonProgress: Double = 0.5,
+        registry: GameDataRegistry
     ) {
         let cols = LocalMap.gridColumns, rows = LocalMap.gridRows
         let cw = rect.width / CGFloat(cols), ch = rect.height / CGFloat(rows)
@@ -164,11 +165,12 @@ enum SettlementGround {
         // answer cannot change between two of them.
         for (_, tone) in batches.keys.map({ ($0.order, $0) }).sorted(by: { $0.0 < $1.0 }) {
             guard let path = batches[tone] else { continue }
-            context.fill(path, with: .color(colour(tone, season: season, sun: sun)))
+            context.fill(path, with: .color(colour(tone, season: season, sun: sun,
+                                                registry: registry)))
         }
         let stroke = StrokeStyle(lineWidth: max(0.4, min(tw, th) * 0.10), lineCap: .round)
         for (cover, path) in texture {
-            context.stroke(path, with: .color(textureColour(cover, season: season)), style: stroke)
+            context.stroke(path, with: .color(textureColour(cover, season: season, registry: registry)), style: stroke)
         }
         for (skin, path) in skinMarks {
             context.stroke(path, with: .color(SettlementSeasons.markColour(skin)), style: stroke)
@@ -210,8 +212,9 @@ enum SettlementGround {
 
     /// The earth, the season lying on it and the sun falling on it, resolved
     /// into one opaque colour.
-    static func colour(_ tone: Tone, season: Season, sun: SettlementLight.Sun) -> Color {
-        var (r, g, b) = seasonal(tone.cover, season: season)
+    static func colour(_ tone: Tone, season: Season, sun: SettlementLight.Sun,
+                       registry: GameDataRegistry) -> Color {
+        var (r, g, b) = seasonal(tone.cover, season: season, registry: registry)
         if let skin = SettlementSeasons.tint(tone.skin) {
             let w = skin.weight
             r = r * (1 - w) + skin.r * w
@@ -354,39 +357,30 @@ enum SettlementGround {
     // MARK: - Colour
 
     /// The raw earth tones, before the season passes over them.
-    private static func baseCover(_ cover: GroundCover) -> (r: Double, g: Double, b: Double) {
-        switch cover {
-        case .grass:  return (0.15, 0.22, 0.15)
-        case .meadow: return (0.19, 0.26, 0.16)
-        case .dirt:   return (0.23, 0.19, 0.14)
-        case .sand:   return (0.29, 0.26, 0.17)
-        case .rock:   return (0.19, 0.20, 0.23)
-        case .snow:   return (0.30, 0.33, 0.39)
-        case .marsh:  return (0.15, 0.23, 0.20)
-        // Each of these has to read as a *neighbour* of the band it came off,
-        // or the ground goes back to being confetti: scree is rock gone pale
-        // and loose, heath is grass gone dry and purple, moss is snow with the
-        // life left in it, clay is dirt with water in it, fern is meadow in
-        // shade.
-        case .scree:  return (0.24, 0.24, 0.25)
-        case .heath:  return (0.22, 0.19, 0.21)
-        case .moss:   return (0.17, 0.24, 0.21)
-        case .clay:   return (0.26, 0.19, 0.15)
-        case .fern:   return (0.13, 0.24, 0.16)
-        }
+    ///
+    /// Read out of `ground.json` rather than written here, so a thirteenth kind
+    /// of country is an entry rather than four new `case`s across this file.
+    /// The registry never returns nil — ground it has nothing to say about is
+    /// plain earth — so this stays total.
+    private static func baseCover(_ cover: GroundCover,
+                                  _ registry: GameDataRegistry) -> (r: Double, g: Double, b: Double) {
+        let def = registry.ground(cover.rawValue)
+        return (def.red, def.green, def.blue)
     }
 
     /// The ground as the season paints it: fresh in spring, warm in summer,
     /// rusted in autumn, and pale under winter snow.
-    static func coverColor(_ cover: GroundCover, season: Season) -> Color {
-        let (r, g, b) = seasonal(cover, season: season)
+    static func coverColor(_ cover: GroundCover, season: Season,
+                           registry: GameDataRegistry) -> Color {
+        let (r, g, b) = seasonal(cover, season: season, registry: registry)
         return Color(red: r, green: g, blue: b)
     }
 
     /// The same, as raw components, so the light and the season's skin can be
     /// blended into it before anything is drawn.
-    static func seasonal(_ cover: GroundCover, season: Season) -> (r: Double, g: Double, b: Double) {
-        var (r, g, b) = baseCover(cover)
+    static func seasonal(_ cover: GroundCover, season: Season,
+                         registry: GameDataRegistry) -> (r: Double, g: Double, b: Double) {
+        var (r, g, b) = baseCover(cover, registry)
         switch season {
         case .spring:
             g *= 1.22; r *= 0.96
@@ -404,21 +398,15 @@ enum SettlementGround {
 
     /// What the grain on a given earth is drawn in — a lift of the ground's own
     /// colour, never a foreign one, or the map turns into confetti.
-    private static func textureColour(_ cover: GroundCover, season: Season) -> Color {
-        var (r, g, b) = baseCover(cover)
+    private static func textureColour(_ cover: GroundCover, season: Season,
+                                      registry: GameDataRegistry) -> Color {
+        var (r, g, b) = baseCover(cover, registry)
         let lift: Double = season == .winter ? 0.14 : 0.10
         r += lift; g += lift * 1.15; b += lift * 0.8
-        let alpha: Double
-        switch cover {
         // Growing ground takes more grain than bare ground: a fern bed or a
-        // heath is texture all the way down, scree is chips, clay is smooth.
-        case .grass, .meadow, .fern: alpha = 0.42
-        case .heath, .moss: alpha = 0.38
-        case .snow: alpha = 0.34
-        case .scree: alpha = 0.36
-        case .clay: alpha = 0.24
-        default: alpha = 0.30
-        }
+        // heath is texture all the way down, clay is nearly smooth. Which is
+        // which is the bank's to say now.
+        let alpha = registry.ground(cover.rawValue).textureAlpha
         return Color(red: min(1, r), green: min(1, g), blue: min(1, b)).opacity(alpha)
     }
 

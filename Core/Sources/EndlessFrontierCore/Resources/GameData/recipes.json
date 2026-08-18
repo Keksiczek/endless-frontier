@@ -581,8 +581,8 @@
     },
     "outputItemID": "flint_and_tinder_kit",
     "materials": {
-      "flint": 1,
-      "strong_plant_fibers": 1
+      "strong_plant_fibers": 1,
+      "rough_stone": 1
     },
     "resourceCost": {
       "materials": 5
@@ -766,7 +766,7 @@
     "outputItemID": "barbed_fishing_spear",
     "materials": {
       "straight_timber_log": 1,
-      "sharpened_bone_splinter": 2
+      "bone_spearhead": 2
     },
     "resourceCost": {
       "materials": 12
@@ -1550,8 +1550,8 @@
     },
     "outputItemID": "whittling_knife",
     "materials": {
-      "flint": 1,
-      "wood": 1
+      "wood": 1,
+      "rough_stone": 1
     },
     "resourceCost": {
       "materials": 5
@@ -1648,7 +1648,7 @@
     "materials": {
       "steel_ingot": 2,
       "timber_bundle": 1,
-      "survey_glass": 1
+      "crater_glass": 1
     },
     "resourceCost": {
       "materials": 60,
@@ -1690,8 +1690,8 @@
     },
     "outputItemID": "bone_carving_set",
     "materials": {
-      "sharpened_bone_splinter": 3,
-      "leather": 1
+      "leather": 1,
+      "bone_spearhead": 3
     },
     "resourceCost": {
       "materials": 10
@@ -1711,7 +1711,7 @@
     "outputItemID": "dried_mushroom_powder",
     "materials": {
       "dried_wild_mushrooms": 2,
-      "simple_stone_mortar": 1
+      "rough_stone": 1
     },
     "resourceCost": {
       "materials": 5

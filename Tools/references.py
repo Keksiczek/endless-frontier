@@ -105,9 +105,26 @@ def settable_flags(draft=None) -> set[str]:
     return flags
 
 
+# Keys whose *dictionary keys* are ids, rather than their values. A recipe's
+# `materials` is `{item_id: count}`, so everything above walks straight past it
+# — which is how six recipes shipped asking for `flint`, an item that does not
+# exist, and for a stone mortar, an item that exists and is a tool rather than
+# something you use up.
+REFERENCE_MAPS: dict[str, str] = {
+    "materials": "items",     # recipes: what is consumed
+    "ingredients": "items",   # meals: the same idea, different word
+}
+
+
 def dangling(draft, out: list[str], known_ids: dict[str, set[str]],
              flags: set[str]) -> None:
     if isinstance(draft, dict):
+        for key, value in draft.items():
+            target = REFERENCE_MAPS.get(key)
+            if target and isinstance(value, dict):
+                for name in value:
+                    if name not in known_ids[target]:
+                        out.append(f"{key}[{name}] — no such {target[:-1]}")
         for key, value in draft.items():
             target = REFERENCES.get(key)
             if target:
@@ -127,7 +144,8 @@ def dangling(draft, out: list[str], known_ids: dict[str, set[str]],
 
 def check(draft, kind: str) -> list[str]:
     """Every name in the draft that points at nothing."""
-    known_ids = {target: ids_of(target) for target in set(REFERENCES.values())}
+    known_ids = {target: ids_of(target)
+                 for target in set(REFERENCES.values()) | set(REFERENCE_MAPS.values())}
     # A draft may refer to itself — two techs in one batch where the second
     # needs the first is a good draft, not a broken one. Only into its own
     # kind, though: a draft of quests does not make new techs exist.
