@@ -20,7 +20,8 @@ enum SettlementFlora {
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap,
         season: Season, time: Double,
-        sun: SettlementLight.Sun = SettlementLight.sun(time: 0)
+        sun: SettlementLight.Sun = SettlementLight.sun(time: 0),
+        registry: GameDataRegistry
     ) {
         let unit = min(rect.width, rect.height)
         let standing = map.trees.sorted(by: { $0.position.y < $1.position.y })
@@ -54,12 +55,12 @@ enum SettlementFlora {
         // Rock first: a tree in front of an outcrop should overlap it.
         for rock in outcrops {
             outcrop(&context, rock, at: SettlementRenderer.point(rock.position, in: rect),
-                    unit: unit, season: season)
+                    unit: unit, season: season, registry: registry)
         }
         // Back to front, so nearer trees overlap the ones behind them.
         for tree in standing {
             trunk(&context, tree, at: SettlementRenderer.point(tree.position, in: rect),
-                  unit: unit, season: season, time: time)
+                  unit: unit, season: season, time: time, registry: registry)
         }
     }
 
@@ -68,7 +69,7 @@ enum SettlementFlora {
     /// A tree, sized by how grown it is and marked by how far the axe has got.
     private static func trunk(
         _ context: inout GraphicsContext, _ tree: Tree, at c: CGPoint,
-        unit: CGFloat, season: Season, time: Double
+        unit: CGFloat, season: Season, time: Double, registry: GameDataRegistry
     ) {
         let growth = CGFloat(tree.growth)
         let s = unit * 0.013 * (0.35 + growth * 0.95)
@@ -80,7 +81,7 @@ enum SettlementFlora {
         let evergreen: Set<TreeSpecies> = [.pine, .spruce, .juniper]
         let bare = season == .winter && !evergreen.contains(tree.species)
         let wood = Color(red: 0.34, green: 0.26, blue: 0.19)
-        let leaf = canopyColour(tree.species, season: season)
+        let leaf = canopyColour(tree.species, season: season, registry: registry)
 
         // A slow sway, out of phase per tree so a wood breathes rather than
         // marching. Leaning trees lean the same way every frame.
@@ -221,21 +222,17 @@ enum SettlementFlora {
         }, with: .color(Color(red: 0.78, green: 0.68, blue: 0.50)))
     }
 
-    private static func canopyColour(_ species: TreeSpecies, season: Season) -> Color {
-        switch (species, season) {
-        // Evergreens keep their colour through the autumn, which is half of
-        // what makes an autumn wood read as an autumn wood: the broadleaves
-        // turn *around* them rather than the whole canopy changing at once.
-        case (.spruce, _): return Color(red: 0.16, green: 0.30, blue: 0.22)
-        case (.pine, _): return Color(red: 0.19, green: 0.34, blue: 0.24)
-        case (.juniper, _): return Color(red: 0.24, green: 0.33, blue: 0.27)
-        case (_, .autumn): return Color(red: 0.52, green: 0.34, blue: 0.16)
-        case (.birch, _): return Color(red: 0.34, green: 0.48, blue: 0.26)
-        case (.poplar, _): return Color(red: 0.38, green: 0.50, blue: 0.28)
-        case (.willow, _): return Color(red: 0.42, green: 0.52, blue: 0.30)
-        case (.beech, _): return Color(red: 0.30, green: 0.44, blue: 0.22)
-        case (.oak, _): return Color(red: 0.25, green: 0.42, blue: 0.24)
-        }
+    /// The colour of a canopy, out of `scenery.json`.
+    ///
+    /// The rule that made this switch worth reading is now a property of each
+    /// tree rather than a case in a table: a broadleaf states what it turns to
+    /// in autumn and an evergreen states nothing, so the wood changes *around*
+    /// the conifers instead of all at once. Adding a species is an entry and a
+    /// drawing routine, not a third place to remember.
+    private static func canopyColour(_ species: TreeSpecies, season: Season,
+                                     registry: GameDataRegistry) -> Color {
+        let (r, g, b) = registry.scenery(species.rawValue).colour(in: season)
+        return Color(red: r, green: g, blue: b)
     }
 
     // MARK: - Rock
@@ -244,7 +241,7 @@ enum SettlementFlora {
     /// a worked-out quarry is a feature of the ground, not a hole in the save.
     private static func outcrop(
         _ context: inout GraphicsContext, _ rock: Rock, at c: CGPoint,
-        unit: CGFloat, season: Season
+        unit: CGFloat, season: Season, registry: GameDataRegistry
     ) {
         let left = CGFloat(rock.remaining)
         let s = unit * 0.014 * (0.45 + left * 0.75)
@@ -255,7 +252,7 @@ enum SettlementFlora {
         // same granite stood side by side in two shades, and only the massif
         // went pale under snow. The snow cap below is an outcrop's own detail
         // and stays; the body is not its to decide.
-        let body = SettlementStone.stoneColour(rock.kind, season: season)
+        let body = SettlementStone.stoneColour(rock.kind, season: season, registry: registry)
 
         groundShadow(&context, at: CGPoint(x: c.x, y: c.y + s * 0.2), halfWidth: s * 0.8)
 

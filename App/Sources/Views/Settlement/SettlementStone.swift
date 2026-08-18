@@ -25,7 +25,7 @@ enum SettlementStone {
 
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap,
-        season: Season, zoom: CGFloat
+        season: Season, zoom: CGFloat, registry: GameDataRegistry
     ) {
         let field = map.stone
         guard field.usesBlocks, !field.isEmpty else { return }
@@ -61,7 +61,7 @@ enum SettlementStone {
         for index in visible {
             let f = frame(index)
             let kind = field.kind(of: index)
-            let body = stoneColour(kind, season: season)
+            let body = stoneColour(kind, season: season, registry: registry)
             let column = StoneField.column(of: index), row = StoneField.row(of: index)
 
             // The face: the block's body, standing.
@@ -73,7 +73,7 @@ enum SettlementStone {
             if !solid(column, row - 1) {
                 context.fill(Path(CGRect(x: f.minX, y: f.minY - lift + ch * 0.2,
                                          width: cw + 0.5, height: lift * 0.75)),
-                             with: .color(litColour(kind, season: season, by: 0.11)))
+                             with: .color(litColour(kind, season: season, by: 0.11, registry: registry)))
             }
             // A worked seam still shows what it is worth going in for.
             if kind == .ironSeam {
@@ -91,7 +91,7 @@ enum SettlementStone {
                 context.fill(Path(CGRect(x: f.minX + cw * 0.12,
                                          y: f.maxY + ch * 0.2 - height,
                                          width: cw * 0.76, height: height)),
-                             with: .color(litColour(kind, season: season, by: 0.17).opacity(0.85)))
+                             with: .color(litColour(kind, season: season, by: 0.17, registry: registry).opacity(0.85)))
             }
         }
 
@@ -125,28 +125,30 @@ enum SettlementStone {
     /// The raw tones of each rock, before the season touches them. Kept as
     /// components so a lit face can actually be computed rather than faked with
     /// an opacity — a `Color` will not hand its channels back.
-    static func stoneTone(_ kind: RockKind, season: Season) -> (r: Double, g: Double, b: Double) {
-        var (r, g, b): (Double, Double, Double)
-        switch kind {
-        case .granite:   (r, g, b) = (0.31, 0.31, 0.34)
-        case .limestone: (r, g, b) = (0.42, 0.41, 0.37)
-        case .ironSeam:  (r, g, b) = (0.30, 0.27, 0.26)
-        case .clayBank:  (r, g, b) = (0.40, 0.30, 0.23)
-        }
+    static func stoneTone(_ kind: RockKind, season: Season,
+                          registry: GameDataRegistry) -> (r: Double, g: Double, b: Double) {
+        // `RockKind` already states snake_case raw values (`ironSeam =
+        // "iron_seam"`), so the bank is keyed on exactly what the enum says and
+        // no name-mangling stands between the two.
+        var (r, g, b) = registry.scenery(kind.rawValue).colour(in: season)
+        // Winter cools and lightens every rock the same way, so this stays a
+        // rule rather than four copies of one in the data.
         if season == .winter {
             r = r * 0.7 + 0.16; g = g * 0.7 + 0.17; b = b * 0.7 + 0.21
         }
         return (r, g, b)
     }
 
-    static func stoneColour(_ kind: RockKind, season: Season) -> Color {
-        let t = stoneTone(kind, season: season)
+    static func stoneColour(_ kind: RockKind, season: Season,
+                            registry: GameDataRegistry) -> Color {
+        let t = stoneTone(kind, season: season, registry: registry)
         return Color(red: t.r, green: t.g, blue: t.b)
     }
 
     /// The same rock with the light on it.
-    static func litColour(_ kind: RockKind, season: Season, by amount: Double) -> Color {
-        let t = stoneTone(kind, season: season)
+    static func litColour(_ kind: RockKind, season: Season, by amount: Double,
+                          registry: GameDataRegistry) -> Color {
+        let t = stoneTone(kind, season: season, registry: registry)
         return Color(red: min(1, t.r + amount),
                      green: min(1, t.g + amount),
                      blue: min(1, t.b + amount))

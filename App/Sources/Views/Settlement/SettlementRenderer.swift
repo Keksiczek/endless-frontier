@@ -157,11 +157,14 @@ enum SettlementRenderer {
         // rock, the wood and everything standing on it belongs in front.
         SettlementLandforms.draw(&context, rect: rect, map: map, season: season,
                                  zoom: zoom, showLabels: showLabels)
-        SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
-        SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time, sun: sun)
+        SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
+                             registry: registry)
+        SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time,
+                             sun: sun, registry: registry)
         // The fields, over the ground and under everything standing on it —
         // a plot is worked earth, so a figure reaping it stands in front.
-        SettlementCrops.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
+        SettlementCrops.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
+                             registry: registry)
         // What has been cut and not yet carried in.
         SettlementPiles.draw(&context, rect: rect, map: map, zoom: zoom)
         // And whoever has come in over the edge to trade or to talk.
@@ -447,11 +450,14 @@ enum SettlementRenderer {
         // rock, the wood and everything standing on it belongs in front.
         SettlementLandforms.draw(&context, rect: rect, map: map, season: season,
                                  zoom: zoom, showLabels: showLabels)
-        SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
-        SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time, sun: sun)
+        SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
+                             registry: registry)
+        SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time,
+                             sun: sun, registry: registry)
         // The fields, over the ground and under everything standing on it —
         // a plot is worked earth, so a figure reaping it stands in front.
-        SettlementCrops.draw(&context, rect: rect, map: map, season: season, zoom: zoom)
+        SettlementCrops.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
+                             registry: registry)
         // What has been cut and not yet carried in.
         SettlementPiles.draw(&context, rect: rect, map: map, zoom: zoom)
         // And whoever has come in over the edge to trade or to talk.

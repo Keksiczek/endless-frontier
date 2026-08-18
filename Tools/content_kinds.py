@@ -189,6 +189,23 @@ not an emotion.""",
         "wants": "the hunt (stalking, closing, the kill, the carcass carried home), "
                  "and the trades that currently all look like the same arm going up and down",
     },
+    "scenery": {
+        "file": "scenery.json",
+        "brief": """The colour of one thing standing on the ground — a crop, a tree, a
+rock, a landform. `red`/`green`/`blue` are 0…1 and *dark*: this is a
+night-leaning line-art world and almost nothing goes above 0.55.
+
+`autumn_red`/`autumn_green`/`autumn_blue` are optional and mean "this turns".
+Broadleaves state them, conifers and rocks do not — that difference is the whole
+reason an autumn wood reads as an autumn wood, because the broadleaves turn
+*around* the evergreens instead of the canopy changing all at once.
+
+**The id must match a raw value of `CropSpecies`, `TreeSpecies`, `RockKind` or
+`LandformKind`.** A new entry under a name none of those enums answers to is a
+colour nothing will ever ask for. Adding a genuinely new species needs the Swift
+enum and a drawing routine first.""",
+        "wants": "nothing, until a new species exists in the Swift — this bank describes what is there",
+    },
     "ground": {
         "file": "ground.json",
         "brief": """What one kind of ground looks like. `red`/`green`/`blue` are the raw

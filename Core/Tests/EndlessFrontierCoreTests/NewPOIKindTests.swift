@@ -410,3 +410,42 @@ struct GroundBankTests {
         }
     }
 }
+
+@Suite("Scenery bank")
+struct SceneryBankTests {
+
+    /// The bank is keyed on raw values, and the four enums it serves do not
+    /// agree about spelling: `RockKind` states `ironSeam = "iron_seam"` while
+    /// `LandformKind.ruinField` states nothing and so answers `"ruinField"`.
+    /// Guessing which is which put one entry in the file under a name nothing
+    /// would ever ask for — an entry that loads and can never be reached, the
+    /// oldest bug here. This asks the enums instead.
+    @Test("Every crop, tree, rock and landform has an entry under its own name")
+    func everythingOnTheGroundIsDescribed() throws {
+        let registry = try GameDataRegistry.bundled()
+        for id in CropSpecies.allCases.map(\.rawValue)
+            + TreeSpecies.allCases.map(\.rawValue)
+            + RockKind.allCases.map(\.rawValue)
+            + LandformKind.allCases.map(\.rawValue) {
+            #expect(registry.scenery[id] != nil,
+                    "\(id) has no entry, so it draws in the fallback green")
+        }
+    }
+
+    /// Broadleaves turn and evergreens do not — half of what makes an autumn
+    /// wood read as one, and a rule that lives entirely in the data now.
+    @Test("The broadleaves turn in autumn and the conifers do not")
+    func autumnSeparatesTheWood() throws {
+        let registry = try GameDataRegistry.bundled()
+        for id in ["oak", "birch", "beech", "poplar", "willow"] {
+            let tree = registry.scenery(id)
+            #expect(tree.colour(in: .autumn) != tree.colour(in: .summer),
+                    "\(id) is a broadleaf and should turn")
+        }
+        for id in ["pine", "spruce", "juniper"] {
+            let tree = registry.scenery(id)
+            #expect(tree.colour(in: .autumn) == tree.colour(in: .summer),
+                    "\(id) is an evergreen and should keep its colour")
+        }
+    }
+}

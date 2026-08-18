@@ -18,18 +18,19 @@ enum SettlementCrops {
 
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap,
-        season: Season, zoom: CGFloat
+        season: Season, zoom: CGFloat, registry: GameDataRegistry
     ) {
         guard map.usesEntityFields else { return }
         for crop in map.crops where map.isExplored(crop.position) {
-            plot(&context, crop, rect: rect, season: season, zoom: zoom)
+            plot(&context, crop, rect: rect, season: season, zoom: zoom,
+                 registry: registry)
         }
     }
 
     /// One plot: tilled earth, then whatever is standing on it.
     private static func plot(
         _ context: inout GraphicsContext, _ crop: Crop, rect: CGRect,
-        season: Season, zoom: CGFloat
+        season: Season, zoom: CGFloat, registry: GameDataRegistry
     ) {
         // The plot's own ground, mapped the same way any other point is. Its
         // size comes off the `Crop` rather than being invented here: the plot
@@ -69,7 +70,7 @@ enum SettlementCrops {
         // reads as ready to cut from across the valley — which is the one thing
         // a player wants to know at a glance.
         let ripeness = min(1, crop.growth)
-        let colour = shoot.blended(to: ripe(crop.species), by: ripeness)
+        let colour = shoot(registry).blended(to: ripe(crop.species, registry), by: ripeness)
         // Reaping eats the standing crop from one end, so a plot somebody is
         // halfway through looks halfway through.
         let standing = 1 - min(1, crop.reaped)
@@ -138,15 +139,17 @@ enum SettlementCrops {
     }
 
     /// New growth: every crop starts the same shade of green.
-    private static let shoot = RGB(r: 0.42, g: 0.58, b: 0.30)
+    private static func shoot(_ registry: GameDataRegistry) -> RGB {
+        let d = registry.scenery("shoot")
+        return RGB(r: d.red, g: d.green, b: d.blue)
+    }
 
     /// …and turns its own colour, so a field ready to cut reads as ready to cut
-    /// from across the valley.
-    private static func ripe(_ species: CropSpecies) -> RGB {
-        switch species {
-        case .grain: return RGB(r: 0.82, g: 0.70, b: 0.34)
-        case .roots: return RGB(r: 0.56, g: 0.60, b: 0.30)
-        case .greens: return RGB(r: 0.46, g: 0.66, b: 0.36)
-        }
+    /// from across the valley. Out of `scenery.json` now, with the other things
+    /// that stand on the ground.
+    private static func ripe(_ species: CropSpecies,
+                             _ registry: GameDataRegistry) -> RGB {
+        let d = registry.scenery(species.rawValue)
+        return RGB(r: d.red, g: d.green, b: d.blue)
     }
 }

@@ -38,6 +38,9 @@ public struct GameDataRegistry: Sendable {
     /// What each kind of ground looks like. Presentation reads this; the
     /// simulation decides *where* the covers lie and never what colour.
     public let ground: [String: GroundDefinition]
+    /// The colour of everything standing on the ground — crops, trees, rock,
+    /// landforms. Presentation only, like the two banks beside it.
+    public let scenery: [String: SceneryDefinition]
     public let config: WorldConfig
     public let mapGen: MapGenConfig
 
@@ -95,6 +98,7 @@ public struct GameDataRegistry: Sendable {
         meals: [MealDefinition] = [],
         motions: [MotionDefinition] = [],
         ground: [GroundDefinition] = [],
+        scenery: [SceneryDefinition] = [],
         config: WorldConfig = .default,
         mapGen: MapGenConfig = .default
     ) {
@@ -105,6 +109,7 @@ public struct GameDataRegistry: Sendable {
         self.meals = mealTable
         self.motions = Dictionary(uniqueKeysWithValues: motions.map { ($0.id, $0) })
         self.ground = Dictionary(uniqueKeysWithValues: ground.map { ($0.id, $0) })
+        self.scenery = Dictionary(uniqueKeysWithValues: scenery.map { ($0.id, $0) })
         self.cookableMeals = cookable
         self.foodstuffs = Set(cookable.flatMap(\.ingredients.keys))
         self.dearestMealWork = cookable.map(\.work).max() ?? 1
@@ -140,6 +145,11 @@ public struct GameDataRegistry: Sendable {
     /// not a hole.
     public func ground(_ id: String) -> GroundDefinition {
         ground[id] ?? .plain
+    }
+
+    /// Never nil: an unlisted thing is drawn a plain green rather than not at all.
+    public func scenery(_ id: String) -> SceneryDefinition {
+        scenery[id] ?? .plain
     }
 
     /// The clip that best fits what somebody is doing and what they do for a
@@ -238,6 +248,7 @@ public struct GameDataRegistry: Sendable {
         let meals = try optional([MealDefinition].self, "meals", else: [])
         let motions = try optional([MotionDefinition].self, "motions", else: [])
         let ground = try optional([GroundDefinition].self, "ground", else: [])
+        let scenery = try optional([SceneryDefinition].self, "scenery", else: [])
         return GameDataRegistry(
             buildings: try load([BuildingDefinition].self, "buildings"),
             techs: try load([TechDefinition].self, "techs"),
@@ -253,6 +264,7 @@ public struct GameDataRegistry: Sendable {
             meals: meals,
             motions: motions,
             ground: ground,
+            scenery: scenery,
             config: try load(WorldConfig.self, "world-config"),
             mapGen: mapGen
         )

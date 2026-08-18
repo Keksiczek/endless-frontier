@@ -1,0 +1,311 @@
+[
+  {
+    "id": "shoot",
+    "name": {
+      "en": "New growth",
+      "cs": "Vzcházející osivo"
+    },
+    "red": 0.42,
+    "green": 0.58,
+    "blue": 0.3,
+    "description": {
+      "en": "Every crop starts the same shade of green — a sown field looks like a sown field whatever is in it.",
+      "cs": "Každá plodina začíná stejnou zelení — oseté pole vypadá jako oseté pole, ať je v něm cokoliv."
+    }
+  },
+  {
+    "id": "grain",
+    "name": {
+      "en": "Grain",
+      "cs": "Obilí"
+    },
+    "red": 0.82,
+    "green": 0.7,
+    "blue": 0.34,
+    "description": {
+      "en": "Ripe to the colour of straw, so a field ready to cut reads as ready to cut from across the valley.",
+      "cs": "Uzrálé do barvy slámy — pole na posečení je vidět přes celé údolí."
+    }
+  },
+  {
+    "id": "roots",
+    "name": {
+      "en": "Roots",
+      "cs": "Okopaniny"
+    },
+    "red": 0.56,
+    "green": 0.6,
+    "blue": 0.3,
+    "description": {
+      "en": "Dull green tops over what matters, which is under the ground.",
+      "cs": "Matně zelená nať nad tím, na čem záleží — a to je pod zemí."
+    }
+  },
+  {
+    "id": "greens",
+    "name": {
+      "en": "Greens",
+      "cs": "Zelenina"
+    },
+    "red": 0.46,
+    "green": 0.66,
+    "blue": 0.36,
+    "description": {
+      "en": "Leaf all the way, and cut before it ever turns.",
+      "cs": "Samý list, a seče se dřív, než stihne zežloutnout."
+    }
+  },
+  {
+    "id": "spruce",
+    "name": {
+      "en": "Spruce",
+      "cs": "Smrk"
+    },
+    "red": 0.16,
+    "green": 0.3,
+    "blue": 0.22,
+    "description": {
+      "en": "Keeps its colour through the autumn, which is half of what makes an autumn wood read as one.",
+      "cs": "Drží barvu i na podzim — a to je půlka toho, proč podzimní les vypadá jako podzimní les."
+    }
+  },
+  {
+    "id": "pine",
+    "name": {
+      "en": "Pine",
+      "cs": "Borovice"
+    },
+    "red": 0.19,
+    "green": 0.34,
+    "blue": 0.24,
+    "description": {
+      "en": "Evergreen, and a shade warmer than the spruce beside it.",
+      "cs": "Stálezelená, o odstín teplejší než smrk vedle ní."
+    }
+  },
+  {
+    "id": "juniper",
+    "name": {
+      "en": "Juniper",
+      "cs": "Jalovec"
+    },
+    "red": 0.24,
+    "green": 0.33,
+    "blue": 0.27,
+    "description": {
+      "en": "Grey-green scrub that holds on where nothing taller will.",
+      "cs": "Šedozelený porost, co se udrží tam, kde nic vyššího nevydrží."
+    }
+  },
+  {
+    "id": "birch",
+    "name": {
+      "en": "Birch",
+      "cs": "Bříza"
+    },
+    "red": 0.34,
+    "green": 0.48,
+    "blue": 0.26,
+    "autumn_red": 0.52,
+    "autumn_green": 0.34,
+    "autumn_blue": 0.16,
+    "description": {
+      "en": "Pale and light-leaved, and the first to turn.",
+      "cs": "Světlá a lehká v listu, a přebarvuje se první."
+    }
+  },
+  {
+    "id": "poplar",
+    "name": {
+      "en": "Poplar",
+      "cs": "Topol"
+    },
+    "red": 0.38,
+    "green": 0.5,
+    "blue": 0.28,
+    "autumn_red": 0.52,
+    "autumn_green": 0.34,
+    "autumn_blue": 0.16,
+    "description": {
+      "en": "Tall and restless — the tree you notice because it never quite stops moving.",
+      "cs": "Vysoký a neklidný — strom, kterého si všimneš, protože se nikdy úplně nezastaví."
+    }
+  },
+  {
+    "id": "willow",
+    "name": {
+      "en": "Willow",
+      "cs": "Vrba"
+    },
+    "red": 0.42,
+    "green": 0.52,
+    "blue": 0.3,
+    "autumn_red": 0.52,
+    "autumn_green": 0.34,
+    "autumn_blue": 0.16,
+    "description": {
+      "en": "Wherever the water is, and the lightest green in the wood.",
+      "cs": "Tam, kde je voda — a nejsvětlejší zeleň v celém lese."
+    }
+  },
+  {
+    "id": "beech",
+    "name": {
+      "en": "Beech",
+      "cs": "Buk"
+    },
+    "red": 0.3,
+    "green": 0.44,
+    "blue": 0.22,
+    "autumn_red": 0.52,
+    "autumn_green": 0.34,
+    "autumn_blue": 0.16,
+    "description": {
+      "en": "Deep shade under it, and nothing much growing there.",
+      "cs": "Hluboký stín pod ním a skoro nic, co by tam rostlo."
+    }
+  },
+  {
+    "id": "oak",
+    "name": {
+      "en": "Oak",
+      "cs": "Dub"
+    },
+    "red": 0.25,
+    "green": 0.42,
+    "blue": 0.24,
+    "autumn_red": 0.52,
+    "autumn_green": 0.34,
+    "autumn_blue": 0.16,
+    "description": {
+      "en": "The darkest green in the wood, and the last to let go of it.",
+      "cs": "Nejtmavší zeleň v lese a pouští ji ze všech nejpozději."
+    }
+  },
+  {
+    "id": "granite",
+    "name": {
+      "en": "Granite",
+      "cs": "Žula"
+    },
+    "red": 0.31,
+    "green": 0.31,
+    "blue": 0.34,
+    "description": {
+      "en": "Cold grey with a blue in it — the bone of an old country.",
+      "cs": "Studená šeď s modrým nádechem — kost staré země."
+    }
+  },
+  {
+    "id": "limestone",
+    "name": {
+      "en": "Limestone",
+      "cs": "Vápenec"
+    },
+    "red": 0.42,
+    "green": 0.41,
+    "blue": 0.37,
+    "description": {
+      "en": "Pale and warm, and it takes the light better than anything else on the map.",
+      "cs": "Světlý a teplý, a bere světlo líp než cokoliv jiného na mapě."
+    }
+  },
+  {
+    "id": "iron_seam",
+    "name": {
+      "en": "Iron seam",
+      "cs": "Železná žíla"
+    },
+    "red": 0.3,
+    "green": 0.27,
+    "blue": 0.26,
+    "description": {
+      "en": "Dark and rust-tinged, and worth digging into.",
+      "cs": "Tmavá s rezavým nádechem — a stojí za to se do ní zakousnout."
+    }
+  },
+  {
+    "id": "clay_bank",
+    "name": {
+      "en": "Clay bank",
+      "cs": "Jílový břeh"
+    },
+    "red": 0.4,
+    "green": 0.3,
+    "blue": 0.23,
+    "description": {
+      "en": "Red earth cut open, usually where water has been at it.",
+      "cs": "Rozříznutá červená zem, obvykle tam, kde se do ní opřela voda."
+    }
+  },
+  {
+    "id": "ravine",
+    "name": {
+      "en": "Ravine",
+      "cs": "Rokle"
+    },
+    "red": 0.13,
+    "green": 0.12,
+    "blue": 0.14,
+    "description": {
+      "en": "A cut too deep to see the bottom of, and a long way round.",
+      "cs": "Zářez, do jehož dna není vidět — a obcházka je dlouhá."
+    }
+  },
+  {
+    "id": "mesa",
+    "name": {
+      "en": "Mesa",
+      "cs": "Stolová hora"
+    },
+    "red": 0.34,
+    "green": 0.31,
+    "blue": 0.3,
+    "description": {
+      "en": "Flat on top and sheer on every side, standing over the country it used to be part of.",
+      "cs": "Nahoře placatá, ze všech stran sráz — stojí nad krajinou, jejíž kus kdysi byla."
+    }
+  },
+  {
+    "id": "oasis",
+    "name": {
+      "en": "Oasis",
+      "cs": "Oáza"
+    },
+    "red": 0.16,
+    "green": 0.34,
+    "blue": 0.3,
+    "description": {
+      "en": "Water where there should be none, and everything alive for a mile is at it.",
+      "cs": "Voda tam, kde být nemá — a všechno živé na míli daleko je u ní."
+    }
+  },
+  {
+    "id": "hollow",
+    "name": {
+      "en": "Hollow",
+      "cs": "Prohlubeň"
+    },
+    "red": 0.15,
+    "green": 0.16,
+    "blue": 0.17,
+    "description": {
+      "en": "A dip that holds the cold and the mist after the rest of the valley has let them go.",
+      "cs": "Prohlubeň, co drží chlad a mlhu i potom, co je zbytek údolí pustil."
+    }
+  },
+  {
+    "id": "ruinField",
+    "name": {
+      "en": "Ruin field",
+      "cs": "Pole ruin"
+    },
+    "red": 0.26,
+    "green": 0.25,
+    "blue": 0.24,
+    "description": {
+      "en": "Somebody built here, and the ground still has the shape of it.",
+      "cs": "Někdo tu stavěl a zem si ten tvar pořád drží."
+    }
+  }
+]
