@@ -734,8 +734,558 @@ struct ConveyanceBankTests {
                 "a colony with nothing standing can still lash two poles together")
         #expect(!bare.contains { $0.id == "hand_cart" },
                 "a cart with no lumberyard")
-        let later = registry.availableConveyances(
+        // A shop is not enough: a cart waits on the wheel, which is what makes
+        // it something research *gives* you rather than something the calendar
+        // hands over.
+        let shopButIgnorant = registry.availableConveyances(
             era: .ancient, standing: ["lumberyard"], researched: [])
+        #expect(!shopButIgnorant.contains { $0.id == "hand_cart" },
+                "a cart built by a colony that has not invented the wheel")
+        let later = registry.availableConveyances(
+            era: .ancient, standing: ["lumberyard"], researched: ["the_wheel"])
         #expect(later.contains { $0.id == "hand_cart" })
+    }
+}
+
+/// **Step two of `docs/MOUNTS_AND_VEHICLES.md`** — the yard: one can be made,
+/// kept and lost. Nothing moves any faster yet; that is step three, and these
+/// exist so that step has ground to stand on.
+@Suite("The yard")
+struct StableEngineTests {
+
+    private func registry() throws -> GameDataRegistry { try .bundled() }
+
+    private func colony(_ reg: GameDataRegistry, materials: [String: Int] = [:],
+                        buildings: [String] = []) -> Settlement {
+        var s = Settlement(
+            id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-000000000001")!,
+            name: "Yardville", regionID: UUID())
+        s.stockpile = materials
+        for (i, id) in buildings.enumerated() {
+            s.buildings.append(BuildingInstance(
+                id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-00000000000\(i + 2)")!,
+                definitionID: id))
+        }
+        return s
+    }
+
+    /// The conveyances are tech-gated now — a cart waits on the wheel and a
+    /// pack animal on husbandry — so a fixture that wants to build one has to
+    /// know them. That gate is the point of the change; the tests follow it
+    /// rather than working round it.
+    private func world(_ s: Settlement, era: Era = .ancient,
+                       knowing techs: Set<String> = ["husbandry", "the_wheel"]) -> WorldState {
+        var w = WorldState(tick: 100, settlements: [s])
+        w.era = era
+        w.researchedTechs = techs
+        return w
+    }
+
+    // MARK: - Making one
+
+    @Test("A colony with the materials can lash a travois together")
+    func theSimplestThingIsBuildable() throws {
+        let reg = try registry()
+        let s = colony(reg, materials: ["wood": 5, "hide": 2])
+        let w = world(s, era: .earlySettlement)
+        #expect(StableEngine.canBuild("travois", in: w, settlement: s, registry: reg))
+        let after = StableEngine.build(s, definitionID: "travois", in: w, registry: reg)
+        #expect(after.conveyances.count == 1)
+        #expect(after.conveyances[0].definitionID == "travois")
+        #expect(!after.conveyances[0].isMount, "a travois is not a beast")
+        // …and it cost what it said it cost.
+        #expect(after.stockpile["wood"] == 2)
+        #expect(after.stockpile["hide"] == 1)
+    }
+
+    @Test("Without the materials, nothing is built")
+    func poverty() throws {
+        let reg = try registry()
+        let s = colony(reg, materials: ["wood": 1])
+        let w = world(s, era: .earlySettlement)
+        #expect(!StableEngine.canBuild("travois", in: w, settlement: s, registry: reg))
+        #expect(StableEngine.build(s, definitionID: "travois", in: w, registry: reg)
+            .conveyances.isEmpty)
+    }
+
+    @Test("A cart wants its shop, and an age that has reached it")
+    func gatesHold() throws {
+        let reg = try registry()
+        let rich = ["wood": 20, "iron_ingot": 4]
+        let noShop = colony(reg, materials: rich)
+        #expect(!StableEngine.canBuild("hand_cart", in: world(noShop),
+                                       settlement: noShop, registry: reg),
+                "a cart with no lumberyard")
+        let shop = colony(reg, materials: rich, buildings: ["lumberyard"])
+        #expect(StableEngine.canBuild("hand_cart", in: world(shop),
+                                      settlement: shop, registry: reg))
+        #expect(!StableEngine.canBuild("hand_cart", in: world(shop, era: .earlySettlement),
+                                       settlement: shop, registry: reg),
+                "an ancient cart in the first age")
+        // …and the tech gate, which is what makes a conveyance a *reward* for
+        // research rather than a thing that appears when the calendar turns.
+        #expect(!StableEngine.canBuild("hand_cart", in: world(shop, knowing: []),
+                                       settlement: shop, registry: reg),
+                "a cart built by a colony that has not invented the wheel")
+    }
+
+    /// **You do not build a horse.** A mount needs a beast already gentled, and
+    /// the same beast cannot be two mounts.
+    @Test("A mount needs a free tamed beast of the right species")
+    func mountsNeedABeast() throws {
+        let reg = try registry()
+        var s = colony(reg, materials: ["leather": 4, "wood": 4],
+                       buildings: ["hunters_lodge"])
+        let w = world(s)
+        #expect(!StableEngine.canBuild("pack_elk", in: w, settlement: s, registry: reg),
+                "an elk-less colony saddled an elk")
+
+        let elk = Animal(id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-0000000000E1")!,
+                         species: .elk, sex: .male, age: 4 * 60,
+                         position: LocalPoint(x: 0.5, y: 0.5))
+        s.tamed = [TamedAnimal(animal: elk, role: .beastOfBurden, tamedTick: 1)]
+        #expect(StableEngine.canBuild("pack_elk", in: w, settlement: s, registry: reg))
+
+        let after = StableEngine.build(s, definitionID: "pack_elk", in: w, registry: reg)
+        #expect(after.conveyances.count == 1)
+        #expect(after.conveyances[0].animalID == elk.id, "the saddle is on no particular elk")
+        #expect(after.tamed[0].role == .mount, "the beast is still down as a pack animal")
+        // The one elk is spoken for.
+        #expect(!StableEngine.canBuild("pack_elk", in: w, settlement: after, registry: reg),
+                "the same elk was saddled twice")
+    }
+
+    /// Rule 3: the same colony building the same thing on the same tick must
+    /// get the same id in every run, or the world drifts between launches.
+    @Test("Ids are derived, not drawn")
+    func idsAreStable() throws {
+        let reg = try registry()
+        let s = colony(reg, materials: ["wood": 9, "hide": 3])
+        let w = world(s, era: .earlySettlement)
+        let a = StableEngine.build(s, definitionID: "travois", in: w, registry: reg)
+        let b = StableEngine.build(s, definitionID: "travois", in: w, registry: reg)
+        #expect(a.conveyances[0].id == b.conveyances[0].id)
+        // …and two built together are still two.
+        let two = StableEngine.build(a, definitionID: "travois", in: w, registry: reg)
+        #expect(two.conveyances.count == 2)
+        #expect(two.conveyances[0].id != two.conveyances[1].id)
+    }
+
+    // MARK: - Keeping them
+
+    @Test("A cart wears out and is eventually broken up")
+    func cartsWearOut() throws {
+        let reg = try registry()
+        var s = StableEngine.build(colony(reg, materials: ["wood": 5, "hide": 2]),
+                                   definitionID: "travois",
+                                   in: world(colony(reg), era: .earlySettlement),
+                                   registry: reg)
+        let w = world(s, era: .earlySettlement)
+        let before = s.conveyances[0].condition
+        s = StableEngine.advanceOneTick(s, in: w, registry: reg)
+        #expect(s.conveyances[0].condition < before, "a cart in use does not stay new")
+
+        // Run it into the ground.
+        for _ in 0..<(60 * 60) {
+            s = StableEngine.advanceOneTick(s, in: w, registry: reg)
+            if s.conveyances.isEmpty { break }
+        }
+        #expect(s.conveyances.isEmpty, "a travois lasted for ever")
+    }
+
+    /// A mount is its beast. When the beast is gone, so is the mount — and the
+    /// saddle does not quietly go on carrying people.
+    @Test("A mount whose beast has died is not a mount")
+    func aMountIsItsBeast() throws {
+        let reg = try registry()
+        var s = colony(reg, materials: ["leather": 4, "wood": 4],
+                       buildings: ["hunters_lodge"])
+        let elk = Animal(id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-0000000000E2")!,
+                         species: .elk, sex: .male, age: 4 * 60,
+                         position: LocalPoint(x: 0.5, y: 0.5))
+        s.tamed = [TamedAnimal(animal: elk, role: .beastOfBurden, tamedTick: 1)]
+        s = StableEngine.build(s, definitionID: "pack_elk", in: world(s), registry: reg)
+        #expect(s.conveyances.count == 1)
+
+        s.tamed[0].animal.health = 0
+        s = StableEngine.advanceOneTick(s, in: world(s), registry: reg)
+        #expect(s.conveyances.isEmpty, "the colony is still riding a dead elk")
+    }
+
+    /// A beast does not wear like an axle — its body already does that, and
+    /// charging it twice would be paying for the same animal twice.
+    @Test("A mount does not wear out")
+    func mountsDoNotWear() throws {
+        let reg = try registry()
+        var s = colony(reg, materials: ["leather": 4, "wood": 4],
+                       buildings: ["hunters_lodge"])
+        let elk = Animal(id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-0000000000E3")!,
+                         species: .elk, sex: .male, age: 4 * 60,
+                         position: LocalPoint(x: 0.5, y: 0.5))
+        s.tamed = [TamedAnimal(animal: elk, role: .beastOfBurden, tamedTick: 1)]
+        s = StableEngine.build(s, definitionID: "pack_elk", in: world(s), registry: reg)
+        for _ in 0..<500 { s = StableEngine.advanceOneTick(s, in: world(s), registry: reg) }
+        #expect(s.conveyances.count == 1)
+        #expect(s.conveyances[0].condition == 1)
+    }
+
+    // MARK: - Reading the yard
+
+    /// The numbers the four seams will multiply by. Written and tested before
+    /// anything reads them, which is the whole ordering this document argues
+    /// for.
+    @Test("An empty yard is walking pace and no cargo")
+    func anEmptyYardIsWalking() throws {
+        let reg = try registry()
+        let s = colony(reg)
+        #expect(StableEngine.bestPace(s, registry: reg) == 1)
+        #expect(StableEngine.bestRegionPace(s, registry: reg) == 1)
+        #expect(StableEngine.cargoCapacity(s, registry: reg) == 0)
+    }
+
+    @Test("The yard's pace is its best, and its cargo is all of it")
+    func theYardAddsUp() throws {
+        let reg = try registry()
+        var s = colony(reg, materials: ["wood": 30, "hide": 6, "iron_ingot": 4],
+                       buildings: ["lumberyard"])
+        let w = world(s)
+        s = StableEngine.build(s, definitionID: "travois", in: w, registry: reg)
+        s = StableEngine.build(s, definitionID: "hand_cart", in: w, registry: reg)
+        #expect(s.conveyances.count == 2)
+        let travois = try #require(reg.conveyance("travois"))
+        let cart = try #require(reg.conveyance("hand_cart"))
+        #expect(StableEngine.bestPace(s, registry: reg) == max(travois.pace, cart.pace))
+        #expect(StableEngine.cargoCapacity(s, registry: reg) == travois.cargo + cart.cargo)
+    }
+
+    /// The ground has a say, which is the field that stops this being a ladder.
+    @Test("A yard of carts cannot cross a bog")
+    func theGroundHasASay() throws {
+        let reg = try registry()
+        var s = colony(reg, materials: ["wood": 10, "iron_ingot": 2],
+                       buildings: ["lumberyard"])
+        s = StableEngine.build(s, definitionID: "hand_cart", in: world(s), registry: reg)
+        #expect(StableEngine.canCross(.dirt, s, registry: reg))
+        #expect(!StableEngine.canCross(.marsh, s, registry: reg))
+    }
+
+    /// Rule 15: a steward left alone will buy for ever unless something says
+    /// when to stop.
+    @Test("The yard has a ceiling")
+    func theYardIsNotInfinite() throws {
+        let reg = try registry()
+        var s = colony(reg, materials: ["wood": 1000, "hide": 400])
+        let w = world(s, era: .earlySettlement)
+        for _ in 0..<(StableEngine.yardLimit + 6) {
+            s = StableEngine.build(s, definitionID: "travois", in: w, registry: reg)
+        }
+        #expect(s.conveyances.count == StableEngine.yardLimit)
+    }
+}
+
+/// **Research that changes the valley rather than a menu.**
+///
+/// Counted before this existed: of fifty-four tech effects, thirty-nine
+/// unlocked a building, five opened an event category, and all ten `modifier`
+/// effects moved one of exactly two numbers — `knowledgeOutput` and
+/// `influenceOutput`. So finishing a study gave you a new row in the build
+/// menu, or research that produces more research. Keks: *"ať to není jen text,
+/// ale ať to něco dělá."*
+///
+/// These are the tests that stop the new stats going the way of `texture` in
+/// `ground.json` — validated, generated, and read by nothing (rule 52). Each
+/// one runs the seam and checks the world moved.
+@Suite("Research does something")
+struct ResearchStatTests {
+
+    private func world(_ modifiers: [ResearchStat: Double]) -> WorldState {
+        var w = WorldState(tick: 0, settlements: [])
+        for (stat, delta) in modifiers { w.statModifiers[stat.rawValue] = delta }
+        return w
+    }
+
+    @Test("An unstudied colony is multiplied by one, everywhere")
+    func nothingStudiedChangesNothing() {
+        let bare = WorldState(tick: 0, settlements: [])
+        for stat in ResearchStat.allCases where stat.kind == .factor {
+            #expect(bare.researchFactor(stat) == 1,
+                    "\(stat.rawValue) is not neutral before anything is studied")
+        }
+        for stat in ResearchStat.allCases where stat.kind == .addedToOutput {
+            #expect(bare.researchBonus(stat) == 0)
+        }
+    }
+
+    /// No stack of studies may drive a rate negative — "slower" and
+    /// "backwards" are different words.
+    @Test("A factor is floored, however much is stacked against it")
+    func factorsAreFloored() {
+        let w = world([.buildingWear: -50])
+        #expect(w.researchFactor(.buildingWear) == ResearchStat.minimumFactor)
+    }
+
+    /// The two that always worked keep working, through the new vocabulary.
+    @Test("Output bonuses are added, not multiplied")
+    func outputsAreAdditive() {
+        let w = world([.knowledgeOutput: 4])
+        #expect(w.researchBonus(.knowledgeOutput) == 4)
+        #expect(w.researchFactor(.knowledgeOutput) == 1, "an output is not a factor")
+    }
+
+    // MARK: - Each seam, run
+
+    /// The seam the player would notice first: the same field, the same
+    /// season, more on the ground.
+    ///
+    /// Run through a real founding colony rather than a hand-built plot,
+    /// because `FarmEngine` only reaps ground a farm owns and a farmer has
+    /// walked to — a fixture that skips either of those measures nothing and
+    /// passes for the wrong reason.
+    @Test("A studied colony gets more off the same fields")
+    func cropYieldReachesTheGround() throws {
+        let reg = try GameDataRegistry.bundled()
+        let kinds = CookingEngine.foodstuffs(reg)
+
+        func reaped(_ factor: Double) -> Int {
+            var world = GameWorldFactory.newGame(registry: reg, seed: 4242)
+            for tick in 1...900 {
+                world.tick = tick
+                world.settlements[0] = FarmEngine.advanceOneTick(
+                    world.settlements[0], registry: reg, tick: tick, yieldFactor: factor)
+                world.settlements[0] = HaulEngine.advanceStep(
+                    world.settlements[0], registry: reg,
+                    clock: WorldClock(tick: tick, step: 0))
+            }
+            let s = world.settlements[0]
+            let onTheGround = s.localMap?.piles.reduce(0) { $0 + $1.amount } ?? 0
+            return onTheGround + kinds.reduce(0) { $0 + s.stockpile[$1, default: 0] }
+        }
+        let plain = reaped(1)
+        let studied = reaped(2.5)
+        #expect(plain > 0, "this fixture reaped nothing at all — it measures nothing")
+        #expect(studied > plain,
+                "a richer yield put no more on the ground: \(studied) against \(plain)")
+    }
+
+    @Test("A studied colony raises a roof sooner")
+    func buildSpeedReachesTheScaffold() throws {
+        let reg = try GameDataRegistry.bundled()
+        var s = Fixtures.world(population: 6).settlements[0]
+        s.pawns = Fixtures.pawns(6, work: .building)
+        s.constructions = [ConstructionProject(
+            id: 1, definitionID: "hut", startedTick: 0, progress: 0, required: 500)]
+        let plain = ConstructionEngine.advanceOneTick(s, registry: reg, tick: 1)
+        let studied = ConstructionEngine.advanceOneTick(s, registry: reg, tick: 1,
+                                                        speedFactor: 2)
+        let a = plain.constructions.first?.progress ?? 0
+        let b = studied.constructions.first?.progress ?? 0
+        #expect(b > a, "twice the build speed did not raise the frame any faster")
+    }
+
+    @Test("A studied colony mends faster")
+    func recoveryReachesTheBody() throws {
+        let reg = try GameDataRegistry.bundled()
+        var hurt = Fixtures.world(population: 4).settlements[0]
+        for i in hurt.pawns.indices { hurt.pawns[i].health = 50 }
+        let plain = PawnEngine.advanceOneTick(hurt, registry: reg, tick: 1)
+        let studied = PawnEngine.advanceOneTick(hurt, registry: reg, tick: 1,
+                                                recoveryFactor: 3)
+        let a = plain.pawns.first?.health ?? 0
+        let b = studied.pawns.first?.health ?? 0
+        #expect(b > a, "three times the recovery healed nobody any faster")
+    }
+
+    // MARK: - The content actually uses it
+
+    /// A stat nothing in `techs.json` ever grants is a stat the player can
+    /// never have — the same fault from the content side.
+    @Test("Every research stat is granted by some tech")
+    func everyStatIsGrantable() throws {
+        let reg = try GameDataRegistry.bundled()
+        var granted = Set<String>()
+        for tech in reg.techs.values {
+            for effect in tech.effects {
+                if case let .modifier(stat, _, _) = effect {
+                    granted.insert(stat.hasPrefix("global.")
+                                   ? String(stat.dropFirst("global.".count)) : stat)
+                }
+            }
+        }
+        let ungranted = Set(ResearchStat.allCases.map(\.rawValue)).subtracting(granted)
+        #expect(ungranted.isEmpty,
+                "stats no tech ever grants: \(ungranted.sorted())")
+    }
+
+    /// …and the endless studies are not all about the library any more.
+    @Test("Some study that never ends pays out in the valley")
+    func theEndlessStudiesAreNotAllLibraries() throws {
+        let reg = try GameDataRegistry.bundled()
+        let worldFacing = reg.techs.values.filter { tech in
+            guard tech.repeatable else { return false }
+            return tech.effects.contains { effect in
+                guard case let .modifier(stat, _, _) = effect else { return false }
+                let name = stat.hasPrefix("global.")
+                    ? String(stat.dropFirst("global.".count)) : stat
+                return ResearchStat(rawValue: name)?.kind == .factor
+            }
+        }
+        #expect(worldFacing.count >= 3,
+                "every endless study still buys nothing but more studying")
+    }
+}
+
+/// **Step three of `docs/MOUNTS_AND_VEHICLES.md`** — the yard is felt.
+///
+/// A conveyance that does not change one of these numbers is a picture of a
+/// horse. Each of these runs the seam and checks the number moved.
+@Suite("The yard is felt")
+struct ConveyanceSeamTests {
+
+    private func yard(_ reg: GameDataRegistry, _ ids: [String]) -> Settlement {
+        var s = Settlement(id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-00000000000F")!,
+                           name: "Cartville", regionID: UUID())
+        s.stockpile = ["wood": 200, "hide": 60, "iron_ingot": 40]
+        s.buildings = [BuildingInstance(
+            id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-00000000001F")!,
+            definitionID: "lumberyard")]
+        var w = WorldState(tick: 10, settlements: [s])
+        w.era = .ancient
+        w.researchedTechs = ["husbandry", "the_wheel"]
+        for id in ids { s = StableEngine.build(s, definitionID: id, in: w, registry: reg) }
+        return s
+    }
+
+    /// **The seam the colony feels most**, because hauling is most of what it
+    /// does: a load is an armful, and a cart makes the armful bigger.
+    @Test("A load has a size, and the yard is what makes it bigger")
+    func aLoadHasASize() throws {
+        let reg = try GameDataRegistry.bundled()
+        let bare = Settlement(id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-00000000002F")!,
+                              name: "Bare", regionID: UUID())
+        #expect(HaulEngine.carryLimit(bare, registry: reg) == HaulEngine.armfuls,
+                "a colony with no yard carries an armful and nothing more")
+
+        let carted = yard(reg, ["hand_cart"])
+        #expect(!carted.conveyances.isEmpty, "this fixture built nothing to measure")
+        #expect(HaulEngine.carryLimit(carted, registry: reg)
+                > HaulEngine.carryLimit(bare, registry: reg),
+                "a cart in the yard did not make one trip worth any more")
+    }
+
+    /// …and the heap is not swallowed whole any more: what will not fit stays
+    /// for the next trip, which is the pressure a cart is an answer to.
+    @Test("What will not fit stays on the ground")
+    func theRestIsLeftBehind() throws {
+        let reg = try GameDataRegistry.bundled()
+        var s = Settlement(id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-00000000003F")!,
+                           name: "Heaps", regionID: UUID())
+        s.pawns = Fixtures.pawns(1, work: .logging)
+        var map = LocalMapGenerator.generate(
+            mapSeed: 7, regionID: s.id, biome: Fixtures.defaultBiomes[0])
+        var dropRNG = SeededRNG(seed: 7)
+        map = HaulEngine.drop(map, itemID: "wood",
+                              amount: HaulEngine.armfuls * 5,
+                              at: LocalPoint(x: 0.5, y: 0.5), tick: 0, rng: &dropRNG)
+        s.localMap = map
+        let before = s.localMap?.piles.reduce(0) { $0 + $1.amount } ?? 0
+        for step in 0..<40 {
+            s = HaulEngine.advanceStep(s, registry: reg,
+                                       clock: WorldClock(tick: 1, step: step % 8))
+        }
+        let carried = s.pawns[0].carrying?.amount ?? 0
+        #expect(before > 0, "this fixture dropped nothing to carry")
+        #expect(carried <= HaulEngine.carryLimit(s, registry: reg),
+                "one colonist walked off with the whole heap")
+    }
+
+    /// The two roads. `regionPace` is a *speed*, and both of these count ticks
+    /// per distance — so they divide. One number, converted at each seam
+    /// rather than copied (rule 34).
+    @Test("A yard shortens the walk to a place of interest")
+    func poiTravelReadsTheYard() {
+        let far = LocalPoint(x: 0.95, y: 0.95)
+        let onFoot = LocalPOIEngine.travelTicks(to: far)
+        let mounted = LocalPOIEngine.travelTicks(to: far, pace: 2)
+        #expect(mounted < onFoot, "twice the pace was the same walk")
+        #expect(LocalPOIEngine.travelTicks(to: far, pace: 1) == onFoot,
+                "a pace of one is not the walk it always was")
+    }
+
+    @Test("An empty yard changes nothing at all")
+    func anEmptyYardIsNeutral() throws {
+        let reg = try GameDataRegistry.bundled()
+        let bare = Settlement(id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-00000000004F")!,
+                              name: "Bare", regionID: UUID())
+        #expect(StableEngine.haulLift(bare, registry: reg) == 0)
+        #expect(StableEngine.bestRegionPace(bare, registry: reg) == 1)
+    }
+
+    /// Rule 14's ceiling: a yard stacked to the limit is quicker, not instant.
+    @Test("The yard's lift is capped")
+    func theLiftIsCapped() throws {
+        let reg = try GameDataRegistry.bundled()
+        var s = yard(reg, [])
+        s.stockpile = ["wood": 4000, "iron_ingot": 900]
+        var w = WorldState(tick: 10, settlements: [s])
+        w.era = .ancient
+        w.researchedTechs = ["the_wheel"]
+        for _ in 0..<StableEngine.yardLimit {
+            s = StableEngine.build(s, definitionID: "hand_cart", in: w, registry: reg)
+        }
+        #expect(StableEngine.haulLift(s, registry: reg) <= StableEngine.maximumHaulLift)
+    }
+}
+
+/// **Which way the world is.** A raid by the tribe to the north used to come
+/// over the southern fence, and a trader from the eastern neighbour walked in
+/// from the west — because the world map knew where everybody was and the local
+/// map rolled a die.
+@Suite("Arrivals come from where they live")
+struct BearingTests {
+
+    @Test("A neighbour due east is due east")
+    func eastIsEast() {
+        let home = HexCoord(0, 0)
+        let angle = try! #require(Bearing.angle(from: home, toward: HexCoord(3, 0)))
+        #expect(abs(angle) < 0.01, "a hex three to the east is not east")
+        let entry = Bearing.edgePoint(along: angle)
+        #expect(entry.x > 0.9, "they did not come in from the eastern edge")
+        #expect(abs(entry.y - 0.5) < 0.2)
+    }
+
+    @Test("The opposite neighbour is the opposite edge")
+    func oppositeSides() {
+        let home = HexCoord(0, 0)
+        let east = try! #require(Bearing.angle(from: home, toward: HexCoord(4, 0)))
+        let west = try! #require(Bearing.angle(from: home, toward: HexCoord(-4, 0)))
+        let a = Bearing.edgePoint(along: east), b = Bearing.edgePoint(along: west)
+        #expect(a.x > 0.9 && b.x < 0.1, "east and west arrived on the same side")
+    }
+
+    @Test("Nowhere has no bearing, and the caller keeps its own roll")
+    func sameHexHasNoBearing() {
+        #expect(Bearing.angle(from: HexCoord(2, 2),
+                              toward: HexCoord(2, 2)) == nil)
+    }
+
+    /// Every arrival lands *on* the map — an entry drawn outside the valley is
+    /// a party the player never sees walking in.
+    @Test("Every bearing lands inside the valley", arguments: 0..<24)
+    func entriesAreOnTheMap(step: Int) {
+        let angle = Double(step) / 24 * 2 * .pi
+        for spread in [0.0, 0.5, 1.0] {
+            let p = Bearing.edgePoint(along: angle, spread: spread)
+            #expect(p.x >= 0.02 && p.x <= 0.98)
+            #expect(p.y >= 0.02 && p.y <= 0.98)
+        }
+    }
+
+    /// …and on the *edge*, not wandering into the middle of the town.
+    @Test("An arrival starts at the rim", arguments: 0..<12)
+    func entriesAreOnTheRim(step: Int) {
+        let angle = Double(step) / 12 * 2 * .pi
+        let p = Bearing.edgePoint(along: angle)
+        let fromMiddle = max(abs(p.x - 0.5), abs(p.y - 0.5))
+        #expect(fromMiddle > 0.35, "a party appeared in the middle of town")
     }
 }

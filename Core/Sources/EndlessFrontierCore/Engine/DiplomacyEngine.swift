@@ -448,7 +448,12 @@ public enum DiplomacyEngine {
             fortification: s.settlements[capitalIndex].stats.defense,
             tick: s.tick,
             registry: registry,
-            seed: rng.next())
+            seed: rng.next(),
+            // They come in from where they live. The world map has always
+            // known; the valley used to roll a die.
+            approachBearing: Bearing.angle(
+                fromRegion: s.settlements[capitalIndex].regionID,
+                towardRegion: s.tribes[tribeIndex].regionID, in: s))
 
         // What the attempt costs the raiders is known when it ends, not now,
         // so only the standing consequences of *declaring* it land here.

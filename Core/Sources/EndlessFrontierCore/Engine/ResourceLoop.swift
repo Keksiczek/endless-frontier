@@ -184,13 +184,20 @@ public enum ResourceLoop {
         var s = state
         let config = registry.config
         let settlementCount = s.settlements.count
+        // What the tree has earned, gathered once for the whole world rather
+        // than looked up per settlement per seam. Research is global — a thing
+        // the civilisation knows, not a thing one town knows.
+        let research = Dictionary(uniqueKeysWithValues: ResearchStat.allCases.map {
+            ($0, state.researchFactor($0))
+        })
         s.settlements = s.settlements.map {
             advanceSettlement($0, registry: registry, config: config,
                               tick: state.tick, mapSeed: state.mapSeed, era: state.era,
                               settlementCount: settlementCount, language: state.language,
                               // Where this colony actually stands. A tundra
                               // valley in January is not a coastal one.
-                              climate: Climate.of($0, in: state, registry: registry))
+                              climate: Climate.of($0, in: state, registry: registry),
+                              research: research)
         }
         s.globalStats = recomputeGlobalStats(s, registry: registry)
         return s
@@ -205,7 +212,12 @@ public enum ResourceLoop {
         era: Era = .earlySettlement,
         settlementCount: Int = 1,
         language: GameLanguage = .cs,
-        climate: Climate = .temperate
+        climate: Climate = .temperate,
+        /// What the colony's studies have earned, by `ResearchStat`. Passed in
+        /// rather than read off a `WorldState` the settlement engines do not
+        /// have — they stay pure functions of a settlement, which is the rule
+        /// the whole Core is built on.
+        research: [ResearchStat: Double] = [:]
     ) -> Settlement {
         var s = settlement
         let profile = s.specialization.profile
@@ -357,7 +369,8 @@ public enum ResourceLoop {
             // nobody keeps up stops working and stops sheltering anyone, which
             // is what makes the mason's trade outlive the building of the
             // thing.
-            s = BuildingEngine.weather(s, registry: registry, tick: tick, climate: climate)
+            s = BuildingEngine.weather(s, registry: registry, tick: tick, climate: climate,
+                                       wearFactor: research[.buildingWear] ?? 1)
             s = BuildingEngine.repair(s, registry: registry)
             // …and what people are holding wears out with it. Same cadence and
             // for the same reason: this walks every colonist (rule 4).
@@ -383,7 +396,8 @@ public enum ResourceLoop {
 
         // 8b. Raise what's being built: sites draft hands, progress accrues,
         //     and a finished roof joins the economy ledger above.
-        s = ConstructionEngine.advanceOneTick(s, registry: registry, tick: tick)
+        s = ConstructionEngine.advanceOneTick(s, registry: registry, tick: tick,
+                                              speedFactor: research[.buildSpeed] ?? 1)
 
         // 9. Individual colonists: needs, mood, skilled work, morale pull.
         //    Gathering work is scaled by how full the local deposits & herd are;
@@ -410,7 +424,8 @@ public enum ResourceLoop {
         //     could not have while a walk cost whole ticks (`WalkPace`).
         s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick,
                                       gatheringFactors: factors, laws: laws,
-                                      climate: climate)
+                                      climate: climate,
+                                      recoveryFactor: research[.recovery] ?? 1)
         // 9b. Bleeding, mending, and the healers doing the mending. After the
         //     pawns' own tick so a wound taken this minute is bleeding by the
         //     next one — and so the healer's trade finally has something to do.
@@ -449,7 +464,8 @@ public enum ResourceLoop {
         //      (`FarmEngine`), the grain is carried in like timber, and a cook
         //      turns it into what the colony actually eats (`CookingEngine`).
         s = FarmEngine.advanceOneTick(s, registry: registry, tick: tick,
-                                      climate: climate, mapSeed: mapSeed)
+                                      climate: climate, mapSeed: mapSeed,
+                                      yieldFactor: research[.cropYield] ?? 1)
         s = CookingEngine.advanceOneTick(s, registry: registry, tick: tick)
         // What there is no roof for goes over. On the staffing cadence rather
         // than every tick: it walks the whole shelf, and a colony one sack over
@@ -968,8 +984,8 @@ public enum ResourceLoop {
         // Standing research bonuses ride on top of the building total. They
         // have to be re-added here: this assignment is what used to silently
         // erase every `modifier` effect in techs.json the tick after it landed.
-        g.knowledgeOutput = knowledge + (state.statModifiers["knowledgeOutput"] ?? 0)
-        g.influenceOutput = influence + (state.statModifiers["influenceOutput"] ?? 0)
+        g.knowledgeOutput = knowledge + state.researchBonus(.knowledgeOutput)
+        g.influenceOutput = influence + state.researchBonus(.influenceOutput)
 
         // Prosperity drifts toward average morale.
         g.prosperity += (avgMorale - g.prosperity) * 0.05

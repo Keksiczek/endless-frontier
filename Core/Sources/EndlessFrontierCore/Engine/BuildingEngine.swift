@@ -144,7 +144,10 @@ public enum BuildingEngine {
     /// catch-up is not paying for a per-tick pass over the whole colony.
     public static func weather(
         _ settlement: Settlement, registry: GameDataRegistry, tick: Int,
-        climate: Climate = .temperate
+        climate: Climate = .temperate,
+        /// What the colony's studies have done to how hard the years bite.
+        /// Below 1 is a colony that has learned to keep its roofs on.
+        wearFactor: Double = 1
     ) -> Settlement {
         guard var colony = settlement.colony, !colony.placements.isEmpty else {
             return settlement
@@ -193,7 +196,7 @@ public enum BuildingEngine {
             let out = (ColonyBuilder.squaredDistance(placement.coord, heart)).squareRoot() / reach
             let exposed = 1 + exposureWear * min(1, out)
             colony.placements[i].condition =
-                max(0, before - wearPerInterval * multiplier * sky * made * exposed)
+                max(0, before - wearPerInterval * multiplier * sky * made * exposed * wearFactor)
             changed = true
         }
         guard changed else { return settlement }

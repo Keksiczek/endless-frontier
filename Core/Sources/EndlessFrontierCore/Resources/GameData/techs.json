@@ -38,6 +38,12 @@
       {
         "type": "unlock_building",
         "buildingId": "farm_advanced"
+      },
+      {
+        "type": "modifier",
+        "stat": "global.cropYield",
+        "delta": 0.15,
+        "mode": "additive"
       }
     ],
     "description": {
@@ -181,6 +187,12 @@
       {
         "type": "unlock_building",
         "buildingId": "granary"
+      },
+      {
+        "type": "modifier",
+        "stat": "global.cropYield",
+        "delta": 0.08,
+        "mode": "additive"
       }
     ],
     "description": {
@@ -209,6 +221,12 @@
       {
         "type": "unlock_building",
         "buildingId": "aqueduct"
+      },
+      {
+        "type": "modifier",
+        "stat": "global.buildingWear",
+        "delta": -0.25,
+        "mode": "additive"
       }
     ],
     "description": {
@@ -264,6 +282,12 @@
       {
         "type": "unlock_building",
         "buildingId": "workshop"
+      },
+      {
+        "type": "modifier",
+        "stat": "global.buildSpeed",
+        "delta": 0.3,
+        "mode": "additive"
       }
     ],
     "description": {
@@ -452,6 +476,12 @@
       {
         "type": "unlock_building",
         "buildingId": "hospital"
+      },
+      {
+        "type": "modifier",
+        "stat": "global.recovery",
+        "delta": 0.35,
+        "mode": "additive"
       }
     ],
     "description": {
@@ -568,6 +598,12 @@
       {
         "type": "unlock_event_category",
         "eventCategory": "medicine"
+      },
+      {
+        "type": "modifier",
+        "stat": "global.recovery",
+        "delta": 0.6,
+        "mode": "additive"
       }
     ],
     "description": {
@@ -863,5 +899,147 @@
       "en": "The study of holding a realm together — never finished, and never cheap.",
       "cs": "Nauka o tom, jak držet říši pohromadě — nikdy hotová a nikdy laciná."
     }
+  },
+  {
+    "id": "husbandry",
+    "name": {
+      "en": "Husbandry",
+      "cs": "Chov"
+    },
+    "era": "ancient",
+    "requires": [],
+    "cost": {
+      "knowledge": 900
+    },
+    "effects": [],
+    "description": {
+      "en": "Beasts gentled, bred and worked — and the tack to put on them.",
+      "cs": "Zvířata zkrocená, chovaná a zapřažená — a postroj, který se na ně dává."
+    }
+  },
+  {
+    "id": "the_wheel",
+    "name": {
+      "en": "The Wheel",
+      "cs": "Kolo"
+    },
+    "era": "ancient",
+    "requires": [],
+    "cost": {
+      "knowledge": 700
+    },
+    "effects": [],
+    "description": {
+      "en": "A hub, a rim and an axle that will take a load across a valley.",
+      "cs": "Náboj, loukoť a osa, které unesou náklad přes údolí."
+    }
+  },
+  {
+    "id": "selective_breeding",
+    "name": {
+      "en": "Selective Breeding",
+      "cs": "Šlechtění"
+    },
+    "era": "medieval",
+    "requires": [
+      "agriculture"
+    ],
+    "cost": {
+      "knowledge": 3200
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.cropYield",
+        "delta": 0.1,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "Keeping the best seed back year after year. Never finished, because the field always has more to give.",
+      "cs": "Rok co rok si nechat to nejlepší zrno. Nikdy hotové — pole má vždycky co dát."
+    },
+    "repeatable": true
+  },
+  {
+    "id": "surveying",
+    "name": {
+      "en": "Surveying",
+      "cs": "Zeměměřictví"
+    },
+    "era": "medieval",
+    "requires": [
+      "engineering"
+    ],
+    "cost": {
+      "knowledge": 3000
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.buildSpeed",
+        "delta": 0.12,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "Measuring the ground before building on it, and going on measuring.",
+      "cs": "Změřit zem, než se na ni staví — a měřit dál."
+    },
+    "repeatable": true
+  },
+  {
+    "id": "preservation",
+    "name": {
+      "en": "Preservation",
+      "cs": "Konzervace"
+    },
+    "era": "medieval",
+    "requires": [
+      "masonry"
+    ],
+    "cost": {
+      "knowledge": 3400
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.buildingWear",
+        "delta": -0.06,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "Mortar, pitch and paint against the years. A study with no end, because the weather has none either.",
+      "cs": "Malta, smůla a nátěr proti letům. Bádání bez konce — počasí ho taky nemá."
+    },
+    "repeatable": true
+  },
+  {
+    "id": "physic",
+    "name": {
+      "en": "Physic",
+      "cs": "Lékařství"
+    },
+    "era": "medieval",
+    "requires": [
+      "scholarship"
+    ],
+    "cost": {
+      "knowledge": 3600
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.recovery",
+        "delta": 0.15,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "What the herbalists learn from every winter, written down and learned again.",
+      "cs": "Co se bylinkáři naučí každou zimu, zapsané a znovu naučené."
+    },
+    "repeatable": true
   }
 ]

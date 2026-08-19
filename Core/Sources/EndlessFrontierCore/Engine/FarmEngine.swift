@@ -107,7 +107,11 @@ public enum FarmEngine {
     /// Plots ripen, farmers reap, and what they cut is left at the plot.
     public static func advanceOneTick(
         _ settlement: Settlement, registry: GameDataRegistry, tick: Int,
-        climate: Climate = .temperate, mapSeed: UInt64 = 0
+        climate: Climate = .temperate, mapSeed: UInt64 = 0,
+        /// What the colony's studies have done to what comes off a plot. The
+        /// most visible number research can move: the same field, the same
+        /// season, more grain on the ground.
+        yieldFactor: Double = 1
     ) -> Settlement {
         var s = settlement
         if tick % reconcileInterval == 0 {
@@ -185,7 +189,7 @@ public enum FarmEngine {
             }
             // Off the plot, onto the ground, and the plot is sown again. The
             // ground is permanent; the crop on it is what cycles.
-            cut.append((crop.species.itemID, crop.standing, crop.position))
+            cut.append((crop.species.itemID, crop.standing * yieldFactor, crop.position))
             map.crops[index].reaped = 0
             map.crops[index].growth = 0
             return hands - spent

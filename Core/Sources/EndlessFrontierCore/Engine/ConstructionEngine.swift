@@ -43,7 +43,9 @@ public enum ConstructionEngine {
     public static func advanceOneTick(
         _ settlement: Settlement,
         registry: GameDataRegistry,
-        tick: Int
+        tick: Int,
+        /// What the colony's studies have done to how fast a frame is raised.
+        speedFactor: Double = 1
     ) -> Settlement {
         guard !settlement.constructions.isEmpty else { return settlement }
         var s = settlement
@@ -82,7 +84,7 @@ public enum ConstructionEngine {
         }
 
         guard !s.constructions.isEmpty else { return s }
-        s.constructions[0].progress += rate
+        s.constructions[0].progress += rate * speedFactor
 
         // Builders learn the trade by doing it.
         for (index, _) in builders {

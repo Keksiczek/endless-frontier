@@ -56,7 +56,9 @@ public enum PawnEngine {
         tick: Int = 0,
         gatheringFactors: [WorkKind: Double] = [:],
         laws: LawModifiers = LawModifiers(),
-        climate: Climate = .temperate
+        climate: Climate = .temperate,
+        /// What the colony's studies have done to how fast a hurt body mends.
+        recoveryFactor: Double = 1
     ) -> Settlement {
         guard !settlement.pawns.isEmpty else { return settlement }
         var s = settlement
@@ -132,7 +134,7 @@ public enum PawnEngine {
                 // healer's trade bought nothing. It is the recurring shape:
                 // a system whose bite is cancelled by a flat number nothing
                 // gates. Being hurt has to cost the colony something.
-                let mending = s.pawns[i].body.bleeding > 0 ? 0 : healthRecovery + regen
+                let mending = s.pawns[i].body.bleeding > 0 ? 0 : (healthRecovery + regen) * recoveryFactor
                 s.pawns[i].health = min(100, s.pawns[i].health + mending)
             }
             s.pawns[i].health = max(0, s.pawns[i].health)

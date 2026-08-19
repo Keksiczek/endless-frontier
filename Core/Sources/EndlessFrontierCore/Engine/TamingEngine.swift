@@ -180,6 +180,11 @@ public enum TamingEngine {
             case .beastOfBurden: haul += 0.12 * vigour
             case .guard: defense += 3.5 * vigour
             case .companion: mood += 0.8 * vigour
+            // A mount's worth is not a multiplier on the economy — it is the
+            // walk it saves, and that is `Conveyance`'s to say at the four
+            // seams in `docs/MOUNTS_AND_VEHICLES.md`. Putting a haul bonus
+            // here as well would pay for the same animal twice.
+            case .mount: break
             }
         }
         return (min(0.6, haul), min(20, defense), min(6, mood))

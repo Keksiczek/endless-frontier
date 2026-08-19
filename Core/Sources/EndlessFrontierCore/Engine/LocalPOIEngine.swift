@@ -102,7 +102,12 @@ public enum LocalPOIEngine {
             poiID: poiID,
             memberIDs: party,
             departedTick: s.tick,
-            travelTicks: travelTicks(to: poi.position),
+            // A party takes the yard with it. The best thing standing in it,
+            // because the expedition moves at the pace of what it took, not at
+            // the average of everything the colony owns.
+            travelTicks: travelTicks(
+                to: poi.position,
+                pace: StableEngine.bestRegionPace(state.settlements[seat], registry: registry)),
             workTicks: poi.kind.workTicks)
 
         for i in s.settlements[seat].pawns.indices where party.contains(s.settlements[seat].pawns[i].id) {
@@ -120,14 +125,23 @@ public enum LocalPOIEngine {
     /// waits through. Stated here rather than recomputed at each call site —
     /// the inspector card was doing the `× 2 + workTicks` arithmetic itself,
     /// which is a formula in two places waiting to disagree.
-    public static func roundTripTicks(to poi: LocalPOI) -> Int {
-        travelTicks(to: poi.position) * 2 + poi.kind.workTicks
+    public static func roundTripTicks(to poi: LocalPOI, pace: Double = 1) -> Int {
+        travelTicks(to: poi.position, pace: pace) * 2 + poi.kind.workTicks
     }
 
-    /// How long the walk out takes, from how far the place is.
-    public static func travelTicks(to position: LocalPoint) -> Int {
+    /// How long the walk out takes, from how far the place is — and what the
+    /// party took with them.
+    ///
+    /// **The unit conversion rule 34 asks for.** `pace` on a conveyance is
+    /// *distance per step* on the local map, and this counts *ticks per unit of
+    /// distance* — the reciprocal. So a conveyance twice as fast divides the
+    /// ticks rather than multiplying them, and the one number in
+    /// `conveyances.json` means the same thing at both seams because each seam
+    /// converts it rather than copying it.
+    public static func travelTicks(to position: LocalPoint, pace: Double = 1) -> Int {
         let dx = position.x - heart.x, dy = position.y - heart.y
-        return max(1, Int((( dx * dx + dy * dy).squareRoot() * travelTicksPerDistance).rounded()))
+        let distance = (dx * dx + dy * dy).squareRoot()
+        return max(1, Int((distance * travelTicksPerDistance / max(0.1, pace)).rounded()))
     }
 
     /// Who goes: adults who are fit, free, and best at what the place asks for.

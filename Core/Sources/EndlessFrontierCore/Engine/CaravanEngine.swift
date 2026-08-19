@@ -20,11 +20,23 @@ public enum CaravanEngine {
 
     /// Travel time between two settlements, from the hex distance of their
     /// regions (a fallback covers settlements without a placed region).
-    public static func travelTicks(from origin: Settlement, to destination: Settlement, in state: WorldState) -> Int {
+    ///
+    /// **The road reads the yard.** Second of the two travel seams in
+    /// `docs/MOUNTS_AND_VEHICLES.md`, and the same conversion as the first:
+    /// this counts *ticks per hex*, so a conveyance's `regionPace` — which is
+    /// stated as a speed — divides rather than multiplies. `registry` is
+    /// optional so the many callers that only want the geography keep working;
+    /// pass it and the caravan travels at what the origin has to send it with.
+    public static func travelTicks(
+        from origin: Settlement, to destination: Settlement, in state: WorldState,
+        registry: GameDataRegistry? = nil
+    ) -> Int {
+        let pace = registry.map { StableEngine.bestRegionPace(origin, registry: $0) } ?? 1
         guard let o = region(of: origin, in: state), let d = region(of: destination, in: state) else {
-            return fallbackTravelTicks
+            return max(minTravelTicks, Int((Double(fallbackTravelTicks) / max(0.1, pace)).rounded()))
         }
-        return max(minTravelTicks, o.coord.distance(to: d.coord) * ticksPerHex)
+        let plain = Double(o.coord.distance(to: d.coord) * ticksPerHex)
+        return max(minTravelTicks, Int((plain / max(0.1, pace)).rounded()))
     }
 
     /// Whether a caravan can be dispatched with the given cargo and escort.
@@ -52,7 +64,10 @@ public enum CaravanEngine {
         destinationID: UUID,
         resource: ResourceType,
         amount: Double,
-        guardIDs: [UUID]
+        guardIDs: [UUID],
+        /// Optional so every existing caller keeps working; with it, the
+        /// caravan travels at what the origin's yard can send it out with.
+        registry: GameDataRegistry? = nil
     ) -> WorldState {
         guard canDispatch(state, originID: originID, destinationID: destinationID,
                           resource: resource, amount: amount, guardIDs: guardIDs),
@@ -66,7 +81,8 @@ public enum CaravanEngine {
         s.settlements[oi].storage[resource] = s.settlements[oi].storage[resource] - amount
 
         let destination = s.settlements.first { $0.id == destinationID }!
-        let ticks = travelTicks(from: s.settlements[oi], to: destination, in: s)
+        let ticks = travelTicks(from: s.settlements[oi], to: destination, in: s,
+                                registry: registry)
         var rng = SeededRNG(seed: dispatchSeed(state: s, originID: originID, destinationID: destinationID))
         let caravan = Caravan(
             id: rng.nextUUID(),

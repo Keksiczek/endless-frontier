@@ -39,20 +39,38 @@ struct EraProbe {
             case let .settlementCount(min):
                 return ("settlements", "\(state.settlements.count)", "\(min)", met)
             case let .populationTotal(min):
-                return ("population", "\(state.totalPopulation)",
+                return ("population", "\(Int(state.totalPopulation))",
                         String(format: "%.0f", min), met)
             }
         }
     }
 
+    /// Left-padded number and right-padded name. Plain string work rather
+    /// than `String(format:)`, for the reason written at the call site.
+    private func column(_ value: Int, _ width: Int) -> String {
+        let text = "\(value)"
+        return String(repeating: " ", count: max(0, width - text.count)) + text
+    }
+
+    private func pad(_ text: String, _ width: Int) -> String {
+        text + String(repeating: " ", count: max(0, width - text.count))
+    }
+
     @Test("How far a colony left alone gets, and what it is standing at")
     func theLadder() throws {
+        // Unbuffered, or nothing is seen until the whole run is over.
+        // Swift's stdout is fully buffered when it is not a terminal, and a
+        // probe you cannot watch is a probe you cannot tell from a hang — this
+        // one ran an hour and a half looking exactly like one.
+        setvbuf(stdout, nil, _IONBF, 0)
         let registry = try GameDataRegistry.bundled()
         var state = GameWorldFactory.newGame(registry: registry, seed: 4242)
         let ticksPerYear = max(1, registry.config.ticksPerYear)
-        // Five hundred years. Long past any session anybody will play, so a
-        // wall found here is a wall, not impatience.
-        let years = 500
+        // Two hundred and fifty years. Long past any session anybody will
+        // play, so a wall found here is a wall and not impatience — and half
+        // of what the first draft asked for, which was slower than the whole
+        // rest of the test suite put together.
+        let years = 250
         let step = 300
         var reached: [Era: Int] = [.earlySettlement: 0]
 
@@ -61,7 +79,7 @@ struct EraProbe {
         ── eras ──────────────────────────────────────────────────────
         a tick is \(Int(registry.config.realSecondsPerTick))s · a year is \
         \(ticksPerYear) ticks · running \(years) years
-        year   era                pop   prosp  techs  settlements
+        year   era                 pop   prosp  techs   total  towns  pawns[0]
         """)
 
         for step in stride(from: step, through: years * ticksPerYear, by: step) {
@@ -70,37 +88,38 @@ struct EraProbe {
             if state.era != before, reached[state.era] == nil {
                 reached[state.era] = state.tick / ticksPerYear
             }
-            guard step % (ticksPerYear * 25) < 300 else { continue }
-            print(String(
-                format: "%5d   %-16s %5d   %5.0f  %5d  %5d",
-                state.tick / ticksPerYear,
-                (state.era.rawValue as NSString).utf8String!,
-                state.totalPopulation,
-                WorldQuery.globalValue("prosperity", in: state),
-                state.researchedTechs.count,
-                state.settlements.count))
+            guard step % (ticksPerYear * 10) < 300 else { continue }
+            // No `%s`. Mixing a C string into `String(format:)` shifts every
+            // argument after it on arm64, and the first run of this probe
+            // printed a colony with zero settlements and thirty-one people in
+            // them — numbers that cost twenty minutes before the format was
+            // suspected rather than the simulation.
+            print(column(state.tick / ticksPerYear, 5)
+                  + "   " + pad(state.era.rawValue, 17)
+                  + column(Int(state.totalPopulation), 5)
+                  + column(Int(WorldQuery.globalValue("prosperity", in: state)), 8)
+                  + column(state.researchedTechs.count, 7)
+                  // Repeats, separately: `researchedTechs` saturates at the
+                  // size of the tree, so the count alone says "research
+                  // stopped" for a colony that is still studying every tick.
+                  // The first read of this probe made exactly that mistake.
+                  + column(state.techCompletions.values.reduce(0, +), 8)
+                  + column(state.settlements.count, 7)
+                  + column(state.settlements.first?.pawns.count ?? 0, 7))
         }
 
         print("\n── how far it got ───────────────────────────────────────────")
         for era in Era.allCases {
-            if let year = reached[era] {
-                print(String(format: "  %-18s reached in year %d",
-                             (era.rawValue as NSString).utf8String!, year))
-            } else {
-                print(String(format: "  %-18s NEVER",
-                             (era.rawValue as NSString).utf8String!))
-            }
+            let verdict = reached[era].map { "reached in year \($0)" } ?? "NEVER"
+            print("  " + pad(era.rawValue, 19) + verdict)
         }
 
         // The wall it is standing at, spelled out.
         if let next = state.era.next {
             print("\n── what stops it becoming \(next.rawValue) ──────────────────")
             for m in standing(next, in: state, registry: registry) {
-                print(String(format: "  %-14s have %-6s need %-6s  %@",
-                             (m.name as NSString).utf8String!,
-                             (m.have as NSString).utf8String!,
-                             (m.need as NSString).utf8String!,
-                             m.met ? "met" : "← BLOCKED"))
+                print("  " + pad(m.name, 16) + "have " + pad(m.have, 8)
+                      + "need " + pad(m.need, 8) + (m.met ? "met" : "← BLOCKED"))
             }
         } else {
             print("\n  the colony reached the last era.")

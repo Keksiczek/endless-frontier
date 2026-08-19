@@ -1,6 +1,6 @@
 # Mounts and vehicles
 
-<!-- Written 2026-08-19. Design only — none of this is built yet. -->
+<!-- Written 2026-08-19. Steps 1 and 2 are built; 3 onward are design. -->
 
 The colony walks everywhere. It will walk everywhere in the fusion age too,
 because nothing in the game can move a body or a load any way but on foot. This
@@ -45,6 +45,17 @@ Two more that make it felt rather than merely faster:
 |---|---|
 | `CombatEngine` | a rider charges; a wagon is a wall to fight behind |
 | `AgentMotion` + `motions.json` | a rider is drawn on the animal, a driver in front of the cart |
+
+### And one the map owed the world
+
+Not a conveyance seam, but found next to them and the same fault: **arrivals
+had no direction.** A raid picked its line with `rng.nextUnit() * 2 * .pi` and
+a visitor picked one of four edges at random, so the tribe you can see to the
+north on the world map came over your southern fence. Every region has a
+`HexCoord`; none of it reached the valley. `Bearing` is the conversion, read by
+the raid and the visit alike so they cannot disagree about where north is — and
+it falls back to the old roll for anybody with no place on the map, which is
+the right answer for a wanderer.
 
 **Rule 34 applies twice here.** `WalkPace` counts in *local-map units per action
 step*; the two travel functions count in *ticks per unit of distance*. One
@@ -92,7 +103,7 @@ whether the abstraction is right:
 A cart cannot cross marsh or scree. A horse cannot take a mountain pass a mule
 walks. An airship does not care and eats fuel the whole time. Without this, every
 conveyance is strictly better than the last and the choice is "have you unlocked
-it yet" — which is not a choice. `GroundCover` already has twelve kinds and
+it yet" — which is not a choice. `GroundCover` has twenty kinds and
 `LocalMap` already knows which is where; `terrain` is the list a conveyance may
 cross, and a route that needs a cover outside it either takes the long way or
 goes on foot.
@@ -148,14 +159,26 @@ Each of these is a session someone already paid for.
 
 Swift first, then generate — the whole point of writing this down.
 
-1. `ConveyanceDefinition`, `conveyances.json` with **three** hand-written
+1. ~~`ConveyanceDefinition`, `conveyances.json` with **three** hand-written
    entries, `GameDataRegistry` loading, and a test that counts what the
-   *registry* holds (rule 43).
-2. `Settlement.conveyances`, `TamedRole.mount`, and `StableEngine`: build one,
-   keep it fed, lose it when it starves or is killed.
-3. Pace at the four seams above, each with its own conversion and its own test.
-4. `HaulEngine` cargo capacity — the seam that changes how the colony *feels*,
-   because hauling is most of what it does.
+   *registry* holds (rule 43).~~ **Done 2026-08-19** — `ConveyanceBankTests`.
+2. ~~`Settlement.conveyances`, `TamedRole.mount`, and `StableEngine`: build one,
+   keep it fed, lose it when it starves or is killed.~~ **Done 2026-08-19** —
+   `StableEngineTests`. `bestPace`, `bestRegionPace`, `cargoCapacity` and
+   `canCross` are written and tested; **nothing reads them yet**, which is
+   step 3.
+3. ~~Pace at the four seams above, each with its own conversion and its own
+   test.~~ **Done 2026-08-19** — `ConveyanceSeamTests`. `regionPace` *divides*
+   at both travel seams, because those count ticks per distance and the
+   definition states a speed; the haul seam multiplies. One number, converted
+   at each seam rather than copied.
+4. ~~`HaulEngine` cargo capacity — the seam that changes how the colony
+   *feels*, because hauling is most of what it does.~~ **Done 2026-08-19**, and
+   it needed a mechanic first: **a load had no size.** A hauler picked up the
+   whole heap however big it was, so twelve logs and one log were the same
+   walk and `cargo` had nothing to multiply. `HaulEngine.armfuls` is that size
+   now, and the yard adds to it — what will not fit stays on the ground for
+   the next trip, which is the pressure a cart is an answer to.
 5. Terrain routing: a conveyance refuses ground outside its `terrain`.
 6. Presentation: a `riding` activity in `AgentMotion`, `serves_conveyance` in
    the motion bank, and a figure drawn on the beast.

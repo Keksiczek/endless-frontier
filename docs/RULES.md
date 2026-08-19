@@ -525,3 +525,27 @@ fires, do the arithmetic before you rewrite the mechanic.
    bank, ask what reads the bank *by the whole*. A `for recipe in all recipes`
    that accumulates is a number that grows with the file, and somewhere
    downstream something is dividing by it.
+54. **A count that saturates is not a measurement of activity.** The first read
+   of `EraProbe` reported "the tech tree is exhausted in year 60 and research
+   does nothing for the next 190 years" — from `researchedTechs.count`, which
+   stops at the size of the tree because a *repeatable* study stays in the set
+   after it completes. The colony was studying the whole time: twenty-nine
+   further completions, roughly one every six or seven years. The wrong version
+   is the more quotable one, and it would have justified flattening a cost
+   curve that turned out to be correctly tuned. Before drawing a conclusion
+   from a number going flat, ask what that number is *able* to do — a set's
+   size cannot exceed the set, and a probe that prints one is measuring the
+   ceiling, not the work.
+55. **`String(format:)` with `%s` shifts every argument after it.** The same
+   probe printed a colony with zero settlements and thirty-one people in them.
+   Neither was true: a Swift `String` bridged for `%s`, and a `Double` handed
+   to `%d`, misalign the varargs on arm64 and every column after the mistake is
+   another column's memory. Twenty minutes went into the simulation before the
+   format string was suspected. In Swift, build a table with interpolation and
+   padding; `String(format:)` earns its place for floats and nothing else.
+56. **A neutral default has to be the *neutral* value, not zero.**
+   `Bearing.edgePoint(along:spread:)` took `spread` as a 0…1 roll and defaulted
+   it to 0 — which is not "no spread", it is *full spread to one side*, so
+   every arrival that did not pass one was a quarter of a map off its own
+   bearing. Caught by a test asserting east is east. When a parameter's
+   identity value is in the middle of its range, the default is the middle.

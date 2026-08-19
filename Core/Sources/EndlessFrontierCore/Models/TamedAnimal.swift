@@ -11,12 +11,18 @@ public enum TamedRole: String, Codable, Sendable, CaseIterable {
     case `guard`
     /// Keeps somebody company, and the colony's spirits up.
     case companion
+    /// **Carries a person.** Distinct from `beastOfBurden` on purpose: a pack
+    /// animal takes the weight off a back and a mount takes the *walk* off a
+    /// pair of legs, and a colony that has one does not automatically have the
+    /// other. A beast in this role is paired with a `Conveyance`.
+    case mount
 
     public var displayName: LocalizedText {
         switch self {
         case .beastOfBurden: return LocalizedText(values: [.en: "Pack animal", .cs: "Soumar"])
         case .guard: return LocalizedText(values: [.en: "Guard", .cs: "Hlídač"])
         case .companion: return LocalizedText(values: [.en: "Companion", .cs: "Společník"])
+        case .mount: return LocalizedText(values: [.en: "Mount", .cs: "Jezdecké zvíře"])
         }
     }
 }

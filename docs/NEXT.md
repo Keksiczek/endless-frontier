@@ -139,6 +139,53 @@ decode failure.
 
 ## 5. Measurement, before more content
 
+### `EraProbe`, run 2026-08-19 — the ladder is reachable, and two other things
+
+Built to answer "is the late game behind glass, and should we stop generating
+content for it?" The answer is **no, generate freely**: a colony left entirely
+alone reaches the last era in year 225 of 250, and *nothing* is unreachable —
+0 of 152 events, 0 of 31 techs, 0 of 49 buildings.
+
+```
+year   era                 pop   prosp  techs  repeats  towns
+  10   ancient              21     90      5        0      1
+  40   medieval             48     98     19        0      1
+  60   medieval             43     95     31        2      1   ← tree finished
+ 120   early_industrial    115     85     31       15      2
+ 170   modern              262     88     31       21      3
+ 225   near_future           —      —     31        —      —
+ 250   near_future         906     87     31       29      7
+```
+
+**A correction worth keeping**, because the first read of this probe got it
+wrong and the wrong version is the more quotable one: *"research dies at year
+60"* is **false**. `researchedTechs.count` saturates at the size of the tree —
+a repeatable study stays in the set — so the count alone says "stopped" for a
+colony still studying every tick. The `repeats` column is the honest one, and
+it keeps climbing: twenty-nine completions over the 190 years after the tree
+runs out, roughly one every six or seven years, slowing as the price grows at
+1.35× a time. That cadence is *fine*. Do not flatten the curve.
+
+What is worth fixing is what those studies **buy**, and one thing about the
+ladder:
+
+- **Research changed menus, never the valley.** Counted across `techs.json`
+  before 2026-08-19: thirty-nine effects unlocked a building, five opened an
+  event category, and every one of the ten `modifier` effects moved
+  `knowledgeOutput` or `influenceOutput` — nine of the ten the former. So the
+  reward for finishing a study was a new row in the build menu, or research
+  that produces more research. Fixed by `ResearchStat`: four world-facing
+  stats — crop yield, build speed, building wear, recovery — wired at the
+  seams that decide them, and four endless studies that pay out in the valley.
+- **The era ladder is a population ladder wearing three hats.** Every milestone
+  has three parts — a tech, prosperity, a population. The techs are all done by
+  year 60 and prosperity never drops below 81 against thresholds of 35…75, so
+  **neither is ever the binding constraint**. Only population gates anything,
+  and a three-part gate where two parts are always open is a one-part gate.
+
+Re-run with `EF_PROBE=1 swift test --package-path Core --filter EraProbe`. It
+takes about half an hour; the table prints as it goes.
+
 - **`LivelinessProbe`** — still not built, and it is the probe that matches what
   the player actually complains about: what share of colonists are visibly doing
   something, per part of the day.

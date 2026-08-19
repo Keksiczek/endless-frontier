@@ -159,14 +159,25 @@ public enum SiegeEngine {
         tick: Int,
         registry: GameDataRegistry,
         seed: UInt64,
-        carriesOff: Double = 1
+        carriesOff: Double = 1,
+        /// Where the attackers actually live, as a bearing off the world map.
+        /// Nil when nobody knows — a beast out of the woods has no hex to come
+        /// from — and then the line falls back to the roll it always used.
+        approachBearing: Double? = nil
     ) -> Settlement {
         var rng = SeededRNG(seed: seed)
         var s = settlement
         let line = BattleResolver.defenders(s.pawns, registry: registry)
             .prefix(lineSize(of: s, registry: registry)).map(\.id)
         let id = rng.nextUUID()
-        let approach = rng.nextUnit() * 2 * .pi
+        // **The line comes in from where the enemy is.** This was
+        // `rng.nextUnit() * 2 * .pi` — a raid by the tribe you can see to the
+        // north arrived over your southern fence, because the world map knew
+        // exactly where they lived and the local map rolled a die. The roll
+        // survives as the fallback for an attacker with no place on the map;
+        // the wobble keeps two raids from the same neighbour off one line.
+        let approach = approachBearing.map { $0 + (rng.nextUnit() - 0.5) * 0.5 }
+            ?? rng.nextUnit() * 2 * .pi
         // A wall is only a wall on the side it stands. What the colony has
         // built still decides how much of the attack it turns aside, but
         // **where** it built it now decides how much of that counts (§11.27).

@@ -36,6 +36,32 @@ public enum HaulEngine {
     /// logged flat should not carry two hundred heaps in its save.
     public static let maxPiles = 40
 
+    /// **How much one colonist gets home in one trip.**
+    ///
+    /// There was no such number. A hauler picked up *the whole heap* however
+    /// big it was — `amount: pile.amount` — so twelve logs and one log were the
+    /// same walk, and a colony's carrying capacity was purely a question of how
+    /// many feet it had. That is why `ConveyanceDefinition.cargo` had nowhere to
+    /// land: you cannot multiply a limit that does not exist.
+    ///
+    /// Four is a person's arms full. It is deliberately small enough that a
+    /// good harvest takes several trips, because that is the pressure a cart is
+    /// an answer to — see `docs/MOUNTS_AND_VEHICLES.md`.
+    public static let armfuls = 4
+
+    /// What this colony can move in one trip: a pair of arms, plus whatever is
+    /// standing in the yard.
+    ///
+    /// The fourth seam, and the one the yard exists for. `cargo` is stated in
+    /// *multiples of a back*, so it adds to the armful rather than scaling the
+    /// walk — a cart does not make you faster, it makes the trip worth more,
+    /// and those are different sentences about a colony.
+    public static func carryLimit(
+        _ settlement: Settlement, registry: GameDataRegistry
+    ) -> Int {
+        armfuls + StableEngine.cargoCapacity(settlement, registry: registry)
+    }
+
     // MARK: - Dropping
 
     /// Leaves a pile of `itemID` at `position`.
@@ -117,7 +143,15 @@ public enum HaulEngine {
         }
         // A pack animal takes the weight off: the colony's beasts of burden
         // make every hauler quicker, which is the whole reason to keep one.
+        //
+        // …and so does the yard. A travois, a cart, an ox under a load — the
+        // first of the four seams in `docs/MOUNTS_AND_VEHICLES.md`, and the one
+        // the colony feels most, because hauling is most of what it does. Two
+        // sources, one multiplier, each with its own ceiling: a colony with
+        // both a stable and a cartwright is quicker than one with either, and
+        // neither can run away on its own.
         let lift = 1 + TamingEngine.bonuses(s).haul
+            + StableEngine.haulLift(s, registry: registry)
         // What stands where, worked out once for the whole colony rather than
         // once per walker per sampled point (§11.23).
         // …and the rock with it: a cliff is as impassable as a wall, and
@@ -192,7 +226,22 @@ public enum HaulEngine {
             let pilePosition = map.piles[index].position
             let out = walk(of: s.pawns[i], to: pilePosition, pace: emptySpeed * lift)
             if out.hasArrived(at: step) {
-                let pile = map.piles.remove(at: index)
+                // As much of the heap as they can carry, and the rest stays
+                // where it is for the next trip — which is what makes a cart
+                // worth building.
+                let limit = carryLimit(s, registry: registry)
+                let pile: HaulPile
+                if map.piles[index].amount > limit {
+                    map.piles[index].amount -= limit
+                    map.piles[index].claimedBy = nil
+                    pile = HaulPile(id: map.piles[index].id,
+                                    position: map.piles[index].position,
+                                    itemID: map.piles[index].itemID,
+                                    amount: limit,
+                                    droppedTick: map.piles[index].droppedTick)
+                } else {
+                    pile = map.piles.remove(at: index)
+                }
                 // Which store this load goes to is decided **here**, with the
                 // heap in their hands: grain to the granary, timber to the
                 // warehouse, and the nearest one of the right kind measured

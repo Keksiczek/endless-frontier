@@ -270,8 +270,11 @@ public enum VisitorEngine {
         let kind = pick(for: tribe, rng: &rng)
         let name = tribe?.name ?? wandererOrigin(rng: &rng)
 
-        // In from an edge, at a spot that is not the same one every time.
-        let entry = edgePoint(rng: &rng)
+        // In from the edge that faces the people they belong to, at a spot
+        // that is not the same one every time.
+        let entry = edgePoint(rng: &rng, bearing: Bearing.angle(
+            fromRegion: s.settlements[settlementIndex].regionID,
+            towardRegion: tribe?.regionID, in: s))
         var updated = map
         updated.visitors.append(Visitor(
             id: rng.nextUUID(), kind: kind, fromName: name, tribeID: tribe?.id,
@@ -438,7 +441,19 @@ public enum VisitorEngine {
     // MARK: - Maths
 
     /// A spot on the edge of the map, away from the corners.
-    static func edgePoint(rng: inout SeededRNG) -> LocalPoint {
+    /// Where a party first shows on the edge of the valley.
+    ///
+    /// `bearing` is where they actually came from, off the world map. Given
+    /// one, they walk in from that side; without one — a wanderer with no home
+    /// hex — the old roll of four sides stands, which is the right answer for
+    /// somebody who came from nowhere in particular.
+    ///
+    /// It used to be the roll always, so the neighbour you can see to the north
+    /// arrived over the southern fence.
+    static func edgePoint(rng: inout SeededRNG, bearing: Double? = nil) -> LocalPoint {
+        if let bearing {
+            return Bearing.edgePoint(along: bearing, spread: rng.nextUnit())
+        }
         let along = 0.12 + rng.nextUnit() * 0.76
         switch Int(rng.nextUnit() * 4) % 4 {
         case 0: return LocalPoint(x: along, y: 0.02)
