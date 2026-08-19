@@ -236,3 +236,57 @@ struct InteriorTests {
         #expect(middle > 0 && middle < 1)
     }
 }
+
+/// **The volley.** Keks, watching a fight: *"střílení je docela rychlé."*
+///
+/// It was not the rate — a step of a siege is fifteen real seconds and at most
+/// one volley is loosed in it. Two other things were wrong, and together they
+/// read as continuous fire:
+///
+/// - a beat stayed on screen for 0.12 of the fight, very nearly **three**
+///   steps, so three volleys overlapped and each faded through the next;
+/// - the arrows did not move. Six dashes were strung along the flight path at
+///   `t = 0.15 + i * 0.12` — a function of *which arrow*, never of *when* — so
+///   a volley was a static fan that faded where it stood.
+@Suite("A volley is a flight, and it lands")
+struct VolleyTests {
+
+    /// One beat, one step — of *this* fight. Derived rather than written down,
+    /// so it cannot drift away from the fight it is timing (rule 35), and so a
+    /// long siege has more beats rather than shorter ones.
+    @Test("A beat lasts one step of the fight and no longer",
+          arguments: [Siege.stepsFloor, 24, 40, Siege.stepsCeiling])
+    func aBeatIsAStep(steps: Int) {
+        let beat = SettlementBattle.momentLife(steps: steps)
+        #expect(abs(beat - 1 / Double(steps)) < 1e-9)
+        // The bug, pinned: three of these used to fit inside one beat.
+        #expect(beat < 0.12, "a volley outlives its own step again")
+    }
+
+    /// The volley phase still comes before the clash, whatever the beat is —
+    /// the fix must not reorder the fight.
+    @Test("The shooting still happens before the lines meet")
+    func theOrderHolds() {
+        #expect(SettlementBattle.volleyAt < SettlementBattle.meleeAt)
+        #expect(SettlementBattle.phase(at: SettlementBattle.volleyAt + 0.01) == .volley)
+        #expect(SettlementBattle.phase(at: 0.0) == .marching)
+    }
+
+    /// A beat has to be long enough to *see*. One step of a siege is fifteen
+    /// real seconds at the shipped tick rate; an arrow crossing the field in
+    /// that is a flight rather than a flicker.
+    @Test("A beat is long enough to watch")
+    func aBeatIsWatchable() {
+        let stepsPerTick = 8.0
+        let secondsPerTick = 120.0
+        // A beat is one step whatever the fight's length, so this is the same
+        // number of real seconds for a skirmish and for a war — which is the
+        // point: the fight gets longer, its beats do not get faster.
+        for steps in [Siege.stepsFloor, 24, Siege.stepsCeiling] {
+            let beatSeconds = SettlementBattle.momentLife(steps: steps)
+                * Double(steps) * (secondsPerTick / stepsPerTick)
+            #expect(beatSeconds > 5, "a volley is gone too fast to see")
+            #expect(beatSeconds < 30, "a volley hangs about")
+        }
+    }
+}

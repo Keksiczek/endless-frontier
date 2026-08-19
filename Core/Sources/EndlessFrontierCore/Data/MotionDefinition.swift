@@ -101,6 +101,17 @@ public struct MotionDefinition: Codable, Sendable, Identifiable, Equatable {
     /// file rather than a branch in Swift.
     public let servesBuildings: [String]
 
+    /// **What this clip is for riding or driving**, by `conveyances.json` id.
+    ///
+    /// One rank above the building, because a body on a horse is not the same
+    /// body doing the same trade on foot — a rider's legs do not walk, a
+    /// driver's hands are out in front of them holding something, and a
+    /// travois is dragged from the shoulders. The class name is accepted too
+    /// (`mount`, `cart`, `rail`, `motor`, `air`), so one clip can serve every
+    /// cart in the game and a particular one can still be written for the
+    /// orbital lifter.
+    public let servesConveyance: [String]
+
     /// The legs, driven by the walk cycle and scaled by how much the colonist
     /// is actually moving.
     public let legs: Wave
@@ -141,6 +152,7 @@ public struct MotionDefinition: Codable, Sendable, Identifiable, Equatable {
         servesWork: [String] = [],
         servesPhases: [String] = [],
         servesBuildings: [String] = [],
+        servesConveyance: [String] = [],
         legs: Wave = .still,
         toolArm: Wave = .still,
         freeArmCounterSwing: Double = 0,
@@ -159,6 +171,7 @@ public struct MotionDefinition: Codable, Sendable, Identifiable, Equatable {
         self.servesWork = servesWork
         self.servesPhases = servesPhases
         self.servesBuildings = servesBuildings
+        self.servesConveyance = servesConveyance
         self.legs = legs
         self.toolArm = toolArm
         self.freeArmCounterSwing = freeArmCounterSwing
@@ -178,6 +191,7 @@ public struct MotionDefinition: Codable, Sendable, Identifiable, Equatable {
         case servesWork = "serves_work"
         case servesPhases = "serves_phases"
         case servesBuildings = "serves_buildings"
+        case servesConveyance = "serves_conveyance"
         case toolArm = "tool_arm"
         case freeArmCounterSwing = "free_arm_counter_swing"
         case handHeight = "hand_height"
@@ -191,6 +205,7 @@ public struct MotionDefinition: Codable, Sendable, Identifiable, Equatable {
         servesWork = try c.decodeIfPresent([String].self, forKey: .servesWork) ?? []
         servesPhases = try c.decodeIfPresent([String].self, forKey: .servesPhases) ?? []
         servesBuildings = try c.decodeIfPresent([String].self, forKey: .servesBuildings) ?? []
+        servesConveyance = try c.decodeIfPresent([String].self, forKey: .servesConveyance) ?? []
         legs = try c.decodeIfPresent(Wave.self, forKey: .legs) ?? .still
         toolArm = try c.decodeIfPresent(Wave.self, forKey: .toolArm) ?? .still
         freeArmCounterSwing = try c.decodeIfPresent(Double.self, forKey: .freeArmCounterSwing) ?? 0

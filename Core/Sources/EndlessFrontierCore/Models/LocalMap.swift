@@ -711,6 +711,32 @@ public struct LocalMap: Codable, Sendable, Equatable {
         LocalTerrain.cover(terrainSeed: terrainSeed, biomeID: biomeID, column: column, row: row)
     }
 
+    /// The ground under a point of the valley, in normalised coordinates.
+    public func cover(at point: LocalPoint) -> GroundCover {
+        let column = min(Self.gridColumns - 1, max(0, Int(point.x * Double(Self.gridColumns))))
+        let row = min(Self.gridRows - 1, max(0, Int(point.y * Double(Self.gridRows))))
+        return cover(column: column, row: row)
+    }
+
+    /// Every kind of ground a straight walk from `from` to `to` would cross.
+    ///
+    /// What makes a conveyance a *choice* rather than an upgrade: a cart may
+    /// not take a route through a bog, and this is the question that finds
+    /// out. Sampled rather than walked cell by cell — the grid is 40×25 and a
+    /// route across the whole valley touches a few dozen cells, so thirty-two
+    /// samples cannot miss a band of anything wide enough to matter and cost
+    /// the same whatever the distance.
+    public func covers(from: LocalPoint, to: LocalPoint, samples: Int = 32) -> Set<GroundCover> {
+        var out: Set<GroundCover> = []
+        let steps = max(2, samples)
+        for i in 0...steps {
+            let t = Double(i) / Double(steps)
+            out.insert(cover(at: LocalPoint(x: from.x + (to.x - from.x) * t,
+                                            y: from.y + (to.y - from.y) * t)))
+        }
+        return out
+    }
+
     public init(
         river: RiverShape,
         nodes: [ResourceNode],

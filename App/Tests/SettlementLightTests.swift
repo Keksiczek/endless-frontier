@@ -236,6 +236,58 @@ struct SettlementLightTests {
         #expect(late > 0.3)
     }
 
+    // MARK: - It does not snow in the desert
+
+    /// **The biome was a colour on the canvas.** Winter dressing was season and
+    /// progress and nothing else, so a dune sea in January was drawn exactly
+    /// like a tundra in January — while `Climate` had been saying for months
+    /// that one is eleven degrees warmer than the plains and the other thirteen
+    /// colder. Nothing on the canvas read it.
+    @Test("A desert winter puts no snow on the ground")
+    func desertsDoNotSnow() throws {
+        let registry = try GameDataRegistry.bundled()
+        let desert = SettlementSeasons.Country(biomeID: "desert", registry: registry)
+        let tundra = SettlementSeasons.Country(biomeID: "tundra", registry: registry)
+        let deep = { (c: SettlementSeasons.Country) in
+            SettlementSeasons.coverage(season: .winter, progress: 0.5, country: c)
+        }
+        #expect(deep(desert) < 0.05, "midwinter in the dunes was \(deep(desert))")
+        #expect(deep(tundra) > 0.95, "a tundra that barely goes white")
+        // …and no melt to follow, because there was nothing to melt.
+        #expect(SettlementSeasons.coverage(season: .spring, progress: 0.05,
+                                           country: desert) < 0.2)
+    }
+
+    /// The other half of the same rule: the ordinary country is untouched. Every
+    /// band above was tuned against a temperate valley, and a "climate" pass
+    /// that quietly halves the snow everywhere is a regression wearing a
+    /// feature's clothes.
+    @Test("The ordinary valley is dressed exactly as before")
+    func temperateCountryIsUnchanged() throws {
+        let registry = try GameDataRegistry.bundled()
+        for id in ["plains", "forest", "tundra", "mountains"] {
+            let country = SettlementSeasons.Country(biomeID: id, registry: registry)
+            #expect(SettlementSeasons.coverage(season: .winter, progress: 0.5,
+                                               country: country) > 0.95,
+                    "\(id) stopped going white at midwinter")
+            #expect(SettlementSeasons.coverage(season: .spring, progress: 0.02,
+                                               country: country) > 0.9,
+                    "\(id) stopped thawing into mud")
+        }
+    }
+
+    /// A biome the file has never heard of is the ordinary country, not a
+    /// desert — the failure mode that would silently strip winter off every
+    /// valley the day a biome is renamed.
+    @Test("An unknown country is a temperate one")
+    func unknownBiomeIsTemperate() throws {
+        let registry = try GameDataRegistry.bundled()
+        let nowhere = SettlementSeasons.Country(biomeID: "__nowhere__", registry: registry)
+        #expect(nowhere == .temperate)
+        #expect(SettlementSeasons.coverage(season: .winter, progress: 0.5,
+                                           country: nowhere) > 0.95)
+    }
+
     @Test("Rock and sand shed snow before a meadow does")
     func rockShedsSnow() {
         let onRock = skinned(season: .winter, progress: 0.16, cover: .rock) {

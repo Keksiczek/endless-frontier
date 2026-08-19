@@ -179,7 +179,13 @@ Swift first, then generate — the whole point of writing this down.
    walk and `cargo` had nothing to multiply. `HaulEngine.armfuls` is that size
    now, and the yard adds to it — what will not fit stays on the ground for
    the next trip, which is the pressure a cart is an answer to.
-5. Terrain routing: a conveyance refuses ground outside its `terrain`.
+5. ~~Terrain routing: a conveyance refuses ground outside its `terrain`.~~
+   **Done 2026-08-19** — `ConveyanceTerrainTests`. Two questions, not one:
+   `bestPace(_:from:to:)` samples the cells a walk across the valley actually
+   crosses, and `bestRegionPace(_:crossing:)` reads the dominant cover of every
+   biome a road runs through (`CaravanEngine.countryBetween`). A journey a
+   conveyance cannot make is one it does not join, and the answer falls back
+   to walking — never slower than feet, which are always available.
 6. Presentation: a `riding` activity in `AgentMotion`, `serves_conveyance` in
    the motion bank, and a figure drawn on the beast.
 7. **Then** generate forty to sixty conveyances across all six eras, plus the

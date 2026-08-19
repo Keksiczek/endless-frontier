@@ -365,6 +365,13 @@ public enum LocalTerrain {
         }
     }
 
+    /// The one cover that gives a country its character — the heaviest in its
+    /// mix. What a journey *through* a region has to be able to cross, since
+    /// the world map has one hex where the local map has a thousand cells.
+    public static func dominantCover(of biomeID: String) -> GroundCover? {
+        weights(for: biomeID).max { $0.1 < $1.1 }?.0
+    }
+
     /// The scenery mix a biome scatters, and how much of it.
     public static func sceneryMix(for biomeID: String) -> (kinds: [(SceneryKind, Double)], count: Int) {
         switch biomeID {

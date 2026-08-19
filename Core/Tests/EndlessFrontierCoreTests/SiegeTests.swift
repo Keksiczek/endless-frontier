@@ -52,7 +52,7 @@ struct SiegeTests {
     /// How far the world clock has to run for a siege opened on `tick` to be
     /// carried to its end.
     private func endStep(of siege: Siege) -> Int {
-        siege.openedAt + Siege.stepsTotal
+        siege.openedAt + siege.steps
     }
 
     // MARK: - It is actually live
@@ -141,7 +141,7 @@ struct SiegeTests {
         #expect(!(try #require(s.siege).inContact))
 
         var met = false
-        for step in 1...Siege.stepsTotal {
+        for step in 1...(s.siege?.steps ?? Siege.stepsTotal) {
             s = SiegeEngine.advance(s, to: opened + step, registry: reg)
             guard let siege = s.siege else { break }
             if siege.inContact { met = true; break }
@@ -158,7 +158,8 @@ struct SiegeTests {
         let reg = try registry()
         var s = try besieged(colony(pawns: 8, defense: 6), strength: 90)
         let opened = try #require(s.siege).openedAt
-        s = SiegeEngine.advance(s, to: opened + Siege.stepsTotal, registry: reg)
+        s = SiegeEngine.advance(s, to: opened + (s.siege?.steps ?? Siege.stepsTotal),
+                                registry: reg)
         let hurt = s.pawns.filter { $0.health < 100 }.count
         #expect(hurt >= 3, "ninety raiders and only \(hurt) of eight came away marked")
     }
@@ -491,8 +492,11 @@ struct SiegeTests {
             for posture in Siege.Posture.allCases {
                 var s = try besieged(colony(), strength: strength)
                 s = SiegeEngine.order(s, posture: posture)
-                let opened = try #require(s.siege).openedAt
-                s = SiegeEngine.advance(s, to: opened + Siege.stepsTotal, registry: reg)
+                // Its *own* window: a fight's length is now a function of the
+                // assault (`Siege.lengthFor`), so "run it to the end" means
+                // running it to the end of this one.
+                let siege = try #require(s.siege)
+                s = SiegeEngine.advance(s, to: siege.openedAt + siege.steps, registry: reg)
                 #expect(s.siege == nil,
                         "a \(strength)-strong raid at \(posture) never ended")
                 #expect(s.lastBattle != nil)

@@ -75,7 +75,11 @@ enum SettlementGround {
         var texture: [GroundCover: Path] = [:]
         var skinMarks: [SettlementSeasons.Skin: Path] = [:]
 
-        let coverage = SettlementSeasons.coverage(season: season, progress: seasonProgress)
+        // The country this valley is in, so a desert is not drawn under snow
+        // and a tundra is not drawn under a dusting.
+        let coverage = SettlementSeasons.coverage(
+            season: season, progress: seasonProgress,
+            country: SettlementSeasons.Country(biomeID: map.biomeID, registry: registry))
         // Only autumn needs to know where the wood stands.
         let canopy = season == .autumn ? SettlementSeasons.canopy(map: map) : []
         let seed = map.terrainSeed

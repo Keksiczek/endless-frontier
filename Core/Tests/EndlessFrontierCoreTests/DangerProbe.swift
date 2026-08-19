@@ -118,7 +118,8 @@ struct DangerProbe {
                     s, attackerStrength: strength, attackerName: "Warband",
                     fortification: defense, tick: 100, registry: registry, seed: 0xBEEF)
                 let opened = try #require(s.siege).openedAt
-                s = SiegeEngine.advance(s, to: opened + Siege.stepsTotal, registry: registry)
+                s = SiegeEngine.advance(s, to: opened + (s.siege?.steps ?? Siege.stepsTotal),
+                                        registry: registry)
                 let dead = 12 - s.pawns.count
                 let hurt = s.pawns.filter { $0.health < 100 }.count
                 let worst = 100 - (s.pawns.map(\.health).min() ?? 100)

@@ -188,7 +188,28 @@ public struct GameDataRegistry: Sendable {
     /// two clips both matched is worse than no clip at all.
     public func motion(activity: String, work: String?,
                        phase: String? = nil, variant: UInt64 = 0,
-                       building: String? = nil) -> MotionDefinition {
+                       building: String? = nil,
+                       conveyance: ConveyanceDefinition? = nil) -> MotionDefinition {
+        // **What they are on outranks everything.** A rider's legs do not walk
+        // and a driver's hands are out in front of them, so a body on a horse
+        // is not the trade's clip with a horse drawn under it. Asked before the
+        // trade is even looked at, because a hauler on a cart is still hauling
+        // and the trade's own clip would win every time otherwise.
+        if let conveyance {
+            let named = [conveyance.id, conveyance.kind.rawValue]
+            let fitted = motions.values
+                .filter { clip in
+                    clip.servesActivities.contains(activity)
+                        && clip.servesConveyance.contains(where: named.contains)
+                }
+                .sorted { $0.id < $1.id }
+            // The clip written for *this* conveyance beats the one written for
+            // its whole class, or every wagon in the game is a travois.
+            let exact = fitted.filter { $0.servesConveyance.contains(conveyance.id) }
+            if let pick = one(of: exact.isEmpty ? fitted : exact, variant: variant) {
+                return pick
+            }
+        }
         if let work {
             let fitted = motions.values
                 .filter { $0.servesWork.contains(work) && $0.servesActivities.contains(activity) }
@@ -200,7 +221,9 @@ public struct GameDataRegistry: Sendable {
             // falls through to the trade's own clips, which is what keeps the
             // bank total while it is only half written.
             if let building {
-                let here = fitted.filter { $0.servesBuildings.contains(building) }
+                let here = fitted.filter {
+                    $0.servesBuildings.contains(building) && $0.servesConveyance.isEmpty
+                }
                 if let phase {
                     let matched = here.filter { $0.servesPhases.contains(phase) }
                     if let pick = one(of: matched, variant: variant) { return pick }
@@ -227,7 +250,9 @@ public struct GameDataRegistry: Sendable {
             // every room. When a trade has only room-specific clips the answer
             // is the plain `working` body below, which is what somebody working
             // in an unwritten place actually looks like.
-            let pool = fitted.filter { $0.servesBuildings.isEmpty }
+            let pool = fitted.filter {
+                $0.servesBuildings.isEmpty && $0.servesConveyance.isEmpty
+            }
             if let phase {
                 let matched = pool.filter { $0.servesPhases.contains(phase) }
                 if let pick = one(of: matched, variant: variant) { return pick }
@@ -238,7 +263,10 @@ public struct GameDataRegistry: Sendable {
             }
         }
         let byActivity = motions.values
-            .filter { $0.servesWork.isEmpty && $0.servesActivities.contains(activity) }
+            .filter {
+                $0.servesWork.isEmpty && $0.servesActivities.contains(activity)
+                    && $0.servesConveyance.isEmpty
+            }
             .sorted { $0.id < $1.id }
         return one(of: byActivity, variant: variant) ?? motion(activity)
     }

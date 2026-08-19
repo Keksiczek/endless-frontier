@@ -163,6 +163,68 @@ public enum StableEngine {
         return s
     }
 
+    // MARK: - Who is on what
+
+    /// Puts the yard under the people actually moving something.
+    ///
+    /// A cart standing in the yard is a number in `haulLift`; a cart with
+    /// somebody on it is a thing on the canvas, a body that arrives sooner and
+    /// a loss the colony feels when the wolf gets the horse. This is what turns
+    /// the one into the other — and it lives here rather than in the renderer
+    /// because presentation never writes the world, so the world has to know
+    /// who is riding before anybody can be drawn riding.
+    ///
+    /// Who rides: whoever is under way with a load on. Not somebody at a bench,
+    /// not somebody asleep, and not more people than the yard has room for —
+    /// one driver per conveyance, which is what `riderID` means.
+    ///
+    /// Deterministic: carriers in stored order against the yard in stored
+    /// order, so the same world always puts the same person on the same cart.
+    public static func assignRiders(
+        _ settlement: Settlement, registry: GameDataRegistry
+    ) -> Settlement {
+        guard !settlement.conveyances.isEmpty else { return settlement }
+        var s = settlement
+        let carriers = s.pawns
+            .filter { $0.carrying != nil && !$0.isAway && !$0.isBroken }
+            .map { (id: $0.id, walk: $0.haulWalk) }
+        var taken = 0
+        for i in s.conveyances.indices {
+            guard taken < carriers.count else {
+                // Nobody left to drive it: it is standing in the yard, and the
+                // record has to say so or a cart keeps a rider who went home.
+                s.conveyances[i].riderID = nil
+                continue
+            }
+            guard let def = registry.conveyance(s.conveyances[i].definitionID) else {
+                s.conveyances[i].riderID = nil
+                continue
+            }
+            // The ground still has a say. A cart that cannot cross the bog
+            // between the field and the granary is a cart that stays behind,
+            // and the carrier walks — which is `bestPace(_:from:to:)`'s rule
+            // applied to one particular person's trip.
+            let next = carriers[taken]
+            if let walk = next.walk, let map = s.localMap {
+                guard map.covers(from: walk.from, to: walk.to).allSatisfy(def.canCross) else {
+                    s.conveyances[i].riderID = nil
+                    continue
+                }
+            }
+            s.conveyances[i].riderID = next.id
+            taken += 1
+        }
+        return s
+    }
+
+    /// What this colonist is riding or driving right now, if anything. The one
+    /// question the canvas asks.
+    public static func conveyance(
+        of pawnID: UUID, in settlement: Settlement
+    ) -> Conveyance? {
+        settlement.conveyances.first { $0.riderID == pawnID }
+    }
+
     // MARK: - Reading the yard
 
     /// The best pace the colony can put a body on, on its own map — 1 when it
@@ -238,6 +300,56 @@ public enum StableEngine {
         settlement.conveyances.contains {
             registry.conveyance($0.definitionID)?.canCross(cover) ?? false
         }
+    }
+
+    // MARK: - The ground has a say
+
+    /// The best pace the colony can put a body on **for a particular journey**
+    /// across its own valley — 1 when nothing in the yard can make that trip,
+    /// which is walking.
+    ///
+    /// This is what makes the yard a *choice*. `bestPace` answers "what is the
+    /// fastest thing I own"; this answers "what is the fastest thing that can
+    /// get there", and they are different questions the moment a bog lies
+    /// between the two. Without it every conveyance is strictly better than
+    /// the last and the only decision is whether you have unlocked it.
+    public static func bestPace(
+        _ settlement: Settlement, from: LocalPoint, to: LocalPoint,
+        registry: GameDataRegistry
+    ) -> Double {
+        guard let map = settlement.localMap else {
+            return bestPace(settlement, registry: registry)
+        }
+        let crossed = map.covers(from: from, to: to)
+        return settlement.conveyances
+            .compactMap { thing -> Double? in
+                guard let def = registry.conveyance(thing.definitionID) else { return nil }
+                return crossed.allSatisfy(def.canCross) ? def.pace : nil
+            }
+            .max() ?? 1
+    }
+
+    /// …and the same for a journey out of the valley, where the ground is a
+    /// run of biomes rather than a run of cells.
+    ///
+    /// A region's country is its dominant cover — the one `LocalTerrain`
+    /// weights heaviest, and the one that gives the place its character. A
+    /// cart that cannot take marsh cannot take the road through the fens,
+    /// whatever the fens have around their edges.
+    public static func bestRegionPace(
+        _ settlement: Settlement, crossing biomeIDs: [String],
+        registry: GameDataRegistry
+    ) -> Double {
+        let country = Set(biomeIDs.compactMap { LocalTerrain.dominantCover(of: $0) })
+        guard !country.isEmpty else {
+            return bestRegionPace(settlement, registry: registry)
+        }
+        return settlement.conveyances
+            .compactMap { thing -> Double? in
+                guard let def = registry.conveyance(thing.definitionID) else { return nil }
+                return country.allSatisfy(def.canCross) ? def.regionPace : nil
+            }
+            .max() ?? 1
     }
 
     // MARK: - Ids

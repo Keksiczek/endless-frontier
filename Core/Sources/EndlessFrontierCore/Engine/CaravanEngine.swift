@@ -31,12 +31,46 @@ public enum CaravanEngine {
         from origin: Settlement, to destination: Settlement, in state: WorldState,
         registry: GameDataRegistry? = nil
     ) -> Int {
-        let pace = registry.map { StableEngine.bestRegionPace(origin, registry: $0) } ?? 1
         guard let o = region(of: origin, in: state), let d = region(of: destination, in: state) else {
+            let pace = registry.map { StableEngine.bestRegionPace(origin, registry: $0) } ?? 1
             return max(minTravelTicks, Int((Double(fallbackTravelTicks) / max(0.1, pace)).rounded()))
         }
+        // **The country between them.** A cart that cannot take marsh cannot
+        // take the road through the fens, so the pace this journey gets is the
+        // pace of the best thing in the yard that can actually make it — not
+        // the best thing in the yard.
+        let crossed = countryBetween(o, d, in: state)
+        let pace = registry.map {
+            StableEngine.bestRegionPace(origin, crossing: crossed, registry: $0)
+        } ?? 1
         let plain = Double(o.coord.distance(to: d.coord) * ticksPerHex)
         return max(minTravelTicks, Int((plain / max(0.1, pace)).rounded()))
+    }
+
+    /// The biomes a road between two regions runs through.
+    ///
+    /// A straight line over the hex grid rather than a path-find: the world map
+    /// has no roads yet, and what this is for is asking *what country is in the
+    /// way*, which a line answers as well as a route would. Regions the world
+    /// does not have are skipped rather than guessed at.
+    static func countryBetween(
+        _ from: Region, _ to: Region, in state: WorldState
+    ) -> [String] {
+        let steps = max(1, from.coord.distance(to: to.coord))
+        let a = Bearing.plane(from.coord), b = Bearing.plane(to.coord)
+        var out: [String] = [from.biomeID, to.biomeID]
+        for i in 1..<steps {
+            let t = Double(i) / Double(steps)
+            let x = a.x + (b.x - a.x) * t, y = a.y + (b.y - a.y) * t
+            // Back to axial, and to the nearest hex.
+            let r = (y / 0.866_025_4).rounded()
+            let q = (x - r / 2).rounded()
+            let coord = HexCoord(Int(q), Int(r))
+            if let region = state.regions.first(where: { $0.coord == coord }) {
+                out.append(region.biomeID)
+            }
+        }
+        return out
     }
 
     /// Whether a caravan can be dispatched with the given cargo and escort.

@@ -36,20 +36,109 @@ enum SettlementSeasons {
     /// dusting is a winter nobody sees.
     ///
     /// `progress` is how far through this season the year has got.
-    static func coverage(season: Season, progress: Double) -> Double {
+    static func coverage(season: Season, progress: Double,
+                         country: Country = .temperate) -> Double {
         let p = max(0, min(1, progress))
+        let held = country.holds(season)
         switch season {
         case .winter:
             // Lying by the first week, deep by midwinter, still deep at its end
             // — a thaw is spring's business, not winter's.
-            return smoothstep(0.02, 0.40, p)
+            return smoothstep(0.02, 0.40, p) * held
         case .spring:
             // The melt is *first*: spring opens as mud and dries out of it.
-            return 1 - smoothstep(0.05, 0.62, p)
+            return (1 - smoothstep(0.05, 0.62, p)) * held
         case .autumn:
-            return smoothstep(0.10, 0.70, p)
+            return smoothstep(0.10, 0.70, p) * held
         case .summer:
-            return smoothstep(0.22, 0.78, p)
+            return smoothstep(0.22, 0.78, p) * held
+        }
+    }
+
+    // MARK: - What country this is
+
+    /// How much of each season's dressing a particular country actually gets.
+    ///
+    /// **It does not snow in the desert.** The dressing above was season and
+    /// progress and nothing else, so every valley in the world went white on
+    /// the same day and thawed on the same day: a dune sea in January was
+    /// drawn as a tundra in January, and the biome the map generator works so
+    /// hard to choose was — again — a colour. `Climate` has said for a while
+    /// that the desert is eleven degrees warmer and the tundra thirteen colder;
+    /// nothing on the canvas read it.
+    ///
+    /// Snow wants **cold and water**, which is why the two fields it is built
+    /// from are the ones that mean exactly that: `temperature_shift` and the
+    /// biome's own `niche.moisture`. A cold wet country lies deep, a cold dry
+    /// one gets a scouring and bare ground, and a hot one gets nothing at all
+    /// whatever the calendar says.
+    struct Country: Equatable {
+        /// °C this country adds to the season — negative is cold.
+        var shift: Double
+        /// −1 (desert) … +1 (fen). The biome's `niche.moisture`.
+        var moisture: Double
+
+        /// The middling place the canvas used to assume everywhere was.
+        static let temperate = Country(shift: 0, moisture: 0)
+
+        /// Read off the biome, so a seventh biome is drawn correctly the day
+        /// its JSON lands rather than the day somebody remembers this file.
+        init(shift: Double = 0, moisture: Double = 0) {
+            self.shift = shift
+            self.moisture = moisture
+        }
+
+        init(biomeID: String, registry: GameDataRegistry) {
+            guard let biome = registry.biome(biomeID) else {
+                self = .temperate
+                return
+            }
+            // A biome with no niche stated is the middling wet — the field
+            // is optional in the schema and the answer must not be "desert".
+            self.init(shift: biome.temperatureShift,
+                      moisture: biome.niche?.moisture ?? 0)
+        }
+
+        /// **Calibrated so the ordinary country is unchanged.** The temperate
+        /// valley these bands were tuned against still goes fully white at
+        /// midwinter and fully to mud in spring: this only takes dressing
+        /// *away*, from the places that have no business wearing it. Plains,
+        /// forest, tundra and mountains all come out at 1; the coast, mild and
+        /// wet, keeps three quarters of its snow; the desert keeps none.
+
+        /// How damp, 0 (dune sea) … 1. Saturates quickly, because only a real
+        /// desert is dry enough for it to matter — a `niche.moisture` of −0.05
+        /// is a tundra, not a drought.
+        var dampness: Double { max(0, min(1, 1.35 + moisture)) }
+
+        /// How cold, 0 (a hot country) … 1. Everything at or below the plains'
+        /// own temperature is simply "cold enough to snow"; the scale is for
+        /// the warm end, where the coast sits at +4 and the desert at +11.
+        var coldness: Double { max(0, min(1, (10 - shift) / 8)) }
+
+        /// How much of this season's dressing lies here.
+        func holds(_ season: Season) -> Double {
+            switch season {
+            case .winter:
+                // Snow wants cold *and* water, and multiplying is what makes a
+                // hot desert get none however dry-cold the night is.
+                return coldness * dampness
+            case .spring:
+                // Mud is last winter's snow. No snow, no melt — a desert
+                // spring is dust, which is the ground's own colour. The floor
+                // is the rain a dry place still gets.
+                return max(0.12 * dampness, coldness * dampness)
+            case .autumn:
+                // Leaves need a wood, and `skin` already asks for the canopy;
+                // this only thins the litter where the country is sparse.
+                return max(0, min(1, 0.55 + 0.45 * dampness))
+            case .summer:
+                // The other way round, and read off the raw moisture rather
+                // than the saturating `dampness`: a fen stays green through
+                // August and a dune sea burns off entirely, and the ordinary
+                // valley — moisture 0 — is left exactly where it was tuned.
+                return max(0, min(1, 1 - 0.5 * max(0, moisture)))
+            }
         }
     }
 

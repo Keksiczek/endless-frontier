@@ -18,6 +18,15 @@ enum SettlementFigures {
     /// How big a grown colonist is drawn, against the buildings they live in.
     static let bodyScale: CGFloat = 0.82
 
+    /// How tall a grown colonist stands, in points, at a given zoom.
+    ///
+    /// The figure is drawn in body units — the head sits at `-4.9 * scale` and
+    /// the feet at `+6 * scale` — so this is that span. Anything drawn *beside*
+    /// a person (a cart, a beast under a rider) sizes itself against this, or
+    /// it ends up scaled against the buildings and a handcart comes out the
+    /// size of a barn.
+    static func bodyHeight(zoom: CGFloat) -> CGFloat { 10.9 * bodyScale * zoom }
+
     static func draw(
         pawn: Pawn, pose: AgentMotion.Pose, at anchor: CGPoint,
         time: Double, ticksPerYear: Int, selected: Bool, zoom: CGFloat = 1,

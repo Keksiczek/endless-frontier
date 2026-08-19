@@ -21,7 +21,7 @@ public enum Bearing {
     ///
     /// Only the *direction* between two of these is ever used, so the scale is
     /// arbitrary and the constants are the standard axial-to-cartesian ones.
-    static func plane(_ coord: HexCoord) -> (x: Double, y: Double) {
+    public static func plane(_ coord: HexCoord) -> (x: Double, y: Double) {
         let x = Double(coord.q) + Double(coord.r) / 2
         let y = Double(coord.r) * 0.866_025_4      // √3/2
         return (x, y)

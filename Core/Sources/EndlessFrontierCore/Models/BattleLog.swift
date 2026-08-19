@@ -99,6 +99,9 @@ public struct BattleLog: Codable, Sendable, Equatable, Identifiable {
     /// while it is being watched, and *stored* rather than derived from a hash
     /// so the same fight always comes from the same side of the valley.
     public let approach: Double
+    /// How many steps the fight it records ran for, so a replay beats at the
+    /// same rate the live fight did.
+    public let steps: Int
     /// How many came. The canvas draws this many raiders; the simulation
     /// settles the fight on strength alone, so this is the strength made
     /// countable rather than a second source of truth.
@@ -112,6 +115,7 @@ public struct BattleLog: Codable, Sendable, Equatable, Identifiable {
     public init(id: UUID, tick: Int, attackerName: String, defenderName: String,
                 moments: [BattleMoment], repelled: Bool,
                 attackerLabel: LocalizedText? = nil, approach: Double = 0,
+                steps: Int = Siege.stepsTotal,
                 attackers: Int = 0, line: [UUID] = []) {
         self.id = id
         self.tick = tick
@@ -121,6 +125,7 @@ public struct BattleLog: Codable, Sendable, Equatable, Identifiable {
         self.moments = moments.sorted { $0.at == $1.at ? $0.id < $1.id : $0.at < $1.at }
         self.repelled = repelled
         self.approach = approach
+        self.steps = max(1, steps)
         self.attackers = attackers
         self.line = line
     }
@@ -129,7 +134,7 @@ public struct BattleLog: Codable, Sendable, Equatable, Identifiable {
 
     private enum CodingKeys: String, CodingKey {
         case id, tick, attackerName, attackerLabel, defenderName, moments, repelled
-        case approach, attackers, line
+        case approach, attackers, line, steps
     }
 
     public init(from decoder: Decoder) throws {
@@ -142,6 +147,7 @@ public struct BattleLog: Codable, Sendable, Equatable, Identifiable {
         moments = try c.decode([BattleMoment].self, forKey: .moments)
         repelled = try c.decode(Bool.self, forKey: .repelled)
         approach = try c.decodeIfPresent(Double.self, forKey: .approach) ?? 0
+        steps = try c.decodeIfPresent(Int.self, forKey: .steps) ?? Siege.stepsTotal
         attackers = try c.decodeIfPresent(Int.self, forKey: .attackers) ?? 0
         line = try c.decodeIfPresent([UUID].self, forKey: .line) ?? []
     }

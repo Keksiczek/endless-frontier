@@ -66,8 +66,16 @@ public enum SiegeEngine {
     /// which is what the one-tick resolver credited it with. A hand-picked
     /// number here is how an *undefended* colony quietly started turning back
     /// warbands that used to walk straight through it.
-    static var meleePerStep: Double {
-        1 / Double(max(1, Siege.stepsTotal - typicalApproachSteps))
+    /// The share of their weight a fighter lands in one step of contact, in a
+    /// fight of `steps` steps.
+    ///
+    /// Was a static off `Siege.stepsTotal`, which was fine while every fight
+    /// was that long and wrong the moment they stopped being: a long siege
+    /// would have delivered its line's weight three times over, and a short one
+    /// half of it. The contract is *one full weight across the fight*, so it
+    /// has to be measured against the fight it is in.
+    static func meleePerStep(steps: Int) -> Double {
+        1 / Double(max(1, steps - typicalApproachSteps))
     }
     /// …and the share an archer looses per step, while they still have the
     /// range to. There are only a few such steps, which is the point: closing
@@ -652,14 +660,14 @@ public enum SiegeEngine {
         var total = 0.0
         for pair in met.colony {
             let swing = (power[pair.colonist]?.melee ?? 0) * siege.posture.bite
-                * (0.85 + rng.nextUnit() * 0.3) * meleePerStep
+                * (0.85 + rng.nextUnit() * 0.3) * meleePerStep(steps: siege.steps)
             total += wound(raider: pair.on, by: swing, siege: &siege)
         }
         // The wall itself, while somebody is holding it: stakes, a ditch, and
         // stones off the parapet — worth something beyond soaking blows.
         if let first = met.colony.first {
             total += wound(raider: first.on,
-                           by: siege.fortification * fortificationBite * meleePerStep,
+                           by: siege.fortification * fortificationBite * meleePerStep(steps: siege.steps),
                            siege: &siege)
         }
         guard total > 0 else { return }
@@ -1120,6 +1128,7 @@ public enum SiegeEngine {
             attackerName: siege.attackerName, defenderName: s.name,
             moments: moments, repelled: siege.repelled,
             attackerLabel: siege.attackerLabel, approach: siege.approach,
+            steps: siege.steps,
             attackers: siege.attackers, line: siege.line)
         s.lastBattle = record
         // …and it is kept. A colony that fought four raids has four records,

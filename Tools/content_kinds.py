@@ -192,12 +192,24 @@ not an emotion.
 and **outranks the trade**. This is the difference between a weaver and a
 tanner, who are both `crafting` and were drawn identically until a clip could
 name the shed it happens in. A clip with `serves_buildings` is only ever chosen
-inside those buildings, so write it for the actual work done there.""",
+inside those buildings, so write it for the actual work done there.
+
+`serves_conveyance` outranks even that: a body on a horse or between the shafts
+of a cart is not the trade's clip with a cart drawn under it. It takes either a
+`conveyances.json` id or a class (`mount`, `cart`, `rail`, `motor`, `air`), and
+those clips serve the `riding` activity and no trade at all — a rider's legs do
+not walk, so `legs.amplitude` is near 0 for anything sat on or in.
+
+**A clip has to be reachable, not merely declared.** `serves_work` must name the
+trade of whoever actually stands in that building — the one `buildings.json`
+gives as its `work` — or the ask the canvas makes will never carry it.""",
         "wants": "one clip per staffed building — a bloomery, a windmill, a "
                  "foundry and a library are four different rooms and currently "
                  "four people doing the same thing",
-        # `MotionDefinition` learned this before any row used it.
-        "new_fields": ("serves_buildings",),
+        # `MotionDefinition` learned these before any row used them.
+        "new_fields": ("serves_buildings", "serves_conveyance"),
+        # …and `AgentMotion.Activity` learned `riding` the same way.
+        "new_values": {"serves_activities": ("riding",)},
     },
     "scenery": {
         "file": "scenery.json",

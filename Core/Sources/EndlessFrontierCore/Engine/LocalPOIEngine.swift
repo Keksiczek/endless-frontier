@@ -102,12 +102,16 @@ public enum LocalPOIEngine {
             poiID: poiID,
             memberIDs: party,
             departedTick: s.tick,
-            // A party takes the yard with it. The best thing standing in it,
-            // because the expedition moves at the pace of what it took, not at
-            // the average of everything the colony owns.
+            // A party takes the yard with it — but only what can get there.
+            // The best thing standing in it is not the best thing for *this*
+            // journey the moment a bog lies between the town and the cave, and
+            // that difference is what makes a second conveyance worth owning
+            // rather than a strictly better one worth replacing it with.
             travelTicks: travelTicks(
                 to: poi.position,
-                pace: StableEngine.bestRegionPace(state.settlements[seat], registry: registry)),
+                pace: StableEngine.bestPace(state.settlements[seat],
+                                            from: heart, to: poi.position,
+                                            registry: registry)),
             workTicks: poi.kind.workTicks)
 
         for i in s.settlements[seat].pawns.indices where party.contains(s.settlements[seat].pawns[i].id) {

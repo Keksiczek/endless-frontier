@@ -289,7 +289,7 @@ struct MotionBankTests {
     /// because the point of the test is to fail when the two drift apart.
     static let drawnActivities = [
         "sleeping", "at_home", "walking", "working", "socializing", "playing",
-        "resting", "travelling", "expedition", "fighting", "hauling",
+        "resting", "travelling", "expedition", "fighting", "hauling", "riding",
     ]
 
     /// **The test the last one was not.**
@@ -323,6 +323,23 @@ struct MotionBankTests {
                                 activity: activity, work: work, phase: phase,
                                 variant: variant, building: building).id)
                         }
+                    }
+                }
+            }
+        }
+        // …and everything the yard can put somebody on, for the same reason: a
+        // clip written for a cart is only ever asked for by a body on one.
+        // Its own loop rather than another axis on the one above — the
+        // conveyance arm answers before the trade, the building and the phase
+        // are even looked at, so crossing it with them is a million asks for
+        // one answer.
+        for activity in Self.drawnActivities {
+            for conveyance in registry.conveyances.keys.sorted().compactMap(registry.conveyance) {
+                for work in WorkKind.allCases.map(\.rawValue) + [nil] {
+                    for variant in UInt64(0)..<8 {
+                        seen.insert(registry.motion(
+                            activity: activity, work: work, variant: variant,
+                            conveyance: conveyance).id)
                     }
                 }
             }
@@ -417,6 +434,52 @@ struct MotionBankTests {
             let again = registry.motion(activity: "working", work: work.rawValue)
             #expect(first.id == again.id,
                     "\(work.rawValue) is drawn differently on two identical asks")
+        }
+    }
+
+    /// **The sweep above asks combinations the canvas can name. This one asks
+    /// only the combinations the simulation can actually produce.**
+    ///
+    /// `everyClipIsSelectable` walks every trade against every building, so a
+    /// clip written for a hunter's lodge and marked `crafting` comes back from
+    /// it and looks alive. No crafter is ever posted to a lodge:
+    /// `LaborEngine.staffBuildings` fills a bench only with the trade
+    /// `ColonyBuilder.workKind(for:)` names, so the only ask the canvas will
+    /// ever make about that room carries `hunting`. Fourteen of thirty-six
+    /// freshly written clips were wrong this way, and the bank's own checker
+    /// called them clean.
+    @Test("A clip written for a building serves the trade posted there")
+    func buildingClipsServeTheTradePostedThere() throws {
+        let registry = try GameDataRegistry.bundled()
+        for clip in registry.motions.values where !clip.servesBuildings.isEmpty {
+            for id in clip.servesBuildings {
+                guard let def = registry.building(id) else {
+                    Issue.record("\(clip.id) names a building that does not exist: \(id)")
+                    continue
+                }
+                let posted = ColonyBuilder.workKind(for: def)
+                #expect(def.workers > 0 && posted != .idle,
+                        "\(clip.id) is written for \(id), where nobody can be posted")
+                #expect(clip.servesWork.contains(posted.rawValue),
+                        "a clip names a building whose trade it does not serve")
+            }
+        }
+    }
+
+    /// The same hole one layer down, and the reason nine buildings were quietly
+    /// broken: a building with benches and no trade to fill them.
+    ///
+    /// `workKind` answers `.idle`, `staffBuildings` gives it no room, and
+    /// `ResourceLoop.staffingFactors` — which counts every building with
+    /// `workers > 0` — pins it at `unstaffedFloor` for ever. Every energy
+    /// building in the game ran at 40% of its stated output, permanently, with
+    /// nothing the player could do about it.
+    @Test("Every bench in the game has a trade that can stand at it")
+    func everyBenchCanBeFilled() throws {
+        let registry = try GameDataRegistry.bundled()
+        for def in registry.buildings.values where def.workers > 0 {
+            #expect(ColonyBuilder.workKind(for: def) != .idle,
+                    "a building employs people and names no trade, so it is unstaffable")
         }
     }
 }
@@ -981,6 +1044,81 @@ struct StableEngineTests {
         }
         #expect(s.conveyances.count == StableEngine.yardLimit)
     }
+
+    // MARK: - Who is on it
+
+    private func hauler(_ n: Int, walking: Bool = true) -> Pawn {
+        var p = Pawn(
+            id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-000000000A0\(n)")!,
+            name: "Carrier \(n)", assignedWork: .logging,
+            age: 30 * 60)
+        p.carrying = HaulLoad(itemID: "wood", amount: 3,
+                              destination: LocalPoint(x: 0.5, y: 0.5))
+        if walking {
+            p.haulWalk = WalkPath(from: LocalPoint(x: 0.2, y: 0.2),
+                                  to: LocalPoint(x: 0.5, y: 0.5),
+                                  leftAt: 0, arrivesAt: 20)
+        }
+        return p
+    }
+
+    /// **Nobody rides anything the yard does not have.** The seams read the
+    /// colony's best conveyance whether or not a soul is on it, so this is the
+    /// first thing that makes one a *thing on the canvas* rather than a number.
+    @Test("The yard goes under whoever is carrying something")
+    func carriersGetTheCarts() throws {
+        let reg = try registry()
+        var s = colony(reg, materials: ["wood": 30, "hide": 10])
+        let w = world(s, era: .earlySettlement)
+        s = StableEngine.build(s, definitionID: "travois", in: w, registry: reg)
+        s = StableEngine.build(s, definitionID: "travois", in: w, registry: reg)
+        s.pawns = [hauler(1), hauler(2), hauler(3)]
+
+        s = StableEngine.assignRiders(s, registry: reg)
+        let riders = s.conveyances.compactMap(\.riderID)
+        #expect(riders.count == 2, "two carts and three carriers is two riders")
+        #expect(Set(riders).count == 2, "one person on two carts")
+        #expect(StableEngine.conveyance(of: s.pawns[0].id, in: s) != nil)
+    }
+
+    /// …and lets go of them again. A cart that keeps a rider who has put the
+    /// load down draws a colonist on a cart standing at a bench.
+    @Test("A cart standing in the yard has nobody on it")
+    func ridersAreReleased() throws {
+        let reg = try registry()
+        var s = colony(reg, materials: ["wood": 30, "hide": 10])
+        s = StableEngine.build(s, definitionID: "travois",
+                               in: world(s, era: .earlySettlement), registry: reg)
+        s.pawns = [hauler(4)]
+        s = StableEngine.assignRiders(s, registry: reg)
+        #expect(s.conveyances[0].riderID != nil)
+
+        s.pawns[0].carrying = nil
+        s = StableEngine.assignRiders(s, registry: reg)
+        #expect(s.conveyances[0].riderID == nil, "a cart still ridden by somebody empty-handed")
+    }
+
+    /// **The yard has to tick in a running game.** Everything above was built,
+    /// tested and reachable from nowhere but these tests: `advanceOneTick` had
+    /// no caller in the whole repository, so in play no cart ever wore out, no
+    /// fuel was ever burned and no rider was ever seated. Rule 47, in the one
+    /// system this document is about.
+    @Test("A world advancing wears the yard out")
+    func theYardTicksInPlay() throws {
+        let reg = try registry()
+        var settlement = colony(reg, materials: ["wood": 30, "hide": 10])
+        settlement.pawns = [hauler(5)]
+        var w = world(settlement, era: .earlySettlement)
+        settlement = StableEngine.build(settlement, definitionID: "travois",
+                                        in: w, registry: reg)
+        w.settlements = [settlement]
+        let before = try #require(w.settlements.first?.conveyances.first?.condition)
+
+        let after = TickEngine.advance(w, ticks: 5, registry: reg).state
+        let cart = try #require(after.settlements.first?.conveyances.first)
+        #expect(cart.condition < before, "five ticks of a running world and nothing wore")
+        #expect(cart.riderID != nil, "nobody was put on it by the tick")
+    }
 }
 
 /// **Research that changes the valley rather than a menu.**
@@ -1287,5 +1425,213 @@ struct BearingTests {
         let p = Bearing.edgePoint(along: angle)
         let fromMiddle = max(abs(p.x - 0.5), abs(p.y - 0.5))
         #expect(fromMiddle > 0.35, "a party appeared in the middle of town")
+    }
+}
+
+/// **Step five of `docs/MOUNTS_AND_VEHICLES.md`** — the ground has a say.
+///
+/// Without this every conveyance is strictly better than the last and the only
+/// decision is whether you have unlocked it yet, which is not a decision. A
+/// cart cannot take a bog; a pack animal can. That is what makes owning both
+/// worth doing.
+@Suite("The ground decides what can travel")
+struct ConveyanceTerrainTests {
+
+    @Test("A route knows what it crosses")
+    func aRouteKnowsItsGround() throws {
+        let map = LocalMapGenerator.generate(
+            mapSeed: 21, regionID: UUID(), biome: Fixtures.defaultBiomes[0])
+        let crossed = map.covers(from: LocalPoint(x: 0.05, y: 0.5),
+                                 to: LocalPoint(x: 0.95, y: 0.5))
+        #expect(!crossed.isEmpty, "a walk across the whole valley crossed nothing")
+        // A point is the ground it stands on and nothing else.
+        let here = LocalPoint(x: 0.5, y: 0.5)
+        #expect(map.covers(from: here, to: here) == [map.cover(at: here)])
+    }
+
+    /// The decisive one: two conveyances, one route, and only one of them can
+    /// make it.
+    @Test("A cart is turned back by ground a pack animal takes")
+    func theBogTurnsTheCartBack() throws {
+        let reg = try GameDataRegistry.bundled()
+        let onlyDry = ConveyanceDefinition(
+            id: "dry_cart", name: LocalizedText(values: [.en: "Dry cart", .cs: "Suchý vůz"]),
+            description: LocalizedText(values: [.en: "For dry roads", .cs: "Na suché cesty"]),
+            era: .ancient, kind: .cart, pace: 3, regionPace: 3,
+            terrain: [GroundCover.grass.rawValue])
+        let anywhere = ConveyanceDefinition(
+            id: "sure_foot", name: LocalizedText(values: [.en: "Sure foot", .cs: "Jistá noha"]),
+            description: LocalizedText(values: [.en: "Goes anywhere", .cs: "Projde všude"]),
+            era: .ancient, kind: .mount, pace: 2, regionPace: 2, terrain: [])
+        #expect(onlyDry.canCross(.grass))
+        #expect(!onlyDry.canCross(.marsh), "a dry cart forded a bog")
+        #expect(anywhere.canCross(.marsh), "an empty terrain list means anywhere")
+    }
+
+    /// A country's character is what a road through it has to cross.
+    @Test("Every biome has a dominant cover a road can be judged against")
+    func everyBiomeHasCharacter() {
+        for biome in ["forest", "desert", "tundra", "mountains", "coast", "plains"] {
+            let cover = LocalTerrain.dominantCover(of: biome)
+            #expect(cover != nil, "\(biome) has no dominant cover")
+        }
+        #expect(LocalTerrain.dominantCover(of: "desert") == .sand)
+        #expect(LocalTerrain.dominantCover(of: "tundra") == .snow)
+        #expect(LocalTerrain.dominantCover(of: "mountains") == .rock)
+    }
+
+    /// An empty yard is walking pace whatever the ground, and a yard that
+    /// cannot make a trip is walking pace for *that trip* — never slower than
+    /// feet, which are always available.
+    @Test("Ground nothing can cross is walking pace, not a stop")
+    func impassableGroundIsStillWalkable() throws {
+        let reg = try GameDataRegistry.bundled()
+        var s = Settlement(id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-00000000005F")!,
+                           name: "Boggy", regionID: UUID())
+        s.localMap = LocalMapGenerator.generate(
+            mapSeed: 5, regionID: s.id, biome: Fixtures.defaultBiomes[0])
+        let pace = StableEngine.bestPace(s, from: LocalPoint(x: 0.1, y: 0.1),
+                                         to: LocalPoint(x: 0.9, y: 0.9), registry: reg)
+        #expect(pace == 1, "an empty yard is walking, and walking is never slower than walking")
+    }
+
+    /// The world map's version of the same question.
+    @Test("A road through country a cart cannot take is walked")
+    func theRoadReadsTheCountry() throws {
+        let reg = try GameDataRegistry.bundled()
+        var s = Settlement(id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-00000000006F")!,
+                           name: "Roads", regionID: UUID())
+        s.stockpile = ["wood": 60, "iron_ingot": 12]
+        s.buildings = [BuildingInstance(
+            id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-00000000007F")!,
+            definitionID: "lumberyard")]
+        var w = WorldState(tick: 5, settlements: [s])
+        w.era = .ancient
+        w.researchedTechs = ["the_wheel"]
+        s = StableEngine.build(s, definitionID: "hand_cart", in: w, registry: reg)
+        #expect(!s.conveyances.isEmpty, "this fixture built no cart to turn back")
+
+        let cart = try #require(reg.conveyance("hand_cart"))
+        let overPlains = StableEngine.bestRegionPace(s, crossing: ["plains"], registry: reg)
+        #expect(overPlains == cart.regionPace || overPlains == 1,
+                "a cart on the plains is either its own pace or walking, nothing else")
+        // Whatever the cart's terrain list says, the answer is never *worse*
+        // than feet — a journey it cannot make is one it does not join.
+        for country in [["tundra"], ["coast"], ["mountains"], ["desert", "tundra"]] {
+            #expect(StableEngine.bestRegionPace(s, crossing: country, registry: reg) >= 1)
+        }
+    }
+}
+
+/// **A fight lasts as long as the fight.**
+///
+/// Every siege used to run exactly `Siege.stepsTotal` — three bandits and a
+/// tribe's whole warband took the same twenty-four steps. It could end early on
+/// a break but never run long, so a big battle was cut off by the clock rather
+/// than decided, and a colony one step from finishing somebody was told the
+/// time was up. Keks: *"ať boje nemají pevné trvání, to je docela omezení."*
+@Suite("A fight lasts as long as the fight")
+struct SiegeLengthTests {
+
+    @Test("A bigger assault runs longer")
+    func sizeDecidesLength() {
+        #expect(Siege.lengthFor(attackers: 4) < Siege.lengthFor(attackers: 30))
+        #expect(Siege.lengthFor(attackers: 30) < Siege.lengthFor(attackers: 200))
+    }
+
+    /// Both ends bounded: a fight the player cannot react to is a number, and
+    /// one that never ends is a bug wearing drama's coat.
+    @Test("However big, a fight is neither a flicker nor a chore",
+          arguments: [0, 1, 12, 200, 5000])
+    func lengthIsBounded(attackers: Int) {
+        let steps = Siege.lengthFor(attackers: attackers)
+        #expect(steps >= Siege.stepsFloor)
+        #expect(steps <= Siege.stepsCeiling)
+    }
+
+    /// **The defence must not lengthen the siege.** Counting defenders in the
+    /// length made a well-manned town drag its own raid out, and a longer raid
+    /// is more steps of plunder — so a town of sixty lost more stores to the
+    /// same warband than a town of ten. Caught by `RampartTests`, and pinned
+    /// here at the source.
+    @Test("Holding the line does not make the raid last longer")
+    func theDefenceDoesNotPayTheAttacker() {
+        let small = Siege(
+            id: UUID(uuidString: "51E6E000-0000-0000-0000-00000000000A")!,
+            startTick: 0, openedAt: 0, attackerName: "Same warband",
+            approach: 0, attackers: 60, openingStrength: 60, fortification: 0,
+            seed: 9, line: (0..<5).map { _ in UUID() })
+        let large = Siege(
+            id: UUID(uuidString: "51E6E000-0000-0000-0000-00000000000B")!,
+            startTick: 0, openedAt: 0, attackerName: "Same warband",
+            approach: 0, attackers: 60, openingStrength: 60, fortification: 0,
+            seed: 9, line: (0..<60).map { _ in UUID() })
+        #expect(small.steps == large.steps,
+                "the same warband fights longer against a bigger town")
+    }
+
+    /// The line delivers its weight once across the fight, whatever its length.
+    /// That contract is what a per-step share *means*, and it broke the moment
+    /// fights stopped all being the same size.
+    @Test("A long fight does not land its line's weight three times over")
+    func theWeightIsSpreadOverTheFight() {
+        for steps in [Siege.stepsFloor, 24, 40, Siege.stepsCeiling] {
+            let share = SiegeEngine.meleePerStep(steps: steps)
+            let contactSteps = Double(steps - SiegeEngine.typicalApproachSteps)
+            #expect(abs(share * contactSteps - 1) < 0.001,
+                    "a \(steps)-step fight lands \(share * contactSteps) weights")
+        }
+    }
+
+    /// A siege decides its length when the attack arrives and then keeps it —
+    /// recomputing as the line thins would make a fight accelerate toward its
+    /// own end.
+    @Test("The length is fixed when the attack lands")
+    func lengthIsDecidedOnce() {
+        var siege = Siege(
+            id: UUID(uuidString: "51E6E000-0000-0000-0000-000000000001")!,
+            startTick: 0, openedAt: 0, attackerName: "Wolves",
+            approach: 0, attackers: 40,
+            openingStrength: 40, fortification: 0, seed: 1,
+            line: (0..<30).map { _ in UUID() })
+        let decided = siege.steps
+        #expect(decided > Siege.stepsFloor, "forty on thirty is not a skirmish")
+        siege.withdrawn = Set(siege.line.prefix(25))
+        #expect(siege.steps == decided, "the fight got shorter as people fell")
+    }
+
+    /// …and a save from before this keeps the length it was actually fought at.
+    @Test("An old save is still twenty-four steps")
+    func oldSavesKeepTheirClock() throws {
+        let siege = Siege(
+            id: UUID(uuidString: "51E6E000-0000-0000-0000-000000000002")!,
+            startTick: 0, openedAt: 0, attackerName: "Old",
+            approach: 0, attackers: 6, openingStrength: 6, fortification: 0,
+            seed: 2, line: [UUID()])
+        var json = try JSONSerialization.jsonObject(
+            with: JSONEncoder().encode(siege)) as! [String: Any]
+        json.removeValue(forKey: "steps")
+        let restored = try JSONDecoder().decode(
+            Siege.self, from: JSONSerialization.data(withJSONObject: json))
+        #expect(restored.steps == Siege.stepsTotal)
+    }
+
+    /// Progress and the finish line both read the fight's own clock.
+    @Test("Progress runs to one over the fight's own length")
+    func progressReadsItsOwnClock() {
+        var siege = Siege(
+            id: UUID(uuidString: "51E6E000-0000-0000-0000-000000000003")!,
+            startTick: 0, openedAt: 0, attackerName: "Host",
+            approach: 0, attackers: 80, openingStrength: 80, fortification: 0,
+            seed: 3, line: (0..<60).map { _ in UUID() })
+        #expect(siege.steps > Siege.stepsFloor, "eighty attackers is not a skirmish")
+        #expect(siege.progress == 0)
+        #expect(!siege.isFinished)
+        siege.advancedTo = siege.steps - 1
+        #expect(siege.progress < 1, "the fight is over before its last step")
+        #expect(!siege.isFinished)
+        siege.advancedTo = siege.steps
+        #expect(siege.progress == 1)
+        #expect(siege.isFinished)
     }
 }

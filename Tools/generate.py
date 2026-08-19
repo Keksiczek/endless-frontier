@@ -298,6 +298,13 @@ def check(kind: str, draft: list) -> list[str]:
     untranslated(draft, kind, english)
     faults += [f"reads in English to a Czech player: {p}" for p in english]
 
+    # The same escape hatch as `new_fields`, one level down: a *value* the Swift
+    # has just learned and no row uses yet. `riding` was a real activity with a
+    # case in the enum, a clip selector arm and a test, and the vocabulary is
+    # measured out of the file — so the first clip to use it looked like a typo.
+    for key, values in KINDS[kind].get("new_values", {}).items():
+        allowed.setdefault(key, set()).update(values)
+
     odd: list[str] = []
     strange_values(draft, allowed, odd)
     faults += [f"value the game has never used: {v}" for v in sorted(set(odd))]
@@ -621,8 +628,15 @@ def do_merge(draft_path: Path) -> None:
     )
     if result.returncode != 0:
         shutil.move(backup, target)
-        tail = "\n".join(result.stdout.strip().splitlines()[-25:])
-        raise SystemExit(f"tests failed, {target.name} put back:\n{tail}")
+        # **Both streams.** A failing *test* writes to stdout and a failing
+        # *build* writes to stderr, and printing only the first turned "the
+        # test target does not compile" and "another SwiftPM already holds the
+        # lock" into `tests failed:` followed by nothing at all — a silent
+        # failure in the tool whose whole job is catching silent failures.
+        tail = "\n".join(
+            (result.stdout.strip() + "\n" + result.stderr.strip()).strip().splitlines()[-25:]
+        )
+        raise SystemExit(f"merge gate failed, {target.name} put back:\n{tail}")
     backup.unlink()
     print("tests green — merged")
 

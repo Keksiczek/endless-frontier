@@ -249,6 +249,7 @@
   },
   {
     "id": "windmill",
+    "work": "cooking",
     "look": "mill",
     "era": "ancient",
     "name": {
@@ -600,6 +601,7 @@
   },
   {
     "id": "aqueduct",
+    "work": "building",
     "look": "aqueduct",
     "era": "ancient",
     "name": {
@@ -888,6 +890,7 @@
   },
   {
     "id": "power_plant",
+    "work": "crafting",
     "era": "early_industrial",
     "name": {
       "en": "Power Plant",
@@ -1009,6 +1012,7 @@
   },
   {
     "id": "hydro_dam",
+    "work": "crafting",
     "era": "modern",
     "name": {
       "en": "Hydroelectric Dam",
@@ -1035,6 +1039,7 @@
   },
   {
     "id": "oil_refinery",
+    "work": "crafting",
     "era": "modern",
     "name": {
       "en": "Oil Refinery",
@@ -1288,6 +1293,7 @@
   },
   {
     "id": "solar_array",
+    "work": "crafting",
     "era": "near_future",
     "name": {
       "en": "Solar Array",
@@ -1313,6 +1319,7 @@
   },
   {
     "id": "wind_farm",
+    "work": "crafting",
     "era": "near_future",
     "name": {
       "en": "Wind Farm",
@@ -1367,6 +1374,7 @@
   },
   {
     "id": "fusion_reactor",
+    "work": "crafting",
     "look": "generator",
     "era": "near_future",
     "name": {
@@ -1485,6 +1493,7 @@
   },
   {
     "id": "arcology",
+    "work": "crafting",
     "look": "tenement",
     "era": "near_future",
     "name": {

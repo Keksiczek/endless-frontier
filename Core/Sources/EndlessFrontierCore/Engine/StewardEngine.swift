@@ -116,6 +116,10 @@ public enum StewardEngine {
             // knew about building materials and nothing else, so a colony left
             // to itself went two hundred years without making a spear.
             s = QuartermasterEngine.advance(s, index: index, registry: registry)
+            // …and the yard. A colony that has a cartwright and never builds a
+            // cart is the mounts system in the state it shipped in: four seams
+            // wired, tested, and reading an empty yard for ever.
+            s = keepTheYard(s, index: index, registry: registry)
             s = sendSomebodyOut(s, index: index, registry: registry)
             // …and, when it is doing well enough to spare them, a party that
             // does not come back: a daughter town on charted ground.
@@ -681,6 +685,67 @@ public enum StewardEngine {
     /// How much more than its upkeep a colony wants to be earning before it
     /// takes on another standing cost.
     static let upkeepMargin = 1.15
+
+    // MARK: - The yard
+
+    /// How many colonists one conveyance is worth keeping for.
+    ///
+    /// **Rule 14 — a rate times an entity count.** `StableEngine.yardLimit` is
+    /// 24, which is a ceiling on absurdity and not a plan: twenty-four elk at
+    /// 0.35 food a tick is more than a village of forty eats. A yard is sized
+    /// against the people who would push the things, so it grows with the
+    /// colony and never outruns it.
+    static let colonistsPerConveyance = 6.0
+
+    /// Builds one thing for the yard when the colony is short of them.
+    ///
+    /// Same "acts only in the gaps" rule as the rest of the council: it stops
+    /// at the size the population justifies, it never spends the last of the
+    /// stores, and it will not take on a mouth the colony is not already
+    /// feeding comfortably.
+    static func keepTheYard(
+        _ state: WorldState, index: Int, registry: GameDataRegistry
+    ) -> WorldState {
+        let settlement = state.settlements[index]
+        let wanted = min(StableEngine.yardLimit,
+                         Int(settlement.population / colonistsPerConveyance))
+        guard settlement.conveyances.count < wanted else { return state }
+
+        // The best thing it can actually make: what carries most, and between
+        // equals what moves fastest. Ties broken by id, because two identical
+        // definitions must not order differently between runs (rule 3).
+        let choices = registry.conveyances.values
+            .filter { def in
+                StableEngine.canBuild(def.id, in: state, settlement: settlement,
+                                      registry: registry)
+                    && canFeedIt(def, at: settlement)
+            }
+            .sorted { a, b in
+                if a.cargo != b.cargo { return a.cargo > b.cargo }
+                if a.pace != b.pace { return a.pace > b.pace }
+                return a.id < b.id
+            }
+        guard let best = choices.first else { return state }
+        var s = state
+        s.settlements[index] = StableEngine.build(
+            settlement, definitionID: best.id, in: state, registry: registry)
+        return s
+    }
+
+    /// Whether the colony is comfortable enough in everything this thing draws
+    /// to take on another one that draws it every tick, for ever.
+    ///
+    /// Deliberately a *comfort* test on each store this eats out of rather than
+    /// a projection: the council has no net-rate to read, and a horse bought
+    /// out of a granary at a third full is a horse eating the winter.
+    static func canFeedIt(_ def: ConveyanceDefinition, at settlement: Settlement) -> Bool {
+        for resource in ResourceType.allCases where def.upkeep[resource] > 0 {
+            let roof = settlement.storageCapacity[resource]
+            guard roof > 0, settlement.storage[resource] >= roof * comfortable
+            else { return false }
+        }
+        return true
+    }
 
     // MARK: - Sending people out
 

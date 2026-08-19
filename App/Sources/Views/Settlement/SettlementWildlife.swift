@@ -66,11 +66,49 @@ enum SettlementWildlife {
                           y: heart.y + sin(angle) * radius * 0.7)
     }
 
+    /// One beast, drawn wherever the caller says.
+    ///
+    /// Split out of `drawTamed` so a mount can be drawn under the colonist
+    /// riding it: a horse with somebody on its back belongs beside that person
+    /// on the road, not circling the heart with the stock. The wild and the
+    /// pen and the saddle are then one drawing each, which is what stops a
+    /// ridden elk being a second, worse elk.
+    static func body(
+        _ species: AnimalSpecies, at: CGPoint, s: CGFloat, time: Double,
+        phase: Double, walking: Bool, context: inout GraphicsContext
+    ) {
+        let doing: AnimalActivity = walking ? .wary : .grazing
+        switch species {
+        case .deer: deer(&context, at: at, s: s, time: time, phase: phase,
+                         doing: doing, urgency: 1, crown: .antlersIfStag)
+        case .elk:  deer(&context, at: at, s: s, time: time, phase: phase,
+                         doing: doing, urgency: 1, crown: .heavyAntlers)
+        case .goat: deer(&context, at: at, s: s, time: time, phase: phase,
+                         doing: doing, urgency: 1, crown: .curvedHorns)
+        case .boar: boar(&context, at: at, s: s, time: time, phase: phase,
+                         doing: doing, urgency: 1)
+        case .hare, .grouse:
+            hare(&context, at: at, s: s, time: time, phase: phase, doing: doing)
+        case .fox, .wolf, .bear:
+            prowler(&context, at: at, s: s, time: time, hungry: false)
+        case .lynx:
+            lynx(&context, at: at, s: s, time: time, doing: doing, urgency: 1)
+        case .badger:
+            badger(&context, at: at, s: s, time: time, doing: doing, urgency: 1)
+        }
+    }
+
     static func drawTamed(
         _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement,
         map: LocalMap, time: Double, zoom: CGFloat
     ) {
         for (index, kept) in settlement.tamed.enumerated() {
+            // A beast somebody is on is not in the pen. It is drawn under its
+            // rider by `SettlementConveyances`, and drawing it here as well
+            // put the same horse in two places at once.
+            if settlement.conveyances.contains(where: {
+                $0.animalID == kept.id && $0.riderID != nil
+            }) { continue }
             let phase = Double(hash(kept.animal.id) % 6199) / 6199 * 2 * .pi
             let position = tamedPosition(kept, index: index, time: time)
             guard map.isExplored(position) else { continue }
@@ -80,24 +118,8 @@ enum SettlementWildlife {
             // Kept stock is not roamed by `AnimalEngine`, so its `activity`
             // is whatever it held when it was gentled. A beast in the pen is a
             // beast at grass, and saying so beats reading a stale field.
-            switch kept.animal.species {
-            case .deer: deer(&context, at: at, s: s, time: time, phase: phase,
-                             doing: .grazing, urgency: 1, crown: .antlersIfStag)
-            case .elk:  deer(&context, at: at, s: s, time: time, phase: phase,
-                             doing: .grazing, urgency: 1, crown: .heavyAntlers)
-            case .goat: deer(&context, at: at, s: s, time: time, phase: phase,
-                             doing: .grazing, urgency: 1, crown: .curvedHorns)
-            case .boar: boar(&context, at: at, s: s, time: time, phase: phase,
-                             doing: .grazing, urgency: 1)
-            case .hare, .grouse:
-                hare(&context, at: at, s: s, time: time, phase: phase, doing: .grazing)
-            case .fox, .wolf, .bear:
-                prowler(&context, at: at, s: s, time: time, hungry: false)
-            case .lynx:
-                lynx(&context, at: at, s: s, time: time, doing: .grazing, urgency: 1)
-            case .badger:
-                badger(&context, at: at, s: s, time: time, doing: .grazing, urgency: 1)
-            }
+            body(kept.animal.species, at: at, s: s, time: time, phase: phase,
+                 walking: false, context: &context)
             // The collar: a small ring under it, in the colony's own amber, so
             // a tamed wolf never reads as one that came out of the trees.
             context.stroke(

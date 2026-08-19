@@ -51,6 +51,17 @@ public enum TickEngine {
             // The benches. After the day's gathering, so what came in this tick
             // is on the shelf for the crafters to reach for.
             s = CraftingEngine.advanceOneTick(s, registry: registry)
+            // The yard: what is kept, what wears out, and who is on it.
+            // Every one of the four seams reads `Settlement.conveyances`, and
+            // until this line nothing in a running game ever ticked it — carts
+            // never wore, fuel was never burned, and a dead horse stayed a
+            // mount. Built, tested, and reachable from nowhere but the tests.
+            for index in s.settlements.indices {
+                s.settlements[index] = StableEngine.advanceOneTick(
+                    s.settlements[index], in: s, registry: registry)
+                s.settlements[index] = StableEngine.assignRiders(
+                    s.settlements[index], registry: registry)
+            }
             // …and the council, deciding what to study, stock and raise when
             // nobody is telling it. Without this the world does not advance at
             // all on its own: research, construction and the bench were every

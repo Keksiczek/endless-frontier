@@ -184,10 +184,51 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
     }
 
     /// How many action steps a siege runs before it is decided one way or the
-    /// other. Three world ticks' worth on the shared grid — long enough that
-    /// the player's orders can change it twice, short enough to be a fight
-    /// rather than a chore.
+    /// other, when nothing says otherwise.
+    ///
+    /// Three world ticks' worth on the shared grid — long enough that the
+    /// player's orders can change it twice, short enough to be a fight rather
+    /// than a chore. Kept as the default a save without a length falls back to,
+    /// and as the yardstick `lengthFor` measures against.
     public static let stepsTotal = 24
+
+    /// The shortest a fight can be and still be one. Below about this the
+    /// approach is not over before the thing is decided, and a raid the player
+    /// cannot react to is a number, not a battle.
+    public static let stepsFloor = 12
+
+    /// …and the longest. A fight that runs on for ever is a bug wearing
+    /// drama's coat, and the siege holds the colony's line the whole time it
+    /// lasts.
+    public static let stepsCeiling = 72
+
+    /// **How long *this* fight lasts.**
+    ///
+    /// Every siege used to run exactly `stepsTotal`. Three bandits and a whole
+    /// tribe's warband took the same twenty-four steps, and a fight could end
+    /// early on a break but never run long — so a big battle was cut off by the
+    /// clock rather than decided, and a colony that was one step from finishing
+    /// somebody was simply told the time was up. Keks: *"ať boje nemají pevné
+    /// trvání, to je docela omezení."*
+    ///
+    /// Length comes from the size of the **assault** now: a raid by six is
+    /// short, a siege by a host is long, and both are bounded so neither
+    /// becomes a flicker or a chore.
+    ///
+    /// **Off the attackers alone, and that is deliberate.** Counting the
+    /// defenders too — the obvious first version — made a well-manned town
+    /// *lengthen* its own siege, and a longer siege is more steps of plunder:
+    /// a town of sixty lost more stores to the same raid than a town of ten,
+    /// which is the exact opposite of what defending is for. How many hold the
+    /// line already decides the fight through the line's weight; letting it
+    /// decide the clock as well pays the attacker for the defence.
+    public static func lengthFor(attackers: Int) -> Int {
+        // Square-rooted rather than linear: doubling a warband should make the
+        // fight noticeably longer, not twice as long, or a late-era war would
+        // run for an hour of real time.
+        let scaled = Double(stepsTotal) * (Double(max(1, attackers)) / 12).squareRoot()
+        return max(stepsFloor, min(stepsCeiling, Int(scaled.rounded())))
+    }
 
     public let id: UUID
     /// The world tick the attack arrived on.
@@ -217,6 +258,15 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
     /// Rolls come from this and the step index, so a step's outcome is a pure
     /// function of where it sits in the fight.
     public let seed: UInt64
+
+    /// **How many steps this fight runs**, from how big it is. See
+    /// `lengthFor(attackers:defenders:)`.
+    ///
+    /// Stored rather than recomputed, because the line thins as people fall
+    /// and a fight whose length shortened every time somebody went down would
+    /// accelerate toward its own end. It is decided once, when the attack
+    /// arrives, and then it is the clock.
+    public let steps: Int
 
     /// Everyone who turned out, in the order they took the line.
     public var line: [UUID]
@@ -256,7 +306,8 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         attackerTribeID: UUID? = nil,
         approach: Double, attackers: Int,
         openingStrength: Double, fortification: Double, seed: UInt64,
-        line: [UUID], posture: Posture = .hold, carriesOff: Double = 1
+        line: [UUID], posture: Posture = .hold, carriesOff: Double = 1,
+        steps: Int? = nil
     ) {
         self.id = id
         self.startTick = startTick
@@ -271,6 +322,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         self.strength = max(0, openingStrength)
         self.fortification = max(0, fortification)
         self.seed = seed
+        self.steps = steps ?? Self.lengthFor(attackers: attackers)
         self.line = line
         self.withdrawn = []
         self.posture = posture
@@ -282,17 +334,17 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         self.plundered = 0
     }
 
-    /// Which step of its own fight the siege is on, `0 ..< stepsTotal`.
+    /// Which step of its own fight the siege is on, `0 ..< steps`.
     public var step: Int { max(0, advancedTo - openedAt) }
 
     /// How far through the fight it is, 0…1 — what the canvas plays against.
     public var progress: Double {
-        min(1, Double(step) / Double(Self.stepsTotal))
+        min(1, Double(step) / Double(max(1, steps)))
     }
 
     /// Whether the fighting is over: they broke, or they ran out of fight.
     public var isFinished: Bool {
-        strength <= 0 || step >= Self.stepsTotal || standing.isEmpty
+        strength <= 0 || step >= steps || standing.isEmpty
     }
 
     /// The colonists actually holding the line right now.
@@ -341,6 +393,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         case attackerTribeID
         case approach, attackers, openingStrength, strength, fortification, seed
         case line, withdrawn, posture, damage, moments, plundered, carriesOff
+        case steps
         case fighters, orders
     }
 
@@ -360,6 +413,9 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         fortification = try c.decodeIfPresent(Double.self, forKey: .fortification) ?? 0
         seed = try c.decodeIfPresent(UInt64.self, forKey: .seed) ?? 1
         line = try c.decodeIfPresent([UUID].self, forKey: .line) ?? []
+        // A save from before fights had lengths of their own gets the old
+        // fixed one, which is exactly what it was fought at.
+        steps = try c.decodeIfPresent(Int.self, forKey: .steps) ?? Self.stepsTotal
         withdrawn = try c.decodeIfPresent(Set<UUID>.self, forKey: .withdrawn) ?? []
         posture = try c.decodeIfPresent(Posture.self, forKey: .posture) ?? .hold
         carriesOff = try c.decodeIfPresent(Double.self, forKey: .carriesOff) ?? 1

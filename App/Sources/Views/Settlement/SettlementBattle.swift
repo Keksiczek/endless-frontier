@@ -79,6 +79,26 @@ enum SettlementBattle {
     }
 
     static let volleyAt = 0.26
+
+    /// **How long one beat of a fight stays on the screen**, as a share of the
+    /// whole siege.
+    ///
+    /// One step of the fight and no longer. It was 0.12 — very nearly *three*
+    /// steps — so three volleys were on screen at once, overlapping, each
+    /// fading through the next. Keks: *"střílení je docela rychlé."* It was not
+    /// the rate: a step is fifteen real seconds and at most one volley is
+    /// loosed in it. It was that a volley outlived its own step threefold and
+    /// the next began before the last had gone, which reads as continuous fire.
+    ///
+    /// Derived from the fight's own length rather than written down, so the
+    /// two cannot drift apart (rule 35: a number that must equal another number
+    /// should *be* that number) — and so a long siege's beats are not three
+    /// times shorter on screen than a short one's just because it has more of
+    /// them. A beat is one step, whatever the fight.
+    static func momentLife(steps: Int) -> Double { 1 / Double(max(1, steps)) }
+
+    /// The default beat, for a picture with no siege behind it.
+    static var momentLife: Double { momentLife(steps: Siege.stepsTotal) }
     static let meleeAt = 0.40
     static let breakAt = 0.84
 
@@ -365,14 +385,17 @@ enum SettlementBattle {
 
         // The beats: arrows away from the wall, and every blow on the two
         // bodies it happened between.
+        // A beat is one step of *this* fight — a long siege has more of them,
+        // not shorter ones.
+        let beat = momentLife(steps: siege?.steps ?? log.steps)
         for moment in log.moments(upTo: progress) {
             let age = progress - moment.at
-            guard age >= 0, age < 0.12 else { continue }
-            let fade = 1 - age / 0.12
+            guard age >= 0, age < beat else { continue }
+            let fade = 1 - age / beat
             switch moment.kind {
             case .volley:
-                volley(&context, field: field, rect: rect, fade: fade, zoom: zoom,
-                       landing: moment.spot)
+                volley(&context, field: field, rect: rect, flight: 1 - fade,
+                       fade: fade, zoom: zoom, landing: moment.spot)
             case .clash, .charge:
                 // Nothing of its own. A clash is a tally of the whole line's
                 // swings for one step, and the swings themselves are already
@@ -760,9 +783,20 @@ enum SettlementBattle {
     /// the shafts were drawn from the muster point toward the map edge — an
     /// effect at a place nobody was standing, which is most of what "efekty na
     /// místě, kde postava stála když boj začínal" was about.
+    /// **Arrows that fly.**
+    ///
+    /// They used to be six dashes strung along the flight path at fixed
+    /// fractions — `t = 0.15 + i * 0.12`, a function of *which arrow* and not
+    /// of *when* — so a volley was a static fan that faded where it stood.
+    /// Nothing crossed the ground, which is the one thing an arrow does.
+    ///
+    /// `flight` is how far through its life this volley is, 0 at the loose and
+    /// 1 at the landing, so the fan now travels; the per-arrow offset survives
+    /// as a stagger, because six arrows loosed together do not arrive in a
+    /// rank.
     private static func volley(
         _ context: inout GraphicsContext, field: SiegeField, rect: CGRect,
-        fade: Double, zoom: CGFloat, landing: LocalPoint? = nil
+        flight: Double, fade: Double, zoom: CGFloat, landing: LocalPoint? = nil
     ) {
         // The wall end of the flight: back along the axis from where it hit.
         let target = landing ?? field.origin
@@ -771,13 +805,19 @@ enum SettlementBattle {
                        y: $0.y - field.axisY * SiegeField.openReach * 0.35)
         } ?? field.muster
         for i in 0..<6 {
-            let t = 0.15 + Double(i) * 0.12
+            // Each shaft a little behind the last, and none of them past the
+            // mark: an arrow that has landed stops rather than flying on.
+            let stagger = Double(i) * 0.05
+            let t = min(1, max(0, flight * 1.15 - stagger))
             let spread = (Double(i) - 2.5) * 0.012
             let px = -field.axisY * spread, py = field.axisX * spread
             let from = LocalPoint(x: source.x + px, y: source.y + py)
             let to = LocalPoint(x: target.x + px, y: target.y + py)
+            // The shaft itself: a short length of the flight, not a point, so
+            // it reads as something moving rather than a mark on the ground.
             let a = SettlementRenderer.point(interpolate(from, to, t: t), in: rect)
-            let b = SettlementRenderer.point(interpolate(from, to, t: t + 0.06), in: rect)
+            let b = SettlementRenderer.point(
+                interpolate(from, to, t: min(1, t + 0.06)), in: rect)
             context.stroke(Path { p in
                 p.move(to: a)
                 p.addLine(to: b)

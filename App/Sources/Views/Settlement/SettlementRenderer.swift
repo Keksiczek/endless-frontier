@@ -2209,8 +2209,29 @@ enum SettlementRenderer {
             case .melee:  armed = .blade
             case nil:     armed = .none
             }
+            // What they are on, if the yard put them on something. Drawn
+            // first, so the body sits on it rather than behind it — and asked
+            // of the motion bank too, because a rider's legs do not walk.
+            let ridden = scene.ridden[pawn.id]
+            let carriage = ridden.flatMap { registry.conveyance($0.definitionID) }
+            var at = point(pose.position, in: rect)
+            if let ridden, let carriage {
+                SettlementConveyances.draw(
+                    carriage, thing: ridden, at: at,
+                    s: SettlementFigures.bodyHeight(zoom: zoom), facing: CGFloat(pose.facing),
+                    time: time, loaded: pawn.carrying != nil,
+                    beast: ridden.animalID.flatMap { id in
+                        settlement.tamed.first { $0.id == id }?.animal.species
+                    },
+                    context: &context)
+                // Somebody on a beast sits above it; somebody walking beside a
+                // cart does not move at all.
+                if carriage.kind == .mount {
+                    at.y -= SettlementFigures.bodyHeight(zoom: zoom) * 0.62
+                }
+            }
             SettlementFigures.draw(
-                pawn: pawn, pose: pose, at: point(pose.position, in: rect),
+                pawn: pawn, pose: pose, at: at,
                 time: time, ticksPerYear: ticksPerYear,
                 selected: pawn.id == selectedPawnID, zoom: zoom, armed: armed,
                 motion: registry.motion(activity: pose.activity.motionID,
@@ -2220,7 +2241,8 @@ enum SettlementRenderer {
                                             reported: settlement.huntPhases[pawn.id],
                                             map: map, at: pose.position),
                                         variant: AgentMotion.motionVariant(for: pawn),
-                                        building: AgentMotion.workBuilding(for: pawn, scene: scene)),
+                                        building: AgentMotion.workBuilding(for: pawn, scene: scene),
+                                        conveyance: carriage),
                 context: &context)
         }
     }

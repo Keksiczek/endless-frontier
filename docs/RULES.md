@@ -549,3 +549,13 @@ fires, do the arithmetic before you rewrite the mechanic.
    every arrival that did not pass one was a quarter of a map off its own
    bearing. Caught by a test asserting east is east. When a parameter's
    identity value is in the middle of its range, the default is the middle.
+57. **A shared constant becomes a bug the moment the thing it measures stops
+   being uniform.** Every siege ran `Siege.stepsTotal` steps — three bandits
+   and a tribe's warband alike — and two other numbers were derived from it:
+   `meleePerStep` divided by it so that a line delivers its weight exactly once
+   across a fight, and the canvas's beat divided by it so a volley lasts one
+   step. Giving fights a length of their own broke both silently in opposite
+   directions: a long siege would have landed its line's weight three times and
+   drawn its beats three times too fast. When a constant is promoted to a
+   variable, grep every division by it — each one encoded an assumption that
+   the constant was the whole truth.

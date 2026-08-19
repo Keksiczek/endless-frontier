@@ -79,6 +79,7 @@ enum AgentMotion {
         case expedition    // at the landmark, working it
         case fighting      // called out of the day and into the line
         case hauling       // carrying a load home
+        case riding        // carrying a load home on something with legs or wheels
 
         /// Which clip in `motions.json` draws this.
         ///
@@ -99,6 +100,7 @@ enum AgentMotion {
             case .expedition:  return "expedition"
             case .fighting:    return "fighting"
             case .hauling:     return "hauling"
+            case .riding:      return "riding"
             }
         }
     }
@@ -345,6 +347,15 @@ enum AgentMotion {
         /// One bed per colonist, taken in roster order.
         let beds: [UUID: LocalPoint]
 
+        /// Who is on what, out of `Settlement.conveyances` — pawn id → the
+        /// thing they are riding or driving this tick.
+        ///
+        /// The simulation's answer, not the canvas's guess:
+        /// `StableEngine.assignRiders` decides, and this only reads it. A
+        /// renderer that picked its own riders would be presentation writing
+        /// the world with extra steps.
+        let ridden: [UUID: Conveyance]
+
         init(settlement: Settlement, registry: GameDataRegistry, continuousTick: Double = 0,
              replay: SettlementBattle.Replay? = nil) {
             let layout = SettlementRenderer.normalizedLayout(settlement: settlement, registry: registry)
@@ -384,6 +395,11 @@ enum AgentMotion {
             }
             self.homes = homes
             self.posts = posts
+            var ridden: [UUID: Conveyance] = [:]
+            for thing in settlement.conveyances {
+                if let rider = thing.riderID { ridden[rider] = thing }
+            }
+            self.ridden = ridden
             self.byTrade = byTrade
             self.sites = sites
             self.heart = SettlementRenderer.colonyHeart
@@ -499,7 +515,9 @@ enum AgentMotion {
             // turns with the corner rather than staring at the store through it.
             let ahead = haul.heading(at: scene.continuousStep)
             return Pose(position: at,
-                        activity: pawn.carrying == nil ? .walking : .hauling,
+                        activity: pawn.carrying == nil
+                            ? .walking
+                            : (scene.ridden[pawn.id] == nil ? .hauling : .riding),
                         stride: 1,
                         facing: facing(from: .init(x: 0, y: 0), to: ahead))
         }
@@ -965,6 +983,7 @@ enum AgentMotion {
         case .playing: return cs ? "Hraje si" : "Playing"
         case .resting: return cs ? "Stůně doma" : "Laid up at home"
         case .hauling: return cs ? "Nese náklad do skladu" : "Carrying a load to the store"
+        case .riding: return cs ? "Veze náklad do skladu" : "Driving a load to the store"
         case .fighting: return cs ? "V linii" : "In the line"
         case .travelling: return cs ? "Na cestě mimo osadu" : "On the road, away from the settlement"
         case .expedition: return cs ? "Pracuje na výpravě" : "Working the site"
@@ -1050,6 +1069,7 @@ enum AgentMotion {
         // A hauler's position is the engine's own; drifting it would take them
         // off the path they are actually walking.
         case .hauling: return 0
+        case .riding: return 0
         }
     }
 

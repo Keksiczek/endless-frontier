@@ -314,7 +314,7 @@ struct RampartTests {
                             strength: 300, registry: r)
         // Read it **mid-fight**: a finished siege is cleared off the settlement
         // by `conclude`, so comparing two raids at the end compares two nils.
-        let half = (bare.siege?.openedAt ?? 0) + Siege.stepsTotal / 2
+        let half = (bare.siege?.openedAt ?? 0) + (bare.siege?.steps ?? Siege.stepsTotal) / 2
 
         let afterBare = SiegeEngine.advance(bare, to: half, registry: r)
         let afterHeld = SiegeEngine.advance(held, to: half, registry: r)
@@ -434,7 +434,7 @@ struct RaidAnswerTests {
                 town(people: people), attackerStrength: 120,
                 attackerName: "The Ashfolk", fortification: 0, tick: 100,
                 registry: r, seed: 0xB00B)
-            let end = (s.siege?.openedAt ?? 0) + Siege.stepsTotal / 2
+            let end = (s.siege?.openedAt ?? 0) + (s.siege?.steps ?? Siege.stepsTotal) / 2
             s = SiegeEngine.advance(s, to: end, registry: r)
             return (s.siege?.strength ?? 0, s.storage[.food])
         }
@@ -452,7 +452,9 @@ struct RaidAnswerTests {
         var s = try SiegeEngine.begin(
             town(people: 30), attackerStrength: 200, attackerName: "The Ashfolk",
             fortification: 0, tick: 100, registry: r, seed: 0x5A17)
-        let end = (s.siege?.openedAt ?? 0) + Siege.stepsTotal
+        // To the end of *this* fight, which is now its own length rather
+        // than everybody's (`Siege.lengthFor`).
+        let end = (s.siege?.openedAt ?? 0) + (s.siege?.steps ?? Siege.stepsTotal)
         s = SiegeEngine.advance(s, to: end, registry: r)
         let log = try #require(s.lastBattle)
         // Every beat that happens *to somebody somewhere* carries the somewhere.
@@ -478,7 +480,8 @@ struct RaidAnswerTests {
                 s, attackerStrength: 60, attackerName: "Raid \(i)",
                 fortification: 0, tick: 100 + i * 10, registry: r,
                 seed: UInt64(0xBEEF + i))
-            s = SiegeEngine.advance(s, to: (s.siege?.openedAt ?? 0) + Siege.stepsTotal,
+            s = SiegeEngine.advance(s, to: (s.siege?.openedAt ?? 0)
+                                    + (s.siege?.steps ?? Siege.stepsTotal),
                                     registry: r)
         }
         #expect(s.battleHistory.count == 3)
