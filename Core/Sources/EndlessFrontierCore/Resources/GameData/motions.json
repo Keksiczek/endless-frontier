@@ -2296,5 +2296,1384 @@
     "slouch": -0.4,
     "reach": 1.5,
     "hand_height": -0.9
+  },
+  {
+    "id": "hoeing_field_basic_farm",
+    "name": {
+      "en": "Hoeing",
+      "cs": "Okopávání"
+    },
+    "description": {
+      "en": "Breaking up the hard soil with a hoe. A steady, rhythmic motion that turns the earth over, preparing it for seed.",
+      "cs": "Rozbíjení tvrdé půdy motykou. Stálý, rytmický pohyb, který obrací zeminu a připravuje ji na setí."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "farming"
+    ],
+    "serves_buildings": [
+      "farm_basic"
+    ],
+    "legs": {
+      "amplitude": 0.3,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 1.8,
+      "frequency": 0.9
+    },
+    "slouch": 0.6,
+    "reach": 1.8,
+    "hand_height": -0.8
+  },
+  {
+    "id": "weeding_by_hand_basic_farm",
+    "name": {
+      "en": "Weeding by Hand",
+      "cs": "Ruční pletí"
+    },
+    "description": {
+      "en": "Bent low over the crop rows, patiently pulling out weeds one by one. Slow, careful work that gives the crops room to breathe.",
+      "cs": "Nízko skloněn nad řádky plodin, trpělivě vytahuje plevel jeden po druhém. Pomalá, pečlivá práce, která dává plodinám prostor dýchat."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "farming"
+    ],
+    "serves_buildings": [
+      "farm_basic"
+    ],
+    "tool_arm": {
+      "amplitude": 0.3,
+      "frequency": 4.5
+    },
+    "slouch": 0.8,
+    "reach": 1.4,
+    "hand_height": -1.0
+  },
+  {
+    "id": "broadcasting_seed_basic_farm",
+    "name": {
+      "en": "Broadcasting Seed",
+      "cs": "Rozsévaní"
+    },
+    "description": {
+      "en": "Walking the tilled field, casting seed in a wide, even arc. The sower's classic gesture, a promise of the harvest to come.",
+      "cs": "Prochází zoraným polem a rozhazuje osivo v širokém, rovnoměrném oblouku. Klasické gesto rozsévače, příslib budoucí sklizně."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "farming"
+    ],
+    "serves_buildings": [
+      "farm_basic"
+    ],
+    "legs": {
+      "amplitude": 1.7,
+      "frequency": 1.0
+    },
+    "tool_arm": {
+      "amplitude": 1.5,
+      "frequency": 0.8,
+      "phase": 1.57
+    },
+    "bob": 0.2,
+    "slouch": 0.1,
+    "reach": 1.8,
+    "hand_height": 0.2
+  },
+  {
+    "id": "operating_sluice_gate_advanced_farm",
+    "name": {
+      "en": "Operating Sluice Gate",
+      "cs": "Obsluha stavidla"
+    },
+    "description": {
+      "en": "Leaning with their whole weight to turn the heavy iron wheel of a sluice gate, controlling the flow of water into the irrigation channels.",
+      "cs": "Celou vahou se opírá do těžkého železného kola stavidla a řídí tak tok vody do zavlažovacích kanálů."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "farming"
+    ],
+    "serves_buildings": [
+      "farm_advanced"
+    ],
+    "legs": {
+      "amplitude": 0.4,
+      "frequency": 0.4
+    },
+    "tool_arm": {
+      "amplitude": 1.2,
+      "frequency": 0.5
+    },
+    "slouch": 0.4,
+    "reach": 1.6,
+    "hand_height": 0.3
+  },
+  {
+    "id": "clearing_ditch_advanced_farm",
+    "name": {
+      "en": "Clearing a Ditch",
+      "cs": "Čištění příkopu"
+    },
+    "description": {
+      "en": "Standing on the bank of an irrigation ditch, using a mattock to drag out mud and weeds. Heavy, wet work to keep the water flowing freely.",
+      "cs": "Stojí na břehu zavlažovacího kanálu a motykou vytahuje bahno a plevel. Těžká, mokrá práce, aby voda mohla volně proudit."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "farming"
+    ],
+    "serves_buildings": [
+      "farm_advanced"
+    ],
+    "legs": {
+      "amplitude": 0.3,
+      "frequency": 0.6
+    },
+    "tool_arm": {
+      "amplitude": 1.9,
+      "frequency": 0.8
+    },
+    "slouch": 0.7,
+    "reach": 2.0,
+    "hand_height": -1.1
+  },
+  {
+    "id": "inspecting_levee_advanced_farm",
+    "name": {
+      "en": "Inspecting a Levee",
+      "cs": "Prohlídka hráze"
+    },
+    "description": {
+      "en": "A slow walk along the top of the levee, eyes scanning the earth and water for any sign of weakness. A quiet, watchful patrol.",
+      "cs": "Pomalá chůze po koruně hráze, oči pátrají po zemi a vodě po jakémkoli náznaku slabiny. Tichá, ostražitá hlídka."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "farming"
+    ],
+    "serves_buildings": [
+      "farm_advanced"
+    ],
+    "legs": {
+      "amplitude": 1.5,
+      "frequency": 0.8
+    },
+    "tool_arm": {
+      "amplitude": 0.3,
+      "frequency": 0.8
+    },
+    "bob": 0.1,
+    "slouch": 0.3
+  },
+  {
+    "id": "skinning_carcass_lodge",
+    "name": {
+      "en": "Skinning a Carcass",
+      "cs": "Stahování zvěře"
+    },
+    "description": {
+      "en": "Careful, practiced cuts to separate the hide. The carcass hangs from a hook in the lodge, turning slowly as the work is done.",
+      "cs": "Opatrné, procvičené řezy k oddělení kůže. Zvíře visí na háku v lovecké chatě a při práci se pomalu otáčí."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "hunting"
+    ],
+    "serves_buildings": [
+      "hunters_lodge"
+    ],
+    "tool_arm": {
+      "amplitude": 0.5,
+      "frequency": 4.5
+    },
+    "slouch": 0.2,
+    "reach": 1.5,
+    "hand_height": 0.7
+  },
+  {
+    "id": "stretching_hide_frame",
+    "name": {
+      "en": "Stretching a Hide",
+      "cs": "Napínání kůže"
+    },
+    "description": {
+      "en": "Pulling the raw hide taut on a large wooden frame, lacing it down to dry flat. The start of a long curing process.",
+      "cs": "Napíná syrovou kůži na velký dřevěný rám a přivazuje ji, aby uschla naplocho. Začátek dlouhého procesu činění."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "hunting"
+    ],
+    "serves_buildings": [
+      "hunters_lodge"
+    ],
+    "legs": {
+      "amplitude": 0.3,
+      "frequency": 0.6
+    },
+    "tool_arm": {
+      "amplitude": 1.5,
+      "frequency": 0.9
+    },
+    "slouch": 0.4,
+    "reach": 1.8,
+    "hand_height": -0.1
+  },
+  {
+    "id": "butchering_on_block",
+    "name": {
+      "en": "Butchering at the Block",
+      "cs": "Bourání masa na špalku"
+    },
+    "description": {
+      "en": "The heavy thud of a cleaver on the butcher's block, separating the hunt into portions for the cookhouse. A strong, steady arm is needed here.",
+      "cs": "Těžké zadunění sekáčku o řeznický špalek, jak se úlovek dělí na porce pro kuchyni. Je k tomu potřeba silná a jistá ruka."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "hunting"
+    ],
+    "serves_buildings": [
+      "hunters_lodge"
+    ],
+    "legs": {
+      "amplitude": 0.2,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 1.7,
+      "frequency": 1.3
+    },
+    "slouch": 0.6,
+    "reach": 1.4,
+    "hand_height": -0.3
+  },
+  {
+    "id": "stirring_cauldron_cookhouse",
+    "name": {
+      "en": "Stirring the Cauldron",
+      "cs": "Míchání v kotli"
+    },
+    "description": {
+      "en": "Leaning over the great cauldron with a long paddle, stirring the stew for the whole village. A slow, rhythmic task that fills the air with steam.",
+      "cs": "Skloněný nad velkým kotlem s dlouhým míchadlem míchá jídlo pro celou vesnici. Pomalá, rytmická práce, která plní vzduch párou."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "cooking"
+    ],
+    "serves_buildings": [
+      "cookhouse"
+    ],
+    "legs": {
+      "amplitude": 0.4,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 1.2,
+      "frequency": 0.7
+    },
+    "slouch": 0.5,
+    "reach": 1.7,
+    "hand_height": -0.1
+  },
+  {
+    "id": "chopping_roots_cookhouse",
+    "name": {
+      "en": "Chopping Roots",
+      "cs": "Sekání kořenové zeleniny"
+    },
+    "description": {
+      "en": "A steady, rapid rhythm of a knife on the cutting board. Piles of carrots and turnips mount up for the evening meal.",
+      "cs": "Stálý, rychlý rytmus nože o prkénko. Hromady mrkve a tuřínu se vrší k večeři."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "cooking"
+    ],
+    "serves_buildings": [
+      "cookhouse"
+    ],
+    "tool_arm": {
+      "amplitude": 0.6,
+      "frequency": 5.5
+    },
+    "slouch": 0.7,
+    "reach": 1.3,
+    "hand_height": -0.2
+  },
+  {
+    "id": "feeding_oven_cookhouse",
+    "name": {
+      "en": "Tending the Oven",
+      "cs": "Obsluha pece"
+    },
+    "description": {
+      "en": "Using the long peel to slide loaves deep into the brick oven, or adding another log to the fire beneath.",
+      "cs": "Dlouhou lopatou sází chleby hluboko do cihlové pece nebo přikládá další poleno do ohně pod ní."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "cooking"
+    ],
+    "serves_buildings": [
+      "cookhouse"
+    ],
+    "legs": {
+      "amplitude": 0.8,
+      "frequency": 0.8
+    },
+    "tool_arm": {
+      "amplitude": 1.9,
+      "frequency": 0.8
+    },
+    "slouch": 0.4,
+    "reach": 2.1,
+    "hand_height": 0.0
+  },
+  {
+    "id": "palisade_guard_duty",
+    "name": {
+      "en": "Gate Sentry",
+      "cs": "Stráž u brány"
+    },
+    "description": {
+      "en": "Leaning on a spear, watching the approach to the gate. A quiet, steady presence.",
+      "cs": "Opřený o kopí, sleduje přístup k bráně. Tichá, stálá přítomnost."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "garrison"
+    ],
+    "serves_buildings": [
+      "palisade"
+    ],
+    "legs": {
+      "amplitude": 0.05,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 0.1,
+      "frequency": 0.2
+    },
+    "lean": 0.1,
+    "reach": 1.0,
+    "hand_height": -0.5
+  },
+  {
+    "id": "palisade_tamping_earth",
+    "name": {
+      "en": "Tamping Earth",
+      "cs": "Dusání hlíny"
+    },
+    "description": {
+      "en": "Driving a heavy tamper into the ground, compacting the earth at the base of the palisade. A rhythmic, tiring job.",
+      "cs": "Těžkým pěchem stlouká zem, aby zpevnil hlínu u paty palisády. Rytmická, únavná práce."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "garrison"
+    ],
+    "serves_buildings": [
+      "palisade"
+    ],
+    "legs": {
+      "amplitude": 0.3,
+      "frequency": 1.0
+    },
+    "tool_arm": {
+      "amplitude": 1.2,
+      "frequency": 1.1
+    },
+    "slouch": 0.6,
+    "reach": 1.5,
+    "hand_height": -0.8
+  },
+  {
+    "id": "palisade_hauling_stake",
+    "name": {
+      "en": "Raising a Stake",
+      "cs": "Vztyčování kůlu"
+    },
+    "description": {
+      "en": "With rope and muscle, heaving a heavy, sharpened log into its vertical position in the wall. A moment of intense effort.",
+      "cs": "Lanem a svaly táhnou těžký, zašpičatěný kmen do svislé polohy ve stěně. Okamžik obrovského úsilí."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "garrison"
+    ],
+    "serves_buildings": [
+      "palisade"
+    ],
+    "legs": {
+      "amplitude": 0.5,
+      "frequency": 0.4
+    },
+    "tool_arm": {
+      "amplitude": 0.8,
+      "frequency": 0.5
+    },
+    "slouch": 0.4,
+    "reach": 1.8,
+    "hand_height": 0.2
+  },
+  {
+    "id": "stone_walls_rampart_walk",
+    "name": {
+      "en": "Walking the Ramparts",
+      "cs": "Hlídka na hradbách"
+    },
+    "description": {
+      "en": "A steady, measured pace along the stone walkway. Eyes scanning the horizon. The valley is safe, for now.",
+      "cs": "Pevným, odměřeným krokem po kamenném ochozu. Oči pátrají po obzoru. Údolí je v bezpečí, prozatím."
+    },
+    "serves_activities": [
+      "working",
+      "walking"
+    ],
+    "serves_work": [
+      "garrison"
+    ],
+    "serves_buildings": [
+      "stone_walls"
+    ],
+    "legs": {
+      "amplitude": 1.7,
+      "frequency": 1.0
+    },
+    "tool_arm": {
+      "amplitude": 0.4,
+      "frequency": 1.0
+    },
+    "bob": 0.1,
+    "lean": 0.1
+  },
+  {
+    "id": "stone_walls_lookout_duty",
+    "name": {
+      "en": "Lookout Duty",
+      "cs": "Na stráži"
+    },
+    "description": {
+      "en": "Leaning against the cold stone of the parapet, watching the distant treeline for any sign of movement.",
+      "cs": "Opřený o chladný kámen cimbuří, sleduje vzdálenou linii stromů a pátrá po jakémkoli náznaku pohybu."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "garrison"
+    ],
+    "serves_buildings": [
+      "stone_walls"
+    ],
+    "legs": {
+      "amplitude": 0.1,
+      "frequency": 0.4
+    },
+    "tool_arm": {
+      "amplitude": 0.15,
+      "frequency": 0.6
+    },
+    "slouch": 0.4,
+    "reach": 1.3,
+    "hand_height": 0.9
+  },
+  {
+    "id": "stone_walls_hoisting_stone",
+    "name": {
+      "en": "Hoisting Stone",
+      "cs": "Zvedání kamene"
+    },
+    "description": {
+      "en": "Turning the crank of a wooden crane, slowly raising a heavy, dressed stone block to the top of the wall.",
+      "cs": "Otáčí klikou dřevěného jeřábu a pomalu zvedá těžký, opracovaný kamenný blok na korunu zdi."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "garrison"
+    ],
+    "serves_buildings": [
+      "stone_walls"
+    ],
+    "legs": {
+      "amplitude": 0.3,
+      "frequency": 0.6
+    },
+    "tool_arm": {
+      "amplitude": 1.1,
+      "frequency": 0.7
+    },
+    "slouch": 0.5,
+    "reach": 1.6,
+    "hand_height": 0.0
+  },
+  {
+    "id": "watchtower_scan_horizon",
+    "name": {
+      "en": "Scanning the Horizon",
+      "cs": "Prohlížení obzoru"
+    },
+    "description": {
+      "en": "Standing watch on the tower, hand shading the eyes, slowly turning to take in the whole valley.",
+      "cs": "Na stráži na věži, rukou si stíní oči a pomalu se otáčí, aby přehlédl celé údolí."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_buildings": [
+      "watchtower"
+    ],
+    "legs": {
+      "amplitude": 0.3,
+      "frequency": 0.4
+    },
+    "tool_arm": {
+      "amplitude": 0.1,
+      "frequency": 1
+    },
+    "reach": 1,
+    "hand_height": 1.2,
+    "serves_work": [
+      "garrison"
+    ]
+  },
+  {
+    "id": "watchtower_climb_ladder",
+    "name": {
+      "en": "Climbing the Ladder",
+      "cs": "Lezení po žebříku"
+    },
+    "description": {
+      "en": "Up or down the watchtower ladder, hand over hand. A familiar climb for the guards.",
+      "cs": "Nahoru nebo dolů po žebříku strážní věže, ruku za rukou. Pro stráže známá cesta."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_buildings": [
+      "watchtower"
+    ],
+    "legs": {
+      "amplitude": 1.5,
+      "frequency": 1.2
+    },
+    "tool_arm": {
+      "amplitude": 1.6,
+      "frequency": 1.2
+    },
+    "slouch": 0.3,
+    "reach": 1.5,
+    "hand_height": 1,
+    "serves_work": [
+      "garrison"
+    ]
+  },
+  {
+    "id": "watchtower_report_sighting",
+    "name": {
+      "en": "Reporting a Sighting",
+      "cs": "Hlášení pozorování"
+    },
+    "description": {
+      "en": "Cupping hands around the mouth to shout a warning or a report down to the village. A sharp, sudden action.",
+      "cs": "Dlaněmi si dělá trychtýř u úst, aby zakřičel varování nebo zprávu dolů do vesnice. Ostrý, náhlý pohyb."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_buildings": [
+      "watchtower"
+    ],
+    "legs": {
+      "amplitude": 0.2,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 0.3,
+      "frequency": 2
+    },
+    "lean": 0.2,
+    "reach": 0.8,
+    "hand_height": 1,
+    "serves_work": [
+      "garrison"
+    ]
+  },
+  {
+    "id": "barracks_spear_drill",
+    "name": {
+      "en": "Spear Drill",
+      "cs": "Cvičení s kopím"
+    },
+    "description": {
+      "en": "In the barracks yard, practicing the basic thrust and parry with a spear. Repetition builds muscle and discipline.",
+      "cs": "Na dvoře kasáren, nácvik základních výpadů a krytů s kopím. Opakování buduje svaly a disciplínu."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_buildings": [
+      "barracks"
+    ],
+    "legs": {
+      "amplitude": 1.2,
+      "frequency": 0.8
+    },
+    "tool_arm": {
+      "amplitude": 1.8,
+      "frequency": 0.8
+    },
+    "lean": 0.4,
+    "reach": 2,
+    "hand_height": 0.2,
+    "serves_work": [
+      "garrison"
+    ]
+  },
+  {
+    "id": "barracks_pell_work",
+    "name": {
+      "en": "Pell Work",
+      "cs": "Trénink na pellu"
+    },
+    "description": {
+      "en": "Striking the pell, a simple wooden post, with a practice blade. Each blow is aimed to build strength and perfect technique.",
+      "cs": "Údery cvičným mečem do pellu, prostého dřevěného kůlu. Cílem je síla a dokonalá technika."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_buildings": [
+      "barracks"
+    ],
+    "legs": {
+      "amplitude": 0.5,
+      "frequency": 1
+    },
+    "tool_arm": {
+      "amplitude": 1.9,
+      "frequency": 1
+    },
+    "slouch": 0.4,
+    "reach": 1.8,
+    "hand_height": 0,
+    "serves_work": [
+      "garrison"
+    ]
+  },
+  {
+    "id": "barracks_oiling_armour",
+    "name": {
+      "en": "Oiling Armour",
+      "cs": "Ošetřování zbroje"
+    },
+    "description": {
+      "en": "Carefully applying oil to a piece of armour to prevent rust. A quiet, focused task essential for readiness.",
+      "cs": "Pečlivě nanáší olej na část zbroje, aby se zabránilo korozi. Tichá, soustředěná práce nezbytná pro bojeschopnost."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_buildings": [
+      "barracks"
+    ],
+    "tool_arm": {
+      "amplitude": 0.3,
+      "frequency": 4
+    },
+    "slouch": 0.6,
+    "reach": 1.3,
+    "hand_height": -0.3,
+    "serves_work": [
+      "garrison"
+    ]
+  },
+  {
+    "id": "clearing_blockage_aqueduct",
+    "name": {
+      "en": "Clearing Blockage",
+      "cs": "Čištění koryta"
+    },
+    "description": {
+      "en": "Bent over the side of the aqueduct, reaching down into the channel to pull out leaves and silt that are slowing the flow.",
+      "cs": "Skloněný přes okraj akvaduktu, sahá do koryta, aby vytáhl listí a nánosy, které zpomalují proud."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "building"
+    ],
+    "serves_buildings": [
+      "aqueduct"
+    ],
+    "legs": {
+      "amplitude": 0.1,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 0.6,
+      "frequency": 1.5
+    },
+    "slouch": 0.8,
+    "reach": 2.0,
+    "hand_height": -0.8
+  },
+  {
+    "id": "inspecting_lining_aqueduct",
+    "name": {
+      "en": "Inspecting Lining",
+      "cs": "Prohlídka obložení"
+    },
+    "description": {
+      "en": "Walking slowly alongside the channel, running a hand over the stone lining, feeling for cracks and weaknesses.",
+      "cs": "Pomalá chůze podél kanálu, rukou přejíždí po kamenném obložení a hledá praskliny a slabá místa."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "building"
+    ],
+    "serves_buildings": [
+      "aqueduct"
+    ],
+    "legs": {
+      "amplitude": 0.5,
+      "frequency": 0.8
+    },
+    "tool_arm": {
+      "amplitude": 0.1,
+      "frequency": 0.4
+    },
+    "slouch": 0.3,
+    "reach": 1.4,
+    "hand_height": 0.0
+  },
+  {
+    "id": "hauling_bucket_aqueduct",
+    "name": {
+      "en": "Hauling Bucket",
+      "cs": "Tahání vědra"
+    },
+    "description": {
+      "en": "Pulling a heavy bucket on a rope from the aqueduct's head-race, hand over hand. Cleaning out a silt trap or taking a water sample.",
+      "cs": "Ruku po ruce vytahuje těžké vědro na laně z nátoku akvaduktu. Čistí lapač písku nebo odebírá vzorek vody."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "building"
+    ],
+    "serves_buildings": [
+      "aqueduct"
+    ],
+    "legs": {
+      "amplitude": 0.3,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 1.5,
+      "frequency": 0.9
+    },
+    "slouch": 0.4,
+    "reach": 1.0,
+    "hand_height": 0.5
+  },
+  {
+    "id": "changing_dressing_hospital",
+    "name": {
+      "en": "Changing a Dressing",
+      "cs": "Převaz rány"
+    },
+    "description": {
+      "en": "Leaning over a patient's bed, carefully unwrapping an old bandage and applying a new, clean one. The hands must be steady.",
+      "cs": "Skloněný nad lůžkem pacienta, opatrně odmotává starý obvaz a přikládá nový, čistý. Ruce se nesmí třást."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "healing"
+    ],
+    "serves_buildings": [
+      "hospital"
+    ],
+    "tool_arm": {
+      "amplitude": 0.2,
+      "frequency": 2.5
+    },
+    "slouch": 0.7,
+    "reach": 1.5,
+    "hand_height": 0.2
+  },
+  {
+    "id": "carrying_basin_hospital",
+    "name": {
+      "en": "Carrying a Basin",
+      "cs": "Nese umyvadlo"
+    },
+    "description": {
+      "en": "Walking carefully through the ward, carrying a basin of water two-handed. Each step is measured to avoid spilling a drop.",
+      "cs": "Opatrně prochází oddělením a oběma rukama nese umyvadlo s vodou. Každý krok je odměřený, aby ani kapka neukápla."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "healing"
+    ],
+    "serves_buildings": [
+      "hospital"
+    ],
+    "legs": {
+      "amplitude": 0.8,
+      "frequency": 0.8
+    },
+    "tool_arm": {
+      "amplitude": 0.05,
+      "frequency": 1.0
+    },
+    "bob": 0.1,
+    "reach": 1.2,
+    "hand_height": 0.3
+  },
+  {
+    "id": "grinding_remedy_hospital",
+    "name": {
+      "en": "Grinding a Remedy",
+      "cs": "Drcení léku"
+    },
+    "description": {
+      "en": "At the apothecary's bench, using a mortar and pestle to grind dried herbs and minerals into a fine powder for a poultice or potion.",
+      "cs": "U lékárnického stolu, v hmoždíři tře sušené byliny a minerály na jemný prášek pro obklad nebo lektvar."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "healing"
+    ],
+    "serves_buildings": [
+      "hospital"
+    ],
+    "tool_arm": {
+      "amplitude": 0.4,
+      "frequency": 2.2
+    },
+    "slouch": 0.6,
+    "reach": 1.3,
+    "hand_height": -0.1
+  },
+  {
+    "id": "clinic_taking_pulse",
+    "name": {
+      "en": "Taking a Pulse",
+      "cs": "Měření pulzu"
+    },
+    "description": {
+      "en": "Gently holding a patient's wrist, fingers pressed to the artery, counting the beats. A moment of focused quiet.",
+      "cs": "Jemně drží pacientovo zápěstí, prsty na tepně, počítá údery. Chvíle soustředěného ticha."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "healing"
+    ],
+    "serves_buildings": [
+      "clinic"
+    ],
+    "tool_arm": {
+      "amplitude": 0.1,
+      "frequency": 1.0
+    },
+    "slouch": 0.5,
+    "reach": 1.3,
+    "hand_height": 0.2
+  },
+  {
+    "id": "clinic_filling_syringe",
+    "name": {
+      "en": "Preparing Injection",
+      "cs": "Příprava injekce"
+    },
+    "description": {
+      "en": "Carefully drawing fluid from a vial into a syringe. A steady hand and unwavering focus are essential.",
+      "cs": "Opatrně natahuje tekutinu z lahvičky do injekční stříkačky. Pevná ruka a naprosté soustředění jsou nezbytné."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "healing"
+    ],
+    "serves_buildings": [
+      "clinic"
+    ],
+    "tool_arm": {
+      "amplitude": 0.2,
+      "frequency": 2.5
+    },
+    "slouch": 0.4,
+    "reach": 1.1,
+    "hand_height": 0.0
+  },
+  {
+    "id": "clinic_writing_chart",
+    "name": {
+      "en": "Updating a Chart",
+      "cs": "Zápis do karty"
+    },
+    "description": {
+      "en": "Scribbling notes on a patient's chart at a standing desk. The day's observations, treatments, and progress, recorded for the record.",
+      "cs": "Zapisuje poznámky do karty pacienta u pultu. Denní pozorování, léčba a pokrok, zapsané do spisu."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "healing"
+    ],
+    "serves_buildings": [
+      "clinic"
+    ],
+    "tool_arm": {
+      "amplitude": 0.6,
+      "frequency": 4.0
+    },
+    "slouch": 0.3,
+    "reach": 1.4,
+    "hand_height": -0.1
+  },
+  {
+    "id": "arcology_reading_panels",
+    "name": {
+      "en": "Monitoring Systems",
+      "cs": "Sledování systémů"
+    },
+    "description": {
+      "en": "Studying the glowing data streams on a wall-sized interface. The lifeblood of the arcology, rendered in light and numbers.",
+      "cs": "Pročítá zářící datové toky na rozhraní velikosti stěny. Životní míza arkologie, zobrazená jako světlo a čísla."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "arcology"
+    ],
+    "tool_arm": {
+      "amplitude": 0.3,
+      "frequency": 1.5
+    },
+    "slouch": 0.1,
+    "reach": 1.5,
+    "hand_height": 0.5
+  },
+  {
+    "id": "arcology_tending_hydroponics",
+    "name": {
+      "en": "Tending Hydroponics",
+      "cs": "Péče o hydroponii"
+    },
+    "description": {
+      "en": "Reaching up to adjust nutrient lines and inspect the leaves of plants growing in vertical racks. Farming, but indoors and under artificial suns.",
+      "cs": "Sahá nahoru, aby upravil rozvody živin a zkontroloval listy rostlin rostoucích ve vertikálních stojanech. Zemědělství, ale uvnitř a pod umělými slunci."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "arcology"
+    ],
+    "tool_arm": {
+      "amplitude": 0.7,
+      "frequency": 2.0
+    },
+    "reach": 1.4,
+    "hand_height": 1.4
+  },
+  {
+    "id": "arcology_corridor_walk",
+    "name": {
+      "en": "Corridor Inspection",
+      "cs": "Inspekce koridoru"
+    },
+    "description": {
+      "en": "A slow, deliberate patrol through the arcology's quiet, climate-controlled corridors. Eyes scanning for any anomaly, any flicker in the lights.",
+      "cs": "Pomalá, rozvážná hlídka tichými, klimatizovanými chodbami arkologie. Oči pátrají po jakékoli anomálii, jakémkoli zablikání světel."
+    },
+    "serves_activities": [
+      "walking",
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "arcology"
+    ],
+    "legs": {
+      "amplitude": 1.2,
+      "frequency": 0.9
+    },
+    "tool_arm": {
+      "amplitude": 0.2,
+      "frequency": 0.9
+    },
+    "lean": 0.2,
+    "bob": 0.05
+  },
+  {
+    "id": "riding_mount_trot",
+    "name": {
+      "en": "Riding at a Trot",
+      "cs": "Jízda v klusu"
+    },
+    "description": {
+      "en": "Settled into the saddle for a long journey, rising and falling with the animal's easy gait.",
+      "cs": "Pohodlně v sedle, tělo se zvedá a klesá v lehkém rytmu zvířecího klusu."
+    },
+    "serves_activities": [
+      "riding"
+    ],
+    "serves_conveyance": [
+      "mount"
+    ],
+    "legs": {
+      "amplitude": 0.1,
+      "frequency": 1.2
+    },
+    "tool_arm": {
+      "amplitude": 0.2,
+      "frequency": 1.0
+    },
+    "bob": 0.6,
+    "lean": 0.3,
+    "slouch": 0.2,
+    "reach": 1.2,
+    "hand_height": -0.5,
+    "serves_work": []
+  },
+  {
+    "id": "riding_mount_gallop",
+    "name": {
+      "en": "Riding at a Gallop",
+      "cs": "Jízda ve cvalu"
+    },
+    "description": {
+      "en": "A hard ride, leaning low over the animal's neck to cut through the wind. Body braced for speed.",
+      "cs": "Ostrá jízda, skloněný nízko nad krkem zvířete proti větru. Tělo zpevněné pro maximální rychlost."
+    },
+    "serves_activities": [
+      "riding"
+    ],
+    "serves_conveyance": [
+      "mount"
+    ],
+    "speed": 1.6,
+    "legs": {
+      "amplitude": 0.1,
+      "frequency": 1.8
+    },
+    "tool_arm": {
+      "amplitude": 0.3,
+      "frequency": 1.5
+    },
+    "bob": 0.8,
+    "lean": 0.7,
+    "slouch": 0.5,
+    "reach": 1.4,
+    "hand_height": -0.3,
+    "serves_work": []
+  },
+  {
+    "id": "pulling_cart_heavy",
+    "name": {
+      "en": "Pulling a Heavy Cart",
+      "cs": "Tažení těžkého vozíku"
+    },
+    "description": {
+      "en": "Shoulders squared, leaning into the harness to get a heavy load of stone or timber moving. Each step is a deliberate effort.",
+      "cs": "Zapřený do postroje, aby pohnul s těžkým nákladem kamene nebo dřeva. Každý krok je plný úsilí."
+    },
+    "serves_activities": [
+      "riding"
+    ],
+    "serves_conveyance": [
+      "cart"
+    ],
+    "speed": 0.6,
+    "legs": {
+      "amplitude": 1.0,
+      "frequency": 0.8
+    },
+    "tool_arm": {
+      "amplitude": 0.2,
+      "frequency": 0.5
+    },
+    "lean": 0.8,
+    "slouch": 0.6,
+    "reach": 1.6,
+    "hand_height": -0.6,
+    "serves_work": []
+  },
+  {
+    "id": "guiding_cart_downhill",
+    "name": {
+      "en": "Guiding a Cart Downhill",
+      "cs": "Vedení vozíku z kopce"
+    },
+    "description": {
+      "en": "Leaning back against the cart's momentum, taking careful, braking steps to keep the load from running away.",
+      "cs": "Brzdí vozík vlastní vahou, zakloněný, s opatrnými kroky, aby se těžký náklad z kopce nerozjel."
+    },
+    "serves_activities": [
+      "riding"
+    ],
+    "serves_conveyance": [
+      "cart"
+    ],
+    "speed": 0.8,
+    "legs": {
+      "amplitude": 1.0,
+      "frequency": 1.1
+    },
+    "tool_arm": {
+      "amplitude": 0.3,
+      "frequency": 0.8
+    },
+    "lean": 0.1,
+    "slouch": 0.1,
+    "reach": 1.5,
+    "hand_height": -0.5,
+    "serves_work": []
+  },
+  {
+    "id": "operating_rail_speeder",
+    "name": {
+      "en": "Operating a Rail Speeder",
+      "cs": "Jízda na drezíně"
+    },
+    "description": {
+      "en": "Pumping a handcar down the line. A rhythmic push-pull on the lever, body rocking with the effort as the valley flies by.",
+      "cs": "Rytmické pohyby pákou pohánějí drezínu po kolejích. Tělo se houpe v rytmu námahy, zatímco údolí mizí za zády."
+    },
+    "serves_activities": [
+      "riding"
+    ],
+    "serves_conveyance": [
+      "rail"
+    ],
+    "legs": {
+      "amplitude": 0.1,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 1.7,
+      "frequency": 1.0
+    },
+    "bob": 0.2,
+    "lean": 0.4,
+    "slouch": 0.5,
+    "reach": 1.4,
+    "hand_height": 0.2,
+    "serves_work": []
+  },
+  {
+    "id": "riding_motor_vehicle",
+    "name": {
+      "en": "Driving",
+      "cs": "Řízení vozidla"
+    },
+    "description": {
+      "en": "Sat at the wheel of a motor vehicle, hands firmly on the controls. The body is still, braced against the vibration of the engine and the motion of the road.",
+      "cs": "Sedí za volantem, ruce pevně na řízení. Tělo je nehybné, zpevněné proti vibracím motoru a pohybům vozidla na cestě."
+    },
+    "serves_activities": [
+      "riding"
+    ],
+    "serves_conveyance": [
+      "motor"
+    ],
+    "legs": {
+      "amplitude": 0,
+      "frequency": 0
+    },
+    "tool_arm": {
+      "amplitude": 0.1,
+      "frequency": 3
+    },
+    "slouch": 0.2,
+    "reach": 1.4,
+    "hand_height": 0.1,
+    "serves_work": []
+  },
+  {
+    "id": "riding_air_harness",
+    "name": {
+      "en": "Hanging from Harness",
+      "cs": "Let v závěsu"
+    },
+    "description": {
+      "en": "Suspended from an aerial lift or glider, hands gripping the bar above. The legs dangle freely, and the body sways with the movement of the air.",
+      "cs": "Zavěšený v kluzáku nebo na lanovce, ruce svírají madlo nad hlavou. Nohy se volně pohupují a celé tělo se kolébá v proudech vzduchu."
+    },
+    "serves_activities": [
+      "riding"
+    ],
+    "serves_conveyance": [
+      "air"
+    ],
+    "legs": {
+      "amplitude": 0.4,
+      "frequency": 0.6,
+      "phase": 1.57
+    },
+    "bob": 0.1,
+    "reach": 0.8,
+    "hand_height": 1.5,
+    "serves_work": []
+  },
+  {
+    "id": "pulling_travois",
+    "name": {
+      "en": "Pulling a Travois",
+      "cs": "Vlečení nákladu"
+    },
+    "description": {
+      "en": "Leaning into the harness, dragging a heavy load on two poles. A slow, determined trudge, with each step a victory against the weight.",
+      "cs": "Opřený do postroje vleče těžký náklad. Pomalá, odhodlaná dřina; každý krok je vítězstvím nad tíhou."
+    },
+    "serves_activities": [
+      "riding"
+    ],
+    "serves_conveyance": [
+      "travois"
+    ],
+    "legs": {
+      "amplitude": 1.2,
+      "frequency": 0.8
+    },
+    "tool_arm": {
+      "amplitude": 0.1,
+      "frequency": 1
+    },
+    "lean": 0.7,
+    "bob": 0.3,
+    "slouch": 0.8,
+    "speed": 0.6,
+    "reach": 0.5,
+    "hand_height": -0.6,
+    "serves_work": []
+  },
+  {
+    "id": "leading_pack_elk",
+    "name": {
+      "en": "Leading a Pack Elk",
+      "cs": "Vedení nákladního losa"
+    },
+    "description": {
+      "en": "Walking beside the elk, one hand steady on the halter rope. A constant pace that matches the animal's long stride.",
+      "cs": "Chůze vedle losa s rukou pevně na ohlávce. Stálé tempo, které ladí s dlouhým krokem zvířete."
+    },
+    "serves_activities": [
+      "riding"
+    ],
+    "serves_conveyance": [
+      "pack_elk"
+    ],
+    "legs": {
+      "amplitude": 1.7,
+      "frequency": 1
+    },
+    "tool_arm": {
+      "amplitude": 0.3,
+      "frequency": 1
+    },
+    "free_arm_counter_swing": 0.6,
+    "lean": 0.1,
+    "bob": 0.2,
+    "speed": 1,
+    "reach": 1.2,
+    "hand_height": -0.1,
+    "serves_work": []
+  },
+  {
+    "id": "pushing_hand_cart",
+    "name": {
+      "en": "Pushing a Hand Cart",
+      "cs": "Tlačení dvoukoláku"
+    },
+    "description": {
+      "en": "Leaning into the work, pushing a laden two-wheeled cart. The body is angled forward, the steps short and powerful.",
+      "cs": "Zapřený do práce, tlačí naložený dvoukolák. Tělo je nakloněné dopředu, kroky jsou krátké a silné."
+    },
+    "serves_activities": [
+      "riding"
+    ],
+    "serves_conveyance": [
+      "hand_cart"
+    ],
+    "legs": {
+      "amplitude": 1.2,
+      "frequency": 1.1
+    },
+    "tool_arm": {
+      "amplitude": 0.2,
+      "frequency": 1.1
+    },
+    "free_arm_counter_swing": 0,
+    "lean": 0.7,
+    "bob": 0.1,
+    "slouch": 0.4,
+    "speed": 0.85,
+    "reach": 1.8,
+    "hand_height": -0.3,
+    "serves_work": []
   }
 ]

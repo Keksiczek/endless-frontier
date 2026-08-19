@@ -344,10 +344,29 @@ struct MotionBankTests {
                 }
             }
         }
+        // Activities the *content* declares and the app has not learned yet.
+        // Written down rather than silently skipped, on the same reasoning as
+        // rule 49's `new_fields`: a bypass that has to be typed out costs one
+        // line and leaves a record of why, and this list failing to shrink is
+        // itself the reminder.
+        //
+        // `riding` is step six of `docs/MOUNTS_AND_VEHICLES.md` — seven clips
+        // were written for it ahead of the pose that will play them. Delete
+        // this line when `AgentMotion.Activity` learns to ride, and the seven
+        // become live content the same day.
+        let awaiting: Set<String> = ["riding"]
         let unreachable = Set(registry.motions.keys).subtracting(seen)
             .subtracting(["standing"])
+            .subtracting(registry.motions.values
+                .filter { !Set($0.servesActivities).isDisjoint(with: awaiting) }
+                .map(\.id))
         #expect(unreachable.isEmpty,
                 "clips that load and can never be drawn: \(unreachable.sorted())")
+        // …and the waiting list is real content, not a hole to hide things in.
+        let waiting = registry.motions.values.count {
+            !Set($0.servesActivities).isDisjoint(with: awaiting)
+        }
+        #expect(waiting <= 12, "the 'not drawn yet' list is being used as a bin")
     }
 
     /// Variety, stated as an assertion: a field of farmers is not one farmer

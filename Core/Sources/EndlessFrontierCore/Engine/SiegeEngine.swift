@@ -346,7 +346,11 @@ public enum SiegeEngine {
         var chips: [UUID: Double] = [:]
         var power = weights(of: s.pawns, siege: siege, registry: registry)
         for (id, standing) in towers { power[id] = (melee: 0, ranged: standing * towerShotShare) }
-        loose(&siege, power: power, cover: cover, chips: &chips, rng: &rng)
+        // …and what each of them is actually holding. `weights` boils a weapon
+        // down to one number; the shot needs the weapon itself — how far it
+        // carries, and what leaves it.
+        let arms = armaments(of: s.pawns, registry: registry)
+        loose(&siege, power: power, arms: arms, cover: cover, chips: &chips, rng: &rng)
         strike(&siege, power: power, met: met, rng: &rng)
         s = answer(s, siege: &siege, met: met, field: field, cover: cover,
                    chips: &chips, rng: &rng)
@@ -604,6 +608,7 @@ public enum SiegeEngine {
     /// a bow is for: closing fast is what costs you the volleys.
     private static func loose(
         _ siege: inout Siege, power: [UUID: (melee: Double, ranged: Double)],
+        arms: [UUID: CombatProfile] = [:],
         cover: CoverField, chips: inout [UUID: Double], rng: inout SeededRNG
     ) {
         let raiders = siege.fighters.filter { $0.side == .raider && !$0.down }
@@ -615,13 +620,25 @@ public enum SiegeEngine {
         // Where the last shaft of this volley struck — the volley is drawn
         // there rather than at a fixed point on an imaginary wall.
         var landed: LocalPoint?
+        // …and one beat per *kind* of shot, so a fight in which both bows and
+        // rifles are firing is drawn as both, rather than as whichever archer
+        // happened to be last in the list.
+        var fired: [ProjectileKind: (from: LocalPoint, to: LocalPoint,
+                                     amount: Double, caliber: Double, shots: Int)] = [:]
         for archer in archers {
             guard let mark = nearest(to: archer.at, among: raiders) else { continue }
             let gap = SiegeField.distance(archer.at, mark.at)
             // A tower shoots further than a bow in a hand, and it keeps
             // shooting at what is at its foot — there is nobody up there to be
             // pushed into a scuffle.
-            let range = archer.kind == .emplacement ? towerRange : bowRange
+            // **How far this weapon carries**, not how far a bow carries. The
+            // whole fight used one constant, so a sling and a rifle opened fire
+            // at the same distance and the only thing that made one better than
+            // the other was a bigger number in `damage`.
+            let arm = arms[archer.id]
+            let range = archer.kind == .emplacement
+                ? towerRange
+                : (arm?.range ?? bowRange)
             guard gap <= range, archer.kind == .emplacement || gap > reach else { continue }
             // What the world has to say about the line between them (§11.27).
             // A raider coming on through a wood or behind the old walls is a
@@ -642,14 +659,36 @@ public enum SiegeEngine {
             }
             guard shot > 0 else { continue }
             landed = mark.at
-            total += wound(raider: mark.id, by: shot, siege: &siege)
+            let dealt = wound(raider: mark.id, by: shot, siege: &siege)
+            total += dealt
+            let sort = arm?.projectile ?? .arrow
+            var seen = fired[sort] ?? (from: archer.at, to: mark.at, amount: 0,
+                                       caliber: arm?.caliber ?? 1, shots: 0)
+            // One beat covers everybody who fired that kind this step, so what
+            // is drawn is how many shots there were: six archers put six
+            // shafts in the air, and one of them puts up one.
+            seen.shots += max(1, arm?.shots ?? 1)
+            // The heaviest exchange of each kind is the one drawn: a volley is
+            // one beat, and the beat should be the part of it worth watching.
+            if dealt >= seen.amount {
+                seen.from = archer.at
+                seen.to = mark.at
+            }
+            seen.amount += dealt
+            fired[sort] = seen
         }
-        guard total > 0, let landed else { return }
+        guard total > 0, landed != nil else { return }
         // **Where the arrows went.** A volley used to be a bare tally, so the
         // canvas drew it as arrows off an abstract wall — an effect at a place
-        // nobody was standing. It lands on whoever was shot at, which is a
-        // position the fight already knows.
-        siege.moments.append(moment(siege, .volley, amount: total, spot: landed))
+        // nobody was standing. It lands on whoever was shot at, and now leaves
+        // from whoever fired it, which are both positions the fight knows.
+        for sort in ProjectileKind.allCases {
+            guard let shot = fired[sort] else { continue }
+            siege.moments.append(moment(
+                siege, .volley, amount: shot.amount, spot: shot.to,
+                from: shot.from, projectile: sort,
+                caliber: shot.caliber, shots: shot.shots))
+        }
     }
 
     /// The line, where it is in contact.
@@ -1093,11 +1132,32 @@ public enum SiegeEngine {
 
     private static func moment(
         _ siege: Siege, _ kind: BattleMoment.Kind, pawnID: UUID? = nil,
-        pawnName: String? = nil, amount: Double = 0, spot: LocalPoint? = nil
+        pawnName: String? = nil, amount: Double = 0, spot: LocalPoint? = nil,
+        from: LocalPoint? = nil, projectile: ProjectileKind? = nil,
+        caliber: Double? = nil, shots: Int? = nil
     ) -> BattleMoment {
         BattleMoment(id: siege.moments.count, at: momentPosition(step: siege.step),
                      kind: kind, pawnID: pawnID, pawnName: pawnName, amount: amount,
-                     spot: spot)
+                     spot: spot, from: from, projectile: projectile,
+                     caliber: caliber, shots: shots)
+    }
+
+    /// What everybody is holding, for the fighters who are holding something.
+    ///
+    /// `weights` answers "how hard does this person hit"; this answers "with
+    /// what", which is a different question the moment two ranged weapons stop
+    /// being the same weapon with different numbers.
+    static func armaments(
+        of pawns: [Pawn], registry: GameDataRegistry
+    ) -> [UUID: CombatProfile] {
+        var arms: [UUID: CombatProfile] = [:]
+        for pawn in pawns {
+            guard let item = pawn.equipment[.weapon], !item.isBroken,
+                  let def = registry.item(item.definitionID),
+                  let combat = def.combat else { continue }
+            arms[pawn.id] = combat
+        }
+        return arms
     }
 
     // MARK: - Ending it

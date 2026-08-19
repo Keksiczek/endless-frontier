@@ -35,9 +35,31 @@ public struct BattleMoment: Codable, Sendable, Equatable, Identifiable {
     /// has no positions in it at all, gets its blood in the right places too.
     public let spot: LocalPoint?
 
+    /// **Where it was fired from**, when it was fired at all.
+    ///
+    /// A volley knew where it landed and nothing about where it came from, so
+    /// the canvas worked the other end out by stepping back along the field's
+    /// axis — an arrow drawn from a place chosen by arithmetic rather than
+    /// from the archer. With a hundred yards between a pistol and a rifle that
+    /// stops being close enough: the length of the shot *is* the weapon.
+    public let from: LocalPoint?
+
+    /// What was fired. Nil in every fight recorded before weapons had
+    /// projectiles, and read as an arrow — which is what those fights drew.
+    public let projectile: ProjectileKind?
+
+    /// How big the thing was, against an arrow at 1. Carried on the moment
+    /// rather than looked up, because a replay has no fighters left to ask.
+    public let caliber: Double?
+
+    /// How many left the weapon in this beat. A bow looses one.
+    public let shots: Int?
+
     public init(id: Int, at: Double, kind: Kind, pawnID: UUID? = nil,
                 pawnName: String? = nil, amount: Double = 0,
-                spot: LocalPoint? = nil) {
+                spot: LocalPoint? = nil, from: LocalPoint? = nil,
+                projectile: ProjectileKind? = nil, caliber: Double? = nil,
+                shots: Int? = nil) {
         self.id = id
         self.at = min(1, max(0, at))
         self.kind = kind
@@ -45,12 +67,17 @@ public struct BattleMoment: Codable, Sendable, Equatable, Identifiable {
         self.pawnName = pawnName
         self.amount = amount
         self.spot = spot
+        self.from = from
+        self.projectile = projectile
+        self.caliber = caliber
+        self.shots = shots
     }
 
     // MARK: - Codable (resilient: the place postdates the first battles)
 
     private enum CodingKeys: String, CodingKey {
         case id, at, kind, pawnID, pawnName, amount, spot
+        case from, projectile, caliber, shots
     }
 
     public init(from decoder: Decoder) throws {
@@ -62,6 +89,10 @@ public struct BattleMoment: Codable, Sendable, Equatable, Identifiable {
         pawnName = try c.decodeIfPresent(String.self, forKey: .pawnName)
         amount = try c.decodeIfPresent(Double.self, forKey: .amount) ?? 0
         spot = try c.decodeIfPresent(LocalPoint.self, forKey: .spot)
+        from = try c.decodeIfPresent(LocalPoint.self, forKey: .from)
+        projectile = try c.decodeIfPresent(ProjectileKind.self, forKey: .projectile)
+        caliber = try c.decodeIfPresent(Double.self, forKey: .caliber)
+        shots = try c.decodeIfPresent(Int.self, forKey: .shots)
     }
 }
 

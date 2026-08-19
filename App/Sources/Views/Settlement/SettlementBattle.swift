@@ -394,8 +394,18 @@ enum SettlementBattle {
             let fade = 1 - age / beat
             switch moment.kind {
             case .volley:
-                volley(&context, field: field, rect: rect, flight: 1 - fade,
-                       fade: fade, zoom: zoom, landing: moment.spot)
+                // What was actually fired, when the record says. A fight
+                // recorded before weapons had projectiles has neither end nor
+                // kind, and falls back to the arrows this always drew.
+                let landing = moment.spot ?? field.origin
+                let origin = moment.from ?? LocalPoint(
+                    x: landing.x - field.axisX * SiegeField.openReach * 0.35,
+                    y: landing.y - field.axisY * SiegeField.openReach * 0.35)
+                SettlementProjectiles.draw(
+                    &context, rect: rect, kind: moment.projectile ?? .arrow,
+                    from: origin, to: landing, flight: 1 - fade, fade: fade,
+                    zoom: zoom, caliber: moment.caliber ?? 1,
+                    shots: moment.shots ?? 6, seed: UInt64(moment.id) &+ 1)
             case .clash, .charge:
                 // Nothing of its own. A clash is a tally of the whole line's
                 // swings for one step, and the swings themselves are already
@@ -777,55 +787,6 @@ enum SettlementBattle {
     }
 
     /// Arrows loosed from the colony's side, back down the road.
-    /// Arrows, drawn on the line they actually flew along.
-    ///
-    /// `landing` is where the volley struck (`BattleMoment.spot`). Without it
-    /// the shafts were drawn from the muster point toward the map edge — an
-    /// effect at a place nobody was standing, which is most of what "efekty na
-    /// místě, kde postava stála když boj začínal" was about.
-    /// **Arrows that fly.**
-    ///
-    /// They used to be six dashes strung along the flight path at fixed
-    /// fractions — `t = 0.15 + i * 0.12`, a function of *which arrow* and not
-    /// of *when* — so a volley was a static fan that faded where it stood.
-    /// Nothing crossed the ground, which is the one thing an arrow does.
-    ///
-    /// `flight` is how far through its life this volley is, 0 at the loose and
-    /// 1 at the landing, so the fan now travels; the per-arrow offset survives
-    /// as a stagger, because six arrows loosed together do not arrive in a
-    /// rank.
-    private static func volley(
-        _ context: inout GraphicsContext, field: SiegeField, rect: CGRect,
-        flight: Double, fade: Double, zoom: CGFloat, landing: LocalPoint? = nil
-    ) {
-        // The wall end of the flight: back along the axis from where it hit.
-        let target = landing ?? field.origin
-        let source = landing.map {
-            LocalPoint(x: $0.x - field.axisX * SiegeField.openReach * 0.35,
-                       y: $0.y - field.axisY * SiegeField.openReach * 0.35)
-        } ?? field.muster
-        for i in 0..<6 {
-            // Each shaft a little behind the last, and none of them past the
-            // mark: an arrow that has landed stops rather than flying on.
-            let stagger = Double(i) * 0.05
-            let t = min(1, max(0, flight * 1.15 - stagger))
-            let spread = (Double(i) - 2.5) * 0.012
-            let px = -field.axisY * spread, py = field.axisX * spread
-            let from = LocalPoint(x: source.x + px, y: source.y + py)
-            let to = LocalPoint(x: target.x + px, y: target.y + py)
-            // The shaft itself: a short length of the flight, not a point, so
-            // it reads as something moving rather than a mark on the ground.
-            let a = SettlementRenderer.point(interpolate(from, to, t: t), in: rect)
-            let b = SettlementRenderer.point(
-                interpolate(from, to, t: min(1, t + 0.06)), in: rect)
-            context.stroke(Path { p in
-                p.move(to: a)
-                p.addLine(to: b)
-            }, with: .color(Theme.bone.opacity(0.75 * fade)),
-               style: StrokeStyle(lineWidth: max(0.7, zoom), lineCap: .round))
-        }
-    }
-
     /// Stores going the other way, on somebody's back.
     private static func plunder(
         _ context: inout GraphicsContext, field: SiegeField, rect: CGRect,

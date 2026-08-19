@@ -53,18 +53,141 @@ public enum WeaponClass: String, Codable, Sendable, Equatable {
 /// A weapon's fighting characteristics. Tools that live in the weapon slot
 /// (an axe, a pick) carry a token profile — a colonist swinging an axe is not
 /// unarmed — while true arms carry real ones.
+/// **What a weapon throws at somebody.**
+///
+/// Fifty-eight weapons shipped with a `class` and a `damage`, which is to say
+/// that a sling, a longbow, a musket, a pistol and a railgun were one thing
+/// with five numbers on it. They were drawn identically too — six bone-coloured
+/// shafts, whatever had been fired — because the canvas had nothing else to go
+/// on. Keks: *"at ma kazda zbran unikat, pistol strili mensi nez sniper"*.
+///
+/// So the shot is a thing with a kind, and the kind is what every part of it is
+/// derived from: how big it draws, how fast it crosses, what it leaves behind
+/// it, and whether it goes off when it arrives. One enum, read by the engine
+/// (what may be shot at, and from how far) and by the canvas (what it looks
+/// like) — never two lists that drift.
+public enum ProjectileKind: String, Codable, Sendable, CaseIterable {
+    /// Nothing leaves the hand. Every melee weapon.
+    case none
+    /// A shaft from a bow — the one the game already drew.
+    case arrow
+    /// Shorter, heavier, flatter: a crossbow.
+    case bolt
+    /// A stone from a sling or a hand.
+    case stone
+    /// A blowpipe dart, and anything else small and slow.
+    case dart
+    /// A lead ball out of a smoothbore, in a great deal of smoke.
+    case ball
+    /// A rifled round: small, fast, and gone before it is seen.
+    case bullet
+    /// A burst of shot from one barrel — a cone rather than a line.
+    case shot
+    /// An artillery shell: it arcs, and it goes off where it lands.
+    case shell
+    /// Thrown, arcs high, goes off after it stops.
+    case grenade
+    /// Carries its own fire, leaves a trail, goes off on arrival.
+    case rocket
+    /// No flight at all — a line drawn the instant it is fired.
+    case beam
+
+    /// Whether this one goes off where it lands rather than simply hitting.
+    public var bursts: Bool {
+        switch self {
+        case .shell, .grenade, .rocket: return true
+        default: return false
+        }
+    }
+
+    /// Whether it travels on a curve rather than flat. What arcs can be lobbed
+    /// over a wall; what does not, cannot.
+    public var arcs: Bool {
+        switch self {
+        case .arrow, .stone, .grenade, .shell: return true
+        default: return false
+        }
+    }
+
+    /// How far it crosses the valley in one action step, as a fraction of the
+    /// local map. Feeds the canvas' flight and nothing else — a shot resolves
+    /// in the step it is fired in, the way it always has.
+    public var speed: Double {
+        switch self {
+        case .none:               return 0
+        case .stone, .grenade:    return 0.20
+        case .arrow, .dart:       return 0.35
+        case .bolt, .ball:        return 0.55
+        case .rocket:             return 0.6
+        case .shell:              return 0.7
+        case .shot, .bullet:      return 1.6
+        case .beam:               return 8
+        }
+    }
+}
+
+/// What a weapon does, and — since it stopped being a number — what it throws.
 public struct CombatProfile: Codable, Sendable, Equatable {
     public let damage: Double
     public let kind: WeaponClass
 
-    public init(damage: Double, kind: WeaponClass) {
+    /// What leaves the weapon. Absent in every entry written before this
+    /// existed, and those are answered for rather than left blank: a ranged
+    /// weapon with nothing stated shoots an arrow, which is what the game drew
+    /// for all of them anyway, and a melee one shoots nothing.
+    public let projectile: ProjectileKind
+
+    /// How far it carries, as a fraction of the local map. Nil means "the
+    /// ordinary reach of its kind" — `SiegeEngine.bowRange`. **This is the
+    /// pistol-and-sniper difference**, and the first thing about a ranged
+    /// weapon that was ever anything but damage.
+    public let range: Double?
+
+    /// How wide the shot goes, in fractions of the map at the far end. A
+    /// smoothbore scatters, a scoped rifle does not.
+    public let spread: Double?
+
+    /// How big the thing that leaves it is, drawn. 1 is an arrow.
+    public let caliber: Double?
+
+    /// How many shots one action step's worth of fire is drawn as. A bow looses
+    /// once; a machine gun does not.
+    public let shots: Int?
+
+    /// How far the burst reaches, for the kinds that burst. Fraction of the map.
+    public let blast: Double?
+
+    public init(damage: Double, kind: WeaponClass,
+                projectile: ProjectileKind? = nil, range: Double? = nil,
+                spread: Double? = nil, caliber: Double? = nil,
+                shots: Int? = nil, blast: Double? = nil) {
         self.damage = damage
         self.kind = kind
+        self.projectile = projectile ?? (kind == .ranged ? .arrow : .none)
+        self.range = range
+        self.spread = spread
+        self.caliber = caliber
+        self.shots = shots
+        self.blast = blast
     }
 
     private enum CodingKeys: String, CodingKey {
-        case damage
+        case damage, projectile, range, spread, caliber, shots, blast
         case kind = "class"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let damage = try c.decode(Double.self, forKey: .damage)
+        let kind = try c.decode(WeaponClass.self, forKey: .kind)
+        self.init(
+            damage: damage, kind: kind,
+            projectile: try c.decodeIfPresent(ProjectileKind.self, forKey: .projectile),
+            range: try c.decodeIfPresent(Double.self, forKey: .range),
+            spread: try c.decodeIfPresent(Double.self, forKey: .spread),
+            caliber: try c.decodeIfPresent(Double.self, forKey: .caliber),
+            shots: try c.decodeIfPresent(Int.self, forKey: .shots),
+            blast: try c.decodeIfPresent(Double.self, forKey: .blast))
     }
 }
 

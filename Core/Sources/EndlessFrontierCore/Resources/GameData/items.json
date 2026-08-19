@@ -21,7 +21,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 2
+      "damage": 2,
+      "projectile": "none"
     }
   },
   {
@@ -46,7 +47,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 4
+      "damage": 4,
+      "projectile": "none"
     }
   },
   {
@@ -71,7 +73,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 4
+      "damage": 4,
+      "projectile": "none"
     }
   },
   {
@@ -96,7 +99,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 4
+      "damage": 4,
+      "projectile": "none"
     }
   },
   {
@@ -121,7 +125,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 5
+      "damage": 5,
+      "projectile": "none"
     }
   },
   {
@@ -557,7 +562,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 6
+      "damage": 6,
+      "projectile": "none"
     }
   },
   {
@@ -582,7 +588,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 4
+      "damage": 4,
+      "projectile": "none"
     }
   },
   {
@@ -607,7 +614,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 2
+      "damage": 2,
+      "projectile": "none"
     }
   },
   {
@@ -853,7 +861,8 @@
     "equipSlot": "weapon",
     "combat": {
       "class": "melee",
-      "damage": 6
+      "damage": 6,
+      "projectile": "none"
     },
     "description": {
       "en": "A plain spear — the first argument a raider understands.",
@@ -871,7 +880,11 @@
     "equipSlot": "weapon",
     "combat": {
       "class": "ranged",
-      "damage": 5
+      "damage": 5,
+      "projectile": "arrow",
+      "range": 0.16,
+      "caliber": 1.0,
+      "shots": 1
     },
     "effects": [
       {
@@ -896,7 +909,8 @@
     "equipSlot": "weapon",
     "combat": {
       "class": "melee",
-      "damage": 10
+      "damage": 10,
+      "projectile": "none"
     },
     "description": {
       "en": "Honest iron with an edge — a militia line stiffens around it.",
@@ -914,7 +928,11 @@
     "equipSlot": "weapon",
     "combat": {
       "class": "ranged",
-      "damage": 9
+      "damage": 9,
+      "projectile": "arrow",
+      "range": 0.22,
+      "caliber": 1.15,
+      "shots": 1
     },
     "effects": [
       {
@@ -939,7 +957,8 @@
     "equipSlot": "weapon",
     "combat": {
       "class": "melee",
-      "damage": 14
+      "damage": 14,
+      "projectile": "none"
     },
     "description": {
       "en": "Axe, hook and spike on one long haft — a wall in a single pair of hands.",
@@ -957,7 +976,11 @@
     "equipSlot": "weapon",
     "combat": {
       "class": "ranged",
-      "damage": 12
+      "damage": 12,
+      "projectile": "bolt",
+      "range": 0.19,
+      "caliber": 1.1,
+      "shots": 1
     },
     "description": {
       "en": "Slow to span, terrible to receive.",
@@ -975,7 +998,11 @@
     "equipSlot": "weapon",
     "combat": {
       "class": "ranged",
-      "damage": 18
+      "damage": 18,
+      "projectile": "bullet",
+      "range": 0.42,
+      "caliber": 0.5,
+      "shots": 1
     },
     "description": {
       "en": "One shot from the tower ends most arguments before they start.",
@@ -1130,7 +1157,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 2
+      "damage": 2,
+      "projectile": "none"
     }
   },
   {
@@ -1252,7 +1280,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 11
+      "damage": 11,
+      "projectile": "none"
     }
   },
   {
@@ -1313,7 +1342,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 16
+      "damage": 16,
+      "projectile": "none"
     }
   },
   {
@@ -1544,7 +1574,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 3
+      "damage": 3,
+      "projectile": "none"
     }
   },
   {
@@ -1602,7 +1633,11 @@
     },
     "combat": {
       "class": "ranged",
-      "damage": 4
+      "damage": 4,
+      "projectile": "stone",
+      "range": 0.11,
+      "caliber": 0.9,
+      "shots": 1
     }
   },
   {
@@ -1691,7 +1726,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 3
+      "damage": 3,
+      "projectile": "none"
     }
   },
   {
@@ -1709,7 +1745,11 @@
     },
     "combat": {
       "class": "ranged",
-      "damage": 4
+      "damage": 4,
+      "projectile": "stone",
+      "range": 0.14,
+      "caliber": 1.0,
+      "shots": 1
     }
   },
   {
@@ -1799,7 +1839,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 3
+      "damage": 3,
+      "projectile": "none"
     }
   },
   {
@@ -1881,7 +1922,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 4
+      "damage": 4,
+      "projectile": "none"
     }
   },
   {
@@ -2074,7 +2116,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 3
+      "damage": 3,
+      "projectile": "none"
     }
   },
   {
@@ -2099,7 +2142,11 @@
     },
     "combat": {
       "class": "ranged",
-      "damage": 4
+      "damage": 4,
+      "projectile": "stone",
+      "range": 0.11,
+      "caliber": 0.9,
+      "shots": 1
     }
   },
   {
@@ -2187,7 +2234,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 3
+      "damage": 3,
+      "projectile": "none"
     }
   },
   {
@@ -2527,7 +2575,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 5
+      "damage": 5,
+      "projectile": "none"
     }
   },
   {
@@ -2667,7 +2716,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 4
+      "damage": 4,
+      "projectile": "none"
     }
   },
   {
@@ -2865,7 +2915,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 4
+      "damage": 4,
+      "projectile": "none"
     }
   },
   {
@@ -3119,7 +3170,8 @@
     "equipSlot": "weapon",
     "combat": {
       "class": "melee",
-      "damage": 4
+      "damage": 4,
+      "projectile": "none"
     },
     "description": {
       "en": "A heavy wooden shaft topped with a crudely chipped stone point. Effective enough for defending the settlement perimeter, as Kael learned.",
@@ -3266,7 +3318,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 2
+      "damage": 2,
+      "projectile": "none"
     }
   },
   {
@@ -3304,7 +3357,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 3
+      "damage": 3,
+      "projectile": "none"
     }
   },
   {
@@ -3456,7 +3510,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 1
+      "damage": 1,
+      "projectile": "none"
     }
   },
   {
@@ -3629,7 +3684,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 3
+      "damage": 3,
+      "projectile": "none"
     }
   },
   {
@@ -3814,7 +3870,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 3
+      "damage": 3,
+      "projectile": "none"
     }
   },
   {
@@ -3877,7 +3934,11 @@
     },
     "combat": {
       "class": "ranged",
-      "damage": 3
+      "damage": 3,
+      "projectile": "stone",
+      "range": 0.06,
+      "caliber": 1.6,
+      "shots": 1
     }
   },
   {
@@ -4012,7 +4073,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 4
+      "damage": 4,
+      "projectile": "none"
     }
   },
   {
@@ -4037,7 +4099,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 2
+      "damage": 2,
+      "projectile": "none"
     }
   },
   {
@@ -4082,7 +4145,11 @@
     },
     "combat": {
       "class": "ranged",
-      "damage": 3
+      "damage": 3,
+      "projectile": "stone",
+      "range": 0.08,
+      "caliber": 1.1,
+      "shots": 2
     }
   },
   {
@@ -4428,7 +4495,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 3
+      "damage": 3,
+      "projectile": "none"
     }
   },
   {
@@ -4466,7 +4534,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 4
+      "damage": 4,
+      "projectile": "none"
     }
   },
   {
@@ -4617,7 +4686,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 1
+      "damage": 1,
+      "projectile": "none"
     }
   },
   {
@@ -4641,7 +4711,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 1
+      "damage": 1,
+      "projectile": "none"
     }
   },
   {
@@ -4739,7 +4810,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 1
+      "damage": 1,
+      "projectile": "none"
     }
   },
   {
@@ -4764,7 +4836,11 @@
     },
     "combat": {
       "class": "ranged",
-      "damage": 4
+      "damage": 4,
+      "projectile": "stone",
+      "range": 0.12,
+      "caliber": 0.9,
+      "shots": 1
     }
   },
   {
@@ -4823,7 +4899,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 2
+      "damage": 2,
+      "projectile": "none"
     }
   },
   {
@@ -4962,7 +5039,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 3
+      "damage": 3,
+      "projectile": "none"
     }
   },
   {
@@ -5006,7 +5084,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 1
+      "damage": 1,
+      "projectile": "none"
     }
   },
   {
@@ -5044,7 +5123,11 @@
     },
     "combat": {
       "class": "ranged",
-      "damage": 2
+      "damage": 2,
+      "projectile": "stone",
+      "range": 0.07,
+      "caliber": 0.9,
+      "shots": 1
     }
   },
   {
@@ -5162,7 +5245,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 4
+      "damage": 4,
+      "projectile": "none"
     }
   },
   {
@@ -5206,7 +5290,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 3
+      "damage": 3,
+      "projectile": "none"
     }
   },
   {
@@ -5251,7 +5336,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 5
+      "damage": 5,
+      "projectile": "none"
     }
   },
   {
@@ -5396,7 +5482,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 1
+      "damage": 1,
+      "projectile": "none"
     }
   },
   {
@@ -5435,7 +5522,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 1
+      "damage": 1,
+      "projectile": "none"
     }
   },
   {
@@ -5473,7 +5561,11 @@
     },
     "combat": {
       "class": "ranged",
-      "damage": 3
+      "damage": 3,
+      "projectile": "stone",
+      "range": 0.1,
+      "caliber": 0.8,
+      "shots": 1
     }
   },
   {
@@ -5685,7 +5777,11 @@
     },
     "combat": {
       "class": "ranged",
-      "damage": 3
+      "damage": 3,
+      "projectile": "arrow",
+      "range": 0.09,
+      "caliber": 1.5,
+      "shots": 1
     }
   },
   {
@@ -5826,7 +5922,8 @@
     },
     "combat": {
       "class": "melee",
-      "damage": 3
+      "damage": 3,
+      "projectile": "none"
     }
   },
   {
@@ -5956,6 +6053,544 @@
     "description": {
       "en": "A tightly woven basket overflowing with nutrient-rich roots, gathered from the deeper parts of the valley. Enough to feed a few mouths for a day.",
       "cs": "Pevně pletený koš plný výživných kořenů, nasbíraných z hlubších částí údolí. Dost na nakrmení několika úst na jeden den."
+    }
+  },
+  {
+    "id": "yew_war_bow",
+    "name": {
+      "en": "Yew War Bow",
+      "cs": "Tisový válečný luk"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Made from the heartwood of an old yew, this bow requires immense strength to draw. Its arrows are said to pierce plate at a hundred paces.",
+      "cs": "Tenhle luk, vyrobený z jádrového dřeva starého tisu, vyžaduje k natažení ohromnou sílu. Říká se, že jeho šípy na sto kroků prorazí i plát."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 11,
+      "projectile": "arrow",
+      "range": 0.24,
+      "caliber": 1.0,
+      "shots": 1
+    }
+  },
+  {
+    "id": "heavy_arbalest",
+    "name": {
+      "en": "Heavy Arbalest",
+      "cs": "Těžká arbaleta"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Wound with a crank and lever, its steel prod can send a bolt through a shield and the man behind it. The Sobek family smiths are the only ones who know how to make them.",
+      "cs": "Natahuje se klikou a pákou a její ocelové lučiště dokáže poslat šipku skrz štít i muže za ním. Umí je vyrobit jen kováři z rodu Sobků."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 14,
+      "projectile": "bolt",
+      "range": 0.26,
+      "caliber": 1.2,
+      "shots": 1
+    }
+  },
+  {
+    "id": "recurve_war_bow",
+    "name": {
+      "en": "Recurve War Bow",
+      "cs": "Reflexní válečný luk"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "The limbs curve away from the archer, storing immense energy. The Kovar family's bows are known throughout the valley for their punch.",
+      "cs": "Ramena se prohýbají směrem od lučištníka a ukládají tak obrovskou energii. Luky z dílny Kovářů jsou svou průrazností známé po celém údolí."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 10,
+      "projectile": "arrow",
+      "range": 0.2,
+      "caliber": 1.0,
+      "shots": 1
+    }
+  },
+  {
+    "id": "windlass_arbalest",
+    "name": {
+      "en": "Windlass Arbalest",
+      "cs": "Těžká kuše s heverem"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "So powerful it requires a mechanical winch to draw. Each shot is a deliberate, thunderous affair that can punch through an oak shield.",
+      "cs": "Tak silná, že k natažení tětivy potřebuje mechanický hever. Každý výstřel je promyšlená, hromová rána, která prorazí i dubový štít."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 15,
+      "projectile": "bolt",
+      "range": 0.25,
+      "caliber": 1.2,
+      "shots": 1
+    }
+  },
+  {
+    "id": "matchlock_rifle",
+    "name": {
+      "en": "Matchlock Rifle",
+      "cs": "Zápalková puška"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A long, heavy firearm ignited by a slow-burning cord. It's clumsy and slow to reload, but its reach and power are undeniable.",
+      "cs": "Dlouhá, těžká zbraň zapalovaná doutnákem. Je neohrabaná a pomalu se nabíjí, ale její dostřel a síla jsou nepopiratelné."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 16,
+      "projectile": "ball",
+      "range": 0.28,
+      "caliber": 1.5,
+      "shots": 1
+    }
+  },
+  {
+    "id": "cavalry_blunderbuss",
+    "name": {
+      "en": "Cavalry Blunderbuss",
+      "cs": "Jezdecká bambitka"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A short, wide-muzzled firearm designed for close quarters. It scatters a cloud of shot, making aiming less critical when the target is near.",
+      "cs": "Krátká zbraň s širokým ústím, určená pro boj zblízka. Vystřelí oblak broků, takže míření není tak důležité, když je cíl blízko."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 14,
+      "projectile": "shot",
+      "range": 0.15,
+      "caliber": 0.4,
+      "shots": 8,
+      "spread": 0.08
+    }
+  },
+  {
+    "id": "hand_mortar",
+    "name": {
+      "en": "Hand Mortar",
+      "cs": "Ruční moždíř"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A stubby, oversized firearm for lobbing small explosive charges. Inaccurate and dangerous to the user, but devastating to a tight group of enemies.",
+      "cs": "Podsaditá, předimenzovaná zbraň na vrhání malých výbušných náloží. Nepřesná a nebezpečná pro střelce, ale zničující pro sevřenou skupinu nepřátel."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 20,
+      "projectile": "grenade",
+      "range": 0.1,
+      "caliber": 1.5,
+      "shots": 1,
+      "blast": 0.03
+    }
+  },
+  {
+    "id": "flintlock_pistol",
+    "name": {
+      "en": "Flintlock Pistol",
+      "cs": "Křesadlová pistole"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A personal firearm, more reliable than a matchlock and small enough to be carried at one's belt. A single shot, best saved for when it truly counts.",
+      "cs": "Osobní zbraň, spolehlivější než zápalková a dost malá na nošení za pasem. Jediná rána, kterou je nejlepší si schovat na okamžik, kdy na ní opravdu záleží."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 12,
+      "projectile": "ball",
+      "range": 0.22,
+      "caliber": 1.3,
+      "shots": 1
+    }
+  },
+  {
+    "id": "wheellock_musket",
+    "name": {
+      "en": "Wheellock Musket",
+      "cs": "Kolečková mušketa"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "The spring-wound mechanism means it can be fired in the rain, a trick that saved the Halek hunting party from a cornered bear last winter.",
+      "cs": "Díky kolečkovému zámku na pružinu se z ní dá střílet i v dešti. Tenhle trik loni v zimě zachránil Halečkovu loveckou partu před zahnaným medvědem."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 17,
+      "projectile": "ball",
+      "range": 0.26,
+      "caliber": 1.4,
+      "shots": 1
+    }
+  },
+  {
+    "id": "brass_blunderbuss",
+    "name": {
+      "en": "Brass Blunderbuss",
+      "cs": "Mosazná bambitka"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "The wide, flared muzzle is mostly for show, but it's terrifying up close. The Novaks use it to guard the trading post; one shot can scatter a whole pack of wolves.",
+      "cs": "Široké, trychtýřovité ústí je spíš na parádu, ale zblízka je děsivé. Novákovi s ní střeží obchodní stanici; jedna rána rozpráší celou smečku vlků."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 14,
+      "projectile": "shot",
+      "range": 0.15,
+      "caliber": 0.4,
+      "shots": 8,
+      "spread": 0.08
+    }
+  },
+  {
+    "id": "service_rifle",
+    "name": {
+      "en": "Service Rifle",
+      "cs": "Služební puška"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Standard issue from a forgotten war. Cleaned and maintained by a colonist who remembers her training. Reliable, accurate, and deadly.",
+      "cs": "Standardní výzbroj ze zapomenuté války. Čistí a udržuje ji kolonistka, která si pamatuje svůj výcvik. Spolehlivá, přesná a smrtící."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 24,
+      "projectile": "bullet",
+      "range": 0.35,
+      "caliber": 0.45,
+      "shots": 3,
+      "spread": 0.02
+    }
+  },
+  {
+    "id": "pump_action_shotgun",
+    "name": {
+      "en": "Pump-Action Shotgun",
+      "cs": "Pumpovací brokovnice"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Brought out when the fighting gets close. The sound of the action being worked is often enough to make an attacker think twice.",
+      "cs": "Vytahuje se, když se boj přiblíží na dosah. Zvuk nabíjení často stačí, aby si útočník svůj záměr rozmyslel."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 19,
+      "projectile": "shot",
+      "range": 0.12,
+      "caliber": 0.2,
+      "shots": 8,
+      "spread": 0.1
+    }
+  },
+  {
+    "id": "submachine_gun",
+    "name": {
+      "en": "Submachine Gun",
+      "cs": "Samopal"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Found in a sealed container in the old ruins. It's inaccurate at a distance, but fills the air with lead up close.",
+      "cs": "Nalezen v zapečetěném kontejneru ve starých ruinách. Na dálku je nepřesný, ale zblízka naplní vzduch olovem."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 18,
+      "projectile": "bullet",
+      "range": 0.18,
+      "caliber": 0.35,
+      "shots": 3,
+      "spread": 0.05
+    }
+  },
+  {
+    "id": "semi_auto_pistol",
+    "name": {
+      "en": "Semi-Auto Pistol",
+      "cs": "Poloautomatická pistole"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A personal sidearm, kept holstered by the settlement's Warden. It is more a symbol of office than a weapon of war, but it has saved his life more than once.",
+      "cs": "Osobní zbraň, kterou nosí v pouzdře Strážce osady. Je to spíše symbol úřadu než válečná zbraň, ale už mu nejednou zachránila život."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 14,
+      "projectile": "bullet",
+      "range": 0.14,
+      "caliber": 0.4,
+      "shots": 1
+    }
+  },
+  {
+    "id": "automatic_assault_rifle",
+    "name": {
+      "en": "Automatic Assault Rifle",
+      "cs": "Automatická útočná puška"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Standard issue for the colony's wardens. Lays down suppressive fire when the perimeter is breached.",
+      "cs": "Standardní výbava strážců kolonie. Poskytuje krycí palbu, když je narušen perimetr."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 27,
+      "projectile": "bullet",
+      "range": 0.35,
+      "caliber": 0.45,
+      "shots": 3,
+      "spread": 0.04
+    }
+  },
+  {
+    "id": "heavy_combat_shotgun",
+    "name": {
+      "en": "Heavy Combat Shotgun",
+      "cs": "Těžká bojová brokovnice"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A beast for close quarters. The sound alone is enough to make a raider reconsider.",
+      "cs": "Bestie pro boj zblízka. Už jen ten zvuk stačí, aby si to nájezdník rozmyslel."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 21,
+      "projectile": "shot",
+      "range": 0.12,
+      "caliber": 0.2,
+      "shots": 8,
+      "spread": 0.1
+    }
+  },
+  {
+    "id": "compact_smg",
+    "name": {
+      "en": "Compact SMG",
+      "cs": "Kompaktní samopal"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Light and fast, favored by scouts who need to travel light but hit hard if cornered.",
+      "cs": "Lehký a rychlý, oblíbený u průzkumníků, kteří potřebují cestovat nalehko, ale v nouzi tvrdě udeřit."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 16,
+      "projectile": "bullet",
+      "range": 0.2,
+      "caliber": 0.3,
+      "shots": 4
+    }
+  },
+  {
+    "id": "long_range_sniper_rifle",
+    "name": {
+      "en": "Long-Range Sniper Rifle",
+      "cs": "Dalekonosná odstřelovací puška"
+    },
+    "rarity": "epic",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Can reach a target from one end of the valley to the other. Only the steadiest hands are trusted with it.",
+      "cs": "Dokáže zasáhnout cíl z jednoho konce údolí na druhý. Svěřuje se jen těm nejpevnějším rukám."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 30,
+      "projectile": "bullet",
+      "range": 0.6,
+      "caliber": 0.55,
+      "shots": 1
+    }
+  },
+  {
+    "id": "gauss_carbine",
+    "name": {
+      "en": "Gauss Carbine",
+      "cs": "Gaussova karabina"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Accelerates a tiny ferromagnetic dart to hypersonic speeds. Near-silent, with a flat trajectory that makes it brutally effective at range.",
+      "cs": "Urychluje drobnou feromagnetickou šipku na hypersonickou rychlost. Téměř neslyšná, s plochou trajektorií, která z ní dělá brutálně účinnou zbraň na dálku."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 30,
+      "projectile": "bullet",
+      "range": 0.55,
+      "caliber": 0.4,
+      "shots": 3
+    }
+  },
+  {
+    "id": "plasma_arc_emitter",
+    "name": {
+      "en": "Plasma Arc Emitter",
+      "cs": "Plazmový obloukový emitor"
+    },
+    "rarity": "epic",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A relic from a forgotten war, this weapon projects a contained bolt of stellar-hot plasma. Its power cell is irreplaceable, but each shot is decisive.",
+      "cs": "Relikvie ze zapomenuté války. Tato zbraň vystřeluje ohraničený výboj plazmy horké jako hvězda. Její napájecí článek je nenahraditelný, ale každý výstřel je rozhodující."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 38,
+      "projectile": "beam",
+      "range": 0.65,
+      "caliber": 0.6,
+      "shots": 1
+    }
+  },
+  {
+    "id": "guided_micromissile_launcher",
+    "name": {
+      "en": "Guided Micromissile Launcher",
+      "cs": "Odpalovač naváděných mikroraket"
+    },
+    "rarity": "epic",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Fires a single, self-propelled projectile that tracks its target before detonation. The warhead is small, but its blast can suppress an entire group.",
+      "cs": "Vystřelí jedinou střelu s vlastním pohonem, která před detonací sleduje svůj cíl. Hlavice je malá, ale její výbuch dokáže potlačit celou skupinu."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 34,
+      "projectile": "rocket",
+      "range": 0.4,
+      "caliber": 2.0,
+      "shots": 1,
+      "blast": 0.05
+    }
+  },
+  {
+    "id": "kinetic_scattergun",
+    "name": {
+      "en": "Kinetic Scattergun",
+      "cs": "Kinetická brokovnice"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Doesn't use powder, but a powerful capacitor discharge to fire a spray of tungsten flechettes. At close range, it shreds anything unprotected.",
+      "cs": "Nepoužívá střelný prach, ale silný výboj kondenzátoru, který vystřelí spršku wolframových šipek. Zblízka roztrhá cokoli nechráněného."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 24,
+      "projectile": "bullet",
+      "range": 0.18,
+      "caliber": 0.3,
+      "shots": 10,
+      "spread": 0.1
+    }
+  },
+  {
+    "id": "gauss_rifle",
+    "name": {
+      "en": "Gauss Rifle",
+      "cs": "Gaussova puška"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A near-silent weapon that uses magnetic coils to accelerate a tiny ferromagnetic slug to hypersonic speeds. Leaves no casing, only a neat hole.",
+      "cs": "Téměř neslyšná zbraň, která pomocí magnetických cívek urychluje malý feromagnetický projektil na hypersonickou rychlost. Nezanechává žádnou nábojnici, jen čistý průstřel."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 36,
+      "projectile": "bullet",
+      "range": 0.65,
+      "caliber": 0.4,
+      "shots": 1
+    }
+  },
+  {
+    "id": "plasma_caster",
+    "name": {
+      "en": "Plasma Caster",
+      "cs": "Plazmový vrhač"
+    },
+    "rarity": "epic",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Fires a bolt of contained plasma that destabilizes on impact. The light is blinding, the effect is final.",
+      "cs": "Vystřelí dávku udržované plazmy, která se při dopadu destabilizuje. Světlo je oslepující, účinek konečný."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 42,
+      "projectile": "beam",
+      "range": 0.62,
+      "caliber": 0.6,
+      "shots": 1
     }
   }
 ]

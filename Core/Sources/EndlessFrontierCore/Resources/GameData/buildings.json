@@ -89,6 +89,7 @@
   },
   {
     "id": "lumberyard",
+    "work": "logging",
     "look": "sawmill",
     "era": "early_settlement",
     "name": {
@@ -143,6 +144,7 @@
   },
   {
     "id": "quarry",
+    "work": "mining",
     "look": "mine",
     "era": "early_settlement",
     "name": {
@@ -756,6 +758,7 @@
   },
   {
     "id": "workshop",
+    "work": "crafting",
     "era": "medieval",
     "name": {
       "en": "Workshop",
@@ -800,6 +803,7 @@
   },
   {
     "id": "factory",
+    "work": "crafting",
     "era": "early_industrial",
     "name": {
       "en": "Factory",
@@ -845,6 +849,7 @@
   },
   {
     "id": "foundry",
+    "work": "crafting",
     "era": "early_industrial",
     "name": {
       "en": "Foundry",
@@ -921,6 +926,7 @@
   },
   {
     "id": "railyard",
+    "work": "crafting",
     "look": "rail",
     "era": "early_industrial",
     "name": {
@@ -955,6 +961,7 @@
   },
   {
     "id": "chemical_plant",
+    "work": "crafting",
     "era": "early_industrial",
     "name": {
       "en": "Chemical Plant",
@@ -1070,6 +1077,7 @@
   },
   {
     "id": "vehicle_works",
+    "work": "crafting",
     "era": "modern",
     "name": {
       "en": "Vehicle Works",
@@ -1100,6 +1108,7 @@
   },
   {
     "id": "assembly_plant",
+    "work": "crafting",
     "era": "modern",
     "name": {
       "en": "Assembly Plant",
@@ -1345,6 +1354,7 @@
   },
   {
     "id": "automated_factory",
+    "work": "crafting",
     "era": "near_future",
     "name": {
       "en": "Automated Factory",
@@ -1522,6 +1532,7 @@
   },
   {
     "id": "bloomery",
+    "work": "crafting",
     "era": "early_settlement",
     "name": {
       "en": "Bloomery",
@@ -1554,5 +1565,138 @@
       "cs": "Hliněná pec a měchy. Pomalá, hltá dřevěné uhlí — a do příchodu velkých pecí jediná cesta k železu."
     },
     "look": "forge"
+  },
+  {
+    "id": "stable",
+    "era": "early_settlement",
+    "name": {
+      "en": "Stable",
+      "cs": "Stáj"
+    },
+    "cost": {
+      "materials": 25
+    },
+    "material_cost": {
+      "timber_bundle": 3
+    },
+    "workers": 2,
+    "work": "farming",
+    "production": {
+      "influence": 1
+    },
+    "consumption": {},
+    "morale_effect": 1,
+    "description": {
+      "en": "A warm, dry place for the colony's mounts. Well-kept animals mean faster scouts and a wider reach for the settlement.",
+      "cs": "Teplé a suché místo pro zvířata osady. Dobře ošetřovaná zvířata znamenají rychlejší zvědy a větší dosah."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 3
+    },
+    "look": "lodge"
+  },
+  {
+    "id": "wainwright",
+    "era": "ancient",
+    "name": {
+      "en": "Wainwright's Yard",
+      "cs": "Kolářská dílna"
+    },
+    "cost": {
+      "materials": 50,
+      "knowledge": 5
+    },
+    "material_cost": {
+      "timber_bundle": 5,
+      "brick": 1
+    },
+    "workers": 2,
+    "work": "crafting",
+    "production": {
+      "materials": 4
+    },
+    "consumption": {
+      "energy": 1
+    },
+    "description": {
+      "en": "Here, skilled hands turn wood and iron into the wheels and carts that carry the settlement's wealth.",
+      "cs": "Tady se zručnýma rukama mění dřevo a železo v kola a vozy, které ponesou bohatství osady."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 3
+    },
+    "look": "workshop"
+  },
+  {
+    "id": "garage",
+    "era": "modern",
+    "name": {
+      "en": "Garage",
+      "cs": "Garáž"
+    },
+    "cost": {
+      "materials": 160,
+      "knowledge": 65
+    },
+    "workers": 3,
+    "work": "crafting",
+    "production": {
+      "influence": 4,
+      "materials": 8
+    },
+    "consumption": {
+      "energy": 5
+    },
+    "morale_effect": 1,
+    "storage": {
+      "materials": 200,
+      "energy": 100
+    },
+    "description": {
+      "en": "The roar of internal combustion engines. This is where the colony's trucks and cars are built and maintained, the workhorses of a new age.",
+      "cs": "Hukot spalovacích motorů. Tady se staví a udržují náklaďáky a auta, tahouni nového věku."
+    },
+    "footprint": {
+      "w": 4,
+      "h": 3
+    },
+    "look": "plant"
+  },
+  {
+    "id": "airfield",
+    "era": "near_future",
+    "name": {
+      "en": "Airfield",
+      "cs": "Letiště"
+    },
+    "cost": {
+      "materials": 300,
+      "knowledge": 150
+    },
+    "workers": 4,
+    "work": "crafting",
+    "production": {
+      "influence": 12,
+      "materials": 10
+    },
+    "consumption": {
+      "energy": 10
+    },
+    "morale_effect": 2,
+    "storage": {
+      "materials": 400,
+      "energy": 300
+    },
+    "description": {
+      "en": "From this strip of reinforced concrete, the colony takes to the skies. Aircraft extend the settlement's reach across continents.",
+      "cs": "Z tohoto pásu železobetonu se kolonie vznáší k nebi. Letadla rozšiřují její dosah přes celé kontinenty."
+    },
+    "footprint": {
+      "w": 5,
+      "h": 4
+    },
+    "look": "pad"
   }
 ]

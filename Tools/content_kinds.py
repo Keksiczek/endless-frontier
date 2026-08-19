@@ -118,8 +118,37 @@ and the tests reject it.""",
         "file": "items.json",
         "brief": """A thing a colonist can own, carry, wear or wield. It has a place in
 the world's economy: something makes it, something wears it out, somebody wants
-it. Tools and weapons belong to an era — a colony of seven has no steel.""",
-        "wants": "tools, clothing, weapons, trade goods, oddments worth finding",
+it. Tools and weapons belong to an era — a colony of seven has no steel.
+
+**A weapon is what it throws.** `combat.class` is `melee` or `ranged`, and a
+ranged one states `projectile` — the thing that actually leaves it — plus how
+far it carries and how it is drawn. Fifty-eight weapons shipped with a class and
+a damage, which made a sling and a rifle the same object with different numbers,
+and the canvas drew all of them as the same six arrows.
+
+  projectile: none | arrow | bolt | stone | dart | ball | bullet | shot |
+              shell | grenade | rocket | beam
+  range:      how far it carries, as a fraction of the local map. A hunting bow
+              is 0.16, a longbow 0.22, a marksman's rifle 0.42. This is the
+              whole difference between a pistol and a sniper's rifle, so it must
+              actually differ.
+  caliber:    how big the shot is drawn, against an arrow at 1. A rifle round is
+              0.5, a thrown axe 1.6, a shell 2.5.
+  shots:      how many leave the weapon in one beat. A bow is 1, a shotgun's
+              pellets 8, an automatic 3.
+  spread:     optional, how wide it throws, fraction of the map at the far end.
+  blast:      only for `shell`, `grenade`, `rocket` — how far the burst reaches.
+
+A melee weapon states `projectile: none` and none of the rest.""",
+        "wants": "weapons that are not each other — a pistol, a rifle and a "
+                 "shotgun differ in range, caliber and shots before they differ "
+                 "in damage; and the tools, clothing and trade goods an era is "
+                 "short of",
+        "new_fields": ("combat",),
+        "new_values": {
+            "projectile": ("none", "arrow", "bolt", "stone", "dart", "ball",
+                           "bullet", "shot", "shell", "grenade", "rocket", "beam"),
+        },
     },
     "recipes": {
         "file": "recipes.json",
@@ -164,8 +193,22 @@ a body, what holds it back.""",
         "brief": """A place colonists walk to in order to work and to make things. It owns
 ground (a footprint), it holds the items of its trade, it wears out and wants
 mending. Cost, workers and production have to sit sensibly beside the buildings
-already in the file for the same era.""",
-        "wants": "buildings that fill a gap in an era rather than duplicating one",
+already in the file for the same era.
+
+**A building with `workers` must state its `work`** — the trade of whoever
+stands in it, one of: farming, logging, mining, research, trade, foraging,
+hunting, healing, building, scouting, priest, garrison, crafting, cooking.
+Without it `ColonyBuilder.workKind` guesses from what the place produces, and
+the guess is `logging` for anything that makes materials: nine buildings shipped
+that way, so no colonist could ever be posted to them, the workshop was manned
+by woodcutters, and `ResourceLoop` held every one of them at 40% of its stated
+output for ever with nothing the player could do about it.
+
+`look` names a drawing in `SettlementRenderer.BuildingGlyph`. It must be one
+that already exists — a new picture is Swift, not JSON.""",
+        "wants": "buildings that fill a gap in an era rather than duplicating one — "
+                 "and the places a yard needs: a stable, a wainwright, a garage, "
+                 "an airfield",
     },
     "techs": {
         "file": "techs.json",
