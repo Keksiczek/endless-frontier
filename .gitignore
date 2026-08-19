@@ -4,6 +4,10 @@
 .env
 # Model drafts are read and merged by hand; only the merged content is content.
 Tools/drafts/
+# `generate.py merge` copies the target aside before writing and removes the
+# copy once the tests pass. A merge that is interrupted leaves one behind, and
+# a stale copy of a content file is the last thing that should reach a commit.
+*.json.before-merge
 __pycache__/
 *.xcodeproj
 *.xcworkspace

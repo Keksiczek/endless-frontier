@@ -116,6 +116,53 @@ struct QuartermasterTests {
             .contains("leather"))
     }
 
+    /// **The list must not grow with the content.**
+    ///
+    /// This is the failure content actually caused, and the reason the rule
+    /// changed. `wantedMaterials` was the union over *every* workable gear
+    /// recipe: seven ids when ten such recipes shipped, eighteen when a content
+    /// pass took it to thirty — and `StewardEngine.keepMaterialsComing` places
+    /// one standing order per wanted material, so the bench was split eighteen
+    /// ways, nothing ever reached the amount a recipe needs, and the colony
+    /// stopped arming itself entirely. Rule 14 in the supply chain.
+    ///
+    /// The bench makes one thing per slot. The list has to be about that many.
+    @Test("The want list is about the gear, not about the size of the cookbook")
+    func theWantListStaysShort() throws {
+        let reg = try registry()
+        var s = bareColony(reg)
+        s.buildings.append(BuildingInstance(
+            id: UUID(uuidString: "0A47E12A-7777-0000-0000-000000000001")!,
+            definitionID: "hunters_lodge"))
+        let w = world(s, reg)
+        let wanted = QuartermasterEngine.wantedMaterials(for: s, in: w, registry: reg)
+        // At most two recipes' worth per slot — the one it is aiming at and the
+        // one it can finish — and a recipe is a handful of ingredients.
+        let ceiling = EquipmentSlot.allCases.count * 2 * 4
+        #expect(wanted.count <= ceiling,
+                "the quartermaster is stocking for the whole cookbook: \(wanted)")
+        #expect(!wanted.isEmpty, "and it has to want something")
+    }
+
+    /// The other half of the same rule: whatever it wants, the colony must be
+    /// able to come by. A want list full of things nothing produces is a bench
+    /// full of orders that never start.
+    @Test("Everything wanted is something this colony could actually get")
+    func everythingWantedIsReachable() throws {
+        let reg = try registry()
+        var s = bareColony(reg)
+        s.buildings.append(BuildingInstance(
+            id: UUID(uuidString: "0A47E12A-7777-0000-0000-000000000002")!,
+            definitionID: "hunters_lodge"))
+        let w = world(s, reg)
+        let wanted = QuartermasterEngine.wantedMaterials(for: s, in: w, registry: reg)
+        let reachable = wanted.filter {
+            QuartermasterEngine.producible($0, at: s, in: w, registry: reg)
+        }
+        #expect(!reachable.isEmpty,
+                "not one wanted material has a source: \(wanted)")
+    }
+
     // MARK: - Handing it out
 
     @Test("What comes off the bench ends up on somebody")

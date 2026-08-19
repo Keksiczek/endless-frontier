@@ -19,7 +19,21 @@ struct PawnInspectorCard: View {
 
     let pawn: Pawn
     let ticksPerYear: Int
-    var activity: String?
+    /// What they are visibly doing **right now**, asked again every second.
+    ///
+    /// A value rather than a closure was the bug the card was reported for: the
+    /// line is derived from the frame clock and the colonist's pose, and the
+    /// card is a plain SwiftUI view, so it was computed once when you tapped
+    /// and then stood still. Tapping somebody walking to the field left the
+    /// card saying *walking to the field* for as long as it was open — through
+    /// the walk, the work, the walk home and the night — and the only way to
+    /// see the truth was to close it and tap them again.
+    ///
+    /// So the card asks, on its own clock. See `liveActivity`, which is where
+    /// the ticking happens; nothing else on the card needs it, because
+    /// everything else on it changes when the *simulation* changes and that
+    /// arrives through `@Observable` on its own.
+    var activity: () -> String? = { nil }
     var bonds: [BondLine] = []
     /// Why their mood is what it is, from `MoodLedger`.
     var moodFactors: [MoodFactor] = []
@@ -55,6 +69,28 @@ struct PawnInspectorCard: View {
     /// The most of the screen the opened card may take. Beyond this the detail
     /// scrolls inside the card rather than pushing the header off the top.
     private static let detailMaxHeight: CGFloat = 260
+
+    /// The one line on this card that runs off the frame clock rather than off
+    /// the simulation, and therefore the one that needs a clock of its own.
+    ///
+    /// A second is the right beat: the pose changes when a colonist arrives
+    /// somewhere or picks up a load, which happens on the scale of seconds, and
+    /// a line of text redrawn sixty times a second to say the same four words
+    /// is sixty times the work for none of the benefit. Scoped to this row, so
+    /// opening a card does not put the rest of it — the mood ledger, the
+    /// equipment list — on a repeating render.
+    @ViewBuilder private var liveActivity: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { _ in
+            if let now = activity() {
+                HStack(spacing: 4) {
+                    Image(systemName: "location.fill").font(.system(size: 8))
+                    Text(now)
+                }
+                .font(.caption)
+                .foregroundStyle(Theme.accent.opacity(0.9))
+            }
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -382,14 +418,7 @@ struct PawnInspectorCard: View {
                 }
                 .font(.caption)
                 // What they're visibly doing on the canvas this moment.
-                if let activity {
-                    HStack(spacing: 4) {
-                        Image(systemName: "location.fill").font(.system(size: 8))
-                        Text(activity)
-                    }
-                    .font(.caption)
-                    .foregroundStyle(Theme.accent.opacity(0.9))
-                }
+                liveActivity
             }
             Spacer()
             Button(action: onClose) {

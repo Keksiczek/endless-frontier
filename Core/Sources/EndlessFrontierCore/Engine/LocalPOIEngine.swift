@@ -54,9 +54,20 @@ public enum LocalPOIEngine {
     /// map it crosses is the settlement's *own valley*, the ground its farmers
     /// walk to work every morning. A party took months of game time and half an
     /// hour of real time to reach a cave the colony can see from its doorstep.
-    /// A tick is a real minute and a sixtieth of a year, so this is about as
-    /// short as the trip can be and still be a trip.
-    static let travelTicksPerDistance: Double = 8
+    ///
+    /// **Halved again to 4 on 2026-08-18**, because 8 was still measured against
+    /// the wrong thing. A tick is *two* real minutes, and the far side of the
+    /// valley is about 0.62 from the heart: at 8 that is five ticks out and five
+    /// back, so twenty real minutes of a party being a dot on a road before the
+    /// place is even reached — on top of the work, which for a cave is another
+    /// ten ticks. The trip has to be a trip; it does not have to be the longest
+    /// thing in the game. At 4 the walk is two or three ticks each way and the
+    /// **work** is the bulk of the expedition, which is the right way round.
+    ///
+    /// `roundTripTicks` is what to reason about when tuning this — the number a
+    /// player actually waits out — and `POIInspectorCard` shows it before they
+    /// commit to it.
+    static let travelTicksPerDistance: Double = 4
 
     // MARK: - Ordering a visit
 
@@ -101,6 +112,16 @@ public enum LocalPOIEngine {
         s.settlements[seat].journal.append(
             tick: s.tick, kind: .work, text: departureLine(poi.kind, party: party.count))
         return s
+    }
+
+    /// The whole outing, end to end: out, work, and home again.
+    ///
+    /// The one number worth tuning against, because it is the one the player
+    /// waits through. Stated here rather than recomputed at each call site —
+    /// the inspector card was doing the `× 2 + workTicks` arithmetic itself,
+    /// which is a formula in two places waiting to disagree.
+    public static func roundTripTicks(to poi: LocalPOI) -> Int {
+        travelTicks(to: poi.position) * 2 + poi.kind.workTicks
     }
 
     /// How long the walk out takes, from how far the place is.

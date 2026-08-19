@@ -83,9 +83,27 @@ struct BuildingLookTests {
             definitionID: "b", coord: TileCoord(4, 4), width: w, height: h)]
         s.colony = colony
         let b = SettlementRenderer.normalizedLayout(settlement: s, registry: reg)[0]
-        // A body runs roughly 2.2 × size across; it must not spill its parcel.
-        #expect(b.size * 2.2 <= b.footprintW + 1e-9)
-        #expect(b.size * 2.2 <= b.footprintH + 1e-9)
+        // Measured off the walls the renderer actually draws rather than off a
+        // remembered "a body is about 2.2 × size" — that constant was a guess
+        // covering every glyph, and `lotSize` now sizes each glyph against its
+        // own proportions so the building fills the plot it paid for. Asking
+        // `bodySize` is asking the drawing.
+        //
+        // The widest a body ever gets is at the top of its own size jitter, so
+        // that is what has to fit.
+        let walls = SettlementStructures.bodySize(
+            b.glyph, s: b.size * SettlementRenderer.maxBodyJitter, seed: b.seed,
+            aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1)
+        #expect(walls.width <= b.footprintW + 1e-9,
+                "a \(w)×\(h) body is \(walls.width) across a \(b.footprintW) lot")
+        #expect(walls.height <= b.footprintH + 1e-9,
+                "a \(w)×\(h) body is \(walls.height) tall on a \(b.footprintH) lot")
+        // …and it is not lost in the middle of it either. The complaint this
+        // sizing answers was that the buildings were too small for what has to
+        // fit inside them, so a body that fills less than three quarters of its
+        // plot across is the bug coming back.
+        #expect(walls.width >= b.footprintW * 0.72,
+                "a \(w)×\(h) building is rattling around in its own lot")
     }
 
     /// Two buildings on neighbouring tiles must not grow into each other.
@@ -109,10 +127,16 @@ struct BuildingLookTests {
         s.colony = colony
         let layout = SettlementRenderer.normalizedLayout(settlement: s, registry: reg)
         let gap = abs(layout[1].center.x - layout[0].center.x)
-        // Bodies run 2.2 × size across, so half-widths must not exceed the gap.
-        // They are sized to fill the lot exactly, so this touches rather than
-        // clears — the epsilon is float slack, not headroom.
-        #expect(gap >= (layout[0].size + layout[1].size) * 1.1 - 1e-9)
+        // Half of each body, at the widest its jitter goes — the same question
+        // as before, asked of the drawing rather than of a constant.
+        func halfWidth(_ b: SettlementRenderer.NormalizedBuilding) -> Double {
+            SettlementStructures.bodySize(
+                b.glyph, s: b.size * SettlementRenderer.maxBodyJitter, seed: b.seed,
+                aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1).width / 2
+        }
+        // They are sized to fill their lots, so neighbours touch rather than
+        // clear — the epsilon is float slack, not headroom.
+        #expect(gap >= halfWidth(layout[0]) + halfWidth(layout[1]) - 1e-9)
     }
 
     /// `look` is content, so a typo must not silently pick a shape.
@@ -149,5 +173,90 @@ struct BuildingLookTests {
         // Timber is warm (more red than blue); panel and glass are cool.
         #expect(early.wall.0 > early.wall.2)
         #expect(future.wall.2 > future.wall.0)
+    }
+}
+
+/// **Does the inside match the outside?**
+///
+/// Three things claim to know where the floor of a building is: the drawing
+/// (`SettlementInterior.draw`), the motion that stands workers at its fittings
+/// (`AgentMotion.WorkSite`), and the motion that puts a household to bed. They
+/// agreed on two of the three, and the third — the beds — was still measuring
+/// against the *lot*, so a household slept spread across the parcel while its
+/// mattresses were drawn in a ring inside the walls.
+@Suite("The room is the room, wherever you ask from")
+struct InteriorFitTests {
+
+    private func registry(w: Int, h: Int, housing: Double = 30) -> GameDataRegistry {
+        GameDataRegistry(
+            buildings: [BuildingDefinition(id: "b", era: .earlySettlement, name: "B",
+                                           cost: [.materials: 10], housing: housing,
+                                           footprint: TileSize(width: w, height: h))],
+            techs: [], eras: [], biomes: [], events: [], config: .default)
+    }
+
+    private func colony(w: Int, h: Int) -> Settlement {
+        var s = Settlement(id: UUID(uuidString: "00000000-0000-0000-1111-000000000001")!,
+                           name: "Insideville",
+                           buildings: [BuildingInstance(definitionID: "b", count: 1)])
+        var c = ColonyMap(width: 16, height: 16)
+        c.placements = [BuildingPlacement(
+            id: UUID(uuidString: "00000000-0000-0000-1111-000000000002")!,
+            definitionID: "b", coord: TileCoord(5, 5), width: w, height: h)]
+        s.colony = c
+        return s
+    }
+
+    /// Every fitting the motion places has to land inside the walls the
+    /// renderer draws — that is the whole claim `Slot` makes.
+    @Test("Everything the motion places stands inside the drawn walls",
+          arguments: [(2, 2), (3, 3), (3, 2), (4, 3)])
+    func fittingsLandInsideTheWalls(w: Int, h: Int) {
+        let reg = registry(w: w, h: h)
+        let b = SettlementRenderer.normalizedLayout(settlement: colony(w: w, h: h),
+                                                    registry: reg)[0]
+        let site = AgentMotion.WorkSite(b)
+        let walls = SettlementStructures.bodySize(
+            b.glyph, s: b.size, seed: b.seed,
+            aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1)
+        let beds = SettlementInterior.bedSlots(seed: b.seed, sleepers: 8).map(site.place)
+        #expect(!beds.isEmpty)
+        for bed in beds {
+            #expect(abs(bed.x - b.center.x) <= walls.width / 2 + 1e-9,
+                    "a bed is drawn outside the walls it belongs to")
+            #expect(abs(bed.y - b.center.y) <= walls.height / 2 + 1e-9)
+        }
+    }
+
+    /// …and the room the fittings are measured against is the room the walls
+    /// enclose, not the parcel the building was given.
+    @Test("The floor is the walls inset, not the lot")
+    func roomIsTheWallsNotTheLot() {
+        let reg = registry(w: 3, h: 3)
+        let b = SettlementRenderer.normalizedLayout(settlement: colony(w: 3, h: 3),
+                                                    registry: reg)[0]
+        let site = AgentMotion.WorkSite(b)
+        let walls = SettlementStructures.bodySize(
+            b.glyph, s: b.size, seed: b.seed,
+            aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1)
+        let inset = 1 - SettlementInterior.wallInset * 2
+        #expect(abs(site.roomW - walls.width * inset) < 1e-9)
+        #expect(abs(site.roomH - walls.height * inset) < 1e-9)
+        #expect(site.roomW < b.footprintW, "the floor is not the whole parcel")
+    }
+
+    /// The complaint this answers: eight people posted to a room that laid out
+    /// five places had three of them standing inside somebody else.
+    @Test("A room seats everybody the engine posts to it")
+    func nobodyShareAStool() {
+        for crowd in [2, 5, 8, 11] {
+            let places = SettlementInterior.stationSlots(
+                for: .workshop, seed: 0x51F0_1234, stations: crowd)
+            #expect(places.count >= crowd,
+                    "fewer places than colonists — the rest stand on each other")
+            // …and no two of those places are the same point.
+            let distinct = Set(places.map { "\(($0.dx * 1000).rounded())/\(($0.dy * 1000).rounded())" })
+            #expect(distinct.count == places.count, "two fittings in the same spot")
+        }
     }
 }

@@ -108,22 +108,133 @@ public enum QuartermasterEngine {
     /// Only what the colony could actually work — a shop it has, a tech it
     /// knows — so it does not stand a standing order for ingots it has no
     /// bloomery to smelt.
+    /// **The gear it will actually make, not everything it could.**
+    ///
+    /// This used to be the union of the materials of *every* workable
+    /// equipment recipe, which was seven ids when there were ten such recipes
+    /// and eighteen when content took it to thirty — and the colony stopped
+    /// arming itself entirely. `StewardEngine.keepMaterialsComing` places one
+    /// standing order per wanted material, so the list is a divisor: the bench
+    /// is finite, eighteen standing orders is eighteen slow trickles, and
+    /// nothing ever reaches the amount `bestGear` needs in one place. Rule 14
+    /// in the supply chain — a rate divided by an entity count that grew.
+    ///
+    /// It was also asking for the wrong thing all along. `bestGear` picks one
+    /// recipe per slot and builds *that*; stocking for the twenty-nine it will
+    /// never choose was never useful, it merely became fatal. So the want list
+    /// now follows the same choice the bench will make, which keeps it short
+    /// however much content arrives — and pointed at the one thing that will
+    /// be built.
     static func wantedMaterials(
         for settlement: Settlement, in state: WorldState, registry: GameDataRegistry
     ) -> [String] {
         var wanted: Set<String> = []
-        for recipe in registry.recipes.values {
-            guard let item = registry.item(recipe.outputItemID),
-                  item.slot == .equipment else { continue }
-            if let building = recipe.requiresBuilding,
-               !settlement.buildings.contains(where: { $0.definitionID == building }) {
-                continue
+        for slot in EquipmentSlot.allCases {
+            let workable = registry.recipes.values
+                .filter { canWork($0, for: slot, at: settlement, in: state, registry: registry) }
+            guard !workable.isEmpty else { continue }
+            let byWorth: (RecipeDefinition, RecipeDefinition) -> Bool = { a, b in
+                let wa = worth(of: a, registry: registry)
+                let wb = worth(of: b, registry: registry)
+                return wa == wb ? a.id > b.id : wa < wb
             }
-            if let tech = recipe.requiresTech,
-               !state.researchedTechs.contains(tech) { continue }
-            wanted.formUnion(recipe.materials.keys)
+            // **What it is aiming at**, and…
+            if let best = workable.max(by: byWorth) { wanted.formUnion(best.materials.keys) }
+            // …**what it can actually finish.** Two entries, not one, because
+            // the best thing a colony can *work* is often made of something it
+            // cannot *get*: a workshop makes chainmail out of ingots, and a
+            // colony with no bloomery will stock for chainmail for ever and
+            // never tan the hide for a coat. An unreachable best starving the
+            // reachable one is the oldest shape in this repository
+            // (`ef-unreachable-mechanics`), and this is it inside one function.
+            let finishable = workable.filter { recipe in
+                recipe.materials.keys.allSatisfy {
+                    producible($0, at: settlement, in: state, registry: registry)
+                }
+            }
+            if let reachable = finishable.max(by: byWorth) {
+                wanted.formUnion(reachable.materials.keys)
+            }
         }
         return wanted.sorted()
+    }
+
+    /// What the land itself yields, with no recipe in front of it. Stated the
+    /// same way `SiteEngine.lootPool` states it, off `LocalResourceKind`, so
+    /// the two cannot drift apart.
+    static let gathered: Set<String> = Set(
+        LocalResourceKind.allCases.compactMap(\.rawMaterialID)
+    ).union([ResourceLoop.hideItemID])
+
+    /// Whether this colony has any way at all of coming by a material: it is
+    /// gathered off the land, or something it can work turns it out.
+    ///
+    /// One level deep on purpose. A full walk of the chain would be the honest
+    /// answer and costs a graph search every tick; one level catches the case
+    /// this exists for — leather from hides — and a deeper chain that is truly
+    /// unreachable simply fails to accumulate, which is visible rather than
+    /// fatal.
+    static func producible(
+        _ materialID: String, at settlement: Settlement,
+        in state: WorldState, registry: GameDataRegistry
+    ) -> Bool {
+        if gathered.contains(materialID) { return true }
+        return registry.recipes.values.contains { recipe in
+            guard recipe.outputItemID == materialID else { return false }
+            if let building = recipe.requiresBuilding,
+               !settlement.buildings.contains(where: { $0.definitionID == building }) {
+                return false
+            }
+            if let tech = recipe.requiresTech,
+               !state.researchedTechs.contains(tech) { return false }
+            return true
+        }
+    }
+
+    /// What the bench *would* make for a slot if the materials were on the
+    /// pile — the same choice `bestGear` makes, with the one clause that asks
+    /// whether the stock is already there taken out.
+    ///
+    /// The split matters: `bestGear` answers "what can I start now", and this
+    /// answers "what am I stocking up for". Using the first for both is how a
+    /// colony ends up waiting for materials nobody ordered.
+    static func intendedGear(
+        for slot: EquipmentSlot, at settlement: Settlement,
+        in state: WorldState, registry: GameDataRegistry
+    ) -> RecipeDefinition? {
+        registry.recipes.values
+            .filter { canWork($0, for: slot, at: settlement, in: state, registry: registry) }
+            .max { a, b in
+                let wa = worth(of: a, registry: registry)
+                let wb = worth(of: b, registry: registry)
+                return wa == wb ? a.id > b.id : wa < wb
+            }
+    }
+
+    /// Whether this colony could work a recipe for `slot` at all: it makes the
+    /// right kind of thing, the shop stands, the knowledge exists, and the
+    /// colony can pay for it with as much again left for the builders.
+    ///
+    /// Deliberately says nothing about whether the *materials* are on the pile
+    /// — that is the one question `bestGear` adds and this does not.
+    private static func canWork(
+        _ recipe: RecipeDefinition, for slot: EquipmentSlot, at settlement: Settlement,
+        in state: WorldState, registry: GameDataRegistry
+    ) -> Bool {
+        guard let item = registry.item(recipe.outputItemID),
+              item.slot == .equipment, item.equipSlot == slot else { return false }
+        if let building = recipe.requiresBuilding,
+           !settlement.buildings.contains(where: { $0.definitionID == building }) {
+            return false
+        }
+        if let tech = recipe.requiresTech,
+           !state.researchedTechs.contains(tech) { return false }
+        for resource in ResourceType.allCases {
+            let cost = recipe.resourceCost[resource]
+            guard cost > 0 else { continue }
+            guard settlement.storage[resource] - cost >= cost * reserve else { return false }
+        }
+        return true
     }
 
     /// The best thing the colony could make for a slot and still afford to
@@ -137,27 +248,14 @@ public enum QuartermasterEngine {
         for slot: EquipmentSlot, at settlement: Settlement,
         in state: WorldState, registry: GameDataRegistry
     ) -> String? {
-        registry.recipes.values
+        let held = CraftingEngine.materialCounts(settlement)
+        return registry.recipes.values
             .filter { recipe in
-                guard let item = registry.item(recipe.outputItemID),
-                      item.slot == .equipment, item.equipSlot == slot else { return false }
-                if let building = recipe.requiresBuilding,
-                   !settlement.buildings.contains(where: { $0.definitionID == building }) {
-                    return false
-                }
-                if let tech = recipe.requiresTech,
-                   !state.researchedTechs.contains(tech) { return false }
-                // Paid for, with as much again left in hand for the builders.
-                for resource in ResourceType.allCases {
-                    let cost = recipe.resourceCost[resource]
-                    guard cost > 0 else { continue }
-                    guard settlement.storage[resource] - cost >= cost * reserve
-                    else { return false }
-                }
+                guard canWork(recipe, for: slot, at: settlement,
+                              in: state, registry: registry) else { return false }
                 // And the made things it is built out of — iron, timber, hide —
                 // are on the pile. Ordering a sword the colony has no ingot for
                 // parks the bench on an order it can never start.
-                let held = CraftingEngine.materialCounts(settlement)
                 return recipe.materials.allSatisfy { (held[$0.key] ?? 0) >= $0.value }
             }
             .max { a, b in

@@ -283,7 +283,14 @@ def check(kind: str, draft: list) -> list[str]:
         # …and nothing may be there that no existing entry has. A field the
         # loader has never heard of is dropped in silence, so the entry loads
         # looking complete and quietly does less than it says.
+        # `new_fields` is the escape hatch for the one case this check gets
+        # wrong: a field the *Swift* has just learned and no row uses yet. The
+        # check compares against the file because it cannot read the decoder, so
+        # the first entry to use a new field always looks like a typo. Declaring
+        # it in `content_kinds.py` is one deliberate line; leaving the check out
+        # would cost the fault it exists to catch.
         known_keys = set().union(*(set(e) for e in existing)) if existing else set()
+        known_keys |= set(KINDS[kind].get("new_fields", ()))
         for key in sorted(set(entry) - known_keys):
             faults.append(f"{entry_id}: field {key!r} exists nowhere in {KINDS[kind]['file']}")
 

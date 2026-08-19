@@ -890,7 +890,7 @@
     "resourceCost": {
       "materials": 5
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "hunters_lodge",
     "requiresTech": "basic_tools",
     "description": {
       "en": "Carefully strike a flint core to break off sharp flakes for arrows.",
@@ -1780,6 +1780,4309 @@
     "description": {
       "en": "A simple shield of woven reeds over a wooden frame. Better than nothing.",
       "cs": "Jednoduchý štít z proutí na dřevěném rámu. Lepší než nic."
+    }
+  },
+  {
+    "id": "twist_grass_rope",
+    "name": {
+      "en": "Twist Grass Rope",
+      "cs": "Uplést travnaté lano"
+    },
+    "outputItemID": "woven_grass_rope",
+    "materials": {
+      "greens": 2
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Twine long grasses together into a crude but useful rope.",
+      "cs": "Dlouhá stébla trávy stočená do hrubého, ale užitečného lana."
+    }
+  },
+  {
+    "id": "assemble_snare_trap",
+    "name": {
+      "en": "Assemble Snare Trap",
+      "cs": "Sestavit oko na zvěř"
+    },
+    "outputItemID": "woven_snare_trap",
+    "materials": {
+      "wood": 1,
+      "woven_grass_rope": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "A simple loop trap made of rope and a bent sapling, for catching small game.",
+      "cs": "Jednoduchá past z provazu a ohnutého proutku. Na lapání drobné zvěře."
+    }
+  },
+  {
+    "id": "break_obsidian_core",
+    "name": {
+      "en": "Break Obsidian Core",
+      "cs": "Rozbít obsidiánové jádro"
+    },
+    "outputItemID": "obsidian_shard",
+    "materials": {
+      "rough_stone": 1
+    },
+    "resourceCost": {
+      "materials": 4
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Carefully strike a piece of volcanic glass to create sharp, usable shards.",
+      "cs": "Opatrným úderem do kusu sopečného skla vytvořit ostré, použitelné střepiny."
+    }
+  },
+  {
+    "id": "craft_obsidian_knife",
+    "name": {
+      "en": "Craft Obsidian Knife",
+      "cs": "Vyrobit obsidiánový nůž"
+    },
+    "outputItemID": "polished_obsidian_knife",
+    "materials": {
+      "obsidian_shard": 1,
+      "wood": 1,
+      "leather": 1
+    },
+    "resourceCost": {
+      "materials": 12
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "A wickedly sharp knife made from a shard of volcanic glass, hafted to a wooden handle.",
+      "cs": "Pekelně ostrý nůž ze střepiny sopečného skla, upevněné na dřevěné rukojeti."
+    }
+  },
+  {
+    "id": "carve_hardwood_cudgel",
+    "name": {
+      "en": "Carve Hardwood Cudgel",
+      "cs": "Vyřezat palici z tvrdého dřeva"
+    },
+    "outputItemID": "hardwood_cudgel",
+    "materials": {
+      "wood": 2
+    },
+    "resourceCost": {
+      "materials": 6
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A heavy, dense club for self-defense. Simple, but effective.",
+      "cs": "Těžký kyj z tvrdého dřeva pro sebeobranu. Jednoduchý, ale účinný."
+    }
+  },
+  {
+    "id": "braid_grass_rope",
+    "name": {
+      "en": "Braid Grass Rope",
+      "cs": "Splést travěné lano"
+    },
+    "outputItemID": "woven_grass_rope",
+    "materials": {
+      "greens": 3
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Twist and braid tough valley grasses into a functional rope.",
+      "cs": "Z pevné trávy z údolí se dá splést použitelné lano."
+    }
+  },
+  {
+    "id": "craft_hunting_sling",
+    "name": {
+      "en": "Craft Hunting Sling",
+      "cs": "Vyrobit lovecký prak"
+    },
+    "outputItemID": "hunting_sling",
+    "materials": {
+      "woven_grass_rope": 1,
+      "leather": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "A simple sling for hunting small game. A good stone and a strong arm are all it needs.",
+      "cs": "Jednoduchý prak k lovu malé zvěře. Stačí dobrý kámen a silná paže."
+    }
+  },
+  {
+    "id": "sew_hide_vest",
+    "name": {
+      "en": "Sew Hide Vest",
+      "cs": "Ušít vestu z kůže"
+    },
+    "outputItemID": "cured_hide_vest",
+    "materials": {
+      "cured_animal_hide": 2
+    },
+    "resourceCost": {
+      "materials": 18
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "A simple vest of cured hide to protect the torso from scrapes and the wind.",
+      "cs": "Prostá vesta z vydělané kůže. Ochrání tělo před škrábanci a větrem."
+    }
+  },
+  {
+    "id": "chip_flint_scraper",
+    "name": {
+      "en": "Chip a Flint Scraper",
+      "cs": "Odštípnout pazourkovou škrabku"
+    },
+    "outputItemID": "flint_scraper",
+    "materials": {
+      "rough_stone": 1
+    },
+    "resourceCost": {
+      "materials": 4
+    },
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "A sharp-edged piece of flint, useful for scraping hides clean or carving soft wood.",
+      "cs": "Ostrý kus pazourku. Hodí se na čištění kůží i na řezání do měkkého dřeva."
+    }
+  },
+  {
+    "id": "make_pemmican",
+    "name": {
+      "en": "Make Berry Pemmican",
+      "cs": "Připravit pemikan z bobulí"
+    },
+    "outputItemID": "dried_berry_pemmican",
+    "materials": {
+      "dried_meat_jerky": 1,
+      "berries": 2
+    },
+    "resourceCost": {
+      "materials": 12
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Pound dried meat and berries into a dense, high-energy cake that lasts for months.",
+      "cs": "Sušené maso a bobule stlučené do hutné, energetické placky, co vydrží měsíce."
+    }
+  },
+  {
+    "id": "make_woven_grass_rope",
+    "name": {
+      "en": "Twist Grass Rope",
+      "cs": "Uplést travnaté lano"
+    },
+    "outputItemID": "woven_grass_rope",
+    "materials": {
+      "greens": 3
+    },
+    "resourceCost": {
+      "materials": 4
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Long stalks of tough valley grass, twisted and dried into a usable rope.",
+      "cs": "Dlouhá stébla tuhé údolní trávy, stočená a usušená v použitelné lano."
+    }
+  },
+  {
+    "id": "weave_woven_grass_mat",
+    "name": {
+      "en": "Weave Grass Mat",
+      "cs": "Uplést rohož z trávy"
+    },
+    "outputItemID": "woven_grass_mat",
+    "materials": {
+      "woven_grass_rope": 2
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A simple, rough mat woven from grass rope. Better than sleeping on the bare ground.",
+      "cs": "Jednoduchá, hrubá rohož upletená z travnatého lana. Lepší než spát na holé zemi."
+    }
+  },
+  {
+    "id": "break_obsidian_for_shards",
+    "name": {
+      "en": "Fracture Obsidian Core",
+      "cs": "Rozbít obsidiánové jádro"
+    },
+    "outputItemID": "obsidian_shard",
+    "materials": {
+      "rough_stone": 1
+    },
+    "resourceCost": {
+      "materials": 3
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Carefully striking a piece of volcanic glass to break off sharp, usable shards.",
+      "cs": "Opatrným úderem do kusu sopečného skla odštípnout ostré, použitelné úlomky."
+    }
+  },
+  {
+    "id": "craft_polished_obsidian_knife",
+    "name": {
+      "en": "Craft Polished Obsidian Knife",
+      "cs": "Vyrobit leštěný obsidiánový nůž"
+    },
+    "outputItemID": "polished_obsidian_knife",
+    "materials": {
+      "obsidian_shard": 1,
+      "wood": 1,
+      "cured_animal_hide": 1
+    },
+    "resourceCost": {
+      "materials": 12
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "A wickedly sharp blade made from a flake of obsidian, fixed to a wooden handle and wrapped with cured hide.",
+      "cs": "Pekelně ostrá čepel z obsidiánového úlomku, připevněná k dřevěné rukojeti a omotaná vydělanou kůží."
+    }
+  },
+  {
+    "id": "sharpen_digging_stick",
+    "name": {
+      "en": "Fashion a Digging Stick",
+      "cs": "Vyrobit rycí hůl"
+    },
+    "outputItemID": "hardwood_digging_stick",
+    "materials": {
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 3
+    },
+    "description": {
+      "en": "Hardening the tip of a sturdy branch in a fire and sharpening it to a point. Used for foraging roots and tubers.",
+      "cs": "Zpevnění konce pevné větve v ohni a jeho zaostření do špičky. Používá se k vyhrabávání kořenů a hlíz."
+    }
+  },
+  {
+    "id": "prepare_berry_pemmican",
+    "name": {
+      "en": "Prepare Berry Pemmican",
+      "cs": "Připravit bobulový pemikán"
+    },
+    "outputItemID": "dried_berry_pemmican",
+    "materials": {
+      "meat": 1,
+      "berries": 2
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Pound dried meat and berries into a dense, high-energy cake that lasts for ages.",
+      "cs": "Směs drceného masa a lesních plodů. Zasytí na celé dny."
+    }
+  },
+  {
+    "id": "dry_meat_into_jerky",
+    "name": {
+      "en": "Dry Meat into Jerky",
+      "cs": "Nasušit maso na jerky"
+    },
+    "outputItemID": "dried_meat_jerky",
+    "materials": {
+      "meat": 2
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Slice meat thin and dry it over a low fire to preserve it for lean times.",
+      "cs": "Tenké plátky masa, pomalu sušené nad ohněm. Vydrží v torbě celé měsíce."
+    }
+  },
+  {
+    "id": "sew_hide_cape",
+    "name": {
+      "en": "Sew Hide Cape",
+      "cs": "Ušít kožený plášť"
+    },
+    "outputItemID": "hide_cape",
+    "materials": {
+      "cured_animal_hide": 2
+    },
+    "resourceCost": {
+      "materials": 12
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "A simple but effective cape made from cured hides, offering protection from wind and rain.",
+      "cs": "Jednoduchý, ale účinný plášť z vydělané kůže. Ochrání před větrem i deštěm."
+    }
+  },
+  {
+    "id": "shape_river_stone_axe_head",
+    "name": {
+      "en": "Shape River Stone Axe Head",
+      "cs": "Vytvarovat sekeromlat z říčního kamene"
+    },
+    "outputItemID": "river_stone_axe_head",
+    "materials": {
+      "rough_stone": 2
+    },
+    "resourceCost": {
+      "materials": 6
+    },
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Chip and grind a river stone to a sharp edge, ready to be hafted onto a handle.",
+      "cs": "Otloukáním a broušením vznikne z valounu ostrá hlavice sekery."
+    }
+  },
+  {
+    "id": "assemble_stone_adze",
+    "name": {
+      "en": "Assemble Stone Adze",
+      "cs": "Sestavit kamennou teslici"
+    },
+    "outputItemID": "stone_adze",
+    "materials": {
+      "river_stone_axe_head": 1,
+      "wood": 1,
+      "woven_grass_rope": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Lash a shaped stone head to a wooden handle to create a tool for shaping wood.",
+      "cs": "Kamenná hlavice, přivázaná k topůrku. Nástroj k opracování dřeva."
+    }
+  },
+  {
+    "id": "twist_woven_grass_rope",
+    "name": {
+      "en": "Twist Woven Grass Rope",
+      "cs": "Splést travěný provaz"
+    },
+    "outputItemID": "woven_grass_rope",
+    "materials": {
+      "greens": 2
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Twist tough grasses gathered from the valley floor into a simple but strong rope.",
+      "cs": "Z tuhých travin sebraných v údolí splést jednoduchý, ale pevný provaz."
+    }
+  },
+  {
+    "id": "build_woven_snare_trap",
+    "name": {
+      "en": "Build Woven Snare Trap",
+      "cs": "Vyrobit pletenou smyčku"
+    },
+    "outputItemID": "woven_snare_trap",
+    "materials": {
+      "wood": 1,
+      "woven_grass_rope": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "A simple snare made from a flexible branch and a rope loop, for catching rabbits and other small game.",
+      "cs": "Jednoduchá smyčka z ohebné větve a provazu k chytání králíků a jiné drobné zvěře."
+    }
+  },
+  {
+    "id": "craft_stone_hammer",
+    "name": {
+      "en": "Craft Stone Hammer",
+      "cs": "Vyrobit kamenné kladivo"
+    },
+    "outputItemID": "stone_hammer",
+    "materials": {
+      "rough_stone": 1,
+      "wood": 1,
+      "woven_grass_rope": 1
+    },
+    "resourceCost": {
+      "materials": 7
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "A heavy stone bound to a wooden handle with rope. A fundamental tool for building and breaking.",
+      "cs": "Těžký kámen přivázaný provazem k dřevěné rukojeti. Základní nástroj pro stavbu i ničení."
+    }
+  },
+  {
+    "id": "prepare_dried_clay",
+    "name": {
+      "en": "Prepare Dried Clay",
+      "cs": "Připravit sušený jíl"
+    },
+    "outputItemID": "dried_river_clay",
+    "materials": {
+      "clay": 2
+    },
+    "resourceCost": {
+      "materials": 3
+    },
+    "description": {
+      "en": "Leave balls of wet river clay in the sun to dry, making them ready for shaping.",
+      "cs": "Hroudy mokrého říčního jílu nechat na slunci vyschnout a připravit je k tvarování."
+    }
+  },
+  {
+    "id": "shape_small_clay_pot",
+    "name": {
+      "en": "Shape Small Clay Pot",
+      "cs": "Vytvarovat malý hliněný hrnec"
+    },
+    "outputItemID": "small_clay_pot",
+    "materials": {
+      "dried_river_clay": 1
+    },
+    "resourceCost": {
+      "materials": 6
+    },
+    "requiresBuilding": "hut",
+    "requiresTech": "pottery",
+    "description": {
+      "en": "Form dried clay into a small, simple pot. Not fired, but useful for storing seeds or berries.",
+      "cs": "Ze sušeného jílu vytvarovat jednoduchý hrneček. Není vypálený, ale hodí se na uskladnění semínek nebo bobulí."
+    }
+  },
+  {
+    "id": "plait_grass_rope",
+    "name": {
+      "en": "Plait Grass Rope",
+      "cs": "Splést provaz z trávy"
+    },
+    "outputItemID": "woven_grass_rope",
+    "materials": {
+      "greens": 2
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Twisting tough, dried grasses together creates a crude but useful rope.",
+      "cs": "Ze svazků suché, pevné trávy se dá splést jednoduchý, ale užitečný provaz."
+    }
+  },
+  {
+    "id": "lash_stone_handaxe",
+    "name": {
+      "en": "Lash Stone Handaxe",
+      "cs": "Vyrobit pěstní klín"
+    },
+    "outputItemID": "rough_stone_handaxe",
+    "materials": {
+      "rough_stone": 1,
+      "wood": 1,
+      "woven_grass_rope": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "A sharpened stone lashed to a handle with grass rope. The first real tool.",
+      "cs": "Ostrý kámen přivázaný travním provazem k topůrku. První skutečný nástroj."
+    }
+  },
+  {
+    "id": "weave_simple_reed_mat",
+    "name": {
+      "en": "Weave Reed Mat",
+      "cs": "Uplést rákosovou rohož"
+    },
+    "outputItemID": "woven_reed_mat",
+    "materials": {
+      "greens": 3
+    },
+    "resourceCost": {
+      "materials": 6
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Weaving together reeds from the riverbank makes a simple mat for sleeping or working on.",
+      "cs": "Spřádáním rákosí od břehu řeky vznikne jednoduchá rohož na spaní nebo na práci."
+    }
+  },
+  {
+    "id": "assemble_reed_pack",
+    "name": {
+      "en": "Assemble Reed Pack",
+      "cs": "Sestavit rákosovou nůši"
+    },
+    "outputItemID": "woven_reed_pack",
+    "materials": {
+      "woven_reed_mat": 2,
+      "woven_grass_rope": 1
+    },
+    "resourceCost": {
+      "materials": 12
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A pair of reed mats and some rope can be fashioned into a pack for carrying things.",
+      "cs": "Ze dvou rákosových rohoží a kusu provazu se dá vyrobit nůše na nošení věcí."
+    }
+  },
+  {
+    "id": "haft_stone_spear",
+    "name": {
+      "en": "Haft Stone Spear",
+      "cs": "Nasadit kamenný hrot na oštěp"
+    },
+    "outputItemID": "stone_tipped_spear",
+    "materials": {
+      "wood": 2,
+      "flint_arrowheads": 1,
+      "woven_grass_rope": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "Fixing a flint point to a long shaft of wood. A real weapon for a real hunter.",
+      "cs": "Připevnění pazourkového hrotu na dlouhou dřevěnou násadu. Zbraň pro skutečného lovce."
+    }
+  },
+  {
+    "id": "braid_grass_for_rope",
+    "name": {
+      "en": "Braid Grass Rope",
+      "cs": "Splést travní provaz"
+    },
+    "outputItemID": "woven_grass_rope",
+    "materials": {
+      "greens": 2
+    },
+    "resourceCost": {
+      "materials": 3
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Twist together tough, fibrous grasses to create a length of simple rope.",
+      "cs": "Spletením tuhých, vláknitých travin vznikne jednoduchý provaz."
+    }
+  },
+  {
+    "id": "weave_small_fishing_net",
+    "name": {
+      "en": "Weave Small Fishing Net",
+      "cs": "Uplést malou rybářskou síť"
+    },
+    "outputItemID": "small_fishing_net",
+    "materials": {
+      "woven_grass_rope": 2,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A simple net woven from grass rope, suitable for catching small fish in the shallows.",
+      "cs": "Jednoduchá síť upletená z travěného provazu. Hodí se k lovu drobných ryb na mělčině."
+    }
+  },
+  {
+    "id": "form_small_clay_pot",
+    "name": {
+      "en": "Form Small Clay Pot",
+      "cs": "Vytvarovat malý hliněný hrnec"
+    },
+    "outputItemID": "small_clay_pot",
+    "materials": {
+      "clay": 2
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "requiresBuilding": "hut",
+    "requiresTech": "pottery",
+    "description": {
+      "en": "Shape wet clay into a small pot for storing liquids, seeds, or other small items.",
+      "cs": "Z vlhké hlíny vymodelovat malý hrnec na vodu, semínka nebo jiné drobnosti."
+    }
+  },
+  {
+    "id": "assemble_fire_starter_kit",
+    "name": {
+      "en": "Assemble Fire Starter",
+      "cs": "Sestavit křesadlo"
+    },
+    "outputItemID": "flint_fire_starter",
+    "materials": {
+      "rough_stone": 1,
+      "small_clay_pot": 1,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "A shard of flint, a striking steel, and dry tinder kept safe in a small clay pot. The beginning of every fire.",
+      "cs": "Ostrý pazourek, ocílka a suchý troud v bezpečí malého hliněného hrnce. Začátek každého ohně."
+    }
+  },
+  {
+    "id": "stitch_hide_vest",
+    "name": {
+      "en": "Stitch Hide Vest",
+      "cs": "Sešít vestu z kůže"
+    },
+    "outputItemID": "cured_hide_vest",
+    "materials": {
+      "cured_animal_hide": 2
+    },
+    "resourceCost": {
+      "materials": 12
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "Stitch together pieces of tough, cured hide to make a simple vest for protection from scrapes and weather.",
+      "cs": "Sešitím kusů houževnaté kůže vznikne vesta, co chrání před odřeninami a nepohodou."
+    }
+  },
+  {
+    "id": "twist_grass_into_rope",
+    "name": {
+      "en": "Twist Grass into Rope",
+      "cs": "Stočit trávu na provaz"
+    },
+    "outputItemID": "woven_grass_rope",
+    "materials": {
+      "greens": 2
+    },
+    "resourceCost": {
+      "materials": 4
+    },
+    "description": {
+      "en": "Twist and plait dried grasses together to form a rough but serviceable length of rope.",
+      "cs": "Zkroutit a splést dohromady suchou trávu. Vznikne hrubý, ale použitelný provaz."
+    }
+  },
+  {
+    "id": "fashion_woven_snare",
+    "name": {
+      "en": "Fashion Woven Snare",
+      "cs": "Vyrobit pletenou smyčku"
+    },
+    "outputItemID": "woven_snare_trap",
+    "materials": {
+      "wood": 2,
+      "woven_grass_rope": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "A simple snare made from a bent sapling and a rope loop, for catching small game unawares.",
+      "cs": "Jednoduchá past z ohnutého proutku a provazové smyčky. Na chytání malé zvěře, když nedává pozor."
+    }
+  },
+  {
+    "id": "sew_simple_moccasins",
+    "name": {
+      "en": "Sew Simple Moccasins",
+      "cs": "Ušít prosté mokasíny"
+    },
+    "outputItemID": "simple_hide_moccasins",
+    "materials": {
+      "hide": 2
+    },
+    "resourceCost": {
+      "materials": 12
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Rawhide cut to the foot and stitched while it is still soft, then left to dry hard around it.",
+      "cs": "Syrová kůže střižená na nohu a sešitá, dokud je měkká; pak se nechá kolem ní ztvrdnout."
+    }
+  },
+  {
+    "id": "chip_stone_chisel",
+    "name": {
+      "en": "Chip a Stone Chisel",
+      "cs": "Otesat kamenné dláto"
+    },
+    "outputItemID": "sharpened_stone_chisel",
+    "materials": {
+      "rough_stone": 2
+    },
+    "resourceCost": {
+      "materials": 6
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Carefully knap a hard river stone to give it a sharp, durable edge for working wood and softer stone.",
+      "cs": "Opatrně otesat tvrdý říční kámen, aby měl ostrou a trvanlivou hranu pro práci se dřevem a měkčím kamenem."
+    }
+  },
+  {
+    "id": "collect_river_clay",
+    "name": {
+      "en": "Collect and Dry River Clay",
+      "cs": "Nasbírat a usušit říční jíl"
+    },
+    "outputItemID": "dried_river_clay",
+    "materials": {
+      "clay": 1
+    },
+    "resourceCost": {
+      "materials": 3
+    },
+    "description": {
+      "en": "Gather fine clay from the riverbank and set it out in the sun to dry into usable cakes.",
+      "cs": "Nasbírat jemný jíl z břehu řeky a nechat ho na slunci vyschnout do použitelných kusů."
+    }
+  },
+  {
+    "id": "process_plant_fibers",
+    "name": {
+      "en": "Process Plant Fibers",
+      "cs": "Zpracovat rostlinná vlákna"
+    },
+    "outputItemID": "flax_fiber_bundle",
+    "materials": {
+      "greens": 3
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "description": {
+      "en": "Beat and scrape stalks of tough plants to extract their useful fibers.",
+      "cs": "Otlouct a oškrabat stonky tuhých rostlin pro získání užitečných vláken."
+    }
+  },
+  {
+    "id": "weave_crude_fishing_net",
+    "name": {
+      "en": "Weave Crude Fishing Net",
+      "cs": "Uplést hrubou rybářskou síť"
+    },
+    "outputItemID": "crude_fishing_net",
+    "materials": {
+      "flax_fiber_bundle": 2,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 12
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A simple net woven from plant fibers. Not pretty, but it might catch something from the river.",
+      "cs": "Jednoduchá síť upletená z rostlinných vláken. Není hezká, ale třeba něco z řeky chytí."
+    }
+  },
+  {
+    "id": "chip_river_stone_head",
+    "name": {
+      "en": "Chip River Stone Axe Head",
+      "cs": "Otesat hlavici sekery z říčního kamene"
+    },
+    "outputItemID": "river_stone_axe_head",
+    "materials": {
+      "rough_stone": 2
+    },
+    "resourceCost": {
+      "materials": 6
+    },
+    "requiresBuilding": "hut",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Knapping a smooth, heavy river stone into a crude but effective axe head.",
+      "cs": "Otesáním hladkého, těžkého říčního kamene vznikne hrubá, ale účinná hlavice sekery."
+    }
+  },
+  {
+    "id": "assemble_stone_handaxe",
+    "name": {
+      "en": "Assemble Stone Handaxe",
+      "cs": "Sestavit kamennou sekeru"
+    },
+    "outputItemID": "rough_stone_handaxe",
+    "materials": {
+      "river_stone_axe_head": 1,
+      "wood": 1,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Lash a stone axe head to a wooden handle with strips of hide. A fundamental tool.",
+      "cs": "Přivázat kamennou hlavici k dřevěné rukojeti pomocí kožených proužků. Základní nástroj."
+    }
+  },
+  {
+    "id": "dry_fish_for_rations",
+    "name": {
+      "en": "Dry Fish for Rations",
+      "cs": "Usušit ryby na příděly"
+    },
+    "outputItemID": "dried_fish_rations",
+    "materials": {
+      "meat": 2,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Fish, cleaned and dried over a slow fire to last through the lean times.",
+      "cs": "Ryby, očištěné a usušené nad pomalým ohněm, aby vydržely v hubených časech."
+    }
+  },
+  {
+    "id": "craft_hide_cape",
+    "name": {
+      "en": "Craft Hide Cape",
+      "cs": "Vyrobit koženou pelerínu"
+    },
+    "outputItemID": "hide_cape",
+    "materials": {
+      "tanned_rabbit_hide": 2,
+      "leather": 1
+    },
+    "resourceCost": {
+      "materials": 18
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "Stitching together smaller hides to make a simple cape that offers some protection from the wind and rain.",
+      "cs": "Sešitím menších kůží vznikne jednoduchá pelerína, která nabízí určitou ochranu před větrem a deštěm."
+    }
+  },
+  {
+    "id": "chip_basic_axe_head",
+    "name": {
+      "en": "Chip Basic Axe Head",
+      "cs": "Vyštípat hlavici sekery"
+    },
+    "outputItemID": "river_stone_axe_head",
+    "materials": {
+      "rough_stone": 2
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "description": {
+      "en": "By striking one river stone against another, a crude but effective axe head can be flaked into shape.",
+      "cs": "Údery jednoho říčního kamene o druhý lze vyštípat hrubou, ale účinnou hlavici sekery."
+    }
+  },
+  {
+    "id": "assemble_rough_handaxe",
+    "name": {
+      "en": "Assemble Rough Handaxe",
+      "cs": "Sestavit hrubou ruční sekeru"
+    },
+    "outputItemID": "rough_stone_handaxe",
+    "materials": {
+      "river_stone_axe_head": 1,
+      "wood": 1,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Lash a stone axe head to a sturdy branch with a strip of hide. A fundamental tool for survival.",
+      "cs": "Přivázat kamennou hlavici k pevné větvi pruhem kůže. Základní nástroj pro přežití."
+    }
+  },
+  {
+    "id": "process_flax_fibers",
+    "name": {
+      "en": "Process Flax Fibers",
+      "cs": "Zpracovat lněná vlákna"
+    },
+    "outputItemID": "flax_fiber_bundle",
+    "materials": {
+      "greens": 4
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "description": {
+      "en": "By soaking, beating, and scraping the stalks of wild flax, strong fibers can be extracted for spinning.",
+      "cs": "Namočením, tlučením a škrábáním stonků divokého lnu lze získat pevná vlákna k předení."
+    }
+  },
+  {
+    "id": "knot_crude_fishing_net",
+    "name": {
+      "en": "Knot Crude Fishing Net",
+      "cs": "Uvázat hrubou rybářskou síť"
+    },
+    "outputItemID": "crude_fishing_net",
+    "materials": {
+      "flax_fiber_bundle": 2,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Knot processed flax fibers into a crude but functional net for catching river fish. Small sticks serve as floats.",
+      "cs": "Spletením lněných vláken vznikne hrubá, ale funkční síť na chytání říčních ryb. Malé klacíky slouží jako plováky."
+    }
+  },
+  {
+    "id": "gather_petrified_wood",
+    "name": {
+      "en": "Gather Petrified Wood",
+      "cs": "Nasbírat zkamenělé dřevo"
+    },
+    "outputItemID": "petrified_wood_fragment",
+    "materials": {
+      "wood": 1,
+      "rough_stone": 1
+    },
+    "resourceCost": {
+      "materials": 6
+    },
+    "description": {
+      "en": "Search riverbeds and cliff-sides for fragments of wood turned to stone by time. The cost represents the effort to find and extract it.",
+      "cs": "Hledání úlomků dřeva, které čas proměnil v kámen, v řečištích a na útesech. Cena představuje úsilí potřebné k nalezení a získání."
+    }
+  },
+  {
+    "id": "carve_petrified_mortar",
+    "name": {
+      "en": "Carve Pestle and Mortar",
+      "cs": "Vyřezat hmoždíř a tlouk"
+    },
+    "outputItemID": "stone_pestle_mortar",
+    "materials": {
+      "petrified_wood_fragment": 2
+    },
+    "resourceCost": {
+      "materials": 12
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Shape a heavy fragment of petrified wood into a mortar and pestle for grinding herbs and pigments.",
+      "cs": "Opracovat těžký úlomek zkamenělého dřeva na hmoždíř a tlouk pro drcení bylin a pigmentů."
+    }
+  },
+  {
+    "id": "prepare_flax_fibers",
+    "name": {
+      "en": "Prepare Flax Fibers",
+      "cs": "Připravit lněná vlákna"
+    },
+    "outputItemID": "flax_fiber_bundle",
+    "materials": {
+      "greens": 4
+    },
+    "resourceCost": {
+      "materials": 4
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Soak and beat plant stalks to separate the tough fibers, which can be spun into thread.",
+      "cs": "Namočit a tlouct stonky rostlin, aby se oddělila pevná vlákna, která se dají spřádat."
+    }
+  },
+  {
+    "id": "sew_hide_moccasins",
+    "name": {
+      "en": "Sew Hide Moccasins",
+      "cs": "Ušít kožené mokasíny"
+    },
+    "outputItemID": "simple_hide_moccasins",
+    "materials": {
+      "hide": 2,
+      "flax_fiber_bundle": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Simple foot coverings made from cured hide, stitched together with strong flax thread.",
+      "cs": "Jednoduchá obuv z kůže, sešitá pevnou lněnou nití."
+    }
+  },
+  {
+    "id": "chip_river_stone_axehead",
+    "name": {
+      "en": "Chip River Stone Axe Head",
+      "cs": "Oštípat hlavici z říčního kamene"
+    },
+    "outputItemID": "river_stone_axe_head",
+    "materials": {
+      "rough_stone": 2
+    },
+    "resourceCost": {
+      "materials": 7
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Carefully chip and grind a smooth river stone into a durable axe head.",
+      "cs": "Pečlivě oštípat a obrousit hladký říční kámen do podoby odolné hlavice sekery."
+    }
+  },
+  {
+    "id": "craft_stone_tipped_spear",
+    "name": {
+      "en": "Craft Stone-Tipped Spear",
+      "cs": "Vyrobit oštěp s kamenným hrotem"
+    },
+    "outputItemID": "stone_tipped_spear",
+    "materials": {
+      "wood": 2,
+      "river_stone_axe_head": 1,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 12
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "A long wooden shaft fitted with a sharp stone head, secured with hide lashings. A hunter's best friend.",
+      "cs": "Dlouhá dřevěná násada s ostrou kamennou hlavicí, zajištěná koženými řemínky. Nejlepší přítel lovce."
+    }
+  },
+  {
+    "id": "make_berry_pemmican",
+    "name": {
+      "en": "Make Berry Pemmican",
+      "cs": "Vyrobit pemikan z bobulí"
+    },
+    "outputItemID": "dried_berry_pemmican",
+    "materials": {
+      "meat": 2,
+      "berries": 2
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Pound dried meat and berries together into a dense, high-energy food that lasts for seasons.",
+      "cs": "Sušené maso a bobule stlučené dohromady v hutné, energetické jídlo, které vydrží celé měsíce."
+    }
+  },
+  {
+    "id": "gather_petrified_splinters",
+    "name": {
+      "en": "Gather Petrified Splinters",
+      "cs": "Sbírat úlomky zkamenělého dřeva"
+    },
+    "outputItemID": "petrified_wood_fragment",
+    "materials": {
+      "rough_stone": 2
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "description": {
+      "en": "Search scree slopes and riverbeds for fragments of wood turned to stone. They are hard enough to work into tools.",
+      "cs": "Prohledat suťové svahy a řečiště a najít úlomky dřeva proměněného v kámen. Jsou dostatečně tvrdé na výrobu nástrojů."
+    }
+  },
+  {
+    "id": "sharpen_petrified_awl",
+    "name": {
+      "en": "Sharpen Petrified Awl",
+      "cs": "Vyostřit zkamenělé šídlo"
+    },
+    "outputItemID": "bone_awl",
+    "materials": {
+      "petrified_wood_fragment": 1,
+      "leather": 1
+    },
+    "resourceCost": {
+      "materials": 12
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Grind a sharp point onto a splinter of petrified wood and wrap the base in leather to make a serviceable, bone-like awl for punching holes in hide.",
+      "cs": "Vybrousit ostrý hrot na úlomku zkamenělého dřeva a omotat základnu kůží. Vznikne použitelné šídlo podobné kostěnému, kterým se dají prorážet díry v kůži."
+    }
+  },
+  {
+    "id": "dry_fish_on_racks",
+    "name": {
+      "en": "Dry Fish on Racks",
+      "cs": "Sušit ryby na stojanech"
+    },
+    "outputItemID": "bundled_dried_fish",
+    "materials": {
+      "meat": 3,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 9
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Clean the day's catch and hang it on a wooden rack to dry in the sun and wind, preserving it for leaner times.",
+      "cs": "Očistit denní úlovek a pověsit ho na dřevěný stojan, aby se usušil na slunci a větru a uchoval na horší časy."
+    }
+  },
+  {
+    "id": "pack_fish_rations",
+    "name": {
+      "en": "Pack Fish Rations",
+      "cs": "Zabalit rybí příděly"
+    },
+    "outputItemID": "dried_fish_rations",
+    "materials": {
+      "bundled_dried_fish": 2,
+      "leather": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Bundle dried fish into a leather pouch to create a durable, lightweight ration for travelers or scouts.",
+      "cs": "Zabalit sušené ryby do koženého váčku. Vznikne trvanlivý a lehký příděl pro cestovatele nebo zvědy."
+    }
+  },
+  {
+    "id": "sew_leather_leggings",
+    "name": {
+      "en": "Sew Leather Leggings",
+      "cs": "Ušít kožené nohavice"
+    },
+    "outputItemID": "leather_leggings",
+    "materials": {
+      "leather": 2,
+      "tanned_rabbit_hide": 1
+    },
+    "resourceCost": {
+      "materials": 16
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "Stitch together pieces of tough leather and softer rabbit hide to protect the legs from thorns and scrapes.",
+      "cs": "Sešít kousky tuhé kůže a měkčí králičiny. Ochrání nohy před trny a škrábanci."
+    }
+  },
+  {
+    "id": "assemble_stone_chisel",
+    "name": {
+      "en": "Assemble Stone Chisel",
+      "cs": "Sestavit kamenné dláto"
+    },
+    "outputItemID": "sharpened_stone_chisel",
+    "materials": {
+      "rough_stone": 1,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 7
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Mount a sharpened piece of flint into a wooden handle. It's crude, but it can be used for rough woodworking.",
+      "cs": "Vsazení naostřeného kusu pazourku do dřevěné rukojeti. Je to sice hrubý nástroj, ale pro základní opracování dřeva stačí."
+    }
+  },
+  {
+    "id": "gather_smooth_stones",
+    "name": {
+      "en": "Gather Smooth Stones",
+      "cs": "Nasbírat hladké kameny"
+    },
+    "outputItemID": "pouch_of_smooth_stones",
+    "materials": {
+      "rough_stone": 2,
+      "leather": 1
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "description": {
+      "en": "Select smooth, dense stones from the riverbed and store them in a simple leather pouch.",
+      "cs": "Vybrat z říčního dna hladké, hutné kameny a uložit je do jednoduchého koženého váčku."
+    }
+  },
+  {
+    "id": "grind_bone_chisel",
+    "name": {
+      "en": "Grind Bone Chisel",
+      "cs": "Vybrousit kostěné dláto"
+    },
+    "outputItemID": "bone_chisel",
+    "materials": {
+      "hide": 1,
+      "pouch_of_smooth_stones": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "Grind a sturdy animal bone against smooth river stones to create a sharp chisel for fine work.",
+      "cs": "Broušením pevné zvířecí kosti o hladké říční kameny vznikne ostré dláto pro jemnou práci."
+    }
+  },
+  {
+    "id": "prepare_salt_crock",
+    "name": {
+      "en": "Prepare Salt Crock",
+      "cs": "Připravit hrnec se solí"
+    },
+    "outputItemID": "salt_crock",
+    "materials": {
+      "clay": 2,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Fire a simple clay crock and fill it with salt gathered from a nearby mineral deposit.",
+      "cs": "Vypálit jednoduchý hliněný hrnec a naplnit ho solí sebranou z blízkého minerálního ložiska."
+    }
+  },
+  {
+    "id": "cure_hide_apron",
+    "name": {
+      "en": "Cure Hide Apron",
+      "cs": "Vyčinit koženou zástěru"
+    },
+    "outputItemID": "thick_hide_apron",
+    "materials": {
+      "hide": 2,
+      "salt_crock": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "Cure thick animal hides with salt to make a durable apron for messy or dangerous work.",
+      "cs": "Nasolit tlusté zvířecí kůže a vyrobit z nich trvanlivou zástěru pro špinavou nebo nebezpečnou práci."
+    }
+  },
+  {
+    "id": "harvest_wild_honeycomb",
+    "name": {
+      "en": "Harvest Wild Honeycomb",
+      "cs": "Sebrat divoké plástve"
+    },
+    "outputItemID": "wild_honeycomb",
+    "materials": {
+      "herb_bundle": 1
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "description": {
+      "en": "Use smoking herbs to pacify a wild beehive, allowing for the safe harvest of its comb.",
+      "cs": "Použít kouřící byliny ke zklidnění divokého včelstva, což umožní bezpečné sebrání pláství."
+    }
+  },
+  {
+    "id": "press_honeycomb",
+    "name": {
+      "en": "Press Honeycomb",
+      "cs": "Vylisovat plástve"
+    },
+    "outputItemID": "raw_beeswax_chunk",
+    "materials": {
+      "wild_honeycomb": 2
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Crush and press wild honeycomb to separate the liquid honey, leaving a chunk of raw wax.",
+      "cs": "Rozdrtit a vylisovat divoké plástve, oddělit tekutý med a zanechat kus surového vosku."
+    }
+  },
+  {
+    "id": "collect_wild_honeycomb",
+    "name": {
+      "en": "Collect Wild Honeycomb",
+      "cs": "Sebrat divoké plástve"
+    },
+    "outputItemID": "wild_honeycomb",
+    "materials": {
+      "wood": 1,
+      "herb_bundle": 1
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "description": {
+      "en": "Build a crude smoker to pacify a bee colony and harvest their comb.",
+      "cs": "Vyrobit provizorní dýmák, uklidnit včely a sebrat plástve."
+    }
+  },
+  {
+    "id": "process_raw_beeswax",
+    "name": {
+      "en": "Process Raw Beeswax",
+      "cs": "Zpracovat surový vosk"
+    },
+    "outputItemID": "raw_beeswax_chunk",
+    "materials": {
+      "wild_honeycomb": 2
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Heat and press honeycomb to separate the raw, unrefined wax.",
+      "cs": "Zahřát a vylisovat plástve a oddělit tak surový, nerafinovaný vosk."
+    }
+  },
+  {
+    "id": "craft_waxed_hide_apron",
+    "name": {
+      "en": "Craft Waxed Hide Apron",
+      "cs": "Vyrobit voskovanou zástěru"
+    },
+    "outputItemID": "thick_hide_apron",
+    "materials": {
+      "hide": 2,
+      "raw_beeswax_chunk": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "A heavy apron of layered hide, rubbed with beeswax for water resistance.",
+      "cs": "Těžká zástěra z vrstvené kůže, napuštěná včelím voskem proti vodě."
+    }
+  },
+  {
+    "id": "fire_salt_crock",
+    "name": {
+      "en": "Fire Salt Crock",
+      "cs": "Vypálit nádobu na sůl"
+    },
+    "outputItemID": "salt_crock",
+    "materials": {
+      "clay": 3
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "pottery",
+    "description": {
+      "en": "A heavy, porous ceramic crock, perfect for storing dry salt and keeping it from clumping.",
+      "cs": "Těžká, porézní keramická nádoba, ideální pro skladování suché soli, aby se neslepila."
+    }
+  },
+  {
+    "id": "assemble_bone_needle_kit",
+    "name": {
+      "en": "Assemble Bone Needle Kit",
+      "cs": "Sestavit sadu kostěných jehel"
+    },
+    "outputItemID": "bone_needle_kit",
+    "materials": {
+      "hide": 1,
+      "leather": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Grind sharp bone splinters into fine needles and keep them in a small leather roll.",
+      "cs": "Z ostrých úlomků kostí vybrousit jehly a uložit je do malého koženého svitku."
+    }
+  },
+  {
+    "id": "carve_crude_mallet",
+    "name": {
+      "en": "Carve Crude Mallet",
+      "cs": "Vyřezat hrubou palici"
+    },
+    "outputItemID": "crude_wooden_mallet",
+    "materials": {
+      "wood": 2
+    },
+    "resourceCost": {
+      "materials": 4
+    },
+    "description": {
+      "en": "A simple, heavy head of hardwood on a handle, useful for all sorts of striking and shaping tasks.",
+      "cs": "Jednoduchá, těžká hlavice z tvrdého dřeva na rukojeti, užitečná pro všemožné údery a tvarování."
+    }
+  },
+  {
+    "id": "find_wild_honeycomb",
+    "name": {
+      "en": "Find Wild Honeycomb",
+      "cs": "Najít divokou plástev"
+    },
+    "outputItemID": "wild_honeycomb",
+    "materials": {
+      "herb_bundle": 1
+    },
+    "resourceCost": {
+      "materials": 3
+    },
+    "description": {
+      "en": "Carefully smoking out a wild bee colony to harvest a piece of their honeycomb.",
+      "cs": "Opatrně vykouřit divoké včely a sebrat kus plástve s medem."
+    }
+  },
+  {
+    "id": "separate_beeswax_chunk",
+    "name": {
+      "en": "Separate Raw Beeswax",
+      "cs": "Oddělit surový vosk"
+    },
+    "outputItemID": "raw_beeswax_chunk",
+    "materials": {
+      "wild_honeycomb": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Breaking apart a honeycomb to separate the raw, sticky wax from the honey.",
+      "cs": "Rozlámat plástev a oddělit surový, lepkavý vosk od medu."
+    }
+  },
+  {
+    "id": "sew_waxed_leather_gloves",
+    "name": {
+      "en": "Sew Waxed Leather Gloves",
+      "cs": "Ušít voskované kožené rukavice"
+    },
+    "outputItemID": "thick_leather_gloves",
+    "materials": {
+      "leather": 2,
+      "raw_beeswax_chunk": 1
+    },
+    "resourceCost": {
+      "materials": 16
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "Heavy leather gloves, with seams sealed with beeswax for durability and water resistance.",
+      "cs": "Silné kožené rukavice se švy zalitými včelím voskem pro větší odolnost a nepromokavost."
+    }
+  },
+  {
+    "id": "make_pouch_of_stones",
+    "name": {
+      "en": "Make Pouch of Smooth Stones",
+      "cs": "Vyrobit váček s hladkými kameny"
+    },
+    "outputItemID": "pouch_of_smooth_stones",
+    "materials": {
+      "rough_stone": 2,
+      "leather": 1
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A small leather pouch filled with smooth river stones, chosen for their shape and feel.",
+      "cs": "Malý kožený váček naplněný hladkými říčními kameny, vybranými pro jejich tvar a omak."
+    }
+  },
+  {
+    "id": "string_mushrooms_to_dry",
+    "name": {
+      "en": "String Mushrooms to Dry",
+      "cs": "Navléct houby k sušení"
+    },
+    "outputItemID": "dried_mushroom_strings",
+    "materials": {
+      "greens": 2
+    },
+    "resourceCost": {
+      "materials": 4
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Threading sliced mushrooms on a string to hang and dry for later use.",
+      "cs": "Navléknout nakrájené houby na provázek, aby uschly na později."
+    }
+  },
+  {
+    "id": "fashion_crude_mallet",
+    "name": {
+      "en": "Fashion Crude Mallet",
+      "cs": "Vyřezat hrubou palici"
+    },
+    "outputItemID": "crude_wooden_mallet",
+    "materials": {
+      "wood": 2
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "description": {
+      "en": "A heavy chunk of wood with a carved handle. Simple, but effective for hitting things.",
+      "cs": "Těžký kus dřeva s vyřezanou rukojetí. Jednoduchý, ale účinný nástroj na zatloukání."
+    }
+  },
+  {
+    "id": "mash_dried_berry_paste",
+    "name": {
+      "en": "Mash Dried Berry Paste",
+      "cs": "Utlouct pastu ze sušených bobulí"
+    },
+    "outputItemID": "dried_berry_paste",
+    "materials": {
+      "berries": 3
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Pound dried berries into a dense, sweet paste that will keep through the lean months.",
+      "cs": "Hustá, sladká pasta z utlučených sušených bobulí, která vydrží i hubené měsíce."
+    }
+  },
+  {
+    "id": "weave_sealed_bark_sandals",
+    "name": {
+      "en": "Weave Sealed Bark Sandals",
+      "cs": "Uplést lepené sandály z kůry"
+    },
+    "outputItemID": "woven_bark_sandals",
+    "materials": {
+      "wood": 2,
+      "dried_berry_paste": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Weave strips of flexible bark into simple footwear, using a sticky berry paste to seal and strengthen the joints.",
+      "cs": "Proužky ohebné kůry spletené do prosté obuvi. Lepkavá pasta z bobulí utěsní a zpevní spoje."
+    }
+  },
+  {
+    "id": "polish_a_river_pearl",
+    "name": {
+      "en": "Polish a River Pearl",
+      "cs": "Vyleštit říční perlu"
+    },
+    "outputItemID": "polished_river_pearl",
+    "materials": {
+      "rough_stone": 1,
+      "leather": 1
+    },
+    "resourceCost": {
+      "materials": 9
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "Find a promising river stone and polish it against a leather strap until a gleam of pearl emerges.",
+      "cs": "Nadějný říční kámen se tře o kus kůže tak dlouho, dokud se neobjeví perleťový lesk."
+    }
+  },
+  {
+    "id": "assemble_decorated_needle_kit",
+    "name": {
+      "en": "Assemble Decorated Needle Kit",
+      "cs": "Sestavit zdobenou sadu jehel"
+    },
+    "outputItemID": "bone_needle_kit",
+    "materials": {
+      "hide": 1,
+      "polished_river_pearl": 1
+    },
+    "resourceCost": {
+      "materials": 12
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "A set of fine bone needles in a leather roll, the tie adorned with a single polished pearl as a mark of its value.",
+      "cs": "Sada jemných kostěných jehel v koženém pouzdře. Sponu zdobí jediná leštěná perla na znamení ceny."
+    }
+  },
+  {
+    "id": "wax_hide_apron",
+    "name": {
+      "en": "Wax Hide Apron",
+      "cs": "Navoskovat koženou zástěru"
+    },
+    "outputItemID": "thick_hide_apron",
+    "materials": {
+      "hide": 2,
+      "tallow_candle": 1
+    },
+    "resourceCost": {
+      "materials": 14
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "A heavy hide apron, rubbed with tallow to make it resistant to water and workshop stains.",
+      "cs": "Těžká kožená zástěra, potřená lojem, aby odolala vodě a dílenským skvrnám."
+    }
+  },
+  {
+    "id": "weave_dyed_wool_blanket",
+    "name": {
+      "en": "Weave Dyed Wool Blanket",
+      "cs": "Utkat barvenou vlněnou deku"
+    },
+    "outputItemID": "rough_wool_blanket",
+    "materials": {
+      "hide": 2,
+      "dried_mushroom_powder": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "A simple woven blanket made from spun fleece, using mushroom powder to dye it a deep, earthy color.",
+      "cs": "Prostá tkaná deka z předeného rouna, obarvená houbovým prachem do syté, zemité barvy."
+    }
+  },
+  {
+    "id": "prepare_dried_mushrooms",
+    "name": {
+      "en": "Prepare Dried Mushroom Assortment",
+      "cs": "Připravit sušené houby"
+    },
+    "outputItemID": "dried_mushroom_assortment",
+    "materials": {
+      "herb_bundle": 2
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "A mix of edible mushrooms, dried over a low fire to preserve them for winter.",
+      "cs": "Směs jedlých hub, usušená nad mírným ohněm, aby vydržela přes zimu."
+    }
+  },
+  {
+    "id": "collect_foraged_berries",
+    "name": {
+      "en": "Collect Foraged Berries",
+      "cs": "Nasbírat lesní plody"
+    },
+    "outputItemID": "foraged_wild_berries",
+    "materials": {
+      "berries": 2
+    },
+    "resourceCost": {
+      "materials": 3
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A small basket of various wild berries, gathered from the thickets in the valley.",
+      "cs": "Malý košík různých lesních plodů, nasbíraných v údolním houští."
+    }
+  },
+  {
+    "id": "assemble_root_basket",
+    "name": {
+      "en": "Assemble Wild Root Basket",
+      "cs": "Připravit košík s kořínky"
+    },
+    "outputItemID": "wild_root_basket",
+    "materials": {
+      "roots": 2,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 4
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A simple woven basket filled with edible roots dug from the valley floor.",
+      "cs": "Jednoduchý pletený košík plný jedlých kořenů vykopaných v údolí."
+    }
+  },
+  {
+    "id": "build_cart_bed",
+    "name": {
+      "en": "Build Wooden Cart Bed",
+      "cs": "Postavit korbu na vůz"
+    },
+    "outputItemID": "wooden_cart_bed",
+    "materials": {
+      "timber_bundle": 2
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "lumberyard",
+    "description": {
+      "en": "The flat, sturdy base of a cart, for hauling goods around the valley.",
+      "cs": "Plochý, bytelný základ vozu pro převážení nákladu po údolí."
+    }
+  },
+  {
+    "id": "seal_gourd_canteen",
+    "name": {
+      "en": "Seal Gourd Canteen",
+      "cs": "Vyrobit čutoru z tykve"
+    },
+    "outputItemID": "dried_gourd_canteen",
+    "materials": {
+      "herb_bundle": 1,
+      "beeswax_block": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Dry a hollowed-out gourd and seal it with beeswax to make a simple, lightweight waterskin.",
+      "cs": "Vysušit vydlabanou tykev a zalepit ji včelím voskem. Vznikne tak prostá a lehká čutora na vodu."
+    }
+  },
+  {
+    "id": "craft_flint_skinning_knife",
+    "name": {
+      "en": "Craft Flint Skinning Knife",
+      "cs": "Vyrobit pazourkový stahovací nůž"
+    },
+    "outputItemID": "flint_skinning_knife",
+    "materials": {
+      "rough_stone": 1,
+      "smoked_meat_strip": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "A sharp flint blade for skinning game, bundled with a strip of smoked meat — a hunter's first tools.",
+      "cs": "Ostrá pazourková čepel na stahování zvěře, svázaná s proužkem uzeného masa — první nástroje lovce."
+    }
+  },
+  {
+    "id": "collect_wild_berries",
+    "name": {
+      "en": "Collect Wild Berries",
+      "cs": "Nasbírat lesní plody"
+    },
+    "outputItemID": "foraged_wild_berries",
+    "materials": {
+      "berries": 4
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "description": {
+      "en": "A full basket of sweet, wild berries gathered from the bushes in the valley.",
+      "cs": "Plný košík sladkých lesních plodů nasbíraných z keřů v údolí."
+    }
+  },
+  {
+    "id": "fill_root_basket",
+    "name": {
+      "en": "Fill Root Basket",
+      "cs": "Naplnit košík s kořeny"
+    },
+    "outputItemID": "wild_root_basket",
+    "materials": {
+      "roots": 4
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "description": {
+      "en": "Dig up a basket of starchy, edible roots. A reliable source of food.",
+      "cs": "Vykopat košík škrobnatých, jedlých kořenů. Spolehlivý zdroj potravy."
+    }
+  },
+  {
+    "id": "assemble_cart_bed",
+    "name": {
+      "en": "Assemble Cart Bed",
+      "cs": "Sestavit korbu vozíku"
+    },
+    "outputItemID": "wooden_cart_bed",
+    "materials": {
+      "timber_bundle": 2
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "lumberyard",
+    "description": {
+      "en": "Assemble heavy timbers into a flat bed for a cart, capable of hauling heavy loads.",
+      "cs": "Sestavit z těžkých trámů plochou korbu pro vozík, schopnou unést těžké náklady."
+    }
+  },
+  {
+    "id": "dry_mushroom_assortment",
+    "name": {
+      "en": "Dry Mushroom Assortment",
+      "cs": "Nasušit směs hub"
+    },
+    "outputItemID": "dried_mushroom_assortment",
+    "materials": {
+      "herb_bundle": 3
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "An assortment of edible mushrooms, sliced and dried to preserve them for winter.",
+      "cs": "Různé jedlé houby, nakrájené a usušené pro uchování na zimu."
+    }
+  },
+  {
+    "id": "craft_waxed_bracers",
+    "name": {
+      "en": "Craft Waxed Bracers",
+      "cs": "Vyrobit voskované nátepníky"
+    },
+    "outputItemID": "rough_leather_bracers",
+    "materials": {
+      "leather": 2,
+      "beeswax_block": 1
+    },
+    "resourceCost": {
+      "materials": 14
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "Stiff leather forearm guards, waterproofed and hardened with a coating of beeswax.",
+      "cs": "Tuhé kožené chrániče předloktí, napuštěné a zpevněné vrstvou včelího vosku."
+    }
+  },
+  {
+    "id": "forge_surgeons_saw",
+    "name": {
+      "en": "Forge Surgeon's Saw",
+      "cs": "Ukovat chirurgickou pilu"
+    },
+    "outputItemID": "bone_saw",
+    "materials": {
+      "iron_ingot": 1,
+      "timber_bundle": 1,
+      "herbal_compress": 1
+    },
+    "resourceCost": {
+      "materials": 25
+    },
+    "requiresBuilding": "clinic",
+    "requiresTech": "medicine",
+    "description": {
+      "en": "Forge a fine-toothed saw for amputations. The work is grim, so it's prepared with a compress to manage the bleeding.",
+      "cs": "Ukovat jemnozubou pilu na amputace. Práce je to ponurá, proto je dodávána s obkladem na zastavení krvácení."
+    }
+  },
+  {
+    "id": "prepare_mushroom_assortment",
+    "name": {
+      "en": "Prepare Mushroom Assortment",
+      "cs": "Připravit houbovou směs"
+    },
+    "outputItemID": "dried_mushroom_assortment",
+    "materials": {
+      "roots": 2,
+      "herb_bundle": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Lacking true mushrooms, resourceful cooks have learned to dry certain roots and herbs to create a savory, mushroom-like substitute.",
+      "cs": "Když nejsou pravé houby, vynalézaví kuchaři suší kořínky a byliny. Vznikne tak náhražka, která houby připomíná chutí i vůní."
+    }
+  },
+  {
+    "id": "assemble_foragers_root_basket",
+    "name": {
+      "en": "Assemble Forager's Root Basket",
+      "cs": "Sestavit košík na kořínky"
+    },
+    "outputItemID": "wild_root_basket",
+    "materials": {
+      "wood": 2,
+      "roots": 3
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A simple woven basket, pre-filled with a good day's haul of edible roots.",
+      "cs": "Jednoduchý pletený košík, rovnou naplněný slušným denním sběrem jedlých kořínků."
+    }
+  },
+  {
+    "id": "prepare_gourd_canteen",
+    "name": {
+      "en": "Prepare Gourd Canteen",
+      "cs": "Připravit tykvovou čutoru"
+    },
+    "outputItemID": "dried_gourd_canteen",
+    "materials": {
+      "greens": 2,
+      "beeswax_block": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "A large, hollowed-out gourd is dried and sealed with beeswax to make a lightweight water carrier.",
+      "cs": "Velká, vydlabaná tykev se vysuší a zalije včelím voskem. Vznikne tak lehká nádoba na vodu."
+    }
+  },
+  {
+    "id": "fashion_bone_saw",
+    "name": {
+      "en": "Fashion Bone Saw",
+      "cs": "Vyrobit kostní pilu"
+    },
+    "outputItemID": "bone_saw",
+    "materials": {
+      "wood": 1,
+      "rough_stone": 1,
+      "wild_root_poultice": 1
+    },
+    "resourceCost": {
+      "materials": 18,
+      "knowledge": 10
+    },
+    "requiresBuilding": "clinic",
+    "requiresTech": "medicine",
+    "description": {
+      "en": "A crude saw for amputations, with sharp stone teeth in a wooden frame. Bundled with a poultice to treat the wound.",
+      "cs": "Hrubá pila na amputace, s ostrými kamennými zuby v dřevěném rámu. Dodává se s obkladem k ošetření rány."
+    }
+  },
+  {
+    "id": "craft_rough_leather_bracers",
+    "name": {
+      "en": "Craft Rough Leather Bracers",
+      "cs": "Vyrobit hrubé kožené chrániče"
+    },
+    "outputItemID": "rough_leather_bracers",
+    "materials": {
+      "leather": 1,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 9
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "Stiff pieces of cured leather tied with hide thongs to protect a worker's forearms.",
+      "cs": "Tuhé kusy vydělané kůže svázané řemínky. Chrání předloktí při práci."
+    }
+  },
+  {
+    "id": "braid_fiber_sling",
+    "name": {
+      "en": "Braid Fiber Sling",
+      "cs": "Uplést vlákenný prak"
+    },
+    "outputItemID": "woven_fiber_sling",
+    "materials": {
+      "herb_bundle": 3,
+      "pouch_of_smooth_stones": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Tough plant fibres braided into a cradle and a pair of cords, with a pouch of river stones picked to fit it.",
+      "cs": "Pevná rostlinná vlákna spletená do lůžka a dvou šňůr, k tomu váček říčních oblázků vybraných tak, aby padly."
+    }
+  },
+  {
+    "id": "sew_thick_fur_hood",
+    "name": {
+      "en": "Sew Thick Fur Hood",
+      "cs": "Ušít tlustou kožešinovou kapuci"
+    },
+    "outputItemID": "thick_fur_hood",
+    "materials": {
+      "hide": 2,
+      "leather": 1
+    },
+    "resourceCost": {
+      "materials": 20
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "A deep hood of heavy fur, lined with leather. It keeps the wind and snow out of the eyes.",
+      "cs": "Hluboká kapuce z těžké kožešiny, podšitá kůží. Chrání oči před větrem a sněhem."
+    }
+  },
+  {
+    "id": "construct_simple_cart",
+    "name": {
+      "en": "Construct Simple Cart",
+      "cs": "Sestavit jednoduchý vozík"
+    },
+    "outputItemID": "simple_wooden_cart",
+    "materials": {
+      "wooden_cart_bed": 1,
+      "wooden_cart_axle": 1,
+      "timber_bundle": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "Assemble the pre-made bed, axle and frame into a simple cart for hauling goods.",
+      "cs": "Sestavit předem vyrobenou korbu, nápravu a rám do jednoduchého vozíku na přepravu zboží."
+    }
+  },
+  {
+    "id": "mash_berry_paste",
+    "name": {
+      "en": "Mash Berry Paste",
+      "cs": "Rozmačkat bobulovou pastu"
+    },
+    "outputItemID": "dried_berry_paste",
+    "materials": {
+      "foraged_wild_berries": 2
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Crush foraged berries into a thick, sweet paste that can be stored for later use.",
+      "cs": "Drcením lesních plodů vznikne hustá, sladká pasta, kterou lze uskladnit na později."
+    }
+  },
+  {
+    "id": "prepare_wild_root_poultice",
+    "name": {
+      "en": "Prepare Wild Root Poultice",
+      "cs": "Připravit kořenový obklad"
+    },
+    "outputItemID": "wild_root_poultice",
+    "materials": {
+      "wild_root_basket": 1,
+      "herb_bundle": 1
+    },
+    "resourceCost": {
+      "materials": 12,
+      "knowledge": 5
+    },
+    "requiresBuilding": "clinic",
+    "requiresTech": "medicine",
+    "description": {
+      "en": "A mash of potent wild roots, applied to draw out infection and reduce swelling.",
+      "cs": "Kaše ze silných divokých kořenů, která se přikládá na rány, aby vytáhla infekci a zmenšila otok."
+    }
+  },
+  {
+    "id": "bundle_prosperity_offering",
+    "name": {
+      "en": "Bundle Prosperity Offering",
+      "cs": "Sestavit obětinu hojnosti"
+    },
+    "outputItemID": "prosperity_relic",
+    "materials": {
+      "dried_berry_pemmican": 1,
+      "dried_mushroom_assortment": 1,
+      "smoked_fish": 1,
+      "grain": 1
+    },
+    "resourceCost": {
+      "materials": 25,
+      "knowledge": 50
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "scholarship",
+    "description": {
+      "en": "A symbolic bundle of the village's finest foods, a powerful reminder of past hardships overcome and a focus for future hopes.",
+      "cs": "Symbolický svazek nejlepších potravin z vesnice. Mocná připomínka překonaných těžkostí a naděje do budoucna."
+    }
+  },
+  {
+    "id": "consecrate_grave_torc",
+    "name": {
+      "en": "Consecrate Grave Torc",
+      "cs": "Posvětit pohřební nákrčník"
+    },
+    "outputItemID": "grave_torc",
+    "materials": {
+      "iron_ingot": 1,
+      "dried_fish_rations": 1,
+      "dried_berry_cakes": 1,
+      "dried_mushroom_strings": 1
+    },
+    "resourceCost": {
+      "materials": 20,
+      "knowledge": 20
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "writing",
+    "description": {
+      "en": "An iron neck ring, consecrated with offerings of precious food. Worn to honor the ancestors and guide the spirits of the dead.",
+      "cs": "Železný nákrčník, posvěcený obětinami drahocenného jídla. Nosí se na počest předků a pro klid duší zemřelých."
+    }
+  },
+  {
+    "id": "sew_layered_fur_hood",
+    "name": {
+      "en": "Sew Thick Fur Hood",
+      "cs": "Ušít tlustou kožešinovou kapuci"
+    },
+    "outputItemID": "thick_fur_hood",
+    "materials": {
+      "hide": 2,
+      "leather": 1
+    },
+    "resourceCost": {
+      "materials": 20
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "A heavy hood of layered furs and leather straps, offering excellent protection against biting winds and winter cold.",
+      "cs": "Těžká kapuce z několika vrstev kožešin a kožených řemínků. Poskytuje vynikající ochranu před kousavým větrem a zimním chladem."
+    }
+  },
+  {
+    "id": "carve_harvest_idol",
+    "name": {
+      "en": "Carve Harvest Idol",
+      "cs": "Vyřezat idol úrody"
+    },
+    "outputItemID": "harvest_idol",
+    "materials": {
+      "wild_root_basket": 1,
+      "wood": 2
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A small totem carved to encourage a bountiful harvest, assembled from valley roots and wood.",
+      "cs": "Malý totem vyřezaný pro povzbuzení hojné sklizně, sestavený z kořenů a dřeva z údolí."
+    }
+  },
+  {
+    "id": "mix_mushroom_pigment",
+    "name": {
+      "en": "Mix Mushroom Pigment",
+      "cs": "Namíchat houbový pigment"
+    },
+    "outputItemID": "clay_pigment_pot",
+    "materials": {
+      "dried_mushroom_assortment": 1,
+      "clay": 1,
+      "unglazed_pottery_bowl": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "Dried caps ground into clay and worked wet in a fired bowl until the colour holds.",
+      "cs": "Sušené klobouky rozetřené do hlíny a za mokra míchané ve vypálené misce, dokud barva nedrží."
+    }
+  },
+  {
+    "id": "cobble_together_worn_tools",
+    "name": {
+      "en": "Cobble Together Worn Tools",
+      "cs": "Stlouct opotřebené nářadí"
+    },
+    "outputItemID": "worn_tools",
+    "materials": {
+      "wood": 2,
+      "rough_stone": 1,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Lashing a sharpened stone to a sturdy branch. Not pretty, but it gets the job done.",
+      "cs": "Přivázat nabroušený kámen k pevné větvi. Není to hezké, ale práci to udělá."
+    }
+  },
+  {
+    "id": "forge_sturdy_axe",
+    "name": {
+      "en": "Forge Sturdy Axe",
+      "cs": "Ukovat bytelnou sekeru"
+    },
+    "outputItemID": "sturdy_axe",
+    "materials": {
+      "iron_ingot": 1,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "A solid iron head, properly hafted on a hardwood handle. Built to last.",
+      "cs": "Pořádná železná hlavice, správně nasazená na topůrko z tvrdého dřeva. Postaveno, aby vydrželo."
+    }
+  },
+  {
+    "id": "fashion_scholars_quill",
+    "name": {
+      "en": "Fashion a Scholar's Quill",
+      "cs": "Vyrobit učený brk"
+    },
+    "outputItemID": "scholars_quill",
+    "materials": {
+      "wood": 1,
+      "obsidian_shard": 1,
+      "clay": 1
+    },
+    "resourceCost": {
+      "materials": 18,
+      "knowledge": 5
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "writing",
+    "description": {
+      "en": "Using an obsidian shard to carve a fine point on a wooden pen, and forming a small clay pot to serve as an inkwell.",
+      "cs": "Použít obsidiánový úlomek k vyřezání jemného hrotu na dřevěném peru a vytvarovat malý hliněný kalamář."
+    }
+  },
+  {
+    "id": "waterproof_wool_cloak",
+    "name": {
+      "en": "Wax a Woolen Cloak",
+      "cs": "Navoskovat vlněný plášť"
+    },
+    "outputItemID": "waxed_rain_cloak",
+    "materials": {
+      "leather": 2,
+      "rendered_animal_fat": 1
+    },
+    "resourceCost": {
+      "materials": 22
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "Cloth beaten with rendered fat until the rain runs off it instead of through it.",
+      "cs": "Látka vyklepaná se škvařeným lojem, dokud po ní déšť stéká místo aby jí prosákl."
+    }
+  },
+  {
+    "id": "forge_barrow_blade",
+    "name": {
+      "en": "Forge the Barrow Blade",
+      "cs": "Ukovat mohylovou čepel"
+    },
+    "outputItemID": "barrow_blade",
+    "materials": {
+      "star_iron": 2,
+      "leather": 1,
+      "charcoal": 4
+    },
+    "resourceCost": {
+      "materials": 50,
+      "knowledge": 25
+    },
+    "requiresBuilding": "foundry",
+    "requiresTech": "engineering",
+    "description": {
+      "en": "Working the star-iron in the hottest forge, folding it until the metal sings. The resulting blade is unnaturally light and sharp.",
+      "cs": "Zpracovat hvězdné železo v nejžhavější peci, překládat ho, dokud kov nezpívá. Výsledná čepel je nepřirozeně lehká a ostrá."
+    }
+  },
+  {
+    "id": "fashion_worn_tools",
+    "name": {
+      "en": "Fashion Worn Tools",
+      "cs": "Vyrobit opotřebené nářadí"
+    },
+    "outputItemID": "worn_tools",
+    "materials": {
+      "rough_stone": 1,
+      "wood": 1,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Lashing a sharpened stone to a sturdy branch. It won't last, but it will get the job done for now.",
+      "cs": "Přivázat nabroušený kámen k pevné větvi. Dlouho to nevydrží, ale pro teď to práci odvede."
+    }
+  },
+  {
+    "id": "craft_sturdy_axe",
+    "name": {
+      "en": "Craft Sturdy Axe",
+      "cs": "Vyrobit bytelnou sekeru"
+    },
+    "outputItemID": "sturdy_axe",
+    "materials": {
+      "iron_ingot": 1,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "bronze_tools",
+    "description": {
+      "en": "A heavy iron head set deep in a hardwood handle. Built to last through many seasons of logging.",
+      "cs": "Těžká železná hlava, hluboce zasazená do topůrka z tvrdého dřeva. Postaveno, aby to vydrželo mnoho sezón kácení."
+    }
+  },
+  {
+    "id": "prepare_scholars_quill",
+    "name": {
+      "en": "Prepare Scholar's Quill",
+      "cs": "Připravit písařský brk"
+    },
+    "outputItemID": "scholars_quill",
+    "materials": {
+      "wood": 1,
+      "charcoal": 1,
+      "clay": 1
+    },
+    "resourceCost": {
+      "materials": 18,
+      "knowledge": 5
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "writing",
+    "description": {
+      "en": "A sharpened bird's feather and a small pot of soot-based ink. For taking careful notes and drafting plans.",
+      "cs": "Ostré ptačí péro a malý kalíšek sazí na inkoust. Pro pečlivé poznámky a návrhy plánů."
+    }
+  },
+  {
+    "id": "bind_merchants_ledger",
+    "name": {
+      "en": "Bind Merchant's Ledger",
+      "cs": "Svázat kupeckou knihu"
+    },
+    "outputItemID": "merchants_ledger",
+    "materials": {
+      "leather": 1,
+      "charcoal": 1
+    },
+    "resourceCost": {
+      "materials": 20,
+      "knowledge": 10
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "writing",
+    "description": {
+      "en": "Tanned hide pages bound in a sturdy leather cover, ready to be filled with accounts and contracts.",
+      "cs": "Stránky z vydělané kůže svázané v pevných deskách, připravené k naplnění účty a smlouvami."
+    }
+  },
+  {
+    "id": "carve_whittled_charm",
+    "name": {
+      "en": "Carve Whittled Charm",
+      "cs": "Vyřezat talisman"
+    },
+    "outputItemID": "whittled_charm",
+    "materials": {
+      "wood": 2
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "To pass the time on a long watch, a colonist carves a piece of scrap wood into a familiar shape. It feels good in the hand.",
+      "cs": "Aby si kolonista zkrátil dlouhou hlídku, vyřezává ze zbytku dřeva povědomý tvar. Dobře padne do ruky."
+    }
+  },
+  {
+    "id": "braid_hide_sling",
+    "name": {
+      "en": "Braid Hide Sling",
+      "cs": "Uplést kožený prak"
+    },
+    "outputItemID": "braided_sling",
+    "materials": {
+      "hide": 2
+    },
+    "resourceCost": {
+      "materials": 6
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Strips of uncured hide are braided into a simple, flexible sling. Stronger than one made of plant-fiber.",
+      "cs": "Proužky surové kůže spletené do jednoduchého, ohebného praku. Pevnější než ten z rostlinných vláken."
+    }
+  },
+  {
+    "id": "sew_rough_hide_pouch",
+    "name": {
+      "en": "Sew Rough Hide Pouch",
+      "cs": "Sešít váček ze surové kůže"
+    },
+    "outputItemID": "rough_leather_pouch",
+    "materials": {
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 4
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Folding and stitching a piece of uncured hide into a simple pouch for carrying small items. Elder Goran could use one.",
+      "cs": "Přeložením a sešitím kusu surové kůže vznikne jednoduchý váček na nošení drobností. Starý Goran by jeden užil."
+    }
+  },
+  {
+    "id": "carve_antler_figurine",
+    "name": {
+      "en": "Carve Antler Figurine",
+      "cs": "Vyřezat sošku z parohu"
+    },
+    "outputItemID": "carved_bone_figurine",
+    "materials": {
+      "bone_spearhead": 1,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "hunters_lodge",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "A worked splinter of antler cut down to a shape, and the block it stands on.",
+      "cs": "Opracovaná parohová tříska seříznutá do tvaru a špalík, na kterém stojí."
+    }
+  },
+  {
+    "id": "sew_reinforced_boots",
+    "name": {
+      "en": "Sew Tracking Boots",
+      "cs": "Ušít stopařské boty"
+    },
+    "outputItemID": "weathered_tracking_boots",
+    "materials": {
+      "leather": 2,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 18
+    },
+    "requiresBuilding": "hunters_lodge",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Crafting durable boots from tanned leather, with an extra layer of tough rawhide reinforcing the sole for Master Kaelen.",
+      "cs": "Výroba odolných bot z vyčiněné kůže pro mistra Kaelena. Podrážka je zpevněná další vrstvou tuhé surové kůže."
+    }
+  },
+  {
+    "id": "carve_lucky_charm_trinket",
+    "name": {
+      "en": "Carve Lucky Charm",
+      "cs": "Vyřezat talisman pro štěstí"
+    },
+    "outputItemID": "lucky_charm",
+    "materials": {
+      "wood": 1,
+      "polished_river_pearl": 1,
+      "leather": 1
+    },
+    "resourceCost": {
+      "materials": 22
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "writing",
+    "description": {
+      "en": "A small wooden disc is carefully carved with symbols of fortune and set with a polished river pearl.",
+      "cs": "Do malého dřevěného kotouče jsou pečlivě vyryty symboly štěstí a zasazena do něj vyleštěná říční perla."
+    }
+  },
+  {
+    "id": "find_lucky_river_stone",
+    "name": {
+      "en": "Find a Lucky River Stone",
+      "cs": "Najít šťastný říční kámen"
+    },
+    "outputItemID": "smooth_lucky_stone",
+    "materials": {},
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Searching the riverbank for a perfectly smooth, calming stone. Old Man Hemlock says the river gives them only to the patient.",
+      "cs": "Hledání dokonale hladkého, uklidňujícího kamene na břehu řeky. Starý Hemlock říká, že řeka je dává jen těm trpělivým."
+    }
+  },
+  {
+    "id": "craft_staff_sling",
+    "name": {
+      "en": "Craft Staff Sling",
+      "cs": "Vyrobit prak s holí"
+    },
+    "outputItemID": "staff_sling",
+    "materials": {
+      "wood": 1,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "A leather sling pouch is attached to the end of a sturdy staff, allowing for more powerful throws.",
+      "cs": "Kožený váček praku připevněný ke konci pevné hole, což umožňuje silnější hody."
+    }
+  },
+  {
+    "id": "carve_small_bone_figurine",
+    "name": {
+      "en": "Carve Bone Figurine",
+      "cs": "Vyřezat kostěnou figurku"
+    },
+    "outputItemID": "carved_bone_figurine",
+    "materials": {},
+    "resourceCost": {
+      "materials": 14
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Whittling a piece of scavenged bone into the shape of a valley hawk. A quiet pastime for a long evening.",
+      "cs": "Vyřezávání kousku nalezené kosti do tvaru údolního jestřába. Tichá zábava na dlouhý večer."
+    }
+  },
+  {
+    "id": "sew_weathered_boots",
+    "name": {
+      "en": "Sew Weathered Boots",
+      "cs": "Ušít bytelné boty"
+    },
+    "outputItemID": "weathered_tracking_boots",
+    "materials": {
+      "leather": 3
+    },
+    "resourceCost": {
+      "materials": 22
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Tough, tanned hide is stitched into a pair of sturdy boots, reinforced for miles of hard travel.",
+      "cs": "Pevná, vyčiněná kůže sešitá do páru bytelných bot, zesílených na míle a míle těžké cesty."
+    }
+  },
+  {
+    "id": "craft_tanning_tools",
+    "name": {
+      "en": "Craft Tanning Tools",
+      "cs": "Vyrobit koželužské nástroje"
+    },
+    "outputItemID": "tanning_tools",
+    "materials": {
+      "rough_stone": 2,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "description": {
+      "en": "Shaping flint into scrapers and sharpening bone into awls, essential for processing hides.",
+      "cs": "Vytvarovat pazourek na škrabky a zaostřit kost na šídla, nezbytné pro zpracování kůží."
+    },
+    "requiresBuilding": "hunters_lodge",
+    "requiresTech": "basic_tools"
+  },
+  {
+    "id": "carve_bone_whistle",
+    "name": {
+      "en": "Carve Bone Hunting Whistle",
+      "cs": "Vyřezat kostěnou vábničku"
+    },
+    "outputItemID": "bone_hunting_whistle",
+    "materials": {
+      "wood": 1,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "description": {
+      "en": "A hollow bone, carefully carved and notched to produce a piercing whistle for the hunt.",
+      "cs": "Dutá kost, pečlivě vyřezaná a se zářezem, aby vydávala pronikavý hvizd na lovu."
+    },
+    "requiresBuilding": "hunters_lodge"
+  },
+  {
+    "id": "shape_grinding_stone",
+    "name": {
+      "en": "Shape a Grinding Stone",
+      "cs": "Opracovat zrnotěrku"
+    },
+    "outputItemID": "flint_grinding_stone",
+    "materials": {
+      "rough_stone": 3
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "description": {
+      "en": "Finding a large, flat river stone and a smaller hand-stone for grinding grain.",
+      "cs": "Nalézt velký plochý říční kámen a menší drtidlo na mletí zrní."
+    },
+    "requiresBuilding": "quarry",
+    "requiresTech": "masonry"
+  },
+  {
+    "id": "sew_fur_lined_cloak",
+    "name": {
+      "en": "Sew Fur-Lined Cloak",
+      "cs": "Ušít plášť s kožešinou"
+    },
+    "outputItemID": "fur_lined_cloak",
+    "materials": {
+      "hide": 3
+    },
+    "resourceCost": {
+      "materials": 18
+    },
+    "description": {
+      "en": "Stitching soft furs to the inside of a heavy hide cloak for extra warmth.",
+      "cs": "Přišít měkké kožešiny na vnitřek těžkého pláště z kůže pro lepší zateplení."
+    },
+    "requiresBuilding": "hunters_lodge"
+  },
+  {
+    "id": "carve_wooden_spoon",
+    "name": {
+      "en": "Carve a Wooden Spoon",
+      "cs": "Vyřezat dřevěnou lžíci"
+    },
+    "outputItemID": "carved_wooden_spoon",
+    "materials": {
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 3
+    },
+    "description": {
+      "en": "Whittling a small piece of hardwood into a simple eating spoon, a small comfort.",
+      "cs": "Vyřezat z kousku tvrdého dřeva prostou jídelní lžíci. Malá radost."
+    },
+    "requiresBuilding": "hut"
+  },
+  {
+    "id": "carve_hunting_whistle",
+    "name": {
+      "en": "Carve Hunting Whistle",
+      "cs": "Vyřezat loveckou píšťalku"
+    },
+    "outputItemID": "bone_hunting_whistle",
+    "materials": {
+      "hide": 1,
+      "bone_spearhead": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Carving a piece of hollow bone, tuning it to mimic an animal call. A strip of hide makes a lanyard.",
+      "cs": "Vyřezání kusu duté kosti a její naladění tak, aby napodobovala volání zvěře. Proužek kůže poslouží jako šňůrka."
+    }
+  },
+  {
+    "id": "shape_flint_grinding_stone",
+    "name": {
+      "en": "Shape Flint Grinding Stone",
+      "cs": "Otesat pazourkový mlecí kámen"
+    },
+    "outputItemID": "flint_grinding_stone",
+    "materials": {
+      "rough_stone": 4
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hut",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Selecting a large, flat piece of flint and a smaller hand-stone, then chipping them to create complementary grinding surfaces.",
+      "cs": "Výběr velkého plochého kusu pazourku a menšího kamene do ruky a jejich otesání pro vytvoření vhodných mlecích ploch."
+    }
+  },
+  {
+    "id": "sew_thick_wool_poncho",
+    "name": {
+      "en": "Sew Thick Wool Poncho",
+      "cs": "Ušít tlusté vlněné pončo"
+    },
+    "outputItemID": "thick_wool_poncho",
+    "materials": {
+      "hide": 4
+    },
+    "resourceCost": {
+      "materials": 18
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Layering and stitching together the thickest, softest hides available to create a heavy poncho. The dense fur serves as 'wool'.",
+      "cs": "Navrstvení a sešití nejtlustších a nejměkčích dostupných kůží do těžkého ponča. Hustá srst slouží jako 'vlna'."
+    }
+  },
+  {
+    "id": "polish_a_river_stone",
+    "name": {
+      "en": "Polish a River Stone",
+      "cs": "Vyleštit říční kámen"
+    },
+    "outputItemID": "polished_river_stone",
+    "materials": {
+      "rough_stone": 1,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "description": {
+      "en": "Hours of patient work, rubbing a chosen river stone with a piece of soft hide until it gleams.",
+      "cs": "Hodiny trpělivé práce, hlazení vybraného říčního kamene kouskem měkké kůže, dokud se neleskne."
+    }
+  },
+  {
+    "id": "assemble_bone_tipped_atlatl",
+    "name": {
+      "en": "Assemble Bone-Tipped Atlatl",
+      "cs": "Sestavit atlatl s kostěným hrotem"
+    },
+    "outputItemID": "bone_tipped_atlatl",
+    "materials": {
+      "wood": 2,
+      "hide": 1,
+      "bone_spearhead": 1
+    },
+    "resourceCost": {
+      "materials": 20
+    },
+    "requiresBuilding": "hunters_lodge",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Lashing a sharpened bone spur to a carved wooden thrower, creating a powerful hunting tool that extends a spear's range.",
+      "cs": "Připevnění nabroušené kostěné ostruhy k vyřezávanému dřevěnému vrhači. Vznikne tak mocný lovecký nástroj, který prodlužuje dosah oštěpu."
+    }
+  },
+  {
+    "id": "dig_spiked_pitfall_trap",
+    "name": {
+      "en": "Dig Spiked Pitfall Trap",
+      "cs": "Vyhloubit past s kůly"
+    },
+    "outputItemID": "spiked_pitfall_trap",
+    "materials": {
+      "wood": 3,
+      "strong_plant_fibers": 2
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "hunters_lodge",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "A deep pit dug on a game trail, lined with sharpened stakes and camouflaged with branches. A design Kaelen came up with after a wolf got too close to the settlement.",
+      "cs": "Hluboká jáma vykopaná na zvířecí stezce, vystlaná zaostřenými kůly a zamaskovaná větvemi. Nápad, se kterým přišel Kaelen, když se vlk dostal příliš blízko k osadě."
+    }
+  },
+  {
+    "id": "craft_oiled_hide_mantle",
+    "name": {
+      "en": "Craft Oiled Hide Mantle",
+      "cs": "Vyrobit naolejovaný plášť"
+    },
+    "outputItemID": "oiled_hide_mantle",
+    "materials": {
+      "hide": 2,
+      "rendered_animal_fat": 1
+    },
+    "resourceCost": {
+      "materials": 18
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "A large hide worked with rendered animal fat until it sheds water. Anya's trick for keeping the damp out on a long watch; she swears it works better than any modern weave.",
+      "cs": "Velká kůže zpracovaná se škvařeným zvířecím tukem, dokud neodpuzuje vodu. Fígl staré Anny, jak se udržet v suchu na dlouhé hlídce; přísahá, že to funguje lépe než jakékoli moderní tkaniny."
+    }
+  },
+  {
+    "id": "braid_flax_fishing_line",
+    "name": {
+      "en": "Braid Flax Fishing Line",
+      "cs": "Splést lněný vlasec"
+    },
+    "outputItemID": "braided_flax_line",
+    "materials": {
+      "flax_fiber_bundle": 2
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Twisting and braiding fine flax fibers together makes a line strong enough for the river's biggest fish. Young Finn spends hours by the fire doing this, dreaming of his next big catch.",
+      "cs": "Spletením jemných lněných vláken vznikne vlasec dost silný i na největší ryby v řece. Mladý Finn tím u ohně tráví hodiny a sní o svém dalším velkém úlovku."
+    }
+  },
+  {
+    "id": "sharpen_hunting_stick",
+    "name": {
+      "en": "Sharpen Hunting Stick",
+      "cs": "Zaostřit loveckou hůl"
+    },
+    "outputItemID": "sharpened_hunting_stick",
+    "materials": {
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 4
+    },
+    "description": {
+      "en": "Find a straight, sturdy branch and sharpen one end with a piece of flint. It's not much, but it's better than bare hands when facing a wild boar in the thicket.",
+      "cs": "Najít rovnou, pevnou větev a jeden konec zaostřit kusem pazourku. Není to moc, ale lepší než holé ruce, když se v houští postavíš divočákovi."
+    }
+  },
+  {
+    "id": "weave_river_fish_trap",
+    "name": {
+      "en": "Weave River Fish Trap",
+      "cs": "Uplést říční vrš"
+    },
+    "outputItemID": "woven_fish_trap",
+    "materials": {
+      "wood": 1,
+      "strong_plant_fibers": 2
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A simple conical basket woven from branches and strong fibers, left in the shallows of the river overnight. Lia and Finn made the first one; now everyone copies their design.",
+      "cs": "Jednoduchý kónický koš upletený z větví a pevných vláken, ponechaný přes noc v říčních mělčinách. První takový vyrobili Lia a Finn; teď už jejich vzor všichni kopírují."
+    }
+  },
+  {
+    "id": "construct_spiked_pitfall",
+    "name": {
+      "en": "Construct Spiked Pitfall",
+      "cs": "Vybudovat bodákovou past"
+    },
+    "outputItemID": "spiked_pitfall_trap",
+    "materials": {
+      "wood": 4,
+      "rough_stone": 1
+    },
+    "resourceCost": {
+      "materials": 18
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Dig a deep hole, line it with sharpened stakes, and cover it with a fragile layer of branches and leaves. A nasty surprise for anything heavy that wanders by.",
+      "cs": "Vyhloubit jámu, vystlat ji zaostřenými kůly a zakrýt křehkou vrstvou větví a listí. Nepříjemné překvapení pro cokoli těžkého, co se zatoulá kolem."
+    }
+  },
+  {
+    "id": "assemble_bone_sewing_set",
+    "name": {
+      "en": "Assemble Bone Needle Set",
+      "cs": "Sestavit sadu kostěných jehel"
+    },
+    "outputItemID": "bone_needle_set",
+    "materials": {
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Grind down bone splinters into fine, sharp needles, and bundle them with sinew thread. A delicate task, but vital for mending.",
+      "cs": "Odlomky kostí vybroušené do jemných, ostrých jehel a svázané se šlachou. Titěrná práce, ale pro spravování a řemeslo nezbytná."
+    }
+  },
+  {
+    "id": "treat_hide_mantle",
+    "name": {
+      "en": "Treat Hide Mantle",
+      "cs": "Impregnovat kožený plášť"
+    },
+    "outputItemID": "oiled_hide_mantle",
+    "materials": {
+      "hide": 3,
+      "herb_bundle": 1
+    },
+    "resourceCost": {
+      "materials": 20
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Working rendered animal fat into a heavy hide cloak, making it water-resistant for long, damp watches on the palisade.",
+      "cs": "Těžká kožená pelerína napuštěná zvířecím tukem. Odpuzuje vodu a hodí se na dlouhé, vlhké hlídky na palisádě."
+    }
+  },
+  {
+    "id": "whittle_hunting_stick",
+    "name": {
+      "en": "Whittle Hunting Stick",
+      "cs": "Vyřezat loveckou hůl"
+    },
+    "outputItemID": "sharpened_hunting_stick",
+    "materials": {
+      "wood": 1,
+      "rough_stone": 1
+    },
+    "resourceCost": {
+      "materials": 4
+    },
+    "description": {
+      "en": "Find a straight, sturdy branch and sharpen one end to a fine point with a sharp stone. Simple, but effective.",
+      "cs": "Najít rovnou, pevnou větev a jeden konec jí zaostřit kamenem. Prosté, ale účinné."
+    }
+  },
+  {
+    "id": "weave_fish_basket_trap",
+    "name": {
+      "en": "Weave Fish Basket Trap",
+      "cs": "Uplést vrš"
+    },
+    "outputItemID": "woven_fish_trap",
+    "materials": {
+      "wood": 3
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Weaving supple branches into a cone-shaped basket that lets fish swim in but not out. A design Lia and Finn came up with watching the river.",
+      "cs": "Z ohebných větví uplést kónický koš, který rybám dovolí vplout dovnitř, ale už ne ven. Nápad, který Lia s Finnem dostali při pozorování řeky."
+    }
+  },
+  {
+    "id": "fashion_simple_fishing_rod",
+    "name": {
+      "en": "Fashion Simple Fishing Rod",
+      "cs": "Vyrobit prostý rybářský prut"
+    },
+    "outputItemID": "simple_fishing_rod",
+    "materials": {
+      "wood": 2,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A sturdy branch, some cured sinew for a line, and a sharpened bone hook. Enough to get started.",
+      "cs": "Pevná větev, pár sušených šlach jako vlasec a zaostřený kostěný háček. Pro začátek to stačí."
+    }
+  },
+  {
+    "id": "sew_fur_lined_mittens",
+    "name": {
+      "en": "Sew Fur-Lined Mittens",
+      "cs": "Ušít palčáky s kožešinou"
+    },
+    "outputItemID": "fur_lined_mittens",
+    "materials": {
+      "hide": 2,
+      "leather": 1
+    },
+    "resourceCost": {
+      "materials": 14
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Stitch together thick hide mittens and line them with soft rabbit fur for warmth during the harshest frosts.",
+      "cs": "Sešít tlusté kožené palčáky a pro teplo je vystlat měkkou králičí kožešinou proti nejtužším mrazům."
+    }
+  },
+  {
+    "id": "carve_bone_comb",
+    "name": {
+      "en": "Carve Bone Comb",
+      "cs": "Vyřezat kostěný hřeben"
+    },
+    "outputItemID": "carved_bone_comb",
+    "materials": {
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 9
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Carefully file teeth into a flat piece of bone to create a simple, sturdy comb for personal grooming.",
+      "cs": "Opatrně vypilovat zuby do plochého kusu kosti a vytvořit tak jednoduchý, pevný hřeben pro osobní potřebu."
+    }
+  },
+  {
+    "id": "carve_clay_shaping_paddle",
+    "name": {
+      "en": "Carve Clay Shaping Paddle",
+      "cs": "Vyřezat hrnčířskou plácačku"
+    },
+    "outputItemID": "clay_shaping_paddle",
+    "materials": {
+      "wood": 2
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "pottery",
+    "description": {
+      "en": "Smooth and shape a piece of hardwood to help form the walls of a new pot, making them stronger and more even.",
+      "cs": "Vyhladit a vytvarovat kus tvrdého dřeva, který pomůže při tvarování stěn nového hrnce, aby byly pevnější a rovnoměrnější."
+    }
+  },
+  {
+    "id": "sew_improved_satchel",
+    "name": {
+      "en": "Sew Improved Forager's Satchel",
+      "cs": "Ušít vylepšenou brašnu"
+    },
+    "outputItemID": "improved_foragers_satchel",
+    "materials": {
+      "leather": 3
+    },
+    "resourceCost": {
+      "materials": 18
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "A larger, sturdier satchel made of tanned leather, with extra pockets for separating delicate herbs from heavy roots.",
+      "cs": "Větší a pevnější brašna z vydělané kůže, s dalšími kapsami pro oddělení křehkých bylin od těžkých kořenů."
+    }
+  },
+  {
+    "id": "treat_foragers_satchel",
+    "name": {
+      "en": "Treat Forager's Satchel",
+      "cs": "Impregnovat sběračskou mošnu"
+    },
+    "outputItemID": "dried_foragers_satchel",
+    "materials": {
+      "leather": 1,
+      "rendered_animal_fat": 1
+    },
+    "resourceCost": {
+      "materials": 16
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Rubbing rendered fat into a leather satchel to make it waterproof, protecting delicate herbs and mushrooms from the rain.",
+      "cs": "Vmasírovat sádlo do kožené mošny, aby nepromokla a chránila křehké byliny a houby před deštěm."
+    }
+  },
+  {
+    "id": "assemble_stiff_bristle_brush",
+    "name": {
+      "en": "Assemble Stiff Bristle Brush",
+      "cs": "Sestavit tuhý kartáč"
+    },
+    "outputItemID": "stiff_bristle_brush",
+    "materials": {
+      "wood": 1,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Tightly binding a bundle of stiff animal hair into a carved wooden handle. Keeps the animals' coats clean.",
+      "cs": "Pevně svázat chomáč tuhých zvířecích chlupů do vyřezávané dřevěné rukojeti. Udržuje srst zvířat čistou."
+    }
+  },
+  {
+    "id": "whittle_bone_lure",
+    "name": {
+      "en": "Whittle Bone Lure",
+      "cs": "Vyřezat kostěnou nástrahu"
+    },
+    "outputItemID": "bone_fishing_lure",
+    "materials": {
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Carefully carving a sliver of bone into the shape of a small fish. Its shimmer in the water might attract a big catch.",
+      "cs": "Opatrně vyřezat úlomek kosti do tvaru malé rybky. Třpyt ve vodě může přilákat velký úlovek."
+    }
+  },
+  {
+    "id": "bind_hide_mallet",
+    "name": {
+      "en": "Bind Hide Mallet",
+      "cs": "Svázat koženou palici"
+    },
+    "outputItemID": "crude_hide_mallet",
+    "materials": {
+      "wood": 1,
+      "hide": 2
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Wrapping and binding layers of tough, uncured hide around a heavy wooden handle to create a mallet for softening other hides.",
+      "cs": "Omotat a svázat vrstvy tuhé, nevyčiněné kůže kolem těžké dřevěné rukojeti. Vznikne tak palice na změkčování dalších kůží."
+    }
+  },
+  {
+    "id": "rig_simple_fishing_rod",
+    "name": {
+      "en": "Rig Simple Fishing Rod",
+      "cs": "Připravit jednoduchý prut"
+    },
+    "outputItemID": "simple_fishing_rod",
+    "materials": {
+      "wood": 2,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 7
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Tying a line of sinew from a supple branch and attaching a sharpened bone hook. A good way to spend a quiet afternoon.",
+      "cs": "Přivázat šlachový vlasec k ohebné větvi a připojit naostřený kostěný háček. Dobrý způsob, jak strávit klidné odpoledne."
+    }
+  },
+  {
+    "id": "knit_thick_wool_socks",
+    "name": {
+      "en": "Knit Thick Wool Socks",
+      "cs": "Uplést tlusté vlněné ponožky"
+    },
+    "outputItemID": "thick_wool_socks",
+    "materials": {
+      "hide": 2
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Knitting rough, unspun wool into thick socks to keep out the cold and damp.",
+      "cs": "Pletení hrubé, nezpracované vlny do tlustých ponožek, které chrání před chladem a vlhkem."
+    }
+  },
+  {
+    "id": "carve_bone_fishing_gorge",
+    "name": {
+      "en": "Carve Bone Fishing Gorge",
+      "cs": "Vyřezat kostěný rybářský háček"
+    },
+    "outputItemID": "bone_fishing_gorge",
+    "materials": {
+      "hide": 1,
+      "rough_stone": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "A splinter of bone is worked against a rough stone until it's sharp at both ends. A simple but effective tool for catching fish.",
+      "cs": "Úlomek kosti se brousí o hrubý kámen, dokud není na obou koncích ostrý. Jednoduchý, ale účinný nástroj pro chytání ryb."
+    }
+  },
+  {
+    "id": "assemble_stone_weighted_club",
+    "name": {
+      "en": "Assemble Stone-Weighted Club",
+      "cs": "Sestavit kyj se závažím"
+    },
+    "outputItemID": "stone_weighted_club",
+    "materials": {
+      "wood": 2,
+      "rough_stone": 1,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A heavy river stone is lashed securely to a stout branch, creating a club with significant impact.",
+      "cs": "Těžký říční kámen je pevně přivázán k silné větvi, čímž vzniká kyj se značnou údernou silou."
+    }
+  },
+  {
+    "id": "fashion_crude_bark_hat",
+    "name": {
+      "en": "Fashion Crude Bark Rain Hat",
+      "cs": "Vyrobit klobouk z hrubé kůry"
+    },
+    "outputItemID": "crude_bark_rain_hat",
+    "materials": {
+      "wood": 2,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 9
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Strips of bark are peeled from a fallen log and crudely stitched together. It's not pretty, but it keeps the rain off.",
+      "cs": "Pásy kůry sloupnuté z padlého kmene a nahrubo sešité. Není to hezké, ale ochrání před deštěm."
+    }
+  },
+  {
+    "id": "weave_reed_pannier",
+    "name": {
+      "en": "Weave Reed Pannier",
+      "cs": "Uplést rákosovou nůši"
+    },
+    "outputItemID": "woven_reed_pannier",
+    "materials": {
+      "wood": 2,
+      "greens": 4
+    },
+    "resourceCost": {
+      "materials": 18
+    },
+    "requiresBuilding": "hut",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Long river reeds are woven around a sturdy wooden frame to create a large basket for a pack animal. Increases how much can be carried on trade journeys.",
+      "cs": "Říční rákosí spletené kolem dřevěného rámu tvoří velký koš pro nákladní zvíře. Zvyšuje nosnost na obchodních výpravách."
+    }
+  },
+  {
+    "id": "weave_reed_rain_hat",
+    "name": {
+      "en": "Weave Reed Rain Hat",
+      "cs": "Uplést rákosový klobouk do deště"
+    },
+    "outputItemID": "woven_reed_rain_hat",
+    "materials": {
+      "strong_plant_fibers": 3
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Weaving dried river reeds into a tight, wide-brimmed hat to keep the rain off one's face.",
+      "cs": "Spletení suchého rákosí do pevného klobouku se širokou krempou, který ochrání tvář před deštěm."
+    }
+  },
+  {
+    "id": "sew_thick_leather_gauntlets",
+    "name": {
+      "en": "Sew Thick Leather Gauntlets",
+      "cs": "Ušít tlusté kožené rukavice"
+    },
+    "outputItemID": "thick_leather_gauntlets",
+    "materials": {
+      "leather": 2,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 18
+    },
+    "requiresBuilding": "workshop",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Stitching together layers of tough leather to protect a smith's hands from sparks and heat.",
+      "cs": "Sešití vrstev tuhé kůže, které ochrání ruce kováře před jiskrami a žárem."
+    }
+  },
+  {
+    "id": "construct_simple_bird_trap",
+    "name": {
+      "en": "Construct Simple Bird Trap",
+      "cs": "Sestrojit prostou past na ptáky"
+    },
+    "outputItemID": "simple_bird_trap",
+    "materials": {
+      "wood": 1,
+      "strong_plant_fibers": 1
+    },
+    "resourceCost": {
+      "materials": 9
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "A simple spring-snare trap made from a bent sapling and a woven fiber noose.",
+      "cs": "Prostá pružinová past z ohnutého proutku a smyčky z rostlinných vláken."
+    }
+  },
+  {
+    "id": "knit_thick_wool_scarf",
+    "name": {
+      "en": "Knit Thick Wool Scarf",
+      "cs": "Uplést tlustou vlněnou šálu"
+    },
+    "outputItemID": "thick_wool_scarf",
+    "materials": {
+      "hide": 2
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Carding the rough wool from a sheep's hide and knitting it into a thick, warm scarf.",
+      "cs": "Vyčesání hrubé vlny z ovčí kůže a její upletení do tlusté, hřejivé šály."
+    }
+  },
+  {
+    "id": "braid_weighted_throwing_cord",
+    "name": {
+      "en": "Braid Weighted Throwing Cord",
+      "cs": "Uplést vrhací šňůru se závažím"
+    },
+    "outputItemID": "weighted_throwing_cord",
+    "materials": {
+      "strong_plant_fibers": 2,
+      "rough_stone": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Braiding tough plant fibers into a strong cord and securely attaching a weighted stone to one end.",
+      "cs": "Spletení pevných rostlinných vláken do silné šňůry a bezpečné připevnění kamenného závaží na jeden konec."
+    }
+  },
+  {
+    "id": "weave_broad_brim_hat",
+    "name": {
+      "en": "Weave Broad-Brim Hat",
+      "cs": "Uplést široký slamák"
+    },
+    "outputItemID": "broad_brim_straw_hat",
+    "materials": {
+      "strong_plant_fibers": 2
+    },
+    "resourceCost": {
+      "materials": 12
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Weave dried plant fibers into a wide hat to shield from the sun during long hours in the fields.",
+      "cs": "Splést sušená rostlinná vlákna do širokého klobouku, který ochrání před sluncem během dlouhých hodin na poli."
+    }
+  },
+  {
+    "id": "sew_rabbit_fur_mittens",
+    "name": {
+      "en": "Sew Rabbit Fur Mittens",
+      "cs": "Ušít rukavice z králičí kožešiny"
+    },
+    "outputItemID": "rabbit_fur_mittens",
+    "materials": {
+      "cured_rabbit_pelt": 2,
+      "herb_bundle": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Two rabbit skins turned fur-in and stitched at the wrist, stuffed with dry herb against the cold.",
+      "cs": "Dvě králičí kůže obrácené srstí dovnitř a sešité u zápěstí, vycpané suchou bylinou proti mrazu."
+    }
+  },
+  {
+    "id": "weave_nettle_tunic",
+    "name": {
+      "en": "Weave Nettle Tunic",
+      "cs": "Utkat kopřivovou tuniku"
+    },
+    "outputItemID": "woven_nettle_tunic",
+    "materials": {
+      "strong_plant_fibers": 3
+    },
+    "resourceCost": {
+      "materials": 14
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Process and weave tough nettle fibers into a rough but durable tunic. It's scratchy, but it's warm.",
+      "cs": "Zpracovat a utkat tuhá kopřivová vlákna do hrubé, ale odolné tuniky. Škrábe, ale hřeje."
+    }
+  },
+  {
+    "id": "cut_hide_leg_wraps",
+    "name": {
+      "en": "Cut Crude Hide Leg Wraps",
+      "cs": "Nařezat hrubé ovinovačky"
+    },
+    "outputItemID": "crude_hide_leg_wraps",
+    "materials": {
+      "hide": 2
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Cut strips of uncured hide to wrap around the legs for basic protection from thorns and brambles.",
+      "cs": "Nařezat pruhy nevyčiněné kůže k ovinutí nohou jako základní ochrana před trním a ostružiním."
+    }
+  },
+  {
+    "id": "haft_flint_javelin",
+    "name": {
+      "en": "Haft Flint Javelin",
+      "cs": "Osadit pazourkový oštěp"
+    },
+    "outputItemID": "flint_tipped_javelin",
+    "materials": {
+      "wood": 1,
+      "flint_arrowheads": 2
+    },
+    "resourceCost": {
+      "materials": 18
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Lash sharp flint heads to a sturdy wooden shaft to create a light throwing spear, good for hunting small game.",
+      "cs": "Přivázat ostré pazourkové hroty na pevnou dřevěnou násadu a vytvořit lehký vrhací oštěp, dobrý k lovu malé zvěře."
+    }
+  },
+  {
+    "id": "weave_straw_sun_hat",
+    "name": {
+      "en": "Weave Straw Sun Hat",
+      "cs": "Uplést slaměný klobouk"
+    },
+    "outputItemID": "broad_brim_straw_hat",
+    "materials": {
+      "strong_plant_fibers": 3
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Twisting and weaving dried grasses into a wide hat to keep the sun off during a long day's work.",
+      "cs": "Spletání sušené trávy do širokého klobouku, který chrání před sluncem během dlouhého pracovního dne."
+    }
+  },
+  {
+    "id": "stitch_rabbit_fur_mittens",
+    "name": {
+      "en": "Stitch Rabbit Fur Mittens",
+      "cs": "Sešít rukavice z králičí kožešiny"
+    },
+    "outputItemID": "rabbit_fur_mittens",
+    "materials": {
+      "cured_rabbit_pelt": 2,
+      "strong_plant_fibers": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Stitching together soft rabbit pelts to make warm, flexible mittens for cold mornings.",
+      "cs": "Sešití měkkých králičích kožek do teplých, ohebných rukavic pro chladná rána."
+    }
+  },
+  {
+    "id": "fashion_flint_javelin",
+    "name": {
+      "en": "Fashion Flint Javelin",
+      "cs": "Vyrobit pazourkový oštěp"
+    },
+    "outputItemID": "flint_tipped_javelin",
+    "materials": {
+      "wood": 2,
+      "rough_stone": 1,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 16
+    },
+    "requiresBuilding": "hunters_lodge",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Knapping a sharp point from a piece of flint and lashing it securely to a straight wooden shaft.",
+      "cs": "Otesání ostrého hrotu z kusu pazourku a jeho pevné přivázání k rovné dřevěné násadě."
+    }
+  },
+  {
+    "id": "slice_hide_for_wraps",
+    "name": {
+      "en": "Slice Hide for Wraps",
+      "cs": "Nařezat kůži na ovinovačky"
+    },
+    "outputItemID": "crude_hide_leg_wraps",
+    "materials": {
+      "hide": 2
+    },
+    "resourceCost": {
+      "materials": 9
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Cutting long, rough strips from a raw hide to be used as leg wraps for protection.",
+      "cs": "Nařezání dlouhých, hrubých pruhů ze surové kůže k použití jako ochranné ovinovačky na nohy."
+    }
+  },
+  {
+    "id": "grind_bone_drill_point",
+    "name": {
+      "en": "Grind Bone Drill Point",
+      "cs": "Vybrousit kostěný vrták"
+    },
+    "outputItemID": "bone_hand_drill",
+    "materials": {
+      "hide": 1,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 11
+    },
+    "requiresBuilding": "hunters_lodge",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "A shard of bone is ground to a sharp point, then fixed into a wooden handle with a hide strap to turn it.",
+      "cs": "Úlomek kosti se vybrousí do ostré špičky a upevní do dřevěné rukojeti s koženým řemínkem na otáčení."
+    }
+  },
+  {
+    "id": "craft_fine_bone_carving_tool",
+    "name": {
+      "en": "Craft Fine Bone Carving Tool",
+      "cs": "Vyrobit jemný kostěný nástroj"
+    },
+    "outputItemID": "fine_bone_carving_tool",
+    "materials": {
+      "hide": 1,
+      "rough_stone": 2
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "A shard of bone is carefully sharpened with a stone, then wrapped with a leather grip for fine work.",
+      "cs": "Úlomek kosti, pečlivě nabroušený kamenem a ovinutý koženou rukojetí pro jemnou práci."
+    }
+  },
+  {
+    "id": "assemble_rope_ladder",
+    "name": {
+      "en": "Assemble Rope Ladder",
+      "cs": "Sestavit provazový žebřík"
+    },
+    "outputItemID": "woven_fiber_rope_ladder",
+    "materials": {
+      "woven_fiber_rope": 2,
+      "wood": 2
+    },
+    "resourceCost": {
+      "materials": 18
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Lengths of fiber rope knotted around sturdy wooden rungs to create a simple, portable ladder.",
+      "cs": "Kusy vláknitého lana svázané kolem pevných dřevěných příček tvoří jednoduchý přenosný žebřík."
+    }
+  },
+  {
+    "id": "weave_reed_muzzle",
+    "name": {
+      "en": "Weave Reed Muzzle",
+      "cs": "Uplést rákosový náhubek"
+    },
+    "outputItemID": "woven_reed_muzzle",
+    "materials": {
+      "greens": 3
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Pliant reeds woven into a muzzle to keep Old Bess from eating the saplings again.",
+      "cs": "Ohebná rákosina spletená do náhubku, aby Stará Běta zase neokusovala sazenice."
+    }
+  },
+  {
+    "id": "polish_bone_needle",
+    "name": {
+      "en": "Polish Bone Needle",
+      "cs": "Vyleštit kostěnou jehlu"
+    },
+    "outputItemID": "polished_bone_needle",
+    "materials": {
+      "rough_stone": 1,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 14
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "A thin bird bone is carefully ground against a flat stone to a sharp point, then polished with leather until smooth.",
+      "cs": "Tenká ptačí kost pečlivě broušená o plochý kámen do ostré špičky a vyleštěná kůží do hladka."
+    }
+  },
+  {
+    "id": "weave_thick_rain_mantle",
+    "name": {
+      "en": "Weave Thick Rain Mantle",
+      "cs": "Uplést tlustý plášť do deště"
+    },
+    "outputItemID": "thick_reed_rain_mantle",
+    "materials": {
+      "greens": 4,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Thick bundles of reeds are layered and tied with hide strips to form a stiff, water-shedding mantle.",
+      "cs": "Silné svazky rákosí se vrství a svazují koženými řemínky, aby vytvořily tuhý plášť, který odpuzuje vodu."
+    }
+  },
+  {
+    "id": "carve_crude_wooden_bit",
+    "name": {
+      "en": "Carve Crude Wooden Bit",
+      "cs": "Vyřezat hrubé dřevěné udidlo"
+    },
+    "outputItemID": "crude_wooden_bit",
+    "materials": {
+      "wood": 2
+    },
+    "resourceCost": {
+      "materials": 7
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A piece of hardwood is whittled down to a simple bit, for guiding a pack animal.",
+      "cs": "Kus tvrdého dřeva otesaný do jednoduchého udidla pro vedení tažného zvířete."
+    }
+  },
+  {
+    "id": "assemble_hide_scrapers",
+    "name": {
+      "en": "Assemble Hide Scrapers",
+      "cs": "Sestavit škrabky na kůže"
+    },
+    "outputItemID": "hide_working_scrapers",
+    "materials": {
+      "rough_stone": 2,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 13
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "A set of sharp stone flakes and shaped bones hafted onto short wooden handles, for scraping hides clean.",
+      "cs": "Sada ostrých kamenných úštěpků a tvarovaných kostí nasazených na krátké dřevěné rukojeti k očištění kůží."
+    }
+  },
+  {
+    "id": "craft_weighted_sling",
+    "name": {
+      "en": "Craft Weighted Sling",
+      "cs": "Vyrobit zatížený prak"
+    },
+    "outputItemID": "weighted_leather_sling",
+    "materials": {
+      "leather": 1,
+      "rough_stone": 1
+    },
+    "resourceCost": {
+      "materials": 16
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "A strip of cured leather with a small, dense stone sewn into the pouch for better weight and aim.",
+      "cs": "Pruh vydělané kůže s malým, hutným kamenem všitým do kapsy pro lepší váhu a míření."
+    }
+  },
+  {
+    "id": "fashion_bone_hoe",
+    "name": {
+      "en": "Fashion Bone Hoe",
+      "cs": "Vyrobit kostěnou motyku"
+    },
+    "outputItemID": "bone_digging_hoe",
+    "materials": {
+      "wood": 2,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 9
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A sturdy branch attached to a sharpened shoulder blade with hide strips. Good for breaking up tough soil.",
+      "cs": "Pevná větev připevněná k naostřené lopatce koženými řemínky. Dobrá na rozbíjení tvrdé půdy."
+    }
+  },
+  {
+    "id": "weave_grass_rain_cape",
+    "name": {
+      "en": "Weave Grass Rain Cape",
+      "cs": "Uplést travnatou pláštěnku"
+    },
+    "outputItemID": "woven_grass_rain_cape",
+    "materials": {
+      "greens": 3,
+      "woven_fiber_rope": 1
+    },
+    "resourceCost": {
+      "materials": 17
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Long, tough grasses are woven tightly and bound with fiber rope to create a surprisingly water-resistant cape.",
+      "cs": "Dlouhé, tuhé trávy jsou pevně spleteny a svázány vláknitým provazem, aby vytvořily překvapivě voděodolnou pláštěnku."
+    }
+  },
+  {
+    "id": "select_river_throwing_stone",
+    "name": {
+      "en": "Select River Throwing Stone",
+      "cs": "Vybrat říční vrhací kámen"
+    },
+    "outputItemID": "smooth_river_throwing_stone",
+    "materials": {
+      "rough_stone": 1
+    },
+    "resourceCost": {
+      "materials": 3
+    },
+    "description": {
+      "en": "Sifting through river stones to find one with the perfect weight and shape for throwing.",
+      "cs": "Probrat se říčními kameny a najít ten s dokonalou vahou a tvarem na házení."
+    }
+  },
+  {
+    "id": "weave_reed_leading_rope",
+    "name": {
+      "en": "Weave Reed Leading Rope",
+      "cs": "Uplést vodící provaz z rákosí"
+    },
+    "outputItemID": "woven_reed_leading_rope",
+    "materials": {
+      "greens": 3
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Twisting and braiding tough reeds from the riverbank into a strong, reliable rope for leading animals.",
+      "cs": "Svinout a splést tuhé rákosí od břehu řeky v pevný, spolehlivý provaz na vedení zvířat."
+    }
+  },
+  {
+    "id": "create_bone_sewing_kit",
+    "name": {
+      "en": "Create Bone Sewing Kit",
+      "cs": "Vytvořit kostěnou šicí soupravu"
+    },
+    "outputItemID": "bone_sewing_kit",
+    "materials": {
+      "hide": 2,
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Sharpening splinters of bone into needles and awls, and bundling them with sinew thread in a small hide pouch.",
+      "cs": "Z úštěpků kostí vybrousit jehly a šídla a svázat je se šlachou do malého koženého váčku."
+    }
+  },
+  {
+    "id": "stitch_crude_hide_mitts",
+    "name": {
+      "en": "Stitch Crude Hide Mitts",
+      "cs": "Sešít hrubé rukavice z kůže"
+    },
+    "outputItemID": "crude_hide_mitts",
+    "materials": {
+      "hide": 2
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Roughly cutting and stitching two pieces of uncured hide to protect the hands from cold and splinters.",
+      "cs": "Hrubě ustřihnout a sešít dva kusy nevyčiněné kůže na ochranu rukou před chladem a třískami."
+    }
+  },
+  {
+    "id": "assemble_hunting_spear",
+    "name": {
+      "en": "Assemble Flint Tipped Spear",
+      "cs": "Sestavit oštěp s pazourkovým hrotem"
+    },
+    "outputItemID": "flint_tipped_hunting_spear",
+    "materials": {
+      "wood": 2,
+      "rough_stone": 1,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 18
+    },
+    "requiresBuilding": "hunters_lodge",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Lashing a carefully knapped flint point to a straight, fire-hardened wooden shaft. A true hunter's weapon.",
+      "cs": "Opatrně štípaný pazourkový hrot připevněný k rovné, ohněm tvrzené dřevěné násadě. Zbraň opravdového lovce."
+    }
+  },
+  {
+    "id": "select_throwing_stone",
+    "name": {
+      "en": "Select a Throwing Stone",
+      "cs": "Vybrat vrhací kámen"
+    },
+    "outputItemID": "smooth_river_throwing_stone",
+    "materials": {
+      "rough_stone": 1
+    },
+    "resourceCost": {
+      "materials": 2
+    },
+    "description": {
+      "en": "Sifting through river stones to find one with the perfect weight and balance for throwing.",
+      "cs": "Probrat říční kameny a najít jeden s dokonalou váhou a vyvážením pro hod."
+    }
+  },
+  {
+    "id": "braid_reed_rope",
+    "name": {
+      "en": "Braid a Reed Rope",
+      "cs": "Uplést rákosový provaz"
+    },
+    "outputItemID": "woven_reed_leading_rope",
+    "materials": {
+      "strong_plant_fibers": 3
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Twisting and braiding bundles of dried reeds into a strong, simple rope for leading animals.",
+      "cs": "Svinout a splést svazky sušeného rákosí do pevného, jednoduchého provazu na vedení zvířat."
+    }
+  },
+  {
+    "id": "fashion_crude_mitts",
+    "name": {
+      "en": "Fashion Crude Mitts",
+      "cs": "Vyrobit hrubé rukavice"
+    },
+    "outputItemID": "crude_hide_mitts",
+    "materials": {
+      "hide": 2
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Stitching together scraps of hide to make simple, warm mitts for cold mornings.",
+      "cs": "Sešít zbytky kůže do jednoduchých, teplých palčáků do chladných rán."
+    }
+  },
+  {
+    "id": "haft_flint_spear",
+    "name": {
+      "en": "Haft Flint Spear",
+      "cs": "Sestavit pazourkový oštěp"
+    },
+    "outputItemID": "flint_tipped_hunting_spear",
+    "materials": {
+      "wood": 1,
+      "flint_arrowheads": 1,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 18
+    },
+    "requiresBuilding": "hunters_lodge",
+    "requiresTech": "basic_tools",
+    "description": {
+      "en": "Lashing a sharp flint point to a seasoned wooden shaft to create a reliable hunting spear.",
+      "cs": "Připevnit ostrý pazourkový hrot na dřevěnou násadu a vytvořit tak spolehlivý lovecký oštěp."
+    }
+  },
+  {
+    "id": "carve_clay_shaping_tools",
+    "name": {
+      "en": "Carve Clay Shaping Tools",
+      "cs": "Vyřezat hliněné modelářské nástroje"
+    },
+    "outputItemID": "clay_shaping_tools",
+    "materials": {
+      "wood": 2,
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "hut",
+    "requiresTech": "pottery",
+    "description": {
+      "en": "Whittling wood and shaping bone fragments into a basic set of tools for working with clay.",
+      "cs": "Vyřezat ze dřeva a úlomků kostí základní sadu nástrojů pro práci s jílem."
+    }
+  },
+  {
+    "id": "craft_thick_hide_bracers",
+    "name": {
+      "en": "Craft Thick Hide Bracers",
+      "cs": "Udělat nátepníky z tlusté kůže"
+    },
+    "outputItemID": "thick_hide_bracers",
+    "materials": {
+      "hide": 3,
+      "greens": 1
+    },
+    "resourceCost": {
+      "materials": 15
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Stitching together several layers of cured hide to protect the forearms.",
+      "cs": "Sešití několika vrstev vydělané kůže pro ochranu předloktí."
+    }
+  },
+  {
+    "id": "carve_hardwood_throwing_spear",
+    "name": {
+      "en": "Carve Hardwood Throwing Spear",
+      "cs": "Vyřezat oštěp z tvrdého dřeva"
+    },
+    "outputItemID": "hardwood_throwing_spear",
+    "materials": {
+      "wood": 2,
+      "rough_stone": 1
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Shaping a straight, dense branch into a balanced spear and sharpening the tip with a stone.",
+      "cs": "Z rovné, husté větve vytvarovat vyvážený oštěp a kámenem naostřit jeho hrot."
+    }
+  },
+  {
+    "id": "weave_reed_gatherers_hat",
+    "name": {
+      "en": "Weave Reed Gatherer's Hat",
+      "cs": "Uplést rákosový klobouk"
+    },
+    "outputItemID": "woven_reed_gatherers_hat",
+    "materials": {
+      "greens": 3
+    },
+    "resourceCost": {
+      "materials": 6
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Weaving dried reeds into a wide-brimmed hat to provide shade during long days of foraging.",
+      "cs": "Spletení sušeného rákosí do klobouku se širokou krempou, který poskytne stín při dlouhých dnech sběru."
+    }
+  },
+  {
+    "id": "fashion_bone_hide_awl",
+    "name": {
+      "en": "Fashion Bone & Hide Awl",
+      "cs": "Vyrobit kostěné šídlo"
+    },
+    "outputItemID": "bone_hide_awl",
+    "materials": {
+      "hide": 1,
+      "rough_stone": 1
+    },
+    "resourceCost": {
+      "materials": 7
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Sharpening a bone splinter into a fine point and wrapping the base in hide for a secure grip.",
+      "cs": "Naostření kostěného úlomku do špičky a obalení rukojeti kůží pro pevný úchop."
+    }
+  },
+  {
+    "id": "braid_simple_lead_rope",
+    "name": {
+      "en": "Braid Simple Lead Rope",
+      "cs": "Uplést jednoduchý vodicí provaz"
+    },
+    "outputItemID": "simple_animal_lead_rope",
+    "materials": {
+      "greens": 4
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Twisting and braiding strong plant fibers together to create a durable rope for leading animals.",
+      "cs": "Zkroucení a spletení pevných rostlinných vláken do odolného provazu pro vedení zvířat."
+    }
+  },
+  {
+    "id": "fashion_thick_hide_bracers",
+    "name": {
+      "en": "Fashion Thick Hide Bracers",
+      "cs": "Vyrobit tlusté kožené nátepníky"
+    },
+    "outputItemID": "thick_hide_bracers",
+    "materials": {
+      "hide": 3
+    },
+    "resourceCost": {
+      "materials": 18
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Layering and stitching tough hide to protect the forearms in a fight. Old Man Hemlock says they're the difference between a scratch and a lost arm.",
+      "cs": "Vrstvení a sešívání tuhé kůže pro ochranu předloktí v boji. Starý Jílek říká, že je to rozdíl mezi škrábancem a ztracenou rukou."
+    }
+  },
+  {
+    "id": "sew_thick_hide_rain_boots",
+    "name": {
+      "en": "Sew Thick Hide Rain Boots",
+      "cs": "Ušít boty do deště z tlusté kůže"
+    },
+    "outputItemID": "thick_hide_rain_boots",
+    "materials": {
+      "hide": 2,
+      "rendered_animal_fat": 1
+    },
+    "resourceCost": {
+      "materials": 20
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Stitching sturdy hide boots and coating them with animal fat to make them waterproof for the marshy lowlands.",
+      "cs": "Ušít pevné kožené boty a potřít je zvířecím tukem, aby nepromokly v podmáčených nížinách."
+    }
+  },
+  {
+    "id": "shape_hardwood_throwing_spear",
+    "name": {
+      "en": "Shape Hardwood Throwing Spear",
+      "cs": "Vytvarovat vrhací oštěp z tvrdého dřeva"
+    },
+    "outputItemID": "hardwood_throwing_spear",
+    "materials": {
+      "wood": 2,
+      "rough_stone": 1
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A straight, dense branch is stripped and its point fire-hardened and sharpened with a stone flake.",
+      "cs": "Rovná, hustá větev se oloupe a její hrot se vytvrdí v ohni a naostří kamenným úštěpem."
+    }
+  },
+  {
+    "id": "weave_woven_reed_rain_cloak",
+    "name": {
+      "en": "Weave Reed Rain Cloak",
+      "cs": "Uplést rákosový plášť do deště"
+    },
+    "outputItemID": "woven_reed_rain_cloak",
+    "materials": {
+      "strong_plant_fibers": 4
+    },
+    "resourceCost": {
+      "materials": 12
+    },
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "A coarse, tightly woven cloak of river reeds. It won't keep out a downpour, but it's enough to stay dry in a drizzle.",
+      "cs": "Hrubý, pevně utkaný plášť z říčního rákosí. Před lijákem neochrání, ale v mrholení stačí, aby člověk zůstal v suchu."
+    }
+  },
+  {
+    "id": "braid_simple_animal_lead_rope",
+    "name": {
+      "en": "Braid Simple Animal Lead Rope",
+      "cs": "Uplést jednoduché vodící lano"
+    },
+    "outputItemID": "simple_animal_lead_rope",
+    "materials": {
+      "strong_plant_fibers": 2
+    },
+    "resourceCost": {
+      "materials": 8
+    },
+    "description": {
+      "en": "Twisting and braiding long strands of tough plant fiber into a sturdy rope for leading pack animals.",
+      "cs": "Spletením dlouhých pramenů tuhých rostlinných vláken vznikne pevné lano pro vedení nákladních zvířat."
+    }
+  },
+  {
+    "id": "sharpen_bone_splinter",
+    "name": {
+      "en": "Sharpen Bone Splinter",
+      "cs": "Naostřit kostěnou třísku"
+    },
+    "outputItemID": "sharpened_bone_splinter",
+    "materials": {
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 5
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "A long bone from a deer, cracked open and a sharp splinter worked against a rough stone until it holds a keen edge.",
+      "cs": "Ostrá tříska z dlouhé jelení kosti, vybroušená o hrubý kámen do ostré hrany."
+    }
+  },
+  {
+    "id": "make_bone_carving_chisels",
+    "name": {
+      "en": "Make Bone Carving Chisels",
+      "cs": "Vyrobit kostěná dláta"
+    },
+    "outputItemID": "bone_carving_chisels",
+    "materials": {
+      "hide": 2
+    },
+    "resourceCost": {
+      "materials": 10
+    },
+    "requiresBuilding": "workshop",
+    "description": {
+      "en": "Grinding down knuckle bones into various fine points and edges, useful for detailed carving work.",
+      "cs": "Kloubní kosti vybroušené do různých jemných špiček a ostří, vhodné pro detailní řezbu."
+    }
+  },
+  {
+    "id": "sharpen_deer_antler",
+    "name": {
+      "en": "Sharpen Deer Antler",
+      "cs": "Zaostřit jelení paroh"
+    },
+    "outputItemID": "sharpened_deer_antler",
+    "materials": {
+      "hide": 1
+    },
+    "resourceCost": {
+      "materials": 7
+    },
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "The tip of a shed antler is ground to a sharp point, making for a sturdy piercing tool.",
+      "cs": "Špička shozeného parohu, vybroušená do ostrého hrotu. Pevný a účinný nástroj na bodání."
+    }
+  },
+  {
+    "id": "carve_clay_shaping_rib",
+    "name": {
+      "en": "Carve Clay Shaping Rib",
+      "cs": "Vyřezat hrnčířskou stěrku"
+    },
+    "outputItemID": "clay_shaping_rib",
+    "materials": {
+      "wood": 1
+    },
+    "resourceCost": {
+      "materials": 6
+    },
+    "requiresBuilding": "hut",
+    "requiresTech": "pottery",
+    "description": {
+      "en": "A piece of hardwood, carefully carved and sanded smooth to help shape the walls of a wet clay pot.",
+      "cs": "Kus tvrdého dřeva, pečlivě vyřezaný a vyhlazený. Pomáhá tvarovat stěny nádob z mokré hlíny."
     }
   }
 ]

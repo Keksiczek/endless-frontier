@@ -149,7 +149,7 @@ enum SettlementGround {
                         // shows the snow's own marks instead.
                         mark(&texture, cover: cover,
                              at: CGPoint(x: x + tw / 2, y: y + th / 2),
-                             size: min(tw, th), hash: h)
+                             size: min(tw, th), hash: h, registry: registry)
                     }
                 }
             }
@@ -266,14 +266,27 @@ enum SettlementGround {
     /// The grain of a given earth: what a tile of it has scratched on it.
     private static func mark(
         _ into: inout [GroundCover: Path], cover: GroundCover,
-        at c: CGPoint, size: CGFloat, hash h: UInt64
+        at c: CGPoint, size: CGFloat, hash h: UInt64,
+        registry: GameDataRegistry
     ) {
         let jx = (CGFloat(unit(h >> 4)) - 0.5) * size * 0.5
         let jy = (CGFloat(unit(h >> 8)) - 0.5) * size * 0.5
         let p = CGPoint(x: c.x + jx, y: c.y + jy)
         var path = into[cover] ?? Path()
-        switch cover {
-        case .grass, .meadow:
+        // **Which mark, off the data rather than off the enum.**
+        //
+        // `baseCover` two functions down already says the intent out loud — "a
+        // thirteenth kind of country is an entry rather than four new `case`s
+        // across this file" — and the colour honoured it while the *mark* did
+        // not: this switched on the cover, so `texture` in `ground.json` was a
+        // field the checker validated, the generator was told to write, and
+        // nothing on screen ever read. Eight new grounds would have been eight
+        // colours with no grain, or a compile error, depending on the default.
+        //
+        // The names are the closed list `content_kinds.py` states, which is now
+        // the same list this switch answers to.
+        switch registry.ground(cover.rawValue).texture {
+        case "blades":
             // Two blades, leaning.
             for k in 0..<2 {
                 let lean = (CGFloat(unit(h >> (10 + UInt64(k) * 3))) - 0.5) * size * 0.35
@@ -281,33 +294,33 @@ enum SettlementGround {
                 path.addLine(to: CGPoint(x: p.x + CGFloat(k) * size * 0.22 + lean,
                                          y: p.y - size * 0.24))
             }
-        case .dirt:
+        case "pebbles":
             // Pebbles: short flat dashes.
             path.move(to: CGPoint(x: p.x - size * 0.16, y: p.y))
             path.addLine(to: CGPoint(x: p.x + size * 0.16, y: p.y))
-        case .sand:
+        case "ripples":
             // Wind ripples.
             path.move(to: CGPoint(x: p.x - size * 0.28, y: p.y))
             path.addQuadCurve(to: CGPoint(x: p.x + size * 0.28, y: p.y),
                               control: CGPoint(x: p.x, y: p.y - size * 0.20))
-        case .rock:
+        case "crack":
             // A crack, angular.
             path.move(to: CGPoint(x: p.x - size * 0.22, y: p.y - size * 0.16))
             path.addLine(to: CGPoint(x: p.x + size * 0.04, y: p.y + size * 0.06))
             path.addLine(to: CGPoint(x: p.x + size * 0.24, y: p.y - size * 0.10))
-        case .snow:
+        case "glint":
             // A glint.
             path.move(to: CGPoint(x: p.x - size * 0.12, y: p.y))
             path.addLine(to: CGPoint(x: p.x + size * 0.12, y: p.y))
             path.move(to: CGPoint(x: p.x, y: p.y - size * 0.12))
             path.addLine(to: CGPoint(x: p.x, y: p.y + size * 0.12))
-        case .marsh:
+        case "reed":
             // A tuft of reed.
             path.move(to: CGPoint(x: p.x, y: p.y + size * 0.24))
             path.addLine(to: CGPoint(x: p.x - size * 0.14, y: p.y - size * 0.24))
             path.move(to: CGPoint(x: p.x, y: p.y + size * 0.24))
             path.addLine(to: CGPoint(x: p.x + size * 0.16, y: p.y - size * 0.20))
-        case .fern:
+        case "frond":
             // A frond: a stem with fingers off it, fuller than a blade.
             path.move(to: CGPoint(x: p.x, y: p.y + size * 0.26))
             path.addLine(to: CGPoint(x: p.x, y: p.y - size * 0.26))
@@ -318,7 +331,7 @@ enum SettlementGround {
                 path.move(to: CGPoint(x: p.x, y: y))
                 path.addLine(to: CGPoint(x: p.x + size * 0.20, y: y - size * 0.10))
             }
-        case .heath:
+        case "sprig":
             // Low woody scrub: a sprig with a couple of stiff shoots.
             path.move(to: CGPoint(x: p.x, y: p.y + size * 0.22))
             path.addLine(to: CGPoint(x: p.x - size * 0.06, y: p.y - size * 0.10))
@@ -326,7 +339,7 @@ enum SettlementGround {
             path.addLine(to: CGPoint(x: p.x - size * 0.22, y: p.y - size * 0.14))
             path.move(to: CGPoint(x: p.x - size * 0.04, y: p.y + size * 0.02))
             path.addLine(to: CGPoint(x: p.x + size * 0.18, y: p.y - size * 0.16))
-        case .moss:
+        case "stipple":
             // Stipple: a cushion rather than anything with a stem.
             for k in 0..<3 {
                 let a = Double(k) * 2.1 + unit(h >> 12) * 6.28
@@ -335,7 +348,7 @@ enum SettlementGround {
                 path.move(to: q)
                 path.addLine(to: CGPoint(x: q.x + size * 0.06, y: q.y))
             }
-        case .scree:
+        case "chips":
             // Chips: short strokes lying at odds with each other.
             for k in 0..<2 {
                 let a = unit(h >> UInt64(14 + k * 3)) * 3.14
@@ -345,11 +358,18 @@ enum SettlementGround {
                 path.addLine(to: CGPoint(x: p.x + CGFloat(cos(a)) * d,
                                          y: p.y + CGFloat(sin(a)) * d * 0.7))
             }
-        case .clay:
+        case "driedCrack":
             // A dried crack, smoother and more meandering than rock's.
             path.move(to: CGPoint(x: p.x - size * 0.24, y: p.y - size * 0.06))
             path.addQuadCurve(to: CGPoint(x: p.x + size * 0.24, y: p.y + size * 0.06),
                               control: CGPoint(x: p.x, y: p.y - size * 0.18))
+        default:
+            // Ground whose texture nothing here draws gets the plainest mark
+            // there is rather than nothing — a flat dash reads as *grain*, and
+            // an unmarked tile reads as a bug. `GroundTextureTests` fails if a
+            // shipped ground ever lands here.
+            path.move(to: CGPoint(x: p.x - size * 0.14, y: p.y))
+            path.addLine(to: CGPoint(x: p.x + size * 0.14, y: p.y))
         }
         into[cover] = path
     }

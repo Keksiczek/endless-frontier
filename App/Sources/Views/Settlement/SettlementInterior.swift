@@ -57,10 +57,16 @@ enum SettlementInterior {
 
     /// One fitting's place inside its lot, in lot-fractions of −0.5…0.5.
     ///
-    /// Deliberately lot-relative rather than in pixels or map space: the
-    /// renderer multiplies by the pixel footprint, `AgentMotion` multiplies by
-    /// the normalised one, and both land on the same spot. That is the whole
-    /// reason a colonist can be drawn *at* the anvil rather than near it.
+    /// Deliberately **room-relative** rather than in pixels or map space: the
+    /// renderer multiplies by the room's pixel size, `AgentMotion` by the
+    /// normalised one (`WorkSite.place`), and both land on the same spot. That
+    /// is the whole reason a colonist can be drawn *at* the anvil rather than
+    /// near it.
+    ///
+    /// It said "lot-relative" for a while after the drawing had moved to the
+    /// room, and the one caller that believed the comment — the beds — put a
+    /// household to sleep across the whole parcel while their mattresses were
+    /// drawn inside the walls.
     struct Slot: Equatable, Sendable {
         let dx: Double
         let dy: Double
@@ -78,7 +84,15 @@ enum SettlementInterior {
         let plan = furnishing(glyph)
         // Enough seats for everyone the engine posted here, within reason: a
         // room is a room, not a stadium.
-        let wanted = max(plan.minimum, min(plan.maximum, stations))
+        //
+        // The ceiling used to be a small constant per kind, and a workshop the
+        // engine had posted eight people to laid out five places — so three of
+        // them were seated *on top of* somebody else by `index % count`, which
+        // is what "lidi v budovách jsou hodně na sobě" looks like from the
+        // inside. The ring is laid out by division, not by a fixed pitch, so
+        // more places do not overlap; they just stand closer. `stationCeiling`
+        // is where the "not a stadium" part lives now.
+        let wanted = max(plan.minimum, min(stationCeiling(plan.maximum), stations))
         var slots: [Slot] = []
         var h = seed | 1
 
@@ -87,8 +101,15 @@ enum SettlementInterior {
             return Double((h >> 40) & 0xFFFF) / 65535
         }
 
-        // Work stations first, laid along the inside of the walls.
-        let ring = perimeter(count: wanted, jitter: { roll() })
+        // Work stations first, laid along the inside of the walls — and on a
+        // second, tighter ring once the wall is full, which is how a real
+        // crowded workroom is arranged and how ten people stand in one room
+        // without standing in each other.
+        let onWall = min(wanted, ringCapacity)
+        var ring = perimeter(count: onWall, jitter: { roll() })
+        if wanted > onWall {
+            ring += perimeter(count: wanted - onWall, jitter: { roll() }, scale: 0.55)
+        }
         for (i, point) in ring.enumerated() {
             slots.append(Slot(dx: point.dx, dy: point.dy,
                               fitting: plan.stations[i % plan.stations.count]))
@@ -155,9 +176,19 @@ enum SettlementInterior {
 
     /// `count` places spread around the inside of the walls, walking the
     /// perimeter so two stations are never on top of each other.
-    private static func perimeter(count: Int, jitter: () -> Double) -> [(dx: Double, dy: Double)] {
+    /// How many places one lap of the wall holds before it is worth starting a
+    /// second ring inside it. Eight is two a side.
+    static let ringCapacity = 8
+
+    /// The most places any room lays out. Past this a room is a crowd scene,
+    /// and the engine posting thirty people to one building is the thing to
+    /// fix rather than the drawing.
+    private static func stationCeiling(_ stated: Int) -> Int { max(stated, 12) }
+
+    private static func perimeter(count: Int, jitter: () -> Double,
+                                  scale: Double = 1) -> [(dx: Double, dy: Double)] {
         guard count > 0 else { return [] }
-        let reach = 0.5 - wallInset - 0.06
+        let reach = (0.5 - wallInset - 0.06) * scale
         return (0..<count).map { i in
             // Walk the perimeter of a square, starting at the back wall so the
             // first (and often only) worker faces the door.

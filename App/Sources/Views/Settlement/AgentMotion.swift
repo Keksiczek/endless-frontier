@@ -156,6 +156,43 @@ enum AgentMotion {
             : HuntEngine.Phase.stalking.rawValue
     }
 
+    /// Which of several equally-fitting clips *this* colonist plays right now.
+    ///
+    /// The motion bank holds seven ways to work a field and six ways to work a
+    /// building site, and until this existed the colony played one of each: the
+    /// registry broke ties on id, so every farmer dug and seventeen clips of
+    /// forty-eight were never drawn at all. Variety is not more content, it is
+    /// a seed to choose content with.
+    ///
+    /// Seeded from the colonist **and the piece of work they are on**, which is
+    /// what makes it read as people rather than as noise:
+    ///
+    /// - Two farmers in the same field are drawn doing different things,
+    ///   because their ids differ.
+    /// - One farmer keeps their clip for as long as they are on that plot —
+    ///   the seed does not move between frames, so nobody flickers between
+    ///   sowing and reaping sixty times a second.
+    /// - Finishing a plot and starting the next one deals a new clip, which is
+    ///   the moment the work genuinely changed.
+    ///
+    /// Presentation only, and pure: same colonist, same job, same clip, for
+    /// ever. Nothing here is written back to the simulation (rule 5).
+    static func motionVariant(for pawn: Pawn) -> UInt64 {
+        var h: UInt64 = 0xCBF2_9CE4_8422_2325
+        let u = pawn.id.uuid
+        for byte in [u.0, u.1, u.2, u.3, u.4, u.5, u.6, u.7,
+                     u.8, u.9, u.10, u.11, u.12, u.13, u.14, u.15] {
+            h = (h ^ UInt64(byte)) &* 0x0100_0000_01B3
+        }
+        if let job = pawn.currentJob {
+            let j = job.id.uuid
+            for byte in [j.0, j.1, j.2, j.3, j.4, j.5, j.6, j.7] {
+                h = (h ^ UInt64(byte)) &* 0x0100_0000_01B3
+            }
+        }
+        return h ^ (h >> 29)
+    }
+
     /// The x-component of a heading from `a` to `b`, normalised — what `Pose`
     /// carries as `facing`. Zero for two points on top of each other, so a
     /// colonist who has arrived does not spin.
@@ -187,8 +224,40 @@ enum AgentMotion {
         /// them. The roster is an order, so it is the seating plan: the first
         /// name on the building's books takes the first station.
         let byPawn: [UUID: LocalPoint]
+        /// **The way in.** A point just outside the front wall, on the door.
+        ///
+        /// Colonists used to arrive at their station by the shortest line from
+        /// wherever they had been standing, which for half the colony meant
+        /// walking through a side wall or the back of the roof. A building has
+        /// had a drawn door the whole time and nothing that moved knew where it
+        /// was. Read from `SettlementStructures.doorOffset`, the same number the
+        /// door is drawn at, so they cannot disagree.
+        let entrance: LocalPoint
+        /// Which building this is, by `buildings.json` id — what the motion
+        /// bank keys `serves_buildings` on, so the smith at the forge and the
+        /// weaver at the loom are drawn doing different things.
+        let definitionID: String
+        /// The floor inside the walls, in normalised map units — the space a
+        /// `SettlementInterior.Slot` is measured against.
+        let roomW: Double
+        let roomH: Double
+
+        /// Where a furniture slot actually stands on the map.
+        ///
+        /// The one place this arithmetic is written down. `Slot`'s own comment
+        /// used to call itself "lot-relative", and the interior drawing had
+        /// long since moved to measuring against the **room** — so the beds
+        /// `AgentMotion` placed (which had kept the lot) were the only thing in
+        /// the game still using the old measure. A household went to sleep
+        /// spread across the whole parcel while their beds were drawn in a
+        /// tight ring inside the walls: nobody was on a mattress, and the ones
+        /// the lot pushed together were drawn standing in each other.
+        func place(_ slot: SettlementInterior.Slot) -> LocalPoint {
+            LocalPoint(x: center.x + slot.dx * roomW, y: center.y + slot.dy * roomH)
+        }
 
         init(_ b: SettlementRenderer.NormalizedBuilding) {
+            definitionID = b.definitionID
             center = b.center
             halfW = b.footprintW / 2
             halfH = b.footprintH / 2
@@ -202,6 +271,8 @@ enum AgentMotion {
                 aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1)
             let roomW = walls.width * (1 - SettlementInterior.wallInset * 2)
             let roomH = walls.height * (1 - SettlementInterior.wallInset * 2)
+            self.roomW = roomW
+            self.roomH = roomH
             let places = SettlementInterior
                 .stationSlots(for: b.glyph, seed: b.seed, stations: b.assignedPawnIDs.count)
                 .map { LocalPoint(x: b.center.x + $0.dx * roomW,
@@ -212,6 +283,13 @@ enum AgentMotion {
                 seating[id] = places[index % places.count]
             }
             byPawn = seating
+            // On the threshold: along the front wall at the door, and a step
+            // clear of it so somebody standing in the doorway is *in* the
+            // doorway rather than inside the room already.
+            let dx = SettlementStructures.doorOffset(
+                b.glyph, seed: b.seed, width: CGFloat(walls.width), s: CGFloat(b.size))
+            entrance = LocalPoint(x: b.center.x + dx * walls.width,
+                                  y: b.center.y + walls.height * 0.5 + b.size * 0.12)
         }
     }
 
@@ -294,8 +372,7 @@ enum AgentMotion {
                         // hundred mattresses in one hut.
                         bedsByHome[placementID] = SettlementInterior
                             .bedSlots(seed: building.seed, sleepers: def?.sleepers ?? 4)
-                            .map { LocalPoint(x: building.center.x + $0.dx * building.footprintW,
-                                              y: building.center.y + $0.dy * building.footprintH) }
+                            .map(site.place)
                     }
                 }
                 // Everyone the engine posted here stands here.
@@ -687,30 +764,76 @@ enum AgentMotion {
         // is not a break, so half of it has to be left to stand about in.
         let midday = shape.middayEnd - shape.middayStart
         let comesIn = distance(work, social) / walkSpeed < midday * 0.5
-        guard comesIn else {
-            return [
-                Waypoint(at: 0.0, place: home, doing: .sleeping),
-                Waypoint(at: shape.wake, place: home, doing: .atHome),
-                Waypoint(at: shape.workStart, place: work, doing: .working),
-                // A break taken where the work is: they stop, they eat, they
-                // are not drawn crossing the map twice for it.
-                Waypoint(at: shape.middayStart,
-                         place: jitter(work, seed: seed &>> 13, radius: 0.02),
-                         doing: .socializing),
-                Waypoint(at: shape.middayEnd, place: work, doing: .working),
-                Waypoint(at: shape.workEnd, place: home, doing: .atHome),
-                Waypoint(at: shape.bed, place: home, doing: .sleeping),
-            ]
+        // **The threshold.** When the work is indoors, the last of the walk in
+        // and the first of the walk out are made at the door, so a colonist
+        // enters the way the building says you enter it. Outdoors this is nil
+        // and the legs are the straight lines they always were — a field has no
+        // door and putting one in front of it would be worse than the bug.
+        let door = workEntrance(for: pawn, map: map, scene: scene)
+        // How much of the day the doorstep leg takes. Small: this is the last
+        // few steps of a walk, not a stop.
+        let step = 0.012
+
+        var day: [Waypoint] = []
+        // Written out step by step rather than as one expression: the whole day
+        // as a single chain of `+` was more than the type-checker would take.
+        func go(_ at: Double, _ place: LocalPoint, _ doing: Activity) {
+            day.append(Waypoint(at: at, place: place, doing: doing))
         }
-        return [
-            Waypoint(at: 0.0, place: home, doing: .sleeping),
-            Waypoint(at: shape.wake, place: home, doing: .atHome),
-            Waypoint(at: shape.workStart, place: work, doing: .working),
-            Waypoint(at: shape.middayStart, place: social, doing: .socializing),
-            Waypoint(at: shape.middayEnd, place: work, doing: .working),
-            Waypoint(at: shape.workEnd, place: home, doing: .atHome),
-            Waypoint(at: shape.bed, place: home, doing: .sleeping),
-        ]
+        /// The last few steps into a building, taken at its door.
+        func arrive(_ at: Double) {
+            guard let door else { return }
+            day.append(Waypoint(at: at - step, place: door, doing: .walking))
+        }
+        /// …and the first few steps out of it.
+        func leave(_ at: Double) {
+            guard let door else { return }
+            day.append(Waypoint(at: at + step, place: door, doing: .walking))
+        }
+
+        go(0.0, home, .sleeping)
+        go(shape.wake, home, .atHome)
+        arrive(shape.workStart)
+        go(shape.workStart, work, .working)
+        if comesIn {
+            leave(shape.middayStart)
+            go(shape.middayStart, social, .socializing)
+            arrive(shape.middayEnd)
+        } else {
+            // A break taken where the work is: they stop, they eat, they are
+            // not drawn crossing the map twice for it.
+            go(shape.middayStart, jitter(work, seed: seed &>> 13, radius: 0.02),
+               .socializing)
+        }
+        go(shape.middayEnd, work, .working)
+        leave(shape.workEnd)
+        go(shape.workEnd, home, .atHome)
+        go(shape.bed, home, .sleeping)
+        return day
+    }
+
+    /// The building a colonist is posted to, by id — nil when their work is
+    /// out of doors. What `serves_buildings` is matched against.
+    static func workBuilding(for pawn: Pawn, scene: Scene) -> String? {
+        scene.posts[pawn.id]?.definitionID
+    }
+
+    /// **The door of the building this colonist works in**, or nil when their
+    /// work has no walls around it.
+    ///
+    /// A field, a wood, a quarry face and a scaffold have no way in — you are
+    /// either standing on the work or you are not. A workshop does, and a
+    /// colonist who arrives at the anvil without having passed the door reads
+    /// as walking through the wall, which is what they have been doing.
+    ///
+    /// Deliberately answers for the **posted** case only, and in the same order
+    /// `workplace` does: a colonist the engine has sent to a named job is at
+    /// that job, outdoors, and gets no door.
+    static func workEntrance(for pawn: Pawn, map: LocalMap, scene: Scene) -> LocalPoint? {
+        guard pawn.currentJob == nil else { return nil }
+        guard realThing(for: pawn, map: map, seed: hash(pawn.id)) == nil else { return nil }
+        guard pawn.assignedWork.harvestedDeposits.isEmpty else { return nil }
+        return scene.posts[pawn.id]?.entrance
     }
 
     /// The spot a colonist's trade is actually plied at.

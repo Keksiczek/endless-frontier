@@ -1208,5 +1208,1093 @@
     "serves_work": [
       "foraging"
     ]
+  },
+  {
+    "id": "working_bloomery",
+    "name": {
+      "en": "Pumping Bellows",
+      "cs": "Dutí měchů"
+    },
+    "description": {
+      "en": "Pumping a steady stream of air into the bloomery furnace. A heavy, rhythmic motion of one arm, with the body braced for the effort.",
+      "cs": "Stálý, mocný pohyb jednou paží do dmýchadla pece, tělo zapřené. Těžká, rytmická práce."
+    },
+    "serves_buildings": [
+      "bloomery"
+    ],
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "legs": {
+      "amplitude": 0.2,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 1.8,
+      "frequency": 0.7
+    },
+    "slouch": 0.6,
+    "reach": 1.5,
+    "hand_height": -0.8
+  },
+  {
+    "id": "researching_library",
+    "name": {
+      "en": "Studying Texts",
+      "cs": "Studiem textů"
+    },
+    "description": {
+      "en": "Bent over a book or scroll at a desk in the library, occasionally making a note. The body is almost still, lost in thought.",
+      "cs": "Skloněný nad knihou nebo svitkem u stolu v knihovně, občas si udělá poznámku. Tělo je téměř v nehybnosti, ztraceno v myšlenkách."
+    },
+    "serves_buildings": [
+      "library"
+    ],
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "research"
+    ],
+    "legs": {
+      "amplitude": 0,
+      "frequency": 0
+    },
+    "tool_arm": {
+      "amplitude": 0.3,
+      "frequency": 0.4
+    },
+    "slouch": 0.7,
+    "reach": 1.2,
+    "hand_height": -0.2
+  },
+  {
+    "id": "milling_grain_windmill",
+    "name": {
+      "en": "Milling Grain",
+      "cs": "Mletí zrní"
+    },
+    "description": {
+      "en": "Heaving sacks of grain and flour around the windmill. A full-body effort of lifting and carrying in the dusty air.",
+      "cs": "Přehazování pytlů s obilím a moukou ve mlýně. Práce pro celé tělo v zaprášeném vzduchu."
+    },
+    "serves_buildings": [
+      "windmill"
+    ],
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "cooking"
+    ],
+    "legs": {
+      "amplitude": 0.6,
+      "frequency": 1.2
+    },
+    "tool_arm": {
+      "amplitude": 0.8,
+      "frequency": 1
+    },
+    "slouch": 0.5,
+    "lean": 0.3,
+    "reach": 0.8,
+    "hand_height": -0.4
+  },
+  {
+    "id": "casting_metal_foundry",
+    "name": {
+      "en": "Casting Metal",
+      "cs": "Odlévání kovu"
+    },
+    "description": {
+      "en": "Carefully pouring molten metal from a crucible into a mold. Intense focus is needed for the slow, deliberate, and dangerous work.",
+      "cs": "Opatrné lití roztaveného kovu z kelímku do formy. Je třeba naprosté soustředění pro pomalou, promyšlenou a nebezpečnou práci."
+    },
+    "serves_buildings": [
+      "foundry"
+    ],
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "legs": {
+      "amplitude": 0.3,
+      "frequency": 0.4
+    },
+    "tool_arm": {
+      "amplitude": 0.5,
+      "frequency": 0.3
+    },
+    "slouch": 0.4,
+    "lean": 0.2,
+    "reach": 1.9,
+    "hand_height": -0.7
+  },
+  {
+    "id": "bench_crafting_workshop",
+    "name": {
+      "en": "Bench Crafting",
+      "cs": "Práce na ponku"
+    },
+    "description": {
+      "en": "Working on a small piece at the workbench, using a file or a small saw. Quick, repetitive hand motions requiring precision.",
+      "cs": "Práce na malém kusu u ponku s pilníkem nebo malou pilkou. Rychlé, opakované pohyby rukou, které vyžadují přesnost."
+    },
+    "serves_buildings": [
+      "workshop"
+    ],
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "legs": {
+      "amplitude": 0.1,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 0.7,
+      "frequency": 5
+    },
+    "slouch": 0.5,
+    "reach": 1.4,
+    "hand_height": -0.1
+  },
+  {
+    "id": "breaking_stone_quarry",
+    "name": {
+      "en": "Breaking Stone",
+      "cs": "Lámání kamene"
+    },
+    "description": {
+      "en": "Swinging a heavy sledgehammer to break up rock in the quarry. It's a full-body motion, putting the back and shoulders into every blow.",
+      "cs": "Těžkým perlíkem rozbíjí skálu v lomu. Pohyb celého těla, do každého úderu jdou záda a ramena."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "mining"
+    ],
+    "serves_buildings": [
+      "quarry"
+    ],
+    "legs": {
+      "amplitude": 0.4,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 2,
+      "frequency": 0.7
+    },
+    "slouch": 0.6,
+    "reach": 1.9,
+    "hand_height": -1.2
+  },
+  {
+    "id": "bartering_trade_post",
+    "name": {
+      "en": "Bartering",
+      "cs": "Smlouvání"
+    },
+    "description": {
+      "en": "Negotiating a price at the trade post, gesturing to wares and haggling with a trader. A lot of pointing and expressive hand movements.",
+      "cs": "Dohaduje cenu na tržnici, ukazuje na zboží a smlouvá s kupcem. Spousta ukazování a výrazných pohybů rukou."
+    },
+    "serves_activities": [
+      "working",
+      "socializing"
+    ],
+    "serves_work": [
+      "trade"
+    ],
+    "serves_buildings": [
+      "trade_post"
+    ],
+    "legs": {
+      "amplitude": 0.1,
+      "frequency": 1
+    },
+    "tool_arm": {
+      "amplitude": 0.9,
+      "frequency": 3.5
+    },
+    "slouch": 0.1,
+    "reach": 1.5,
+    "hand_height": -0.2
+  },
+  {
+    "id": "teaching_lesson_school",
+    "name": {
+      "en": "Teaching a Lesson",
+      "cs": "Vyučování"
+    },
+    "description": {
+      "en": "The teacher stands before the class, explaining a concept. One hand gestures to a blackboard or a map, the other holds a book.",
+      "cs": "Učitel stojí před třídou a vysvětluje látku. Jednou rukou ukazuje na tabuli nebo mapu, v druhé drží knihu."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "research"
+    ],
+    "serves_buildings": [
+      "school"
+    ],
+    "legs": {
+      "amplitude": 0.5,
+      "frequency": 0.8
+    },
+    "tool_arm": {
+      "amplitude": 1.2,
+      "frequency": 1.5
+    },
+    "reach": 1.8,
+    "hand_height": 0.5
+  },
+  {
+    "id": "stargazing_observatory",
+    "name": {
+      "en": "Stargazing",
+      "cs": "Pozorování hvězd"
+    },
+    "description": {
+      "en": "Leaning into the eyepiece of the large telescope, making fine adjustments with a delicate touch. The body is almost perfectly still to keep the image clear.",
+      "cs": "Nakloněný k okuláru velkého dalekohledu, jemným dotykem provádí drobné úpravy. Tělo je téměř nehybné, aby se nezkreslil obraz."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "research"
+    ],
+    "serves_buildings": [
+      "observatory"
+    ],
+    "legs": {
+      "amplitude": 0,
+      "frequency": 0
+    },
+    "tool_arm": {
+      "amplitude": 0.2,
+      "frequency": 0.6
+    },
+    "slouch": 0.7,
+    "lean": 0.3,
+    "reach": 1,
+    "hand_height": 0.8
+  },
+  {
+    "id": "assembly_line_factory",
+    "name": {
+      "en": "Assembly Line",
+      "cs": "Práce u pásu"
+    },
+    "description": {
+      "en": "Performing a repetitive task on the factory line. A quick, precise motion of the hands, over and over, while the body sways to the rhythm of the machinery.",
+      "cs": "Opakující se úkon na tovární lince. Rychlý, přesný pohyb rukou, znovu a znovu, zatímco se tělo pohupuje v rytmu strojů."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "factory"
+    ],
+    "legs": {
+      "amplitude": 0.3,
+      "frequency": 1.2
+    },
+    "tool_arm": {
+      "amplitude": 0.6,
+      "frequency": 5
+    },
+    "slouch": 0.3,
+    "reach": 1.2,
+    "hand_height": -0.4
+  },
+  {
+    "id": "stacking_lumber_lumberyard",
+    "name": {
+      "en": "Stacking Lumber",
+      "cs": "Skládání dřeva"
+    },
+    "description": {
+      "en": "Lifting heavy planks and stacking them to dry. A rhythm of bend, lift, turn, place.",
+      "cs": "Zvedání těžkých fošen a jejich rovnání do hrání k sušení. Rytmus ohnutí, zdvihu, otočky a položení."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "logging"
+    ],
+    "serves_buildings": [
+      "lumberyard"
+    ],
+    "legs": {
+      "amplitude": 0.5,
+      "frequency": 0.8
+    },
+    "tool_arm": {
+      "amplitude": 1.5,
+      "frequency": 0.7
+    },
+    "slouch": 0.7,
+    "bob": 0.3,
+    "reach": 1.5,
+    "hand_height": -1.0
+  },
+  {
+    "id": "advanced_research_university",
+    "name": {
+      "en": "Conducting Research",
+      "cs": "Vědecká práce"
+    },
+    "description": {
+      "en": "Deep in concentration, poring over complex diagrams or making minute adjustments to an experimental setup. The world outside the desk fades away.",
+      "cs": "Hluboké soustředění, skloněný nad složitými diagramy nebo provádějící drobné úpravy experimentálního zařízení. Svět za stolem mizí."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "research"
+    ],
+    "serves_buildings": [
+      "university"
+    ],
+    "legs": {
+      "amplitude": 0.05,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 0.4,
+      "frequency": 3.0
+    },
+    "slouch": 0.6,
+    "reach": 1.2,
+    "hand_height": -0.2
+  },
+  {
+    "id": "selling_at_market",
+    "name": {
+      "en": "Selling at Market",
+      "cs": "Prodej na tržišti"
+    },
+    "description": {
+      "en": "Calling out to passers-by, weighing out produce, gesturing to the quality of the goods. The constant, lively motion of the marketplace.",
+      "cs": "Pokřikování na kolemjdoucí, odvažování zboží, ukazování na kvalitu výrobků. Neustálý, živý pohyb tržiště."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "trade"
+    ],
+    "serves_buildings": [
+      "market"
+    ],
+    "legs": {
+      "amplitude": 0.2,
+      "frequency": 1.0
+    },
+    "tool_arm": {
+      "amplitude": 1.2,
+      "frequency": 2.5
+    },
+    "slouch": 0.2,
+    "reach": 1.7,
+    "hand_height": -0.3
+  },
+  {
+    "id": "railyard_lever_pull",
+    "name": {
+      "en": "Throwing a Switch",
+      "cs": "Přehození výhybky"
+    },
+    "description": {
+      "en": "Putting their whole weight into a heavy iron lever, throwing the switch to guide a train onto the right track. A grunt of effort and a heavy clank of metal.",
+      "cs": "Zapřít se celou vahou do těžké železné páky, přehodit výhybku a nasměrovat vlak na správnou kolej. Zafunění námahou a těžké klapnutí kovu."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "railyard"
+    ],
+    "legs": {
+      "amplitude": 0.4,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 1.9,
+      "frequency": 0.6
+    },
+    "slouch": 0.5,
+    "lean": 0.8,
+    "reach": 2.0,
+    "hand_height": 0.0
+  },
+  {
+    "id": "managing_data_center",
+    "name": {
+      "en": "Managing Servers",
+      "cs": "Správa serverů"
+    },
+    "description": {
+      "en": "Seated before a bank of monitors, fingers flying across a keyboard. The only movement is the flicker of light on their face and the dance of their hands.",
+      "cs": "Sedí před řadou monitorů, prsty létají po klávesnici. Jediný pohyb je blikání světla na tváři a tanec rukou."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "research"
+    ],
+    "serves_buildings": [
+      "data_center"
+    ],
+    "legs": {
+      "amplitude": 0,
+      "frequency": 0
+    },
+    "tool_arm": {
+      "amplitude": 0.2,
+      "frequency": 5.5
+    },
+    "slouch": 0.3,
+    "reach": 1.0,
+    "hand_height": -0.4
+  },
+  {
+    "id": "counting_coin_bank",
+    "name": {
+      "en": "Counting Coin",
+      "cs": "Počítání mincí"
+    },
+    "description": {
+      "en": "At a high counter, head bowed over piles of coin. Fingers are a blur as they sort and count.",
+      "cs": "U vysokého pultu, s hlavou sklopenou nad hromádkami mincí. Prsty se jen míhají, jak je třídí a sčítá."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "trade"
+    ],
+    "serves_buildings": [
+      "bank"
+    ],
+    "legs": {
+      "amplitude": 0,
+      "frequency": 0
+    },
+    "tool_arm": {
+      "amplitude": 0.3,
+      "frequency": 5
+    },
+    "slouch": 0.2,
+    "reach": 1.2,
+    "hand_height": 0.5
+  },
+  {
+    "id": "monitoring_gauges_power_plant",
+    "name": {
+      "en": "Monitoring Gauges",
+      "cs": "Kontrola měřidel"
+    },
+    "description": {
+      "en": "A slow patrol past a row of humming machines. An occasional stop to tap a gauge, to make a note on a clipboard.",
+      "cs": "Pomalá obchůzka řadou hučících strojů. Občas se zastaví, poklepe na budík, zapíše si něco do desek."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "power_plant"
+    ],
+    "legs": {
+      "amplitude": 1,
+      "frequency": 0.8
+    },
+    "tool_arm": {
+      "amplitude": 0.2,
+      "frequency": 1.5
+    },
+    "lean": 0.1,
+    "bob": 0.2,
+    "speed": 0.7,
+    "reach": 1.5,
+    "hand_height": 0
+  },
+  {
+    "id": "adjusting_valves_chemical_plant",
+    "name": {
+      "en": "Adjusting Valves",
+      "cs": "Nastavování ventilů"
+    },
+    "description": {
+      "en": "With concentration, with both hands, turning the wheel of a valve on a tangle of pipes. A slow, careful movement; no room for error here.",
+      "cs": "Soustředěně, oběma rukama, otáčí kolem ventilu na změti trubek. Pomalý, opatrný pohyb, tady není místo pro chybu."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "chemical_plant"
+    ],
+    "legs": {
+      "amplitude": 0.2,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 0.8,
+      "frequency": 0.6
+    },
+    "slouch": 0.3,
+    "reach": 1.9,
+    "hand_height": -0.2
+  },
+  {
+    "id": "inspecting_turbine_hydro_dam",
+    "name": {
+      "en": "Inspecting Turbine",
+      "cs": "Prohlídka turbíny"
+    },
+    "description": {
+      "en": "In the deafening roar of the turbine hall, leaning on the railing to look down. Listening to the rhythm of the machine more than watching it.",
+      "cs": "V ohlušujícím rachotu turbínové haly se opírá o zábradlí a dívá se dolů. Víc než očima naslouchá rytmu stroje."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "hydro_dam"
+    ],
+    "legs": {
+      "amplitude": 0,
+      "frequency": 0
+    },
+    "tool_arm": {
+      "amplitude": 0.1,
+      "frequency": 0.5
+    },
+    "slouch": 0.8,
+    "lean": 0.5,
+    "reach": 1.6,
+    "hand_height": -1
+  },
+  {
+    "id": "welding_frame_vehicle_works",
+    "name": {
+      "en": "Welding Frame",
+      "cs": "Svařování rámu"
+    },
+    "description": {
+      "en": "Bent over the frame of a future vehicle, slowly dragging the welder. Sharp light and the crackle of metal.",
+      "cs": "Skloněný nad rámem budoucího vozidla, pomalu táhne svářečkou. Ostré světlo a praskání kovu."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "vehicle_works"
+    ],
+    "legs": {
+      "amplitude": 0.1,
+      "frequency": 0.4
+    },
+    "tool_arm": {
+      "amplitude": 0.4,
+      "frequency": 0.3
+    },
+    "slouch": 0.5,
+    "reach": 1.7,
+    "hand_height": -0.6
+  },
+  {
+    "id": "turning_valves_refinery",
+    "name": {
+      "en": "Turning Refinery Valves",
+      "cs": "Otáčení ventilem"
+    },
+    "description": {
+      "en": "Turning a large industrial valve requires planting the feet and using the whole body's leverage. A heavy, full-body motion.",
+      "cs": "K otočení velkým průmyslovým ventilem je potřeba zapřít se a opřít se do toho celým tělem. Nohy pevně na zemi, váha přenesená do paží."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "oil_refinery"
+    ],
+    "legs": {
+      "amplitude": 0.2,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 1.5,
+      "frequency": 0.6
+    },
+    "slouch": 0.5,
+    "lean": 0.3,
+    "reach": 1.9,
+    "hand_height": 0.2
+  },
+  {
+    "id": "component_assembly_plant",
+    "name": {
+      "en": "Component Assembly",
+      "cs": "Montáž součástek"
+    },
+    "description": {
+      "en": "A fast, repetitive motion of adding a component to a product on an assembly line. Eyes forward, hands a blur.",
+      "cs": "Usměrněný pohled, ruce se míhají v rychlém, opakovaném pohybu. Další součástka na svém místě, linka se nezastaví."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "assembly_plant"
+    ],
+    "tool_arm": {
+      "amplitude": 0.6,
+      "frequency": 5.5
+    },
+    "slouch": 0.2,
+    "reach": 1.2,
+    "hand_height": -0.3
+  },
+  {
+    "id": "soldering_circuit_board",
+    "name": {
+      "en": "Soldering Circuits",
+      "cs": "Pájení obvodů"
+    },
+    "description": {
+      "en": "Bent over a workbench, concentrating on a tiny component. The work is done with a steady hand and the tip of a soldering iron.",
+      "cs": "Shrbený nad stolem, plně soustředěný na nepatrnou součástku. Klidná ruka a hrot páječky, nic víc."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "research"
+    ],
+    "serves_buildings": [
+      "electronics_lab"
+    ],
+    "tool_arm": {
+      "amplitude": 0.1,
+      "frequency": 2.0
+    },
+    "slouch": 1.1,
+    "reach": 0.8,
+    "hand_height": -0.8
+  },
+  {
+    "id": "whiteboard_theorizing_campus",
+    "name": {
+      "en": "Theorizing at Whiteboard",
+      "cs": "Teoretizování u tabule"
+    },
+    "description": {
+      "en": "Pacing in front of a whiteboard, scribbling down equations and diagrams. A gesture to make a point, a step back to consider the whole.",
+      "cs": "Pár kroků sem a tam před tabulí plnou rovnic a diagramů. Gesto pro zdůraznění myšlenky, krok zpátky pro pohled na celek."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "research"
+    ],
+    "serves_buildings": [
+      "research_campus"
+    ],
+    "legs": {
+      "amplitude": 0.7,
+      "frequency": 0.9
+    },
+    "tool_arm": {
+      "amplitude": 0.9,
+      "frequency": 3.0
+    },
+    "slouch": 0.1,
+    "reach": 1.6,
+    "hand_height": 0.8
+  },
+  {
+    "id": "cleaning_solar_panels",
+    "name": {
+      "en": "Cleaning Solar Panels",
+      "cs": "Čištění solárních panelů"
+    },
+    "description": {
+      "en": "A long, sweeping motion to clean the surface of a solar panel. A steady rhythm under the open sky.",
+      "cs": "Dlouhé, plynulé tahy stěrkou po skle solárního panelu. Jistý rytmus práce pod širým nebem."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "solar_array"
+    ],
+    "legs": {
+      "amplitude": 0.4,
+      "frequency": 0.7
+    },
+    "tool_arm": {
+      "amplitude": 1.8,
+      "frequency": 1.2
+    },
+    "slouch": 0.3,
+    "reach": 2.3,
+    "hand_height": -0.1
+  },
+  {
+    "id": "maintaining_nacelle_wind_farm",
+    "name": {
+      "en": "Maintaining Nacelle",
+      "cs": "Údržba gondoly"
+    },
+    "description": {
+      "en": "Up in the nacelle of a turbine, keeping the gears turning. It's cramped, noisy, and the valley floor is a long way down.",
+      "cs": "Nahoře v gondole turbíny, promazává soukolí. Je tu těsno, hluk a údolí hluboko pod nohama."
+    },
+    "legs": {
+      "amplitude": 0.2,
+      "frequency": 0.8
+    },
+    "tool_arm": {
+      "amplitude": 0.8,
+      "frequency": 4.5
+    },
+    "slouch": 0.6,
+    "reach": 1.2,
+    "hand_height": -0.2,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "wind_farm"
+    ]
+  },
+  {
+    "id": "calibrating_robot_arm",
+    "name": {
+      "en": "Calibrating Robot Arm",
+      "cs": "Kalibrace robotického ramene"
+    },
+    "description": {
+      "en": "The machine does the heavy lifting, but only after a human hand has shown it how. A delicate dance of calibration and diagnostics.",
+      "cs": "Stroj sice odře to těžké, ale jen když mu člověk přesně řekne co a jak. Opatrné seřizování, krok za krokem."
+    },
+    "legs": {
+      "amplitude": 0,
+      "frequency": 0
+    },
+    "tool_arm": {
+      "amplitude": 0.4,
+      "frequency": 5.0
+    },
+    "slouch": 0.3,
+    "reach": 1.4,
+    "hand_height": 0.1,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "automated_factory"
+    ]
+  },
+  {
+    "id": "aligning_magnetic_coils",
+    "name": {
+      "en": "Aligning Magnetic Coils",
+      "cs": "Zarovnávání magnetických cívek"
+    },
+    "description": {
+      "en": "Work on the reactor core is slow and deliberate. Nudging a multi-ton component a millimeter at a time, feeling for the lock.",
+      "cs": "Práce na jádru reaktoru je pomalá a rozvážná. Postrčit několikatunovou součástku o milimetr a čekat, až zapadne."
+    },
+    "legs": {
+      "amplitude": 0.4,
+      "frequency": 0.4
+    },
+    "tool_arm": {
+      "amplitude": 1.5,
+      "frequency": 0.3
+    },
+    "lean": 0.7,
+    "slouch": 0.5,
+    "reach": 1.9,
+    "hand_height": -0.4,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "fusion_reactor"
+    ]
+  },
+  {
+    "id": "interfacing_with_ai",
+    "name": {
+      "en": "Interfacing with AI",
+      "cs": "Komunikace s UI"
+    },
+    "description": {
+      "en": "A conversation with the colony's nascent mind. There's no voice, just gestures in the light and streams of data in return.",
+      "cs": "Rozhovor s rodící se myslí kolonie. Není slyšet hlas, jen gesta ve světle a proudy dat jako odpověď."
+    },
+    "legs": {
+      "amplitude": 0,
+      "frequency": 0
+    },
+    "tool_arm": {
+      "amplitude": 0.2,
+      "frequency": 5.5
+    },
+    "reach": 1.1,
+    "hand_height": 0.3,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "research"
+    ],
+    "serves_buildings": [
+      "ai_core"
+    ]
+  },
+  {
+    "id": "guiding_cargo_loader",
+    "name": {
+      "en": "Guiding Cargo Loader",
+      "cs": "Navádění nákladního modulu"
+    },
+    "description": {
+      "en": "Directing traffic on the landing pad. A language of pure gesture, understood by pilots and loading mechs alike.",
+      "cs": "Řídí provoz na přistávací ploše. Jazyk čistých gest, kterému rozumí piloti i nakládací stroje."
+    },
+    "legs": {
+      "amplitude": 0.2,
+      "frequency": 0.5
+    },
+    "tool_arm": {
+      "amplitude": 1.8,
+      "frequency": 1.2
+    },
+    "reach": 2.1,
+    "hand_height": 0.8,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "trade"
+    ],
+    "serves_buildings": [
+      "spaceport"
+    ]
+  },
+  {
+    "id": "operating_bellows_bloomery",
+    "name": {
+      "en": "Operating Bellows",
+      "cs": "Obsluha měchů"
+    },
+    "description": {
+      "en": "Rhythmic, heavy work at the furnace. One hand on the bellows lever, the whole body swaying in tempo to keep the fire hot.",
+      "cs": "Rytmická, těžká práce u pece. Jedna ruka na páce měchů, celé tělo se houpe v tempu, aby oheň neochladl."
+    },
+    "legs": {
+      "amplitude": 0.2,
+      "frequency": 0.7
+    },
+    "tool_arm": {
+      "amplitude": 1.8,
+      "frequency": 0.7
+    },
+    "slouch": 0.6,
+    "reach": 1.5,
+    "hand_height": 0.8,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "bloomery"
+    ]
+  },
+  {
+    "id": "pouring_grain_windmill",
+    "name": {
+      "en": "Pouring Grain",
+      "cs": "Sypání zrní"
+    },
+    "description": {
+      "en": "A heavy sack on the back, up the stairs, and then carefully emptied into the hopper. Takes strength and a steady hand.",
+      "cs": "Těžký pytel na zádech, po schodech nahoru a pak ho přesně vysypat do násypky. Chce to sílu a pevnou ruku."
+    },
+    "legs": {
+      "amplitude": 0.1,
+      "frequency": 0.8
+    },
+    "tool_arm": {
+      "amplitude": 1.5,
+      "frequency": 0.6
+    },
+    "slouch": 0.7,
+    "lean": 0.3,
+    "reach": 1.2,
+    "hand_height": 0.5,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "cooking"
+    ],
+    "serves_buildings": [
+      "windmill"
+    ]
+  },
+  {
+    "id": "preparing_mould_foundry",
+    "name": {
+      "en": "Preparing a Mould",
+      "cs": "Příprava formy"
+    },
+    "description": {
+      "en": "Careful work at a bench. Tamping sand around the pattern so the casting will be true. Every detail matters.",
+      "cs": "Pečlivá práce u stolu. Pěchování písku kolem modelu, aby odlitek přesně seděl. Každý detail se počítá."
+    },
+    "legs": {
+      "amplitude": 0
+    },
+    "tool_arm": {
+      "amplitude": 0.4,
+      "frequency": 4.5
+    },
+    "slouch": 0.5,
+    "reach": 0.8,
+    "hand_height": -0.2,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "crafting"
+    ],
+    "serves_buildings": [
+      "foundry"
+    ]
+  },
+  {
+    "id": "consulting_folio_library",
+    "name": {
+      "en": "Consulting a Folio",
+      "cs": "Studium foliantu"
+    },
+    "description": {
+      "en": "Bent over a large book on a lectern, tracing lines of old text or maps with a finger. Almost motionless, lost in thought.",
+      "cs": "Skloněný nad velkou knihou na pultu, prstem sleduje řádky starých textů nebo map. Téměř nehybný, ponořený do myšlenek."
+    },
+    "legs": {
+      "amplitude": 0
+    },
+    "tool_arm": {
+      "amplitude": 0.1,
+      "frequency": 0.4
+    },
+    "slouch": 0.8,
+    "reach": 1.0,
+    "hand_height": -0.1,
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "research"
+    ],
+    "serves_buildings": [
+      "library"
+    ]
+  },
+  {
+    "id": "tracking_orbital_dish",
+    "name": {
+      "en": "Tracking the Dish",
+      "cs": "Natáčení antény"
+    },
+    "description": {
+      "en": "Head back, both hands walking a great dish a degree at a time to hold something that is already past the horizon.",
+      "cs": "Hlava zvrácená dozadu, obě ruce popojíždějí s velkou anténou po stupních, aby udržely něco, co už je za obzorem."
+    },
+    "serves_activities": [
+      "working"
+    ],
+    "serves_work": [
+      "research"
+    ],
+    "serves_buildings": [
+      "orbital_array"
+    ],
+    "legs": {
+      "amplitude": 0.15,
+      "frequency": 0.35
+    },
+    "tool_arm": {
+      "amplitude": 0.5,
+      "frequency": 0.5,
+      "phase": 1.6
+    },
+    "free_arm_counter_swing": 0.2,
+    "lean": -0.35,
+    "bob": 0.05,
+    "slouch": -0.4,
+    "reach": 1.5,
+    "hand_height": -0.9
   }
 ]

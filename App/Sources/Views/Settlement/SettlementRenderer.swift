@@ -356,40 +356,92 @@ enum SettlementRenderer {
     /// Pure, and derived from the same `placed` the buildings were drawn from,
     /// so a lamp cannot end up standing where its house is not.
     static func nightLamps(placed: [PlacedBuilding]) -> [SettlementLight.Lamp] {
-        placed.compactMap { building in
-            guard !building.underConstruction else { return nil }
-            let s = building.size
-            // What burns here, how hard, and how far the pool of it reaches.
-            let burn: (strength: Double, radius: CGFloat, colour: Color)
-            switch building.glyph {
-            case .house, .tenement:
-                // Nobody home, no fire lit.
-                guard building.residents > 0 else { return nil }
-                // Four to a dwelling is a full house; past that it is not any
-                // brighter, it is just fuller.
-                let full = min(1.0, Double(building.residents) / 4)
-                burn = (0.45 + full * 0.45, s * 1.25, SettlementLight.hearth)
-            case .forge, .plant, .cookhouse, .tanks:
-                burn = (0.55, s * 1.05, SettlementLight.ember)
-            case .tower:
-                burn = (0.60, s * 1.10, SettlementLight.hearth)
-            case .hall, .clinic, .temple, .lab:
-                burn = (0.28, s * 0.85, SettlementLight.hearth)
-            default:
-                return nil
+        placed.flatMap { lamps(for: $0) }
+    }
+
+    /// **Where a building's light actually comes out of it.**
+    ///
+    /// A dwelling's windows, one lamp apiece; anything else, the opening its
+    /// fire is behind. Neither was true before: every building in the colony
+    /// got one lamp hung at its own centre point, a hand's width above the
+    /// middle of the roof — so a longhouse with four lit bays glowed from a
+    /// single dot floating over its ridge while the panes drawn on its wall sat
+    /// dark. The complaint was exact: *a bright point in the middle of the
+    /// house, and not where the windows are.*
+    ///
+    /// The windows come from `SettlementStructures.dwelling`, the same function
+    /// that draws them, so a lamp cannot land where its window is not — and a
+    /// house whose shutters the seed happens to close is now genuinely dark
+    /// rather than merely dimmer.
+    ///
+    /// Pure, and derived from the same `placed` the buildings were drawn from.
+    static func lamps(for building: PlacedBuilding) -> [SettlementLight.Lamp] {
+        guard !building.underConstruction else { return [] }
+        let s = building.size
+        // A ruin does not keep its fire in.
+        let sound = 0.45 + building.condition * 0.55
+        // Off the building's own seed, so its fire breathes on its own beat and
+        // keeps that beat between frames.
+        let phase = Double(building.seed % 628) / 100
+
+        switch building.glyph {
+        case .house, .tenement:
+            // Nobody home, no fire lit.
+            guard building.residents > 0 else { return [] }
+            let openings = SettlementStructures.dwelling(
+                at: building.center, s: s, seed: building.seed,
+                footprint: building.footprint, floors: building.floors,
+                glyph: building.glyph)
+            let windows = openings.panes.filter(\.lit)
+            guard !windows.isEmpty else { return [] }
+            // Four to a dwelling is a full house; past that it is not any
+            // brighter, it is just fuller. Divided across the lit windows, so a
+            // longhouse showing four is not four times as bright as a hut
+            // showing one — it is the same fire seen through more openings.
+            let full = min(1.0, Double(building.residents) / 4)
+            let each = (0.45 + full * 0.45) / Double(windows.count).squareRoot()
+            return windows.enumerated().map { index, pane in
+                SettlementLight.Lamp(
+                    at: CGPoint(x: pane.rect.midX, y: pane.rect.midY),
+                    // A window throws a pool about as wide as the house is, not
+                    // as wide as the pane: the light spills.
+                    radius: max(pane.rect.width * 2.2, s * 0.9),
+                    strength: each * sound,
+                    colour: SettlementLight.hearth,
+                    // Each window on its own beat, or a house blinks in unison
+                    // and reads as one lamp again.
+                    phase: phase + Double(index) * 0.8)
             }
-            // A ruin does not keep its fire in.
-            let sound = 0.45 + building.condition * 0.55
-            return SettlementLight.Lamp(
-                // Where a window is: on the wall, not on the roof-ridge above it
-                // and not on the ground in front.
-                at: CGPoint(x: building.center.x, y: building.center.y - s * 0.06),
-                radius: burn.radius,
-                strength: burn.strength * sound,
-                colour: burn.colour,
-                // Off the building's own seed, so its fire breathes on its own
-                // beat and keeps that beat between frames.
-                phase: Double(building.seed % 628) / 100)
+        case .forge, .plant, .cookhouse, .tanks:
+            return [SettlementLight.Lamp(at: source(of: building, s: s),
+                                         radius: s * 1.05, strength: 0.55 * sound,
+                                         colour: SettlementLight.ember, phase: phase)]
+        case .tower:
+            return [SettlementLight.Lamp(at: source(of: building, s: s),
+                                         radius: s * 1.10, strength: 0.60 * sound,
+                                         colour: SettlementLight.hearth, phase: phase)]
+        case .hall, .clinic, .temple, .lab:
+            return [SettlementLight.Lamp(at: source(of: building, s: s),
+                                         radius: s * 0.85, strength: 0.28 * sound,
+                                         colour: SettlementLight.hearth, phase: phase)]
+        default:
+            return []
+        }
+    }
+
+    /// The point a non-dwelling burns from — the mouth of the forge, the head
+    /// of the tower, the door of the hall. Low on the body rather than at its
+    /// centre, because a fire sits on a floor.
+    static func source(of building: PlacedBuilding, s: CGFloat) -> CGPoint {
+        switch building.glyph {
+        case .tower:
+            // A beacon is at the top of the tower or it is not a beacon.
+            return CGPoint(x: building.center.x, y: building.center.y - s * 0.62)
+        case .forge, .plant, .cookhouse, .tanks:
+            // A banked fire is at floor level, in the mouth of the building.
+            return CGPoint(x: building.center.x, y: building.center.y + s * 0.16)
+        default:
+            return CGPoint(x: building.center.x, y: building.center.y - s * 0.06)
         }
     }
 
@@ -1696,6 +1748,52 @@ enum SettlementRenderer {
         return ringLayout(settlement: settlement, registry: registry)
     }
 
+    /// **How big a building is drawn on the ground it owns.**
+    ///
+    /// The intent has always been *the building fills its parcel*; the
+    /// arithmetic never did it. It was `min(lotW, lotH) / 2.2` — the lot's
+    /// **short** side, over a rule-of-thumb for how many `size` a body runs
+    /// across — and then `bodySize` multiplied the result by the lot's aspect
+    /// again. Both ends of that are wrong in the same direction:
+    ///
+    /// - A square lot came out **73% filled across and about half filled
+    ///   down**, so a street of huts was a street of models of huts with bare
+    ///   ground between them. This is the complaint: *the houses want to be
+    ///   bigger so everything fits and looks right.*
+    /// - A lot that is narrow and long — a 1×3 — took its size from the *one*
+    ///   tile and its aspect clamp from the three, and came out **44% of its
+    ///   own width**. The longer the plot, the smaller the building on it.
+    ///
+    /// So ask the question directly instead: what `size` makes this glyph's
+    /// body, in this lot's proportions, just fit the lot? `bodyShape` says how
+    /// many `size` wide and tall each kind is drawn, and `bodySize` applies the
+    /// same aspect clamp, so the two agree by construction rather than by a
+    /// constant that has to be kept in step by hand.
+    ///
+    /// `fill` leaves a hair of ground at the edge, because lots may be directly
+    /// adjacent — nothing forces a gap between two placements — and eaves that
+    /// overhang into next door read as a bug rather than as a village. It is
+    /// divided by the largest cosmetic jitter `bodySize` can add, so the
+    /// *biggest* a building can come out is still inside its own parcel.
+    static func lotSize(glyph: BuildingGlyph, lotW: Double, lotH: Double) -> Double {
+        let fill = 0.94 / maxBodyJitter
+        let shape = SettlementStructures.bodyShape(glyph)
+        // The same clamp `bodySize` applies, or the width this solves for is
+        // not the width that gets drawn.
+        let aspect = lotH > 0 ? min(1.7, max(0.6, lotW / lotH)) : 1
+        let byWidth = lotW * fill / (Double(shape.width) * aspect)
+        // Capped by the ground it owns rather than by the room on screen: the
+        // grid is square in map units and the canvas stretches it, so sizing to
+        // the *drawn* height would make a colony of towers on a tall phone and
+        // a colony of sheds on a squat one.
+        let byHeight = lotH * fill / Double(shape.height)
+        return min(byWidth, byHeight)
+    }
+
+    /// The most `SettlementStructures.bodySize` can enlarge a building for
+    /// variety's sake. Stated here because `lotSize` has to leave room for it.
+    static let maxBodyJitter: Double = 1.1
+
     /// The pixel-space layout for one frame — what drawing and hit-testing use.
     static func layout(
         settlement: Settlement, registry: GameDataRegistry, rect: CGRect
@@ -1747,14 +1845,11 @@ enum SettlementRenderer {
                 name: label,
                 glyph: glyph,
                 center: p,
-                // Sized to the ground it owns, not to a bare tile count. The
-                // old `0.021 × max(w, h)` was unrelated to the lot: a 3×2 came
-                // out twice as wide as its own plot, so neighbouring buildings
-                // grew into each other and the colony read as a heap of glyphs.
-                // A body runs about 2.2 × `size` across, so this keeps it
-                // inside the parcel while roofs still rise above it.
-                size: min(Double(max(1, placement.width)) * tileW,
-                          Double(max(1, placement.height)) * tileH) / 2.2,
+                // Sized to the ground it owns, and **to the shape it is drawn
+                // in** — see `lotSize`.
+                size: lotSize(glyph: glyph,
+                              lotW: Double(max(1, placement.width)) * tileW,
+                              lotH: Double(max(1, placement.height)) * tileH),
                 footprintW: Double(max(1, placement.width)) * tileW,
                 footprintH: Double(max(1, placement.height)) * tileH,
                 underConstruction: placement.underConstruction,
@@ -1806,7 +1901,11 @@ enum SettlementRenderer {
                 placed.append(NormalizedBuilding(
                     id: drawn, definitionID: expanded[drawn].id,
                     name: expanded[drawn].name, glyph: expanded[drawn].glyph,
-                    center: c, size: 0.021, footprintW: 0.05, footprintH: 0.05,
+                    center: c,
+                    // The same rule the grid uses, so a colony that has not been
+                    // laid out yet is not drawn a size smaller than one that has.
+                    size: lotSize(glyph: expanded[drawn].glyph, lotW: 0.05, lotH: 0.05),
+                    footprintW: 0.05, footprintH: 0.05,
                     underConstruction: false, progress: 1,
                     seed: buildingSeed(expanded[drawn].id, drawn),
                     era: expanded[drawn].era,
@@ -2081,7 +2180,9 @@ enum SettlementRenderer {
                                         phase: AgentMotion.huntPhase(
                                             for: pawn,
                                             reported: settlement.huntPhases[pawn.id],
-                                            map: map, at: pose.position)),
+                                            map: map, at: pose.position),
+                                        variant: AgentMotion.motionVariant(for: pawn),
+                                        building: AgentMotion.workBuilding(for: pawn, scene: scene)),
                             context: &context)
                     }
                     continue
@@ -2117,7 +2218,9 @@ enum SettlementRenderer {
                                         phase: AgentMotion.huntPhase(
                                             for: pawn,
                                             reported: settlement.huntPhases[pawn.id],
-                                            map: map, at: pose.position)),
+                                            map: map, at: pose.position),
+                                        variant: AgentMotion.motionVariant(for: pawn),
+                                        building: AgentMotion.workBuilding(for: pawn, scene: scene)),
                 context: &context)
         }
     }

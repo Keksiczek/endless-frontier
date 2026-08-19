@@ -196,7 +196,10 @@ final class AudioEngine {
 /// Kept out of `AudioEngine` so the real-time code is one small object with no
 /// actor isolation on it — hopping to the main actor inside a render callback
 /// is how an audio thread misses its deadline and clicks.
-private final class Voices: @unchecked Sendable {
+/// Internal rather than private so `AudioClickTests` can render a buffer and
+/// look at the samples. A click is a property of the waveform, and the only way
+/// to assert it is to have the waveform.
+final class Voices: @unchecked Sendable {
 
     var sampleRate: Double = 44_100
 
@@ -290,9 +293,8 @@ private final class Voices: @unchecked Sendable {
                 data.assumingMemoryBound(to: Float.self)[frame] = out
             }
         }
-        // Age the shots by the whole buffer at once and retire the finished.
-        let elapsed = Double(frames) * dt
-        for i in shots.indices { shots[i].age += elapsed }
+        // Shots age a frame at a time inside `stingSample`; all that is left
+        // here is retiring the finished ones.
         shots.removeAll { $0.age > length(of: $0.kind) }
     }
 
@@ -376,9 +378,23 @@ private final class Voices: @unchecked Sendable {
         }
     }
 
+    /// **Every sting ages a frame at a time.**
+    ///
+    /// It used to age a *buffer* at a time — one `shots[i].age += elapsed`
+    /// after the frame loop — so `t`, and therefore the whole envelope, was
+    /// constant across the buffer and stepped at its boundary. The oscillator
+    /// underneath ran smoothly per frame and was then multiplied by a
+    /// staircase, which is a discontinuity in the waveform every 512 samples:
+    /// a hammer decaying over 0.35s was about thirty of them, and what comes
+    /// out of the speaker is not a decay but a burst of clicks. Keks, hearing
+    /// it: *"přijde mi, že tam pořád cvaká nějaký zvuk."*
+    ///
+    /// The beds never had this because they glide per frame. The stings are
+    /// now on the same clock.
     private func stingSample(dt: Double, frameIsLast: Bool) -> Double {
         guard !shots.isEmpty else { return 0 }
         var sum = 0.0
+        defer { for i in shots.indices { shots[i].age += dt } }
         for i in shots.indices {
             let age = shots[i].age
             let life = length(of: shots[i].kind)

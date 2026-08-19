@@ -29,7 +29,9 @@ REFERENCES: dict[str, str] = {
     "buildingId": "buildings",        # techs: what a tech unlocks
     "neighbor": "buildings",          # buildings: what wants to stand next door
     "requiresBuilding": "buildings",  # recipes: where the work happens
-    "requires_building": "buildings",  # meals: same idea, the older spelling
+    "requires_building": "buildings",  # meals, conveyances: the older spelling
+    "serves_buildings": "buildings",  # motions: the workplace a clip belongs in
+    "requires_tech": "techs",          # conveyances: what must be known first
     "itemID": "items",                # quests: what is asked for or handed over
     "outputItemID": "items",          # recipes: what comes out
     "requires": "techs",              # techs: the DAG's edges

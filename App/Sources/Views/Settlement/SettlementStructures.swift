@@ -560,6 +560,113 @@ enum SettlementStructures {
         }
     }
 
+    // MARK: - Where the door is
+
+    /// How many bays wide a building of this size is drawn — the count the door
+    /// and the windows are both spaced against.
+    static func bays(width: CGFloat, s: CGFloat) -> Int {
+        max(1, min(4, Int((width / (s * 0.72)).rounded(.down))))
+    }
+
+    /// **Where the way in is**, as a fraction of the building's width from its
+    /// middle: −0.5 is the left corner, 0 the centre, +0.5 the right.
+    ///
+    /// The door has always been drawn — for a house, in a bay picked off the
+    /// seed — and nothing else in the game knew where it was. Colonists were
+    /// placed at their station inside the room and walked to it in a straight
+    /// line from wherever they had come from, which meant they came in through
+    /// whichever wall happened to be in the way. This is that number, published
+    /// once, so the drawing and the walking agree about where the door is.
+    ///
+    /// Only a dwelling has a bay-picked door; everything else is entered at the
+    /// middle of its front, which is where the drawings put their openings.
+    static func doorOffset(_ glyph: SettlementRenderer.BuildingGlyph,
+                           seed: UInt64, width: CGFloat, s: CGFloat) -> Double {
+        guard glyph == .house else { return 0 }
+        let count = bays(width: width, s: s)
+        let door = Int((seed >> 3) % UInt64(count))
+        return (Double(door) + 0.5) / Double(count) - 0.5
+    }
+
+    // MARK: - Where the light comes out
+
+    /// One opening in a wall, and whether anything is burning behind it.
+    struct Pane {
+        let rect: CGRect
+        let lit: Bool
+    }
+
+    /// A dwelling's walls, its door and every window in them.
+    ///
+    /// Extracted so that **one** piece of arithmetic decides where a window is.
+    /// It was written twice before — once here, drawing the panes, and once in
+    /// `SettlementRenderer.nightLamps`, which did not know about bays at all
+    /// and hung a single lamp at the middle of the roof. So after dark every
+    /// house in the colony glowed from one point in its centre while its lit
+    /// windows sat dark and unlit a bay to either side: the glow was not coming
+    /// out of the openings it was supposed to be coming out of, which is
+    /// exactly what it looked like.
+    ///
+    /// Pure, and a function of the same `(seed, footprint, floors)` the walls
+    /// are drawn from, so a lamp cannot land where its window is not.
+    static func dwelling(
+        at c: CGPoint, s s0: CGFloat, seed: UInt64, footprint: CGSize, floors: Int,
+        glyph: SettlementRenderer.BuildingGlyph = .house
+    ) -> (body: CGRect, door: CGRect, panes: [Pane]) {
+        // A block of flats is not a cottage with more storeys — it has its own
+        // walls and its own grid of windows, drawn in `SettlementTrades`. Ask
+        // the drawing that owns it rather than guessing at a gable.
+        if glyph == .tenement {
+            let sizeJ = Double((seed &* 0x9E37_79B9_7F4A_7C15) >> 40 & 0xFFFF) / 65535
+            let s = s0 * CGFloat(0.9 + sizeJ * 0.2)
+            let aspect: CGFloat = footprint.height > 0
+                ? min(1.7, max(0.6, footprint.width / footprint.height)) : 1
+            return (SettlementTrades.tenementBody(c, s, aspect), .zero,
+                    SettlementTrades.tenementPanes(c, s, aspect, seed))
+        }
+        let sizeJ = Double((seed &* 0x9E37_79B9_7F4A_7C15) >> 40 & 0xFFFF) / 65535
+        let s = s0 * CGFloat(0.9 + sizeJ * 0.2)
+        let storeys = max(1, min(3, floors))
+        let shell = bodyRect(.house, at: c, s: s0, seed: seed, footprint: footprint)
+        let h = shell.height * (1 + CGFloat(storeys - 1) * 0.62)
+        let body = CGRect(x: shell.minX, y: shell.maxY - h, width: shell.width, height: h)
+
+        // A long house is a house with more *bays*, not a stretched hut: one
+        // door and as many windows as it has rooms behind them.
+        let bays = bays(width: body.width, s: s)
+        let doorBay = Int((seed >> 3) % UInt64(bays))
+        let storeyHeight = body.height / CGFloat(storeys)
+        var door = CGRect.zero
+        var panes: [Pane] = []
+        for storey in 0..<storeys {
+            // Counted from the ground up, so the door is always on the storey
+            // somebody can walk into.
+            let floorTop = body.maxY - storeyHeight * CGFloat(storey + 1)
+            for bay in 0..<bays {
+                let mid = body.minX + body.width * (CGFloat(bay) + 0.5) / CGFloat(bays)
+                if storey == 0, bay == doorBay {
+                    let dw = min(s * 0.32, body.width / CGFloat(bays) * 0.5)
+                    let doorTop = max(floorTop + storeyHeight * 0.35,
+                                      body.maxY - storeyHeight * 0.75)
+                    door = CGRect(x: mid - dw / 2, y: doorTop,
+                                  width: dw, height: body.maxY - doorTop)
+                    continue
+                }
+                // Whether this window has a light behind it is fixed per house,
+                // storey and bay — a home does not blink at you, and the upper
+                // floor of a tenement is not lit in lockstep with the shop
+                // under it.
+                let lamp = UInt64(20 + bay + storey * 5) % 60
+                let paneH = min(s * 0.3, storeyHeight * 0.45)
+                panes.append(Pane(
+                    rect: CGRect(x: mid - s * 0.17, y: floorTop + storeyHeight * 0.28,
+                                 width: s * 0.34, height: paneH),
+                    lit: ((seed >> lamp) & 3) != 0))
+            }
+        }
+        return (body, door, panes)
+    }
+
     static func building(
         _ glyph: SettlementRenderer.BuildingGlyph, at c: CGPoint, s s0: CGFloat,
         time: Double = 0, night: Double = 0, seed: UInt64 = 0,
@@ -602,11 +709,15 @@ enum SettlementStructures {
             // been in the data since the beginning and read by one thing —
             // `HouseholdEngine`, counting beds — so a building that stacks
             // people has never *looked* like one.
-            let storeys = max(1, min(3, floors))
-            let shell = bodyRect(glyph, at: c, s: s0, seed: seed, footprint: footprint)
-            let w = shell.width
-            let h = shell.height * (1 + CGFloat(storeys - 1) * 0.62)
-            let body = CGRect(x: shell.minX, y: shell.maxY - h, width: w, height: h)
+            // The walls, the door and the windows — all of it from `dwelling`,
+            // which is now the one place that decides where a house's openings
+            // are. The lamps that burn behind them after dark read the same
+            // function, which is the whole point of it being one.
+            let openings = dwelling(at: c, s: s0, seed: seed,
+                                    footprint: footprint, floors: floors)
+            let body = openings.body
+            let w = body.width
+            let h = body.height
             groundShadow(at: c, halfWidth: w / 2, footY: body.maxY + s * 0.08, context: &context)
             context.fill(Path(body), with: .color(wall))
             // What the wall is made of, before anything is drawn on it.
@@ -653,40 +764,14 @@ enum SettlementStructures {
                 }
             }
 
-            // A long house is a house with more *bays*, not a stretched hut:
-            // one door and as many windows as it has rooms behind them.
-            let bays = max(1, min(4, Int((w / (s * 0.72)).rounded(.down))))
-            let doorBay = Int((seed >> 3) % UInt64(bays))
-            let storeyHeight = body.height / CGFloat(storeys)
-            for storey in 0..<storeys {
-                // Counted from the ground up, so the door is always on the
-                // storey somebody can walk into.
-                let floorTop = body.maxY - storeyHeight * CGFloat(storey + 1)
-                for bay in 0..<bays {
-                    let mid = body.minX + body.width * (CGFloat(bay) + 0.5) / CGFloat(bays)
-                    if storey == 0, bay == doorBay {
-                        let dw = min(s * 0.32, body.width / CGFloat(bays) * 0.5)
-                        let doorTop = max(floorTop + storeyHeight * 0.35,
-                                          body.maxY - storeyHeight * 0.75)
-                        let door = CGRect(x: mid - dw / 2, y: doorTop,
-                                          width: dw, height: body.maxY - doorTop)
-                        context.fill(Path(door), with: .color(roof))
-                        context.stroke(Path(door), with: .color(ink), lineWidth: 0.8)
-                        continue
-                    }
-                    // Whether this window has a light behind it is fixed per
-                    // house, storey and bay — a home does not blink at you, and
-                    // the upper floor of a tenement is not lit in lockstep with
-                    // the shop under it.
-                    let lamp = UInt64(20 + bay + storey * 5) % 60
-                    let awake = ((seed >> lamp) & 3) != 0
-                    let paneH = min(s * 0.3, storeyHeight * 0.45)
-                    let pane = CGRect(x: mid - s * 0.17,
-                                      y: floorTop + storeyHeight * 0.28,
-                                      width: s * 0.34, height: paneH)
-                    context.fill(Path(pane), with: .color(awake ? lit : stone.opacity(0.75)))
-                    context.stroke(Path(pane), with: .color(ink), lineWidth: 0.6)
-                }
+            if openings.door.height > 0 {
+                context.fill(Path(openings.door), with: .color(roof))
+                context.stroke(Path(openings.door), with: .color(ink), lineWidth: 0.8)
+            }
+            for pane in openings.panes {
+                context.fill(Path(pane.rect),
+                             with: .color(pane.lit ? lit : stone.opacity(0.75)))
+                context.stroke(Path(pane.rect), with: .color(ink), lineWidth: 0.6)
             }
 
             // A chimney, on the gable end, with smoke on it after dark.

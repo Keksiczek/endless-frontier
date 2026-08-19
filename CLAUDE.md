@@ -174,6 +174,7 @@ startup by `GameDataRegistry.bundled()`:
 | `cults.json` | Faiths a temple can seed (V2) |
 | `meals.json` | What a cook can make out of the harvest |
 | `items.json`, `recipes.json`, `quests.json` | RPG layer |
+| `conveyances.json` | Mounts and vehicles — one bank for both (data layer only so far) |
 | `map-gen.json` | Hex world generation tuning |
 | `world-config.json` | Tuning constants (tick rate, calendar, tension formula, etc.) |
 
@@ -203,6 +204,7 @@ Read these three, in order, when picking work up cold:
 | Game systems and formulas | `docs/DESIGN.md` |
 | Architecture rules | `docs/architecture/LAYERS.md` |
 | Footprints, lots, pawn-like animals | `docs/RIMWORLD_LAYER.md` |
+| Mounts, carts and later transport | `docs/MOUNTS_AND_VEHICLES.md` |
 | Event / tech schemas | `docs/data-schemas/` |
 
 **Historical, do not plan from:** `ROADMAP.md`, `NEXT_STEPS.md`, `HANDOFF.md`.

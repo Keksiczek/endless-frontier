@@ -62,35 +62,62 @@ enum SettlementTrades {
 
     /// Stacked storeys, a grid of windows and a tank on the roof. The one
     /// building that is allowed to be taller than it is wide.
+    /// The walls of a block of flats. Its own proportions, and taller than it
+    /// is wide — the one building allowed to be.
+    static func tenementBody(_ c: CGPoint, _ s: CGFloat, _ aspect: CGFloat) -> CGRect {
+        let w = s * 1.5 * aspect, h = s * 2.1
+        return CGRect(x: c.x - w / 2, y: c.y - h * 0.72, width: w, height: h)
+    }
+
+    /// Every window in a block of flats, and which of them have somebody up.
+    ///
+    /// Pure, and the only arithmetic that says where a pane is. It used to be
+    /// inline in the drawing, which is why the lamps knew nothing about it:
+    /// after dark a six-storey block glowed from one dot at its centre while
+    /// twenty-four drawn windows sat there lit and throwing nothing.
+    ///
+    /// Which are awake is fixed per building — a block does not blink its whole
+    /// face every frame.
+    static func tenementPanes(
+        _ c: CGPoint, _ s: CGFloat, _ aspect: CGFloat, _ seed: UInt64
+    ) -> [SettlementStructures.Pane] {
+        let body = tenementBody(c, s, aspect)
+        let cols = 4, rows = 6
+        var h2 = seed | 1
+        let cellW = body.width / CGFloat(cols + 1)
+        let cellH = body.height / CGFloat(rows + 1)
+        var panes: [SettlementStructures.Pane] = []
+        for row in 0..<rows {
+            for col in 0..<cols {
+                h2 ^= h2 >> 33; h2 = h2 &* 0xFF51_AFD7_ED55_8CCD
+                panes.append(SettlementStructures.Pane(
+                    rect: CGRect(x: body.minX + cellW * (CGFloat(col) + 0.75),
+                                 y: body.minY + cellH * (CGFloat(row) + 0.7),
+                                 width: cellW * 0.5, height: cellH * 0.44),
+                    lit: (h2 >> 30) & 7 > 3))
+            }
+        }
+        return panes
+    }
+
     private static func tenement(
         _ c: CGPoint, _ s: CGFloat, _ aspect: CGFloat, _ night: Double,
         _ seed: UInt64, _ f: Surfaces, _ ctx: inout GraphicsContext
     ) {
-        let w = s * 1.5 * aspect, h = s * 2.1
-        let body = CGRect(x: c.x - w / 2, y: c.y - h * 0.72, width: w, height: h)
+        let body = tenementBody(c, s, aspect)
+        let w = body.width
         SettlementStructures.groundShadow(at: c, halfWidth: w / 2,
                                           footY: body.maxY + s * 0.06, context: &ctx)
         ctx.fill(Path(body), with: .color(f.wall))
         ctx.stroke(Path(body), with: .color(f.ink), lineWidth: 1)
 
-        // Six floors of windows. Which ones are lit is fixed per building, so a
-        // block does not blink its whole face every frame.
-        let cols = 4, rows = 6
-        var h2 = seed | 1
-        let cellW = body.width / CGFloat(cols + 1)
-        let cellH = body.height / CGFloat(rows + 1)
-        for row in 0..<rows {
-            for col in 0..<cols {
-                h2 ^= h2 >> 33; h2 = h2 &* 0xFF51_AFD7_ED55_8CCD
-                let awake = (h2 >> 30) & 7 > 3
-                let pane = CGRect(
-                    x: body.minX + cellW * (CGFloat(col) + 0.75),
-                    y: body.minY + cellH * (CGFloat(row) + 0.7),
-                    width: cellW * 0.5, height: cellH * 0.44)
-                ctx.fill(Path(pane), with: .color(awake
-                    ? f.lit.opacity(0.35 + night * 0.5)
-                    : f.stone.opacity(0.8)))
-            }
+        // Six floors of windows, from the one place that decides where they
+        // are — so the lamps that burn behind them after dark land on the
+        // openings rather than at the middle of the block.
+        for pane in tenementPanes(c, s, aspect, seed) {
+            ctx.fill(Path(pane.rect), with: .color(pane.lit
+                ? f.lit.opacity(0.35 + night * 0.5)
+                : f.stone.opacity(0.8)))
         }
         // The parapet, and the water tank everybody's plumbing hangs off.
         ctx.stroke(Path { p in

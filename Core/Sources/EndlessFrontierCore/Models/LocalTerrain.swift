@@ -27,6 +27,30 @@ public enum GroundCover: String, Codable, Sendable, CaseIterable {
     case clay
     /// Deep shade on a damp floor, richer and darker than a meadow.
     case fern
+    // A second widening, on the same rule as the first: these are the *margins*
+    // of country the twelve could not make at all, not new middles. Each one is
+    // an edge some biome already had and had to spell with a neighbour — a
+    // desert's dried-out pan spelled `sand`, a coast's stony strand spelled
+    // `rock`, a tundra's wet ground spelled `moss` for want of anything better.
+    /// Bone-white crust where standing water dried and left what it carried.
+    case saltFlat = "salt_flat"
+    /// Soft grey fall from a mountain that is still alive.
+    case ash
+    /// Water-rounded stone banked where a shore or a river drops it.
+    case shingle
+    /// Black waterlogged ground that has been rotting into itself for
+    /// centuries. Cuts into fuel; walks like a sponge.
+    case peat
+    /// The tundra's living half — moss thick enough to sink into, over ground
+    /// that never fully thaws.
+    case tundraMoss = "tundra_moss"
+    /// A flood plain after the flood: baked mud in plates, curling at the
+    /// edges.
+    case crackedMud = "cracked_mud"
+    /// The loose spine a river leaves in its own bed when the water drops.
+    case gravelBar = "gravel_bar"
+    /// Pale soft stone that shows through the turf on high dry ground.
+    case chalk
 }
 
 /// A decorative feature standing on the map: a tree, a boulder, a patch of
@@ -319,22 +343,25 @@ public enum LocalTerrain {
         // country its character — a desert that stops being mostly sand is not
         // a more varied desert, it is a broken one (`LocalTerrainTests`).
         case "forest":
-            return [(.grass, 0.36), (.meadow, 0.18), (.dirt, 0.24),
-                    (.fern, 0.10), (.rock, 0.08), (.moss, 0.04)]
+            return [(.grass, 0.36), (.meadow, 0.18), (.dirt, 0.20),
+                    (.fern, 0.10), (.rock, 0.07), (.moss, 0.04), (.peat, 0.05)]
         case "desert":
-            return [(.sand, 0.66), (.dirt, 0.16), (.rock, 0.10), (.scree, 0.08)]
+            return [(.sand, 0.62), (.dirt, 0.12), (.rock, 0.08), (.scree, 0.06),
+                    (.saltFlat, 0.07), (.crackedMud, 0.05)]
         case "tundra":
-            return [(.snow, 0.50), (.moss, 0.16), (.rock, 0.16),
-                    (.dirt, 0.10), (.grass, 0.08)]
+            return [(.snow, 0.46), (.tundraMoss, 0.14), (.moss, 0.12),
+                    (.rock, 0.13), (.dirt, 0.07), (.grass, 0.05), (.peat, 0.03)]
         case "mountains":
-            return [(.rock, 0.48), (.dirt, 0.18), (.scree, 0.16),
-                    (.grass, 0.10), (.snow, 0.08)]
+            return [(.rock, 0.44), (.dirt, 0.14), (.scree, 0.16), (.grass, 0.08),
+                    (.snow, 0.07), (.ash, 0.06), (.chalk, 0.05)]
         case "coast":
-            return [(.sand, 0.32), (.grass, 0.24), (.marsh, 0.20),
-                    (.meadow, 0.14), (.clay, 0.10)]
+            return [(.sand, 0.30), (.grass, 0.20), (.marsh, 0.18),
+                    (.meadow, 0.11), (.clay, 0.07), (.shingle, 0.09),
+                    (.gravelBar, 0.05)]
         default: // plains & homeland
-            return [(.grass, 0.44), (.meadow, 0.26), (.dirt, 0.14),
-                    (.heath, 0.08), (.rock, 0.05), (.clay, 0.03)]
+            return [(.grass, 0.42), (.meadow, 0.24), (.dirt, 0.12),
+                    (.heath, 0.07), (.rock, 0.04), (.clay, 0.03),
+                    (.chalk, 0.04), (.crackedMud, 0.04)]
         }
     }
 

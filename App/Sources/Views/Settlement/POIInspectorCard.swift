@@ -216,7 +216,7 @@ struct POIInspectorCard: View {
 
     /// The round trip in ticks, so the player can weigh the walk before making it.
     private var tripTicks: Int {
-        LocalPOIEngine.travelTicks(to: poi.position) * 2 + poi.kind.workTicks
+        LocalPOIEngine.roundTripTicks(to: poi)
     }
 
     private var statusLine: String {

@@ -241,7 +241,7 @@ struct SettlementScreen: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if let pawn = selectedPawn {
                 PawnInspectorCard(pawn: pawn, ticksPerYear: game.ticksPerYear,
-                                  activity: activityLine(for: pawn),
+                                  activity: { activityLine(for: pawn) },
                                   bonds: bondLines(for: pawn),
                                   moodFactors: MoodLedger.factors(for: pawn,
                                                                   registry: game.registry),

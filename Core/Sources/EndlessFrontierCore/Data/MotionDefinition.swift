@@ -86,6 +86,21 @@ public struct MotionDefinition: Codable, Sendable, Identifiable, Equatable {
     /// A clip that names no phase serves every phase of the work it names.
     public let servesPhases: [String]
 
+    /// **The buildings this clip belongs in**, by definition id.
+    ///
+    /// A trade is not a workplace. `crafting` covers the smith at the forge,
+    /// the weaver at the loom and the tanner over a hide, and until this
+    /// existed the canvas could not tell them apart — every crafter in the
+    /// colony was handed whichever clip the trade's list happened to offer, so
+    /// a bloomery and a weaving shed were two buildings with the same person
+    /// inside doing the same thing.
+    ///
+    /// Named clips win over unnamed ones for that building, so the bank stays
+    /// total: a workshop with nothing written for it still gets the trade's
+    /// general clips, and writing `serves_buildings` for it is an entry in the
+    /// file rather than a branch in Swift.
+    public let servesBuildings: [String]
+
     /// The legs, driven by the walk cycle and scaled by how much the colonist
     /// is actually moving.
     public let legs: Wave
@@ -125,6 +140,7 @@ public struct MotionDefinition: Codable, Sendable, Identifiable, Equatable {
         servesActivities: [String] = [],
         servesWork: [String] = [],
         servesPhases: [String] = [],
+        servesBuildings: [String] = [],
         legs: Wave = .still,
         toolArm: Wave = .still,
         freeArmCounterSwing: Double = 0,
@@ -142,6 +158,7 @@ public struct MotionDefinition: Codable, Sendable, Identifiable, Equatable {
         self.servesActivities = servesActivities
         self.servesWork = servesWork
         self.servesPhases = servesPhases
+        self.servesBuildings = servesBuildings
         self.legs = legs
         self.toolArm = toolArm
         self.freeArmCounterSwing = freeArmCounterSwing
@@ -160,6 +177,7 @@ public struct MotionDefinition: Codable, Sendable, Identifiable, Equatable {
         case servesActivities = "serves_activities"
         case servesWork = "serves_work"
         case servesPhases = "serves_phases"
+        case servesBuildings = "serves_buildings"
         case toolArm = "tool_arm"
         case freeArmCounterSwing = "free_arm_counter_swing"
         case handHeight = "hand_height"
@@ -172,6 +190,7 @@ public struct MotionDefinition: Codable, Sendable, Identifiable, Equatable {
         servesActivities = try c.decodeIfPresent([String].self, forKey: .servesActivities) ?? []
         servesWork = try c.decodeIfPresent([String].self, forKey: .servesWork) ?? []
         servesPhases = try c.decodeIfPresent([String].self, forKey: .servesPhases) ?? []
+        servesBuildings = try c.decodeIfPresent([String].self, forKey: .servesBuildings) ?? []
         legs = try c.decodeIfPresent(Wave.self, forKey: .legs) ?? .still
         toolArm = try c.decodeIfPresent(Wave.self, forKey: .toolArm) ?? .still
         freeArmCounterSwing = try c.decodeIfPresent(Double.self, forKey: .freeArmCounterSwing) ?? 0

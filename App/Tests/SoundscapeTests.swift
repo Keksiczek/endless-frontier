@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+import AVFoundation
 import EndlessFrontierCore
 @testable import EndlessFrontier
 
@@ -131,5 +132,82 @@ struct SoundscapeTests {
                 }
             }
         }
+    }
+}
+
+/// **The clicking.**
+///
+/// Keks, listening: *"přijde mi, že tam pořád cvaká nějaký zvuk, tak zda nějaký
+/// efekt není až moc častý."* It was not too frequent — it was one sound,
+/// broken. Every sting aged a whole buffer at a time, so its envelope was a
+/// staircase stepping at each buffer boundary while the oscillator under it ran
+/// smoothly: a discontinuity in the waveform every 512 samples, which is a
+/// click, thirty of them per hammer.
+///
+/// A click is a property of the samples, so these look at the samples.
+@Suite("The stings do not click")
+struct AudioClickTests {
+
+    /// Renders `buffers` buffers of `frames` each and hands back the lot as one
+    /// continuous signal — which is what the speaker gets, and where a
+    /// boundary discontinuity actually shows up.
+    private func render(_ voices: Voices, sting: Sting,
+                        buffers: Int, frames: Int) -> [Float] {
+        voices.sampleRate = 44_100
+        voices.enqueue(sting)
+        var out: [Float] = []
+        let list = AudioBufferList.allocate(maximumBuffers: 1)
+        defer { free(list.unsafeMutablePointer) }
+        var scratch = [Float](repeating: 0, count: frames)
+        for _ in 0..<buffers {
+            scratch.withUnsafeMutableBufferPointer { raw in
+                list[0] = AudioBuffer(
+                    mNumberChannels: 1,
+                    mDataByteSize: UInt32(frames * MemoryLayout<Float>.size),
+                    mData: raw.baseAddress)
+                voices.render(frames: frames, into: list)
+            }
+            out += scratch
+        }
+        return out
+    }
+
+    /// The decisive one: no two neighbouring samples may jump by more than a
+    /// smooth signal at this pitch and this sample rate ever could. A staircase
+    /// envelope shows up as exactly this, and only at buffer boundaries.
+    @Test("A sting decays smoothly across buffer boundaries", arguments: Sting.allCases)
+    func noDiscontinuityAtBufferBoundaries(sting: Sting) {
+        let voices = Voices()
+        let frames = 512
+        let signal = render(voices, sting: sting, buffers: 8, frames: frames)
+        #expect(signal.contains { $0 != 0 }, "\(sting) rendered silence")
+
+        var worst: (jump: Float, at: Int) = (0, 0)
+        for i in 1..<signal.count {
+            let jump = abs(signal[i] - signal[i - 1])
+            if jump > worst.jump { worst = (jump, i) }
+        }
+        // The brightest sting here is the chime at 1980 Hz: one sample at
+        // 44.1 kHz advances it about 0.28 radians, so a smooth waveform of
+        // amplitude ≤ 0.6 cannot step by more than about 0.17. A quarter gives
+        // headroom for the noise in the hammer without admitting a click.
+        #expect(worst.jump < 0.25,
+                "\(sting) jumps \(worst.jump) between samples \(worst.at - 1) and \(worst.at)")
+    }
+
+    /// …and the envelope actually moves *within* a buffer, which is the thing
+    /// that was broken. Two halves of one buffer must not have the same peak.
+    @Test("A sting's envelope moves inside a single buffer")
+    func envelopeIsNotQuantisedToTheBuffer() {
+        let voices = Voices()
+        let frames = 512
+        let signal = render(voices, sting: .hammer, buffers: 2, frames: frames)
+        let first = signal[0..<frames].map(abs).max() ?? 0
+        let second = signal[frames..<frames * 2].map(abs).max() ?? 0
+        #expect(first > second, "a hammer is loudest when it lands")
+        // Within the first buffer alone the decay has to be visible.
+        let early = signal[0..<(frames / 4)].map(abs).max() ?? 0
+        let late = signal[(frames * 3 / 4)..<frames].map(abs).max() ?? 0
+        #expect(early > late * 1.1, "the envelope is flat across the buffer")
     }
 }

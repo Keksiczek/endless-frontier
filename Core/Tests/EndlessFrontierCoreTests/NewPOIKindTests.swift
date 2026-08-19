@@ -284,6 +284,130 @@ struct MotionBankTests {
         }
     }
 
+    /// The activities the renderer can ask for — `AgentMotion.Activity.motionID`
+    /// in the app, which the package cannot see. Kept here rather than derived,
+    /// because the point of the test is to fail when the two drift apart.
+    static let drawnActivities = [
+        "sleeping", "at_home", "walking", "working", "socializing", "playing",
+        "resting", "travelling", "expedition", "fighting", "hauling",
+    ]
+
+    /// **The test the last one was not.**
+    ///
+    /// `everyClipIsReachable` asks whether a clip *declares* what it is for.
+    /// Every clip in the bank passed it while seventeen of forty-eight had
+    /// never been drawn — because declaring is not being chosen, and the
+    /// chooser broke ties on id and stopped at the first. Seven clips serve a
+    /// farmer at work; `digging` sorts first; the colony dug for two hundred
+    /// years.
+    ///
+    /// So this one asks the question that catches it: sweep every ask the
+    /// renderer can actually make — activity × trade × hunt phase × the
+    /// colonist's own variant — and require that every clip comes back at
+    /// least once. A clip that no sweep returns is content that loads and
+    /// cannot be seen, which is rule 43 with the selector in scope.
+    @Test("Every clip is returned by some ask the canvas actually makes")
+    func everyClipIsSelectable() throws {
+        let registry = try GameDataRegistry.bundled()
+        // Every workplace the canvas can name, plus "somewhere unwritten" — the
+        // sweep has to cover the building axis too, or a bank of clips written
+        // for rooms passes a test that never walks into one.
+        let workplaces: [String?] = [nil] + registry.buildings.keys.sorted()
+        var seen = Set<String>()
+        for activity in Self.drawnActivities {
+            for work in WorkKind.allCases.map(\.rawValue) + [nil] {
+                for phase in [nil, "stalking", "closing", "killed"] {
+                    for building in workplaces {
+                        for variant in UInt64(0)..<8 {
+                            seen.insert(registry.motion(
+                                activity: activity, work: work, phase: phase,
+                                variant: variant, building: building).id)
+                        }
+                    }
+                }
+            }
+        }
+        let unreachable = Set(registry.motions.keys).subtracting(seen)
+            .subtracting(["standing"])
+        #expect(unreachable.isEmpty,
+                "clips that load and can never be drawn: \(unreachable.sorted())")
+    }
+
+    /// Variety, stated as an assertion: a field of farmers is not one farmer
+    /// drawn several times. Without this the fix above is a number nobody
+    /// checks — `one(of:variant:)` could go back to `.first` and every test
+    /// but this one would still pass.
+    @Test("Colonists on the same trade are drawn doing different things")
+    func variantSpreadsTheWork() throws {
+        let registry = try GameDataRegistry.bundled()
+        for work in ["farming", "building", "cooking"] {
+            let clips = Set((UInt64(0)..<12).map {
+                registry.motion(activity: "working", work: work, variant: $0).id
+            })
+            #expect(clips.count >= 3,
+                    "\(work) draws only \(clips.sorted()) however the variant falls")
+        }
+    }
+
+    /// **The workplace outranks the trade.** A weaver and a tanner are both
+    /// `crafting`; drawn off the trade alone they are one person twice.
+    @Test("A clip written for a building wins inside that building")
+    func theBuildingOutranksTheTrade() throws {
+        let bellows = MotionDefinition(
+            id: "bellows", name: LocalizedText(values: [.en: "Bellows", .cs: "Měch"]),
+            servesActivities: ["working"], servesWork: ["crafting"],
+            servesBuildings: ["bloomery"])
+        let bench = MotionDefinition(
+            id: "bench", name: LocalizedText(values: [.en: "Bench", .cs: "Ponk"]),
+            servesActivities: ["working"], servesWork: ["crafting"])
+        let registry = GameDataRegistry(
+            buildings: [], techs: [], eras: [], biomes: [], events: [],
+            motions: [bellows, bench], config: .default)
+
+        #expect(registry.motion(activity: "working", work: "crafting",
+                                building: "bloomery").id == "bellows")
+        // …and a building nothing was written for still gets a clip, or the
+        // bank only works once it is finished.
+        #expect(registry.motion(activity: "working", work: "crafting",
+                                building: "workshop").id == "bench")
+        #expect(registry.motion(activity: "working", work: "crafting").id == "bench",
+                "a clip that names a building leaked out of it")
+    }
+
+    /// The other half of the same rule: a building-specific clip must not be
+    /// handed to somebody working somewhere else just because the variant fell
+    /// that way.
+    @Test("A building's own clip never leaks into another building")
+    func namedClipsStayHome() throws {
+        let registry = try GameDataRegistry.bundled()
+        let named = registry.motions.values.filter { !$0.servesBuildings.isEmpty }
+        for clip in named {
+            for work in clip.servesWork {
+                for activity in clip.servesActivities {
+                    for variant in UInt64(0)..<16 {
+                        let elsewhere = registry.motion(
+                            activity: activity, work: work, variant: variant,
+                            building: "__nowhere__")
+                        #expect(elsewhere.id != clip.id,
+                                "a clip written for one building was drawn in another")
+                    }
+                }
+            }
+        }
+    }
+
+    /// …and the same colonist on the same job is drawn the same way twice, or
+    /// the figures flicker at frame rate.
+    @Test("One variant always gets the same clip")
+    func variantIsStable() throws {
+        let registry = try GameDataRegistry.bundled()
+        for variant in UInt64(0)..<8 {
+            let first = registry.motion(activity: "working", work: "farming", variant: variant)
+            let again = registry.motion(activity: "working", work: "farming", variant: variant)
+            #expect(first.id == again.id)
+        }
+    }
+
     /// What the renderer actually asks, for every trade a colonist can have.
     @Test("Every trade at work gets a clip, and the same one twice")
     func selectionIsTotalAndStable() throws {
@@ -447,5 +571,171 @@ struct SceneryBankTests {
             #expect(tree.colour(in: .autumn) == tree.colour(in: .summer),
                     "\(id) is an evergreen and should keep its colour")
         }
+    }
+}
+
+@Suite("Ground bank — every cover is real country")
+struct GroundTextureTests {
+
+    /// **A `GroundCover` case with no row is a colour nobody wrote**, and a row
+    /// with no case is a colour nobody asks for. Both are the same silent
+    /// failure from opposite ends (rule 43), and the enum is the side that
+    /// decides what the map can contain.
+    @Test("Every cover the map can produce has a row in the bank")
+    func everyCoverIsDescribed() throws {
+        let registry = try GameDataRegistry.bundled()
+        for cover in GroundCover.allCases {
+            #expect(registry.ground.keys.contains(cover.rawValue),
+                    "ground.json says nothing about \(cover.rawValue)")
+        }
+    }
+
+    /// …and every row is country some biome actually lays down. A ground the
+    /// generator can never place is rule 47 in the terrain: it loads, it is
+    /// correct, and no player will see it.
+    @Test("Every ground in the bank is produced by some biome")
+    func everyGroundIsReachable() throws {
+        let registry = try GameDataRegistry.bundled()
+        var placed = Set<String>()
+        for biome in ["forest", "desert", "tundra", "mountains", "coast", "plains"] {
+            for (cover, weight) in LocalTerrain.weights(for: biome) where weight > 0 {
+                placed.insert(cover.rawValue)
+            }
+        }
+        let unreachable = Set(registry.ground.keys).subtracting(placed)
+        #expect(unreachable.isEmpty,
+                "ground no biome ever lays down: \(unreachable.sorted())")
+    }
+
+    /// The grain is drawn off `texture`, and the renderer answers to a closed
+    /// list of names. A row naming a mark nothing draws gets the fallback dash
+    /// — legible, and wrong. This is the check that the two lists are one list.
+    @Test("Every texture named in the bank is one the canvas can draw")
+    func everyTextureIsDrawable() throws {
+        let known: Set<String> = ["blades", "pebbles", "ripples", "crack", "glint",
+                                  "reed", "frond", "sprig", "stipple", "chips",
+                                  "driedCrack"]
+        let registry = try GameDataRegistry.bundled()
+        for (id, def) in registry.ground {
+            #expect(known.contains(def.texture),
+                    "\(id) asks for a mark the canvas does not know")
+        }
+    }
+
+    /// A biome's character is its dominant cover, and widening the margins must
+    /// never cost it that (`LocalTerrainTests` checks the outcome; this checks
+    /// the table it comes from).
+    @Test("Widening the margins left every biome its character")
+    func dominanceSurvives() {
+        for biome in ["forest", "desert", "tundra", "mountains", "coast", "plains"] {
+            let table = LocalTerrain.weights(for: biome).sorted { $0.1 > $1.1 }
+            let total = table.reduce(0) { $0 + $1.1 }
+            #expect(abs(total - 1) < 0.001, "\(biome)'s weights sum to \(total)")
+            #expect(table[0].1 > table[1].1 * 1.2,
+                    "\(biome) has no dominant cover any more")
+        }
+    }
+}
+
+/// **Step one of `docs/MOUNTS_AND_VEHICLES.md`.**
+///
+/// Nothing rides anything yet — this is the data layer and the guard that it
+/// actually loads. Written first on purpose: the motion bank shipped 48 clips
+/// of which 17 had never been drawn, and the way that happens is content going
+/// in before anything reads it.
+@Suite("Conveyances — the data layer")
+struct ConveyanceBankTests {
+
+    @Test("The conveyance bank actually reaches the registry")
+    func bankIsLoaded() throws {
+        let registry = try GameDataRegistry.bundled()
+        #expect(registry.conveyances.count >= 3,
+                "conveyances.json failed to decode — one malformed entry takes the lot")
+        #expect(registry.conveyance("travois") != nil)
+    }
+
+    /// Every reference in the file points at something real. `references.py`
+    /// asks this of the drafts; this asks it of what shipped, which is the half
+    /// that matters after a hand edit.
+    @Test("Nothing in the bank points at something that does not exist")
+    func referencesResolve() throws {
+        let registry = try GameDataRegistry.bundled()
+        let species = Set(AnimalSpecies.allCases.map(\.rawValue))
+        let covers = Set(GroundCover.allCases.map(\.rawValue))
+        for def in registry.conveyances.values {
+            if let animal = def.requiresAnimal {
+                #expect(species.contains(animal),
+                        "\(def.id) wants an animal the wild never produces")
+            }
+            if let building = def.requiresBuilding {
+                #expect(registry.building(building) != nil,
+                        "\(def.id) is kept in a building that does not exist")
+            }
+            if let tech = def.requiresTech {
+                #expect(registry.tech(tech) != nil,
+                        "\(def.id) waits on a tech nobody can research")
+            }
+            for material in def.materials.keys {
+                #expect(registry.item(material)?.slot == .material,
+                        "\(def.id) is built out of something that is not stock")
+            }
+            for ground in def.terrain {
+                #expect(covers.contains(ground),
+                        "\(def.id) may cross ground the map cannot make")
+            }
+        }
+    }
+
+    /// A mount must name its beast, and a cart must not — the one place the
+    /// `class` actually changes what the entry means.
+    @Test("A mount is backed by an animal and a cart is not")
+    func mountsNameTheirBeast() throws {
+        let registry = try GameDataRegistry.bundled()
+        for def in registry.conveyances.values {
+            if def.kind == .mount {
+                #expect(def.requiresAnimal != nil, "\(def.id) is a mount with nothing to ride")
+            } else {
+                #expect(def.requiresAnimal == nil, "\(def.id) is not a mount and names a beast")
+            }
+        }
+    }
+
+    /// **The trade-off has to exist in the file**, or the whole design is an
+    /// upgrade ladder with extra steps: something the colony can have early
+    /// must carry more than a back and be *slower* than walking.
+    @Test("The earliest conveyance costs speed for load")
+    func theFirstOneIsATradeOff() throws {
+        let registry = try GameDataRegistry.bundled()
+        let early = registry.conveyances.values.filter { $0.era == .earlySettlement }
+        #expect(!early.isEmpty, "a colony of twelve can have nothing at all")
+        #expect(early.contains { $0.pace < 1 && $0.cargo > 1 },
+                "nothing early trades pace for load, so the first choice is not a choice")
+    }
+
+    /// Terrain is what stops this being a straight upgrade. If every entry
+    /// crosses everything, the map has no say.
+    @Test("Something is stopped by the ground")
+    func terrainMatters() throws {
+        let registry = try GameDataRegistry.bundled()
+        #expect(registry.conveyances.values.contains { !$0.terrain.isEmpty },
+                "every conveyance crosses everything, so the map decides nothing")
+        let cart = try #require(registry.conveyance("hand_cart"))
+        #expect(!cart.canCross(.marsh), "a two-wheeled cart in a bog")
+        #expect(cart.canCross(.dirt))
+    }
+
+    /// What a colony can actually reach right now — the list a build menu shows.
+    @Test("Availability answers to era, building and tech")
+    func availabilityIsGated() throws {
+        let registry = try GameDataRegistry.bundled()
+        let bare = registry.availableConveyances(
+            era: .earlySettlement, standing: [], researched: [])
+        #expect(bare.contains { $0.id == "travois" },
+                "a colony with nothing standing can still lash two poles together")
+        #expect(!bare.contains { $0.id == "hand_cart" },
+                "a cart with no lumberyard")
+        let later = registry.availableConveyances(
+            era: .ancient, standing: ["lumberyard"], researched: [])
+        #expect(later.contains { $0.id == "hand_cart" })
     }
 }

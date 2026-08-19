@@ -185,9 +185,19 @@ over. `reach` and `hand_height` place the tool hand at rest.
 Numbers are small: amplitudes 0…2, frequencies 0.5…6, lean and bob 0…1. A body
 that stands still while working has legs at 0 and a busy `tool_arm`. Write the
 motion of a real action — closing on an animal, gutting it, carrying it home —
-not an emotion.""",
-        "wants": "the hunt (stalking, closing, the kill, the carcass carried home), "
-                 "and the trades that currently all look like the same arm going up and down",
+not an emotion.
+
+`serves_activities` and `serves_work` say when a clip may be chosen;
+`serves_buildings` names the workplaces it belongs in, by `buildings.json` id,
+and **outranks the trade**. This is the difference between a weaver and a
+tanner, who are both `crafting` and were drawn identically until a clip could
+name the shed it happens in. A clip with `serves_buildings` is only ever chosen
+inside those buildings, so write it for the actual work done there.""",
+        "wants": "one clip per staffed building — a bloomery, a windmill, a "
+                 "foundry and a library are four different rooms and currently "
+                 "four people doing the same thing",
+        # `MotionDefinition` learned this before any row used it.
+        "new_fields": ("serves_buildings",),
     },
     "scenery": {
         "file": "scenery.json",
@@ -223,6 +233,32 @@ A new ground has to read as a *neighbour* of the ones beside it, or the map turn
 into confetti — scree is rock gone pale and loose, heath is grass gone dry and
 purple, fern is meadow in shade.""",
         "wants": "country the twelve covers cannot currently make — salt flat, ash, shingle, peat",
+    },
+    "conveyances": {
+        "file": "conveyances.json",
+        "brief": """One kind of thing that carries a body or a load. **A mount and a cart
+are the same entry**: both move a body faster than its legs, carry more than a
+back can, have to be kept and can be lost. `class` says which — mount, cart,
+rail, motor, air — and a `mount` is the only one that names `requires_animal`.
+
+`pace` multiplies walking on the settlement's own map; `region_pace` multiplies
+the road between settlements. They are separate numbers on purpose, because the
+two are measured in different units. **A pace below 1 is legitimate and is where
+the interest is**: a travois is slower than a person and carries three times as
+much, which is the first real trade-off the colony gets.
+
+`terrain` lists the `GroundCover` ids it may cross, and **empty means anything**.
+This is what stops the whole system being an upgrade ladder — a cart refuses a
+bog, a mule takes a pass a horse will not, an airship does not care and burns
+fuel the whole time.
+
+`upkeep` is per tick, per conveyance, and a beast eats whether or not it is
+working. Keep it small: forty of them is forty times this.""",
+        "wants": "the ages the file does not cover — wagons and barges, rail and "
+                 "the roundhouse, trucks and airships, and whatever a near-future "
+                 "colony moves a hundred tonnes with",
+        "new_fields": ("class", "requires_animal", "region_pace", "terrain",
+                       "riders", "cargo", "pace", "upkeep", "combat"),
     },
     "biomes": {
         "file": "biomes.json",

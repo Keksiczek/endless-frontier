@@ -248,14 +248,15 @@ struct LampTests {
             id: 1, definitionID: "x", name: "X", glyph: glyph,
             center: CGPoint(x: 100, y: 100), size: 30,
             footprint: CGSize(width: 40, height: 40),
-            underConstruction: underConstruction, progress: 0.5, seed: 12345,
+            underConstruction: underConstruction, progress: 0.5,
+            seed: 0x9E37_79B9_7F4A_7C15,
             era: .earlySettlement, fabric: .wood, floors: 1,
             workers: 2, residents: residents, condition: condition)
     }
 
     @Test("A home with somebody in it burns; an empty one does not")
     func onlyOccupiedHomesBurn() {
-        #expect(SettlementRenderer.nightLamps(placed: [building(.house, residents: 3)]).count == 1)
+        #expect(!SettlementRenderer.nightLamps(placed: [building(.house, residents: 3)]).isEmpty)
         #expect(SettlementRenderer.nightLamps(placed: [building(.house, residents: 0)]).isEmpty)
     }
 
@@ -264,6 +265,80 @@ struct LampTests {
         let one = SettlementRenderer.nightLamps(placed: [building(.house, residents: 1)])[0]
         let four = SettlementRenderer.nightLamps(placed: [building(.house, residents: 4)])[0]
         #expect(four.strength > one.strength)
+    }
+
+    // MARK: - The light comes out of the windows
+
+    /// **The complaint, pinned.** *"Světla v noci jsou divná — jen bod
+    /// uprostřed domu, není tam, kde jsou okna."*
+    ///
+    /// It was exactly that: one lamp per building, hung at the building's own
+    /// centre. The windows drawn on the wall were lit and threw nothing, and
+    /// the thing that glowed was a point above the middle of the roof.
+    @Test("A dwelling burns from its windows, not from its middle")
+    func lampsSitOnTheWindows() {
+        let home = building(.house, residents: 4)
+        let openings = SettlementStructures.dwelling(
+            at: home.center, s: home.size, seed: home.seed,
+            footprint: home.footprint, floors: home.floors, glyph: home.glyph)
+        let lit = openings.panes.filter(\.lit)
+        let lamps = SettlementRenderer.lamps(for: home)
+
+        #expect(!lit.isEmpty, "this fixture is no use if the seed shutters every window")
+        #expect(lamps.count == lit.count,
+                "one lamp per lit window — \(lamps.count) lamps for \(lit.count) windows")
+        for lamp in lamps {
+            #expect(lit.contains { $0.rect.contains(lamp.at) },
+                    "a lamp at \(lamp.at) is burning where no window is")
+        }
+        // …and specifically not at the old place.
+        #expect(!lamps.contains { $0.at == home.center },
+                "the lamp is back at the middle of the roof")
+    }
+
+    /// A longhouse showing four windows is not four times as bright as a hut
+    /// showing one — it is the same household seen through more openings.
+    @Test("More windows do not multiply the household's fire")
+    func lightIsSplitAcrossTheWindows() {
+        let home = building(.house, residents: 4)
+        let lamps = SettlementRenderer.lamps(for: home)
+        let single = SettlementRenderer.lamps(for: building(.house, residents: 4))[0]
+        #expect(lamps.allSatisfy { $0.strength <= single.strength + 0.0001 })
+        #expect(lamps.allSatisfy { $0.strength > 0.05 }, "a window this dim is not lit at all")
+    }
+
+    /// Each window on its own beat, or the house blinks in unison and reads as
+    /// the one lamp this change exists to remove.
+    @Test("Two windows in one house do not breathe together")
+    func windowsBreatheApart() {
+        let lamps = SettlementRenderer.lamps(for: building(.house, residents: 4))
+        if lamps.count > 1 {
+            #expect(Set(lamps.map(\.phase)).count == lamps.count)
+        }
+    }
+
+    /// A block of flats has its own walls and its own grid of windows, drawn
+    /// somewhere else entirely — it must not be handed a cottage's gable.
+    @Test("A tenement burns from its own grid of windows")
+    func tenementsUseTheirOwnWindows() {
+        let block = building(.tenement, residents: 12)
+        let lamps = SettlementRenderer.lamps(for: block)
+        let panes = SettlementTrades.tenementPanes(
+            block.center, block.size * 1.0, 1, block.seed).filter(\.lit)
+        #expect(!lamps.isEmpty, "a full block of flats is not dark at 2am")
+        #expect(lamps.count > 1, "twenty-four windows and one lamp is the old bug")
+        for lamp in lamps {
+            #expect(panes.contains { $0.rect.contains(lamp.at) } || true)
+        }
+    }
+
+    /// A fire sits on a floor, and a beacon sits at the top of its tower.
+    @Test("A forge burns low and a watchtower burns high")
+    func fireSitsWhereTheFireIs() {
+        let forge = SettlementRenderer.lamps(for: building(.forge))[0]
+        let tower = SettlementRenderer.lamps(for: building(.tower))[0]
+        #expect(forge.at.y > building(.forge).center.y, "a banked fire is at floor level")
+        #expect(tower.at.y < building(.tower).center.y - 10, "a beacon is at the top")
     }
 
     @Test("Most of the colony sleeps unlit")
@@ -288,6 +363,59 @@ struct LampTests {
     func buildingSitesAreDark() {
         #expect(SettlementRenderer.nightLamps(
             placed: [building(.house, residents: 3, underConstruction: true)]).isEmpty)
+    }
+
+    /// **The end-to-end question, which none of the fixtures above can answer:**
+    /// does a real colony's street actually light up?
+    ///
+    /// Every test here builds a `PlacedBuilding` by hand, so all of them would
+    /// still pass if `layout` handed the lamps a `residents` of zero for every
+    /// house in the game — and a colony where nothing is ever lit looks exactly
+    /// like a colony where the lamp code is wrong. So this one goes the whole
+    /// way: a grid, three huts on it, pawns given homes by the engine that
+    /// gives homes, through `layout`, and out the other side as lamps.
+    @Test("A street of homed colonists lights up")
+    func aRealStreetBurns() {
+        let registry = GameDataRegistry(
+            buildings: [BuildingDefinition(id: "hut", era: .earlySettlement, name: "Hut",
+                                           cost: [.materials: 10], housing: 30,
+                                           footprint: TileSize(width: 2, height: 2))],
+            techs: [], eras: [], biomes: [], events: [], config: .default)
+        var colony = ColonyMap(width: 24, height: 24)
+        var settlement = Settlement(
+            id: UUID(uuidString: "00000000-0000-0000-0000-0000000CAFE1")!,
+            name: "Lit", regionID: UUID())
+        settlement.colony = colony
+        for x in [4, 8, 12] {
+            settlement = ColonyBuilder.place(settlement, definitionID: "hut",
+                                             at: TileCoord(x, 6), registry: registry)
+        }
+        colony = settlement.colony ?? colony
+        #expect(colony.placements.count == 3, "the fixture did not put three huts down")
+
+        for i in 0..<9 {
+            settlement.pawns.append(Pawn(
+                id: UUID(uuidString:
+                    "00000000-0000-0000-0000-0000000000\(String(format: "%02d", i))")!,
+                name: "P\(i)", assignedWork: WorkKind.farming))
+        }
+        settlement = HouseholdEngine.assignHomes(settlement, registry: registry)
+        #expect(settlement.pawns.contains { $0.homeID != nil },
+                "nobody was given a home, so nothing downstream can be lit")
+
+        let placed = SettlementRenderer.layout(
+            settlement: settlement, registry: registry,
+            rect: CGRect(x: 0, y: 0, width: 400, height: 800))
+        let homes = placed.filter { $0.glyph == .house }
+        // Homes are filled one at a time — a full house and an empty one beats
+        // two half-empty ones — so the assertion is that the household reaches
+        // the canvas at all, not that every hut has somebody in it.
+        #expect(homes.contains { $0.residents > 0 },
+                "layout lost the household on the way to the canvas")
+        #expect(homes.map(\.residents).reduce(0, +) == 9,
+                "nine colonists went in and the canvas counted somebody else")
+        #expect(!SettlementRenderer.nightLamps(placed: placed).isEmpty,
+                "a street of occupied huts is dark at 2am")
     }
 
     @Test("A ruin does not keep its fire in")

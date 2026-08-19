@@ -41,6 +41,10 @@ public struct GameDataRegistry: Sendable {
     /// The colour of everything standing on the ground — crops, trees, rock,
     /// landforms. Presentation only, like the two banks beside it.
     public let scenery: [String: SceneryDefinition]
+
+    /// What the colony can move a body or a load with — mounts and vehicles,
+    /// which are one thing. See `docs/MOUNTS_AND_VEHICLES.md`.
+    public let conveyances: [String: ConveyanceDefinition]
     public let config: WorldConfig
     public let mapGen: MapGenConfig
 
@@ -99,6 +103,7 @@ public struct GameDataRegistry: Sendable {
         motions: [MotionDefinition] = [],
         ground: [GroundDefinition] = [],
         scenery: [SceneryDefinition] = [],
+        conveyances: [ConveyanceDefinition] = [],
         config: WorldConfig = .default,
         mapGen: MapGenConfig = .default
     ) {
@@ -110,6 +115,7 @@ public struct GameDataRegistry: Sendable {
         self.motions = Dictionary(uniqueKeysWithValues: motions.map { ($0.id, $0) })
         self.ground = Dictionary(uniqueKeysWithValues: ground.map { ($0.id, $0) })
         self.scenery = Dictionary(uniqueKeysWithValues: scenery.map { ($0.id, $0) })
+        self.conveyances = Dictionary(uniqueKeysWithValues: conveyances.map { ($0.id, $0) })
         self.cookableMeals = cookable
         self.foodstuffs = Set(cookable.flatMap(\.ingredients.keys))
         self.dearestMealWork = cookable.map(\.work).max() ?? 1
@@ -152,6 +158,26 @@ public struct GameDataRegistry: Sendable {
         scenery[id] ?? .plain
     }
 
+    public func conveyance(_ id: String) -> ConveyanceDefinition? { conveyances[id] }
+
+    /// What this colony could actually build or gentle right now — the era has
+    /// come, the shop stands, the knowledge exists. The list a build menu shows
+    /// and the steward chooses from.
+    public func availableConveyances(
+        era: Era, standing: Set<String>, researched: Set<String>
+    ) -> [ConveyanceDefinition] {
+        conveyances.values
+            .filter { def in
+                guard def.era.index <= era.index else { return false }
+                if let building = def.requiresBuilding, !standing.contains(building) {
+                    return false
+                }
+                if let tech = def.requiresTech, !researched.contains(tech) { return false }
+                return true
+            }
+            .sorted { $0.id < $1.id }
+    }
+
     /// The clip that best fits what somebody is doing and what they do for a
     /// living — a farmer at work sows, a hunter at work stalks, and both fall
     /// back to the plain work clip if the bank has nothing more specific.
@@ -161,26 +187,87 @@ public struct GameDataRegistry: Sendable {
     /// stable across runs, and a figure that changes gait every frame because
     /// two clips both matched is worse than no clip at all.
     public func motion(activity: String, work: String?,
-                       phase: String? = nil) -> MotionDefinition {
+                       phase: String? = nil, variant: UInt64 = 0,
+                       building: String? = nil) -> MotionDefinition {
         if let work {
             let fitted = motions.values
                 .filter { $0.servesWork.contains(work) && $0.servesActivities.contains(activity) }
                 .sorted { $0.id < $1.id }
+            // **The workplace outranks the trade.** A weaver and a tanner are
+            // both `crafting`, and drawn off the trade alone they are the same
+            // person twice — so a clip written for *this* building wins over
+            // one written for the trade at large. A building nothing names
+            // falls through to the trade's own clips, which is what keeps the
+            // bank total while it is only half written.
+            if let building {
+                let here = fitted.filter { $0.servesBuildings.contains(building) }
+                if let phase {
+                    let matched = here.filter { $0.servesPhases.contains(phase) }
+                    if let pick = one(of: matched, variant: variant) { return pick }
+                }
+                let general = here.filter { $0.servesPhases.isEmpty }
+                if let pick = one(of: general.isEmpty ? here : general, variant: variant) {
+                    return pick
+                }
+            }
             // Most specific first: a clip written for *this* moment of the work
             // beats one written for the work in general. Without this the four
             // hunting clips were separated by nothing but the alphabet, so a
             // hunter creeping and a hunter over a carcass were drawn the same.
-            if let phase, let matched = fitted.first(where: { $0.servesPhases.contains(phase) }) {
-                return matched
+            //
+            // A clip that names buildings is skipped here: it has already had
+            // its chance above, and letting it back in would put the smith's
+            // hammer in the weaver's hands whenever the variant fell that way.
+            //
+            // **And there is no falling back into it when the trade has nothing
+            // generic left.** Every clip serving `trade` names a market, a
+            // trade post or a bank, so a "use the named ones rather than
+            // nothing" fallback handed a trader standing anywhere else the
+            // bank's coin-counting — a clip written for one room, drawn in
+            // every room. When a trade has only room-specific clips the answer
+            // is the plain `working` body below, which is what somebody working
+            // in an unwritten place actually looks like.
+            let pool = fitted.filter { $0.servesBuildings.isEmpty }
+            if let phase {
+                let matched = pool.filter { $0.servesPhases.contains(phase) }
+                if let pick = one(of: matched, variant: variant) { return pick }
             }
-            if let best = fitted.first(where: { $0.servesPhases.isEmpty }) ?? fitted.first {
-                return best
+            let general = pool.filter { $0.servesPhases.isEmpty }
+            if let pick = one(of: general.isEmpty ? pool : general, variant: variant) {
+                return pick
             }
         }
         let byActivity = motions.values
             .filter { $0.servesWork.isEmpty && $0.servesActivities.contains(activity) }
             .sorted { $0.id < $1.id }
-        return byActivity.first ?? motion(activity)
+        return one(of: byActivity, variant: variant) ?? motion(activity)
+    }
+
+    /// Which of several equally-fitting clips this body plays.
+    ///
+    /// **The bank was two thirds dead and the build was green.** Seventeen of
+    /// forty-eight clips had never once reached the screen, because the choice
+    /// among clips that fit equally well was `.first` over an id-sorted list:
+    /// seven clips serve a farmer at work and `digging` sorts first, so every
+    /// farmer in the colony dug, for ever, and `reaping_scythe`,
+    /// `threshing_flail`, `sowing` and `tilling_hoe` were content that loaded
+    /// and could never be seen. The same for builders (six clips, all of them
+    /// `digging`) and cooks.
+    ///
+    /// This is [[ef-silent-data-failures]] one layer up: the row was not
+    /// malformed and the table was not empty — the *selection* could not reach
+    /// past the first entry. A bank only grows if picking from it grows too.
+    ///
+    /// `variant` is a caller-supplied seed, and what the caller puts in it
+    /// decides how the variety reads. The canvas passes a hash of the colonist
+    /// and the job they are on, so a field of farmers shows one sowing, one
+    /// reaping and one threshing, each keeping their own clip for as long as
+    /// they are on that piece of work rather than flickering between frames.
+    /// Zero — the default — keeps the old id-sorted answer, so anything that
+    /// wants one settled clip still gets one.
+    func one(of clips: [MotionDefinition], variant: UInt64) -> MotionDefinition? {
+        guard !clips.isEmpty else { return nil }
+        return clips[Int(variant % UInt64(clips.count))]
     }
     public func eraDefinition(_ era: Era) -> EraDefinition? { eras[era] }
 
@@ -249,6 +336,7 @@ public struct GameDataRegistry: Sendable {
         let motions = try optional([MotionDefinition].self, "motions", else: [])
         let ground = try optional([GroundDefinition].self, "ground", else: [])
         let scenery = try optional([SceneryDefinition].self, "scenery", else: [])
+        let conveyances = try optional([ConveyanceDefinition].self, "conveyances", else: [])
         return GameDataRegistry(
             buildings: try load([BuildingDefinition].self, "buildings"),
             techs: try load([TechDefinition].self, "techs"),
@@ -265,6 +353,7 @@ public struct GameDataRegistry: Sendable {
             motions: motions,
             ground: ground,
             scenery: scenery,
+            conveyances: conveyances,
             config: try load(WorldConfig.self, "world-config"),
             mapGen: mapGen
         )

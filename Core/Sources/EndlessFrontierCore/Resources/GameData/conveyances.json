@@ -1,0 +1,55 @@
+[
+  {
+    "id": "travois",
+    "name": { "en": "Travois", "cs": "Smyk" },
+    "description": {
+      "en": "Two poles lashed at one end and dragged behind you, the load slung between them. Slower than walking with nothing, and it carries what three arms could not.",
+      "cs": "Dvě žerdi svázané u jednoho konce a vlečené za sebou, náklad zavěšený mezi nimi. Pomalejší než chůze naprázdno, a unese to, co tři páry rukou neunesou."
+    },
+    "era": "early_settlement",
+    "class": "cart",
+    "materials": { "wood": 3, "hide": 1 },
+    "riders": 0,
+    "cargo": 3,
+    "pace": 0.8,
+    "region_pace": 0.9,
+    "terrain": ["grass", "meadow", "dirt", "sand", "heath", "moss", "snow", "clay", "fern", "chalk", "cracked_mud", "salt_flat", "tundra_moss"]
+  },
+  {
+    "id": "pack_elk",
+    "name": { "en": "Pack elk", "cs": "Soumarský los" },
+    "description": {
+      "en": "A bull gentled over a winter and taught to stand under a load. It goes where a cart cannot and eats whether or not you have work for it.",
+      "cs": "Býk zkrocený přes zimu a naučený stát pod nákladem. Projde tam, kam vůz ne, a žere, ať pro něj práci máš nebo nemáš."
+    },
+    "era": "ancient",
+    "class": "mount",
+    "requires_animal": "elk",
+    "requires_building": "hunters_lodge",
+    "materials": { "leather": 2, "wood": 2 },
+    "riders": 1,
+    "cargo": 4,
+    "pace": 1.5,
+    "region_pace": 1.4,
+    "upkeep": { "food": 0.35 },
+    "terrain": [],
+    "combat": { "charge": 1.2 }
+  },
+  {
+    "id": "hand_cart",
+    "name": { "en": "Hand cart", "cs": "Károvník" },
+    "description": {
+      "en": "Two wheels, a bed and a pair of shafts. It takes a road and refuses a bog, which is the whole of what a wheel ever asks of you.",
+      "cs": "Dvě kola, korba a dvě oje. Chce cestu a odmítá močál, což je všechno, oč kolo kdy žádá."
+    },
+    "era": "ancient",
+    "class": "cart",
+    "requires_building": "lumberyard",
+    "materials": { "wood": 6, "iron_ingot": 1 },
+    "riders": 0,
+    "cargo": 6,
+    "pace": 0.95,
+    "region_pace": 1.15,
+    "terrain": ["grass", "meadow", "dirt", "sand", "heath", "clay", "chalk", "cracked_mud", "salt_flat", "gravel_bar"]
+  }
+]

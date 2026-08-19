@@ -446,3 +446,82 @@ fires, do the arithmetic before you rewrite the mechanic.
    would have sat in the table for ever. The rule generalises past JSON:
    whenever a check walks a structure, ask which half of each pair it is
    reading.
+47. **A bank is only as big as the selector that reaches into it.** Forty-eight
+   motion clips shipped and seventeen of them had never once been drawn,
+   because the choice among clips that fit equally well was `.first` over an
+   id-sorted list. Seven clips serve a farmer at work, `digging` sorts first,
+   and so every farmer in every colony dug — `reaping_scythe`,
+   `threshing_flail`, `sowing` and `tilling_hoe` were content that loaded
+   perfectly and could never be seen. This is the shape of rule 43 one layer
+   up: the row was not malformed, the table was not empty, the *reach* was one
+   deep. Two consequences. First, ties need a seed — here the colonist and the
+   job they are on, so a field shows three different jobs and nobody flickers
+   between frames. Second, the test has to ask the selector, not the data:
+   "every clip declares an activity" passed all forty-eight while a third of
+   them were dead, and only sweeping every ask the canvas can make found it.
+48. **A specific clip must not be able to fall back into a general slot.** The
+   fix for 47 gave clips a `serves_buildings` and let the workplace outrank the
+   trade — and then kept a "use the building-specific ones rather than nothing"
+   fallback for trades with nothing generic left. Every clip serving `trade`
+   names a market, a trade post or a bank, so a trader standing anywhere else
+   was handed the bank's coin-counting: a clip written for one room, drawn in
+   every room. When the specific pool is all there is, the answer is the plain
+   general body one level up, not the specific one used out of place.
+49. **A checker that compares against the file cannot see what the decoder just
+   learned.** `generate.py` rejects any field no existing entry has — the check
+   that catches a typo'd key silently dropped — which is right, and which makes
+   the *first* entry to use a genuinely new field indistinguishable from a
+   typo. Adding `serves_buildings` to `MotionDefinition` meant thirty-five
+   correct clips were reported as thirty-five faults. The fix is not to weaken
+   the check but to let a kind declare `new_fields`: one deliberate line saying
+   the Swift has learned this and the file has not caught up. Deleting the
+   check would have cost the fault it exists to catch; a bypass that has to be
+   written down costs one line and leaves a record of why.
+50. **A dictionary keyed by anything but `String` or `Int` does not decode from
+   a JSON object.** `upkeep: [ResourceType: Double]` looks exactly like
+   `cost: Resources` and behaves nothing like it: without `CodingKeyRepresentable`
+   Swift encodes such a dictionary as a *flat array*, so `"upkeep": {"food": 0.35}`
+   threw `typeMismatch` — and because the registry rethrows now (rule 40), one
+   new three-entry file took **every other bank down with it** and failed five
+   suites that have nothing to do with conveyances. The repository already had
+   the answer: every other cost in it is a `Resources`. Reach for the type the
+   data layer already uses before writing a new shape for the same idea.
+51. **A recipe consumes stock, not things.** Five generated recipes spent a
+   blanket, a sharpened antler and a museum shard — items with `slot`
+   `.equipment` and `.artifact`. They read perfectly and would have quietly
+   destroyed a colonist's kit to make something else. `CraftingTests` catches
+   it, which is why the merge gate runs it; the lesson for the *prompt* is that
+   "use these ids" has to say **which of them are materials**, because a model
+   asked to spend a list will spend whatever is on it.
+52. **A `switch` on the enum is not reading the data, however much the comment
+   says it is.** `SettlementGround.mark` chose a grain by `GroundCover` case
+   while `GroundDefinition.texture` sat in the file being validated by the
+   checker, written by the generator, and read by nothing — with the comment
+   two functions below stating the opposite intent out loud ("a thirteenth kind
+   of country is an entry rather than four new `case`s"). The colour honoured
+   the rule and the grain never had. When a data file has a field naming a
+   drawing routine, grep for the field: if the only reader is the definition's
+   own initialiser, the field is decoration.
+53. **A want list that is a union over the cookbook is a divisor, and content
+   is what divides it.** `QuartermasterEngine.wantedMaterials` was the union of
+   the materials of *every* workable gear recipe. That was seven ids while ten
+   such recipes shipped; a content pass took the recipes to thirty and the list
+   to eighteen, and the colony **stopped arming itself entirely** — because
+   `StewardEngine.keepMaterialsComing` places one standing order per wanted
+   material, the bench is finite, and eighteen trickles never reach the amount
+   any one recipe needs. Nothing was malformed and no test of the content could
+   see it: the failure was in an engine, caused by the *size* of a correct data
+   file. Rule 14 again, one layer up — this time the entity count that grew was
+   the content itself.
+
+   The fix is the honest one rather than a cap: the bench makes **one thing per
+   slot**, so want the materials of that thing. Two per slot, in fact — the best
+   it could work, *and* the best it could actually finish, because a colony with
+   a workshop and no bloomery will otherwise stock for chainmail for ever and
+   never tan the hide for a coat. An unreachable best starving a reachable one
+   is [[ef-unreachable-mechanics]] inside a single function.
+
+   **The general form, and the one worth carrying:** before adding content to a
+   bank, ask what reads the bank *by the whole*. A `for recipe in all recipes`
+   that accumulates is a number that grows with the file, and somewhere
+   downstream something is dividing by it.

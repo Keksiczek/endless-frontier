@@ -8,7 +8,7 @@ Read in this order when picking work up cold:
 |---|---|---|
 | 1 | [NEXT.md](NEXT.md) | **Start here.** Where the game stands and what to work on next, with the evidence for each |
 | 2 | [CODEMAPS/architecture.md](CODEMAPS/architecture.md) | The three layers, the tick order, where a decision flows |
-| 3 | [RULES.md](RULES.md) | **38 rules, each of which cost a session.** Read before writing a threshold |
+| 3 | [RULES.md](RULES.md) | **52 rules, each of which cost a session.** Read before writing a threshold |
 | 4 | [BACKLOG.md](BACKLOG.md) | **The living record.** What was measured, what was built, what Keks asked for |
 
 ## Reference, by question
@@ -23,6 +23,7 @@ Read in this order when picking work up cold:
 | What are the game's systems and formulas? | [DESIGN.md](DESIGN.md) |
 | Building footprints, lots, pawn-like animals | [RIMWORLD_LAYER.md](RIMWORLD_LAYER.md) |
 | Art direction, why it is line art | [ASSET_SPECIFICATION.md](ASSET_SPECIFICATION.md) |
+| Mounts, carts, and everything later that moves | [MOUNTS_AND_VEHICLES.md](MOUNTS_AND_VEHICLES.md) |
 | Event / tech JSON schemas | `data-schemas/` |
 
 ## Historical — do not plan from these
