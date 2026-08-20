@@ -119,12 +119,19 @@ public struct Tree: Codable, Sendable, Equatable, Identifiable {
 /// What a rock is made of, and therefore what breaking it gives up.
 public enum RockKind: String, Codable, Sendable, CaseIterable {
     case granite, limestone, ironSeam = "iron_seam", clayBank = "clay_bank"
+    /// Black rock that burns — the seam a locomotive is downstream of.
+    case coalSeam = "coal_seam"
+    /// Where the oil comes up on its own. Not really rock at all, and
+    /// drawn dark and wet rather than broken.
+    case oilSeep = "oil_seep"
 
     /// The deposit kind this rock reads as for the harvesting economy.
     public var deposit: LocalResourceKind {
         switch self {
         case .granite, .limestone: return .stone
         case .ironSeam: return .ironOre
+        case .coalSeam: return .coal
+        case .oilSeep: return .oilSeep
         case .clayBank: return .clay
         }
     }
@@ -136,6 +143,10 @@ public enum RockKind: String, Codable, Sendable, CaseIterable {
         case .ironSeam: return 1.8
         case .limestone: return 1.3
         case .clayBank: return 0.8
+        // Coal is softer than the rock around it — that is why a seam is worth
+        // following. Oil takes no breaking at all; the work is catching it.
+        case .coalSeam: return 1.1
+        case .oilSeep: return 0.6
         }
     }
 
@@ -145,6 +156,8 @@ public enum RockKind: String, Codable, Sendable, CaseIterable {
         case .limestone: return LocalizedText(values: [.en: "Limestone", .cs: "Vápenec"])
         case .ironSeam: return LocalizedText(values: [.en: "Iron seam", .cs: "Železná žíla"])
         case .clayBank: return LocalizedText(values: [.en: "Clay bank", .cs: "Hliniště"])
+        case .coalSeam: return LocalizedText(values: [.en: "Coal seam", .cs: "Uhelná sloj"])
+        case .oilSeep: return LocalizedText(values: [.en: "Oil seep", .cs: "Ropný vývěr"])
         }
     }
 }
@@ -312,6 +325,8 @@ public enum FloraFactory {
         switch deposit {
         case .ironOre: return [.ironSeam]
         case .clay: return [.clayBank]
+        case .coal: return [.coalSeam]
+        case .oilSeep: return [.oilSeep]
         default: return [.granite, .limestone]
         }
     }

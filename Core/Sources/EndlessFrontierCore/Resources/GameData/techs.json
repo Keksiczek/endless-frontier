@@ -540,6 +540,10 @@
       {
         "type": "unlock_building",
         "buildingId": "vehicle_works"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "garage"
       }
     ],
     "description": {
@@ -722,6 +726,10 @@
       {
         "type": "unlock_building",
         "buildingId": "automated_factory"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "airfield"
       }
     ],
     "description": {
@@ -928,7 +936,12 @@
     "cost": {
       "knowledge": 700
     },
-    "effects": [],
+    "effects": [
+      {
+        "type": "unlock_building",
+        "buildingId": "wainwright"
+      }
+    ],
     "description": {
       "en": "A hub, a rim and an axle that will take a load across a valley.",
       "cs": "Náboj, loukoť a osa, které unesou náklad přes údolí."

@@ -134,6 +134,47 @@ illnesses — a mount that can be hurt, and that dies when the wolf gets it.
 `TamedRole` gains `.mount`; `beastOfBurden` stays what it is, because a pack
 animal that nobody rides is a different thing from a saddle horse.
 
+## What it burns
+
+**A machine burns a thing, not a number.** The five `ResourceType`s are
+abstractions — `energy` means "the colony has power", not a barrel of anything —
+so a locomotive charged `upkeep: {energy: 2}` was a locomotive running on the
+ledger. It burns **coal**: somebody mined it out of a seam, somebody hauled it
+home, and somebody has to keep doing both. That is a supply line, and a supply
+line is a thing the player can lose.
+
+```jsonc
+"upkeep": { "food": 0.35 },          // the ledger: what it costs to keep
+"material_upkeep": { "coal": 3 }     // the shelf: what it actually drinks
+```
+
+The same split buildings already make between `cost` and `material_cost`, for
+the same reason. `StableEngine.advanceOneTick` takes the fuel out of
+`Settlement.stockpile` — **all of it or none of it**, because half a tank does
+not half-run a locomotive, and taking the coal without moving the train is the
+worst of both. A machine that cannot be fuelled does not run, and because it
+does not run it does not wear either.
+
+### The chain, end to end
+
+| | |
+|---|---|
+| the ground | `LocalMapGenerator.depositMix` puts coal seams in the mountains and the tundra, oil seeps in the desert, the tundra and the coast — and **neither in a forest valley**, which is what makes the industrial ages a reason to settle somewhere else |
+| the deposit | `RockKind.coalSeam` / `.oilSeep` → `LocalResourceKind.coal` / `.oilSeep`, mined by a miner like any other seam |
+| the raw thing | `rawMaterialID` → the items `coal` and `crude_oil` |
+| the refinery | `refine_petrol`, `refine_diesel`, `refine_jet_fuel`, `refine_kerosene` — all out of `crude_oil` at the `oil_refinery`, behind `combustion` and `chemistry` |
+| the machine | `material_upkeep` on every `rail`, `motor` and `air` conveyance |
+
+`ZZ` guards, in `StableEngineTests`: every machine burns something real, every
+fuel is either dug or cooked, some country holds coal and some holds oil, and a
+locomotive spends its coal and stands still without it.
+
+**The council knows too.** `StewardEngine.canFeedIt` asks for `fuelRunway`
+ticks' worth on the shelf before it builds another thing that drinks — otherwise
+it would build the lorry and the lorry would stand in the yard for ever, which
+is `upkeep` and `material_upkeep` being two different questions and only the
+first one being asked.
+
 ## The rules this must not break
 
 Each of these is a session someone already paid for.
@@ -186,12 +227,32 @@ Swift first, then generate — the whole point of writing this down.
    biome a road runs through (`CaravanEngine.countryBetween`). A journey a
    conveyance cannot make is one it does not join, and the answer falls back
    to walking — never slower than feet, which are always available.
-6. Presentation: a `riding` activity in `AgentMotion`, `serves_conveyance` in
-   the motion bank, and a figure drawn on the beast.
+6. ~~Presentation: a `riding` activity in `AgentMotion`, `serves_conveyance` in
+   the motion bank, and a figure drawn on the beast.~~ **Done 2026-08-19**, and
+   it needed a mechanic first, again: **nothing in a running game had ever
+   built one.** `StableEngine.advanceOneTick` had no caller outside its own
+   tests, so in play no cart wore out, no fuel was burned, no beast was lost
+   and every one of the four seams read an empty yard — the whole system was a
+   picture of a horse. Wired into `TickEngine` now, with
+   `StewardEngine.keepTheYard` deciding to build one (capped at a conveyance
+   per six colonists — rule 14) and `StableEngine.assignRiders` putting the
+   people who are actually carrying something on them. Only then the drawing:
+   `SettlementConveyances` composes a vehicle out of what its definition
+   already says — undercarriage, cover, draught, bed — so sixty entries are
+   sixty pictures rather than sixty copies of four. A mount's beast is drawn
+   under its rider by `SettlementWildlife.body`, and is no longer also drawn
+   circling the pen.
 7. **Then** generate forty to sixty conveyances across all six eras, plus the
-   buildings (stable, cartwright, roundhouse, garage, airfield), the techs
-   (husbandry, the wheel, rail, combustion) and the events that come with them —
-   a horse thrown, a wagon lost at a ford, the first train.
+   buildings (stable, wainwright, garage, airfield — **written 2026-08-19**),
+   the techs (husbandry, the wheel, rail, combustion — all already in the DAG)
+   and the events that come with them — a horse thrown, a wagon lost at a ford,
+   the first train.
+
+   **There are no horses.** `AnimalSpecies` is deer, boar, hare, fox, wolf,
+   bear, elk, goat, lynx, badger, grouse, so a mount names one of those or it
+   is a conveyance the colony can never build. This is a better constraint than
+   it looks: an elk train and a goat cart are this world's, and a generated
+   "riding horse" is the same dead entry as a tech that does not exist.
 
 Steps 1–6 are perhaps a day. Step 7 is an afternoon and can produce hundreds of
 entries, which is the correct ratio and the reason for doing them in this order.

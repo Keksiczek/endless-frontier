@@ -559,3 +559,33 @@ fires, do the arithmetic before you rewrite the mechanic.
    drawn its beats three times too fast. When a constant is promoted to a
    variable, grep every division by it — each one encoded an assumption that
    the constant was the whole truth.
+58. **A bench with no trade is a bench nobody can ever stand at — and it
+   costs the colony for ever.** `ColonyBuilder.workKind(for:)` falls back to
+   "whatever trade produces most of what this building makes", which answers
+   `.idle` for anything that produces nothing and `logging` for anything that
+   produces materials. Nine buildings therefore employed twenty-four people on
+   paper and could be staffed by nobody at all — every energy building in the
+   game, from the windmill to the fusion reactor — and because
+   `ResourceLoop.staffingFactors` counts *every* building with `workers > 0`,
+   all nine sat at `unstaffedFloor` (0.4× production) permanently, with
+   consumption unscaled and nothing the player could do. Six more — the
+   workshop, the foundry, the factory, the quarry — were staffed by the wrong
+   trade for the same reason: the workshop was manned by woodcutters and no
+   colonist whose trade is `crafting` had anywhere in the world to stand.
+   `everyBenchCanBeFilled` is the guard. **State the trade; never let it be
+   inferred from a by-product.**
+59. **A sweep that walks every combination proves reachability in the API, not
+   in the game.** `everyClipIsSelectable` walks activity × trade × building and
+   passed on fourteen freshly written clips that no ask the simulation can
+   produce would ever return — a clip written for the hunter's lodge and marked
+   `crafting`, when the only trade ever posted to a lodge is `hunting`. The
+   sweep asks what the *canvas can name*; the test that catches this asks only
+   what the *simulation can produce*
+   (`buildingClipsServeTheTradePostedThere`). When you write a totality test,
+   write down which of the two it is.
+60. **A gate that reads one stream reports "failed:" and nothing else.** The
+   merge gate printed `result.stdout` on failure — so a test failure was
+   legible and a *build* failure, or a second SwiftPM holding the lock, came
+   out as an empty message under a headline saying the tests failed. Twenty
+   minutes went into a content bug that was a lock. Print both streams, or the
+   tool built to catch silent failures has one of its own.

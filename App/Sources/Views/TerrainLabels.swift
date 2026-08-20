@@ -14,6 +14,8 @@ extension LocalResourceKind {
         case .herbs: return cs ? "Byliny" : "Herbs"
         case .ironOre: return cs ? "Žíla železné rudy" : "Iron seam"
         case .clay: return cs ? "Jílovna" : "Clay pit"
+        case .coal: return cs ? "Uhelná sloj" : "Coal seam"
+        case .oilSeep: return cs ? "Ropný vývěr" : "Oil seep"
         }
     }
 }

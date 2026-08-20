@@ -744,8 +744,27 @@ public enum StewardEngine {
             guard roof > 0, settlement.storage[resource] >= roof * comfortable
             else { return false }
         }
+        // …and what it *burns*, which is a thing on the shelf rather than a
+        // number on the ledger. A council that cannot see the fuel builds the
+        // lorry anyway, and the lorry stands in the yard for ever: `upkeep`
+        // and `material_upkeep` are two different questions and this only
+        // ever asked the first.
+        for (item, due) in def.materialUpkeep where due > 0 {
+            // A tickful is not a supply. `fuelRunway` ticks of it is the
+            // difference between "we have some" and "we can keep it running",
+            // and it is measured in ticks so it scales with how thirsty the
+            // thing is rather than with a number somebody picked.
+            guard settlement.stockpile[item, default: 0] >= due * fuelRunway
+            else { return false }
+        }
         return true
     }
+
+    /// How many ticks of fuel the colony wants on the shelf before it builds
+    /// something else that drinks. A tick is two real minutes, so this is about
+    /// two hours of it running — long enough that a refinery going down is a
+    /// problem to solve rather than an immediate stoppage.
+    static let fuelRunway = 60
 
     // MARK: - Sending people out
 

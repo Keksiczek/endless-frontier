@@ -67,7 +67,7 @@ public enum WorkKind: String, Codable, Sendable, CaseIterable, Equatable {
         switch self {
         case .farming: return [.field]
         case .logging: return [.forest]
-        case .mining: return [.stone, .ironOre, .clay]
+        case .mining: return [.stone, .ironOre, .clay, .coal, .oilSeep]
         case .foraging: return [.herbs]
         default: return []
         }

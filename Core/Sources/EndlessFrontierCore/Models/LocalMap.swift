@@ -20,13 +20,19 @@ public enum LocalResourceKind: String, Codable, Sendable, CaseIterable {
     case herbs    // foraging → knowledge/medicine
     case ironOre = "iron_ore"   // mining → materials, and the ore the forge needs
     case clay                   // mining → materials, and the clay the kiln needs
+    /// A coal seam. Dug like ore, and burned rather than worked — the first
+    /// fuel that is not a tree, and what a locomotive actually runs on.
+    case coal
+    /// Oil at the surface. Worth nothing until a refinery splits it into the
+    /// three things that are worth something.
+    case oilSeep = "oil_seep"
 
     /// The colonist work that harvests this deposit.
     public var work: WorkKind {
         switch self {
         case .field: return .farming
         case .forest: return .logging
-        case .stone, .ironOre, .clay: return .mining
+        case .stone, .ironOre, .clay, .coal, .oilSeep: return .mining
         case .herbs: return .foraging
         }
     }
@@ -48,6 +54,8 @@ public enum LocalResourceKind: String, Codable, Sendable, CaseIterable {
         case .herbs: return "herb_bundle"
         case .ironOre: return "iron_ore"
         case .clay: return "clay"
+        case .coal: return "coal"
+        case .oilSeep: return "crude_oil"
         }
     }
 }

@@ -145,7 +145,7 @@ public enum FloraEngine {
                     .filter { within($0.position, node.position, claimRadius) }
                     .reduce(0.0) { $0 + $1.timberYield }
                 updated.nodes[i].amount = min(node.capacity, standing)
-            case .stone, .ironOre, .clay:
+            case .stone, .ironOre, .clay, .coal, .oilSeep:
                 let left = map.rocks
                     .filter { $0.kind.deposit == node.kind
                               && within($0.position, node.position, claimRadius) }
@@ -167,7 +167,7 @@ public enum FloraEngine {
         if kind == .field { return map.usesEntityFields }
         guard map.usesEntityLand else { return false }
         switch kind {
-        case .forest, .stone, .ironOre, .clay: return true
+        case .forest, .stone, .ironOre, .clay, .coal, .oilSeep: return true
         case .field, .herbs: return false
         }
     }

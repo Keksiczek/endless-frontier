@@ -23,11 +23,44 @@ struct LocalMapTests {
         #expect(base != otherRegion)
     }
 
-    @Test("A generated map has deposits of every kind, full and on dry land")
+    /// **Not every kind on every map, and that is the design.** This used to
+    /// require all of them in one valley; coal and oil broke it, correctly.
+    /// `depositMix` puts seams in the mountains and the tundra and seeps in the
+    /// desert, the tundra and the coast, and neither in a forest — which is
+    /// what makes the industrial ages a reason to settle somewhere else. So the
+    /// assertion is the one that still has teeth: a valley holds what its own
+    /// country says it holds, and **every kind is somewhere** — "not
+    /// everywhere" and "nowhere" being one typo apart.
+    @Test("A generated map has the deposits its country holds, full and on dry land")
     func depositsWellFormed() {
         let map = LocalMapGenerator.generate(mapSeed: 7, regionID: region, biome: nil)
+        let mix = LocalMapGenerator.depositMix(for: "plains")
+        let expected: [LocalResourceKind: Int] = [
+            .field: mix.fields, .forest: mix.forests, .stone: mix.stone,
+            .herbs: mix.herbs, .ironOre: mix.ironOre, .clay: mix.clay,
+            .coal: mix.coal, .oilSeep: mix.oilSeep,
+        ]
+        for (kind, wanted) in expected {
+            #expect(map.nodes.contains { $0.kind == kind } == (wanted > 0),
+                    "\(kind) on a plains map, where the mix says \(wanted)")
+        }
+        // …and nothing is stranded: somewhere in the world, every kind is dug.
         for kind in LocalResourceKind.allCases {
-            #expect(map.nodes.contains { $0.kind == kind })
+            let anywhere = ["plains", "forest", "desert", "tundra", "mountains", "coast"]
+                .map(LocalMapGenerator.depositMix(for:))
+                .contains { mix in
+                    switch kind {
+                    case .field: return mix.fields > 0
+                    case .forest: return mix.forests > 0
+                    case .stone: return mix.stone > 0
+                    case .herbs: return mix.herbs > 0
+                    case .ironOre: return mix.ironOre > 0
+                    case .clay: return mix.clay > 0
+                    case .coal: return mix.coal > 0
+                    case .oilSeep: return mix.oilSeep > 0
+                    }
+                }
+            #expect(anywhere, "\(kind) is in no country in the world")
         }
         for node in map.nodes {
             #expect(node.amount == node.capacity)   // starts full

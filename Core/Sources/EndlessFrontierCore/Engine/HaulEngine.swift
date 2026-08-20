@@ -469,7 +469,7 @@ public enum HaulEngine {
     /// `extractRawMaterials` no longer grants timber and ore by the week.
     public static func isHauled(_ kind: LocalResourceKind) -> Bool {
         switch kind {
-        case .forest, .stone, .ironOre, .clay: return true
+        case .forest, .stone, .ironOre, .clay, .coal, .oilSeep: return true
         case .field, .herbs: return false
         }
     }

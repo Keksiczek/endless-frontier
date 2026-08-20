@@ -6592,5 +6592,101 @@
       "caliber": 0.6,
       "shots": 1
     }
+  },
+  {
+    "id": "coal",
+    "name": {
+      "en": "Coal",
+      "cs": "Uhlí"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "effects": [],
+    "description": {
+      "en": "Black rock that burns hotter and longer than wood. Dug, not gathered.",
+      "cs": "Černý kámen, co hoří žhavěji a déle než dřevo. Kope se, nesbírá."
+    }
+  },
+  {
+    "id": "crude_oil",
+    "name": {
+      "en": "Crude oil",
+      "cs": "Ropa"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "effects": [],
+    "description": {
+      "en": "Thick and black out of the ground, and worth nothing until it is split.",
+      "cs": "Hustá a černá ze země, a k ničemu, dokud se nerozdělí."
+    }
+  },
+  {
+    "id": "petrol",
+    "name": {
+      "en": "Petrol",
+      "cs": "Benzín"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "effects": [],
+    "description": {
+      "en": "The light fraction. Burns fast, goes off if you look at it wrong.",
+      "cs": "Lehká frakce. Hoří rychle a vzplane, když se na ni křivě podíváš."
+    }
+  },
+  {
+    "id": "diesel",
+    "name": {
+      "en": "Diesel",
+      "cs": "Nafta"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "effects": [],
+    "description": {
+      "en": "The heavy fraction: slower, safer, and what pulls a load.",
+      "cs": "Těžká frakce: pomalejší, bezpečnější — a tahá náklad."
+    }
+  },
+  {
+    "id": "jet_fuel",
+    "name": {
+      "en": "Jet fuel",
+      "cs": "Letecký petrolej"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "effects": [],
+    "description": {
+      "en": "Refined until it will burn cold and thin, high up where the air is not.",
+      "cs": "Rafinovaný, dokud nehoří i v mrazu a řídkém vzduchu tam nahoře."
+    }
+  },
+  {
+    "id": "kerosene",
+    "name": {
+      "en": "Kerosene",
+      "cs": "Petrolej"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "description": {
+      "en": "A refined fuel, lighter than diesel, distilled from crude oil. It's the lifeblood of the valley's first airships and lanterns.",
+      "cs": "Rafinované palivo, lehčí než nafta, destilované z ropy. Životodárná míza pro první vzducholodě a svítilny v údolí."
+    }
+  },
+  {
+    "id": "hydrogen_cell",
+    "name": {
+      "en": "Hydrogen Cell",
+      "cs": "Vodíkový článek"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "description": {
+      "en": "A compact, clean energy source for advanced vehicles. Powers the settlement's first hover sleds, but producing it is an expensive, delicate process.",
+      "cs": "Kompaktní a čistý zdroj energie pro pokročilá vozidla. Pohání první vznášedla osady, ale jeho výroba je drahý a choulostivý proces."
+    }
   }
 ]

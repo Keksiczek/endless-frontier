@@ -79,6 +79,10 @@ enum Theme {
         case .herbs:  return Color(red: 0.54, green: 0.68, blue: 0.56)
         case .ironOre: return Color(red: 0.70, green: 0.48, blue: 0.38)
         case .clay:    return Color(red: 0.68, green: 0.52, blue: 0.42)
+        // The two fuels read against the rock they sit in: coal is the darkest
+        // thing on the map with a cold sheen on it, a seep is warmer and wet.
+        case .coal:    return Color(red: 0.30, green: 0.32, blue: 0.38)
+        case .oilSeep: return Color(red: 0.44, green: 0.38, blue: 0.30)
         }
     }
 

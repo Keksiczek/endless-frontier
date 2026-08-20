@@ -6084,5 +6084,110 @@
       "en": "A piece of hardwood, carefully carved and sanded smooth to help shape the walls of a wet clay pot.",
       "cs": "Kus tvrdého dřeva, pečlivě vyřezaný a vyhlazený. Pomáhá tvarovat stěny nádob z mokré hlíny."
     }
+  },
+  {
+    "id": "refine_petrol",
+    "name": {
+      "en": "Refine petrol",
+      "cs": "Vyrobit benzín"
+    },
+    "outputItemID": "petrol",
+    "materials": {
+      "crude_oil": 3
+    },
+    "resourceCost": {
+      "energy": 12
+    },
+    "requiresBuilding": "oil_refinery",
+    "requiresTech": "combustion",
+    "description": {
+      "en": "The light fraction, taken off the top. Three barrels of crude for one of this.",
+      "cs": "Lehká frakce, sebraná svrchu. Tři sudy ropy na jeden tenhle."
+    }
+  },
+  {
+    "id": "refine_diesel",
+    "name": {
+      "en": "Refine diesel",
+      "cs": "Vyrobit naftu"
+    },
+    "outputItemID": "diesel",
+    "materials": {
+      "crude_oil": 2
+    },
+    "resourceCost": {
+      "energy": 8
+    },
+    "requiresBuilding": "oil_refinery",
+    "requiresTech": "combustion",
+    "description": {
+      "en": "The heavy fraction. Less work than petrol and it pulls more.",
+      "cs": "Těžká frakce. Míň práce než benzín a utáhne víc."
+    }
+  },
+  {
+    "id": "refine_jet_fuel",
+    "name": {
+      "en": "Refine jet fuel",
+      "cs": "Vyrobit letecký petrolej"
+    },
+    "outputItemID": "jet_fuel",
+    "materials": {
+      "crude_oil": 4
+    },
+    "resourceCost": {
+      "energy": 20,
+      "knowledge": 15
+    },
+    "requiresBuilding": "oil_refinery",
+    "requiresTech": "chemistry",
+    "description": {
+      "en": "Cut until it will burn thin and cold — the dearest thing to come out of a barrel.",
+      "cs": "Rafinovaný, dokud nehoří i řídce a v mrazu — nejdražší, co ze sudu vyjde."
+    }
+  },
+  {
+    "id": "refine_kerosene",
+    "name": {
+      "en": "Refine Kerosene",
+      "cs": "Rafinovat petrolej"
+    },
+    "outputItemID": "kerosene",
+    "materials": {
+      "crude_oil": 3
+    },
+    "resourceCost": {
+      "materials": 12,
+      "knowledge": 4
+    },
+    "requiresBuilding": "oil_refinery",
+    "requiresTech": "combustion",
+    "description": {
+      "en": "The middle cut of the barrel: too thin for an engine that pulls, exactly right for one that lifts.",
+      "cs": "Prostřední frakce z barelu: pro tažný motor moc řídká, pro zdvižný přesně tak akorát."
+    }
+  },
+  {
+    "id": "charge_hydrogen_cell",
+    "name": {
+      "en": "Charge Hydrogen Cell",
+      "cs": "Nabít vodíkový článek"
+    },
+    "outputItemID": "hydrogen_cell",
+    "materials": {
+      "steel_ingot": 1,
+      "circuit_board": 1
+    },
+    "resourceCost": {
+      "materials": 30,
+      "knowledge": 20,
+      "energy": 15
+    },
+    "requiresBuilding": "electronics_lab",
+    "requiresTech": "electronics",
+    "description": {
+      "en": "Water split with power the colony had to spare, and pressed into a canister that must not be dropped.",
+      "cs": "Voda rozložená proudem, který osadě zbyl, a stlačená do nádoby, se kterou se nesmí praštit."
+    }
   }
 ]

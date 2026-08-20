@@ -1138,6 +1138,94 @@ struct StableEngineTests {
         #expect(cart.condition < before, "five ticks of a running world and nothing wore")
         #expect(cart.riderID != nil, "nobody was put on it by the tick")
     }
+
+    // MARK: - What it burns
+
+    /// **A machine burns a thing, not a number.** `upkeep` is the ledger — the
+    /// five abstract resources, where `energy` means "the colony has power".
+    /// A locomotive does not burn power, it burns *coal*, which somebody mined
+    /// out of a seam and somebody hauled home, and that is a supply line the
+    /// player can lose. Fourteen machines drew `energy` instead, and one of
+    /// them — a maglev — ate a unit of food a tick.
+    @Test("Every machine burns something real")
+    func machinesBurnAThing() throws {
+        let reg = try registry()
+        let items = Set(reg.items.keys)
+        for def in reg.conveyances.values
+        where def.kind == .rail || def.kind == .motor || def.kind == .air {
+            let fuel = def.materialUpkeep
+            let grid = def.upkeep[.energy] > 0
+            #expect(!fuel.isEmpty || grid,
+                    "\(def.id) is a machine that runs on nothing at all")
+            for (item, due) in fuel {
+                #expect(items.contains(item),
+                        "\(def.id) burns \(item), which is not a thing")
+                #expect(due > 0, "\(def.id) burns nothing of \(item)")
+            }
+            #expect(def.upkeep[.food] == 0,
+                    "\(def.id) eats food, and it has no mouth")
+        }
+    }
+
+    /// …and there has to be a way to *get* it. A fuel nothing produces is the
+    /// gear-in-a-ruin problem with the colony's whole industrial age attached.
+    @Test("Every fuel can be got at")
+    func everyFuelIsObtainable() throws {
+        let reg = try registry()
+        let cooked = Set(reg.recipes.values.map(\.outputItemID))
+        let dug = Set(LocalResourceKind.allCases.compactMap(\.rawMaterialID))
+        for def in reg.conveyances.values {
+            for item in def.materialUpkeep.keys {
+                #expect(cooked.contains(item) || dug.contains(item),
+                        "\(def.id) burns \(item), which nothing makes and nothing digs")
+            }
+        }
+    }
+
+    /// The ground has to hold it, somewhere. Coal and oil are deliberately not
+    /// everywhere — that is what makes the industrial ages a reason to settle a
+    /// second valley — but "not everywhere" and "nowhere" are one typo apart.
+    @Test("Some country holds coal, and some holds oil")
+    func theGroundHoldsFuel() throws {
+        let biomes = ["plains", "forest", "desert", "tundra", "mountains", "coast"]
+        let mixes = biomes.map(LocalMapGenerator.depositMix(for:))
+        #expect(mixes.contains { $0.coal > 0 }, "no valley in the world has coal")
+        #expect(mixes.contains { $0.oilSeep > 0 }, "no valley in the world has oil")
+    }
+
+    /// A fuelled machine spends its fuel; an unfuelled one stands still. All of
+    /// it or none of it — half a tank of coal does not half-run a locomotive,
+    /// and taking the coal without moving the train is the worst of both.
+    @Test("A locomotive spends coal, and stops without it")
+    func fuelIsSpentOrTheThingStands() throws {
+        let reg = try registry()
+        // Whatever the bank's coal-burner is called today, rather than a name
+        // written down here that a regenerated file can quietly invalidate.
+        guard let burner = reg.conveyances.values
+            .filter({ !$0.materialUpkeep.isEmpty })
+            .min(by: { $0.id < $1.id })
+        else { return }
+        let (fuel, due) = try #require(burner.materialUpkeep.sorted { $0.key < $1.key }.first)
+
+        var s = colony(reg)
+        s.stockpile[fuel] = due * 3
+        s.conveyances = [Conveyance(
+            id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-0000000000F1")!,
+            definitionID: burner.id, condition: 1)]
+        let w = world(s)
+
+        s = StableEngine.advanceOneTick(s, in: w, registry: reg)
+        #expect(s.stockpile[fuel] == due * 2, "it ran and paid for nothing")
+
+        // Run it dry, then one more tick: nothing left is taken, and a machine
+        // that is not driven does not wear either.
+        s.stockpile[fuel] = 0
+        let worn = try #require(s.conveyances.first?.condition)
+        s = StableEngine.advanceOneTick(s, in: w, registry: reg)
+        #expect(s.stockpile[fuel, default: 0] == 0, "it drank fuel it did not have")
+        #expect(s.conveyances.first?.condition == worn,
+                "a machine nobody could fuel still wore out")
+    }
 }
 
 /// **Research that changes the valley rather than a menu.**

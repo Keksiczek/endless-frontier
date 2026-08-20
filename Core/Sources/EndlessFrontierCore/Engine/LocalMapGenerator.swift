@@ -78,6 +78,8 @@ public enum LocalMapGenerator {
         nodes += makeNodes(.stone, count: mix.stone)
         nodes += makeNodes(.herbs, count: mix.herbs)
         nodes += makeNodes(.ironOre, count: mix.ironOre)
+        nodes += makeNodes(.coal, count: mix.coal)
+        nodes += makeNodes(.oilSeep, count: mix.oilSeep)
         nodes += makeNodes(.clay, count: mix.clay)
 
         // Points of interest, drawn from what this country plausibly holds —
@@ -176,7 +178,8 @@ public enum LocalMapGenerator {
         let trees = FloraFactory.woods(around: woodCentres, biomeID: biomeID,
                                        shore: shore, river: river, rng: &rng)
         let outcropSites = nodes
-            .filter { $0.kind == .stone || $0.kind == .ironOre || $0.kind == .clay }
+            .filter { $0.kind == .stone || $0.kind == .ironOre || $0.kind == .clay
+                       || $0.kind == .coal || $0.kind == .oilSeep }
             .map { (kind: $0.kind, position: $0.position, capacity: $0.capacity) }
         let rocks = FloraFactory.outcrops(at: outcropSites, rng: &rng)
 
@@ -291,16 +294,21 @@ public enum LocalMapGenerator {
     /// plains has clay for its kilns and almost no ore, so a forge needs either
     /// a trade route or a second settlement up in the hills — which is the
     /// point of having a world map at all.
-    typealias DepositMix = (fields: Int, forests: Int, stone: Int, herbs: Int, ironOre: Int, clay: Int)
+    typealias DepositMix = (fields: Int, forests: Int, stone: Int, herbs: Int,
+                            ironOre: Int, clay: Int, coal: Int, oilSeep: Int)
 
     static func depositMix(for biomeID: String) -> DepositMix {
         switch biomeID {
-        case "forest":    return (2, 6, 2, 3, 1, 1)
-        case "desert":    return (1, 1, 4, 1, 1, 0)
-        case "tundra":    return (1, 2, 3, 2, 2, 0)
-        case "mountains": return (1, 2, 6, 1, 4, 0)   // the ore country
-        case "coast":     return (3, 2, 2, 3, 0, 3)   // clay beds, no iron
-        default:          return (4, 3, 2, 2, 1, 2)   // plains & homeland
+        // Coal goes where the rock is folded and the oil where it is not:
+        // mountains and tundra hold seams, the desert and the coast hold seeps,
+        // and a forest valley holds neither, which is what makes the industrial
+        // eras a reason to settle somewhere else.
+        case "forest":    return (2, 6, 2, 3, 1, 1, 0, 0)
+        case "desert":    return (1, 1, 4, 1, 1, 0, 0, 2)
+        case "tundra":    return (1, 2, 3, 2, 2, 0, 2, 1)
+        case "mountains": return (1, 2, 6, 1, 4, 0, 3, 0)   // the ore country
+        case "coast":     return (3, 2, 2, 3, 0, 3, 0, 1)   // clay beds, no iron
+        default:          return (4, 3, 2, 2, 1, 2, 1, 0)   // plains & homeland
         }
     }
 
@@ -318,7 +326,8 @@ public enum LocalMapGenerator {
         }
         return (fields: vary(mix.fields), forests: vary(mix.forests),
                 stone: vary(mix.stone), herbs: vary(mix.herbs),
-                ironOre: vary(mix.ironOre), clay: vary(mix.clay))
+                ironOre: vary(mix.ironOre), clay: vary(mix.clay),
+                coal: vary(mix.coal), oilSeep: vary(mix.oilSeep))
     }
 
     /// The land's carrying capacity for game.

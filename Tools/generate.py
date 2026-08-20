@@ -33,6 +33,7 @@ entry and never asks whether the things it names can be reached.
 from __future__ import annotations
 
 import argparse
+import os
 import json
 import re
 import shutil
@@ -623,7 +624,13 @@ def do_merge(draft_path: Path) -> None:
         # narrower suite than the content can break is a gate that says yes to
         # the breakage.
         ["swift", "test", "--filter",
-         "ContentTests|CraftingTests|ProductionChainTests|FoodChainTests|ItemTests"],
+         "ContentTests|CraftingTests|ProductionChainTests|FoodChainTests|ItemTests"]
+        # SwiftPM takes a lock on the build directory, so a merge run while
+        # anything else is testing the same package simply waits — for the
+        # length of the other run, which for the full suite is over an hour.
+        # `EF_SCRATCH` gives this gate a build directory of its own.
+        + (["--scratch-path", os.environ["EF_SCRATCH"]]
+           if os.environ.get("EF_SCRATCH") else []),
         cwd=ROOT / "Core", capture_output=True, text=True,
     )
     if result.returncode != 0:

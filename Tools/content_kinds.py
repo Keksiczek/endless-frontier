@@ -314,6 +314,11 @@ working. Keep it small: forty of them is forty times this.""",
                  "colony moves a hundred tonnes with",
         "new_fields": ("class", "requires_animal", "region_pace", "terrain",
                        "riders", "cargo", "pace", "upkeep", "combat"),
+        # The bank opened with three entries in two eras, so the four later
+        # ages looked like typos to a check that measures its vocabulary out of
+        # the file. `Era` has had them all along.
+        "new_values": {"era": ("early_settlement", "ancient", "medieval",
+                               "early_industrial", "modern", "near_future")},
     },
     "biomes": {
         "file": "biomes.json",

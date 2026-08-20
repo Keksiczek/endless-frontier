@@ -144,6 +144,20 @@ public enum StableEngine {
                     short = true
                 }
             }
+            // And what it *burns*, which is a thing in the stockpile rather
+            // than a number on the ledger. All of it or none of it: half a
+            // tank of coal does not half-run a locomotive, and taking the coal
+            // without moving the train is the worst of both.
+            if !def.materialUpkeep.isEmpty {
+                let canFuel = def.materialUpkeep.allSatisfy { s.stockpile[$0.key, default: 0] >= $0.value }
+                if canFuel {
+                    for (item, due) in def.materialUpkeep {
+                        s.stockpile[item, default: 0] -= due
+                    }
+                } else {
+                    short = true
+                }
+            }
             // Wheels wear; a beast does not, because its body already does.
             if !thing.isMount {
                 // Something that cannot be fuelled is not driven, and something

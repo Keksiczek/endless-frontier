@@ -1478,6 +1478,46 @@ enum SettlementRenderer {
                     p.addLine(to: CGPoint(x: ox + 3 * z, y: oy))
                 }, with: .color(shade.opacity(0.3 + fraction * 0.5)), lineWidth: 1)
             }
+        case .coal:
+            // A seam, not a pit: a band of black lying *through* the rock, so
+            // it reads as something followed rather than something dug out.
+            let face = CGRect(x: c.x - 9 * z, y: c.y - 5 * z, width: 18 * z, height: 10 * z)
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: face.minX, y: face.maxY))
+                p.addLine(to: CGPoint(x: face.minX + 2 * z, y: face.minY))
+                p.addLine(to: CGPoint(x: face.maxX - 2 * z, y: face.minY))
+                p.addLine(to: CGPoint(x: face.maxX, y: face.maxY))
+                p.closeSubpath()
+            }, with: .color(shade.opacity(0.5)), lineWidth: 1)
+            // The band itself, thick and unbroken — the one solid mark on a
+            // canvas made of hairlines, because coal is the darkest thing here.
+            let band = CGRect(x: face.minX + 2 * z, y: c.y - 1.4 * z,
+                              width: face.width - 4 * z, height: 2.8 * z)
+            context.fill(Path(band), with: .color(Theme.ink.opacity(0.55 + fraction * 0.35)))
+            for i in 0..<max(2, count / 3) {
+                let ox = face.minX + CGFloat((i * 7) % 14 + 2) * z
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: ox, y: band.minY - 1.5 * z))
+                    p.addLine(to: CGPoint(x: ox + 1.2 * z, y: band.maxY + 1.5 * z))
+                }, with: .color(shade.opacity(0.35)), lineWidth: 0.8)
+            }
+        case .oilSeep:
+            // Nothing is broken open here — it comes up on its own. A dark pool
+            // with rings going out from it, and the ground stained around it.
+            for i in 0..<max(2, count / 2) {
+                let r = CGFloat(3 + i * 3) * z
+                context.stroke(
+                    Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r * 0.55,
+                                           width: r * 2, height: r * 1.1)),
+                    with: .color(shade.opacity(0.45 - Double(i) * 0.08)), lineWidth: 1)
+            }
+            let pool = CGRect(x: c.x - 4.5 * z, y: c.y - 2.4 * z,
+                              width: 9 * z, height: 4.8 * z)
+            context.fill(Path(ellipseIn: pool),
+                         with: .color(Theme.ink.opacity(0.5 + fraction * 0.35)))
+            // A sheen on it, so it reads as wet rather than as a hole.
+            context.stroke(Path(ellipseIn: pool.insetBy(dx: 2 * z, dy: 1 * z)),
+                           with: .color(shade.opacity(0.5)), lineWidth: 0.8)
         }
     }
 

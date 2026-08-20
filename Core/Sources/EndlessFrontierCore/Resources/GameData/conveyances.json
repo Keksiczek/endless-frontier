@@ -100,5 +100,1313 @@
       "gravel_bar"
     ],
     "requires_tech": "the_wheel"
+  },
+  {
+    "id": "hand_sledge",
+    "name": {
+      "en": "Hand Sledge",
+      "cs": "Ruční sáně"
+    },
+    "description": {
+      "en": "A simple sledge of two runners and a platform, pulled by hand. Useless on rock, but glides over snow and wet grass. Slower than walking, but carries a whole log or a quartered deer.",
+      "cs": "Jednoduché sáně se dvěma sanicemi a plošinou, tažené člověkem. Na kamení k ničemu, ale po sněhu a mokré trávě jen kloužou. Pomalejší než chůze, ale odvezou celou kládu nebo poražené zvíře."
+    },
+    "era": "early_settlement",
+    "class": "cart",
+    "materials": {
+      "wood": 2,
+      "hide": 1
+    },
+    "riders": 0,
+    "cargo": 2,
+    "pace": 0.7,
+    "region_pace": 0.8,
+    "terrain": [
+      "grass",
+      "meadow",
+      "snow",
+      "moss",
+      "peat",
+      "tundra_moss"
+    ]
+  },
+  {
+    "id": "dog_travois",
+    "name": {
+      "en": "Dog Travois",
+      "cs": "Psí smyk"
+    },
+    "description": {
+      "en": "A smaller travois for a large dog or a half-tame wolf. A hunter can range for days with one, carrying back more hides than they could on their own back.",
+      "cs": "Menší smyk pro velkého psa nebo napůl ochočeného vlka. Lovec s ním může být na cestách celé dny a přinést víc kůží, než by unesl na zádech."
+    },
+    "era": "early_settlement",
+    "class": "cart",
+    "requires_building": "hunters_lodge",
+    "materials": {
+      "wood": 2
+    },
+    "riders": 0,
+    "cargo": 2,
+    "pace": 0.85,
+    "region_pace": 0.9,
+    "terrain": [
+      "grass",
+      "meadow",
+      "dirt",
+      "sand",
+      "heath",
+      "moss",
+      "snow",
+      "clay",
+      "fern",
+      "salt_flat",
+      "tundra_moss"
+    ]
+  },
+  {
+    "id": "carrying_frame",
+    "name": {
+      "en": "Carrying Frame",
+      "cs": "Krosna"
+    },
+    "description": {
+      "en": "A wooden frame that distributes a heavy load across the shoulders and hips. You can't move as fast, but you can carry firewood or building stones in one trip instead of three.",
+      "cs": "Dřevěný rám, který rozloží těžký náklad na ramena a boky. Člověk se s ní nepohybuje tak rychle, ale dříví na otop nebo stavební kameny odnese na jednu cestu místo tří."
+    },
+    "era": "early_settlement",
+    "class": "cart",
+    "requires_building": "workshop",
+    "materials": {
+      "wood": 2,
+      "hide": 1
+    },
+    "riders": 0,
+    "cargo": 2,
+    "pace": 0.9,
+    "region_pace": 0.95,
+    "terrain": []
+  },
+  {
+    "id": "pack_goat",
+    "name": {
+      "en": "Pack Goat",
+      "cs": "Soumarská koza"
+    },
+    "description": {
+      "en": "The herd's crankiest billy, taught to carry a pack. It's stubborn and can't carry much, but it will follow a hunter up a scree slope where an elk would break a leg.",
+      "cs": "Nejprotivnější kozel ze stáda, naučený nosit náklad. Je tvrdohlavý a moc toho neunese, ale vyšplhá za lovcem po suťovém svahu, kde by si los zlomil nohu."
+    },
+    "era": "early_settlement",
+    "class": "mount",
+    "requires_animal": "goat",
+    "requires_building": "hunters_lodge",
+    "requires_tech": "husbandry",
+    "materials": {
+      "leather": 1,
+      "wood": 1
+    },
+    "riders": 0,
+    "cargo": 3,
+    "pace": 1.2,
+    "region_pace": 1.2,
+    "upkeep": {
+      "food": 0.15
+    },
+    "terrain": [
+      "grass",
+      "meadow",
+      "dirt",
+      "sand",
+      "rock",
+      "scree",
+      "heath",
+      "moss",
+      "clay",
+      "fern",
+      "shingle",
+      "tundra_moss"
+    ]
+  },
+  {
+    "id": "riding_elk",
+    "name": {
+      "en": "Riding Elk",
+      "cs": "Jezdecký los"
+    },
+    "description": {
+      "en": "An elk gentled to the saddle, faster than a person on foot but not bred for heavy loads. Best for scouts and messengers.",
+      "cs": "Los zvyklý na jezdce, rychlejší než pěší chůze, ale neunese těžký náklad. Ideální pro zvědy a posly."
+    },
+    "era": "ancient",
+    "class": "mount",
+    "requires_animal": "elk",
+    "requires_building": "hunters_lodge",
+    "materials": {
+      "leather": 1,
+      "wood": 1
+    },
+    "riders": 1,
+    "cargo": 1,
+    "pace": 1.9,
+    "region_pace": 1.8,
+    "upkeep": {
+      "food": 0.3
+    },
+    "terrain": [],
+    "combat": {
+      "charge": 1.1
+    },
+    "requires_tech": "husbandry"
+  },
+  {
+    "id": "goat_cart",
+    "name": {
+      "en": "Goat Cart",
+      "cs": "Kozí povoz"
+    },
+    "description": {
+      "en": "A small cart pulled by a sturdy goat. It can't carry much, but it's better than your back and it can manage narrow trails.",
+      "cs": "Malý vozík tažený statným kozlem. Neunese mnoho, ale je to lepší než vlastní záda, a projede i po úzkých stezkách."
+    },
+    "era": "ancient",
+    "class": "cart",
+    "requires_building": "workshop",
+    "materials": {
+      "wood": 4,
+      "leather": 1
+    },
+    "riders": 0,
+    "cargo": 5,
+    "pace": 0.9,
+    "region_pace": 1.0,
+    "upkeep": {
+      "food": 0.15
+    },
+    "terrain": [
+      "grass",
+      "meadow",
+      "dirt",
+      "heath",
+      "moss",
+      "fern",
+      "salt_flat",
+      "tundra_moss"
+    ],
+    "requires_tech": "the_wheel"
+  },
+  {
+    "id": "two_wheeled_dray",
+    "name": {
+      "en": "Two-Wheeled Dray",
+      "cs": "Dvoukolák"
+    },
+    "description": {
+      "en": "A sturdy, low-slung cart for heavy goods like stone or logs. It needs a prepared path and strong arms to pull it.",
+      "cs": "Bytelná, nízká kára na těžké náklady jako kámen nebo klády. Potřebuje zpevněnou cestu a silné paže, které ji potáhnou."
+    },
+    "era": "ancient",
+    "class": "cart",
+    "requires_building": "lumberyard",
+    "materials": {
+      "wood": 8,
+      "iron_ingot": 2
+    },
+    "riders": 0,
+    "cargo": 8,
+    "pace": 0.9,
+    "region_pace": 1.1,
+    "terrain": [
+      "grass",
+      "meadow",
+      "dirt",
+      "clay",
+      "salt_flat"
+    ],
+    "requires_tech": "the_wheel"
+  },
+  {
+    "id": "litter",
+    "name": {
+      "en": "Litter",
+      "cs": "Nosítka"
+    },
+    "description": {
+      "en": "Two poles with a seat slung between, carried by two people. Faster than walking for the passenger, a heavy burden for the carriers. Used for the infirm or the important.",
+      "cs": "Dvě tyče se zavěšeným sedátkem, nesené dvěma lidmi. Pro pasažéra je to rychlejší než chůze, pro nosiče těžká dřina. Používají se pro neduživé nebo pro důležité."
+    },
+    "era": "ancient",
+    "class": "cart",
+    "requires_building": "workshop",
+    "materials": {
+      "wood": 4,
+      "leather": 2
+    },
+    "riders": 1,
+    "cargo": 2,
+    "pace": 1.7,
+    "region_pace": 1.6,
+    "terrain": [
+      "grass",
+      "meadow",
+      "dirt",
+      "sand",
+      "heath",
+      "moss",
+      "fern",
+      "shingle"
+    ]
+  },
+  {
+    "id": "riding_boar",
+    "name": {
+      "en": "Riding Boar",
+      "cs": "Jízdní kanec"
+    },
+    "description": {
+      "en": "Only a fool or the truly desperate would try to tame a wild boar. But a boar can carry a rider through thickets a deer would refuse, and its charge can break a line of shields.",
+      "cs": "Jen blázen nebo zoufalec by se pokoušel zkrotit divočáka. Ale kanec unese jezdce houštím, kterému by se i jelen vyhnul, a jeho útok dokáže prorazit řadu štítů."
+    },
+    "era": "ancient",
+    "class": "mount",
+    "requires_animal": "boar",
+    "requires_building": "hunters_lodge",
+    "materials": {
+      "leather": 3,
+      "wood": 1
+    },
+    "riders": 1,
+    "cargo": 1,
+    "pace": 1.8,
+    "region_pace": 1.7,
+    "upkeep": {
+      "food": 0.3
+    },
+    "terrain": [],
+    "combat": {
+      "charge": 1.5
+    },
+    "requires_tech": "husbandry"
+  },
+  {
+    "id": "river_barge",
+    "name": {
+      "en": "River Barge",
+      "cs": "Říční bárka"
+    },
+    "description": {
+      "en": "Slow, clumsy, and can only follow waterways. But it can haul the contents of a small warehouse, making trade between river settlements finally viable.",
+      "cs": "Pomalá, neohrabaná a umí plout jen po vodních tocích. Ale dokáže odvézt obsah malého skladiště, takže obchod mezi osadami na řece je konečně životaschopný."
+    },
+    "era": "medieval",
+    "class": "cart",
+    "requires_building": "workshop",
+    "materials": {
+      "wood": 25,
+      "iron_ingot": 3
+    },
+    "riders": 0,
+    "cargo": 18,
+    "pace": 0.5,
+    "region_pace": 1,
+    "terrain": [
+      "marsh",
+      "clay",
+      "peat",
+      "shingle"
+    ],
+    "requires_tech": "engineering"
+  },
+  {
+    "id": "war_bear",
+    "name": {
+      "en": "War Bear",
+      "cs": "Válečný medvěd"
+    },
+    "description": {
+      "en": "A bear trained not to gentleness but to fury. A terrifying sight on the battlefield, and an even more terrifying drain on the food stores.",
+      "cs": "Medvěd vycvičený ne ke krotkosti, ale k zuřivosti. Děsivý pohled na bitevním poli a ještě děsivější zátěž pro zásoby jídla."
+    },
+    "era": "medieval",
+    "class": "mount",
+    "requires_animal": "bear",
+    "requires_building": "barracks",
+    "materials": {
+      "leather": 4,
+      "iron_ingot": 2
+    },
+    "riders": 1,
+    "cargo": 2,
+    "pace": 1.6,
+    "region_pace": 1.5,
+    "upkeep": {
+      "food": 0.7
+    },
+    "terrain": [],
+    "combat": {
+      "charge": 2
+    },
+    "requires_tech": "selective_breeding"
+  },
+  {
+    "id": "snow_sledge",
+    "name": {
+      "en": "Snow Sledge",
+      "cs": "Sněžné sáně"
+    },
+    "description": {
+      "en": "A heavy sledge for moving goods over deep snow and ice. Faster than walking, but only when the world is white.",
+      "cs": "Těžké sáně pro přepravu zboží hlubokým sněhem a po ledu. Rychlejší než chůze, ale jen když je svět bílý."
+    },
+    "era": "medieval",
+    "class": "cart",
+    "requires_building": "workshop",
+    "materials": {
+      "wood": 8,
+      "leather": 2
+    },
+    "riders": 0,
+    "cargo": 8,
+    "pace": 1.1,
+    "region_pace": 1.2,
+    "terrain": [
+      "snow",
+      "tundra_moss"
+    ]
+  },
+  {
+    "id": "four_wheeled_wagon",
+    "name": {
+      "en": "Four-Wheeled Wagon",
+      "cs": "Čtyřkolový vůz"
+    },
+    "description": {
+      "en": "A heavy cart pulled by a draft animal, requiring a prepared track. It carries the harvest of a whole field, but will mire in the mud of the spring thaw.",
+      "cs": "Těžký povoz tažený soumarem, který vyžaduje upravenou cestu. Uveze úrodu z celého pole, ale na jaře beznadějně zapadne do bahna."
+    },
+    "era": "medieval",
+    "class": "cart",
+    "requires_building": "workshop",
+    "requires_tech": "engineering",
+    "materials": {
+      "wood": 12,
+      "iron_ingot": 4
+    },
+    "riders": 1,
+    "cargo": 12,
+    "pace": 0.9,
+    "region_pace": 1.3,
+    "terrain": [
+      "grass",
+      "meadow",
+      "dirt",
+      "heath",
+      "clay",
+      "salt_flat"
+    ]
+  },
+  {
+    "id": "covered_wagon",
+    "name": {
+      "en": "Covered Wagon",
+      "cs": "Krytý vůz"
+    },
+    "description": {
+      "en": "A wagon with a leather roof to protect its contents from rain and snow. Favored by merchants and families moving between settlements.",
+      "cs": "Vůz s koženou střechou, která chrání náklad před deštěm a sněhem. Oblíbený u kupců a rodin stěhujících se mezi osadami."
+    },
+    "era": "medieval",
+    "class": "cart",
+    "requires_building": "workshop",
+    "requires_tech": "engineering",
+    "materials": {
+      "wood": 14,
+      "iron_ingot": 4,
+      "leather": 6
+    },
+    "riders": 2,
+    "cargo": 10,
+    "pace": 0.85,
+    "region_pace": 1.35,
+    "terrain": [
+      "grass",
+      "meadow",
+      "dirt",
+      "heath",
+      "clay",
+      "salt_flat"
+    ]
+  },
+  {
+    "id": "armored_war_boar",
+    "name": {
+      "en": "Armored War Boar",
+      "cs": "Obrněný válečný kanec"
+    },
+    "description": {
+      "en": "A great boar bred for aggression and size, clad in iron plates. It lacks the speed of an elk but its charge can break a shield wall.",
+      "cs": "Obrovský kanec, vyšlechtěný pro agresivitu a velikost, oděný v železných plátech. Postrádá rychlost losa, ale jeho útok dokáže prolomit i štítovou hradbu."
+    },
+    "era": "medieval",
+    "class": "mount",
+    "requires_animal": "boar",
+    "requires_building": "barracks",
+    "requires_tech": "engineering",
+    "materials": {
+      "iron_ingot": 6,
+      "leather": 3
+    },
+    "riders": 1,
+    "cargo": 1,
+    "pace": 1.2,
+    "region_pace": 1.1,
+    "upkeep": {
+      "food": 0.45
+    },
+    "terrain": [],
+    "combat": {
+      "charge": 2.2
+    }
+  },
+  {
+    "id": "river_keelboat",
+    "name": {
+      "en": "River Keelboat",
+      "cs": "Říční člun"
+    },
+    "description": {
+      "en": "A long, narrow boat with a shallow draft, pushed by poles or pulled from the bank. It can carry what ten wagons could not, but only where the water flows.",
+      "cs": "Dlouhá, úzká loď s mělkým ponorem, poháněná bidly nebo tažená ze břehu. Uveze to, co deset vozů neunese, ale jen tam, kudy teče voda."
+    },
+    "era": "medieval",
+    "class": "cart",
+    "requires_building": "workshop",
+    "requires_tech": "engineering",
+    "materials": {
+      "wood": 25,
+      "iron_ingot": 3
+    },
+    "riders": 2,
+    "cargo": 15,
+    "pace": 0.7,
+    "region_pace": 0.8,
+    "terrain": [
+      "marsh",
+      "clay",
+      "peat",
+      "shingle"
+    ]
+  },
+  {
+    "id": "dire_wolf_mount",
+    "name": {
+      "en": "Dire Wolf Mount",
+      "cs": "Válečný vlk"
+    },
+    "description": {
+      "en": "A wolf bred for size and savagery, trained to carry a rider into battle. Faster than any elk and twice as fierce, but its hunger is a constant drain on the stores.",
+      "cs": "Vlk šlechtěný pro velikost a zuřivost, který unese jezdce i do vřavy boje. Je rychlejší než los a mnohem lítější, ale jeho hlad neustále odčerpává zásoby."
+    },
+    "era": "medieval",
+    "class": "mount",
+    "requires_animal": "wolf",
+    "requires_building": "barracks",
+    "requires_tech": "selective_breeding",
+    "materials": {
+      "leather": 3,
+      "iron_ingot": 2
+    },
+    "riders": 1,
+    "cargo": 2,
+    "pace": 1.8,
+    "region_pace": 1.6,
+    "upkeep": {
+      "food": 0.5
+    },
+    "terrain": [],
+    "combat": {
+      "charge": 2.0
+    }
+  },
+  {
+    "id": "stagecoach",
+    "name": {
+      "en": "Stagecoach",
+      "cs": "Dostavník"
+    },
+    "description": {
+      "en": "The Valesko family's new pride, running the mail and a paying passenger or two between our settlement and the next. Four sturdy elk can keep a good pace, if the road is dry and the driver sober.",
+      "cs": "Nová pýcha rodiny Valeskových, vozí poštu a jednoho dva platící pasažéry mezi naší osadou a tou další. Čtyři statní losi udrží dobré tempo, pokud je cesta suchá a vozka střízlivý."
+    },
+    "era": "early_industrial",
+    "class": "cart",
+    "requires_building": "vehicle_works",
+    "requires_tech": "engineering",
+    "materials": {
+      "wood": 25,
+      "iron_ingot": 8,
+      "leather": 6
+    },
+    "riders": 4,
+    "cargo": 8,
+    "pace": 1.2,
+    "region_pace": 2.2,
+    "upkeep": {
+      "food": 1.2
+    },
+    "terrain": [
+      "grass",
+      "meadow",
+      "dirt",
+      "heath"
+    ]
+  },
+  {
+    "id": "steam_locomotive",
+    "name": {
+      "en": "Steam Locomotive",
+      "cs": "Parní lokomotiva"
+    },
+    "description": {
+      "en": "Dubbed 'The Iron Elk' by the children, its whistle echoes down the valley at dawn and dusk. It hauls a tonnage of stone from the quarry that would have taken a hundred carts a week to move.",
+      "cs": "Děti jí přezdívají ‚Železný los‘ a její hvizd se za úsvitu a soumraku rozléhá údolím. Z lomu odveze tuny kamene, na které by dřív bylo zapotřebí sto vozů a týden práce."
+    },
+    "era": "early_industrial",
+    "class": "rail",
+    "requires_building": "railyard",
+    "requires_tech": "railways",
+    "materials": {
+      "iron_ingot": 150,
+      "wood": 40
+    },
+    "riders": 2,
+    "cargo": 250,
+    "pace": 2,
+    "region_pace": 3.5,
+    "terrain": [],
+    "material_upkeep": {
+      "coal": 3
+    }
+  },
+  {
+    "id": "canal_barge",
+    "name": {
+      "en": "Canal Barge",
+      "cs": "Kanálový člun"
+    },
+    "description": {
+      "en": "The Old Man Hasek swore he'd never live to see the canal finished. Now his grandchildren pole this barge full of grain down it, pulled by a single, plodding elk. It carries more than ten wagons.",
+      "cs": "Stařík Hašek přísahal, že se dokončení kanálu nedožije. Teď jeho vnoučata po něm vodí tenhle člun plný obilí, tažený jediným, loudavým losím býkem. Uveze víc než deset vozů."
+    },
+    "era": "early_industrial",
+    "class": "cart",
+    "requires_building": "workshop",
+    "requires_tech": "engineering",
+    "materials": {
+      "wood": 50,
+      "iron_ingot": 5
+    },
+    "riders": 2,
+    "cargo": 120,
+    "pace": 0.5,
+    "region_pace": 0.7,
+    "upkeep": {
+      "food": 0.35
+    },
+    "terrain": []
+  },
+  {
+    "id": "heavy_dray",
+    "name": {
+      "en": "Heavy Dray",
+      "cs": "Těžký valník"
+    },
+    "description": {
+      "en": "Four wheels, a reinforced frame, and drawn by a team of four powerful elk. It groans under the weight of a single marble block from the high quarry, but it moves it. Slowly.",
+      "cs": "Čtyři kola, zesílený rám a spřežení čtyř silných losů. Pod vahou jediného mramorového bloku z horního lomu sténá, ale hýbe s ním. Pomalu."
+    },
+    "era": "early_industrial",
+    "class": "cart",
+    "requires_building": "vehicle_works",
+    "requires_tech": "engineering",
+    "materials": {
+      "wood": 30,
+      "iron_ingot": 12
+    },
+    "riders": 1,
+    "cargo": 40,
+    "pace": 0.6,
+    "region_pace": 0.8,
+    "upkeep": {
+      "food": 1.2
+    },
+    "terrain": [
+      "dirt",
+      "rock",
+      "clay",
+      "salt_flat"
+    ]
+  },
+  {
+    "id": "valley_locomotive",
+    "name": {
+      "en": "Steam Locomotive",
+      "cs": "Parní lokomotiva"
+    },
+    "description": {
+      "en": "The iron heart of the valley, hauling impossible loads from the quarry to the foundry. Needs a crew, coal, and a clear track.",
+      "cs": "Železné srdce údolí, které tahá neuvěřitelné náklady z lomu do slévárny. Potřebuje posádku, uhlí a volnou trať."
+    },
+    "era": "early_industrial",
+    "class": "rail",
+    "requires_building": "railyard",
+    "materials": {
+      "iron_ingot": 150,
+      "wood": 20
+    },
+    "riders": 2,
+    "cargo": 250,
+    "pace": 2,
+    "region_pace": 3.5,
+    "terrain": [],
+    "requires_tech": "railways",
+    "material_upkeep": {
+      "coal": 2
+    }
+  },
+  {
+    "id": "steam_traction_engine",
+    "name": {
+      "en": "Traction Engine",
+      "cs": "Parní traktor"
+    },
+    "description": {
+      "en": "A self-propelled steam engine that turns the fields and hauls the harvest. Slower than a team of elk, but tireless and immensely strong. Drinks water and devours coal.",
+      "cs": "Samohybný parní stroj, který orá pole a sváží úrodu. Pomalejší než losí spřežení, ale neúnavný a nesmírně silný. Pije vodu a požírá uhlí."
+    },
+    "era": "early_industrial",
+    "class": "motor",
+    "requires_building": "vehicle_works",
+    "materials": {
+      "iron_ingot": 80,
+      "wood": 10
+    },
+    "riders": 1,
+    "cargo": 120,
+    "pace": 0.7,
+    "region_pace": 0.9,
+    "terrain": [
+      "grass",
+      "meadow",
+      "dirt",
+      "heath",
+      "moss",
+      "clay",
+      "fern",
+      "salt_flat",
+      "peat",
+      "tundra_moss"
+    ],
+    "requires_tech": "steam_power",
+    "material_upkeep": {
+      "coal": 1
+    }
+  },
+  {
+    "id": "freight_locomotive",
+    "name": {
+      "en": "Freight Locomotive",
+      "cs": "Nákladní lokomotiva"
+    },
+    "description": {
+      "en": "A steam engine built for torque, not for speed. It will drag a hundred tons of ore from the quarry to the smelter, and shake the teeth out of anyone foolish enough to ride in the cab.",
+      "cs": "Parní stroj postavený na sílu, ne na rychlost. Odtáhne sto tun rudy z lomu do huti a vyklepe zuby z každého, kdo by byl takový blázen, aby se svezl v kabině."
+    },
+    "era": "early_industrial",
+    "class": "rail",
+    "requires_building": "railyard",
+    "requires_tech": "railways",
+    "materials": {
+      "iron_ingot": 80,
+      "wood": 20
+    },
+    "riders": 2,
+    "cargo": 120,
+    "pace": 1.1,
+    "region_pace": 3.0,
+    "terrain": [],
+    "material_upkeep": {
+      "coal": 4
+    }
+  },
+  {
+    "id": "quarry_wagon",
+    "name": {
+      "en": "Quarry Wagon",
+      "cs": "Lomový vůz"
+    },
+    "description": {
+      "en": "A heavy-duty cart with solid wheels and a reinforced axle, designed to be pulled by a team of elk. It can carry immense weight, but only on prepared tracks or very firm ground.",
+      "cs": "Těžký vůz s plnými koly a zesílenou nápravou, určený pro losí spřežení. Unese obrovskou váhu, ale jen po upravených cestách nebo velmi pevném povrchu."
+    },
+    "era": "early_industrial",
+    "class": "cart",
+    "requires_building": "vehicle_works",
+    "requires_tech": "engineering",
+    "materials": {
+      "wood": 15,
+      "iron_ingot": 12
+    },
+    "riders": 1,
+    "cargo": 25,
+    "pace": 0.85,
+    "region_pace": 1.0,
+    "terrain": [
+      "dirt",
+      "rock",
+      "sand",
+      "salt_flat",
+      "ash"
+    ]
+  },
+  {
+    "id": "cargo_lorry",
+    "name": {
+      "en": "Cargo Lorry",
+      "cs": "Těžký náklaďák"
+    },
+    "description": {
+      "en": "The heaviest thing the valley has seen move under its own power. It drinks refined fuel and demands a solid road, but it can haul the entire output of the quarry in a single trip.",
+      "cs": "Nejtěžší věc, která se v údolí kdy pohnula vlastní silou. Žere rafinované palivo a vyžaduje zpevněnou cestu, ale odveze na jednu fůru celou denní těžbu z lomu."
+    },
+    "era": "modern",
+    "class": "motor",
+    "requires_building": "vehicle_works",
+    "requires_tech": "mass_production",
+    "materials": {
+      "iron_ingot": 80,
+      "wood": 10
+    },
+    "riders": 2,
+    "cargo": 30,
+    "pace": 3.5,
+    "region_pace": 4,
+    "terrain": [
+      "dirt",
+      "rock",
+      "sand",
+      "ash",
+      "shingle",
+      "salt_flat"
+    ],
+    "material_upkeep": {
+      "diesel": 2
+    }
+  },
+  {
+    "id": "utility_truck",
+    "name": {
+      "en": "Utility Truck",
+      "cs": "Pick-up"
+    },
+    "description": {
+      "en": "A noisy, rattling runabout for hauling people and things. Faster than any animal, more versatile than a wagon, and it only needs a roof over its head at night.",
+      "cs": "Hlučný, drkotavý pracant pro lidi i náklad. Rychlejší než jakékoliv zvíře, všestrannější než vůz a v noci mu stačí jen střecha nad hlavou."
+    },
+    "era": "modern",
+    "class": "motor",
+    "requires_building": "garage",
+    "requires_tech": "combustion",
+    "materials": {
+      "iron_ingot": 40,
+      "wood": 5
+    },
+    "riders": 4,
+    "cargo": 15,
+    "pace": 4.5,
+    "region_pace": 5,
+    "terrain": [
+      "grass",
+      "meadow",
+      "dirt",
+      "sand",
+      "heath",
+      "salt_flat"
+    ],
+    "material_upkeep": {
+      "petrol": 1
+    }
+  },
+  {
+    "id": "farm_tractor",
+    "name": {
+      "en": "Farm Tractor",
+      "cs": "Traktor"
+    },
+    "description": {
+      "en": "It crawls where a truck would bog down, pulling logs from the wood or stones from a new field. It's not fast, but it doesn't need to be.",
+      "cs": "Proleze tam, kde by náklaďák zapadl, a tahá klády z lesa nebo kamení z nového pole. Není rychlý, ale to se od něj ani nečeká."
+    },
+    "era": "modern",
+    "class": "motor",
+    "requires_building": "garage",
+    "requires_tech": "combustion",
+    "materials": {
+      "iron_ingot": 50,
+      "wood": 8
+    },
+    "riders": 1,
+    "cargo": 12,
+    "pace": 3,
+    "region_pace": 2.5,
+    "terrain": [
+      "grass",
+      "meadow",
+      "dirt",
+      "clay",
+      "peat",
+      "tundra_moss"
+    ],
+    "material_upkeep": {
+      "diesel": 1
+    }
+  },
+  {
+    "id": "cargo_airship",
+    "name": {
+      "en": "Cargo Airship",
+      "cs": "Nákladní vzducholoď"
+    },
+    "description": {
+      "en": "A vast, silent shape that drifts over forest and mountain alike. It burns a frightening amount of power to stay aloft, but for the things that must cross the valley without delay, there is no other way.",
+      "cs": "Obrovský, tichý přízrak plující nad lesy i horami. Spálí děsivé množství energie, jen aby se udržel ve vzduchu, ale pro věci, které musí bezodkladně překonat údolí, není lepší cesty."
+    },
+    "era": "modern",
+    "class": "air",
+    "requires_building": "airfield",
+    "requires_tech": "engineering",
+    "materials": {
+      "iron_ingot": 60,
+      "leather": 30
+    },
+    "riders": 2,
+    "cargo": 25,
+    "pace": 5.5,
+    "region_pace": 6,
+    "terrain": [],
+    "material_upkeep": {
+      "kerosene": 2
+    }
+  },
+  {
+    "id": "personal_automobile",
+    "name": {
+      "en": "Personal Automobile",
+      "cs": "Osobní automobil"
+    },
+    "description": {
+      "en": "The first vehicle not owned by the settlement but by a family. It goes where the owner wants, as long as there is a road and fuel in the tank.",
+      "cs": "První vozidlo, které nepatří osadě, ale jedné rodině. Jede, kam si majitel zamane, pokud má po čem a pokud má co tankovat."
+    },
+    "era": "modern",
+    "class": "motor",
+    "requires_building": "garage",
+    "requires_tech": "combustion",
+    "materials": {
+      "steel_ingot": 12,
+      "processed_resin_block": 4,
+      "circuit_board": 2
+    },
+    "riders": 4,
+    "cargo": 10,
+    "pace": 5.0,
+    "region_pace": 4.5,
+    "terrain": [
+      "dirt",
+      "sand",
+      "rock",
+      "salt_flat"
+    ],
+    "material_upkeep": {
+      "petrol": 1
+    }
+  },
+  {
+    "id": "settlement_bus",
+    "name": {
+      "en": "Settlement Bus",
+      "cs": "Osadní autobus"
+    },
+    "description": {
+      "en": "It runs the same route every day, from the longhouses to the factory district and back again. It means a colonist can live farther from their work, and the settlement can spread out.",
+      "cs": "Každý den krouží po stejné trase, od dlouhých domů k továrnám a zpátky. Osadníci teď mohou bydlet dál od práce a osada se může víc rozrůst do kraje."
+    },
+    "era": "modern",
+    "class": "motor",
+    "requires_building": "vehicle_works",
+    "requires_tech": "combustion",
+    "materials": {
+      "steel_ingot": 25,
+      "processed_resin_block": 8,
+      "circuit_board": 4
+    },
+    "riders": 20,
+    "cargo": 12,
+    "pace": 3.5,
+    "region_pace": 3.0,
+    "terrain": [
+      "dirt",
+      "sand",
+      "rock",
+      "salt_flat"
+    ],
+    "material_upkeep": {
+      "diesel": 2
+    }
+  },
+  {
+    "id": "heavy_hauler_truck",
+    "name": {
+      "en": "Heavy Hauler",
+      "cs": "Těžký tahač"
+    },
+    "description": {
+      "en": "Loud, thirsty, and indispensable. One trip can bring back what twenty people would carry in a day. The valley's economy now depends on the fuel to keep them running.",
+      "cs": "Hlučný, žíznivý a nepostradatelný. Jedna jízda přiveze to, co by dvacet lidí nosilo celý den. Hospodářství údolí teď stojí a padá s palivem, které je drží v chodu."
+    },
+    "era": "modern",
+    "class": "motor",
+    "requires_building": "vehicle_works",
+    "requires_tech": "machining",
+    "materials": {
+      "steel_ingot": 35,
+      "processed_resin_block": 5,
+      "circuit_board": 3
+    },
+    "riders": 2,
+    "cargo": 30,
+    "pace": 3.0,
+    "region_pace": 2.8,
+    "terrain": [
+      "grass",
+      "meadow",
+      "dirt",
+      "sand",
+      "rock",
+      "clay",
+      "salt_flat"
+    ],
+    "material_upkeep": {
+      "diesel": 3
+    }
+  },
+  {
+    "id": "scout_dirigible",
+    "name": {
+      "en": "Scout Dirigible",
+      "cs": "Průzkumná vzducholoď"
+    },
+    "description": {
+      "en": "A gas-bag, a gondola, and a pair of sputtering engines. It can cross the impassable mountains that ring the valley, but a strong wind or a fuel shortage will bring it down.",
+      "cs": "Plynový vak, gondola a dva prskající motory. Přeletí neprostupné hory, které věnčí údolí, ale silný vítr nebo prázdná nádrž ho pošlou k zemi."
+    },
+    "era": "modern",
+    "class": "air",
+    "requires_building": "assembly_plant",
+    "requires_tech": "chemistry",
+    "materials": {
+      "steel_ingot": 8,
+      "flax_fiber_bundle": 40,
+      "circuit_board": 6
+    },
+    "riders": 2,
+    "cargo": 15,
+    "pace": 6.0,
+    "region_pace": 6.0,
+    "terrain": [],
+    "material_upkeep": {
+      "petrol": 1
+    }
+  },
+  {
+    "id": "pickup_truck",
+    "name": {
+      "en": "Pickup Truck",
+      "cs": "Pickup"
+    },
+    "description": {
+      "en": "A four-wheeled motor vehicle with an enclosed cab and an open cargo bed. Faster than any animal and twice as stubborn, it demands maintained roads and a constant supply of fuel. The Radek family's first one spent more time at the vehicle works than on the road.",
+      "cs": "Čtyřkolové motorové vozidlo s uzavřenou kabinou a otevřenou korbou. Rychlejší než jakékoli zvíře a dvakrát tak tvrdohlavé, vyžaduje udržované cesty a stálý přísun paliva. Ten první, co si pořídili Radkovi, strávil víc času v dílnách pro vozidla než na cestě."
+    },
+    "era": "modern",
+    "class": "motor",
+    "requires_building": "vehicle_works",
+    "requires_tech": "combustion",
+    "materials": {
+      "iron_ingot": 30,
+      "leather": 4
+    },
+    "riders": 2,
+    "cargo": 15,
+    "pace": 5,
+    "region_pace": 5.5,
+    "terrain": [
+      "dirt",
+      "rock",
+      "salt_flat",
+      "ash"
+    ],
+    "material_upkeep": {
+      "petrol": 1
+    }
+  },
+  {
+    "id": "transport_dirigible",
+    "name": {
+      "en": "Transport Dirigible",
+      "cs": "Nákladní vzducholoď"
+    },
+    "description": {
+      "en": "A hydrogen-filled rigid airship for moving heavy cargo over any terrain. Slow and vulnerable to weather, its great advantage is its indifference to the ground below. The first one was named 'The Albatross' and its shadow was a familiar sight over the valley for a decade.",
+      "cs": "Vodíkem plněná ztužená vzducholoď pro přepravu těžkých nákladů přes jakýkoli terén. Pomalá a zranitelná vůči počasí, její velkou výhodou je lhostejnost k zemi pod ní. Ta první se jmenovala 'Albatros' a její stín byl po desetiletí nad údolím známým úkazem."
+    },
+    "era": "modern",
+    "class": "air",
+    "requires_building": "vehicle_works",
+    "requires_tech": "engineering",
+    "materials": {
+      "iron_ingot": 40,
+      "leather": 60
+    },
+    "riders": 4,
+    "cargo": 28,
+    "pace": 3.5,
+    "region_pace": 3.5,
+    "terrain": [],
+    "material_upkeep": {
+      "kerosene": 2
+    }
+  },
+  {
+    "id": "hover_sled",
+    "name": {
+      "en": "Hover Sled",
+      "cs": "Vznášedlo"
+    },
+    "description": {
+      "en": "A one-person skiff that rides a cushion of air, ignoring the mud and scree that would stop a wheeled vehicle. The constant whine of its fans is a small price for mobility.",
+      "cs": "Jednomístný kluzák, který jede na vzduchovém polštáři, takže mu nevadí bahno ani suť, které by zastavily kolo. Neustálý svist motoru je jen malá daň za takovou volnost pohybu."
+    },
+    "era": "near_future",
+    "class": "motor",
+    "requires_building": "vehicle_works",
+    "requires_tech": "electronics",
+    "materials": {
+      "steel_ingot": 15,
+      "circuit_board": 8
+    },
+    "riders": 1,
+    "cargo": 2,
+    "pace": 2.5,
+    "region_pace": 2.2,
+    "terrain": [],
+    "material_upkeep": {
+      "hydrogen_cell": 1
+    }
+  },
+  {
+    "id": "cargo_drone",
+    "name": {
+      "en": "Cargo Drone",
+      "cs": "Nákladní dron"
+    },
+    "description": {
+      "en": "An autonomous quadcopter designed for last-mile delivery. It bypasses rivers, cliffs, and bogs, carrying vital supplies directly to where they're needed. Its battery life is the only limit.",
+      "cs": "Autonomní kvadrokoptéra navržená pro doručování na poslední míli. Přelétne řeky, útesy i bažiny a donese životně důležité zásoby přímo tam, kde jsou potřeba. Její jediný limit je výdrž baterie."
+    },
+    "era": "near_future",
+    "class": "air",
+    "requires_building": "airfield",
+    "requires_tech": "robotics",
+    "materials": {
+      "processed_resin_block": 20,
+      "circuit_board": 12
+    },
+    "riders": 0,
+    "cargo": 8,
+    "pace": 3.0,
+    "region_pace": 2.5,
+    "terrain": [],
+    "material_upkeep": {
+      "jet_fuel": 2
+    }
+  },
+  {
+    "id": "gravsled",
+    "name": {
+      "en": "Gravsled",
+      "cs": "Gravitační saně"
+    },
+    "description": {
+      "en": "A silent, floating platform that negates gravity to move heavy loads with minimal effort. Where the hover sled whined, the gravsled glides, its only sound the whisper of displaced air. A true workhorse of the new age.",
+      "cs": "Tichá, plovoucí plošina, která potlačuje gravitaci, aby mohla s minimálním úsilím přesouvat těžké náklady. Kde vznášedlo kvílelo, gravitační saně kloužou; jediný zvuk je šepot vzduchu. Skutečný dříč nového věku."
+    },
+    "era": "near_future",
+    "class": "motor",
+    "requires_building": "assembly_plant",
+    "requires_tech": "fusion_power",
+    "materials": {
+      "steel_ingot": 40,
+      "circuit_board": 25
+    },
+    "riders": 1,
+    "cargo": 30,
+    "pace": 1.2,
+    "region_pace": 1.2,
+    "terrain": [],
+    "material_upkeep": {
+      "fusion_cell": 1
+    }
+  },
+  {
+    "id": "autonomous_hauler",
+    "name": {
+      "en": "Autonomous Hauler",
+      "cs": "Autonomní tahač"
+    },
+    "description": {
+      "en": "A six-wheeled electric vehicle that follows programmed routes without a driver. The colony's AI directs a fleet of them, moving ore from the quarry and timber from the lumberyard day and night, rain or shine.",
+      "cs": "Šestikolové elektrické vozidlo, které jezdí po naprogramovaných trasách bez řidiče. Umělá inteligence kolonie řídí jejich flotilu a ta dnem i nocí, v dešti i slunci, převáží rudu z lomu a dříví z pily."
+    },
+    "era": "near_future",
+    "class": "motor",
+    "requires_building": "vehicle_works",
+    "requires_tech": "robotics",
+    "materials": {
+      "iron_ingot": 40,
+      "circuit_board": 15
+    },
+    "riders": 0,
+    "cargo": 50,
+    "pace": 1.1,
+    "region_pace": 1.5,
+    "terrain": [
+      "grass",
+      "dirt",
+      "sand",
+      "rock",
+      "ash",
+      "salt_flat"
+    ],
+    "material_upkeep": {
+      "diesel": 3
+    }
+  },
+  {
+    "id": "orbital_lifter",
+    "name": {
+      "en": "Orbital Lifter",
+      "cs": "Orbitální výtah"
+    },
+    "description": {
+      "en": "A single-stage-to-orbit craft that rides a pillar of plasma. It carries immense loads out of the valley's gravity well, making regional transport a matter of minutes. Its roar shakes the clinic windows when it launches from the spaceport.",
+      "cs": "Jednostupňová loď stoupající na sloupci plazmatu. Vynáší obrovské náklady z gravitační studny údolí, takže regionální doprava je otázkou minut. Její řev otřásá okny kliniky, když startuje z kosmodromu."
+    },
+    "era": "near_future",
+    "class": "air",
+    "requires_building": "spaceport",
+    "requires_tech": "megastructures",
+    "materials": {
+      "iron_ingot": 800,
+      "circuit_board": 250
+    },
+    "riders": 2,
+    "cargo": 500,
+    "pace": 2.0,
+    "region_pace": 50.0,
+    "terrain": [],
+    "material_upkeep": {
+      "jet_fuel": 5
+    }
+  },
+  {
+    "id": "heavy_cargo_drone",
+    "name": {
+      "en": "Heavy Cargo Drone",
+      "cs": "Těžký nákladní dron"
+    },
+    "description": {
+      "en": "An oversized quadcopter, loud as a nest of angry hornets. It can lift a stack of lumber or a dressed bear carcass directly from the kill site, bypassing the need for trails. The airfield crew complains about the constant high-pitched whine.",
+      "cs": "Příliš velká kvadrokoptéra, hlučná jako hnízdo sršňů. Zvedne hromadu dříví nebo staženého medvěda přímo z místa, takže nepotřebuje stezky. Posádka letiště si stěžuje na neustálé vysoké kvílení."
+    },
+    "era": "near_future",
+    "class": "air",
+    "requires_building": "airfield",
+    "requires_tech": "robotics",
+    "materials": {
+      "iron_ingot": 15,
+      "circuit_board": 8
+    },
+    "riders": 0,
+    "cargo": 12,
+    "pace": 2.5,
+    "region_pace": 3.0,
+    "terrain": [],
+    "material_upkeep": {
+      "jet_fuel": 3
+    }
+  },
+  {
+    "id": "personal_hover_sled",
+    "name": {
+      "en": "Personal Hover Sled",
+      "cs": "Osobní vznášedlo"
+    },
+    "description": {
+      "en": "A one-person skimmer that glides a foot off the ground on a cushion of air. It's the fastest way to get from the farm to the clinic, but the battery barely lasts the trip and it can't carry more than a bag of groceries.",
+      "cs": "Jednomístný kluzák, který se vznáší těsně nad zemí na vzduchovém polštáři. Nejrychlejší cesta z farmy na kliniku, ale baterie sotva vydrží a neunese víc než jednu nákupní tašku."
+    },
+    "era": "near_future",
+    "class": "motor",
+    "requires_building": "vehicle_works",
+    "requires_tech": "electronics",
+    "materials": {
+      "iron_ingot": 8,
+      "circuit_board": 5
+    },
+    "riders": 1,
+    "cargo": 1,
+    "pace": 3.5,
+    "region_pace": 2.5,
+    "terrain": [],
+    "material_upkeep": {
+      "fusion_cell": 1
+    }
+  },
+  {
+    "id": "magnetic_levitation_sled",
+    "name": {
+      "en": "Magnetic Levitation Sled",
+      "cs": "Magnetický levitační kluzák"
+    },
+    "description": {
+      "en": "A whisper-quiet platform that glides a meter above the ground on a focused magnetic field. It ignores terrain entirely, but the resource conversion for its power core is immense.",
+      "cs": "Šepotavě tichá plošina, která klouže metr nad zemí na soustředěném magnetickém poli. Zcela ignoruje terén, ale konverze zdrojů pro její energetické jádro je obrovská."
+    },
+    "era": "near_future",
+    "class": "motor",
+    "requires_building": "assembly_plant",
+    "requires_tech": "fusion_power",
+    "materials": {
+      "iron_ingot": 120
+    },
+    "riders": 1,
+    "cargo": 10,
+    "pace": 4.0,
+    "region_pace": 3.5,
+    "upkeep": {
+      "energy": 1.5
+    },
+    "terrain": []
   }
 ]

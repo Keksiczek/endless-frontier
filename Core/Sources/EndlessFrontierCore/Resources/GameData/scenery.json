@@ -307,5 +307,33 @@
       "en": "Somebody built here, and the ground still has the shape of it.",
       "cs": "Někdo tu stavěl a zem si ten tvar pořád drží."
     }
+  },
+  {
+    "id": "coal_seam",
+    "name": {
+      "en": "Coal seam",
+      "cs": "Uhelná sloj"
+    },
+    "red": 0.12,
+    "green": 0.12,
+    "blue": 0.13,
+    "description": {
+      "en": "The darkest thing on the map, and the one worth digging into once there is something to burn it in.",
+      "cs": "Nejtmavší věc na mapě — a stojí za to se do ní zakousnout, jakmile je v čem ji pálit."
+    }
+  },
+  {
+    "id": "oil_seep",
+    "name": {
+      "en": "Oil seep",
+      "cs": "Ropný vývěr"
+    },
+    "red": 0.17,
+    "green": 0.15,
+    "blue": 0.19,
+    "description": {
+      "en": "Comes up on its own and lies there, wet and useless, until somebody builds the thing that splits it.",
+      "cs": "Prosakuje sám od sebe a leží tam, mokrý a k ničemu, dokud někdo nepostaví, co ho rozdělí."
+    }
   }
 ]

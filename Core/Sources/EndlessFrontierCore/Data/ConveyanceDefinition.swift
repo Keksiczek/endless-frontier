@@ -81,6 +81,20 @@ public struct ConveyanceDefinition: Codable, Sendable, Identifiable, Equatable {
     /// the answer this should have reached for first.
     public let upkeep: Resources
 
+    /// What it burns, by item id — coal, oil, petrol, whatever this one runs on.
+    ///
+    /// The five `ResourceType`s are abstractions: `energy` is "the colony has
+    /// power", not a barrel of anything. A locomotive does not burn *energy*,
+    /// it burns **coal**, which somebody mined, somebody hauled and somebody
+    /// has to keep hauling. That is a supply line, and a supply line is a thing
+    /// the player can lose.
+    ///
+    /// The same split buildings already make (`cost` against `material_cost`),
+    /// for the same reason: the abstract number says whether the colony can
+    /// afford a thing at all, and the stockpile says whether *this* thing has
+    /// what it needs today.
+    public let materialUpkeep: [String: Int]
+
     /// The ground it can cross, by `GroundCover` raw value. **Empty means
     /// anything**, which is what an airship is for.
     ///
@@ -110,6 +124,7 @@ public struct ConveyanceDefinition: Codable, Sendable, Identifiable, Equatable {
         pace: Double = 1,
         regionPace: Double = 1,
         upkeep: Resources = Resources(),
+        materialUpkeep: [String: Int] = [:],
         terrain: [String] = [],
         combat: [String: Double]? = nil
     ) {
@@ -127,6 +142,7 @@ public struct ConveyanceDefinition: Codable, Sendable, Identifiable, Equatable {
         self.pace = max(0.05, pace)
         self.regionPace = max(0.05, regionPace)
         self.upkeep = upkeep
+        self.materialUpkeep = materialUpkeep
         self.terrain = terrain
         self.combat = combat
     }
@@ -135,6 +151,7 @@ public struct ConveyanceDefinition: Codable, Sendable, Identifiable, Equatable {
         case id, name, description, era, materials, riders, cargo, pace, upkeep
         case terrain, combat
         case kind = "class"
+        case materialUpkeep = "material_upkeep"
         case requiresAnimal = "requires_animal"
         case requiresBuilding = "requires_building"
         case requiresTech = "requires_tech"
@@ -163,6 +180,7 @@ public struct ConveyanceDefinition: Codable, Sendable, Identifiable, Equatable {
         pace = max(0.05, try c.decodeIfPresent(Double.self, forKey: .pace) ?? 1)
         regionPace = max(0.05, try c.decodeIfPresent(Double.self, forKey: .regionPace) ?? 1)
         upkeep = try c.decodeIfPresent(Resources.self, forKey: .upkeep) ?? Resources()
+        materialUpkeep = try c.decodeIfPresent([String: Int].self, forKey: .materialUpkeep) ?? [:]
         terrain = try c.decodeIfPresent([String].self, forKey: .terrain) ?? []
         combat = try c.decodeIfPresent([String: Double].self, forKey: .combat)
     }
