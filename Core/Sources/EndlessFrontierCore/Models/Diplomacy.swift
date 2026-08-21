@@ -47,6 +47,21 @@ public struct Tribe: Codable, Sendable, Identifiable, Equatable {
     /// Old wounds that keep relations from healing.
     public var grudge: Double
     /// Whether the leaders' houses have been joined by marriage.
+    /// **What we pay them every year to leave us alone**, in materials.
+    ///
+    /// Zero means no arrangement. Unlike an embassy — which is a colonist and
+    /// therefore already recorded on the colonist — tribute is a standing
+    /// charge with no other home, so it lives here.
+    ///
+    /// The verb pointing outward (`demandTribute`) has existed since the
+    /// beginning; the one pointing in had no counterpart, so a colony that
+    /// could not fight had no way to buy peace except a gift — a single payment
+    /// against a grievance that keeps growing. This is the verb a losing player
+    /// needs, and it is what makes losing interesting rather than terminal.
+    ///
+    /// Optional in the decoder, so saves written before it decode to nobody
+    /// paying anybody (rule 3).
+    public var tributePerYear: Double = 0
     public var married: Bool
     public var wars: Int
     public var defections: Int
@@ -72,6 +87,7 @@ public struct Tribe: Codable, Sendable, Identifiable, Equatable {
         stores: Double = 60,
         standing: Double = 0,
         grudge: Double = 0,
+        tributePerYear: Double = 0,
         married: Bool = false,
         wars: Int = 0,
         defections: Int = 0,
@@ -90,6 +106,7 @@ public struct Tribe: Codable, Sendable, Identifiable, Equatable {
         self.stores = stores
         self.standing = standing
         self.grudge = grudge
+        self.tributePerYear = tributePerYear
         self.married = married
         self.wars = wars
         self.defections = defections
@@ -102,7 +119,7 @@ public struct Tribe: Codable, Sendable, Identifiable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case id, name, regionID, foundedTick, originStory, population, genes
         case cultID, defense, stores, standing, grudge, married, wars, defections
-        case isNative, discovered
+        case isNative, discovered, tributePerYear
     }
 
     public init(from decoder: Decoder) throws {
@@ -125,5 +142,7 @@ public struct Tribe: Codable, Sendable, Identifiable, Equatable {
         // Tribes saved before natives existed are emergent — and already met.
         isNative = try c.decodeIfPresent(Bool.self, forKey: .isNative) ?? false
         discovered = try c.decodeIfPresent(Bool.self, forKey: .discovered) ?? true
+        // Saves from before anybody could buy peace: nobody was paying.
+        tributePerYear = try c.decodeIfPresent(Double.self, forKey: .tributePerYear) ?? 0
     }
 }

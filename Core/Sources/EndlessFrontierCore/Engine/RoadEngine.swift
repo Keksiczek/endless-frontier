@@ -75,6 +75,19 @@ public enum RoadEngine {
     /// empty in every world the harness plays, so the clause did nothing at all.
     static let trafficPerPersonVisit = 0.0006
 
+    /// What is left of an ancient way after weather has had everything it can
+    /// take. See `RoadOrigin.ancient` — this is the floor, not a slower decay:
+    /// the fall already happened, centuries before anybody arrived.
+    static let ancientFloor = 0.22
+
+    /// What a ruin takes off the price of building on it, because the ground is
+    /// already levelled and the stone is already quarried and lying there.
+    ///
+    /// Not free: clearing two centuries of scrub off a buried causeway is work,
+    /// and a discount large enough to make a ruin the *only* place worth
+    /// building would turn the map into a puzzle with one answer.
+    static let ancientDiscount = 0.55
+
     /// How often the neighbourly traffic is counted, in ticks.
     ///
     /// Not every tick: this pathfinds per settlement, and a realm that grows
@@ -191,7 +204,8 @@ public enum RoadEngine {
             // which it already has once, by a factor of twenty.
             let kept = min(0.9, traffic / trackThreshold * 0.5)
             var next = link
-            next.condition = max(0, link.condition - link.grade.wearPerTick * (1 - kept))
+            let floor = link.origin == .ancient ? ancientFloor : 0
+            next.condition = max(floor, link.condition - link.grade.wearPerTick * (1 - kept))
             if next.condition <= 0 {
                 // A track that fails is simply gone; anything dearer falls back
                 // to the grade below rather than vanishing, because the levelled
@@ -247,13 +261,28 @@ public enum RoadEngine {
             let gain = country - max(1, country / grade.speed)
             let score = traffic * gain
             guard score > 0 else { continue }
-            let cost = grade.cost * max(TerrainCost.buildingCost(here), TerrainCost.buildingCost(there))
+            let cost = price(grade, here: here, there: there, existing: existing)
             if best == nil || score > best!.score {
                 best = (RoadLink(a: ends.0, b: ends.1, grade: grade), cost, score)
             }
         }
         guard let best else { return nil }
         return (best.link, best.cost)
+    }
+
+    /// **What laying `grade` on this edge costs.**
+    ///
+    /// One place, because three callers wanted it — the council, a road built
+    /// toward a people, and a road the player lays — and a discount honoured in
+    /// two of them is a discount that does not exist.
+    public static func price(
+        _ grade: RoadGrade, here: Region, there: Region, existing: RoadLink?
+    ) -> Double {
+        let country = max(TerrainCost.buildingCost(here), TerrainCost.buildingCost(there))
+        // Building on a ruin is cheaper: the bed is cut and the stone is lying
+        // there. This is the whole mechanical point of an ancient way.
+        let discount = existing?.origin == .ancient ? ancientDiscount : 1
+        return grade.cost * country * discount
     }
 
     /// The next grade this world may lay on an edge that is currently at
@@ -310,6 +339,72 @@ public enum RoadEngine {
                 .en: "A \(what.resolve(.en).lowercased()) now runs to the next country.",
                 .cs: "K sousední krajině teď vede \(what.resolve(.cs).lowercased())."]))
         return s
+    }
+
+    // MARK: - What was here before
+
+    /// How many stretches of ancient way a world is seeded with.
+    static let ruinStretches = 2
+    /// How long one of them runs, in hexes.
+    static let ruinLengthRange = 3...5
+    /// How far from the homeland a ruin may start. Close enough to be found,
+    /// far enough that finding it is a journey.
+    static let ruinMinDistanceFromHome = 3
+
+    /// **Lays the roads that were here before anybody was.**
+    ///
+    /// A stretch of paved way running out of empty country into more empty
+    /// country, with nothing at either end. `docs/ROADS.md` §7 asked for this
+    /// and named the reason: it is a strong piece of world-telling, and the
+    /// road system already has everything needed to say it.
+    ///
+    /// It is not decoration. An ancient way is faster to walk than the ground
+    /// beside it (`RoadLink.effectiveSpeed` at `ancientFloor`), it does not rot
+    /// any further, and building on it costs `ancientDiscount` of the price —
+    /// so a colony that finds one has been handed a reason to expand *that*
+    /// way rather than any other.
+    ///
+    /// Deterministic: everything is drawn from the map seed, so the ruins are
+    /// in the same country on every launch of the same world. A ruin whose
+    /// position moved between launches would break the one thing it is for,
+    /// which is being a place.
+    public static func seedRuins(
+        _ roads: RoadNetwork, regions: [Region], homeland: HexCoord, mapSeed: UInt64
+    ) -> RoadNetwork {
+        var out = roads
+        var rng = SeededRNG(seed: mapSeed ^ 0x0AD0_0AD0_0AD0_0AD0)
+        let byCoord = Dictionary(regions.map { ($0.coord, $0) }) { first, _ in first }
+        // Sorted, so the candidate list does not depend on the order regions
+        // came out of the generator.
+        let far = regions
+            .filter { $0.coord.distance(to: homeland) >= ruinMinDistanceFromHome }
+            .sorted { ($0.coord.q, $0.coord.r) < ($1.coord.q, $1.coord.r) }
+        guard !far.isEmpty else { return out }
+
+        for _ in 0..<ruinStretches {
+            let start = far[Int(rng.next() % UInt64(far.count))].coord
+            // One heading, held for the whole stretch: an old highway went
+            // somewhere, and a drunkard's walk does not read as one.
+            let heading = Int(rng.next() % 6)
+            let length = ruinLengthRange.lowerBound
+                + Int(rng.next() % UInt64(ruinLengthRange.count))
+
+            var here = start
+            for _ in 0..<length {
+                let onwards = here.neighbors()
+                guard heading < onwards.count else { break }
+                let there = onwards[heading]
+                // It stops where the map does, and it never touches the
+                // homeland — the whole point of a ruin is that both its ends
+                // are nowhere.
+                guard byCoord[here] != nil, byCoord[there] != nil,
+                      there != homeland else { break }
+                out.lay(RoadLink(a: here, b: there, grade: .paved,
+                                 condition: ancientFloor, origin: .ancient))
+                here = there
+            }
+        }
+        return out
     }
 
     // MARK: - What a war does to the ways

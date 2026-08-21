@@ -302,8 +302,8 @@ public enum GameEngine {
                                                    state: state),
                   let here = byCoord[a], let there = byCoord[b] else { continue }
             return (RoadLink(a: a, b: b, grade: grade),
-                    grade.cost * max(TerrainCost.buildingCost(here),
-                                     TerrainCost.buildingCost(there)))
+                    RoadEngine.price(grade, here: here, there: there,
+                                     existing: state.roads.link(a, b)))
         }
         return nil
     }
@@ -328,6 +328,203 @@ public enum GameEngine {
               let seat = state.regions.first(where: { $0.id == seatID })
         else { return nil }
         return nextStretch(state, toward: theirs, from: seat)?.cost
+    }
+
+    // MARK: - A road the player lays
+
+    /// Lays the next grade of way on **one edge the player chose**, paid for
+    /// out of the capital's materials.
+    ///
+    /// The council builds where the traffic is (`RoadEngine.build`) and a road
+    /// toward a people is a gesture to them (`buildRoadToward`). This is
+    /// neither: it is the player saying *this stretch, here*, which is the one
+    /// road-laying the game did not have and the only one that lets somebody
+    /// road a pass before they need it rather than after.
+    ///
+    /// The same ladder as everywhere else — one rung at a time, era- and
+    /// tech-gated (rule 66) — and the same price, so a player-laid road is
+    /// never a cheaper way of buying what the council would have built.
+    ///
+    /// Both hexes must be **known**: a colony cannot survey a route through
+    /// country nobody has walked.
+    public static func layRoad(
+        _ state: WorldState, from a: HexCoord, to b: HexCoord, registry: GameDataRegistry
+    ) -> WorldState {
+        guard let (link, cost) = stretch(state, from: a, to: b),
+              let capital = state.settlements.first,
+              let paid = EffectApplier.payCost([.materials: cost], from: state,
+                                               settlementID: capital.id)
+        else { return state }
+
+        var s = paid
+        s.roads.lay(link)
+        let what = link.grade.displayName
+        let where_ = s.regions.first { $0.coord == b }?.name ?? ""
+        s.settlements[0].journal.append(
+            tick: s.tick, kind: .construction,
+            text: LocalizedText(values: [
+                .en: "The people have laid a \(what.resolve(.en).lowercased()) toward \(where_).",
+                .cs: "Lid vybudoval \(what.resolve(.cs).lowercased()) směrem k \(where_)."]))
+        return s
+    }
+
+    /// What laying the next grade on this edge would cost, or `nil` when there
+    /// is nothing left to lay on it.
+    ///
+    /// Asked without paying, for the same reason `roadTowardCost` is: a panel
+    /// has to tell a price it cannot meet from a way that is already finished.
+    public static func roadCost(
+        _ state: WorldState, from a: HexCoord, to b: HexCoord
+    ) -> Double? {
+        stretch(state, from: a, to: b)?.cost
+    }
+
+    /// The grade this edge would take next and what it would cost — `nil` when
+    /// the two hexes are not neighbours, when either is unknown country, or
+    /// when the way is already as made as this world knows how to make it.
+    static func stretch(
+        _ state: WorldState, from a: HexCoord, to b: HexCoord
+    ) -> (link: RoadLink, cost: Double)? {
+        guard a != b, a.neighbors().contains(b) else { return nil }
+        guard let here = state.regions.first(where: { $0.coord == a }),
+              let there = state.regions.first(where: { $0.coord == b }),
+              here.explorationState != .unknown, there.explorationState != .unknown
+        else { return nil }
+        guard let grade = RoadEngine.nextGrade(after: state.roads.link(a, b)?.grade,
+                                               state: state) else { return nil }
+        return (RoadLink(a: a, b: b, grade: grade),
+                RoadEngine.price(grade, here: here, there: there,
+                                 existing: state.roads.link(a, b)))
+    }
+
+    // MARK: - An embassy
+
+    /// **Posts a colonist to live among a people.**
+    ///
+    /// The verb `docs/NEIGHBOURS.md` writes as costing "influence, and a
+    /// colonist who is *there* and not at home". The second half is the real
+    /// price: `Pawn.isAway` covers an envoy, so the labour engine stops
+    /// counting them, and a colony of thirty feels the gap for as long as the
+    /// post stands.
+    ///
+    /// What it buys is **not** a lump of standing. `DiplomacyProbe` measured
+    /// standings swinging over bands of fifty-eight to a hundred and
+    /// fifty-five points, which makes any single payment noise — so an embassy
+    /// pays a little every year it stands (`DiplomacyEngine.envoyStandingPerYear`),
+    /// and one that has stood for fifty years is worth something no gift can
+    /// buy. Rule 69: the rate has to exist *because the embassy stands*, not
+    /// fire when something happens.
+    ///
+    /// One envoy per people. Returns the state unchanged if the people is
+    /// unmet, already hosts one, or the colony cannot spare anybody.
+    public static func sendEnvoy(
+        _ state: WorldState, tribeID: UUID, registry: GameDataRegistry
+    ) -> WorldState {
+        guard let tribeIndex = state.tribes.firstIndex(where: { $0.id == tribeID }),
+              state.tribes[tribeIndex].discovered,
+              let capitalIndex = state.settlements.indices.first,
+              !state.settlements[capitalIndex].pawns.contains(where: { $0.envoyToTribeID == tribeID }),
+              let chosen = envoyCandidate(state.settlements[capitalIndex], registry: registry),
+              var s = spendInfluence(state, amount: registry.config.giftInfluenceCost)
+        else { return state }
+
+        guard let personIndex = s.settlements[capitalIndex].pawns
+            .firstIndex(where: { $0.id == chosen }) else { return state }
+        s.settlements[capitalIndex].pawns[personIndex].envoyToTribeID = tribeID
+        // Their post is not their trade any more, and the job board must not
+        // keep them on a scaffold they are a hundred miles from.
+        s.settlements[capitalIndex].pawns[personIndex].currentJob = nil
+        let name = s.settlements[capitalIndex].pawns[personIndex].name
+        let them = s.tribes[tribeIndex].name
+        s.settlements[capitalIndex].journal.append(
+            tick: s.tick, kind: .departure,
+            text: LocalizedText(values: [
+                .en: "\(name) has gone to live among \(them), and speak for us there.",
+                .cs: "\(name) odešel_a žít mezi \(them) a mluvit tam za nás."]))
+        return s
+    }
+
+    /// Calls an envoy home. The standing they earned stays earned — it was
+    /// paid a year at a time and is not on loan.
+    public static func recallEnvoy(
+        _ state: WorldState, tribeID: UUID, registry: GameDataRegistry
+    ) -> WorldState {
+        var s = state
+        var found = false
+        for settlementIndex in s.settlements.indices {
+            for personIndex in s.settlements[settlementIndex].pawns.indices
+            where s.settlements[settlementIndex].pawns[personIndex].envoyToTribeID == tribeID {
+                s.settlements[settlementIndex].pawns[personIndex].envoyToTribeID = nil
+                found = true
+            }
+        }
+        guard found else { return state }
+        return s
+    }
+
+    /// Who the colony can spare. An adult in good health who is not already
+    /// elsewhere and is not the last pair of hands in a trade the colony is
+    /// relying on — the same judgement `RegionExpeditionEngine.chooseParty`
+    /// makes, kept simple because a single envoy is a smaller ask than a party.
+    public static func envoyCandidate(
+        _ settlement: Settlement, registry: GameDataRegistry
+    ) -> UUID? {
+        let ticksPerYear = max(1, registry.config.ticksPerYear)
+        return settlement.pawns
+            .filter { $0.isAdult(ticksPerYear: ticksPerYear) && !$0.isAway
+                      && !$0.isBroken && $0.health >= 60 }
+            // The most sociable, because that is what the post is for — and by
+            // id on a tie, so the choice never depends on array order.
+            .max { a, b in
+                a.genes.sociability == b.genes.sociability
+                    ? a.id.uuidString > b.id.uuidString
+                    : a.genes.sociability < b.genes.sociability
+            }?.id
+    }
+
+    /// Whether a people currently hosts one of ours.
+    public static func envoy(in state: WorldState, toward tribeID: UUID) -> Pawn? {
+        state.settlements
+            .flatMap(\.pawns)
+            .first { $0.envoyToTribeID == tribeID }
+    }
+
+    // MARK: - Buying peace
+
+    /// **Offers a people a yearly payment to leave us alone.**
+    ///
+    /// `demandTribute` has always pointed outward. Nothing pointed in, so a
+    /// colony that could not fight had no way to buy peace except a gift: one
+    /// payment against a grievance that keeps growing. This is the verb a
+    /// losing player needs, and the one that makes losing interesting rather
+    /// than terminal.
+    ///
+    /// A **standing charge**, priced as a multiple of what it buys and never as
+    /// a share of the warehouse (rule 16) — otherwise a colony that builds a
+    /// granary can suddenly no longer afford peace. Set it to zero to stop
+    /// paying, and see `DiplomacyEngine.collectTribute` for what stopping does.
+    public static func payTribute(
+        _ state: WorldState, tribeID: UUID, perYear: Double, registry: GameDataRegistry
+    ) -> WorldState {
+        guard let index = state.tribes.firstIndex(where: { $0.id == tribeID }),
+              state.tribes[index].discovered,
+              perYear >= 0, perYear <= DiplomacyEngine.tributeMostPerYear
+        else { return state }
+        var s = state
+        s.tribes[index].tributePerYear = perYear
+        if let capital = s.settlements.indices.first {
+            let them = s.tribes[index].name
+            s.settlements[capital].journal.append(
+                tick: s.tick, kind: .discovery,
+                text: perYear > 0
+                    ? LocalizedText(values: [
+                        .en: "We have agreed to send \(them) a share of the stores each year.",
+                        .cs: "Dohodli jsme se posílat \(them) každý rok díl ze zásob."])
+                    : LocalizedText(values: [
+                        .en: "We will send \(them) nothing more.",
+                        .cs: "\(them) už nepošleme nic."]))
+        }
+        return s
     }
 
     /// Presses a people for tribute: their stores, at the price of their trust.

@@ -140,9 +140,17 @@ exactly 119. `DiplomacyEngine.resent` is the one door now.
    stretch per call, growing outward from home so a half-built road goes *part*
    of the way. Buys standing and eases the grudge, and can be cut by the people
    it was built for.
-4. **The embassy**, because it wants a colonist to be genuinely absent.
-5. **Tribute you pay**, last, because it is the one that most wants the probe's
-   numbers to be trustworthy.
+4. ~~**The embassy**~~ — **done**. `Pawn.envoyToTribeID` is the single record
+   of the posting, and `isAway` covers it, so everything that already respects
+   absence — the labour engine, the food they do not eat at home — takes the
+   cost without a second seam. It pays `envoyStandingPerYear` **every year it
+   stands**, because §4 says a lump sum is noise.
+5. ~~**Tribute you pay**~~ — **done**. `Tribe.tributePerYear`, collected in
+   `DiplomacyEngine.collectTribute`, working the grievance down in proportion
+   to what is actually paid. Breaking it costs more than never having offered
+   — and **a colony that cannot pay has broken it**, deliberately the same as
+   one that will not, because a people on the receiving end cannot tell those
+   apart and the game should not pretend they can.
 
 ## 6. Open questions nobody has decided
 

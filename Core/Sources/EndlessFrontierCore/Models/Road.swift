@@ -33,13 +33,30 @@ public struct RoadLink: Codable, Sendable, Equatable, Identifiable {
     /// How sound it is, 0…1. A road is a building lying on its side: weather
     /// takes it, and a way nobody mends goes back to being country.
     public var condition: Double
+    /// Who laid it. See `RoadOrigin` — the difference is not cosmetic.
+    public var origin: RoadOrigin
 
-    public init(a: HexCoord, b: HexCoord, grade: RoadGrade = .track, condition: Double = 1) {
+    public init(a: HexCoord, b: HexCoord, grade: RoadGrade = .track,
+                condition: Double = 1, origin: RoadOrigin = .built) {
         let (first, second) = RoadLink.ordered(a, b)
         self.a = first
         self.b = second
         self.grade = grade
         self.condition = max(0, min(1, condition))
+        self.origin = origin
+    }
+
+    // Resilient decode: `origin` postdates every road already in a save, and
+    // everything in one was laid by somebody who is still alive.
+    private enum CodingKeys: String, CodingKey { case a, b, grade, condition, origin }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        a = try c.decode(HexCoord.self, forKey: .a)
+        b = try c.decode(HexCoord.self, forKey: .b)
+        grade = try c.decode(RoadGrade.self, forKey: .grade)
+        condition = try c.decode(Double.self, forKey: .condition)
+        origin = try c.decodeIfPresent(RoadOrigin.self, forKey: .origin) ?? .built
     }
 
     /// Canonical ordering, so a link is the same link whichever way you name
@@ -71,6 +88,23 @@ public struct RoadLink: Codable, Sendable, Equatable, Identifiable {
     public var effectiveSpeed: Double {
         1 + (grade.speed - 1) * max(0, min(1, condition))
     }
+}
+
+/// Who made a way, which decides what weather is still allowed to do to it.
+public enum RoadOrigin: String, Codable, Sendable, Equatable {
+    /// Laid by somebody in this world's own history — the council, the player,
+    /// a gesture to a neighbour. Weather takes it back if nobody keeps it.
+    case built
+    /// **Already there when the first colonist arrived.** A stone way running
+    /// out of empty country into more empty country, with nothing at either
+    /// end that anybody now living remembers.
+    ///
+    /// It does not wear away below `RoadEngine.ancientFloor`, and the reason is
+    /// not a special case for the sake of one: everything weather was going to
+    /// take from it, weather took centuries ago. What is left is the bed, and a
+    /// bed is what makes an old road worth finding — building on one is
+    /// cheaper, because the hard half of the work is done.
+    case ancient
 }
 
 /// How much of a road it is. Each grade is a real step, not a multiplier on the

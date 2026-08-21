@@ -80,6 +80,12 @@ public enum GameWorldFactory {
 
         let unlocked = Set(starterBuildingIDs.filter { registry.building($0) != nil })
 
+        // The valley was walked before. A stone way out in the empty country,
+        // going from nowhere to nowhere, is the oldest thing on the map and the
+        // colony did not put it there — see `RoadEngine.seedRuins`.
+        let roads = RoadEngine.seedRuins(RoadNetwork(), regions: regions,
+                                         homeland: homeland.coord, mapSeed: seed)
+
         return WorldState(
             tick: 0,
             lastRealTimestamp: now,
@@ -91,6 +97,7 @@ public enum GameWorldFactory {
             worldFlags: flags,
             settlements: [settlement],
             regions: regions,
+            roads: roads,
             tribes: nativeTribes(regions: regions, seed: seed)
         )
     }

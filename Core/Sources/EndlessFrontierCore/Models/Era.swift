@@ -27,4 +27,26 @@ public enum Era: String, Codable, Sendable, CaseIterable, Comparable {
     public static func < (lhs: Era, rhs: Era) -> Bool {
         lhs.index < rhs.index
     }
+
+    /// What to call this age, in the player's language.
+    ///
+    /// Lives in the Core because the annals are written here now: a chapter
+    /// heading is content, and content ships in every language the game speaks.
+    /// The app reads this rather than keeping a second copy of the list.
+    public var displayName: LocalizedText {
+        switch self {
+        case .earlySettlement:
+            return LocalizedText(values: [.en: "Early Settlement", .cs: "Raná osada"])
+        case .ancient:
+            return LocalizedText(values: [.en: "Ancient", .cs: "Starověk"])
+        case .medieval:
+            return LocalizedText(values: [.en: "Medieval", .cs: "Středověk"])
+        case .earlyIndustrial:
+            return LocalizedText(values: [.en: "Early Industrial", .cs: "Raná industrializace"])
+        case .modern:
+            return LocalizedText(values: [.en: "Modern", .cs: "Moderní doba"])
+        case .nearFuture:
+            return LocalizedText(values: [.en: "Near Future", .cs: "Blízká budoucnost"])
+        }
+    }
 }

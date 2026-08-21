@@ -201,6 +201,20 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     /// ruins is not also at the plough: `PawnEngine` skips their output and
     /// `AgentMotion` walks them across the map instead of through their day.
     public var expeditionID: UUID?
+    /// The people this colonist is posted to as an envoy, if any.
+    ///
+    /// An embassy is a colonist who **is not here**. That is the whole cost of
+    /// it and the reason it is a decision rather than a purchase: a colony of
+    /// thirty feels one fewer pair of hands, for as long as the post stands.
+    ///
+    /// Deliberately the *only* record of the posting — the tribe does not keep
+    /// a copy (rule 8, two numbers for one thing). And deliberately not paired
+    /// with a "posted since" tick either: standing accrues as a **rate** every
+    /// year the envoy sits, so the accumulated total already is the duration.
+    ///
+    /// Optional, so every save written before embassies existed decodes to
+    /// nobody being posted anywhere (rule 3).
+    public var envoyToTribeID: UUID?
     /// The concrete piece of work this colonist is on right now — which tree,
     /// which outcrop, which scaffold. A trade says what they do; this says what
     /// they are doing. Nil when idle, away or unemployed; old saves decode to
@@ -251,7 +265,12 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     public var body: Body
 
     /// Whether this colonist is out of the settlement right now.
-    public var isAway: Bool { expeditionID != nil }
+    ///
+    /// An envoy counts, which is what makes the embassy cost anything at all:
+    /// everything that already respects `isAway` — the labour engine, the food
+    /// they do not eat at home, the canvas that does not draw them at a bench —
+    /// takes the absence into account without a second seam being cut for it.
+    public var isAway: Bool { expeditionID != nil || envoyToTribeID != nil }
 
     public init(
         id: UUID = UUID(),
@@ -270,6 +289,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         wealth: Double = 0,
         pregnancyTicksRemaining: Int = 0,
         expeditionID: UUID? = nil,
+        envoyToTribeID: UUID? = nil,
         currentJob: Job? = nil,
         errand: Errand? = nil,
         homeID: UUID? = nil,
@@ -293,6 +313,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         self.wealth = wealth
         self.pregnancyTicksRemaining = pregnancyTicksRemaining
         self.expeditionID = expeditionID
+        self.envoyToTribeID = envoyToTribeID
         self.currentJob = currentJob
         self.errand = errand
         self.homeID = homeID
@@ -320,6 +341,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         case id, name, trait, skills, skillXP, needs, mood, assignedWork
         case health, isBroken, equipment
         case age, genes, wealth, pregnancyTicksRemaining, expeditionID, currentJob
+        case envoyToTribeID
         case homeID, carrying, haulWalk, body, errand, moodShift
     }
 
@@ -349,6 +371,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         wealth = try c.decodeIfPresent(Double.self, forKey: .wealth) ?? 0
         pregnancyTicksRemaining = try c.decodeIfPresent(Int.self, forKey: .pregnancyTicksRemaining) ?? 0
         expeditionID = try c.decodeIfPresent(UUID.self, forKey: .expeditionID)
+        envoyToTribeID = try c.decodeIfPresent(UUID.self, forKey: .envoyToTribeID)
         currentJob = try c.decodeIfPresent(Job.self, forKey: .currentJob)
         // A colonist saved before needs sent anybody anywhere is standing still.
         errand = try c.decodeIfPresent(Errand.self, forKey: .errand)

@@ -60,6 +60,12 @@ enum AppStrings {
     static var sendGift: String { s("Send a gift", "Poslat dar") }
     /// The one act toward a people that leaves something on the map.
     static var buildRoadToward: String { s("Build a road", "Postavit cestu") }
+    /// An embassy — a colonist who goes to live among them and speak for us.
+    static var sendEnvoy: String { s("Send an envoy", "Vyslat vyslance") }
+    static var recallEnvoy: String { s("Call them home", "Povolat zpět") }
+    /// Buying peace: a yearly payment, and the cost of stopping it.
+    static var offerTribute: String { s("Offer tribute", "Nabídnout tribut") }
+    static var stopTribute: String { s("Stop paying", "Přestat platit") }
     static var demandTribute: String { s("Demand tribute", "Žádat tribut") }
     static var proposePact: String { s("Propose a pact", "Nabídnout spojenectví") }
     static var pactNeedsTrust: String {
@@ -195,17 +201,9 @@ enum AppStrings {
         }
     }
 
-    // Era, capitalised words from the raw enum.
+    // Era. The names live in the Core now — a chapter heading in the annals is
+    // content, and content is not kept in two places.
     static func eraTitle(_ era: Era) -> String {
-        let en = era.rawValue.split(separator: "_").map { $0.capitalized }.joined(separator: " ")
-        guard language == .cs else { return en }
-        switch era {
-        case .earlySettlement: return "Raná osada"
-        case .ancient:         return "Starověk"
-        case .medieval:        return "Středověk"
-        case .earlyIndustrial: return "Raná industrializace"
-        case .modern:          return "Moderní doba"
-        case .nearFuture:      return "Blízká budoucnost"
-        }
+        era.displayName.resolve(language)
     }
 }

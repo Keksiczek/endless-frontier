@@ -1,5 +1,9 @@
 # Docs — what is where
 
+> **Start here if you are picking this up cold:**
+> [`HANDOFF-2026-08-21.md`](HANDOFF-2026-08-21.md) — where things stand, what is
+> uncommitted, and the four open things that have a measured number against them.
+
 <!-- Consolidated 2026-08-13 -->
 
 Read in this order when picking work up cold:

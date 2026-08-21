@@ -213,6 +213,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         worldFlags: [String: Bool] = [:],
         settlements: [Settlement] = [],
         regions: [Region] = [],
+        roads: RoadNetwork = RoadNetwork(),
         tradeRoutes: [TradeRoute] = [],
         caravans: [Caravan] = [],
         regionExpeditions: [RegionExpedition] = [],
@@ -245,6 +246,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         self.worldFlags = worldFlags
         self.settlements = settlements
         self.regions = regions
+        self.roads = roads
         self.tradeRoutes = tradeRoutes
         self.caravans = caravans
         self.regionExpeditions = regionExpeditions

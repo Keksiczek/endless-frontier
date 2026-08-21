@@ -861,6 +861,51 @@ final class GameViewModel {
         persist()
     }
 
+    /// Whoever of ours lives among this people, if anybody does.
+    func envoy(toward tribe: Tribe) -> Pawn? {
+        GameEngine.envoy(in: world, toward: tribe.id)
+    }
+
+    /// An embassy costs what a gift costs *and* a pair of hands, which is the
+    /// half the price tag cannot show.
+    var envoyCost: Double { registry.config.giftInfluenceCost }
+
+    func canSendEnvoy(to tribe: Tribe) -> Bool {
+        envoy(toward: tribe) == nil && canAfford(influence: envoyCost)
+            && GameEngine.envoyCandidate(
+                selectedSettlement ?? world.settlements[0], registry: registry) != nil
+    }
+
+    func sendEnvoy(to tribeID: UUID) {
+        world = GameEngine.sendEnvoy(world, tribeID: tribeID, registry: registry)
+        persist()
+    }
+
+    func recallEnvoy(from tribeID: UUID) {
+        world = GameEngine.recallEnvoy(world, tribeID: tribeID, registry: registry)
+        persist()
+    }
+
+    /// What a people is being paid each year, if anything.
+    func tribute(to tribe: Tribe) -> Double { tribe.tributePerYear }
+
+    /// The offer the panel makes — the full arrangement, so the button is one
+    /// decision rather than a slider nobody will drag.
+    var tributeOffer: Double { DiplomacyEngine.tributeMostPerYear }
+
+    /// Promising costs nothing today; it costs every year afterwards, and it
+    /// costs more to break than never to have offered.
+    func offerTribute(to tribeID: UUID) {
+        world = GameEngine.payTribute(world, tribeID: tribeID,
+                                      perYear: tributeOffer, registry: registry)
+        persist()
+    }
+
+    func stopTribute(to tribeID: UUID) {
+        world = GameEngine.payTribute(world, tribeID: tribeID, perYear: 0, registry: registry)
+        persist()
+    }
+
     /// How long the Leader has left to answer the decision on the desk, in
     /// ticks. Negative would mean it's already gone.
     func ticksLeft(for pending: PendingEvent) -> Int {
@@ -872,6 +917,23 @@ final class GameViewModel {
     /// Observations the chronicle reads out of the world's history.
     var insights: [Insight] {
         ChronicleEngine.insights(world, registry: registry)
+    }
+
+    /// The history cut into chapters — the annals' spine.
+    var chapters: [ChapterSnapshot] {
+        Annals.chapters(world, registry: registry)
+    }
+
+    /// Who writes the annals. `StubNarrator` ships and is always available; a
+    /// model-backed narrator may replace it later and may never be required to
+    /// (`docs/architecture/LAYERS.md`). Seeded from the map so two worlds with
+    /// the same numbers do not use the same words.
+    var narrator: NarratorProtocol { StubNarrator(mapSeed: world.mapSeed) }
+
+    /// One chapter, written out. Synchronous because the stub is: the async
+    /// seam lives in `NarratorProtocol` for the narrator that is not here yet.
+    func annal(_ chapter: ChapterSnapshot) -> String {
+        StubNarrator(mapSeed: world.mapSeed).annal(chapter, language: AppStrings.language)
     }
 
     // MARK: - Event decisions

@@ -83,6 +83,35 @@ struct TribesPanel: View {
                     game.buildRoad(toward: tribe.id)
                 }
             }
+            // An embassy: a named colonist who is *there* and not here. The
+            // button becomes the way to call them home once it stands, because
+            // the post is a state rather than an act.
+            if let posted = game.envoy(toward: tribe) {
+                action(AppStrings.recallEnvoy, icon: "person.fill.checkmark", cost: 0,
+                       enabled: true, tint: Theme.textDim) {
+                    game.recallEnvoy(from: tribe.id)
+                }
+                .help(posted.name)
+            } else {
+                action(AppStrings.sendEnvoy, icon: "person.line.dotted.person",
+                       cost: game.envoyCost, enabled: game.canSendEnvoy(to: tribe)) {
+                    game.sendEnvoy(to: tribe.id)
+                }
+            }
+            // Buying peace. Only offered to a people with something against
+            // us — paying somebody who already likes you is a button with no
+            // question behind it.
+            if game.tribute(to: tribe) > 0 {
+                action(AppStrings.stopTribute, icon: "hand.raised.slash", cost: 0,
+                       enabled: true, tint: Theme.danger) {
+                    game.stopTribute(to: tribe.id)
+                }
+            } else if tribe.grudge > 40 {
+                action(AppStrings.offerTribute, icon: "shippingbox.fill",
+                       cost: game.tributeOffer, enabled: true, tint: Theme.textDim) {
+                    game.offerTribute(to: tribe.id)
+                }
+            }
             Spacer(minLength: 0)
         }
         .padding(.top, 2)

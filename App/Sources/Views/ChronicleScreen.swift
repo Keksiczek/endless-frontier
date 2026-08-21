@@ -20,6 +20,7 @@ struct ChronicleScreen: View {
                     if records.count < 2 {
                         empty
                     } else {
+                        annals
                         insights
                         populationChart
                         spiritChart
@@ -69,6 +70,63 @@ struct ChronicleScreen: View {
             }
         }
         .frontierCard()
+    }
+
+    // MARK: - The annals
+
+    /// The history, in chapters, written out. Newest age first: a player
+    /// opening the book wants the age they are living in, not the founding.
+    ///
+    /// The prose comes from Layer 3 through `NarratorProtocol`. What ships is
+    /// `StubNarrator`, which needs no model and no network — so this reads the
+    /// same on a plane as it does at home, which is the rule.
+    private var annals: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            SectionHeader(title: cs ? "Letopisy" : "Annals")
+            ForEach(game.chapters.reversed()) { chapter in
+                chapterCard(chapter)
+            }
+        }
+    }
+
+    private func chapterCard(_ chapter: ChapterSnapshot) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("\(chapter.firstYear)–\(chapter.lastYear)")
+                    .font(.system(.title3, design: .serif).weight(.bold).monospacedDigit())
+                    .foregroundStyle(Theme.accent)
+                Spacer()
+                Text(chapter.era.displayName.resolve(AppStrings.language))
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Theme.textDim)
+                    .textCase(.uppercase)
+                    .tracking(0.8)
+            }
+            Text(game.annal(chapter))
+                .font(.system(.callout, design: .serif))
+                .lineSpacing(3)
+                .foregroundStyle(Theme.text)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 12) {
+                chapterStat("person.2.fill",
+                            "\(chapter.populationFirst) → \(chapter.populationLast)")
+                if chapter.deathCount > 0 {
+                    chapterStat("moon.zzz.fill", "\(chapter.deathCount)")
+                }
+                if !chapter.events.isEmpty {
+                    chapterStat("bolt.fill", "\(chapter.events.count)")
+                }
+            }
+        }
+        .frontierCard()
+    }
+
+    private func chapterStat(_ symbol: String, _ value: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: symbol).font(.caption2)
+            Text(value).font(.caption.monospacedDigit())
+        }
+        .foregroundStyle(Theme.textDim)
     }
 
     // MARK: - Charts

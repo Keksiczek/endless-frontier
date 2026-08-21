@@ -65,6 +65,36 @@ public enum DiplomacyEngine {
     /// And spill into raids here. An angry secession opens around −35, so this
     /// has to sit above that for a grudge to ever turn into a war.
     static let warStanding = -30.0
+
+    /// **What an embassy is worth, each year it stands.**
+    ///
+    /// A rate rather than a payment, because `DiplomacyProbe` measured
+    /// standings swinging over bands of fifty-eight to a hundred and fifty-five
+    /// points: any single sum is noise against that, and a verb is felt when it
+    /// accrues. Three a year is a quiet thing at five years and decisive at
+    /// fifty — which is the difference between an embassy and a gift, stated in
+    /// the only place the game can state it.
+    static let envoyStandingPerYear = 3.0
+    /// …and how much of a grievance living among somebody works off.
+    static let envoyGrudgePerYear = 1.5
+
+    /// **The most a colony may promise a people in a year**, in materials.
+    ///
+    /// A ceiling so the verb cannot be used to buy every neighbour off at once
+    /// — peace has to be chosen, and choosing it for one people is choosing not
+    /// to for another.
+    public static let tributeMostPerYear = 120.0
+    /// How much grievance a full year's tribute works off, at the ceiling.
+    /// Scaled by what is actually paid, so half a tribute buys half a peace.
+    static let tributeGrudgeRelief = 14.0
+    /// …and what breaking the arrangement costs.
+    ///
+    /// **With what it would have been.** A colony that pays for twenty years
+    /// and stops has not merely gone back to where it started: it has taught a
+    /// people to expect something and then taken it away, which is worse than
+    /// never having offered. Without this the verb is free to abandon, and a
+    /// promise nobody can break is not a promise.
+    static let tributeBrokenGrudge = 25.0
     /// Colonists only look over the fence at a people they don't fear.
     static let defectionStanding = 20.0
     /// Morale below which a colonist might leave regardless of wealth.
@@ -96,6 +126,11 @@ public enum DiplomacyEngine {
             // A people you have never met has no relations to move: native
             // tribes live on quietly beyond the fog until first contact.
             guard s.tribes[index].discovered else { continue }
+            // Somebody of ours has lived among them for another year. Applied
+            // before the drift, so what the embassy earns is what the drift
+            // then works from rather than an adjustment tacked on after it.
+            s = envoyYear(s, tribeIndex: index)
+            s = collectTribute(s, tribeIndex: index)
             s = drift(s, tribeIndex: index, registry: registry, rng: &rng)
             s = resolveRelations(s, tribeIndex: index, registry: registry, rng: &rng)
         }
@@ -107,6 +142,54 @@ public enum DiplomacyEngine {
                                                     tribeID: capital.id, year: year))
             s = maybeSomebodyLeaves(s, registry: registry, rng: &leaving)
         }
+        return s
+    }
+
+    /// A year of an embassy standing. Nothing at all when nobody is posted —
+    /// which is most peoples, most of the time.
+    static func envoyYear(_ state: WorldState, tribeIndex: Int) -> WorldState {
+        let tribeID = state.tribes[tribeIndex].id
+        guard state.settlements.contains(where: { settlement in
+            settlement.pawns.contains { $0.envoyToTribeID == tribeID }
+        }) else { return state }
+        var s = state
+        s.tribes[tribeIndex].standing = clamp(
+            s.tribes[tribeIndex].standing + envoyStandingPerYear)
+        resent(&s.tribes[tribeIndex], by: -envoyGrudgePerYear)
+        return s
+    }
+
+    /// A year of tribute: what we send, what it buys, and what it costs to stop.
+    ///
+    /// Paid out of the capital's materials. **A colony that cannot pay is a
+    /// colony that has broken the arrangement**, which is deliberately the same
+    /// thing as choosing to stop — a people on the receiving end cannot tell
+    /// "we would not" from "we could not", and the game should not pretend they
+    /// can.
+    static func collectTribute(_ state: WorldState, tribeIndex: Int) -> WorldState {
+        let owed = state.tribes[tribeIndex].tributePerYear
+        guard owed > 0, let capital = state.settlements.indices.first else { return state }
+        var s = state
+
+        guard s.settlements[capital].storage[.materials] >= owed else {
+            // The promise is broken, and the arrangement with it.
+            s.tribes[tribeIndex].tributePerYear = 0
+            resent(&s.tribes[tribeIndex], by: tributeBrokenGrudge)
+            s.tribes[tribeIndex].standing = clamp(s.tribes[tribeIndex].standing - 10)
+            let them = s.tribes[tribeIndex].name
+            s.settlements[capital].journal.append(
+                tick: s.tick, kind: .danger,
+                text: LocalizedText(values: [
+                    .en: "There was nothing in the store to send \(them). They will have noticed.",
+                    .cs: "Ve skladu nebylo co poslat \(them). Jistě si toho všimli."]))
+            return s
+        }
+
+        s.settlements[capital].storage[.materials] -= owed
+        s.tribes[tribeIndex].stores += owed * 0.6
+        // Scaled by what is actually paid: half a tribute buys half a peace.
+        let share = min(1, owed / tributeMostPerYear)
+        resent(&s.tribes[tribeIndex], by: -tributeGrudgeRelief * share)
         return s
     }
 
