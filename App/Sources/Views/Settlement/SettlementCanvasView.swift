@@ -420,7 +420,11 @@ struct SettlementCanvasView: View {
         }
         if let hit = probe.take() { return hit }
 
-        for building in SettlementRenderer.layout(settlement: settlement, registry: registry, rect: rect) {
+        // The same cull the drawing uses, so a tap can only ever land on a
+        // roof that is actually on screen.
+        for building in SettlementRenderer.layout(
+            settlement: settlement, registry: registry, rect: rect,
+            viewport: viewRect) {
             // The whole lot answers, not the pin in the middle of it. Widened a
             // touch so a thumb on the eaves still counts.
             let lot = CGRect(

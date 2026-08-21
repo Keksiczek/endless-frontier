@@ -76,26 +76,52 @@ struct EndlessFrontierApp: App {
                     }
                 }
                 .overlay {
-                    if game.isCatchingUp { CatchUpOverlay() }
+                    if game.isCatchingUp { CatchUpOverlay(game: game) }
                 }
         }
     }
 }
 
 /// Shown while a long absence is being simulated — the years pass without you.
+/// What the player sees while a long absence is simulated.
+///
+/// It used to be a bare spinner over a line of prose: no figure, no estimate,
+/// no way to tell a month of world being computed from a game that had locked
+/// up. A determinate bar and the years counting up as they pass are the whole
+/// difference between waiting and wondering.
 private struct CatchUpOverlay: View {
+    let game: GameViewModel
+
     var body: some View {
         ZStack {
             Theme.ink.opacity(0.9).ignoresSafeArea()
             VStack(spacing: 14) {
-                ProgressView().tint(Theme.accent)
                 Text(AppStrings.language == .cs
                      ? "Roky ubíhaly i bez tebe…"
                      : "The years passed without you…")
                     .font(.system(.callout, design: .serif))
                     .foregroundStyle(Theme.text)
+                ProgressView(value: game.catchUpFraction)
+                    .tint(Theme.accent)
+                    .frame(maxWidth: 220)
+                // The years, because that is the unit a player thinks in — a
+                // tick count means nothing to anybody outside the engine.
+                Text(years)
+                    .font(.system(.caption, design: .serif))
+                    .foregroundStyle(Theme.textDim)
+                    .monospacedDigit()
             }
         }
         .transition(.opacity)
+    }
+
+    private var years: String {
+        let done = game.catchUpYears
+        if AppStrings.language == .cs {
+            // Czech counts in threes: 1 rok, 2–4 roky, 5+ let.
+            let word = done == 1 ? "rok" : (done < 5 ? "roky" : "let")
+            return "\(done) \(word) · \(Int(game.catchUpFraction * 100)) %"
+        }
+        return "\(done) year\(done == 1 ? "" : "s") · \(Int(game.catchUpFraction * 100))%"
     }
 }

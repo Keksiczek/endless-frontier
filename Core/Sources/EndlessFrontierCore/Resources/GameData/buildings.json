@@ -1698,5 +1698,87 @@
       "h": 4
     },
     "look": "pad"
+  },
+  {
+    "id": "courtyard_house",
+    "era": "ancient",
+    "name": {
+      "en": "Courtyard House",
+      "cs": "Dům s dvorem"
+    },
+    "cost": {
+      "materials": 30
+    },
+    "material_cost": {
+      "timber_bundle": 2
+    },
+    "workers": 0,
+    "morale_effect": 2,
+    "housing": 36,
+    "description": {
+      "en": "Rooms built around a walled yard, with a loft over each range. A household keeps its own water and its own fire.",
+      "cs": "Místnosti kolem uzavřeného dvora, nad každým křídlem podkroví. Domácnost má vlastní vodu i vlastní oheň."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 3
+    },
+    "floors": 2,
+    "look": "house"
+  },
+  {
+    "id": "townhouse_row",
+    "era": "medieval",
+    "name": {
+      "en": "Townhouse Row",
+      "cs": "Řadové domy"
+    },
+    "cost": {
+      "materials": 34
+    },
+    "material_cost": {
+      "timber_bundle": 2,
+      "brick": 2
+    },
+    "workers": 0,
+    "morale_effect": 2,
+    "housing": 32,
+    "description": {
+      "en": "Narrow houses sharing their side walls, two storeys and a workshop on the ground floor. Land in a walled town is dear.",
+      "cs": "Úzké domy sdílející boční zdi, dvě patra a dílna v přízemí. Půda v hrazeném městě je drahá."
+    },
+    "footprint": {
+      "w": 4,
+      "h": 2
+    },
+    "floors": 2,
+    "look": "house"
+  },
+  {
+    "id": "brick_tenement",
+    "era": "early_industrial",
+    "name": {
+      "en": "Brick Tenement",
+      "cs": "Nájemní dům"
+    },
+    "cost": {
+      "materials": 52
+    },
+    "material_cost": {
+      "brick": 6
+    },
+    "workers": 0,
+    "morale_effect": -1,
+    "housing": 54,
+    "description": {
+      "en": "Three storeys of rented rooms, a stair up the middle and a pump in the yard. It houses more for less, and nobody pretends otherwise.",
+      "cs": "Tři patra pronajatých pokojů, schodiště uprostřed a pumpa na dvoře. Ubytuje víc za míň — a nikdo nepředstírá opak."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 3
+    },
+    "floors": 3,
+    "look": "tenement"
   }
 ]

@@ -286,6 +286,9 @@ public enum LocalTerrain {
         case "tundra":    return (-0.06, 0.14, true)
         case "mountains": return (0.26, -0.04, false)
         case "coast":     return (-0.14, 0.22, false)
+        // Lower than the coast and wetter than anything: a fen is the bottom
+        // of the country, and the water has nowhere to go.
+        case "wetlands":  return (-0.30, 0.62, false)
         default:          return (0, 0.06, false)   // plains & homeland
         }
     }
@@ -354,6 +357,14 @@ public enum LocalTerrain {
         case "mountains":
             return [(.rock, 0.44), (.dirt, 0.14), (.scree, 0.16), (.grass, 0.08),
                     (.snow, 0.07), (.ash, 0.06), (.chalk, 0.05)]
+        // A fen is marsh and peat almost all the way across, with the driest
+        // ground it has going to whatever can be walked on. `dominantCover`
+        // reads this, so the answer to "what does a journey through here have
+        // to cross" is water.
+        case "wetlands":
+            return [(.marsh, 0.38), (.peat, 0.20), (.grass, 0.14),
+                    (.clay, 0.10), (.meadow, 0.08), (.dirt, 0.06),
+                    (.gravelBar, 0.04)]
         case "coast":
             return [(.sand, 0.30), (.grass, 0.20), (.marsh, 0.18),
                     (.meadow, 0.11), (.clay, 0.07), (.shingle, 0.09),
@@ -396,6 +407,11 @@ public enum LocalTerrain {
             return ([(.cliff, 0.20), (.boulder, 0.19), (.crag, 0.17), (.rock, 0.14),
                      (.pine, 0.08), (.hotSpring, 0.04), (.flowers, 0.05),
                      (.cairn, 0.08), (.standingStone, 0.05)], 58)
+        case "wetlands":
+            return ([(.reeds, 0.28), (.tallGrass, 0.14), (.deadTree, 0.10),
+                     (.fallenLog, 0.09), (.bush, 0.08), (.tree, 0.08),
+                     (.flowers, 0.07), (.brambles, 0.06), (.mushroom, 0.06),
+                     (.driftwood, 0.04)], 64)
         case "coast":
             return ([(.reeds, 0.20), (.dune, 0.16), (.driftwood, 0.14), (.bush, 0.11),
                      (.tree, 0.09), (.cliff, 0.07), (.rock, 0.06), (.flowers, 0.06),

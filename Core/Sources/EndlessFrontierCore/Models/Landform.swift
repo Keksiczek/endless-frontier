@@ -83,6 +83,11 @@ public enum LandformKind: String, Codable, Sendable, CaseIterable {
         case (.mesa, "desert"): return 0.55
         case (.mesa, "plains"), (.mesa, "homeland"): return 0.25
         case (.mesa, _): return 0.10
+        // A fen has no fall in it, so nothing has ever cut down through it —
+        // but it is one long hollow, and that is what it is.
+        case (.ravine, "wetlands"): return 0.05
+        case (.hollow, "wetlands"): return 0.75
+        case (.mesa, "wetlands"): return 0
         case (.ravine, "mountains"): return 0.70
         case (.ravine, "tundra"), (.ravine, "forest"): return 0.35
         case (.ravine, _): return 0.25

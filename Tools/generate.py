@@ -48,7 +48,7 @@ import references
 from content_kinds import (
     ENUM_KEYS, INTEGER_FIELDS, KINDS, NEEDS_SWIFT_FIRST, READABLE_GLOBAL_STATS,
     READABLE_SETTLEMENT_STATS, ROOT, SHAPES, SUPPLEMENTS, WRITABLE_GLOBAL_STATS,
-    WRITABLE_SETTLEMENT_STATS, path_for,
+    WRITABLE_SETTLEMENT_STATS, effect_shape_problems, path_for,
 )
 
 DRAFTS = Path(__file__).resolve().parent / "drafts"
@@ -315,6 +315,20 @@ def check(kind: str, draft: list) -> list[str]:
     # world flag that does not exist, and that entry loads and then waits for
     # ever.
     faults += [f"points at nothing: {r}" for r in references.check(draft, kind)]
+
+    # And an effect can name a legal type and still be the wrong *shape*. The
+    # vocabulary check knows the words `EventEffect` accepts; this knows what
+    # each of them reads. Three drafts in a row passed everything above and then
+    # failed to decode — `unlock_tech` with no `techId`, a `region_hazard`
+    # written as a `region_kind`, a `remove_pawn` carrying a `count` that
+    # nothing reads and that therefore removed one person instead of two.
+    if kind == "events":
+        for entry in draft:
+            if not isinstance(entry, dict):
+                continue
+            for problem in effect_shape_problems(entry):
+                faults.append(f"{entry.get('id', '?')}: {problem}")
+
     faults += malformed(draft)
     return faults
 

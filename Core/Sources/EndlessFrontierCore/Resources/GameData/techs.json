@@ -216,6 +216,10 @@
     "effects": [
       {
         "type": "unlock_building",
+        "buildingId": "courtyard_house"
+      },
+      {
+        "type": "unlock_building",
         "buildingId": "stone_walls"
       },
       {
@@ -333,6 +337,10 @@
       "knowledge": 760
     },
     "effects": [
+      {
+        "type": "unlock_building",
+        "buildingId": "townhouse_row"
+      },
       {
         "type": "unlock_building",
         "buildingId": "market"
@@ -473,6 +481,10 @@
       "knowledge": 1840
     },
     "effects": [
+      {
+        "type": "unlock_building",
+        "buildingId": "brick_tenement"
+      },
       {
         "type": "unlock_building",
         "buildingId": "hospital"

@@ -12,6 +12,10 @@ enum BiomePalette {
         case "tundra": return Color(red: 0.74, green: 0.80, blue: 0.85)
         case "mountains": return Color(red: 0.52, green: 0.52, blue: 0.56)
         case "coast": return Color(red: 0.36, green: 0.62, blue: 0.69)
+        // Green gone grey with standing water in it — a fen must not read
+        // as plains from the world map, or the one country whose whole
+        // character is water looks like the one whose character is grass.
+        case "wetlands": return Color(red: 0.42, green: 0.57, blue: 0.45)
         default: return Color(red: 0.45, green: 0.47, blue: 0.45)
         }
     }
@@ -31,6 +35,7 @@ enum BiomePalette {
         case "tundra": return Color.white
         case "mountains": return Color(red: 0.38, green: 0.38, blue: 0.42)
         case "coast": return Color(red: 0.85, green: 0.92, blue: 0.97)
+        case "wetlands": return Color(red: 0.30, green: 0.44, blue: 0.40)
         default: return Color.black.opacity(0.5)
         }
     }

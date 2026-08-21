@@ -19,6 +19,43 @@ public enum GameEngine {
         return result
     }
 
+    /// The same thing, reported as it goes.
+    ///
+    /// A month away is up to 43,200 ticks, and in a debug build that is minutes
+    /// with a spinner over it and no way to tell it from a hang. `onProgress`
+    /// is called with `(ticks done, ticks in total)` after each slice.
+    ///
+    /// **This is not a different simulation.** `TickEngine.advance` is a plain
+    /// `for _ in 0..<ticks` over a pure step, and `ticks` is nothing but the
+    /// loop's bound — everything else it reads comes off the state. So
+    /// advancing 600 then 600 lands on the same world as advancing 1,200, and
+    /// `catchUpIsTheSameWorldEitherWay` says so in a test rather than in a
+    /// comment. Determinism is the project's hardest invariant; a progress bar
+    /// is not worth spending it.
+    public static func openSession(
+        _ state: WorldState,
+        now: Date,
+        registry: GameDataRegistry,
+        sliceTicks: Int = 240,
+        onProgress: (Int, Int) -> Void
+    ) -> PlannerResult {
+        let total = TickEngine.ticksElapsed(
+            since: state.lastRealTimestamp, until: now, config: registry.config)
+        var result = PlannerResult(state: state, fired: [])
+        var done = 0
+        onProgress(0, total)
+        while done < total {
+            let slice = min(max(1, sliceTicks), total - done)
+            let step = TickEngine.advance(result.state, ticks: slice, registry: registry)
+            result.state = step.state
+            result.fired.append(contentsOf: step.fired)
+            done += slice
+            onProgress(done, total)
+        }
+        result.state.lastRealTimestamp = now
+        return result
+    }
+
     // MARK: - Player actions
 
     /// Queues a tech for research (validates prerequisites).

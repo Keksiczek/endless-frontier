@@ -249,7 +249,7 @@ struct LampTests {
             center: CGPoint(x: 100, y: 100), size: 30,
             footprint: CGSize(width: 40, height: 40),
             underConstruction: underConstruction, progress: 0.5,
-            seed: 0x9E37_79B9_7F4A_7C15,
+            seed: 0x9E37_79B9_7F4A_7C15, variant: .plain,
             era: .earlySettlement, fabric: .wood, floors: 1,
             workers: 2, residents: residents, condition: condition)
     }

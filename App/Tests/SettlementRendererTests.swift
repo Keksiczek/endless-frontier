@@ -358,3 +358,98 @@ struct BattlePlaybackTests {
         #expect(l.moments.last?.kind == .repelled, "it breaks at the end, not the start")
     }
 }
+
+/// The cap that dropped the newest roof in town.
+///
+/// `maxVisibleBuildings = 30` was applied as `placements.prefix(30)` — the
+/// first thirty in **build order** — inside `normalizedLayout`, which is also
+/// where `AgentMotion` reads homes, beds and work posts. A colony of seventy-
+/// nine therefore had forty-nine buildings that were not drawn, could not be
+/// tapped, nobody lived in and nobody worked at. The one the player had just
+/// paid for was always among them.
+@Suite("A big town is all there")
+struct RenderBudgetTests {
+    private func town(of count: Int) -> ColonyMap {
+        var placements: [BuildingPlacement] = []
+        for i in 0..<count {
+            placements.append(BuildingPlacement(
+                id: UUID(uuidString: String(format: "00000000-0000-0000-0000-%012X", i + 1))!,
+                definitionID: "hut",
+                coord: TileCoord(i % 20, i / 20)))
+        }
+        return ColonyMap(width: 20, height: 20, placements: placements)
+    }
+
+    @Test("Every building the colony owns is in the layout, however many it has")
+    func layoutIsComplete() {
+        let placed = SettlementRenderer.normalizedLayout(
+            settlement: settlement(colony: town(of: 79)), registry: registry())
+        #expect(placed.count == 79,
+                "the layout feeds AgentMotion — a building missing from it is one nobody can live or work in")
+    }
+
+    /// The specific regression: with a build-order cut, the *last* placement is
+    /// the first casualty.
+    @Test("The building raised most recently is drawn")
+    func newestSurvives() {
+        let colony = town(of: 79)
+        let placed = SettlementRenderer.layout(
+            settlement: settlement(colony: colony), registry: registry(), rect: rect,
+            viewport: rect)
+        let newest = colony.placements.count - 1
+        #expect(placed.contains { $0.id == newest },
+                "a colonist watches a roof go up and it must not vanish for being late")
+    }
+
+    @Test("Nothing off screen is drawn")
+    func offScreenIsCulled() {
+        let placed = SettlementRenderer.layout(
+            settlement: settlement(colony: town(of: 79)), registry: registry(), rect: rect,
+            viewport: CGRect(x: 0, y: 0, width: 40, height: 40))
+        let full = SettlementRenderer.layout(
+            settlement: settlement(colony: town(of: 79)), registry: registry(), rect: rect)
+        #expect(placed.count < full.count, "a corner of the view must not pay for the whole town")
+        #expect(!placed.isEmpty, "…nor cull away the corner you are looking at")
+    }
+
+    /// Culling must not renumber anything: `id` is what a selection holds on to
+    /// and what `.building(index:)` reports from a tap.
+    @Test("A building keeps its number whatever else is drawn")
+    func idsAreStableUnderCulling() {
+        let s = settlement(colony: town(of: 79))
+        let whole = SettlementRenderer.layout(settlement: s, registry: registry(), rect: rect)
+        let corner = SettlementRenderer.layout(
+            settlement: s, registry: registry(), rect: rect,
+            viewport: CGRect(x: 0, y: 0, width: 120, height: 120))
+        for building in corner {
+            let same = whole.first { $0.id == building.id }
+            #expect(same?.definitionID == building.definitionID)
+            #expect(same?.center == building.center, "an id must mean the same roof in both")
+        }
+    }
+
+    /// Over budget, what survives is what you are looking at — not what was
+    /// built first.
+    @Test("Over budget, the middle of the view is what stays")
+    func budgetKeepsTheMiddle() {
+        let many = SettlementRenderer.maxDrawnBuildings + 40
+        let placed = SettlementRenderer.layout(
+            settlement: settlement(colony: town(of: many)), registry: registry(), rect: rect,
+            viewport: rect)
+        #expect(placed.count <= SettlementRenderer.maxDrawnBuildings,
+                "the frame still has a budget")
+        let middle = CGPoint(x: rect.midX, y: rect.midY)
+        func distance(_ p: CGPoint) -> CGFloat {
+            ((p.x - middle.x) * (p.x - middle.x) + (p.y - middle.y) * (p.y - middle.y)).squareRoot()
+        }
+        let drawn = Set(placed.map(\.id))
+        let all = SettlementRenderer.layout(
+            settlement: settlement(colony: town(of: many)), registry: registry(), rect: rect)
+        let kept = all.filter { drawn.contains($0.id) }.map { distance($0.center) }
+        let dropped = all.filter { !drawn.contains($0.id) }.map { distance($0.center) }
+        if let farthestKept = kept.max(), let nearestDropped = dropped.min() {
+            #expect(farthestKept <= nearestDropped + 1,
+                    "nothing nearer the eye may be dropped for something further away")
+        }
+    }
+}

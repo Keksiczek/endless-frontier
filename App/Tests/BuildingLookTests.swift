@@ -260,3 +260,94 @@ struct InteriorFitTests {
         }
     }
 }
+
+/// **No two buildings are drawn the same.**
+///
+/// Twenty-three of the fifty-three shared a `look` with something else, so five
+/// industries were one smoking block and four laboratories were one glass one.
+/// The archetype is right — a factory *is* shaped like a plant — so the fix is
+/// composition rather than seventeen more hand-drawn shapes, and
+/// `StructureVariant` is the composition.
+///
+/// `signature` stands in for the drawing: every field of it is read by
+/// `SettlementStructures`, so two buildings with the same signature really do
+/// come out identical on the canvas. This is the standing rule ("every thing
+/// must be unique and do something") made into something that can fail.
+@Suite("Every building looks like itself")
+struct StructureVariantTests {
+    private func variants() throws -> [(BuildingDefinition, StructureVariant)] {
+        let registry = try GameDataRegistry.bundled()
+        let sheds = StructureVariant.conveyanceHomes(registry)
+        return registry.buildings.values.map {
+            ($0, StructureVariant.of($0, housesConveyances: sheds.contains($0.id)))
+        }
+    }
+
+    @Test("No two buildings share both an archetype and a composition")
+    func everyBuildingIsItsOwnDrawing() throws {
+        var seen: [String: String] = [:]
+        for (def, variant) in try variants() {
+            let key = "\(SettlementRenderer.glyph(for: def).hashValue)|\(variant.signature)"
+            if let other = seen[key] {
+                Issue.record("'\(def.id)' is drawn exactly like '\(other)' — same shape, same composition")
+            }
+            seen[key] = def.id
+        }
+    }
+
+    /// The five that were one drawing before this existed. Named outright so a
+    /// future change that collapses them again fails on the case that mattered.
+    @Test("The five plants are five different places")
+    func theIndustriesDiffer() throws {
+        let byID = Dictionary(uniqueKeysWithValues: try variants().map { ($0.0.id, $0.1) })
+        let plants = ["factory", "vehicle_works", "assembly_plant", "automated_factory", "garage"]
+        let signatures = Set(plants.compactMap { byID[$0]?.signature })
+        #expect(signatures.count == plants.count,
+                "a player must be able to tell the place that builds lorries from the place that builds everything")
+    }
+
+    /// Derivation must be a function of the *definition*, or a building
+    /// redecorates itself between launches.
+    @Test("A building's look does not change between runs")
+    func derivationIsStable() throws {
+        let registry = try GameDataRegistry.bundled()
+        let sheds = StructureVariant.conveyanceHomes(registry)
+        for def in registry.buildings.values {
+            let once = StructureVariant.of(def, housesConveyances: sheds.contains(def.id))
+            let twice = StructureVariant.of(def, housesConveyances: sheds.contains(def.id))
+            #expect(once == twice)
+        }
+        // …and not on `String.hashValue`, which Swift seeds per process. Pinned
+        // to the literal FNV-1a value so a change of hash is a failing test
+        // rather than a town that quietly rebuilds itself overnight.
+        #expect(StructureVariant.kindSeed(for: "garage") == 0x9826_1AD9_7975_232C)
+    }
+
+    /// Each axis has to say something true, or it is decoration with extra
+    /// steps. These are the four claims the drawing makes.
+    @Test("What the drawing says about a building is true of it")
+    func axesMeanSomething() throws {
+        let byID = Dictionary(uniqueKeysWithValues: try variants().map { ($0.0.id, $0.1) })
+        let registry = try GameDataRegistry.bundled()
+
+        // A clean industry raises no chimney, however big it is.
+        if let fusion = byID["fusion_reactor"], let plant = byID["power_plant"] {
+            #expect(fusion.stacks == 0, "fusion burns nothing — it must not smoke")
+            #expect(plant.stacks > 0, "a coal-fired plant must")
+        }
+        // Somewhere that keeps a vehicle has a door one fits through.
+        let sheds = StructureVariant.conveyanceHomes(registry)
+        #expect(!sheds.isEmpty, "conveyances.json must still name the buildings vehicles are kept at")
+        for shed in sheds {
+            #expect(byID[shed]?.wideDoor == true, "'\(shed)' keeps vehicles and needs a door for them")
+        }
+        // Nobody posted, nothing lit.
+        for (def, variant) in try variants() where def.workers == 0 {
+            #expect(!variant.nightShift, "'\(def.id)' has no workers and must be dark at night")
+        }
+        // A stouter wall is drawn stouter.
+        if let palisade = byID["palisade"], let stone = byID["stone_walls"] {
+            #expect(stone.heft > palisade.heft, "masonry turns more aside than stakes, and looks it")
+        }
+    }
+}

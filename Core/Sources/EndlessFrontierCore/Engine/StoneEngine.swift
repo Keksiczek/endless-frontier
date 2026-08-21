@@ -82,6 +82,9 @@ public enum StoneEngine {
         case "desert":    return 0.45
         case "forest":    return 0.22
         case "coast":     return 0.20
+        // Peat over silt over more silt. A colony founded on a fen has no
+        // stone of its own at all, which is the trade for how easily it eats.
+        case "wetlands":  return 0.06
         default:          return 0.16   // plains & homeland: an outcrop, if that
         }
     }
@@ -99,6 +102,9 @@ public enum StoneEngine {
         case "desert":    return (0.10, 0.00)
         case "forest":    return (0.08, 0.08)
         case "coast":     return (0.00, 0.26)
+        // What little rock it has is clay, and a lot of it — the one thing a
+        // fen can fire into a brick.
+        case "wetlands":  return (0.00, 0.34)
         default:          return (0.05, 0.14)   // plains & homeland
         }
     }

@@ -62,6 +62,27 @@ final class GameViewModel {
     /// True while a long absence is being simulated, so the UI can say so.
     private(set) var isCatchingUp = false
 
+    /// How far the catch-up has got: ticks done, ticks in total.
+    ///
+    /// The spinner used to say nothing at all — no figure, no estimate, no idea
+    /// whether a month of world was three seconds away or three minutes. In a
+    /// debug build a long absence really is minutes, and a screen that shows
+    /// nothing for minutes is a screen the player reads as a hang.
+    private(set) var catchUpProgress: (done: Int, total: Int) = (0, 0)
+
+    /// Ticks done as a fraction, for a bar. Zero total reads as complete.
+    var catchUpFraction: Double {
+        catchUpProgress.total > 0
+            ? Double(catchUpProgress.done) / Double(catchUpProgress.total) : 1
+    }
+
+    /// The years the catch-up has covered so far, which is what a player
+    /// actually cares about — "twelve years have passed" says more than
+    /// "eight thousand ticks".
+    var catchUpYears: Int {
+        catchUpProgress.done / max(1, registry.config.ticksPerYear)
+    }
+
     /// Advances the world by the real time elapsed since the last session.
     ///
     /// A month away is up to 43,200 ticks of a fully simulated colony — far too
@@ -97,11 +118,26 @@ final class GameViewModel {
         }
 
         isCatchingUp = true
-        let result = await Task.detached(priority: .userInitiated) {
-            GameEngine.openSession(snapshot, now: now, registry: registry)
-        }.value
+        catchUpProgress = (0, ticks)
+        // The slices report from the detached task, so the main actor is only
+        // ever handed a pair of numbers — the world itself never crosses back
+        // until it is finished.
+        let progress = AsyncStream<(Int, Int)> { continuation in
+            Task.detached(priority: .userInitiated) {
+                let result = GameEngine.openSession(
+                    snapshot, now: now, registry: registry,
+                    onProgress: { done, total in continuation.yield((done, total)) })
+                continuation.finish()
+                await MainActor.run { self.finishCatchUp(result, before: snapshot) }
+            }
+        }
+        for await step in progress { catchUpProgress = step }
+    }
+
+    private func finishCatchUp(_ result: PlannerResult, before: WorldState) {
         isCatchingUp = false
-        apply(result, before: snapshot)
+        catchUpProgress = (0, 0)
+        apply(result, before: before)
     }
 
     /// Ticks we're happy to simulate inline rather than hopping off the actor.

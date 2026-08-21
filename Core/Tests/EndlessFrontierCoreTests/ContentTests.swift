@@ -196,3 +196,106 @@ struct PollutionTests {
         #expect(dirty.settlements[0].stats.morale < clean.settlements[0].stats.morale)
     }
 }
+
+/// **Every key on an authored effect is one the decoder reads.**
+///
+/// `EventEffect.init(from:)` takes what it knows and drops the rest in silence,
+/// so an effect can be spelled four different ways and only one of them does
+/// anything. Measured on the shipped file: of twenty-odd `damage_buildings`,
+/// twelve said `strength` and the rest said `delta`, `damage` or `amount` — all
+/// three ignored, all three falling back to a severity of 0.5, so an authored
+/// landslide and an authored dam breach were exactly as bad as each other.
+/// `add_pawn` with `count: 3` added one person; `remove_pawn` with `count: 2`
+/// took one.
+///
+/// The check works by round-tripping: decode the effect, encode it again, and
+/// anything in the original that the encoded form has no place for is a key
+/// nothing reads. No second list to keep in step with the decoder — the decoder
+/// *is* the list.
+@Suite("Nothing in an event is written for a reader that does not exist")
+struct EffectShapeTests {
+    @Test("Every key on every effect is one the game reads")
+    func noKeyIsIgnored() throws {
+        let url = try #require(Bundle.module.url(forResource: "events", withExtension: "json",
+                                                 subdirectory: "GameData"))
+        let raw = try JSONSerialization.jsonObject(with: Data(contentsOf: url))
+        let events = try #require(raw as? [[String: Any]])
+
+        func inspect(_ effects: Any?, in event: String, at place: String) throws {
+            guard let effects = effects as? [[String: Any]] else { return }
+            for (i, effect) in effects.enumerated() {
+                let data = try JSONSerialization.data(withJSONObject: effect)
+                let decoded = try JSONDecoder().decode(EventEffect.self, from: data)
+                let round = try JSONSerialization.jsonObject(
+                    with: try JSONEncoder().encode(decoded))
+                let kept = Set((round as? [String: Any])?.keys ?? [:].keys)
+                for key in Set(effect.keys).subtracting(kept).sorted() {
+                    Issue.record("\(event) \(place)[\(i)] (\(effect["type"] ?? "?")) carries '\(key)', which nothing reads")
+                }
+            }
+        }
+
+        for event in events {
+            let id = event["id"] as? String ?? "?"
+            try inspect(event["effects"], in: id, at: "effects")
+            for choice in (event["choices"] as? [[String: Any]]) ?? [] {
+                try inspect(choice["effects"], in: id,
+                            at: "choices.\(choice["id"] as? String ?? "?").effects")
+            }
+        }
+    }
+}
+
+/// **A progress bar must not cost determinism.**
+///
+/// Catch-up after a long absence had no progress at all — a spinner over up to
+/// 43,200 ticks, which in a debug build is minutes the player cannot tell from
+/// a hang. Reporting it means running the catch-up in slices, and slicing a
+/// simulation is exactly the kind of change that quietly stops two runs of the
+/// same seed agreeing.
+///
+/// It is safe here for one reason worth stating: `TickEngine.advance` is a
+/// plain `for _ in 0..<ticks` over a pure step, and `ticks` is nothing but the
+/// loop's bound. This test is what keeps that true.
+@Suite("A month of world runs the same whether or not anybody is watching")
+struct CatchUpSliceTests {
+    @Test("Catch-up in slices lands on the same world as catch-up in one go")
+    func catchUpIsTheSameWorldEitherWay() throws {
+        let registry = try GameDataRegistry.bundled()
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        var world = GameWorldFactory.newGame(registry: registry, seed: 4242, now: start)
+        world.lastRealTimestamp = start
+        // Far enough to cross several slices, and several game years.
+        let later = start.addingTimeInterval(
+            Double(registry.config.realSecondsPerTick) * 900)
+
+        let whole = GameEngine.openSession(world, now: later, registry: registry)
+        var seen: [(Int, Int)] = []
+        let sliced = GameEngine.openSession(
+            world, now: later, registry: registry, sliceTicks: 97,
+            onProgress: { done, total in seen.append((done, total)) })
+
+        #expect(sliced.state == whole.state,
+                "slicing the catch-up must not change a single thing about the world")
+        #expect(sliced.fired.count == whole.fired.count,
+                "…nor swallow or duplicate an event")
+        #expect(seen.first?.0 == 0, "progress must start at nothing")
+        #expect(seen.last?.0 == seen.last?.1, "…and end at everything")
+        #expect((seen.last?.1 ?? 0) > 0, "a long absence must report a total worth showing")
+    }
+
+    /// The slice size is a tuning knob, not a behaviour.
+    @Test("Any slice size gives the same world", arguments: [1, 13, 240, 10_000])
+    func sliceSizeDoesNotMatter(slice: Int) throws {
+        let registry = try GameDataRegistry.bundled()
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        var world = GameWorldFactory.newGame(registry: registry, seed: 77, now: start)
+        world.lastRealTimestamp = start
+        let later = start.addingTimeInterval(Double(registry.config.realSecondsPerTick) * 300)
+
+        let whole = GameEngine.openSession(world, now: later, registry: registry)
+        let sliced = GameEngine.openSession(world, now: later, registry: registry,
+                                            sliceTicks: slice, onProgress: { _, _ in })
+        #expect(sliced.state == whole.state)
+    }
+}

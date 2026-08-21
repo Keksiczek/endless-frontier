@@ -2829,3 +2829,90 @@ presentation reading a `BattleLog`; 6.11 is the simulation half.
 session at least once. They were buried at the bottom of this file and out of
 order, which is the worst possible place for the one document you want to read
 *before* writing code rather than after.
+
+---
+
+## 12. 2026-08-20 — the render cap, building identity, and the grammar of an effect
+
+Five things, and three of them were faults that had shipped.
+
+| # | Thing | State |
+|---|---|---|
+| 12.1 | A town past thirty buildings was **half a town** | **done** — rule 63 |
+| 12.2 | Twenty-three buildings **shared a drawing** | **done** — rule 64 |
+| 12.3 | The late eras had **almost no events** | **done** — modern 30 → 45, near_future 20 → 45 |
+| 12.4 | Catch-up after an absence **looked like a hang** | **done** |
+| 12.5 | Three whole eras had **no new dwelling**, and there was no seventh biome | **done** |
+
+### 12.1 — the cap that always dropped the newest roof
+
+`maxVisibleBuildings = 30`, applied as `placements.prefix(30)` — the first
+thirty in *build order*, so a colony of seventy-nine drew what it raised in its
+first twenty years and silently dropped the building the player had just paid
+for and watched go up.
+
+The half nobody had noticed is worse: the cut lived inside `normalizedLayout`,
+which `AgentMotion` also reads for homes, beds and work posts. Those
+forty-nine buildings were not merely undrawn — **nobody could live or work in
+them**. The §9.11 shape again, in the one place it had been fixed once already.
+
+The layout is complete now and `maxDrawnBuildings` (120) is a *frame* budget:
+cull to the camera's rect, and if a town still overflows, keep what is nearest
+the middle of the view. Ids come from the complete layout, so culling never
+renumbers a selection. Five claims, five tests (`RenderBudgetTests`).
+
+### 12.2 — twenty-three buildings, seventeen shared drawings
+
+`factory`, `vehicle_works`, `assembly_plant`, `automated_factory` and `garage`
+were one smoking block; `library`, `school` and `university` one hall. The
+tempting fix is seventeen more shapes, which is the plan
+`HANDOFF-GENERATION.md` warns against — it does not scale and the next twenty
+buildings break it again.
+
+`StructureVariant` derives how a building is put together **from its own
+definition**: chimneys from what it burns (so a fusion reactor raises none,
+however large), a wide door from whether `conveyances.json` keeps a vehicle
+there, dark windows from having no workers, `tier` from what it cost, `heft`
+from `defense`, `stores` from what it holds. `roofCap`, `roofFurniture` and
+`frontDoor` compose it.
+
+Worth keeping: **a random tie-breaker is worse than none.** A coin toss on
+`bays` was itself making a 2-wide palisade and a 3-wide stone wall come out
+identical. Every axis says something true now, and `signature` makes "no two
+are drawn alike" a thing a test can fail.
+
+### 12.3 — and what generating them turned over
+
+Four rounds, because the draft passed `check` and then failed to *decode*
+three times running: `unlock_tech` with no `techId`, a `region_hazard` in
+`region_kind`'s shape, a `remove_pawn` carrying a `count`. The vocabulary check
+knew every word `EventEffect` accepts and nothing about what each one reads.
+
+Pointing the new grammar check at the **shipped** file found forty-one of the
+same fault already in the game. `damage_buildings` reads `strength`; eleven
+effects said `delta`, `damage` or `amount` — every one ignored, every one
+falling back to severity 0.5, so an authored landslide and an authored dam
+breach had always been exactly as bad as each other. Seven carried a `count`
+for an effect that already damages many buildings; three `add_pawn`s asked for
+people they never got. All repaired. Rules 61 and 62.
+
+### 12.5 — a house for the middle of the game, and a country made of water
+
+Only five buildings in the game have `housing`, and between the longhouse
+(early settlement) and the apartment block (modern) there was **no new dwelling
+for three entire eras**. Three added — `courtyard_house`, `townhouse_row`,
+`brick_tenement` — priced off the beds-per-material curve the shipped dwellings
+already describe (2.00 → 1.29 → 1.04 → 0.80) rather than off a guess, and each
+opened by a tech that exists.
+
+The seventh biome is **`wetlands` / Mokřiny**, and the handoff's estimate of
+"two lines of Swift" was fourteen `switch`es plus two in the app. Every one has
+a `default:` arm, so a biome added to the JSON alone generates cleanly and *is
+the plains under a different name*. `BiomeCoverageTests` fingerprints each
+biome across nine axes against the unknown-biome path and requires six to be
+its own; `plains` is exempt by name because it genuinely is the fallback.
+
+A fen eats easily and has no stone at all — massif weight 0.06, no iron in any
+seam — so a colony founded on one must trade or move for the whole industrial
+chain, and has peat to trade with. Its water lies through the middle of the map
+rather than along an edge, which no other country does.

@@ -13,8 +13,27 @@ enum SettlementRenderer {
     /// Cap on drawn colonists — keeps a boom-town calm and the frame cheap.
     /// Everyone still exists in the sim; this only thins the *visible* crowd.
     static let maxVisibleAgents = 90
-    /// Cap on drawn structures, so a large town stays legible.
-    static let maxVisibleBuildings = 30
+    /// Per-frame budget for **drawn** structures.
+    ///
+    /// This used to be `placements.prefix(30)` — the first thirty in *build
+    /// order*, so a colony of seventy-nine drew the ones it raised in its first
+    /// twenty years and silently dropped everything after. The building the
+    /// player had just paid for and watched go up was always the one that
+    /// vanished.
+    ///
+    /// Worse, `normalizedLayout` is not only the drawing's layout:
+    /// `AgentMotion` reads it for homes, beds and work posts. Forty-nine
+    /// buildings past the cap were not merely undrawn — nobody could live or
+    /// work in them, so a boom-town's colonists drifted with no post to stand
+    /// at. The §9.11 shape again: the entity layer invisible to the thing that
+    /// draws it.
+    ///
+    /// So the layout is now **complete**, and the budget applies to one frame:
+    /// cull to what is actually on screen, and if a town still overflows it,
+    /// keep what is nearest the middle of the view. A building leaves the
+    /// drawing because you panned away from it, never because of when it
+    /// was built.
+    static let maxDrawnBuildings = 120
 
     /// Where the viewer is standing: how far in, and how far they've dragged.
     ///
@@ -187,7 +206,11 @@ enum SettlementRenderer {
             continuousStep: continuousTick * Double(WorldClock.actionStepsPerTick),
             zoom: zoom)
 
-        let placed = layout(settlement: settlement, registry: registry, rect: rect)
+        // Culled to the screen, not to build order: the newest roof in a town
+        // of eighty is drawn, and what drops out is whatever you panned away
+        // from. `size` is the view, `rect` is the world the camera maps into.
+        let placed = layout(settlement: settlement, registry: registry, rect: rect,
+                            viewport: CGRect(origin: .zero, size: size))
         // Pushed in close, every structure says what it is — the answer to
         // "which roof is the library?" without a single tap.
         buildings(&context, placed: placed, time: time, night: night,
@@ -1665,6 +1688,10 @@ enum SettlementRenderer {
         let progress: Double
         /// A stable per-building seed for cosmetic variation (tone, size).
         let seed: UInt64
+        /// **How this kind of building is put together** — see
+        /// `StructureVariant`. The seed above varies one instance from the
+        /// next; this varies one *kind* from another that shares its glyph.
+        let variant: StructureVariant
         /// The era that raised it — timber and thatch give way to brick, then
         /// to panel and glass, so a data centre is not a wattle hut in a hat.
         let era: Era
@@ -1702,6 +1729,8 @@ enum SettlementRenderer {
         let underConstruction: Bool
         let progress: Double
         let seed: UInt64
+        /// See `NormalizedBuilding.variant`.
+        let variant: StructureVariant
         let era: Era
         /// What it is built of, and how tall it stands. See `NormalizedBuilding`.
         let fabric: Cover.Substance
@@ -1835,8 +1864,19 @@ enum SettlementRenderer {
     static let maxBodyJitter: Double = 1.1
 
     /// The pixel-space layout for one frame — what drawing and hit-testing use.
+    ///
+    /// `viewport` is the rect actually on screen (the *view's* bounds, not the
+    /// world rect the camera maps into). Pass it and the result is culled to
+    /// what a viewer can see, which is the only cull that is safe: a building
+    /// dropped for being off-screen is one nobody is looking at. Pass `nil` —
+    /// as the path-drawing does — for the whole town.
+    ///
+    /// `PlacedBuilding.id` is the building's index in the **complete** layout,
+    /// so culling never renumbers anything: a selection made before you panned
+    /// still points at the same roof afterwards.
     static func layout(
-        settlement: Settlement, registry: GameDataRegistry, rect: CGRect
+        settlement: Settlement, registry: GameDataRegistry, rect: CGRect,
+        viewport: CGRect? = nil
     ) -> [PlacedBuilding] {
         let unit = min(rect.width, rect.height)
         // Who sleeps where, counted once for the whole frame.
@@ -1845,23 +1885,67 @@ enum SettlementRenderer {
             guard let home = pawn.homeID else { continue }
             household[home, default: 0] += 1
         }
-        return normalizedLayout(settlement: settlement, registry: registry).map { b in
+        let all = normalizedLayout(settlement: settlement, registry: registry).map { b in
             PlacedBuilding(id: b.id, definitionID: b.definitionID, name: b.name, glyph: b.glyph,
                            center: point(b.center, in: rect), size: unit * b.size,
                            footprint: CGSize(width: b.footprintW * unit, height: b.footprintH * unit),
                            underConstruction: b.underConstruction, progress: b.progress,
-                           seed: b.seed, era: b.era, fabric: b.fabric, floors: b.floors,
+                           seed: b.seed, variant: b.variant,
+                           era: b.era, fabric: b.fabric, floors: b.floors,
                            workers: b.assignedPawnIDs.count,
                            residents: b.placementID.map { household[$0] ?? 0 } ?? 0,
                            condition: b.condition)
         }
+        return onScreen(all, viewport: viewport)
     }
+
+    /// What one frame draws, out of every building the colony has.
+    ///
+    /// Two steps, in this order, because they answer different questions:
+    ///
+    /// 1. **Is it on screen?** A lot is kept if it overlaps the viewport grown
+    ///    by `offscreenMargin` — the margin so a roof half off the edge, and
+    ///    the shadow it throws inward, are still drawn.
+    /// 2. **If more than the budget survive, which?** The ones nearest the
+    ///    middle of the view. Zoomed out over a large town this is the whole
+    ///    colony minus its outskirts, which is the right thing to lose: you
+    ///    are looking at the middle.
+    static func onScreen(_ all: [PlacedBuilding], viewport: CGRect?) -> [PlacedBuilding] {
+        guard let viewport else { return all }
+        let frame = viewport.insetBy(dx: -offscreenMargin, dy: -offscreenMargin)
+        let visible = all.filter { b in
+            frame.intersects(CGRect(x: b.center.x - b.footprint.width / 2,
+                                    y: b.center.y - b.footprint.height / 2,
+                                    width: max(1, b.footprint.width),
+                                    height: max(1, b.footprint.height)))
+        }
+        guard visible.count > maxDrawnBuildings else { return visible }
+        let middle = CGPoint(x: viewport.midX, y: viewport.midY)
+        // Sorted by distance, then by id, so a tie never depends on the order
+        // the layout happened to come back in.
+        return visible.sorted { a, b in
+            let da = (a.center.x - middle.x) * (a.center.x - middle.x)
+                + (a.center.y - middle.y) * (a.center.y - middle.y)
+            let db = (b.center.x - middle.x) * (b.center.x - middle.x)
+                + (b.center.y - middle.y) * (b.center.y - middle.y)
+            return da == db ? a.id < b.id : da < db
+        }
+        .prefix(maxDrawnBuildings)
+        .sorted { $0.id < $1.id }
+    }
+
+    /// How far outside the view a building is still drawn. A lot whose middle
+    /// has just left the screen still has eaves and a shadow inside it.
+    static let offscreenMargin: CGFloat = 80
 
     /// The structures as actually placed on the build grid.
     private static func gridLayout(
         settlement: Settlement, colony: ColonyMap, registry: GameDataRegistry
     ) -> [NormalizedBuilding] {
-        colony.placements.prefix(maxVisibleBuildings).enumerated().map { index, placement in
+        // Which buildings keep or build a conveyance, read out of the vehicle
+        // bank once for the whole pass rather than per placement.
+        let sheds = StructureVariant.conveyanceHomes(registry)
+        return colony.placements.enumerated().map { index, placement in
             // `coord` is the footprint's top-left origin, so a multi-tile
             // building is nudged to the middle of what it covers — and drawn
             // larger for covering it.
@@ -1895,6 +1979,8 @@ enum SettlementRenderer {
                 underConstruction: placement.underConstruction,
                 progress: placement.underConstruction ? (progress ?? 0) : 1,
                 seed: buildingSeed(placement.id),
+                variant: def.map { StructureVariant.of($0, housesConveyances: sheds.contains($0.id)) }
+                    ?? .plain,
                 era: def?.era ?? .earlySettlement,
                 fabric: def.map { Cover.substance(of: $0, registry: registry) } ?? .wood,
                 floors: max(1, def?.floors ?? 1),
@@ -1911,16 +1997,20 @@ enum SettlementRenderer {
         settlement: Settlement, registry: GameDataRegistry
     ) -> [NormalizedBuilding] {
         var expanded: [(id: String, name: String, glyph: BuildingGlyph, era: Era,
-                        fabric: Cover.Substance, floors: Int)] = []
+                        fabric: Cover.Substance, floors: Int,
+                        variant: StructureVariant)] = []
+        let sheds = StructureVariant.conveyanceHomes(registry)
         for instance in settlement.buildings {
             let def = registry.building(instance.definitionID)
             let g = def.map(glyph(for:)) ?? .house
-            for _ in 0..<instance.count where expanded.count < maxVisibleBuildings {
+            for _ in 0..<instance.count {
                 expanded.append((instance.definitionID,
                                  def?.name.resolve(AppStrings.language) ?? instance.definitionID,
                                  g, def?.era ?? .earlySettlement,
                                  def.map { Cover.substance(of: $0, registry: registry) } ?? .wood,
-                                 max(1, def?.floors ?? 1)))
+                                 max(1, def?.floors ?? 1),
+                                 def.map { StructureVariant.of($0, housesConveyances: sheds.contains($0.id)) }
+                                    ?? .plain))
             }
         }
         guard !expanded.isEmpty else { return [] }
@@ -1948,6 +2038,7 @@ enum SettlementRenderer {
                     footprintW: 0.05, footprintH: 0.05,
                     underConstruction: false, progress: 1,
                     seed: buildingSeed(expanded[drawn].id, drawn),
+                    variant: expanded[drawn].variant,
                     era: expanded[drawn].era,
                     fabric: expanded[drawn].fabric, floors: expanded[drawn].floors,
                     assignedPawnIDs: [], placementID: nil, condition: 1))
@@ -2039,6 +2130,7 @@ enum SettlementRenderer {
                                               seed: building.seed, era: building.era,
                                               footprint: building.footprint,
                                               fabric: building.fabric, floors: building.floors,
+                                              variant: building.variant,
                                               context: &roofContext)
             }
             // What time and trouble have done to it, over whatever is drawn —

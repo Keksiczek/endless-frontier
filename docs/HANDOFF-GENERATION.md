@@ -123,3 +123,94 @@ a plan.
   and 20 empty, and an empty house is dark at night. Deliberate
   (`HouseholdEngine.assignHomes`), and the reason the town looks dead. Keks's
   call, not a bug.
+
+
+---
+
+# What the next session inherits — 2026-08-20
+
+The three open steps above are closed, and closing them turned over the usual
+thing: **content that loads and that nothing reaches.**
+
+| | |
+|---|---|
+| Step 1, motions | already done — 129 clips, none of the twelve buildings missing |
+| Step 2, late-era events | **done** — modern 30 → 45, near_future 20 → 45 |
+| Step 3, a seventh biome | **done** — `wetlands` / Mokřiny, and it was fourteen touchpoints, not two |
+| Steps 6–7, conveyances | already done — 46 in the bank, parametric drawing |
+
+## Generating the late-era events took four rounds, and that is the lesson
+
+The draft passed `check` and then failed to *decode*, three times running:
+`unlock_tech` with no `techId`, a `region_hazard` written in `region_kind`'s
+shape, a `remove_pawn` carrying a `count`. `SUPPLEMENTS["type"]` had taught the
+generator every word `EventEffect` accepts and nothing about what each one
+reads.
+
+`EFFECT_SHAPES` in `content_kinds.py` is the grammar, taken from the decoder,
+and `check` runs it for events now. **Run it before believing a draft is
+clean.** Rule 61.
+
+Pointing it at the shipped file found **forty-one of the same fault already in
+the game**, none of them new: `damage_buildings` takes `strength`, and eleven
+effects said `delta`, `damage` or `amount` instead — every one ignored, every
+one falling back to a severity of 0.5, so an authored landslide and an authored
+dam breach had always been exactly as bad as each other. Seven carried a `count`
+for an effect that already damages many buildings; three `add_pawn`s asked for
+people they never got. All repaired, and `EffectShapeTests` guards it in Swift
+by round-tripping every effect through the decoder and its own encoder — no
+second list to keep in step. Rule 62.
+
+## Where the drawing stands
+
+**`19 buildings share a drawing` is closed** — by composition, not by seventeen
+new shapes. `StructureVariant` derives how a building is put together from its
+own definition (chimneys from what it burns, a wide door from whether
+`conveyances.json` keeps a vehicle there, a dark building from having no
+workers, `tier` from what it cost, `heft` from `defense`), and
+`SettlementStructures.roofCap` / `roofFurniture` / `frontDoor` compose it.
+`StructureVariantTests` asserts no two of the fifty-six buildings share both an
+archetype and a composition.
+
+Two things worth keeping from it:
+
+- **A random tie-breaker is worse than none.** A coin toss on `bays` was itself
+  making a 2-wide palisade and a 3-wide stone wall come out identical. Every
+  axis says something true now, and the ties break on `tier`, `heft` and what
+  the building stores.
+- The signature is what makes the standing rule testable. If you add an axis to
+  the drawing, add it to `signature` or the guard stops guarding.
+
+## Still not generated, still for the same reasons
+
+**Horse tack** — seventeen pieces in `items.json` with no recipe, waiting on
+mounts. **Anything into a bank whose reader you have not checked.**
+
+## The seventh biome cost fourteen edits, not two
+
+The handoff above said "a row in `LocalTerrain.weights(for:)` and
+`sceneryMix(for:)` — Swift, but two lines". It is **fourteen** `switch`es:
+terrain shape, ground weights, scenery, tree count, tree species, massif
+weight, seam mix, river chance, river anchor, landform chance, animal mix, POI
+mix, deposit mix and forage base — plus two in the app for the world-map
+colour and its detail marks.
+
+Every one of them has a `default:` arm, so a biome added to the JSON alone
+generates cleanly, crashes nothing, and is **the plains under a different
+name**. `BiomeCoverageTests` is the guard: it fingerprints each biome across
+nine axes against what the unknown-biome path answers and requires at least six
+to be its own. `plains` is exempt by name because it genuinely *is* the
+fallback — every `default:` in the Core reads `// plains & homeland`.
+
+What the fen is *for*, so the next country is designed and not just tuned: it
+eats easily (fowl, fish, reed — forage 85, food affinity 1.15) and it has no
+stone at all (massif weight 0.06, no iron in any seam). A colony founded on one
+must trade or move for the whole industrial chain, and it has peat to trade
+with. Its water lies through the middle of the map rather than along an edge,
+which is the only biome that does.
+
+## Open, unchanged
+- The crafting panel: 306 recipes in one flat alphabetical list.
+- Roads, bridges, rail links — asked for, never written down.
+- Households fill one house at a time, so a village of 76 has ~10 full houses
+  and 20 dark ones. Deliberate; Keks's call.

@@ -94,6 +94,16 @@ enum HexTerrain {
             for p in scatter(4, in: rect, rng: &rng) {
                 dune(at: p, width: s * 0.32, color: detail, context: &context)
             }
+        case "wetlands":
+            // Standing water: short horizontal strokes lying flat, which is the
+            // one mark that cannot be mistaken for a tree or a dune.
+            for p in scatter(9, in: rect, rng: &rng) {
+                let w = s * (0.06 + rng.nextUnit() * 0.06)
+                context.stroke(Path { path in
+                    path.move(to: p)
+                    path.addLine(to: CGPoint(x: p.x + w, y: p.y))
+                }, with: .color(detail), lineWidth: max(0.6, s * 0.012))
+            }
         case "tundra":
             for p in scatter(10, in: rect, rng: &rng) {
                 let r = s * 0.035

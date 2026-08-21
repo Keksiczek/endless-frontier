@@ -23,6 +23,10 @@ public enum LocalMapGenerator {
         let riverBase: Double
         if biomeID == "desert" {
             riverBase = rng.nextUnit() < 0.5 ? 0.06 : 0.94
+        } else if biomeID == "wetlands" {
+            // A fen's water does not keep to an edge — it lies through the
+            // middle of the country and everything is built around it.
+            riverBase = 0.38 + rng.nextUnit() * 0.24
         } else {
             riverBase = rng.nextUnit() < 0.5 ? 0.16 : 0.82
         }
@@ -249,6 +253,11 @@ public enum LocalMapGenerator {
                     (.spring, 0.5), (.wreck, 0.2),
                     (.watchtower, 1.2), (.hermit, 1.1), (.starfall, 0.3),
                     (.barrow, 0.5), (.orchard, 0.2), (.saltPan, 0.2)]
+        case "wetlands":
+            return [(.barrow, 1.7), (.wreck, 1.2), (.ruins, 1.0), (.shrine, 1.0),
+                    (.treasure, 0.9), (.spring, 0.6), (.cave, 0.1),
+                    (.hermit, 1.1), (.orchard, 0.4), (.watchtower, 0.3),
+                    (.saltPan, 0.2), (.starfall, 0.15)]
         case "coast":
             return [(.wreck, 1.5), (.spring, 0.9), (.shrine, 0.8), (.treasure, 0.8),
                     (.ruins, 0.6), (.cave, 0.4),
@@ -308,6 +317,9 @@ public enum LocalMapGenerator {
         case "tundra":    return (1, 2, 3, 2, 2, 0, 2, 1)
         case "mountains": return (1, 2, 6, 1, 4, 0, 3, 0)   // the ore country
         case "coast":     return (3, 2, 2, 3, 0, 3, 0, 1)   // clay beds, no iron
+        // Peat is the fen's coal and it has no iron at all: fuel it can dig
+        // and metal it has to trade for.
+        case "wetlands":  return (4, 3, 0, 4, 0, 4, 2, 0)
         default:          return (4, 3, 2, 2, 1, 2, 1, 0)   // plains & homeland
         }
     }
@@ -337,6 +349,7 @@ public enum LocalMapGenerator {
         case "forest":    base = 110
         case "plains":    base = 95
         case "coast":     base = 80
+        case "wetlands":  base = 85
         case "tundra":    base = 55
         case "mountains": base = 50
         case "desert":    base = 35

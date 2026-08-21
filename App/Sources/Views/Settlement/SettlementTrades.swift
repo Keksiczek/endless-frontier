@@ -34,23 +34,24 @@ enum SettlementTrades {
     static func draw(
         _ glyph: SettlementRenderer.BuildingGlyph, at c: CGPoint, s: CGFloat,
         aspect: CGFloat, time: Double, night: Double, seed: UInt64, era: Era,
+        variant: StructureVariant = .plain,
         surfaces f: Surfaces, context: inout GraphicsContext
     ) {
         switch glyph {
         case .tenement: tenement(c, s, aspect, night, seed, f, &context)
-        case .farm:     farm(c, s, aspect, time, seed, f, &context)
-        case .lodge:    lodge(c, s, aspect, seed, f, &context)
+        case .farm:     farm(c, s, aspect, time, seed, variant, f, &context)
+        case .lodge:    lodge(c, s, aspect, seed, variant, f, &context)
         case .sawmill:  sawmill(c, s, aspect, time, f, &context)
         case .well:     well(c, s, f, &context)
-        case .forge:    forge(c, s, aspect, time, night, f, &context)
-        case .tanks:    tanks(c, s, aspect, time, f, &context)
+        case .forge:    forge(c, s, aspect, time, night, variant, f, &context)
+        case .tanks:    tanks(c, s, aspect, time, variant, f, &context)
         case .rail:     rail(c, s, aspect, f, &context)
-        case .lab:      lab(c, s, aspect, night, f, &context)
+        case .lab:      lab(c, s, aspect, night, variant, f, &context)
         case .dish:     dish(c, s, time, f, &context)
         case .vault:    vault(c, s, aspect, f, &context)
-        case .clinic:   clinic(c, s, aspect, night, f, &context)
+        case .clinic:   clinic(c, s, aspect, night, variant, f, &context)
         case .aqueduct: aqueduct(c, s, aspect, f, &context)
-        case .wall:     palisade(c, s, aspect, era, seed, f, &context)
+        case .wall:     palisade(c, s, aspect, era, seed, variant, f, &context)
         case .barracks: barracks(c, s, aspect, time, f, &context)
         case .turbine:  turbine(c, s, time, f, &context)
         case .dam:      dam(c, s, aspect, time, f, &context)
@@ -134,11 +135,14 @@ enum SettlementTrades {
 
     /// Furrows, and the barn at the head of them. A farm is mostly *field*,
     /// which is why drawing it as a barrel never read as one.
+    /// `farm_basic` and `farm_advanced` share this barn. An advanced farm is
+    /// a bigger building with more doors down its side, which is what paying
+    /// four times as much for it bought.
     private static func farm(
         _ c: CGPoint, _ s: CGFloat, _ aspect: CGFloat, _ time: Double,
-        _ seed: UInt64, _ f: Surfaces, _ ctx: inout GraphicsContext
+        _ seed: UInt64, _ v: StructureVariant, _ f: Surfaces, _ ctx: inout GraphicsContext
     ) {
-        let w = s * 2.0 * aspect
+        let w = s * (1.8 + CGFloat(v.tier) * 0.12) * aspect
         // **No field is drawn here.** There used to be one: five ruled rows of
         // decorative furrow, identical on every farm, that knew nothing about
         // what was growing. The plots are real now (`Crop`, `FarmEngine`) and
@@ -176,12 +180,21 @@ enum SettlementTrades {
 
     /// The hunters': a steep roof to shed snow, racks of hides drying outside,
     /// and antlers over the door.
+    /// The hunters' lodge and the stable are one drawing. A stable keeps
+    /// animals, so it gets the wide door — `conveyances.json` says which
+    /// buildings do, and nothing here has to be listed by hand.
     private static func lodge(
         _ c: CGPoint, _ s: CGFloat, _ aspect: CGFloat, _ seed: UInt64,
-        _ f: Surfaces, _ ctx: inout GraphicsContext
+        _ v: StructureVariant, _ f: Surfaces, _ ctx: inout GraphicsContext
     ) {
         let w = s * 1.4 * aspect, h = s * 0.85
         let body = CGRect(x: c.x - w / 2, y: c.y - h * 0.3, width: w, height: h)
+        defer {
+            // Drawn last so it sits on the front wall rather than under it.
+            SettlementStructures.frontDoor(
+                wide: v.wideDoor, on: body, s: s, at: body.midX,
+                ink: f.ink, dark: Theme.boneDim.opacity(0.32), context: &ctx)
+        }
         SettlementStructures.groundShadow(at: c, halfWidth: w / 2,
                                           footY: body.maxY + s * 0.06, context: &ctx)
         ctx.fill(Path(body), with: .color(f.wall))
@@ -314,11 +327,13 @@ enum SettlementTrades {
 
     /// The hearth that glows. A squat stone hut under a chimney too big for it,
     /// with the door open onto the fire and an anvil in the yard.
+    /// The bloomery and the foundry. A foundry is the heavier of the two and
+    /// sends up more than a bloomery does.
     private static func forge(
         _ c: CGPoint, _ s: CGFloat, _ aspect: CGFloat, _ time: Double,
-        _ night: Double, _ f: Surfaces, _ ctx: inout GraphicsContext
+        _ night: Double, _ v: StructureVariant, _ f: Surfaces, _ ctx: inout GraphicsContext
     ) {
-        let w = s * 1.3 * aspect, h = s * 0.95
+        let w = s * (1.2 + CGFloat(v.tier) * 0.08) * aspect, h = s * 0.95
         let body = CGRect(x: c.x - w / 2, y: c.y - h * 0.45, width: w, height: h)
         SettlementStructures.groundShadow(at: c, halfWidth: w / 2,
                                           footY: body.maxY + s * 0.06, context: &ctx)
@@ -361,11 +376,13 @@ enum SettlementTrades {
     /// Cylinders, catwalks, pipework and a flare. Nothing else in the colony
     /// looks like a refinery, which was the trouble: it used to look like a
     /// factory.
+    /// The chemical plant and the oil refinery. Both are tank farms; a
+    /// refinery is the larger and the smokier.
     private static func tanks(
         _ c: CGPoint, _ s: CGFloat, _ aspect: CGFloat, _ time: Double,
-        _ f: Surfaces, _ ctx: inout GraphicsContext
+        _ v: StructureVariant, _ f: Surfaces, _ ctx: inout GraphicsContext
     ) {
-        let w = s * 1.9 * aspect
+        let w = s * (1.75 + CGFloat(v.tier) * 0.08) * aspect
         SettlementStructures.groundShadow(at: c, halfWidth: w / 2,
                                           footY: c.y + s * 0.62, context: &ctx)
         let radii: [CGFloat] = [0.42, 0.32, 0.26]
@@ -473,11 +490,16 @@ enum SettlementTrades {
     // MARK: - Knowing
 
     /// The clean block: a glass band, a flat roof and the plant on top of it.
+    /// `electronics_lab`, `data_center`, `research_campus` and `ai_core` are
+    /// all this clean block. `variant` is what keeps four of the most expensive
+    /// buildings in the game from being one drawing: how far the glazing runs,
+    /// what stands on the roof, and whether there is anyone inside at night —
+    /// an `ai_core` is worked by two people and a research campus by six.
     private static func lab(
         _ c: CGPoint, _ s: CGFloat, _ aspect: CGFloat, _ night: Double,
-        _ f: Surfaces, _ ctx: inout GraphicsContext
+        _ v: StructureVariant, _ f: Surfaces, _ ctx: inout GraphicsContext
     ) {
-        let w = s * 1.7 * aspect, h = s * 1.15
+        let w = s * (1.55 + CGFloat(v.tier) * 0.07) * aspect, h = s * 1.15
         let body = CGRect(x: c.x - w / 2, y: c.y - h * 0.55, width: w, height: h)
         SettlementStructures.groundShadow(at: c, halfWidth: w / 2,
                                           footY: body.maxY + s * 0.05, context: &ctx)
@@ -488,16 +510,23 @@ enum SettlementTrades {
         // read as modern next to a house full of shutters.
         let band = CGRect(x: body.minX + s * 0.12, y: body.minY + h * 0.22,
                           width: body.width - s * 0.24, height: h * 0.3)
-        ctx.fill(Path(band), with: .color(f.lit.opacity(0.3 + night * 0.4)))
+        ctx.fill(Path(band), with: .color(f.lit.opacity(
+            (v.nightShift ? 0.3 : 0.12) + night * (v.nightShift ? 0.4 : 0.1))))
         ctx.stroke(Path(band), with: .color(Theme.boneDim.opacity(0.6)), lineWidth: 0.6)
-        for mullion in 1..<4 {
-            let x = band.minX + band.width * CGFloat(mullion) / 4
+        for mullion in 1..<max(2, v.bays) {
+            let x = band.minX + band.width * CGFloat(mullion) / CGFloat(max(2, v.bays))
             ctx.stroke(Path { p in
                 p.move(to: CGPoint(x: x, y: band.minY))
                 p.addLine(to: CGPoint(x: x, y: band.maxY))
             }, with: .color(f.wall), lineWidth: 1)
         }
-        // Rooftop plant and a slim mast.
+        // How it is closed off at the top, and what it carries up there.
+        SettlementStructures.roofCap(v.roofline, over: body, s: s,
+                                     roof: f.roof, ink: f.ink, bright: f.bright, context: &ctx)
+        SettlementStructures.roofFurniture(v.rooftop, over: body, s: s,
+                                           stone: f.stone, ink: f.ink, bright: f.bright,
+                                           lit: f.lit, context: &ctx)
+        // Rooftop plant, sized to the building under it.
         let unit = CGRect(x: c.x - w * 0.22, y: body.minY - s * 0.24,
                           width: w * 0.3, height: s * 0.24)
         ctx.fill(Path(unit), with: .color(f.stone))
@@ -590,11 +619,13 @@ enum SettlementTrades {
     }
 
     /// Pale walls, a cross, and a lamp that stays lit all night.
+    /// The clinic and the hospital. A hospital is a hospital-sized building
+    /// with a hospital's windows lit all night; a village clinic is not.
     private static func clinic(
         _ c: CGPoint, _ s: CGFloat, _ aspect: CGFloat, _ night: Double,
-        _ f: Surfaces, _ ctx: inout GraphicsContext
+        _ v: StructureVariant, _ f: Surfaces, _ ctx: inout GraphicsContext
     ) {
-        let w = s * 1.7 * aspect, h = s * 1.05
+        let w = s * (1.5 + CGFloat(v.tier) * 0.1) * aspect, h = s * 1.05
         let body = CGRect(x: c.x - w / 2, y: c.y - h * 0.55, width: w, height: h)
         SettlementStructures.groundShadow(at: c, halfWidth: w / 2,
                                           footY: body.maxY + s * 0.05, context: &ctx)
@@ -667,11 +698,14 @@ enum SettlementTrades {
 
     /// A run of wall rather than a tower: stakes while it is timber,
     /// crenellations once it is cut stone.
+    /// A line of stakes and a stone rampart are the same run of wall at two
+    /// weights. `heft` comes off `defense`, so the drawing and the number a
+    /// raid is resolved against cannot drift apart.
     private static func palisade(
         _ c: CGPoint, _ s: CGFloat, _ aspect: CGFloat, _ era: Era, _ seed: UInt64,
-        _ f: Surfaces, _ ctx: inout GraphicsContext
+        _ v: StructureVariant, _ f: Surfaces, _ ctx: inout GraphicsContext
     ) {
-        let w = s * 2.2 * aspect
+        let w = s * (2.05 + CGFloat(v.heft) * 0.08) * aspect
         let masonry = era != .earlySettlement
         SettlementStructures.groundShadow(at: c, halfWidth: w / 2,
                                           footY: c.y + s * 0.5, context: &ctx)

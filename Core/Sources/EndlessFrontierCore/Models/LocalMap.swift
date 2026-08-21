@@ -543,6 +543,7 @@ public struct RiverShape: Codable, Sendable, Equatable {
         case "forest":    return 0.75
         case "plains":    return 0.55
         case "coast":     return 0.45   // it already has the sea
+        case "wetlands":  return 0.95   // the water is the country
         case "mountains": return 0.40   // a fast stream in a cut
         case "tundra":    return 0.25
         case "desert":    return 0.10   // and then it is a wash

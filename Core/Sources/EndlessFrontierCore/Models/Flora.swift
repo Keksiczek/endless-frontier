@@ -271,6 +271,9 @@ public enum FloraFactory {
         case "forest":    return 60
         case "plains":    return 26
         case "coast":     return 18
+        // Not bare, but not a wood either: a fen grows in stands on the dry
+        // hummocks and nothing at all between them.
+        case "wetlands":  return 20
         case "mountains": return 14
         case "tundra":    return 12
         case "desert":    return 4
@@ -288,6 +291,7 @@ public enum FloraFactory {
         case "temperate_forest", "forest": return [.oak, .beech, .birch, .pine]
         // Wet ground and a shoreline grow what likes its feet wet.
         case "coast": return [.willow, .poplar, .birch]
+        case "wetlands": return [.willow, .birch, .poplar]
         default: return [.oak, .birch, .poplar, .willow, .pine]
         }
     }

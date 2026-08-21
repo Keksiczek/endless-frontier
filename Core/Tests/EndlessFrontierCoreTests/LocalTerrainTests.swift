@@ -93,3 +93,78 @@ struct LocalTerrainTests {
         #expect(restored.cover(column: 4, row: 4) == map.cover(column: 4, row: 4))
     }
 }
+
+/// **A new biome must be answered by every system, not fall into `default`.**
+///
+/// Adding a country is a row in `biomes.json` plus fourteen `switch`es across
+/// the Core, and the failure mode is silent: a `default:` arm answers, the map
+/// generates, nothing crashes, and the seventh biome is the plains with a
+/// different name on the world map. That is this project's commonest bug shape
+/// wearing new clothes — content that loads and that nothing reaches.
+///
+/// So the test does not check *what* each answer is. It checks that the answer
+/// is the biome's own: distinct from the fallback the unknown-biome path gives.
+/// A country allowed to agree with the default on one or two axes is fine; one
+/// that agrees on all of them has not really been added.
+@Suite("Every country the game ships is its own country")
+struct BiomeCoverageTests {
+    /// A biome id nothing knows, so `default:` is what answers for it.
+    private static let unknown = "no_such_biome"
+
+    private func fingerprint(_ id: String) -> [String] {
+        let shape = LocalTerrain.shape(of: id)
+        let stone = StoneEngine.seamMix(for: id)
+        return [
+            "\(shape.lift)/\(shape.damp)/\(shape.cold)",
+            LocalTerrain.weights(for: id).map { "\($0.0)\($0.1)" }.joined(),
+            "\(LocalTerrain.sceneryMix(for: id).count)",
+            "\(FloraFactory.wildTreeCount(for: id))",
+            FloraFactory.species(for: id).map(\.rawValue).joined(),
+            "\(StoneEngine.massifWeight(for: id))",
+            "\(stone.iron)/\(stone.clay)",
+            "\(RiverShape.chance(biomeID: id))",
+            AnimalFactory.mix(for: id).map { "\($0.0)\($0.1)\($0.2)" }.joined(),
+        ]
+    }
+
+    @Test("No shipped biome is answered by the fallback on every axis")
+    func everyBiomeIsSomewhereInParticular() throws {
+        let registry = try GameDataRegistry.bundled()
+        let fallback = fingerprint(Self.unknown)
+        for biome in registry.biomes.values {
+            // `plains` **is** the fallback, deliberately: every switch in the
+            // Core reads `default: // plains & homeland`. Naming the one
+            // exception is honest; lowering the bar for all seven so it passes
+            // would be the test quietly agreeing not to look.
+            guard biome.id != "plains" else { continue }
+            let mine = fingerprint(biome.id)
+            let own = zip(mine, fallback).filter { $0 != $1 }.count
+            #expect(own >= 6,
+                    "'\(biome.id)' answers like an unknown country on \(mine.count - own) of \(mine.count) axes — it is the default with a new name")
+        }
+    }
+
+    /// The homeland is deliberately the default's country, so it is the one
+    /// exception and worth naming rather than quietly excluding.
+    @Test("Two different countries are never the same country")
+    func biomesDifferFromEachOther() throws {
+        let registry = try GameDataRegistry.bundled()
+        var seen: [String: String] = [:]
+        for biome in registry.biomes.values {
+            let key = fingerprint(biome.id).joined(separator: "|")
+            if let twin = seen[key] {
+                Issue.record("'\(biome.id)' and '\(twin)' generate the same country")
+            }
+            seen[key] = biome.id
+        }
+    }
+
+    @Test("Every biome states a world flag an event can gate on")
+    func everyBiomeCanBeAskedAbout() throws {
+        let registry = try GameDataRegistry.bundled()
+        for biome in registry.biomes.values {
+            #expect(biome.worldFlag == "biome:\(biome.id)_present",
+                    "'\(biome.id)' must be nameable by an event's condition")
+        }
+    }
+}

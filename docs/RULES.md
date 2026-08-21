@@ -589,3 +589,51 @@ fires, do the arithmetic before you rewrite the mechanic.
    out as an empty message under a headline saying the tests failed. Twenty
    minutes went into a content bug that was a lock. Print both streams, or the
    tool built to catch silent failures has one of its own.
+61. **A vocabulary check knows the words; it does not know the grammar.**
+   `SUPPLEMENTS["type"]` teaches the generator every string
+   `EventEffect.init(from:)` switches on, which is what makes `unlock_tech` and
+   `remove_pawn` reachable at all (rule 57). It says nothing about what each of
+   them *reads*, so three drafts in a row passed every check and then failed to
+   decode: `unlock_tech` with no `techId`, a `region_hazard` written in
+   `region_kind`'s shape, a `remove_pawn` carrying a `count`. The first two are
+   loud — the file will not load and every test that reads it fails at once.
+   The third is the quiet one: `count` is not a `CodingKey`, so it decodes
+   cleanly, takes **one** person, and the event that was meant to cost the
+   colony two costs it one for ever. `EFFECT_SHAPES` in `content_kinds.py` is
+   the grammar, taken from the decoder. **When you open a vocabulary, open the
+   shapes with it.**
+62. **Four spellings of one field, and only one of them was ever read.** The
+   check written for rule 61 found forty-one of these in *shipped* content, none
+   of them new. `damage_buildings` takes `strength`; twelve effects said so and
+   eleven more said `delta`, `damage` or `amount`, every one of them ignored and
+   every one of them falling back to `severity = 0.5` — so an authored landslide
+   and an authored dam breach had always been exactly as bad as each other, and
+   the numbers in the file were decoration. Seven more carried a `count` for an
+   effect that already damages many buildings, and five a `selector` it has no
+   place for. `EffectShapeTests` guards this in Swift now, by round-tripping
+   each effect through the decoder and its own encoder: anything the encoded
+   form has no place for is a key nothing reads. **No second list to keep in
+   step — the decoder is the list.**
+63. **A cull by array order drops the newest thing every time.**
+   `maxVisibleBuildings = 30` was applied as `placements.prefix(30)`, so a town
+   of seventy-nine drew what it built in its first twenty years and silently
+   dropped everything after — including the roof the player had just paid for
+   and watched go up. And the cut was inside `normalizedLayout`, which
+   `AgentMotion` also reads for homes, beds and work posts, so those
+   forty-nine buildings were not merely undrawn: nobody could live or work in
+   them. **A frame budget belongs in the frame.** Cull by what is on screen,
+   and when a budget still bites, keep what is nearest the middle of the view —
+   a building leaves the drawing because you looked away from it, never because
+   of when it was built.
+64. **Two things sharing an archetype must not share a drawing.** Twenty-three
+   of fifty-three buildings shared a `look`: five industries were one smoking
+   block, four laboratories one glass one, and a player could not tell the place
+   that builds lorries from the place that builds everything else. The tempting
+   fix is seventeen more shapes; the fix that scales is composition, and the
+   axes have to be **derived from the definition** so the difference is true —
+   a clean industry raises no chimney however large it is, a building that keeps
+   vehicles has a door one fits through, a building nobody works at night is
+   dark. A random tie-breaker is worse than no tie-breaker: a coin toss on
+   `bays` was itself making a 2-wide palisade and a 3-wide stone wall come out
+   identical. `StructureVariant.signature` makes "no two are drawn alike" a
+   thing a test can fail.

@@ -416,6 +416,9 @@ public enum AnimalFactory {
         case "mountains":
             return [(.deer, 3, 5), (.hare, 3, 5), (.boar, 2, 3), (.bear, 1, 2),
                     (.wolf, 1, 2), (.goat, 4, 7), (.lynx, 1, 2)]
+        case "wetlands":
+            return [(.grouse, 6, 9), (.boar, 4, 6), (.deer, 4, 6), (.hare, 3, 5),
+                    (.badger, 2, 4), (.fox, 2, 3), (.elk, 1, 2)]
         case "desert":
             return [(.hare, 4, 6), (.fox, 2, 3), (.boar, 1, 2), (.deer, 1, 3),
                     (.goat, 2, 4)]

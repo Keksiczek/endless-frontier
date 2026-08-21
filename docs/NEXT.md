@@ -19,8 +19,8 @@ cd App && xcodegen generate && cd .. && xcodebuild -project App/EndlessFrontier.
 
 A deterministic colony simulation with a living top-down canvas. Seven founders,
 a two-minute tick, a five-real-minute drawn day. **67 engines, 50 model types,
-96 view files, 1145 Core tests.** Content: 49 buildings, 31 techs, 72 events, 76
-items, 29 recipes, 7 quests — all bilingual CZ/EN, guarded by a test.
+97 view files.** Content: 56 buildings, 37 techs, 182 events, 7 biomes, 46
+conveyances, 306 items, 306 recipes — all bilingual CZ/EN, guarded by a test.
 
 What works and is worth protecting:
 
@@ -41,7 +41,18 @@ What works and is worth protecting:
 
 Ordered by *how likely a player is to hit it*. These are the first batch.
 
-### 2.1 A town past thirty buildings is half-drawn — `maxVisibleBuildings = 30`
+### 2.1 ~~A town past thirty buildings is half-drawn~~ — **done 2026-08-20**
+
+Fixed, and it was worse than the heading said. The cut lived inside
+`normalizedLayout`, which `AgentMotion` also reads for homes, beds and work
+posts — so the forty-nine buildings past the cap were not merely undrawn:
+**nobody could live or work in them.** The layout is complete now and the budget
+(`maxDrawnBuildings`, 120) applies to one frame: cull to the camera's rect, and
+when a town still overflows, keep what is nearest the middle of the view. Ids
+come from the complete layout, so culling never renumbers a selection.
+`RenderBudgetTests` pins all five claims. Rule **63**.
+
+<details><summary>What it used to say</summary>
 
 `SettlementRenderer.maxVisibleBuildings = 30`, applied as
 `colony.placements.prefix(30)`. Placements are in build order, so the buildings
@@ -54,8 +65,20 @@ properly — cull by what is **on screen** (the camera's world rect) rather than
 by array order, and keep a cap on what a single frame draws. The fix and the
 measurement belong together: after §11.36's sort bug, the ground is no longer
 the bottleneck, so the budget is worth re-measuring before choosing a number.
+</details>
 
-### 2.2 Opening after a long absence looks like a hang
+### 2.2 ~~Opening after a long absence looks like a hang~~ — **done 2026-08-20**
+
+`GameEngine.openSession(_:now:registry:sliceTicks:onProgress:)` runs the
+catch-up in slices and reports `(done, total)`; `CatchUpOverlay` shows a
+determinate bar and **the years counting up**, which is the unit a player thinks
+in. Slicing a deterministic simulation is the dangerous part, so it is guarded
+rather than argued: `CatchUpSliceTests` runs the same absence whole and in
+slices of 1, 13, 240 and 10,000 and requires the identical `WorldState`. It is
+safe because `TickEngine.advance` is a plain loop over a pure step and `ticks`
+is nothing but its bound.
+
+<details><summary>What it used to say</summary>
 
 Catch-up simulates up to 30 days off the main actor and shows a spinner with no
 progress, no estimate, and no way out. In a debug build a multi-day absence is
@@ -64,7 +87,26 @@ partly *was* one. Wants: a progress figure (ticks done / total), the years
 counting up as they pass, and a cap the player can understand ("a month is as
 far as the world runs without you").
 
-### 2.3 Storeys exist in the drawing and not in the data
+</details>
+
+### 2.3 Storeys exist in the drawing and not in the data — **half done 2026-08-20**
+
+Measuring it found a bigger hole than the one described. Only five buildings in
+the game have `housing` at all, and between the longhouse (early settlement) and
+the apartment block (modern) there was **no new dwelling for three entire
+eras** — a player's housing did not change for most of the game. Three added,
+priced off the beds-per-material curve the shipped dwellings already describe
+(2.00 → 1.29 → 1.04 → 0.80) rather than off a guess: `courtyard_house`
+(ancient, 3×3×2, opened by masonry), `townhouse_row` (medieval, 4×2×2, guilds)
+and `brick_tenement` (early industrial, 3×3×3, sanitation — more people for
+less, at −1 morale, and it knows it).
+
+Still open, and still a deliberate decision rather than a fix: whether the
+**hut and the longhouse** should carry a loft. That one moves the growth curve
+(`sleepers = footprint × 2 × floors`), so it wants `GrowthProbe` re-run either
+side of it.
+
+<details><summary>What it used to say</summary>
 
 `floors` is drawn now, but only `apartment_block` (5) and `arcology` (12) carry
 it, so every building a player sees for the first two hundred years is one
@@ -73,6 +115,8 @@ storey. Raising it on a hut is **not** a drawing change: `sleepers = footprint �
 curve moves. Decide deliberately: either give `floors` to the buildings that
 plainly have them and re-run `GrowthProbe`, or split "drawn storeys" from
 "storeys that hold beds" and accept two numbers for two different things.
+
+</details>
 
 ### 2.4 The era ladder is probably unreachable, and nobody has measured it
 

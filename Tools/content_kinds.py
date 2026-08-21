@@ -339,6 +339,72 @@ NEEDS_SWIFT_FIRST = {
 }
 
 
+
+# **What each effect type actually needs, and what it silently ignores.**
+#
+# `SUPPLEMENTS["type"]` taught the generator the *words* `EventEffect` accepts.
+# It said nothing about the grammar, and three drafts in a row got through the
+# check and then failed to decode: `unlock_tech` without a `techId`, a
+# `region_hazard` written in `region_kind`'s shape, `remove_pawn` carrying a
+# `count`.
+#
+# The first two are loud — the file will not decode and every test that loads
+# `events.json` fails at once. The third is the quiet kind this tool exists for:
+# `count` is not a `CodingKey`, so it decodes cleanly, removes **one** pawn, and
+# the event that was meant to cost the colony two people costs it one for ever.
+#
+# Taken from `EventEffect.init(from:)`, which is the authority. `required` is
+# every key decoded with `decode`; `optional` is every key decoded with
+# `decodeIfPresent`. Anything else on an effect of that type is read by nobody.
+EFFECT_SHAPES: dict[str, tuple[set[str], set[str]]] = {
+    "resource_delta":   ({"resource", "delta"}, {"scope", "duration_ticks"}),
+    "stat_delta":       ({"stat", "delta"},     set()),
+    "unlock_tech":      ({"techId"},            set()),
+    "trigger_event":    ({"eventId"},           {"delay_ticks"}),
+    "set_world_flag":   ({"flag"},              {"value"}),
+    "pawn_health":      ({"delta"},             {"selector"}),
+    "pawn_mood":        ({"delta"},             {"selector"}),
+    "add_pawn":         (set(),                 set()),
+    "remove_pawn":      (set(),                 {"selector"}),
+    "region_hazard":    ({"delta"},             {"selector"}),
+    "region_kind":      ({"kind"},              {"selector"}),
+    "raid":             ({"strength"},          set()),
+    "damage_buildings": (set(),                 {"kind", "strength"}),
+}
+
+
+def effect_shape_problems(entry: dict) -> list[str]:
+    """Every effect on one event, measured against what the decoder will read.
+
+    Returns blocking problems: a missing required key means `events.json` will
+    not decode at all, and a key nothing reads means the effect quietly does
+    less than it says.
+    """
+    problems: list[str] = []
+
+    def check(effects, where: str) -> None:
+        for i, effect in enumerate(effects or []):
+            if not isinstance(effect, dict):
+                continue
+            kind = effect.get("type")
+            shape = EFFECT_SHAPES.get(kind)
+            if shape is None:
+                continue          # an unknown type is already caught elsewhere
+            required, optional = shape
+            given = set(effect) - {"type"}
+            for key in sorted(required - given):
+                problems.append(
+                    f"{where}[{i}] {kind} needs '{key}' — events.json will not decode without it")
+            for key in sorted(given - required - optional):
+                problems.append(
+                    f"{where}[{i}] {kind} carries '{key}', which nothing reads")
+
+    check(entry.get("effects"), "effects")
+    for choice in entry.get("choices") or []:
+        check(choice.get("effects"), f"choices.{choice.get('id', '?')}.effects")
+    return problems
+
+
 def path_for(kind: str) -> Path:
     return GAME_DATA / KINDS[kind]["file"]
 

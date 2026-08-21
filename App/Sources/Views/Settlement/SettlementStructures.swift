@@ -667,11 +667,171 @@ enum SettlementStructures {
         return (body, door, panes)
     }
 
+
+    // MARK: - Composition, so a shared archetype is not a shared drawing
+
+    /// **How a block-shaped building is closed off at the top.**
+    ///
+    /// Five buildings were the `plant` archetype and four were `lab`, so a town
+    /// of the late eras was one smoking block and one glass block repeated. The
+    /// shape is right for all of them — what was missing is that a vehicle
+    /// works, an assembly plant and an automated factory *close their roofs
+    /// differently*, and always have.
+    ///
+    /// Drawn over `body`, so a case only has to say where its walls are.
+    static func roofCap(
+        _ line: StructureVariant.Roofline, over body: CGRect, s: CGFloat,
+        roof: Color, ink: Color, bright: Color, context: inout GraphicsContext
+    ) {
+        switch line {
+        case .flat:
+            // A parapet: a lip standing a little proud of the wall.
+            let lip = CGRect(x: body.minX - s * 0.04, y: body.minY - s * 0.09,
+                             width: body.width + s * 0.08, height: s * 0.11)
+            context.fill(Path(lip), with: .color(roof))
+            context.stroke(Path(lip), with: .color(ink), lineWidth: 0.9)
+        case .gable:
+            let peak = Path { p in
+                p.move(to: CGPoint(x: body.minX - s * 0.08, y: body.minY))
+                p.addLine(to: CGPoint(x: body.midX, y: body.minY - s * 0.42))
+                p.addLine(to: CGPoint(x: body.maxX + s * 0.08, y: body.minY))
+                p.closeSubpath()
+            }
+            context.fill(peak, with: .color(roof))
+            context.stroke(peak, with: .color(ink), lineWidth: 1)
+        case .sawtooth:
+            // North light: the working roof, glazed on the shaded side. The one
+            // roofline that says "there are benches under here".
+            let teeth = max(2, Int(body.width / (s * 0.62)))
+            for k in 0..<teeth {
+                let x0 = body.minX + body.width * CGFloat(k) / CGFloat(teeth)
+                let x1 = body.minX + body.width * CGFloat(k + 1) / CGFloat(teeth)
+                let tooth = Path { p in
+                    p.move(to: CGPoint(x: x0, y: body.minY))
+                    p.addLine(to: CGPoint(x: x0, y: body.minY - s * 0.3))
+                    p.addLine(to: CGPoint(x: x1, y: body.minY))
+                    p.closeSubpath()
+                }
+                context.fill(tooth, with: .color(roof))
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: x0, y: body.minY - s * 0.3))
+                    p.addLine(to: CGPoint(x: x0, y: body.minY))
+                }, with: .color(bright), lineWidth: 0.8)
+            }
+        case .barrel:
+            let shell = Path { p in
+                p.move(to: CGPoint(x: body.minX, y: body.minY))
+                p.addQuadCurve(to: CGPoint(x: body.maxX, y: body.minY),
+                               control: CGPoint(x: body.midX, y: body.minY - s * 0.68))
+                p.closeSubpath()
+            }
+            context.fill(shell, with: .color(roof))
+            context.stroke(shell, with: .color(ink), lineWidth: 1)
+        case .stepped:
+            // Storeys that set back as they rise — what a tall building does.
+            var step = body
+            for k in 0..<3 {
+                let inset = s * 0.16 * CGFloat(k + 1)
+                step = CGRect(x: body.minX + inset, y: body.minY - s * 0.26 * CGFloat(k + 1),
+                              width: max(s * 0.2, body.width - inset * 2), height: s * 0.28)
+                context.fill(Path(step), with: .color(roof))
+                context.stroke(Path(step), with: .color(ink), lineWidth: 0.8)
+            }
+        }
+    }
+
+    /// **What stands on the roof** — the second half of the same idea. A place
+    /// that makes power carries collectors; a place that teaches carries an
+    /// aerial; a place that cooks or burns carries vents.
+    static func roofFurniture(
+        _ top: StructureVariant.Rooftop, over body: CGRect, s: CGFloat,
+        stone: Color, ink: Color, bright: Color, lit: Color,
+        context: inout GraphicsContext
+    ) {
+        let y = body.minY
+        switch top {
+        case .none:
+            break
+        case .vents:
+            for k in 0..<3 {
+                let x = body.minX + body.width * (CGFloat(k) + 0.5) / 3
+                let vent = CGRect(x: x - s * 0.07, y: y - s * 0.2, width: s * 0.14, height: s * 0.2)
+                context.fill(Path(vent), with: .color(stone))
+                context.stroke(Path(vent), with: .color(ink), lineWidth: 0.7)
+            }
+        case .array:
+            // Collectors lying back toward the light.
+            let panels = max(2, Int(body.width / (s * 0.5)))
+            for k in 0..<panels {
+                let x = body.minX + body.width * (CGFloat(k) + 0.5) / CGFloat(panels)
+                let panel = Path { p in
+                    p.move(to: CGPoint(x: x - s * 0.2, y: y - s * 0.04))
+                    p.addLine(to: CGPoint(x: x + s * 0.06, y: y - s * 0.26))
+                    p.addLine(to: CGPoint(x: x + s * 0.2, y: y - s * 0.18))
+                    p.addLine(to: CGPoint(x: x - s * 0.06, y: y + s * 0.04))
+                    p.closeSubpath()
+                }
+                context.fill(panel, with: .color(lit.opacity(0.5)))
+                context.stroke(panel, with: .color(bright), lineWidth: 0.6)
+            }
+        case .aerial:
+            let mast = CGPoint(x: body.midX + body.width * 0.28, y: y)
+            context.stroke(Path { p in
+                p.move(to: mast)
+                p.addLine(to: CGPoint(x: mast.x, y: y - s * 0.62))
+            }, with: .color(ink), lineWidth: 1)
+            for k in 1...3 {
+                let ry = y - s * 0.62 + s * 0.14 * CGFloat(k)
+                let w = s * 0.07 * CGFloat(k)
+                context.stroke(Path { p in
+                    p.move(to: CGPoint(x: mast.x - w, y: ry))
+                    p.addLine(to: CGPoint(x: mast.x + w, y: ry))
+                }, with: .color(bright.opacity(0.8)), lineWidth: 0.7)
+            }
+        case .tank:
+            let r = s * 0.24
+            let tank = CGRect(x: body.midX - r, y: y - r * 1.5, width: r * 2, height: r * 1.5)
+            context.fill(Path(roundedRect: tank, cornerRadius: r * 0.45), with: .color(stone))
+            context.stroke(Path(roundedRect: tank, cornerRadius: r * 0.45),
+                           with: .color(ink), lineWidth: 0.8)
+            // Legs, so it reads as standing on the roof rather than sunk in it.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: tank.minX + r * 0.3, y: tank.maxY))
+                p.addLine(to: CGPoint(x: tank.minX + r * 0.3, y: y))
+                p.move(to: CGPoint(x: tank.maxX - r * 0.3, y: tank.maxY))
+                p.addLine(to: CGPoint(x: tank.maxX - r * 0.3, y: y))
+            }, with: .color(ink), lineWidth: 0.7)
+        }
+    }
+
+    /// A door wide enough for what lives inside. A stable, a wainwright's and a
+    /// garage all need one; a library does not.
+    static func frontDoor(
+        wide: Bool, on body: CGRect, s: CGFloat, at x: CGFloat,
+        ink: Color, dark: Color, context: inout GraphicsContext
+    ) {
+        let w = wide ? s * 0.62 : s * 0.24
+        let h = wide ? s * 0.52 : s * 0.42
+        let door = CGRect(x: x - w / 2, y: body.maxY - h, width: w, height: h)
+        context.fill(Path(door), with: .color(dark))
+        context.stroke(Path(door), with: .color(ink), lineWidth: 0.8)
+        guard wide else { return }
+        // A roller shutter reads as a vehicle door and not as a big front door.
+        for k in 1..<4 {
+            let y = door.minY + door.height * CGFloat(k) / 4
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: door.minX, y: y))
+                p.addLine(to: CGPoint(x: door.maxX, y: y))
+            }, with: .color(ink.opacity(0.5)), lineWidth: 0.5)
+        }
+    }
+
     static func building(
         _ glyph: SettlementRenderer.BuildingGlyph, at c: CGPoint, s s0: CGFloat,
         time: Double = 0, night: Double = 0, seed: UInt64 = 0,
         era: Era = .earlySettlement, footprint: CGSize = .zero,
         fabric: Cover.Substance = .wood, floors: Int = 1,
+        variant: StructureVariant = .plain,
         context: inout GraphicsContext
     ) {
         // Per-building variation so same-type structures aren't clones: a nudge
@@ -1105,15 +1265,21 @@ enum SettlementStructures {
                                width: hw * 1.5, height: s * 0.42)
             context.fill(Path(clere), with: .color(roof))
             context.stroke(Path(clere), with: .color(bright), lineWidth: 1)
-            let panes = max(3, Int(hw / (s * 0.42)))
+            // A library, a school and a university are all this hall. What
+            // separates them is how much of it there is: the panes across the
+            // clerestory, the aerial a university carries and a village school
+            // does not.
+            let panes = max(3, variant.bays)
             for k in 0..<panes {
                 let x = clere.minX + clere.width * (CGFloat(k) + 0.5) / CGFloat(panes)
                 context.fill(Path(CGRect(x: x - s * 0.07, y: clere.minY + s * 0.09,
                                          width: s * 0.14, height: s * 0.24)),
-                             with: .color(lit))
+                             with: .color(variant.nightShift ? lit : lit.opacity(0.3)))
             }
-            // The colonnade along the front.
-            let posts = max(3, Int(hw / (s * 0.34)))
+            roofFurniture(variant.rooftop, over: clere, s: s,
+                          stone: stone, ink: ink, bright: bright, lit: lit, context: &context)
+            // The colonnade along the front — a grander hall has more of it.
+            let posts = max(3, variant.bays + variant.tier)
             for k in 0..<posts {
                 let x = body.minX + body.width * (CGFloat(k) + 0.5) / CGFloat(posts)
                 context.stroke(Path { p in
@@ -1154,23 +1320,40 @@ enum SettlementStructures {
             }
 
         case .plant:
-            // Heavy industry: a blunt block, stacks, and smoke that keeps coming.
-            let hw = s * 1.0 * aspect
+            // Heavy industry — and five different industries, not one.
+            //
+            // `factory`, `vehicle_works`, `assembly_plant`, `automated_factory`
+            // and `garage` all draw here, so everything that tells them apart
+            // comes out of `variant`: how many chimneys the work needs (a
+            // garage has none), whether the front has a door a lorry fits
+            // through, whether anyone is here after dark, and how the roof is
+            // closed. See `StructureVariant`.
+            let hw = s * (0.9 + CGFloat(variant.tier) * 0.06) * aspect
             let body = CGRect(x: c.x - hw, y: c.y - s * 0.55, width: hw * 2, height: s * 1.2)
             groundShadow(at: c, halfWidth: hw, footY: body.maxY + s * 0.05, context: &context)
             context.fill(Path(body), with: .color(stone))
             context.stroke(Path(body), with: .color(ink), lineWidth: 1)
-            // A band of lit windows — the night shift.
-            let bays = max(3, Int(hw / (s * 0.3)))
+            roofCap(variant.roofline, over: body, s: s,
+                    roof: roof, ink: ink, bright: bright, context: &context)
+            roofFurniture(variant.rooftop, over: body, s: s,
+                          stone: stone, ink: ink, bright: bright, lit: lit, context: &context)
+            // A band of windows. Lit only if somebody is posted here — an
+            // automated works runs in the dark, which is what it is *for*.
+            let bays = max(3, variant.bays)
             for k in 0..<bays {
                 let x = body.minX + body.width * (CGFloat(k) + 0.5) / CGFloat(bays)
                 context.fill(Path(CGRect(x: x - s * 0.08, y: c.y - s * 0.18,
                                          width: s * 0.16, height: s * 0.3)),
-                             with: .color(lit.opacity(0.7)))
+                             with: .color(variant.nightShift
+                                          ? lit.opacity(0.7)
+                                          : Theme.boneDim.opacity(0.18)))
             }
-            // Two stacks, the taller one drawing.
-            for (i, dx) in [(-0.55 as CGFloat), (0.3 as CGFloat)].enumerated() {
-                let h = s * (i == 0 ? 1.5 : 1.05)
+            frontDoor(wide: variant.wideDoor, on: body, s: s, at: body.midX,
+                      ink: ink, dark: Theme.boneDim.opacity(0.3), context: &context)
+            // Chimneys: as many as the work actually sends up, tallest first.
+            for i in 0..<variant.stacks {
+                let dx = -0.55 + CGFloat(i) * 0.42
+                let h = s * (1.5 - CGFloat(i) * 0.22)
                 let stack = CGRect(x: c.x + hw * dx, y: body.minY - h, width: s * 0.26, height: h)
                 context.fill(Path(stack), with: .color(roof))
                 context.stroke(Path(stack), with: .color(ink), lineWidth: 0.8)
@@ -1267,7 +1450,7 @@ enum SettlementStructures {
              .turbine, .dam:
             SettlementTrades.draw(
                 glyph, at: c, s: s, aspect: aspect, time: time, night: night,
-                seed: seed, era: era,
+                seed: seed, era: era, variant: variant,
                 surfaces: SettlementTrades.Surfaces(
                     wall: wall, roof: roof, stone: stone,
                     ink: ink, bright: bright, lit: lit),

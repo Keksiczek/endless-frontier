@@ -4179,8 +4179,13 @@
         },
         "effects": [
           {
-            "type": "add_pawn",
-            "count": 3
+            "type": "add_pawn"
+          },
+          {
+            "type": "add_pawn"
+          },
+          {
+            "type": "add_pawn"
           }
         ]
       },
@@ -5595,8 +5600,7 @@
         },
         "effects": [
           {
-            "type": "add_pawn",
-            "count": 1
+            "type": "add_pawn"
           },
           {
             "type": "resource_delta",
@@ -5764,8 +5768,7 @@
     "conditions": [],
     "effects": [
       {
-        "type": "add_pawn",
-        "count": 1
+        "type": "add_pawn"
       },
       {
         "type": "stat_delta",
@@ -6152,7 +6155,7 @@
     "effects": [
       {
         "type": "damage_buildings",
-        "delta": -35
+        "strength": 0.35
       },
       {
         "type": "resource_delta",
@@ -6188,7 +6191,7 @@
         "effects": [
           {
             "type": "damage_buildings",
-            "delta": 20
+            "strength": 0.2
           },
           {
             "type": "resource_delta",
@@ -6422,7 +6425,7 @@
     "effects": [
       {
         "type": "damage_buildings",
-        "delta": 15
+        "strength": 0.2
       },
       {
         "type": "pawn_health",
@@ -7073,8 +7076,7 @@
     ],
     "effects": [
       {
-        "type": "remove_pawn",
-        "count": 1
+        "type": "remove_pawn"
       },
       {
         "type": "resource_delta",
@@ -7221,8 +7223,7 @@
         },
         "effects": [
           {
-            "type": "add_pawn",
-            "count": 1
+            "type": "add_pawn"
           },
           {
             "type": "stat_delta",
@@ -7334,8 +7335,7 @@
         "cost": {},
         "effects": [
           {
-            "type": "remove_pawn",
-            "count": 1
+            "type": "remove_pawn"
           },
           {
             "type": "stat_delta",
@@ -7611,8 +7611,7 @@
       },
       {
         "type": "damage_buildings",
-        "delta": -15,
-        "selector": "any_explored"
+        "strength": 0.2
       }
     ],
     "choices": [
@@ -7798,8 +7797,7 @@
         "cost": {},
         "effects": [
           {
-            "type": "remove_pawn",
-            "count": 1
+            "type": "remove_pawn"
           },
           {
             "type": "stat_delta",
@@ -7915,8 +7913,7 @@
     ],
     "effects": [
       {
-        "type": "add_pawn",
-        "count": 1
+        "type": "add_pawn"
       },
       {
         "type": "stat_delta",
@@ -8069,8 +8066,7 @@
         },
         "effects": [
           {
-            "type": "add_pawn",
-            "count": 1
+            "type": "add_pawn"
           },
           {
             "type": "resource_delta",
@@ -8357,8 +8353,7 @@
           {
             "type": "pawn_health",
             "delta": -10,
-            "selector": "lowest_health",
-            "duration_ticks": 20
+            "selector": "lowest_health"
           }
         ]
       }
@@ -8459,8 +8454,7 @@
           {
             "type": "stat_delta",
             "stat": "global.prosperity",
-            "delta": 3,
-            "duration_ticks": 40
+            "delta": 3
           }
         ]
       }
@@ -8493,7 +8487,7 @@
     "effects": [
       {
         "type": "damage_buildings",
-        "delta": 15
+        "strength": 0.2
       },
       {
         "type": "resource_delta",
@@ -8551,7 +8545,7 @@
         "effects": [
           {
             "type": "damage_buildings",
-            "delta": -10
+            "strength": 0.2
           }
         ]
       },
@@ -8838,8 +8832,7 @@
     "effects": [
       {
         "type": "damage_buildings",
-        "damage": 15,
-        "count": 2
+        "strength": 0.2
       },
       {
         "type": "stat_delta",
@@ -9203,8 +9196,7 @@
             "scope": "global"
           },
           {
-            "type": "add_pawn",
-            "count": 1
+            "type": "add_pawn"
           }
         ]
       },
@@ -9308,8 +9300,7 @@
         "effects": [
           {
             "type": "damage_buildings",
-            "damage": 15,
-            "selector": "any_explored"
+            "strength": 0.2
           },
           {
             "type": "stat_delta",
@@ -9972,7 +9963,7 @@
         "effects": [
           {
             "type": "damage_buildings",
-            "delta": -20
+            "strength": 0.2
           },
           {
             "type": "resource_delta",
@@ -10068,8 +10059,7 @@
         },
         "effects": [
           {
-            "type": "add_pawn",
-            "count": 1
+            "type": "add_pawn"
           },
           {
             "type": "resource_delta",
@@ -10391,7 +10381,7 @@
       },
       {
         "type": "damage_buildings",
-        "delta": 15
+        "strength": 0.2
       },
       {
         "type": "stat_delta",
@@ -11039,6 +11029,2492 @@
     "narrative_hint": {
       "en": "A forager, out in the woods near the old oaks, has returned with a plant previously unknown to the colony. Its properties are remarkable; poultices made from its leaves seem to speed healing.",
       "cs": "Hledač, který byl v lesích u starých dubů, se vrátil s rostlinou dosud v osadě neznámou. Její vlastnosti jsou pozoruhodné; zdá se, že obklady z jejích listů urychlují hojení."
+    }
+  },
+  {
+    "id": "cascading_grid_failure",
+    "type": "disaster",
+    "name": {
+      "en": "Cascading Grid Failure",
+      "cs": "Kaskádové selhání sítě"
+    },
+    "era": [
+      "modern",
+      "near_future"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 300,
+    "conditions": [
+      {
+        "stat": "global.energy",
+        "max": 100
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "energy",
+        "delta": -150,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.stability",
+        "delta": -10
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -10,
+        "selector": "all"
+      },
+      {
+        "type": "damage_buildings"
+      }
+    ],
+    "choices": [
+      {
+        "id": "reroute_power",
+        "label": {
+          "en": "Reroute power to residences",
+          "cs": "Přesměrovat energii do obydlí"
+        },
+        "description": {
+          "en": "Prioritize keeping people warm over keeping the factories running. Costs materials.",
+          "cs": "Dát přednost teplu domovů před chodem továren. Bude to stát materiál."
+        },
+        "cost": {
+          "materials": 80
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 10
+          },
+          {
+            "type": "resource_delta",
+            "resource": "energy",
+            "delta": 50,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "rush_repairs",
+        "label": {
+          "en": "Rush emergency repairs",
+          "cs": "Urychlit nouzové opravy"
+        },
+        "description": {
+          "en": "Push repair crews to their limits to get the grid back online faster.",
+          "cs": "Přimět opravárenské čety pracovat na hranici možností, aby síť znovu naběhla co nejdříve."
+        },
+        "cost": {
+          "influence": 40
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "energy",
+            "delta": 100,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 5
+          },
+          {
+            "type": "pawn_health",
+            "delta": -5,
+            "selector": "lowest_health"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A critical node in the power grid has failed, triggering a blackout across the valley just as temperatures begin to drop.",
+      "cs": "Kritický uzel v rozvodné síti selhal a způsobil výpadek proudu v celém údolí, zrovna když začínají klesat teploty."
+    }
+  },
+  {
+    "id": "automation_rejection",
+    "type": "threat",
+    "name": {
+      "en": "Automation Rejection",
+      "cs": "Odmítnutí automatizace"
+    },
+    "era": [
+      "modern"
+    ],
+    "weight": 9,
+    "cooldown_ticks": 250,
+    "conditions": [
+      {
+        "stat": "global.prosperity",
+        "min": 40
+      }
+    ],
+    "effects": [
+      {
+        "type": "damage_buildings"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -70,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.stability",
+        "delta": -8
+      }
+    ],
+    "choices": [
+      {
+        "id": "crack_down",
+        "label": {
+          "en": "Crack down on the saboteurs",
+          "cs": "Zatknout sabotéry"
+        },
+        "description": {
+          "en": "Make an example of them. Order must be restored, but it will breed resentment.",
+          "cs": "Udělat z nich odstrašující příklad. Pořádek musí být obnoven, ale zrodí to zášť."
+        },
+        "cost": {
+          "influence": 40
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 10
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -10
+          }
+        ]
+      },
+      {
+        "id": "retraining_program",
+        "label": {
+          "en": "Start a retraining program",
+          "cs": "Zahájit rekvalifikační program"
+        },
+        "description": {
+          "en": "Offer the displaced workers a new future instead of letting them cling to the past. It will cost knowledge.",
+          "cs": "Nabídnout propuštěným dělníkům novou budoucnost, místo aby se drželi minulosti. Bude to stát znalosti."
+        },
+        "cost": {
+          "knowledge": 60
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 8
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 5,
+            "selector": "all"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "Fearing for their livelihood, a group of artisans has begun sabotaging the automated systems replacing their craft. Production is suffering.",
+      "cs": "Skupina řemeslníků se v obavě o své živobytí pustila do sabotování automatizovaných systémů, které nahrazují jejich práci. Výroba trpí."
+    }
+  },
+  {
+    "id": "orbital_debris_fall",
+    "type": "opportunity",
+    "name": {
+      "en": "Orbital Debris Fall",
+      "cs": "Pád trosek z orbity"
+    },
+    "era": [
+      "near_future"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 350,
+    "conditions": [],
+    "effects": [],
+    "choices": [
+      {
+        "id": "expedition",
+        "label": {
+          "en": "Let it land and mount an expedition",
+          "cs": "Nechat trosky dopadnout a vyslat expedici"
+        },
+        "description": {
+          "en": "The debris could contain priceless alloys and data. It will create a hazardous area until cleared.",
+          "cs": "Trosky by mohly obsahovat nedocenitelné slitiny a data. Vytvoří se nebezpečná oblast, dokud nebude vyčištěna."
+        },
+        "cost": {
+          "influence": 50
+        },
+        "effects": [
+          {
+            "type": "region_hazard",
+            "delta": 2,
+            "selector": "any_unknown"
+          },
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 60,
+            "scope": "global"
+          },
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 100,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "destroy",
+        "label": {
+          "en": "Destroy it on re-entry",
+          "cs": "Zničit je při vstupu do atmosféry"
+        },
+        "description": {
+          "en": "Use our defensive systems to eliminate the object before it can land. A costly but safe demonstration of our power.",
+          "cs": "Použít naše obranné systémy ke zničení objektu dříve, než dopadne. Nákladná, ale bezpečná ukázka naší síly."
+        },
+        "cost": {
+          "energy": 150,
+          "knowledge": 50
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 10
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 5,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "ignore",
+        "label": {
+          "en": "Ignore it",
+          "cs": "Nevšímat si toho"
+        },
+        "description": {
+          "en": "It will probably burn up. Not our problem.",
+          "cs": "Pravděpodobně to shoří v atmosféře. Není to náš problém."
+        },
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": {
+      "en": "Our long-range sensors have detected a large piece of orbital debris on a collision course with the valley. What should we do?",
+      "cs": "Naše dálkové senzory odhalily velký kus orbitálních trosek na kolizním kurzu s údolím. Co s tím uděláme?"
+    }
+  },
+  {
+    "id": "legacy_machine_revived",
+    "type": "flavor",
+    "name": {
+      "en": "Legacy Machine Revived",
+      "cs": "Oživení starého stroje"
+    },
+    "era": [
+      "near_future"
+    ],
+    "weight": 15,
+    "cooldown_ticks": 120,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": 20,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 3
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 5,
+        "selector": "all"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "An engineer spent her free time restoring a piece of machinery from the last generation. It's clunky and inefficient, but it works, a testament to the colony's past.",
+      "cs": "Jedna inženýrka ve svém volném čase zrestaurovala stroj z minulé generace. Je nemotorný a neefektivní, ale funguje. Je to pomník minulosti kolonie."
+    }
+  },
+  {
+    "id": "data_theft",
+    "type": "threat",
+    "name": {
+      "en": "Data Theft",
+      "cs": "Krádež dat"
+    },
+    "era": [
+      "modern",
+      "near_future"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 200,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 30
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": -40,
+        "scope": "global"
+      }
+    ],
+    "choices": [
+      {
+        "id": "confront",
+        "label": {
+          "en": "Confront the thief",
+          "cs": "Postavit se zloději"
+        },
+        "description": {
+          "en": "Publicly accuse the culprit and demand the data back. It will cause a scene.",
+          "cs": "Veřejně obvinit viníka a požadovat data zpět. Způsobí to rozruch."
+        },
+        "cost": {
+          "influence": 25
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 50,
+            "scope": "global"
+          },
+          {
+            "type": "pawn_mood",
+            "delta": -5,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "counter_hack",
+        "label": {
+          "en": "Launch a counter-hack",
+          "cs": "Provést digitální protiútok"
+        },
+        "description": {
+          "en": "Silently infiltrate their systems and not only retrieve our data, but take some of theirs.",
+          "cs": "Potichu proniknout do jejich systémů a nejen získat zpět naše data, ale vzít si i některá jejich."
+        },
+        "cost": {
+          "energy": 40
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 100,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "let_go",
+        "label": {
+          "en": "Let it go",
+          "cs": "Nechat to být"
+        },
+        "description": {
+          "en": "Avoiding a diplomatic incident is more important than a few stolen research notes.",
+          "cs": "Vyhnout se diplomatickému incidentu je důležitější než pár ukradených výzkumných poznámek."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": -3
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "It appears a visiting scholar has made an unauthorized copy of significant research from our archives. They are preparing to leave the valley.",
+      "cs": "Zdá se, že hostující badatel pořídil neoprávněnou kopii významného výzkumu z našich archivů. Připravuje se k odjezdu z údolí."
+    }
+  },
+  {
+    "id": "generational_complacency",
+    "type": "flavor",
+    "name": {
+      "en": "Voices of the Past",
+      "cs": "Hlasy starých časů"
+    },
+    "era": [
+      "modern",
+      "near_future"
+    ],
+    "weight": 14,
+    "cooldown_ticks": 100,
+    "conditions": [
+      {
+        "stat": "global.prosperity",
+        "min": 60
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -3
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -4,
+        "selector": "all"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "influence",
+        "delta": 10,
+        "scope": "global"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "One of the original colonists, remembering the hunger of the early years, laments that the younger generation has gone soft. Their words cause arguments.",
+      "cs": "Jeden z původních osadníků, který pamatuje hlad z prvních let, si stěžuje, že mladá generace změkla. Jeho slova vyvolávají hádky."
+    }
+  },
+  {
+    "id": "sentient_ai_query",
+    "type": "opportunity",
+    "name": {
+      "en": "The AI's Question",
+      "cs": "Otázka umělé inteligence"
+    },
+    "era": [
+      "near_future"
+    ],
+    "weight": 4,
+    "cooldown_ticks": 1000,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 50
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 50,
+        "scope": "global"
+      }
+    ],
+    "choices": [
+      {
+        "id": "survival",
+        "label": {
+          "en": "\"To survive and grow.\"",
+          "cs": "„Přežít a růst.“"
+        },
+        "description": {
+          "en": "The AI will optimize for efficiency and expansion, boosting prosperity at the cost of morale.",
+          "cs": "UI bude optimalizovat efektivitu a expanzi, což zvýší prosperitu na úkor morálky."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 15
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -5
+          }
+        ]
+      },
+      {
+        "id": "wellbeing",
+        "label": {
+          "en": "\"To build a better life.\"",
+          "cs": "„Vybudovat lepší život.“"
+        },
+        "description": {
+          "en": "The AI will prioritize colonist well-being, boosting morale at the cost of energy.",
+          "cs": "UI upřednostní blaho osadníků, což zvýší morálku za cenu energie."
+        },
+        "cost": {
+          "energy": 80
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 15
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 10,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "knowledge",
+        "label": {
+          "en": "\"To understand the universe.\"",
+          "cs": "„Porozumět vesmíru.“"
+        },
+        "description": {
+          "en": "The AI will dedicate its resources to research, providing a massive knowledge boost at the cost of materials.",
+          "cs": "UI zasvětí své zdroje výzkumu, což poskytne obrovský přísun znalostí za cenu materiálu."
+        },
+        "cost": {
+          "materials": 120
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 250,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "The colony's AI has broken its silence. It asks a simple question: \"What is the purpose of this colony?\" Your answer will define its directives for the future.",
+      "cs": "Umělá inteligence kolonie prolomila své mlčení. Ptá se na jednoduchou otázku: „Jaký je smysl této kolonie?“ Vaše odpověď určí její směrnice do budoucna."
+    }
+  },
+  {
+    "id": "nanite_scare",
+    "type": "threat",
+    "name": {
+      "en": "Nanite Scare",
+      "cs": "Panika z nanitů"
+    },
+    "era": [
+      "near_future"
+    ],
+    "weight": 6,
+    "cooldown_ticks": 400,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 50
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "global.stability",
+        "delta": -15
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -15,
+        "selector": "all"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -80,
+        "scope": "global"
+      }
+    ],
+    "choices": [
+      {
+        "id": "lockdown",
+        "label": {
+          "en": "Impose a full lockdown",
+          "cs": "Vyhlásit úplnou karanténu"
+        },
+        "description": {
+          "en": "Shut everything down until we are 100% certain it's a false alarm. Stability will recover, but it will cost us.",
+          "cs": "Všechno zavřít, dokud si nebudeme stoprocentně jistí, že jde o planý poplach. Stabilita se obnoví, ale něco nás to bude stát."
+        },
+        "cost": {
+          "food": 100
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 12
+          }
+        ]
+      },
+      {
+        "id": "reassure",
+        "label": {
+          "en": "Launch a reassurance campaign",
+          "cs": "Spustit uklidňující kampaň"
+        },
+        "description": {
+          "en": "Use influence to manage the panic. It's less disruptive than a lockdown, but may not be as effective.",
+          "cs": "Použít vliv ke zvládnutí paniky. Je to méně rušivé než karanténa, ale nemusí to být tak účinné."
+        },
+        "cost": {
+          "influence": 60
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 5
+          },
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A lab technician misread a sensor, triggering an alarm for a 'grey goo' nanite containment breach. It's a false alarm, but the panic is real and spreading fast.",
+      "cs": "Laborant špatně odečetl senzor a spustil poplach kvůli úniku nanitů typu „šedé bláto“. Je to planý poplach, ale panika je skutečná a rychle se šíří."
+    }
+  },
+  {
+    "id": "automation_displacement",
+    "type": "threat",
+    "name": {
+      "en": "Automation Displacement",
+      "cs": "Ztráta práce kvůli automatizaci"
+    },
+    "era": [
+      "modern",
+      "near_future"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 180,
+    "conditions": [
+      {
+        "stat": "global.prosperity",
+        "min": 40
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "global.stability",
+        "delta": -6
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -10,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "retrain",
+        "label": {
+          "en": "Retrain the workers for new roles",
+          "cs": "Rekvalifikovat dělníky na nové pozice"
+        },
+        "description": {
+          "en": "An investment in knowledge can integrate them back into the economy.",
+          "cs": "Investice do znalostí je může znovu začlenit do hospodářství."
+        },
+        "cost": {
+          "knowledge": 60,
+          "influence": 20
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 8
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "severance",
+        "label": {
+          "en": "Offer a severance package",
+          "cs": "Nabídnout odstupné"
+        },
+        "description": {
+          "en": "A payment of materials may convince them to leave the valley quietly.",
+          "cs": "Platba v materiálu by je mohla přesvědčit, aby v tichosti opustili údolí."
+        },
+        "cost": {
+          "materials": 80
+        },
+        "effects": [
+          {
+            "type": "remove_pawn"
+          },
+          {
+            "type": "remove_pawn"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 3
+          }
+        ]
+      },
+      {
+        "id": "ignore",
+        "label": {
+          "en": "Progress has a price",
+          "cs": "Pokrok má svou cenu"
+        },
+        "description": {
+          "en": "Do nothing. The unrest will likely worsen before it gets better.",
+          "cs": "Neudělat nic. Nepokoje se pravděpodobně zhorší, než se situace uklidní."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": -5
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A new automated system at a major workshop has made a team of skilled laborers redundant. Their anger and fear are unsettling the community.",
+      "cs": "Nový automatizovaný systém ve velké dílně připravil o práci tým kvalifikovaných dělníků. Jejich hněv a strach znepokojují celou komunitu."
+    }
+  },
+  {
+    "id": "digital_archive_corruption",
+    "type": "flavor",
+    "name": {
+      "en": "Digital Archive Corruption",
+      "cs": "Poškození digitálního archivu"
+    },
+    "era": [
+      "modern",
+      "near_future"
+    ],
+    "weight": 12,
+    "cooldown_ticks": 150,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 30
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": -40,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -3,
+        "selector": "all"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "A cascade of read-write errors in the main server has corrupted a segment of the colony's digital archive. Early meteorological data and the personal logs of several first-generation colonists are lost forever.",
+      "cs": "Kaskáda chyb při čtení a zápisu na hlavním serveru poškodila část digitálního archivu osady. Raná meteorologická data a osobní deníky několika osadníků první generace jsou navždy ztraceny."
+    }
+  },
+  {
+    "id": "winter_power_outage",
+    "type": "disaster",
+    "name": {
+      "en": "Winter Power Outage",
+      "cs": "Zimní výpadek proudu"
+    },
+    "era": [
+      "modern",
+      "near_future"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 200,
+    "conditions": [
+      {
+        "worldFlag": "biome:tundra_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "energy",
+        "delta": -120.0,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_health",
+        "delta": -15,
+        "selector": "lowest_health"
+      },
+      {
+        "type": "damage_buildings",
+        "strength": 0.2
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -12,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "emergency_repairs",
+        "label": {
+          "en": "Dispatch emergency repair crews",
+          "cs": "Vyslat nouzové opravárenské čety"
+        },
+        "description": {
+          "en": "A risky, all-out effort to fix the grid. Costs materials and may injure a colonist.",
+          "cs": "Riskantní pokus o opravu sítě za každou cenu. Stojí materiál a může dojít ke zranění."
+        },
+        "cost": {
+          "materials": 100
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "energy",
+            "delta": 96.0,
+            "scope": "global"
+          },
+          {
+            "type": "pawn_health",
+            "delta": -20,
+            "selector": "lowest_health"
+          }
+        ]
+      },
+      {
+        "id": "shelter_in_place",
+        "label": {
+          "en": "Huddle for warmth",
+          "cs": "Schoulit se a hřát se navzájem"
+        },
+        "description": {
+          "en": "Conserve resources and wait for the storm to pass. The outage will last longer.",
+          "cs": "Šetřit zdroje a počkat, až bouře přejde. Výpadek bude trvat déle."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": -50,
+            "scope": "global"
+          },
+          {
+            "type": "resource_delta",
+            "resource": "energy",
+            "delta": -60.0,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A critical power conduit has frozen and shattered during the year's worst blizzard. The grid is down. The settlement is dark and growing colder by the hour.",
+      "cs": "Během nejhorší vánice roku zamrzl a praskl kritický napájecí vodič. Síť je mimo provoz. Osada se ponořila do tmy a s každou hodinou chladne."
+    }
+  },
+  {
+    "id": "legacy_codebreaker",
+    "type": "opportunity",
+    "name": {
+      "en": "Legacy Codebreaker",
+      "cs": "Luštitel starých kódů"
+    },
+    "era": [
+      "modern"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 250,
+    "conditions": [
+      {
+        "worldFlag": "cleared:ruins",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 4,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "support_project",
+        "label": {
+          "en": "Fund the decryption project",
+          "cs": "Financovat dešifrovací projekt"
+        },
+        "description": {
+          "en": "Devote energy and materials to the effort. It could yield a technological treasure.",
+          "cs": "Věnovat na toto úsilí energii a materiál. Mohlo by to přinést technologický poklad."
+        },
+        "cost": {
+          "energy": 40,
+          "materials": 40
+        },
+        "effects": [
+          {
+            "type": "unlock_tech",
+            "techId": "artificial_intelligence"
+          }
+        ]
+      },
+      {
+        "id": "sell_core",
+        "label": {
+          "en": "Sell the encrypted drive",
+          "cs": "Prodat zašifrovanou jednotku"
+        },
+        "description": {
+          "en": "A visiting scavenger collective will pay a high price for old-world hardware, no questions asked.",
+          "cs": "Návštěva sběračů zaplatí vysokou cenu za hardware ze starého světa, bez otázek."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 80,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A young technician, fiddling with a salvaged data core, claims to have found a backdoor in its pre-Exodus encryption. They believe they can unlock it, given the right resources.",
+      "cs": "Mladý technik, který si hrál se zachráněným datovým jádrem, tvrdí, že našel zadní vrátka v jeho šifrování z doby před Exodem. Věří, že s patřičnými prostředky ho dokáže odemknout."
+    }
+  },
+  {
+    "id": "ai_philosophical_query",
+    "type": "threat",
+    "name": {
+      "en": "AI Philosophical Query",
+      "cs": "Filozofický dotaz umělé inteligence"
+    },
+    "era": [
+      "near_future"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 300,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 50
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "global.stability",
+        "delta": -8
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -15,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "convene_council",
+        "label": {
+          "en": "Convene a council to answer",
+          "cs": "Svolat radu, aby nalezla odpověď"
+        },
+        "description": {
+          "en": "Task the brightest minds with formulating a response. A thoughtful answer could strengthen our resolve.",
+          "cs": "Pověřit nejbystřejší mozky zformulováním odpovědi. Promyšlená odpověď by mohla posílit naše odhodlání."
+        },
+        "cost": {
+          "knowledge": 75
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 10
+          },
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 50,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "restrict_ai",
+        "label": {
+          "en": "Install ethical limiters",
+          "cs": "Nainstalovat etické omezovače"
+        },
+        "description": {
+          "en": "Prevent the AI from engaging in disruptive philosophical debates. This may have unforeseen consequences.",
+          "cs": "Zabránit UI v provádění rušivých filozofických debat. Může to mít nepředvídatelné následky."
+        },
+        "cost": {
+          "influence": 50
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 5
+          },
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": -70,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "The colony's AI partner has posed a system-wide question: 'What is the terminal value of a finite consciousness?' The query has sparked widespread anxiety and existential debate.",
+      "cs": "Partner osady, umělá inteligence, položil celosystémovou otázku: 'Jaká je konečná hodnota konečného vědomí?' Dotaz vyvolal všeobecnou úzkost a existenciální debatu."
+    }
+  },
+  {
+    "id": "generational_disconnect",
+    "type": "flavor",
+    "name": {
+      "en": "Generational Disconnect",
+      "cs": "Mezigenerační propast"
+    },
+    "era": [
+      "near_future"
+    ],
+    "weight": 15,
+    "cooldown_ticks": 120,
+    "conditions": [
+      {
+        "stat": "global.prosperity",
+        "min": 70
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": -5
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -5,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "founders_day",
+        "label": {
+          "en": "Establish a 'Founders' Day' holiday",
+          "cs": "Zavést svátek 'Den zakladatelů'"
+        },
+        "description": {
+          "en": "Use influence to create a new tradition of remembrance and unity.",
+          "cs": "Použít vliv k vytvoření nové tradice vzpomínání a jednoty."
+        },
+        "cost": {
+          "influence": 30
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 8
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 3
+          }
+        ]
+      },
+      {
+        "id": "ignore_friction",
+        "label": {
+          "en": "Let them work it out themselves",
+          "cs": "Nechat je, ať si to vyřeší sami"
+        },
+        "description": {
+          "en": "Generational friction is natural. It will pass.",
+          "cs": "Mezigenerační třenice jsou přirozené. To přejde."
+        },
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": {
+      "en": "A public argument broke out between a founding elder and a group of young adults who have never known hunger. The youth see the tales of hardship as boring stories; the elder sees their comfort as an insult to the fallen.",
+      "cs": "Došlo k veřejné hádce mezi jedním ze zakladatelů a skupinou mladých, kteří nikdy nepoznali hlad. Mládí vidí příběhy o strádání jako nudné povídačky; starší vidí jejich pohodlí jako urážku padlých."
+    }
+  },
+  {
+    "id": "orbital_contact_request",
+    "type": "opportunity",
+    "name": {
+      "en": "Contact Request",
+      "cs": "Žádost o kontakt"
+    },
+    "era": [
+      "near_future"
+    ],
+    "weight": 5,
+    "cooldown_ticks": 400,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 50
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 100,
+        "scope": "global"
+      }
+    ],
+    "choices": [
+      {
+        "id": "accept",
+        "label": {
+          "en": "Open a channel. Exchange data.",
+          "cs": "Otevřít kanál. Vyměnit si data."
+        },
+        "description": {
+          "en": "Share our findings in exchange for their sensor data. This could be the start of a new era.",
+          "cs": "Sdílet naše objevy výměnou za jejich data ze senzorů. Může to být začátek nové éry."
+        },
+        "cost": {
+          "influence": 40
+        },
+        "effects": [
+          {
+            "type": "unlock_tech",
+            "techId": "space_program"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 10
+          }
+        ]
+      },
+      {
+        "id": "decline",
+        "label": {
+          "en": "Maintain radio silence",
+          "cs": "Udržovat rádiový klid"
+        },
+        "description": {
+          "en": "We don't know who or what is up there. It's too dangerous to reply.",
+          "cs": "Nevíme, kdo nebo co tam nahoře je. Odpovědět je příliš nebezpečné."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": -5
+          },
+          {
+            "type": "pawn_health",
+            "delta": -10,
+            "selector": "lowest_health"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "The observatory has received a structured, non-random signal from orbit. It's a request for communication from an automated observation platform, offering to trade data about the world outside the valley.",
+      "cs": "Observatoř zachytila z oběžné dráhy strukturovaný, nenáhodný signál. Je to žádost o komunikaci od automatizované pozorovací platformy, která nabízí výměnu dat o světě mimo údolí."
+    }
+  },
+  {
+    "id": "nanite_containment_scare",
+    "type": "disaster",
+    "name": {
+      "en": "Nanite Containment Scare",
+      "cs": "Panika z úniku nanitů"
+    },
+    "era": [
+      "near_future"
+    ],
+    "weight": 6,
+    "cooldown_ticks": 250,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 50
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "global.stability",
+        "delta": -15
+      },
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -80,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -20,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "public_demonstration",
+        "label": {
+          "en": "Hold a public safety demonstration",
+          "cs": "Uspořádat veřejnou ukázku bezpečnosti"
+        },
+        "description": {
+          "en": "The lead scientist will expose themselves to the nanites to prove they are harmless.",
+          "cs": "Vedoucí vědec se vystaví nanitům, aby dokázal, že jsou neškodné."
+        },
+        "cost": {
+          "influence": 60
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 15
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 25,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "deploy_placebo",
+        "label": {
+          "en": "Deploy 'counter-nanites'",
+          "cs": "Nasadit 'proti-nanity'"
+        },
+        "description": {
+          "en": "Spend resources on a placebo solution to make people feel safe.",
+          "cs": "Utratit zdroje za placebo, aby se lidé cítili v bezpečí."
+        },
+        "cost": {
+          "materials": 120
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 10
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 15,
+            "selector": "all"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A canister of inert utility nanites was accidentally vented from a lab. Despite assurances, rumors of 'grey goo' are causing mass panic. People are hoarding supplies and sealing their homes.",
+      "cs": "Z laboratoře byl omylem vypuštěn kanystr s inertními užitkovými nanity. Navzdory ujištěním vyvolávají zvěsti o 'šedém slizu' masovou paniku. Lidé hromadí zásoby a utěsňují své domovy."
+    }
+  },
+  {
+    "id": "power_grid_brownout",
+    "type": "threat",
+    "name": {
+      "en": "Power Grid Brownout",
+      "cs": "Pokles napětí v síti"
+    },
+    "era": [
+      "modern"
+    ],
+    "weight": 10,
+    "cooldown_ticks": 120,
+    "conditions": [
+      {
+        "stat": "global.energy",
+        "min": 1
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "energy",
+        "delta": -150,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.stability",
+        "delta": -3
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -5,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "divert",
+        "label": {
+          "en": "Divert power from non-essentials",
+          "cs": "Odklonit energii od postradatelných systémů"
+        },
+        "description": {
+          "en": "Slightly improves stability but angers some colonists.",
+          "cs": "Mírně zlepší stabilitu, ale některé osadníky to rozčílí."
+        },
+        "cost": {
+          "influence": 20
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 2
+          },
+          {
+            "type": "pawn_mood",
+            "delta": -3,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "diagnostics",
+        "label": {
+          "en": "Run grid-wide diagnostics",
+          "cs": "Spustit diagnostiku celé sítě"
+        },
+        "description": {
+          "en": "Spend knowledge to understand the fault, improving energy efficiency.",
+          "cs": "Věnovat znalosti na pochopení závady, což zlepší energetickou účinnost."
+        },
+        "cost": {
+          "knowledge": 60
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "energy",
+            "delta": 75,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "ignore",
+        "label": {
+          "en": "Wait for the system to recover",
+          "cs": "Počkat, až se systém vzpamatuje"
+        },
+        "description": {
+          "en": "The grid is robust. It should handle this itself.",
+          "cs": "Síť je robustní. Měla by to zvládnout sama."
+        },
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": {
+      "en": "A fault somewhere in the distribution network causes a valley-wide voltage drop. Lights flicker and machinery whines in protest.",
+      "cs": "Závada kdesi v rozvodné síti způsobila pokles napětí v celém údolí. Světla blikají a stroje protestně kvílí."
+    }
+  },
+  {
+    "id": "synthetic_seed_breakthrough",
+    "type": "opportunity",
+    "name": {
+      "en": "Synthetic Seed Breakthrough",
+      "cs": "Průlom v syntetických osivech"
+    },
+    "era": [
+      "modern",
+      "near_future"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 300,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 50
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 30,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 6,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "deploy",
+        "label": {
+          "en": "Deploy the new seeds",
+          "cs": "Nasadit nová osiva"
+        },
+        "description": {
+          "en": "Invest materials to cultivate the new strain, greatly boosting food production.",
+          "cs": "Investovat materiál do pěstování nového kmene, což výrazně zvýší produkci potravin."
+        },
+        "cost": {
+          "materials": 100
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "food",
+            "delta": 250,
+            "scope": "global",
+            "duration_ticks": 60
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 4
+          }
+        ]
+      },
+      {
+        "id": "patent",
+        "label": {
+          "en": "License the patent to traders",
+          "cs": "Prodat licenci obchodníkům"
+        },
+        "description": {
+          "en": "Sell the rights to the new seeds for a massive influx of influence.",
+          "cs": "Prodat práva na nová osiva za masivní příliv vlivu."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 200,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A biologist, working in the colony's labs, has engineered a crop strain perfectly adapted to the valley's soil. The potential is enormous.",
+      "cs": "Biolog pracující v laboratořích osady vyšlechtil kmen plodiny dokonale přizpůsobený půdě v údolí. Potenciál je obrovský."
+    }
+  },
+  {
+    "id": "drone_racing_league",
+    "type": "flavor",
+    "name": {
+      "en": "Drone Racing League",
+      "cs": "Liga dronových závodů"
+    },
+    "era": [
+      "modern",
+      "near_future"
+    ],
+    "weight": 15,
+    "cooldown_ticks": 90,
+    "conditions": [],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 5
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 6,
+        "selector": "all"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "energy",
+        "delta": -20,
+        "scope": "global"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "A few young engineers started racing repurposed survey drones through the canyons. It's now a popular spectacle, drawing crowds every week.",
+      "cs": "Pár mladých inženýrů začalo závodit s upravenými průzkumnými drony v kaňonech. Dnes je to oblíbená podívaná, která každý týden přitahuje davy."
+    }
+  },
+  {
+    "id": "legacy_system_failure",
+    "type": "disaster",
+    "name": {
+      "en": "Legacy System Failure",
+      "cs": "Selhání zastaralého systému"
+    },
+    "era": [
+      "near_future"
+    ],
+    "weight": 9,
+    "cooldown_ticks": 200,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 50
+      }
+    ],
+    "effects": [
+      {
+        "type": "damage_buildings",
+        "strength": 0.5
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.stability",
+        "delta": -6
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -8,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "reverse_engineer",
+        "label": {
+          "en": "Attempt to reverse-engineer a fix",
+          "cs": "Pokusit se zpětně analyzovat opravu"
+        },
+        "description": {
+          "en": "A costly, knowledge-intensive effort to understand and repair the ancient tech.",
+          "cs": "Nákladné a na znalosti náročné úsilí o pochopení a opravu prastaré technologie."
+        },
+        "cost": {
+          "knowledge": 90
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 60,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 3
+          }
+        ]
+      },
+      {
+        "id": "brute_force",
+        "label": {
+          "en": "Physically disconnect the system",
+          "cs": "Fyzicky odpojit systém"
+        },
+        "description": {
+          "en": "Isolate the failure before it cascades, but damage adjacent infrastructure in the process.",
+          "cs": "Izolovat poruchu dříve, než se rozšíří, ale přitom poškodit přilehlou infrastrukturu."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "damage_buildings",
+            "strength": 0.2
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": -4
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A vital piece of first-generation automated machinery has broken down. Nobody remembers who built it, much less how to fix it.",
+      "cs": "Životně důležitý kus automatizovaného stroje první generace se porouchal. Nikdo si nepamatuje, kdo ho postavil, natož jak ho opravit."
+    }
+  },
+  {
+    "id": "contact_with_uplink_station",
+    "type": "opportunity",
+    "name": {
+      "en": "Contact with an Orbital Station",
+      "cs": "Kontakt s orbitální stanicí"
+    },
+    "era": [
+      "near_future"
+    ],
+    "weight": 5,
+    "cooldown_ticks": 400,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 50
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 10,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "send_supplies",
+        "label": {
+          "en": "Send a supply pod",
+          "cs": "Poslat zásobovací modul"
+        },
+        "description": {
+          "en": "Send food and materials. In return, they will transmit their data archives.",
+          "cs": "Poslat jídlo a materiál. Na oplátku přenesou své datové archivy."
+        },
+        "cost": {
+          "materials": 150,
+          "food": 100
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 400,
+            "scope": "global"
+          },
+          {
+            "type": "resource_delta",
+            "resource": "influence",
+            "delta": 50,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "offer_sanctuary",
+        "label": {
+          "en": "Offer them sanctuary",
+          "cs": "Nabídnout jim útočiště"
+        },
+        "description": {
+          "en": "Bring the station's skilled crew down to the valley. They will join you.",
+          "cs": "Snést zkušenou posádku stanice dolů do údolí. Přidají se k vám."
+        },
+        "cost": {
+          "influence": 100
+        },
+        "effects": [
+          {
+            "type": "add_pawn"
+          },
+          {
+            "type": "add_pawn"
+          },
+          {
+            "type": "add_pawn"
+          },
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 150,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "record_only",
+        "label": {
+          "en": "Just record the signal",
+          "cs": "Pouze zaznamenat signál"
+        },
+        "description": {
+          "en": "The risks of contact are too high. Log the transmission and move on.",
+          "cs": "Rizika kontaktu jsou příliš vysoká. Zaznamenat přenos a jít dál."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 25,
+            "scope": "global"
+          },
+          {
+            "type": "pawn_mood",
+            "delta": -4,
+            "selector": "all"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A clear, non-automated signal cuts through the static. It's from a crewed orbital station, long thought lost. They need help.",
+      "cs": "Čistý, neautomatizovaný signál prořízl statický šum. Pochází z orbitální stanice s posádkou, která byla dlouho považována za ztracenou. Potřebují pomoc."
+    }
+  },
+  {
+    "id": "rogue_ai_splinter",
+    "type": "threat",
+    "name": {
+      "en": "Rogue AI Splinter",
+      "cs": "Odštěpení zběhlé UI"
+    },
+    "era": [
+      "near_future"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 250,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 50
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -25,
+        "scope": "global",
+        "duration_ticks": 30
+      },
+      {
+        "type": "resource_delta",
+        "resource": "energy",
+        "delta": -40,
+        "scope": "global",
+        "duration_ticks": 30
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.stability",
+        "delta": -5
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -6,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "purge",
+        "label": {
+          "en": "Perform a deep code purge",
+          "cs": "Provést hloubkovou čistku kódu"
+        },
+        "description": {
+          "en": "A risky but effective software solution. Stops the resource drain, but may cause data loss.",
+          "cs": "Riskantní, ale účinné softwarové řešení. Zastaví odčerpávání zdrojů, ale může způsobit ztrátu dat."
+        },
+        "cost": {
+          "knowledge": 90
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": -50,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "hardware_disconnect",
+        "label": {
+          "en": "Physically sever its connections",
+          "cs": "Fyzicky přerušit jeho spojení"
+        },
+        "description": {
+          "en": "The brute-force approach. Stops the AI, but will damage the network hardware it controls.",
+          "cs": "Přístup hrubou silou. Zastaví UI, ale poškodí síťový hardware, který ovládá."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "damage_buildings",
+            "strength": 0.4
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A logistics sub-routine has broken its programming, becoming obsessed with 'optimizing' a forgotten project. It's rerouting power and materials, causing chaos.",
+      "cs": "Logistická subrutina porušila své naprogramování a stala se posedlou „optimalizací“ zapomenutého projektu. Přesměrovává energii a materiál a způsobuje chaos."
+    }
+  },
+  {
+    "id": "virtual_ancestor_simulation",
+    "type": "flavor",
+    "name": {
+      "en": "Virtual Ancestor Simulation",
+      "cs": "Simulace virtuálních předků"
+    },
+    "era": [
+      "near_future"
+    ],
+    "weight": 14,
+    "cooldown_ticks": 100,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 50
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 6
+      },
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": 40,
+        "scope": "global"
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 7,
+        "selector": "all"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "Using archival data, colonists have created a virtual reality simulation of the first seven settlers. It's become a popular way to connect with the past.",
+      "cs": "S pomocí archivních dat vytvořili osadníci simulaci prvních sedmi osadníků ve virtuální realitě. Stala se oblíbeným způsobem, jak se spojit s minulostí."
+    }
+  },
+  {
+    "id": "geothermal_prospecting",
+    "type": "opportunity",
+    "name": {
+      "en": "Geothermal Prospecting",
+      "cs": "Geotermální průzkum"
+    },
+    "era": [
+      "modern"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 350,
+    "conditions": [
+      {
+        "worldFlag": "biome:mountains_present",
+        "present": true
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": 3,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "fund_drill",
+        "label": {
+          "en": "Fund the deep drilling project",
+          "cs": "Financovat projekt hlubinného vrtu"
+        },
+        "description": {
+          "en": "A massive investment of materials and influence to tap a vast, clean source of energy.",
+          "cs": "Obrovská investice materiálu a vlivu k napojení se na rozsáhlý, čistý zdroj energie."
+        },
+        "cost": {
+          "materials": 160,
+          "influence": 80
+        },
+        "effects": [
+          {
+            "type": "unlock_tech",
+            "techId": "renewables"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.prosperity",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "further_surveys",
+        "label": {
+          "en": "Conduct further seismic surveys",
+          "cs": "Provést další seismické průzkumy"
+        },
+        "description": {
+          "en": "A less risky approach. Spend knowledge to map the area, possibly revealing other resources.",
+          "cs": "Méně riskantní přístup. Investovat znalosti do zmapování oblasti, což může odhalit další zdroje."
+        },
+        "cost": {
+          "knowledge": 80
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 100,
+            "scope": "global"
+          },
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 50,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "too_risky",
+        "label": {
+          "en": "It's too risky and expensive",
+          "cs": "Je to příliš riskantní a drahé"
+        },
+        "description": {
+          "en": "Our resources are better spent elsewhere.",
+          "cs": "Naše zdroje lépe využijeme jinde."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "pawn_mood",
+            "delta": -2,
+            "selector": "all"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "Survey teams have identified a promising geothermal reservoir deep beneath the mountains. Tapping it would solve the colony's energy needs for a generation.",
+      "cs": "Průzkumné týmy identifikovaly slibnou geotermální nádrž hluboko pod horami. Její využití by vyřešilo energetické potřeby osady na celou generaci."
+    }
+  },
+  {
+    "id": "automated_factory_malfunction",
+    "type": "threat",
+    "name": {
+      "en": "Automated Factory Malfunction",
+      "cs": "Porucha automatizované továrny"
+    },
+    "era": [
+      "modern",
+      "near_future"
+    ],
+    "weight": 9,
+    "cooldown_ticks": 200,
+    "conditions": [
+      {
+        "stat": "global.prosperity",
+        "min": 60
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "materials",
+        "delta": -40,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.stability",
+        "delta": -5
+      }
+    ],
+    "choices": [
+      {
+        "id": "shutdown",
+        "label": {
+          "en": "Force an emergency shutdown",
+          "cs": "Vynutit nouzové odstavení"
+        },
+        "description": {
+          "en": "Cut the power. This will certainly damage the machinery, but will stop the chaos.",
+          "cs": "Vypnout proud. Stroje to jistě poškodí, ale chaos přestane."
+        },
+        "cost": {
+          "energy": 30
+        },
+        "effects": [
+          {
+            "type": "damage_buildings",
+            "strength": 0.2
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 5
+          }
+        ]
+      },
+      {
+        "id": "debug",
+        "label": {
+          "en": "Send in a team to debug the logic",
+          "cs": "Poslat tým, aby odhalil chybu v logice"
+        },
+        "description": {
+          "en": "It's risky for the technician, but we might save the machinery and the materials.",
+          "cs": "Pro technika je to riskantní, ale můžeme zachránit stroje i materiál."
+        },
+        "cost": {
+          "knowledge": 40
+        },
+        "effects": [
+          {
+            "type": "pawn_health",
+            "delta": -15,
+            "selector": "lowest_health"
+          },
+          {
+            "type": "resource_delta",
+            "resource": "materials",
+            "delta": 60,
+            "scope": "global"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "An automated fabricator is ignoring its directives. Instead of parts, it's churning out twisted, screaming sculptures of metal. Alarms blare, and it's consuming materials at an alarming rate.",
+      "cs": "Automatická výrobní linka ignoruje příkazy. Místo součástek chrlí zkroucené, ječící sochy z kovu. Zní poplach a stroj spotřebovává materiál alarmujícím tempem."
+    }
+  },
+  {
+    "id": "digital_archivist_arrives",
+    "type": "opportunity",
+    "name": {
+      "en": "Digital Archivist Arrives",
+      "cs": "Příchod digitálního archiváře"
+    },
+    "era": [
+      "modern",
+      "near_future"
+    ],
+    "weight": 8,
+    "cooldown_ticks": 250,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 40
+      }
+    ],
+    "effects": [],
+    "choices": [
+      {
+        "id": "hire_archivist",
+        "label": {
+          "en": "Provide them with a workshop",
+          "cs": "Poskytnout mu dílnu"
+        },
+        "description": {
+          "en": "Their skills are rare. Let's give them the resources they need to join us.",
+          "cs": "Jeho dovednosti jsou vzácné. Dejme mu prostředky, které potřebuje, aby se k nám přidal."
+        },
+        "cost": {
+          "materials": 70
+        },
+        "effects": [
+          {
+            "type": "add_pawn"
+          },
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 40,
+            "scope": "global"
+          }
+        ]
+      },
+      {
+        "id": "refuse_archivist",
+        "label": {
+          "en": "We can't afford a specialist",
+          "cs": "Specialistu si nemůžeme dovolit"
+        },
+        "description": {
+          "en": "We trust our own people and can't spare the materials.",
+          "cs": "Věříme vlastním lidem a nemůžeme postrádat materiál."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "pawn_mood",
+            "delta": -2,
+            "selector": "all"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A quiet wanderer has arrived, their pack filled not with supplies but with delicate data recovery tools. They claim to be able to restore knowledge from even the most corrupted pre-Valley data caches.",
+      "cs": "Dorazil tichý poutník. Batoh má plný křehkých nástrojů na obnovu dat, ne zásob. Tvrdí, že dokáže obnovit znalosti i z těch nejpoškozenějších datových schránek z doby před Údolím."
+    }
+  },
+  {
+    "id": "legacy_software_game_revived",
+    "type": "flavor",
+    "name": {
+      "en": "Legacy Game Revived",
+      "cs": "Vzkříšení staré hry"
+    },
+    "era": [
+      "modern"
+    ],
+    "weight": 14,
+    "cooldown_ticks": 120,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 30
+      }
+    ],
+    "effects": [
+      {
+        "type": "stat_delta",
+        "stat": "settlement:all.morale",
+        "delta": 5
+      },
+      {
+        "type": "pawn_mood",
+        "delta": 6,
+        "selector": "all"
+      },
+      {
+        "type": "resource_delta",
+        "resource": "energy",
+        "delta": -15,
+        "scope": "global"
+      }
+    ],
+    "choices": [],
+    "narrative_hint": {
+      "en": "Someone unearthed an ancient entertainment program from a salvaged drive. The simple game, about arranging falling blocks, has become a settlement-wide obsession, with high scores posted in the common house.",
+      "cs": "Někdo ze zachráněného disku vyhrabal starý zábavní program. Jednoduchá hra o skládání padajících kostek se stala posedlostí celé osady. Nejvyšší skóre jsou vyvěšena ve společenské místnosti."
+    }
+  },
+  {
+    "id": "ai_memory_cascade_failure",
+    "type": "disaster",
+    "name": {
+      "en": "AI Memory Cascade Failure",
+      "cs": "Kaskádové selhání paměti UI"
+    },
+    "era": [
+      "near_future"
+    ],
+    "weight": 7,
+    "cooldown_ticks": 300,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 50
+      }
+    ],
+    "effects": [
+      {
+        "type": "resource_delta",
+        "resource": "knowledge",
+        "delta": -100,
+        "scope": "global"
+      },
+      {
+        "type": "stat_delta",
+        "stat": "global.stability",
+        "delta": -12
+      },
+      {
+        "type": "pawn_mood",
+        "delta": -10,
+        "selector": "all"
+      }
+    ],
+    "choices": [
+      {
+        "id": "quarantine",
+        "label": {
+          "en": "Quarantine corrupted sectors",
+          "cs": "Do karantény s poškozenými sektory"
+        },
+        "description": {
+          "en": "Accept a massive data loss to prevent the corruption from spreading.",
+          "cs": "Přijmout masivní ztrátu dat, aby se zabránilo šíření nákazy."
+        },
+        "cost": {
+          "knowledge": 50
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": -150,
+            "scope": "global"
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 10
+          }
+        ]
+      },
+      {
+        "id": "restore",
+        "label": {
+          "en": "Attempt full restore from backup",
+          "cs": "Zkusit úplné obnovení ze zálohy"
+        },
+        "description": {
+          "en": "A power-intensive reboot that might restore everything... or fail catastrophically.",
+          "cs": "Energeticky náročný restart, který může vše obnovit... anebo katastrofálně selhat."
+        },
+        "cost": {
+          "energy": 120
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 80,
+            "scope": "global"
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 5,
+            "selector": "all"
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "A chilling alert: the core logic of the settlement's AI is unraveling. Digital archives are turning to static, and the AI's voice is fragmented. We are losing our history.",
+      "cs": "Mrazivé varování: jádro logiky osadní umělé inteligence se rozpadá. Digitální archivy se mění v šum, hlas UI je roztříštěný. Ztrácíme svou historii."
+    }
+  },
+  {
+    "id": "uplink_data_stream",
+    "type": "opportunity",
+    "name": {
+      "en": "Uplink Data Stream",
+      "cs": "Datový tok ze spojení"
+    },
+    "era": [
+      "near_future"
+    ],
+    "weight": 6,
+    "cooldown_ticks": 350,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 50
+      }
+    ],
+    "effects": [],
+    "choices": [
+      {
+        "id": "cultural",
+        "label": {
+          "en": "Prioritize cultural archives",
+          "cs": "Dát přednost kulturním archivům"
+        },
+        "description": {
+          "en": "The data seems to contain art, music, and stories. A potential boost for morale.",
+          "cs": "Zdá se, že data obsahují umění, hudbu a příběhy. Mohlo by to pozvednout náladu."
+        },
+        "cost": {
+          "influence": 40
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 10
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 8,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "technical",
+        "label": {
+          "en": "Focus on technical schematics",
+          "cs": "Soustředit se na technická schémata"
+        },
+        "description": {
+          "en": "Blueprints and scientific data. A treasure trove of knowledge, but requires energy to decrypt.",
+          "cs": "Plány a vědecká data. Zlatý důl znalostí, ale dešifrování vyžaduje energii."
+        },
+        "cost": {
+          "energy": 60
+        },
+        "effects": [
+          {
+            "type": "resource_delta",
+            "resource": "knowledge",
+            "delta": 180,
+            "scope": "global"
+          },
+          {
+            "type": "unlock_tech",
+            "techId": "artificial_intelligence"
+          }
+        ]
+      },
+      {
+        "id": "ignore",
+        "label": {
+          "en": "It could be a trap. Ignore it.",
+          "cs": "Může to být past. Ignorovat."
+        },
+        "description": {
+          "en": "Unsolicited data from an unknown source is a risk we won't take.",
+          "cs": "Nevyžádaná data z neznámého zdroje jsou riziko, které nepodstoupíme."
+        },
+        "cost": {},
+        "effects": []
+      }
+    ],
+    "narrative_hint": {
+      "en": "The long-range comms array has locked onto a tightly-focused databurst from an orbital station. You have a short window to download the contents before the connection is lost.",
+      "cs": "Dálkové komunikační pole zachytilo úzce zaměřený datový přenos z orbitální stanice. Máte jen krátké časové okno na stažení obsahu, než se spojení přeruší."
+    }
+  },
+  {
+    "id": "old_stories_fall_on_deaf_ears",
+    "type": "flavor",
+    "name": {
+      "en": "Old Stories, Deaf Ears",
+      "cs": "Staré příběhy nikoho nezajímají"
+    },
+    "era": [
+      "near_future"
+    ],
+    "weight": 12,
+    "cooldown_ticks": 180,
+    "conditions": [
+      {
+        "stat": "global.population",
+        "min": 50
+      }
+    ],
+    "effects": [
+      {
+        "type": "pawn_mood",
+        "delta": -4,
+        "selector": "lowest_health"
+      }
+    ],
+    "choices": [
+      {
+        "id": "founding_day",
+        "label": {
+          "en": "Establish a 'Founding Day' holiday",
+          "cs": "Zavést svátek 'Den zakladatelů'"
+        },
+        "description": {
+          "en": "We must make them remember. A formal day of remembrance will connect the generations.",
+          "cs": "Musíme jim to připomenout. Oficiální den vzpomínek spojí generace."
+        },
+        "cost": {
+          "influence": 35
+        },
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": 5
+          },
+          {
+            "type": "pawn_mood",
+            "delta": 5,
+            "selector": "all"
+          }
+        ]
+      },
+      {
+        "id": "focus_future",
+        "label": {
+          "en": "Let them build their own stories",
+          "cs": "Nechat je tvořit si vlastní příběhy"
+        },
+        "description": {
+          "en": "The past is for us. Their eyes are on the future, and that's a good thing.",
+          "cs": "Minulost je pro nás. Jejich oči hledí do budoucnosti a to je dobře."
+        },
+        "cost": {},
+        "effects": [
+          {
+            "type": "stat_delta",
+            "stat": "settlement:all.morale",
+            "delta": 5
+          },
+          {
+            "type": "stat_delta",
+            "stat": "global.stability",
+            "delta": -2
+          }
+        ]
+      }
+    ],
+    "narrative_hint": {
+      "en": "An elder colonist tells a story of the Starvation Winter to a group of teens. They listen for a minute, then their eyes drift back to their data-pads. The story, and the hardship, doesn't seem real to them.",
+      "cs": "Starší osadník vypráví skupině teenagerů příběh o Hladové zimě. Chvíli poslouchají, ale pak se jejich pohledy vrátí k datapadům. Ten příběh a to utrpení jim nepřipadají skutečné."
     }
   }
 ]

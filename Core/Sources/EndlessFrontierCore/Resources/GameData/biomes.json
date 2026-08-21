@@ -125,5 +125,27 @@
       "warmth": 0.15,
       "pull": 1.35
     }
+  },
+  {
+    "id": "wetlands",
+    "name": {
+      "en": "Wetlands",
+      "cs": "Mokřiny"
+    },
+    "base_hazard": 3,
+    "resource_affinity": {
+      "food": 1.15,
+      "energy": 1.1,
+      "materials": 0.6
+    },
+    "homeland_weight": 2,
+    "world_flag": "biome:wetlands_present",
+    "temperature_shift": 2,
+    "niche": {
+      "elevation": -0.45,
+      "moisture": 0.9,
+      "warmth": 0.25,
+      "pull": 1.3
+    }
   }
 ]
