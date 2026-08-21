@@ -95,6 +95,11 @@ public enum CaptiveEngine {
         // carries in the same people (rule 2).
         var rng = SeededRNG(seed: siege.seed ^ 0x4341_5054_4956_4553)
         let tick = siege.startTick
+        // A prisoner ought to carry their own people's character in with them
+        // (`Genes.drawn(from:using:)`), and does not yet: `Siege` knows the
+        // attacker's id but not their genes, and the tribes are not in scope
+        // anywhere on the path from `begin` to here. Left alone rather than
+        // threaded through four signatures for the rarest way anybody arrives.
         for _ in 0..<taken {
             // A prisoner is a whole person from the moment they are carried in,
             // so the day they come round is a move between two lists rather

@@ -86,6 +86,17 @@ public enum GameWorldFactory {
         let roads = RoadEngine.seedRuins(RoadNetwork(), regions: regions,
                                          homeland: homeland.coord, mapSeed: seed)
 
+        // **The founders go into the annals by name, on day one.**
+        // Nobody else is in them until they are old, and a chronicle whose
+        // first entry appears in year seventy-two would have no beginning.
+        // Their birth years are negative — they were born before there was
+        // anywhere here to be born.
+        let figures = settlement.pawns.map { pawn in
+            ChronicleFigure(id: pawn.id, name: pawn.name,
+                            bornYear: -(pawn.age / max(1, registry.config.ticksPerYear)),
+                            standing: .founder)
+        }
+
         return WorldState(
             tick: 0,
             lastRealTimestamp: now,
@@ -98,6 +109,7 @@ public enum GameWorldFactory {
             settlements: [settlement],
             regions: regions,
             roads: roads,
+            figures: figures,
             tribes: nativeTribes(regions: regions, seed: seed)
         )
     }

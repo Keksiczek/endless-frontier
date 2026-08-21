@@ -211,7 +211,8 @@ public enum RoadEngine {
                 // to the grade below rather than vanishing, because the levelled
                 // ground under a paved road does not stop existing.
                 if let lower = fallback(from: link.grade) {
-                    s.roads.update(RoadLink(a: link.a, b: link.b, grade: lower, condition: 0.5))
+                    s.roads.update(RoadLink(a: link.a, b: link.b, grade: lower,
+                                            condition: 0.5, origin: link.origin))
                 } else {
                     ruined.append((link.a, link.b))
                 }
@@ -270,6 +271,28 @@ public enum RoadEngine {
         return (best.link, best.cost)
     }
 
+    /// **What a bridge adds to the price of a way that has to cross water.**
+    ///
+    /// Nearly double, and deliberately not more: rule 21 says a ladder whose
+    /// rungs nobody can afford has no rungs, and a river that made a road
+    /// unbuildable would simply be a wall drawn in blue. What it should be is
+    /// a *reason to go round* — which is what a nine-tenths premium buys, since
+    /// `wanted` scores every candidate edge against every other.
+    static let bridgePremium = 1.9
+
+    /// Whether a way between these two hexes has to get across the water.
+    ///
+    /// A road that runs **along the course** — from a hex to the one the water
+    /// runs on to — follows the bank and needs no bridge. Anything else that
+    /// touches a river hex has to cross it, because at this scale the water
+    /// runs through the middle of the region and a road into that region meets
+    /// it. See `RiverCourse`.
+    public static func needsBridge(_ here: Region, _ there: Region) -> Bool {
+        if here.river?.runsTo(there.coord) == true { return false }
+        if there.river?.runsTo(here.coord) == true { return false }
+        return here.river != nil || there.river != nil
+    }
+
     /// **What laying `grade` on this edge costs.**
     ///
     /// One place, because three callers wanted it — the council, a road built
@@ -282,7 +305,11 @@ public enum RoadEngine {
         // Building on a ruin is cheaper: the bed is cut and the stone is lying
         // there. This is the whole mechanical point of an ancient way.
         let discount = existing?.origin == .ancient ? ancientDiscount : 1
-        return grade.cost * country * discount
+        // …and a bridge, where the water is. An ancient way already has one —
+        // whoever cut that causeway got across somehow — so the discount and
+        // the premium are allowed to meet.
+        let water = needsBridge(here, there) ? bridgePremium : 1
+        return grade.cost * country * discount * water
     }
 
     /// The next grade this world may lay on an edge that is currently at
@@ -437,17 +464,20 @@ public enum RoadEngine {
               let from = state.regions.first(where: { $0.id == raiderRegionID }),
               let seat = state.settlements.first(where: { $0.id == settlementID })?.regionID,
               let target = state.regions.first(where: { $0.id == seat }),
-              !state.roads.isEmpty
+              !state.roads.hasBuiltNothing
         else { return state }
 
         let byCoord = coordIndex(state)
         guard let march = state.roads.route(from: from.coord, to: target.coord,
                                             regions: byCoord) else { return state }
 
-        // The dearest piece of made way on their line of march.
+        // The dearest piece of made way on their line of march. Ancient stone
+        // is not on the list: a raid is a blow against what *this* colony
+        // built, and there is nothing to take from a road that fell before
+        // anybody here was born.
         var worst: (link: RoadLink, cost: Double)?
         for (a, b) in zip(march.hexes, march.hexes.dropFirst()) {
-            guard let link = state.roads.link(a, b) else { continue }
+            guard let link = state.roads.link(a, b), link.origin == .built else { continue }
             guard let here = byCoord[a], let there = byCoord[b] else { continue }
             let dearness = link.grade.cost
                 * max(TerrainCost.buildingCost(here), TerrainCost.buildingCost(there))
@@ -458,7 +488,8 @@ public enum RoadEngine {
         var s = state
         if let lower = fallback(from: worst.link.grade) {
             s.roads.update(RoadLink(a: worst.link.a, b: worst.link.b,
-                                    grade: lower, condition: 0.35))
+                                    grade: lower, condition: 0.35,
+                                    origin: worst.link.origin))
         } else {
             s.roads.remove(worst.link.a, worst.link.b)
         }

@@ -148,7 +148,8 @@ public enum MapGenerator {
                 biomeID: homelandBiome,
                 hazardLevel: registry.biome(homelandBiome)?.baseHazard ?? 0,
                 explorationState: .fullyExplored,
-                feature: feature(at: .origin, mapSeed: mapSeed)
+                feature: feature(at: .origin, mapSeed: mapSeed),
+                river: river(at: .origin, mapSeed: mapSeed)
             )
         }
 
@@ -171,8 +172,95 @@ public enum MapGenerator {
             biomeID: biomeID,
             hazardLevel: hazard,
             explorationState: .unknown,
-            feature: feature(at: coord, mapSeed: mapSeed)
+            feature: feature(at: coord, mapSeed: mapSeed),
+            river: river(at: coord, mapSeed: mapSeed)
         )
+    }
+
+    // MARK: - Where the water runs
+
+    /// How wet ground has to be before water will run on it.
+    ///
+    /// **Measured, not guessed** (rule 23). `MapProbe.whereTheWaterRuns` prints
+    /// the moisture percentiles *and sweeps this constant*, so it is chosen
+    /// against the shape of the whole map rather than against one number
+    /// somebody liked the look of:
+    ///
+    /// ```
+    /// moisture   share   courses   longest
+    ///     0.06   30.7%        55        14
+    ///     0.30   15.8%        31         9
+    ///     0.50    8.0%        18         8
+    ///     0.60    5.5%        14         8
+    /// ```
+    ///
+    /// The first guess was 0.06 and put water on nearly a third of the map,
+    /// which does not make rivers a feature of a valley — it makes a bridge a
+    /// flat tax on building anything. At 0.50 water is on one hex in twelve:
+    /// rare enough to be a thing about *this* country, common enough that a
+    /// road will meet it.
+    static let riverMoisture = 0.50
+
+    /// How high a spring rises. Wet flat country with nothing feeding it is a
+    /// marsh, not a river, and the difference is that a river comes *down* from
+    /// somewhere.
+    static let springElevation = 0.18
+
+    /// Where water goes from here: the lowest neighbour, if any is lower.
+    ///
+    /// Ties broken on the coordinate, never on the order `neighbors()` happens
+    /// to return, so the same seed runs the same water.
+    static func downhill(from coord: HexCoord, mapSeed: UInt64) -> HexCoord? {
+        let here = land(at: coord, mapSeed: mapSeed).elevation
+        var best: (coord: HexCoord, elevation: Double)?
+        for neighbour in coord.neighbors() {
+            let there = land(at: neighbour, mapSeed: mapSeed).elevation
+            guard there < here else { continue }
+            let better = best.map { there < $0.elevation
+                || (there == $0.elevation && hexIndex(neighbour) < hexIndex($0.coord)) } ?? true
+            if better { best = (neighbour, there) }
+        }
+        return best?.coord
+    }
+
+    static func carriesWater(_ coord: HexCoord, mapSeed: UInt64) -> Bool {
+        land(at: coord, mapSeed: mapSeed).moisture >= riverMoisture
+    }
+
+    /// **The water through one hex, if there is any.**
+    ///
+    /// Purely local — this hex and its six neighbours — because the map is
+    /// generated per hex and grows outward for ever as the player explores. A
+    /// river traced globally from its source would come out differently
+    /// depending on which hexes happened to exist when it was asked for, which
+    /// is the one thing a deterministic map may not do.
+    ///
+    /// Courses still form: a hex runs water when something upstream feeds it,
+    /// and that upstream hex runs water when *its* upstream does, so a line
+    /// grows on its own and ends where the ground dries out or stops falling.
+    public static func river(at coord: HexCoord, mapSeed: UInt64) -> RiverCourse? {
+        guard carriesWater(coord, mapSeed: mapSeed) else { return nil }
+        let here = land(at: coord, mapSeed: mapSeed)
+        let onward = downhill(from: coord, mapSeed: mapSeed)
+
+        // Who feeds it: the wettest neighbour that carries water and falls into
+        // this hex.
+        var inflow: (coord: HexCoord, moisture: Double)?
+        for neighbour in coord.neighbors() {
+            guard carriesWater(neighbour, mapSeed: mapSeed),
+                  downhill(from: neighbour, mapSeed: mapSeed) == coord else { continue }
+            let wet = land(at: neighbour, mapSeed: mapSeed).moisture
+            let better = inflow.map { wet > $0.moisture
+                || (wet == $0.moisture && hexIndex(neighbour) < hexIndex($0.coord)) } ?? true
+            if better { inflow = (neighbour, wet) }
+        }
+
+        // Something feeds it, or a spring rises here. Otherwise the hex is
+        // merely damp.
+        guard inflow != nil || here.elevation >= springElevation else { return nil }
+        // …and water that neither arrives nor leaves is standing water.
+        guard inflow != nil || onward != nil else { return nil }
+        return RiverCourse(from: inflow?.coord, to: onward)
     }
 
     /// The initial world: a disc of regions of radius `mapRadius`. Only a

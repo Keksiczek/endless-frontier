@@ -106,6 +106,17 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     public var pawns: [Pawn]
     /// Lifetime deaths by `PawnDeathCause.rawValue` — chronicle material.
     public var deathTallies: [String: Int]
+    /// How many children have been born here, and how many people have walked
+    /// in from outside, since the founding.
+    ///
+    /// Two counters rather than a reading off `ColonyLog`, which is a
+    /// hundred-and-forty-entry ring: counting `.birth` entries in the journal
+    /// silently undercounts the moment a colony is older than its diary, and
+    /// **"nobody arrived" and "the arrivals were not recorded" are the same
+    /// number and different bugs** (rule 67). `GeneProbe` needed to tell those
+    /// apart to know whether immigration was moving the gene pool at all.
+    public var birthTally: Int = 0
+    public var arrivalTally: Int = 0
     public var buildings: [BuildingInstance]
     public var storage: Resources
     /// How deep this settlement's store is, **per resource** — see
@@ -324,7 +335,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     // MARK: - Codable (resilient to pre-specialisation saves)
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, kind, regionID, foundedTick, pawns, deathTallies
+        case id, name, kind, regionID, foundedTick, pawns, deathTallies, birthTally, arrivalTally
         case buildings, storage, storageCapacity, stats, inventory, specialization, colony, localMap
         case laws, leaderID, society, strikeTicksRemaining, faith
         case constructions, constructionSequence, journal, relationships, expeditions
@@ -345,6 +356,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         foundedTick = try c.decode(Int.self, forKey: .foundedTick)
         pawns = try c.decode([Pawn].self, forKey: .pawns)
         deathTallies = try c.decodeIfPresent([String: Int].self, forKey: .deathTallies) ?? [:]
+        birthTally = try c.decodeIfPresent(Int.self, forKey: .birthTally) ?? 0
+        arrivalTally = try c.decodeIfPresent(Int.self, forKey: .arrivalTally) ?? 0
         buildings = try c.decode([BuildingInstance].self, forKey: .buildings)
         storage = try c.decode(Resources.self, forKey: .storage)
         // Typed as of 2026-08-13. A save written before it holds one number for

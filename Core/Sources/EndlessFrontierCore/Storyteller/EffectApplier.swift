@@ -384,7 +384,15 @@ public enum EffectApplier {
     private static func addPawn(_ s: inout WorldState) {
         guard let capital = s.settlements.indices.first else { return }
         let seed = UInt64(bitPattern: Int64(s.tick)) &+ UInt64(s.settlements[capital].pawns.count) &+ 1
-        s.settlements[capital].pawns.append(PawnFactory.generate(seed: seed, language: s.language))
+        // Whoever an event brings in comes from **this country**, as far as the
+        // game knows — an event does not say which people they walked from. So
+        // they resemble the colony rather than being a fresh roll at mean 0.5,
+        // which would quietly reset the world's dispositions toward the middle
+        // every time the storyteller was generous. See `Genes.drawn(from:using:)`.
+        let stock = Genes.mean(of: s.settlements[capital].pawns.map(\.genes))
+        s.settlements[capital].pawns.append(
+            PawnFactory.generate(seed: seed, language: s.language, stock: stock))
+        s.settlements[capital].arrivalTally += 1
     }
 
     /// Resolves which region a dynamic event targets. Deterministic.

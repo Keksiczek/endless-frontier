@@ -58,6 +58,11 @@ public struct Region: Codable, Sendable, Identifiable, Equatable {
     /// synthesised `Codable` is also what lets every save written before the
     /// land had features decode straight through (rule 3).
     public var feature: RegionFeature?
+    /// The water, where there is any. Optional for the same two reasons
+    /// `feature` is: most country has no river in it, and an `Optional` on a
+    /// synthesised `Codable` lets every save written before the map had water
+    /// decode straight through.
+    public var river: RiverCourse?
 
     public init(
         id: UUID = UUID(),
@@ -71,7 +76,8 @@ public struct Region: Codable, Sendable, Identifiable, Equatable {
         settlementIDs: [UUID] = [],
         siteCleared: Bool = false,
         siteVisits: Int? = nil,
-        feature: RegionFeature? = nil
+        feature: RegionFeature? = nil,
+        river: RiverCourse? = nil
     ) {
         self.id = id
         self.name = name
@@ -85,6 +91,7 @@ public struct Region: Codable, Sendable, Identifiable, Equatable {
         self.siteCleared = siteCleared
         self.siteVisits = siteVisits
         self.feature = feature
+        self.river = river
     }
 
     /// `true` if this region has an interactable special site that's explored

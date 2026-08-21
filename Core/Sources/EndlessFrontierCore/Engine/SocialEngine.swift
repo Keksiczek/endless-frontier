@@ -36,6 +36,22 @@ public enum SocialEngine {
     static let griefRecreation = -28.0
     // Bond dynamics.
     static let strengthPerChat = 7.0
+    /// **How much two colonists' sociability moves a bond along.**
+    ///
+    /// Sociability used to touch one thing only — how likely a meeting was to
+    /// end in a quarrel — and `GeneProbe` measured what that is worth: the
+    /// selection differential on sociability wandered around zero for two
+    /// hundred years while the colony's mean crawled back to 0.5.
+    ///
+    /// Children come out of bonds now (`PopulationEngine.conceive`), so how
+    /// fast a bond grows *is* how many children a colonist has. That makes this
+    /// the one place sociability can be a disposition rather than a decoration:
+    /// two people who are easy company are close sooner, wed sooner, and have
+    /// more of their fertile years in front of them when they do.
+    ///
+    /// At a pair mean of 0.5 the factor is exactly 1, so the average colony's
+    /// courtship — and every growth number measured against it — is unchanged.
+    static let sociabilityBondPull = 0.8
     static let strengthPerQuarrel = 9.0
     static let decayPerTick = 0.035        // ≈ 2 points a year at 60 t/y
     static let forgottenThreshold = 3.0    // bonds below this are dropped
@@ -162,7 +178,8 @@ public enum SocialEngine {
                     s.relationships.remove(at: e)
                 }
             } else {
-                s.relationships[e].strength = min(100, before + strengthPerChat)
+                s.relationships[e].strength = min(100, before + strengthPerChat
+                                                  * bondPull(first.genes, second.genes))
                 // The moment two colonists become proper friends is worth a line.
                 if before < closeFriendStrength, s.relationships[e].strength >= closeFriendStrength {
                     s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
@@ -179,7 +196,8 @@ public enum SocialEngine {
         } else if s.bondCount(of: first.id) < maxRelationsPerPawn,
                   s.bondCount(of: second.id) < maxRelationsPerPawn {
             s.relationships.append(Relationship(
-                between: first.id, and: second.id, kind: .friend, strength: strengthPerChat + 4))
+                between: first.id, and: second.id, kind: .friend,
+                strength: strengthPerChat * bondPull(first.genes, second.genes) + 4))
         }
 
         // A sliver of chatter reaches the diary — enough to hear the village.
@@ -191,6 +209,13 @@ public enum SocialEngine {
             ]))
         }
         return s
+    }
+
+    /// How readily these two grow close, out of what they were born with.
+    /// See `sociabilityBondPull` — 1 at the middle of the distribution.
+    static func bondPull(_ a: Genes, _ b: Genes) -> Double {
+        let mean = (a.sociability + b.sociability) / 2
+        return max(0.25, 1 + (mean - 0.5) * sociabilityBondPull)
     }
 
     /// Hard words: recreation drains, and the bond curdles toward rivalry.

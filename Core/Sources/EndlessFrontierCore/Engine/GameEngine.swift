@@ -382,7 +382,11 @@ public enum GameEngine {
     /// The grade this edge would take next and what it would cost — `nil` when
     /// the two hexes are not neighbours, when either is unknown country, or
     /// when the way is already as made as this world knows how to make it.
-    static func stretch(
+    ///
+    /// Public because the panel that offers the road has to show the grade as
+    /// well as the price: "a road, thirty" and "a railway, four hundred" are
+    /// different offers and a lone number cannot tell them apart.
+    public static func stretch(
         _ state: WorldState, from a: HexCoord, to b: HexCoord
     ) -> (link: RoadLink, cost: Double)? {
         guard a != b, a.neighbors().contains(b) else { return nil }

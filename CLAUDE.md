@@ -194,7 +194,7 @@ to build next".
 Read these three, in order, when picking work up cold:
 
 1. `docs/CODEMAPS/architecture.md` — three layers, tick order, how a decision flows
-2. **`docs/RULES.md`** — 35 rules, each of which cost a session. Read *before*
+2. **`docs/RULES.md`** — 75 rules, each of which cost a session. Read *before*
    writing a threshold, not after
 3. `docs/BACKLOG.md` — the living plan
 

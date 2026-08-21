@@ -173,8 +173,63 @@ struct RegionDetailCard: View {
             }
 
             actions
+            ways
         }
         .frontierCard()
+    }
+
+    /// **The ways out of this hex, with a price on each.**
+    ///
+    /// Until now only the council laid roads, on the edge its own arithmetic
+    /// liked best (`RoadEngine.build`). This is the player saying *this stretch,
+    /// here* — which is the one road-laying decision the game did not have, and
+    /// the only one that lets somebody road a pass before they need it rather
+    /// than after.
+    ///
+    /// Nothing shows while the age has not learned to level ground. That is the
+    /// ladder doing its job, not an empty panel.
+    @ViewBuilder
+    private var ways: some View {
+        let options = game.roadableNeighbours(of: region)
+        if !options.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(AppStrings.language == .cs ? "Cesty odsud" : "Ways from here")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Theme.textDim)
+                ForEach(options, id: \.region.id) { option in
+                    let affordable = game.selectedSettlementStorage(.materials) >= option.cost
+                    Button {
+                        game.layRoad(from: region.coord, to: option.region.coord)
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
+                                .font(.caption)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(option.region.name)
+                                    .font(.subheadline.weight(.medium))
+                                Text(option.grade.displayName.resolve(AppStrings.language))
+                                    .font(.caption2).foregroundStyle(Theme.textDim)
+                            }
+                            Spacer()
+                            HStack(spacing: 3) {
+                                Image(systemName: ResourceType.materials.symbolName)
+                                    .font(.caption2)
+                                Text("\(Int(option.cost.rounded()))")
+                                    .font(.caption.monospacedDigit())
+                            }
+                            .foregroundStyle(affordable ? Theme.textDim : Theme.danger)
+                        }
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: 8))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!affordable)
+                    .opacity(affordable ? 1 : 0.45)
+                }
+            }
+        }
     }
 
     @ViewBuilder

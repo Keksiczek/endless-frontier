@@ -35,6 +35,7 @@ public struct StubNarrator: NarratorProtocol {
         if let drift = changed(chapter, language) { lines.append(drift) }
         if let mood = state(chapter, language) { lines.append(mood) }
         if let lean = hunger(chapter, language) { lines.append(lean) }
+        if let who = buried(chapter, language) { lines.append(who) }
         if let seen = remembered(chapter, language) { lines.append(seen) }
         return lines.joined(separator: " ")
     }
@@ -138,6 +139,30 @@ public struct StubNarrator: NarratorProtocol {
         return lang == .cs
             ? "V roce \(c.leanestYear) byly sýpky skoro prázdné."
             : "In \(c.leanestYear) the granaries stood all but empty."
+    }
+
+    /// **Who was buried, by name.**
+    ///
+    /// One line and at most two names. An annal that lists everybody is a
+    /// register, and a register is what the chronicle already had.
+    private func buried(_ c: ChapterSnapshot, _ lang: GameLanguage) -> String? {
+        let named = c.lives.prefix(2)
+        guard !named.isEmpty else { return nil }
+        let cs = lang == .cs
+        let parts = named.map { figure -> String in
+            let standing = figure.standing.label.resolve(lang)
+            guard let age = figure.age, let died = figure.diedYear else {
+                return figure.name
+            }
+            // No verb, on purpose. Czech would have to agree with a gender
+            // the game does not record, and "zemřel(a)" belongs in a diary
+            // entry rather than in an annal.
+            return cs
+                ? "\(figure.name), \(standing) — roku \(died), ve věku \(age) let"
+                : "\(figure.name), \(standing) — in the year \(died), aged \(age)"
+        }
+        return (cs ? "Pohřbeni: " : "Buried in those years: ")
+            + parts.joined(separator: cs ? "; " : "; ") + "."
     }
 
     /// What the years are remembered for. A colon and a list, on purpose: an

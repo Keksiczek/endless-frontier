@@ -707,3 +707,31 @@ fires, do the arithmetic before you rewrite the mechanic.
    is gone" from "the wars are gone" took reading the mechanism rather than the
    table. Change one thing per measurement, or write down in advance which
    column each change is supposed to move.
+73. **A round-trip test proves nothing about a field that is empty on both
+   sides.** `WorldState.roads` and `roadTraffic` had no `CodingKeys` case, so
+   the synthesised encoder skipped them and the decoder never looked — **every
+   road the colony built was thrown away on the next save** and came back an
+   empty network. "Full round-trip is lossless" had been green over that bug
+   since the day roads shipped, because the world it encoded had no roads in it
+   yet. It only went red once the map began *generating* with ancient stone on
+   it. A round-trip fixture has to carry a value in every field it claims to
+   cover, and adding a stored property means adding it to the coding keys in
+   the same edit.
+74. **A gene that does not decide who has children is a label, not a gene.**
+   `GeneProbe` measured two centuries: standing deviation 0.09–0.11, so there
+   was plenty of variation, and a selection differential with **no sign at all**
+   for any of the four dispositions. The reason was structural — `fertilityAt`
+   returns a flat 1 through the middle of a life, and the two lifespan genes add
+   their years *after* the fertile window shuts at forty to fifty-two, so both
+   were invisible to selection by construction however large their coefficients
+   looked. Before tuning a heritable number, check that the thing it moves
+   happens **while people are still having children**.
+75. **A newcomer rolled from a fixed distribution is a hole in the world's
+   gene pool.** Every arrival — a settler party, an event's colonist, an
+   outpost's founders — was built by `PawnFactory.generate` rolling
+   `Genes.founder`, whose mean is exactly 0.5. So immigration reset the colony
+   toward the middle every time somebody walked up the road, and it is a far
+   stronger force than anything two hundred years of selection produces: all
+   four means converged on 0.5 *even after* selection had been given real
+   teeth. Anything that enters a closed system from "outside" has to come from
+   somewhere the world actually models, or it is a leak into a constant.

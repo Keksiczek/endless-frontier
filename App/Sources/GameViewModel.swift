@@ -919,6 +919,33 @@ final class GameViewModel {
         ChronicleEngine.insights(world, registry: registry)
     }
 
+    /// Whether the player has walked this hex. What is drawn on the world map
+    /// may only be what they could actually know.
+    func isKnown(_ coord: HexCoord) -> Bool {
+        guard let region = world.regions.first(where: { $0.coord == coord })
+        else { return false }
+        return region.explorationState != .unknown
+    }
+
+    /// The neighbouring hexes this region could have a way laid to, with the
+    /// price of the next grade on each. Empty while the age has not learned to
+    /// level ground, which is the ladder doing its job rather than a bug.
+    func roadableNeighbours(of region: Region) -> [(region: Region, cost: Double, grade: RoadGrade)] {
+        region.coord.neighbors().compactMap { coord in
+            guard let there = world.regions.first(where: { $0.coord == coord }),
+                  let stretch = GameEngine.stretch(world, from: region.coord, to: coord)
+            else { return nil }
+            return (there, stretch.cost, stretch.link.grade)
+        }
+        .sorted { $0.cost < $1.cost }
+    }
+
+    /// Lays the way the player picked, and saves.
+    func layRoad(from a: HexCoord, to b: HexCoord) {
+        world = GameEngine.layRoad(world, from: a, to: b, registry: registry)
+        persist()
+    }
+
     /// The history cut into chapters — the annals' spine.
     var chapters: [ChapterSnapshot] {
         Annals.chapters(world, registry: registry)

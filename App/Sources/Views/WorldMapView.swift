@@ -80,7 +80,35 @@ struct WorldMapView: View {
                 // the one thing the colony builds *on the world map* was
                 // invisible. Under the trade threads on purpose: a route is a
                 // contract and a road is the ground it runs over.
+                // **The water, under the ways.** A river is drawn as the
+                // course it is — in at one edge, out at another — so a valley
+                // reads as a valley and a bridge has something visible to
+                // cross. Only where the player has walked: the fog is the fog.
+                for region in game.world.regions {
+                    guard let river = region.river,
+                          region.explorationState != .unknown else { continue }
+                    let centre = tilePosition(region.coord)
+                    var water = Path()
+                    if let from = river.from {
+                        water.move(to: midpoint(region.coord, from))
+                        water.addLine(to: centre)
+                    } else {
+                        water.move(to: centre)
+                    }
+                    if let to = river.to {
+                        water.addLine(to: midpoint(region.coord, to))
+                    }
+                    ctx.stroke(water, with: .color(Theme.water.opacity(0.75)),
+                               style: StrokeStyle(lineWidth: 2.2, lineCap: .round,
+                                                  lineJoin: .round))
+                }
+
                 for link in game.world.roads.all {
+                    // A way through country nobody has walked is not something
+                    // the player knows about. Ancient stone especially: finding
+                    // it is the whole of what it is for, and a ruin drawn
+                    // through the fog has already been found.
+                    guard game.isKnown(link.a) || game.isKnown(link.b) else { continue }
                     let a = tilePosition(link.a)
                     let b = tilePosition(link.b)
                     var way = Path()
@@ -139,6 +167,12 @@ struct WorldMapView: View {
     private enum RoadStyle {
         static func of(_ link: RoadLink) -> (color: Color, width: CGFloat, dash: [CGFloat]) {
             let kept = max(0.25, min(1, link.condition))
+            // An ancient way is drawn as what it is: stretches of stone with
+            // the country grown back over the gaps. Never as a road somebody is
+            // keeping, which is what a solid line means everywhere else here.
+            if link.origin == .ancient {
+                return (Theme.boneFaint.opacity(0.55), 2.4, [5, 5])
+            }
             switch link.grade {
             case .track: return (Theme.boneFaint.opacity(0.42 * kept), 1.1, [2, 4])
             case .road:  return (Theme.boneDim.opacity(0.62 * kept), 1.8, [])
@@ -155,6 +189,13 @@ struct WorldMapView: View {
             return nil
         }
         return tilePosition(region.coord)
+    }
+
+    /// Halfway between two hexes' centres — where a course leaves one hex and
+    /// enters the next.
+    private func midpoint(_ a: HexCoord, _ b: HexCoord) -> CGPoint {
+        let p = tilePosition(a), q = tilePosition(b)
+        return CGPoint(x: (p.x + q.x) / 2, y: (p.y + q.y) / 2)
     }
 
     private func tilePosition(_ coord: HexCoord) -> CGPoint {

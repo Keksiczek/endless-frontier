@@ -163,21 +163,93 @@ around them. Widening `neighbourlyTraffic` past the nearest neighbour would
 close it, at O(settlements²) pathfinding, which is a cost that wants measuring
 before it is paid.
 
-## 7. Still open
+## 7. What was here before
 
-- **Bridges.** A river crossing is currently just terrain. `RiverShape` exists
-  per local map; the world map has no river edges to bridge yet, so this wants
-  the world map to know where water runs before it can mean anything.
-- **Cutting a road.** The model supports it (`RoadNetwork.remove`) and nothing
-  does it. A raid that cuts the pass behind you is the war-fought-over-terrain
-  the chokepoints are for.
-- **Infrastructure ruins.** A stretch of paved road with no colony at either end
-  is a strong piece of world-telling and `SiteEncounter` already knows how to
-  make a place out of things.
-- **A player-built road.** Today only the council lays them. A tap on a hex edge
-  with a price on it is the obvious affordance, and it wants the drawing first.
+`RoadEngine.seedRuins` lays two stretches of **ancient paved way** at world
+generation: three to five hexes, one heading, out in the country and never
+touching the homeland. Deterministic from the map seed, because a ruin whose
+position moved between launches would not be a place.
 
-## 8. What four measurements cost, and what they taught
+It is not decoration, and the reason is a single field. `RoadLink.origin` is
+`.built` or `.ancient`, and the difference decides three things:
+
+- **Weather cannot take it any further.** `RoadEngine.weather` floors an ancient
+  way at `ancientFloor = 0.22`. A paved road nobody keeps is gone in about forty
+  years, which would have made every ruin a thing the player never saw. What is
+  left is the bed, and everything weather was going to take it took centuries
+  before anybody arrived.
+- **Building on it is cheaper.** `ancientDiscount = 0.55` off the price, through
+  `RoadEngine.price` — which is now the **one** place a road is costed, because
+  a discount honoured in two of three call sites is a discount that does not
+  exist.
+- **A raid leaves it alone.** `RoadEngine.cut` skips ancient links: a warband
+  wrecks what this colony built, and there is nothing left to take from a road
+  that fell before anybody here was born.
+
+A ruin is drawn as broken stone rather than a kept road, and only where the
+player has actually walked — finding it is the whole of what it is for.
+
+## 8. A road the player lays
+
+`GameEngine.layRoad(_:from:to:registry:)`, with `roadCost` to ask the price
+without paying it. Two hexes that touch, both of them known country, the same
+one-rung-at-a-time ladder and the same price as the council pays — so a
+player-laid road is never a cheaper way of buying what the council would have
+built anyway.
+
+The affordance is the region panel: **Ways from here**, one row per neighbour,
+cheapest first, with the grade and the price on it. Nothing shows in the first
+age, because nothing can be laid in it — `RoadGrade.road` wants `.ancient`, and
+a founding party wears tracks and builds nothing. That is §5's ladder doing its
+job and not an empty panel.
+
+## 9. The water, and the bridges over it
+
+The blocker was never the bridge. It was that **the world map had no water on
+it** — `RiverShape` is a local-map thing, and a bridge is a road crossing a
+river, so with no river there was nothing to cross.
+
+`Region.river` is a `RiverCourse`: which neighbour the water comes down from,
+which one it runs on to. `MapGenerator.river(at:mapSeed:)` derives it from the
+same elevation and moisture fields the biomes and `RegionFeature` already come
+from, so the water can never disagree with the country it runs through.
+
+**It is computed per hex, from that hex and its six neighbours only.** This is
+not an optimisation — the map is generated lazily and grows outward for ever, so
+a river traced globally from its source would come out differently depending on
+which hexes happened to exist when it was asked for, and that is the one thing a
+deterministic map may not do. Courses still form: a hex runs water when
+something upstream feeds it, and that hex runs water when *its* upstream does.
+
+The threshold was swept, not guessed (`MapProbe.whereTheWaterRuns`):
+
+```
+moisture   share   courses   longest
+    0.06   30.7%        55        14
+    0.30   15.8%        31         9
+    0.50    8.0%        18         8      <- shipped
+    0.60    5.5%        14         8
+```
+
+The first cut was 0.06, which puts water on nearly a third of the map. That does
+not make a river a feature of a valley; it makes a bridge a flat tax on building
+anything.
+
+**The bridge itself** is `RoadEngine.bridgePremium = 1.9`, applied in `price`
+when `needsBridge` says the way has to get across. A road that runs *along the
+course* — from a hex to the one the water runs on to — follows the bank and pays
+nothing extra. Nearly double and deliberately not more: a river that made a road
+unbuildable would just be a wall drawn in blue, and what it should be is a
+**reason to go round**, which is what a premium buys given `wanted` scores every
+candidate edge against every other.
+
+## 9a. Still open
+
+- **A river should slow a crossing, not only price one.** `TerrainCost.of` does
+  not read the water yet. Left out on purpose (rule 72): the bridge premium is
+  one change and it wants measuring on its own first.
+
+## 10. What four measurements cost, and what they taught
 
 Worth writing down, because the system was **correct after the first pass** and
 three of the four rounds of "tuning" that followed were chasing a broken metric.
@@ -195,7 +267,7 @@ last. A total says nothing about how it is spread, and a track is worn by
 traffic on **one edge**. `routes` was what proved the `TradeRoute` clause dead:
 zero in every world the harness plays.
 
-## 9. How to measure it
+## 11. How to measure it
 
 `RoadProbe` walks two hundred years of a real world and prints what the map
 ended up with: traffic, tracks worn, what the council paid for, worst-kept

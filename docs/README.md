@@ -1,8 +1,11 @@
 # Docs — what is where
 
 > **Start here if you are picking this up cold:**
-> [`HANDOFF-2026-08-21.md`](HANDOFF-2026-08-21.md) — where things stand, what is
-> uncommitted, and the four open things that have a measured number against them.
+> [`HANDOFF-2026-08-21-evening.md`](HANDOFF-2026-08-21-evening.md) — the
+> narrator, the chronicle's names, what `GeneProbe` measured twice, roads over
+> water, and a save bug that had been throwing away every road since it shipped.
+> [`HANDOFF-2026-08-21.md`](HANDOFF-2026-08-21.md) is the morning before it, and
+> its §4.2 and §4.4 are still open.
 
 <!-- Consolidated 2026-08-13 -->
 
@@ -12,13 +15,15 @@ Read in this order when picking work up cold:
 |---|---|---|
 | 1 | [NEXT.md](NEXT.md) | **Start here.** Where the game stands and what to work on next, with the evidence for each |
 | 2 | [CODEMAPS/architecture.md](CODEMAPS/architecture.md) | The three layers, the tick order, where a decision flows |
-| 3 | [RULES.md](RULES.md) | **52 rules, each of which cost a session.** Read before writing a threshold |
+| 3 | [RULES.md](RULES.md) | **75 rules, each of which cost a session.** Read before writing a threshold |
 | 4 | [BACKLOG.md](BACKLOG.md) | **The living record.** What was measured, what was built, what Keks asked for |
 
 ## Reference, by question
 
 | Question | Doc |
 |---|---|
+| The chronicle, the annals, and the narrator seam | [CHRONICLE.md](CHRONICLE.md) |
+| Roads, water, bridges, ruins and what rail costs | [ROADS.md](ROADS.md) |
 | What does this engine own? | [CODEMAPS/engines.md](CODEMAPS/engines.md) |
 | Is this an entity or still a number? | [CODEMAPS/models.md](CODEMAPS/models.md) |
 | Where does content live? | [CODEMAPS/data.md](CODEMAPS/data.md) |

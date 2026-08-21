@@ -52,6 +52,41 @@ public struct Genes: Codable, Sendable, Equatable {
         )
     }
 
+    /// How much one person differs from the people they come from.
+    ///
+    /// Wider than a child's drift from its parents, because a stranger off the
+    /// road is not anybody's child — they are one draw out of a whole folk.
+    public static let stockSpread = 0.13
+
+    /// **One person out of a people.**
+    ///
+    /// Every newcomer used to be rolled fresh from `founder`, whose mean is
+    /// exactly 0.5 — so a colony's gene pool was quietly reset toward the
+    /// middle every time somebody walked up the road, and `GeneProbe` duly
+    /// measured all four dispositions converging on 0.5 over two centuries no
+    /// matter what selection did. Immigration was a stronger force than
+    /// anything the world could select for, and it pulled in one direction
+    /// only.
+    ///
+    /// A wanderer comes from **somewhere**, and that somewhere has a character
+    /// of its own — `Tribe.genes` has existed since a seceding band first
+    /// carried the average of those who left. Drawing from it closes the loop:
+    /// the world's gene pool becomes a real system rather than a leak.
+    public static func drawn(from stock: Genes, using rng: inout SeededRNG) -> Genes {
+        stock.mutated(using: &rng, spread: stockSpread)
+    }
+
+    /// The average of a group — what a people's character is made of.
+    public static func mean(of genes: [Genes]) -> Genes? {
+        guard !genes.isEmpty else { return nil }
+        let n = Double(genes.count)
+        return Genes(
+            industry: genes.reduce(0) { $0 + $1.industry } / n,
+            fertility: genes.reduce(0) { $0 + $1.fertility } / n,
+            sociability: genes.reduce(0) { $0 + $1.sociability } / n,
+            courage: genes.reduce(0) { $0 + $1.courage } / n)
+    }
+
     /// The genes a child inherits: each trait drifts by up to ±`spread`.
     public func mutated(using rng: inout SeededRNG, spread: Double = 0.09) -> Genes {
         func drift(_ value: Double) -> Double {

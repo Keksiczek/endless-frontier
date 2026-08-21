@@ -16,6 +16,10 @@ public enum Annals {
     /// hold on to.
     public static let maxChapterYears = 25
 
+    /// …and the shortest one worth writing. Below this a chapter is a
+    /// paragraph about four quiet years, which is padding with a heading on it.
+    public static let minChapterYears = 8
+
     /// Every chapter of the world's history, oldest first.
     public static func chapters(
         _ state: WorldState, registry: GameDataRegistry
@@ -57,13 +61,22 @@ public enum Annals {
                 start = i + 1
             }
         }
-        // A one-row tail is not a chapter. Fold it back.
-        if out.count >= 2, let tail = out.last, tail.count < 2 {
-            let previous = out[out.count - 2]
-            out.removeLast(2)
-            out.append(previous.lowerBound...tail.upperBound)
+        // **A stub is not a chapter.** An era turning a few years after the
+        // last cut leaves a paragraph about four quiet years, which reads as
+        // padding — so anything shorter than `minChapterYears` is folded back
+        // into the chapter before it. Only backwards, and only once per
+        // chapter, so the fold cannot cascade into one enormous age.
+        var folded: [ClosedRange<Int>] = []
+        for cut in out {
+            let years = records[cut.upperBound].year - records[cut.lowerBound].year
+            if years < minChapterYears, let previous = folded.last {
+                folded.removeLast()
+                folded.append(previous.lowerBound...cut.upperBound)
+            } else {
+                folded.append(cut)
+            }
         }
-        return out
+        return folded
     }
 
     /// One chapter, out of the rows between two indices.
@@ -120,6 +133,15 @@ public enum Annals {
             moraleMean: span.reduce(0) { $0 + $1.morale } / Double(span.count),
             giniLast: last.gini, faithLast: last.faith,
             leanestYear: leanest.year, leanestFood: leanest.food,
-            drifts: drifts, events: events)
+            drifts: drifts, events: events,
+            // Whoever the chronicle was keeping and buried in these years. The
+            // longest life first: an annal has room for one or two names, and
+            // the one worth the room is the one that spans the most of it.
+            lives: state.figures
+                .filter { ($0.diedYear ?? .max) >= first.year
+                    && ($0.diedYear ?? .max) <= last.year }
+                .sorted { ($0.age ?? 0) != ($1.age ?? 0)
+                    ? ($0.age ?? 0) > ($1.age ?? 0)
+                    : $0.name < $1.name })
     }
 }

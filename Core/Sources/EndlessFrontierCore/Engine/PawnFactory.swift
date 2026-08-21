@@ -12,7 +12,16 @@ public enum PawnFactory {
     /// Builds a colonist from a numeric seed (typically derived from world tick
     /// and current colonist count). Recruits arrive as working-age adults with
     /// their own genes.
-    public static func generate(seed: UInt64, language: GameLanguage = .cs) -> Pawn {
+    ///
+    /// `stock` is **the people they come from**: a tribe's character for a
+    /// wanderer or a prisoner, the colony's own for somebody it sent out to
+    /// found an outpost. Passing `nil` rolls a stranger from nowhere, whose
+    /// mean is 0.5 — which is what every newcomer used to be, and is why a
+    /// colony's dispositions converged on the middle however hard the world
+    /// selected (see `Genes.drawn(from:using:)`). Prefer to say where somebody
+    /// came from; the game almost always knows.
+    public static func generate(seed: UInt64, language: GameLanguage = .cs,
+                                stock: Genes? = nil) -> Pawn {
         var rng = SeededRNG(seed: seed ^ 0xA11CE_5EED)
         let name = name(using: &rng, language: language)
         let traits = PawnTrait.allCases
@@ -37,7 +46,8 @@ public enum PawnFactory {
             skills: [work: skillLevel],
             assignedWork: work,
             age: ageYears * 60,   // in ticks at the standard 60 ticks/year
-            genes: .founder(using: &rng)
+            genes: stock.map { Genes.drawn(from: $0, using: &rng) }
+                ?? .founder(using: &rng)
         )
     }
 }

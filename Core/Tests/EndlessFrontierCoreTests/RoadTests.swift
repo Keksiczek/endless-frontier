@@ -241,13 +241,13 @@ struct RoadTests {
 
         var poor = s
         poor.settlements[0].storage[.materials] = 5
-        #expect(RoadEngine.build(poor, registry: reg).roads.isEmpty,
+        #expect(RoadEngine.build(poor, registry: reg).roads.hasBuiltNothing,
                 "a colony with five materials must not be paving anything")
 
         var rich = s
         rich.settlements[0].storage[.materials] = 4000
         let built = RoadEngine.build(rich, registry: reg)
-        #expect(!built.roads.isEmpty, "…and one with a full warehouse must be able to")
+        #expect(!built.roads.hasBuiltNothing, "…and one with a full warehouse must be able to")
         #expect(built.settlements[0].storage[.materials] < 4000, "…and must have paid for it")
     }
 
@@ -291,7 +291,7 @@ struct RoadTests {
         json.removeValue(forKey: "roadTraffic")
         let stripped = try JSONSerialization.data(withJSONObject: json)
         let decoded = try JSONDecoder().decode(WorldState.self, from: stripped)
-        #expect(decoded.roads.isEmpty)
+        #expect(decoded.roads.hasBuiltNothing)
         #expect(decoded.roadTraffic.isEmpty)
     }
 }
@@ -592,7 +592,7 @@ struct RoadCuttingTests {
         let s = try world()
         guard let capital = s.settlements.first,
               let elsewhere = s.regions.first(where: { $0.id != capital.regionID }) else { return }
-        #expect(RoadEngine.cut(s, from: elsewhere.id, to: capital.id).roads.isEmpty)
+        #expect(RoadEngine.cut(s, from: elsewhere.id, to: capital.id).roads.hasBuiltNothing)
     }
 }
 
@@ -708,7 +708,7 @@ struct RoadTowardTests {
         let purse = s.settlements[0].storage[.materials]
 
         let after = GameEngine.buildRoadToward(s, tribeID: them.id, registry: reg)
-        #expect(!after.roads.isEmpty, "the verb did nothing at all")
+        #expect(!after.roads.hasBuiltNothing, "the verb did nothing at all")
         #expect(after.settlements[0].storage[.materials] < purse, "…and it was free")
     }
 
@@ -742,7 +742,7 @@ struct RoadTowardTests {
         s.settlements[0].storage[.materials] = 0
         #expect(GameEngine.roadTowardCost(s, tribeID: them.id, registry: reg) == price,
                 "an empty warehouse must not make the road look finished")
-        #expect(GameEngine.buildRoadToward(s, tribeID: them.id, registry: reg).roads.isEmpty,
+        #expect(GameEngine.buildRoadToward(s, tribeID: them.id, registry: reg).roads.hasBuiltNothing,
                 "…and it must still not be built")
     }
 
@@ -770,6 +770,194 @@ struct RoadTowardTests {
               let index = s.tribes.firstIndex(where: { $0.id == them.id }) else { return }
         s.tribes[index].discovered = false
         #expect(GameEngine.roadTowardCost(s, tribeID: them.id, registry: reg) == nil)
-        #expect(GameEngine.buildRoadToward(s, tribeID: them.id, registry: reg).roads.isEmpty)
+        #expect(GameEngine.buildRoadToward(s, tribeID: them.id, registry: reg).roads.hasBuiltNothing)
+    }
+}
+
+/// The roads that were here before anybody was, and the ones the player lays.
+@Suite("What was here before, and what the player adds")
+struct AncientAndPlayerRoadTests {
+
+    @Test("A new world has stone in the wilderness and nothing built")
+    func worldStartsWithRuins() throws {
+        let registry = try GameDataRegistry.bundled()
+        let state = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        #expect(state.roads.hasBuiltNothing)
+        #expect(!state.roads.all.isEmpty, "a valley nobody ever crossed is a poorer valley")
+        #expect(state.roads.all.allSatisfy { $0.origin == .ancient })
+        #expect(state.roads.all.allSatisfy { $0.grade == .paved },
+                "stone is what survives; a levelled track would not have")
+    }
+
+    @Test("The same seed leaves the same ruins")
+    func ruinsAreDeterministic() throws {
+        let registry = try GameDataRegistry.bundled()
+        let a = GameWorldFactory.newGame(registry: registry, seed: 77).roads.all
+        let b = GameWorldFactory.newGame(registry: registry, seed: 77).roads.all
+        #expect(a == b)
+    }
+
+    @Test("Weather has already taken all it can take from an ancient way")
+    func ruinsDoNotRotAway() throws {
+        let registry = try GameDataRegistry.bundled()
+        var state = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        let before = state.roads.all.count
+        // Long enough that an unmaintained paved road laid today would be gone
+        // several times over: `paved.wearPerTick` clears 1.0 in about 2500.
+        for _ in 0..<6000 { state = RoadEngine.weather(state, registry: registry) }
+        #expect(state.roads.all.count == before)
+        #expect(state.roads.all.allSatisfy { $0.condition >= RoadEngine.ancientFloor - 0.001 })
+    }
+
+    @Test("Building on a ruin is cheaper than building on bare ground")
+    func ruinsAreCheaperToBuildOn() throws {
+        let registry = try GameDataRegistry.bundled()
+        let state = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        guard let ruin = state.roads.all.first,
+              let here = state.regions.first(where: { $0.coord == ruin.a }),
+              let there = state.regions.first(where: { $0.coord == ruin.b })
+        else { return }
+        let onStone = RoadEngine.price(.rail, here: here, there: there, existing: ruin)
+        let onGrass = RoadEngine.price(.rail, here: here, there: there, existing: nil)
+        #expect(onStone < onGrass)
+        #expect(onStone > 0, "clearing a buried causeway is still work")
+    }
+
+    @Test("A raid does not wreck a ruin — there is nothing left in it to take")
+    func raidersLeaveRuinsAlone() throws {
+        let registry = try GameDataRegistry.bundled()
+        let state = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        guard let capital = state.settlements.first,
+              let elsewhere = state.regions.first(where: { $0.id != capital.regionID })
+        else { return }
+        let after = RoadEngine.cut(state, from: elsewhere.id, to: capital.id)
+        #expect(after.roads.all == state.roads.all)
+    }
+
+    // MARK: - A road the player lays
+
+    @Test("The player lays a road on an edge they chose, and pays for it")
+    func playerLaysARoad() throws {
+        let registry = try GameDataRegistry.bundled()
+        var state = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        guard let seatID = state.settlements[0].regionID,
+              let seat = state.regions.first(where: { $0.id == seatID }),
+              let neighbour = seat.coord.neighbors().first(where: { coord in
+                  state.regions.contains { $0.coord == coord }
+              }) else { return }
+        // Both ends have to be known country, the purse has to be full, and the
+        // age has to be one that knows how to level ground — a founding party
+        // wears tracks and builds nothing, which is rule 66's ladder and not an
+        // oversight.
+        for index in state.regions.indices where state.regions[index].coord == neighbour {
+            state.regions[index].explorationState = .fullyExplored
+        }
+        state.era = .ancient
+        state.settlements[0].storage[.materials] = 5000
+
+        let price = GameEngine.roadCost(state, from: seat.coord, to: neighbour)
+        #expect(price != nil)
+        let after = GameEngine.layRoad(state, from: seat.coord, to: neighbour, registry: registry)
+        #expect(after.roads.link(seat.coord, neighbour) != nil)
+        #expect(after.settlements[0].storage[.materials] < 5000)
+    }
+
+    @Test("A road cannot be laid into country nobody has walked")
+    func unknownCountryCannotBeRoaded() throws {
+        let registry = try GameDataRegistry.bundled()
+        var state = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        guard let seatID = state.settlements[0].regionID,
+              let seat = state.regions.first(where: { $0.id == seatID }),
+              let neighbour = seat.coord.neighbors().first(where: { coord in
+                  state.regions.contains { $0.coord == coord }
+              }) else { return }
+        for index in state.regions.indices where state.regions[index].coord == neighbour {
+            state.regions[index].explorationState = .unknown
+        }
+        state.settlements[0].storage[.materials] = 5000
+        #expect(GameEngine.roadCost(state, from: seat.coord, to: neighbour) == nil)
+        #expect(GameEngine.layRoad(state, from: seat.coord, to: neighbour,
+                                   registry: registry).roads.hasBuiltNothing)
+    }
+
+    @Test("Two hexes that do not touch have no edge to road")
+    func onlyNeighboursCanBeJoined() throws {
+        let registry = try GameDataRegistry.bundled()
+        let state = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        let far = HexCoord(0, 0)
+        let further = HexCoord(4, 4)
+        #expect(GameEngine.roadCost(state, from: far, to: further) == nil)
+    }
+}
+
+/// Water on the world map, and what it costs to get a road across it.
+@Suite("The water, and the bridges over it")
+struct RiverTests {
+
+    @Test("A world has rivers in it, and they run downhill")
+    func riversExistAndFall() {
+        let hexes = HexCoord.disc(radius: 12)
+        let courses = hexes.compactMap { coord in
+            MapGenerator.river(at: coord, mapSeed: 4242).map { (coord, $0) }
+        }
+        #expect(!courses.isEmpty, "a world with no water on it has no bridges to build")
+        for (coord, course) in courses {
+            let here = MapGenerator.land(at: coord, mapSeed: 4242).elevation
+            if let to = course.to {
+                #expect(MapGenerator.land(at: to, mapSeed: 4242).elevation < here,
+                        "water does not run uphill")
+            }
+            if let from = course.from {
+                #expect(MapGenerator.land(at: from, mapSeed: 4242).elevation > here)
+            }
+        }
+    }
+
+    @Test("Water is a feature of some country, not of all of it")
+    func riversAreRare() {
+        let hexes = HexCoord.disc(radius: 14)
+        let wet = hexes.count { MapGenerator.river(at: $0, mapSeed: 4242) != nil }
+        let share = Double(wet) / Double(hexes.count)
+        // Measured at 8% (`MapProbe.whereTheWaterRuns`). The bounds are wide on
+        // purpose: this guards against the two failures that matter — a map
+        // with no water, and a map that is all water — not against the number.
+        #expect(share > 0.02 && share < 0.20)
+    }
+
+    @Test("The same seed runs the same water")
+    func riversAreDeterministic() {
+        for coord in HexCoord.disc(radius: 6) {
+            #expect(MapGenerator.river(at: coord, mapSeed: 909)
+                    == MapGenerator.river(at: coord, mapSeed: 909))
+        }
+    }
+
+    @Test("A road that crosses water costs more than the same road on dry ground")
+    func bridgesCostMore() throws {
+        let registry = try GameDataRegistry.bundled()
+        var dry = Region(name: "Dry", coord: HexCoord(0, 0), biomeID: registry.biomes.keys.sorted()[0])
+        var wet = Region(name: "Wet", coord: HexCoord(1, 0), biomeID: registry.biomes.keys.sorted()[0])
+        let onDry = RoadEngine.price(.road, here: dry, there: wet, existing: nil)
+        wet.river = RiverCourse(from: HexCoord(1, -1), to: HexCoord(2, 0))
+        let overWater = RoadEngine.price(.road, here: dry, there: wet, existing: nil)
+        #expect(overWater > onDry)
+        // …and following the bank does not.
+        dry.river = RiverCourse(from: nil, to: HexCoord(1, 0))
+        #expect(RoadEngine.price(.road, here: dry, there: wet, existing: nil) == onDry)
+    }
+
+    @Test("A way along the course follows the bank; anything else has to cross")
+    func alongTheBankNeedsNoBridge() throws {
+        let registry = try GameDataRegistry.bundled()
+        let biome = registry.biomes.keys.sorted()[0]
+        let upstream = Region(name: "Up", coord: HexCoord(0, 0), biomeID: biome,
+                              river: RiverCourse(from: nil, to: HexCoord(1, 0)))
+        let downstream = Region(name: "Down", coord: HexCoord(1, 0), biomeID: biome,
+                                river: RiverCourse(from: HexCoord(0, 0), to: nil))
+        let bank = Region(name: "Bank", coord: HexCoord(1, -1), biomeID: biome)
+        #expect(!RoadEngine.needsBridge(upstream, downstream))
+        #expect(RoadEngine.needsBridge(bank, downstream))
+        #expect(!RoadEngine.needsBridge(bank, Region(name: "Far", coord: HexCoord(2, -1),
+                                                    biomeID: biome)))
     }
 }

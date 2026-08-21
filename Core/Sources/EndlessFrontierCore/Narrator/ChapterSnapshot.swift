@@ -66,6 +66,9 @@ public struct ChapterSnapshot: Codable, Sendable, Equatable, Identifiable {
 
     public let drifts: [GeneDrift]
     public let events: [ChapterEvent]
+    /// The people the chapter buried — the whole reason the annals have names
+    /// in them at all. See `ChronicleFigure`.
+    public let lives: [ChronicleFigure]
 
     public var id: Int { firstYear }
     public var years: Int { lastYear - firstYear }
@@ -81,7 +84,7 @@ public struct ChapterSnapshot: Codable, Sendable, Equatable, Identifiable {
         populationFirst: Int, populationLast: Int, populationPeak: Int, peakYear: Int,
         deaths: [String: Int], moraleMean: Double, giniLast: Double, faithLast: Double,
         leanestYear: Int, leanestFood: Double,
-        drifts: [GeneDrift], events: [ChapterEvent]
+        drifts: [GeneDrift], events: [ChapterEvent], lives: [ChronicleFigure] = []
     ) {
         self.firstYear = firstYear
         self.lastYear = lastYear
@@ -99,5 +102,6 @@ public struct ChapterSnapshot: Codable, Sendable, Equatable, Identifiable {
         self.leanestFood = leanestFood
         self.drifts = drifts
         self.events = events
+        self.lives = lives
     }
 }

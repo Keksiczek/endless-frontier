@@ -98,7 +98,71 @@ public enum ChronicleEngine {
         if s.records.count > maxRecords {
             s.records.removeFirst(s.records.count - maxRecords)
         }
+        s.figures = remember(s, year: year, ticksPerYear: registry.config.ticksPerYear)
         return s
+    }
+
+    // MARK: - The people the annals remember
+
+    /// How old somebody has to get before the chronicle notices them.
+    ///
+    /// `PopulationEngine.baseLifespanYears` is sixty and genes stretch it to
+    /// about seventy-eight, so this is genuinely the far end of a life rather
+    /// than a number that would enrol half the colony.
+    public static let rememberedAge = 72
+    /// How many named people the annals keep. Two centuries of history at a
+    /// few remarkable lives a decade.
+    public static let maxFigures = 90
+
+    /// **Who the chronicle keeps, updated once a year.**
+    ///
+    /// Derived rather than plumbed. `PopulationEngine` runs per settlement and
+    /// never sees `WorldState`, so recording a death where it happens would
+    /// mean threading a world through the life cycle; instead the year boundary
+    /// — which already walks every settlement — notices that somebody it was
+    /// keeping is no longer among the living and writes the year down. What is
+    /// lost is the cause of death, which `WorldRecord.deaths` already tallies;
+    /// what is kept is a name, a span, and why they were noticed.
+    static func remember(
+        _ state: WorldState, year: Int, ticksPerYear: Int
+    ) -> [ChronicleFigure] {
+        let pawns = state.settlements.flatMap(\.pawns)
+        let living = Set(pawns.map(\.id))
+        var figures = state.figures
+
+        for index in figures.indices where figures[index].isAlive
+            && !living.contains(figures[index].id) {
+            figures[index].diedYear = year
+        }
+
+        let known = Set(figures.map(\.id))
+        // In id order, so a year that notices three people notices them in the
+        // same order on every replay — `pawns` reorders as colonists die.
+        let newly = pawns
+            .filter { !known.contains($0.id)
+                && $0.ageYears(ticksPerYear: ticksPerYear) >= rememberedAge }
+            .sorted { $0.id.uuidString < $1.id.uuidString }
+        for pawn in newly {
+            let age = pawn.ageYears(ticksPerYear: ticksPerYear)
+            figures.append(ChronicleFigure(id: pawn.id, name: pawn.name,
+                                           bornYear: year - age, standing: .elder))
+        }
+
+        // Over the cap, the dead go first and the oldest of those before the
+        // rest: somebody still walking about is not yet history.
+        if figures.count > maxFigures {
+            let over = figures.count - maxFigures
+            var dropped = 0
+            figures.removeAll { figure in
+                guard dropped < over, !figure.isAlive else { return false }
+                dropped += 1
+                return true
+            }
+            if figures.count > maxFigures {
+                figures.removeFirst(figures.count - maxFigures)
+            }
+        }
+        return figures
     }
 
     /// Reads the record and says something true about it. Pure — the same

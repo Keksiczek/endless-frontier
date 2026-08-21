@@ -51,7 +51,8 @@ public enum ExpansionEngine {
             kind: .outpost,
             regionID: regionID,
             foundedTick: s.tick,
-            pawns: settlers(seedBase: seedBase, language: s.language),
+            pawns: settlers(seedBase: seedBase, language: s.language,
+                            stock: Genes.mean(of: s.settlements.flatMap(\.pawns).map(\.genes))),
             buildings: buildings,
             storage: [.food: 40, .materials: 20],
             storageCapacity: .uniform(registry.config.defaultStorageCapacity),
@@ -79,9 +80,16 @@ public enum ExpansionEngine {
 
     /// The founding party of a new outpost — generated deterministically
     /// so each settlement is a real, living community from day one.
-    private static func settlers(seedBase: UInt64, language: GameLanguage) -> [Pawn] {
+    ///
+    /// **They are your own people.** An outpost is founded by colonists who
+    /// walked out of a town you already have, so they carry that realm's
+    /// character (`stock`) rather than being rolled fresh at mean 0.5, which
+    /// would quietly wash out every disposition the world had selected for the
+    /// moment you expanded.
+    private static func settlers(seedBase: UInt64, language: GameLanguage,
+                                 stock: Genes?) -> [Pawn] {
         (0..<6).map { PawnFactory.generate(seed: seedBase &+ UInt64($0) &* 0x9E37_79B9,
-                                           language: language) }
+                                           language: language, stock: stock) }
     }
 
     private static func settlerSeed(state: WorldState, region: Region) -> UInt64 {

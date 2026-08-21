@@ -26,6 +26,18 @@ public struct RoadNetwork: Codable, Sendable, Equatable {
 
     public var isEmpty: Bool { links.isEmpty }
 
+    /// Every way somebody in this world's own history laid.
+    ///
+    /// A map is not empty of roads at the founding — `RoadEngine.seedRuins`
+    /// puts ancient stone out in the wilderness before the first colonist
+    /// arrives. "Nothing has been built" and "there are no roads anywhere" were
+    /// the same question while that was true and are two questions now, and it
+    /// is the first one every caller actually meant.
+    public var built: [RoadLink] { all.filter { $0.origin == .built } }
+
+    /// True when nobody has laid anything — ruins do not count.
+    public var hasBuiltNothing: Bool { built.isEmpty }
+
     public func link(_ a: HexCoord, _ b: HexCoord) -> RoadLink? {
         links[RoadLink.key(a, b)]
     }
@@ -40,7 +52,8 @@ public struct RoadNetwork: Codable, Sendable, Equatable {
             // Never quietly downgrade a way somebody paid for.
             links[link.id] = RoadLink(a: existing.a, b: existing.b,
                                       grade: existing.grade,
-                                      condition: max(existing.condition, link.condition))
+                                      condition: max(existing.condition, link.condition),
+                                      origin: existing.origin)
             return
         }
         links[link.id] = link

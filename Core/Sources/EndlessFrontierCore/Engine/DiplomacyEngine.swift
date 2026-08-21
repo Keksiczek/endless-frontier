@@ -235,17 +235,31 @@ public enum DiplomacyEngine {
 
         // The settlers: those with least to lose go first. The rich have no
         // reason to walk into the wilderness.
+        //
+        // **And of those, the bold go first.** Walking out of the only roof you
+        // have ever known, into country nobody has mapped, is the one thing in
+        // this game that plainly asks for courage — and it is the only place
+        // courage can decide anything, because `GeneProbe` measured a colony
+        // where 142 of 143 deaths in two centuries were old age. Until the
+        // world is dangerous (see `DangerProbe`), a lifespan gene acts entirely
+        // after the last child is born and selection cannot see it at all.
+        //
+        // So the colony gets steadier as its boldest keep leaving, and the
+        // peoples out in the hills are founded by them — which is already how
+        // a seceding band's character is worked out, three lines below.
         let ordered: [Pawn]
         if aggrieved {
             ordered = poor.sorted { $0.wealth != $1.wealth ? $0.wealth < $1.wealth
-                                                           : $0.id.uuidString < $1.id.uuidString }
+                                                           : boldestFirst($0, $1) }
         } else if miserable {
-            ordered = adults.sorted { $0.mood < $1.mood }
+            ordered = adults.sorted { $0.mood != $1.mood ? $0.mood < $1.mood
+                                                         : boldestFirst($0, $1) }
         } else {
-            ordered = adults.sorted { $0.id.uuidString < $1.id.uuidString }
+            ordered = adults.sorted { boldestFirst($0, $1) }
         }
         let settlers = Array(ordered.prefix(settlersPerSecession))
         guard settlers.count >= 4 else { return s }
+
 
         let departing = Set(settlers.map(\.id))
         s.settlements[capitalIndex].pawns.removeAll { departing.contains($0.id) }
@@ -633,4 +647,14 @@ public enum DiplomacyEngine {
         h = (h ^ UInt64(bitPattern: Int64(year))) &* 0x0100_0000_01B3
         return h ^ (h >> 19)
     }
+
+    /// Who walks out first, all else equal: the boldest, and on a tie the same
+    /// colonist every replay. Never the array's own order — `pawns` reorders as
+    /// people die, and a choice that depends on it is not deterministic.
+    static func boldestFirst(_ a: Pawn, _ b: Pawn) -> Bool {
+        a.genes.courage != b.genes.courage
+            ? a.genes.courage > b.genes.courage
+            : a.id.uuidString < b.id.uuidString
+    }
+
 }

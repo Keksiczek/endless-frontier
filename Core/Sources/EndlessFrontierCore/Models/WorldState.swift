@@ -189,6 +189,9 @@ public struct WorldState: Codable, Sendable, Equatable {
     public var pendingLawProposal: LawProposal?
     /// One snapshot per in-game year — the chronicle's raw material.
     public var records: [WorldRecord]
+    /// The people the annals remember by name. Written at the year boundary by
+    /// `ChronicleEngine.record`; see `ChronicleFigure`.
+    public var figures: [ChronicleFigure] = []
     /// Neighbouring peoples who grew out of your own settlement.
     public var tribes: [Tribe]
     /// Events awaiting the Leader's decision (see `PendingEvent`).
@@ -225,6 +228,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         completedQuests: Set<String> = [],
         pendingLawProposal: LawProposal? = nil,
         records: [WorldRecord] = [],
+        figures: [ChronicleFigure] = [],
         tribes: [Tribe] = [],
         pendingEvents: [PendingEvent] = []
     ) {
@@ -258,6 +262,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         self.completedQuests = completedQuests
         self.pendingLawProposal = pendingLawProposal
         self.records = records
+        self.figures = figures
         self.tribes = tribes
         self.pendingEvents = pendingEvents
     }
@@ -280,8 +285,10 @@ public struct WorldState: Codable, Sendable, Equatable {
              researchedTechs, techCompletions, statModifiers, activeResearch,
              researchProgress, globalStats,
              unlockedBuildings, worldFlags, settlements, regions, tradeRoutes,
-             caravans, regionExpeditions, activeExpedition, eventHistory, eventCooldowns,
-             scheduledEffects, activeQuests, completedQuests, pendingLawProposal, records, tribes, pendingEvents
+             caravans, roads, roadTraffic,
+             regionExpeditions, activeExpedition, eventHistory, eventCooldowns,
+             scheduledEffects, activeQuests, completedQuests, pendingLawProposal, records,
+             figures, tribes, pendingEvents
         case actionStep, stewardEnabled
     }
 
@@ -314,6 +321,15 @@ public struct WorldState: Codable, Sendable, Equatable {
         worldFlags = value(.worldFlags, [:])
         settlements = value(.settlements, [])
         regions = value(.regions, [])
+        // **Roads were never saved.** They had no `CodingKeys` case, so the
+        // synthesised encoder skipped them and the decoder never looked — every
+        // way the colony built, and every mark its traffic had worn, went in the
+        // bin on the next save and came back an empty network. Caught by
+        // "Full round-trip is lossless" only once the map started *generating*
+        // with ancient ways on it, because until then the field it silently
+        // dropped happened to be empty in that test.
+        roads = value(.roads, RoadNetwork())
+        roadTraffic = value(.roadTraffic, [:])
         tradeRoutes = value(.tradeRoutes, [])
         caravans = value(.caravans, [])
         regionExpeditions = value(.regionExpeditions, [])
@@ -325,6 +341,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         completedQuests = value(.completedQuests, [])
         pendingLawProposal = (try? c.decodeIfPresent(LawProposal.self, forKey: .pendingLawProposal)) ?? nil
         records = value(.records, [])
+        figures = value(.figures, [])
         tribes = value(.tribes, [])
         pendingEvents = value(.pendingEvents, [])
     }
@@ -348,6 +365,8 @@ public struct WorldState: Codable, Sendable, Equatable {
         try c.encode(worldFlags, forKey: .worldFlags)
         try c.encode(settlements, forKey: .settlements)
         try c.encode(regions, forKey: .regions)
+        try c.encode(roads, forKey: .roads)
+        try c.encode(roadTraffic, forKey: .roadTraffic)
         try c.encode(tradeRoutes, forKey: .tradeRoutes)
         try c.encode(caravans, forKey: .caravans)
         try c.encode(regionExpeditions, forKey: .regionExpeditions)
@@ -359,6 +378,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         try c.encode(completedQuests, forKey: .completedQuests)
         try c.encodeIfPresent(pendingLawProposal, forKey: .pendingLawProposal)
         try c.encode(records, forKey: .records)
+        try c.encode(figures, forKey: .figures)
         try c.encode(tribes, forKey: .tribes)
         try c.encode(pendingEvents, forKey: .pendingEvents)
     }

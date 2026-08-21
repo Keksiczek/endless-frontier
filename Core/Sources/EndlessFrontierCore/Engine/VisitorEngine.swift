@@ -384,9 +384,26 @@ public enum VisitorEngine {
             var rng = SeededRNG(seed: householdSeed(visitor.id) ^ UInt64(bitPattern: Int64(tick)))
             var arrived: [String] = []
             for _ in 0..<VisitorKind.settler.partySize {
-                let pawn = PawnFactory.generate(seed: rng.next(), language: world.language)
+                // They come **from somewhere**: a people the world knows has a
+                // character, and the settlers who join you carry it in. Without
+                // this every arrival is a fresh roll at mean 0.5 and the
+                // colony's dispositions are reset toward the middle by the
+                // simple fact of having a road (see `Genes.drawn(from:using:)`).
+                // A named people first. Failing that, **the colony they are
+                // joining** — `settlerParty` invents an origin
+                // (`wandererOrigin`) that is not on the map, and a household off
+                // an unnamed road is people of this country, not a draw from a
+                // fixed distribution centred on 0.5. That fallback is the whole
+                // fix: the settler party is the volume path, and it always
+                // carries `tribeID: nil`.
+                let stock = visitor.tribeID
+                    .flatMap { id in world.tribes.first { $0.id == id } }?.genes
+                    ?? Genes.mean(of: s.pawns.map(\.genes))
+                let pawn = PawnFactory.generate(seed: rng.next(), language: world.language,
+                                                stock: stock)
                 arrived.append(pawn.name)
                 s.pawns.append(pawn)
+                s.arrivalTally += 1
             }
             let who = arrived.joined(separator: " a ")
             let whoEN = arrived.joined(separator: " and ")

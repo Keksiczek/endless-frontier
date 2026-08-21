@@ -69,6 +69,31 @@ public enum PopulationEngine {
         guard years > taperFrom else { return 1 }
         return max(0, (last - years) / (last - taperFrom))
     }
+    /// **How much a colonist's own fertility moves their chance of a child.**
+    ///
+    /// `fertilityAt` returns a flat 1 through the whole middle of a life, so
+    /// until this existed the gene did nothing at all for a couple in their
+    /// twenties — it moved the *edges* of a window most children are born well
+    /// inside. Measured over two centuries (`GeneProbe`), the selection
+    /// differential on fertility wandered around zero and the colony's mean
+    /// slid back to 0.5 from wherever its founders had started.
+    ///
+    /// A gene called `fertility` that does not change how often a child is
+    /// conceived is not a gene, it is a label. This is the coefficient that
+    /// makes it one.
+    ///
+    /// **At 0.5 the factor is exactly 1**, which matters: the average colony's
+    /// growth curve is untouched and every measured number about it still
+    /// stands. What changes is the *spread* — the ends of the distribution
+    /// differ by better than two to one, which is what selection needs to have
+    /// anything to work on.
+    static let fertilityGenePull = 1.2
+
+    /// This colonist's fertility as a multiplier on a couple's chance.
+    static func fertilityFactor(_ genes: Genes) -> Double {
+        max(0.1, 1 + (genes.fertility - 0.5) * fertilityGenePull)
+    }
+
     /// How long a pregnancy lasts, in ticks (half a year at 60 ticks/year).
     static let pregnancyTicks = 30
     // MARK: - Children come out of a bond, not out of a birth rate
@@ -203,6 +228,7 @@ public enum PopulationEngine {
                     .cs: "\(namesCS) přivedli na svět dítě — \(child.name)."
                 ]), subject: .pawn(child.id))
                 s.pawns.append(child)
+                s.birthTally += 1
                 // The bond remembers. It is what spaces the next one.
                 if let partnerID,
                    let bond = s.relationships.firstIndex(where: {
@@ -270,8 +296,12 @@ public enum PopulationEngine {
 
             // The couple is as fertile as the less fertile of them.
             let fertility = least * (able[0] + able[1]) / 2
+            // …and as fertile as they were born. Averaged over the pair rather
+            // than multiplied, so one unlucky partner halves a couple's chances
+            // instead of erasing them.
+            let born = (fertilityFactor(first.genes) + fertilityFactor(second.genes)) / 2
             let mood = min(1.4, max(0.3, (first.mood + second.mood) / 140))
-            let chance = perTick * readiness * fertility * mood * headroom * multiplier
+            let chance = perTick * readiness * fertility * born * mood * headroom * multiplier
             guard rng.nextUnit() < chance else { continue }
 
             // Whichever of them carries it — decided, not drawn, so a replay

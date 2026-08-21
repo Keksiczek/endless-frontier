@@ -21,10 +21,12 @@ struct ChronicleScreen: View {
                         empty
                     } else {
                         annals
+                        lives
                         insights
                         populationChart
                         spiritChart
                         geneChart
+                        storesChart
                         deathsChart
                     }
                     faithCard
@@ -129,6 +131,51 @@ struct ChronicleScreen: View {
         .foregroundStyle(Theme.textDim)
     }
 
+    // MARK: - The people
+
+    /// **Who the annals remember.** A chronicle of a civilisation with no names
+    /// in it is a spreadsheet; these are the founders and the elders, newest
+    /// death first, with the living at the top of the list where they belong.
+    @ViewBuilder
+    private var lives: some View {
+        let figures = game.world.figures.sorted { a, b in
+            if a.isAlive != b.isAlive { return a.isAlive }
+            return (a.diedYear ?? 0) > (b.diedYear ?? 0)
+        }
+        if !figures.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                SectionHeader(title: cs ? "Životy" : "Lives")
+                ForEach(figures.prefix(12)) { figure in
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Image(systemName: figure.isAlive ? "figure.stand" : "leaf")
+                            .font(.caption2)
+                            .foregroundStyle(figure.isAlive ? Theme.accent : Theme.textDim)
+                        Text(figure.name)
+                            .font(.system(.subheadline, design: .serif).weight(.semibold))
+                        Text(figure.standing.label.resolve(AppStrings.language))
+                            .font(.caption2).foregroundStyle(Theme.textDim)
+                        Spacer()
+                        Text(span(figure))
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(Theme.textDim)
+                    }
+                }
+                if figures.count > 12 {
+                    Text(cs ? "…a dalších \(figures.count - 12)"
+                            : "…and \(figures.count - 12) more")
+                        .font(.caption2).foregroundStyle(Theme.textDim)
+                }
+            }
+            .frontierCard()
+        }
+    }
+
+    /// "12–84" for somebody buried, "12–" for somebody still walking about.
+    private func span(_ figure: ChronicleFigure) -> String {
+        guard let died = figure.diedYear else { return "\(figure.bornYear)–" }
+        return "\(figure.bornYear)–\(died)"
+    }
+
     // MARK: - Charts
 
     private var populationChart: some View {
@@ -197,6 +244,35 @@ struct ChronicleScreen: View {
                      series: .value("s", name))
                 .foregroundStyle(color)
                 .interpolationMethod(.monotone)
+        }
+    }
+
+    /// What the colony had, year by year. `food` and `materials` have been in
+    /// every `WorldRecord` since the chronicle existed and nothing ever drew
+    /// them — which meant the one question a player asks about their own
+    /// history ("were we ever this short before?") had no answer on this
+    /// screen.
+    private var storesChart: some View {
+        chartCard(cs ? "Zásoby" : "Stores") {
+            Chart {
+                ForEach(records) { r in
+                    LineMark(x: .value("Year", r.year), y: .value("Value", r.food),
+                             series: .value("s", "food"))
+                        .foregroundStyle(Theme.good)
+                        .interpolationMethod(.monotone)
+                }
+                ForEach(records) { r in
+                    LineMark(x: .value("Year", r.year), y: .value("Value", r.materials),
+                             series: .value("s", "materials"))
+                        .foregroundStyle(Theme.accent)
+                        .interpolationMethod(.monotone)
+                }
+            }
+        } legend: {
+            HStack(spacing: 14) {
+                legendDot(Theme.good, cs ? "Jídlo" : "Food")
+                legendDot(Theme.accent, cs ? "Materiál" : "Materials")
+            }
         }
     }
 

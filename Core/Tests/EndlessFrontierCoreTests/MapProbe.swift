@@ -143,4 +143,82 @@ struct MapProbe {
         }
         print("──────────────────────────────────────────────────────────────\n")
     }
+
+    /// **Where the water runs, and how much of it there is.**
+    ///
+    /// The moisture percentiles first, then the count of hexes the river rule
+    /// actually puts water on — because a threshold picked against a
+    /// distribution nobody printed is how this file got a world with
+    /// twenty-nine plateaus and never a pass (rule 23).
+    @Test("Where the water runs")
+    func whereTheWaterRuns() {
+        let hexes = HexCoord.disc(radius: 20)
+        let wet = hexes.map { MapGenerator.land(at: $0, mapSeed: 4242).moisture }
+        func percentiles(_ name: String, _ values: [Double]) {
+            let sorted = values.sorted()
+            func at(_ p: Double) -> String {
+                String(format: "%+.3f", sorted[min(sorted.count - 1, Int(Double(sorted.count) * p))])
+            }
+            print("\(name)  p5 \(at(0.05))  p25 \(at(0.25))  p50 \(at(0.50))  "
+                  + "p75 \(at(0.75))  p95 \(at(0.95))  p99 \(at(0.99))")
+        }
+        print("\n── the water, \(hexes.count) hexes ──────────────────────────")
+        percentiles("moisture        ", wet)
+
+        percentiles("elevation       ", hexes.map { MapGenerator.land(at: $0, mapSeed: 4242).elevation })
+
+        let courses = hexes.compactMap { MapGenerator.river(at: $0, mapSeed: 4242) }
+        let sources = courses.count { $0.isSource }
+        let mouths = courses.count { $0.isMouth }
+        print(String(format: "\nat the shipped threshold: river hexes %d of %d (%.1f%%)"
+                     + "  ·  springs %d  ·  mouths %d",
+                     courses.count, hexes.count,
+                     Double(courses.count) / Double(hexes.count) * 100,
+                     sources, mouths))
+
+        // **The sweep, so the threshold is chosen against the shape of the
+        // whole map rather than against one number somebody liked.** A world
+        // where a third of the hexes hold a river is a world where a bridge is
+        // a flat tax; one where none do has no rivers at all. What is wanted is
+        // water rare enough to be a feature of *this* valley and common enough
+        // to be met.
+        print("\nmoisture   share   courses   longest")
+        for wetEnough in [0.06, 0.20, 0.30, 0.40, 0.45, 0.50, 0.60] {
+            var river: Set<String> = []
+            func key(_ c: HexCoord) -> String { "\(c.q),\(c.r)" }
+            func wet(_ c: HexCoord) -> Bool {
+                MapGenerator.land(at: c, mapSeed: 4242).moisture >= wetEnough
+            }
+            func course(_ c: HexCoord) -> (from: HexCoord?, to: HexCoord?)? {
+                guard wet(c) else { return nil }
+                let onward = MapGenerator.downhill(from: c, mapSeed: 4242)
+                let feeder = c.neighbors().first {
+                    wet($0) && MapGenerator.downhill(from: $0, mapSeed: 4242) == c
+                }
+                guard feeder != nil
+                        || MapGenerator.land(at: c, mapSeed: 4242).elevation
+                            >= MapGenerator.springElevation else { return nil }
+                guard feeder != nil || onward != nil else { return nil }
+                return (feeder, onward)
+            }
+            for coord in hexes where course(coord) != nil { river.insert(key(coord)) }
+            var lengths: [Int] = []
+            var walked: Set<String> = []
+            for coord in hexes {
+                guard let c = course(coord), c.from == nil, !walked.contains(key(coord))
+                else { continue }
+                var length = 1, here = coord
+                while let next = course(here)?.to, course(next) != nil,
+                      !walked.contains(key(next)) {
+                    walked.insert(key(next)); here = next; length += 1
+                    if length > 60 { break }
+                }
+                lengths.append(length)
+            }
+            print(String(format: "%8.2f  %5.1f%%  %8d  %8d", wetEnough,
+                         Double(river.count) / Double(hexes.count) * 100,
+                         lengths.count, lengths.max() ?? 0))
+        }
+        print("──────────────────────────────────────────────────────────────\n")
+    }
 }

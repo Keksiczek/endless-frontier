@@ -16,6 +16,10 @@ enum Theme {
     /// Cold. Its own colour rather than a blue-tinted `textDim`, because a
     /// temperature that can hurt somebody should not read as a caption.
     static let frost = Color(red: 0.55, green: 0.76, blue: 0.93)
+    /// Running water on the world map. Cooler and deeper than `frost`, which
+    /// is a *temperature* — a river is a thing you can stand beside, and the
+    /// two should never be mistaken for one another on the same map.
+    static let water = Color(red: 0.36, green: 0.58, blue: 0.78)
 
     static let cardRadius: CGFloat = 18
     static let spacing: CGFloat = 16

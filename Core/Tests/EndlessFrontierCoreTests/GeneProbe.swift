@@ -107,18 +107,24 @@ struct GeneProbe {
         print("""
 
         ── how lives end ──────────────────────────────────────────────
-        year   pop   born  died  |  causes (cumulative)
+        year   pop   born  came  died  |  causes (cumulative)
         """)
 
         for step in 1...20 {
             state = TickEngine.advance(state, ticks: 600, registry: registry).state
             guard let s = state.settlements.first else { break }
             let died = s.deathTallies.values.reduce(0, +)
-            let born = s.journal.entries.count { $0.kind == .birth }
+            // Off the tallies, not off the journal: `ColonyLog` is a
+            // hundred-and-forty-entry ring, so counting `.birth` entries in it
+            // undercounts the moment the colony outlives its own diary — and
+            // **`came` is the column that decides whether immigration can be
+            // moving the gene pool at all**. It read zero from the journal in
+            // every run, which is exactly what "nobody came" looks like.
             let causes = s.deathTallies.sorted { $0.value > $1.value }
                 .map { "\($0.key):\($0.value)" }.joined(separator: " ")
-            print(String(format: "%4d %5d %6d %5d  |  %@",
-                         step * 10, s.pawns.count, born, died, causes))
+            print(String(format: "%4d %5d %6d %5d %5d  |  %@",
+                         step * 10, s.pawns.count, s.birthTally, s.arrivalTally,
+                         died, causes))
         }
 
         // The fertile window against the lifespan, for the record — the two
