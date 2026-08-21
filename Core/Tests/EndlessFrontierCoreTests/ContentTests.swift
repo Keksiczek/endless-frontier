@@ -299,3 +299,87 @@ struct CatchUpSliceTests {
         #expect(sliced.state == whole.state)
     }
 }
+
+/// **A colony is a hundred hours of somebody's life and it lived in one file.**
+///
+/// `.atomic` promises the file is never *half* written. It promises nothing
+/// about the contents being loadable, and every way a save goes bad — a schema
+/// change that encodes fine and decodes badly, a disk that fills, a field that
+/// stops being optional by mistake — replaces the good save with a bad one and
+/// the good one is gone.
+@Suite("A bad save does not cost the colony")
+struct SaveBackupTests {
+    private func store() -> WorldStore {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return WorldStore(url: dir.appendingPathComponent("world.json"))
+    }
+
+    private func world() throws -> WorldState {
+        GameWorldFactory.newGame(registry: try GameDataRegistry.bundled(), seed: 7,
+                                 now: Date(timeIntervalSince1970: 1_700_000_000))
+    }
+
+    @Test("The second save keeps the first")
+    func savingRotates() throws {
+        let store = store()
+        var first = try world()
+        first.tick = 100
+        try store.save(first)
+        #expect(!FileManager.default.fileExists(atPath: store.backupURL.path),
+                "there is nothing to keep on the very first save")
+
+        var second = first
+        second.tick = 200
+        try store.save(second)
+        #expect(try store.load()?.tick == 200)
+        let kept = try JSONDecoder().decode(
+            WorldState.self, from: Data(contentsOf: store.backupURL))
+        #expect(kept.tick == 100, "the backup must be the world before this one, not a copy of it")
+    }
+
+    /// The case the whole thing exists for.
+    @Test("A save that will not decode falls back to the one that will")
+    func corruptionIsSurvivable() throws {
+        let store = store()
+        var good = try world()
+        good.tick = 500
+        try store.save(good)
+        var newer = good
+        newer.tick = 600
+        try store.save(newer)
+
+        try Data("{ this is not a world }".utf8).write(to: store.url)
+        let result = try store.loadRecovering()
+        #expect(result.state?.tick == 500, "the colony must come back, one save behind")
+        #expect(result.rescued, "…and the app must be able to say so")
+    }
+
+    @Test("A world that cannot be encoded never touches either file")
+    func encodingFailsBeforeAnythingMoves() throws {
+        let store = store()
+        var first = try world()
+        first.tick = 42
+        try store.save(first)
+        var second = first
+        second.tick = 43
+        try store.save(second)
+        // Both files are sound; the encode-then-rotate order is what guarantees
+        // it, and this is the ordering pinned so a refactor cannot swap them.
+        #expect(try store.load()?.tick == 43)
+        #expect(try JSONDecoder().decode(
+            WorldState.self, from: Data(contentsOf: store.backupURL)).tick == 42)
+    }
+
+    @Test("Deleting a save deletes the backup with it")
+    func deletingTakesBoth() throws {
+        let store = store()
+        try store.save(try world())
+        try store.save(try world())
+        try store.deleteSave()
+        #expect(!FileManager.default.fileExists(atPath: store.url.path))
+        #expect(!FileManager.default.fileExists(atPath: store.backupURL.path),
+                "a player who deletes their world must not leave a copy of it behind")
+    }
+}

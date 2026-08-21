@@ -1,0 +1,332 @@
+import Foundation
+
+/// **Who lays the roads, what takes them back, and where a track comes from.**
+///
+/// Three motions, and only the middle one costs the colony anything:
+///
+/// 1. **Traffic beats a track.** Nobody decides to build one. Where caravans,
+///    expeditions and supply runs actually go, the ground wears into a way —
+///    which is how the map earns its first roads without the player having to
+///    know roads exist. A track is 1.35× and free.
+/// 2. **The council makes a road.** `StewardEngine` runs the colony in the
+///    gaps, and `wanted(in:)` tells it which single edge is worth the most
+///    right now: the piece that carries the most traffic through the worst
+///    country. One edge at a time, paid for out of materials, so the network
+///    grows visibly and a half-built road is a real state of the world.
+/// 3. **Weather takes it back.** A way nobody mends returns to being country.
+///    Stone lasts, a levelled track does not, and a road at zero condition is
+///    removed rather than kept as a line on the map that means nothing.
+///
+/// Pure, like every engine here: `advanceOneTick(state, registry) -> WorldState`
+/// with no clock and no unseeded die.
+public enum RoadEngine {
+    /// How much traffic one journey lays down on each edge it uses.
+    static let trafficPerJourney = 1.0
+
+    /// Traffic at which the ground is a track.
+    ///
+    /// **Measured, not guessed** — and the first guess was wrong by more than
+    /// an order of magnitude. `RoadProbe` over two hundred years of a real
+    /// world: total traffic across the whole map, at the end, was **four**.
+    /// The threshold was sixty. Not one track could ever be worn, in any world,
+    /// ever: rule 6 in the plainest form it takes, a threshold beyond the reach
+    /// of the rate meant to cross it.
+    ///
+    /// The rate is what it is because journeys between *regions* are rare — a
+    /// caravan every few years, an expedition when the council has hands to
+    /// spare. So three crossings of the same edge is a path, which is about
+    /// right for a world where crossing it at all is an occasion.
+    static let trackThreshold = 3.0
+
+    /// Traffic decays, or a route abandoned two centuries ago still counts.
+    ///
+    /// Also re-measured. At the first value a lane lost three quarters of its
+    /// traffic over a long game, which on a *four*-journey budget is most of
+    /// the evidence — so the decay was erasing the signal faster than the world
+    /// could write it. Half-life of about four centuries now: long enough that
+    /// a lane in use stays warm, short enough that a road to a town that died
+    /// is eventually allowed to go under.
+    static let trafficDecayPerTick = 0.00003
+
+    /// How much of the colony's materials the council will sink into a road.
+    /// A road is worth having and never worth starving for.
+    static let reserveMultiple = 2.5
+
+    // MARK: - The tick
+
+    /// How much **two neighbouring towns wear the ground between them**, per
+    /// person, each time this is counted.
+    ///
+    /// The missing half, and it took three measurements to see because each of
+    /// the first two moved a number and changed nothing on the map. Traffic was
+    /// recorded only when a caravan was *dispatched* or a party sent out — and
+    /// in two hundred measured years of a five-town realm that is **thirteen
+    /// journeys**, because supply only moves when somebody is short and the
+    /// council only explores out of overflow. A threshold tuned against that is
+    /// tuning against noise.
+    ///
+    /// What actually wears a road is not freight. It is people going back and
+    /// forth between places that are near each other: to a market, to a
+    /// wedding, to a brother's farm. That is a **rate that exists as long as
+    /// the towns do**, it scales with how many people live in them, and it puts
+    /// roads exactly where roads belong — between neighbours.
+    ///
+    /// `TradeRoute` was the first guess at this and is not it: `tradeRoutes` is
+    /// empty in every world the harness plays, so the clause did nothing at all.
+    static let trafficPerPersonVisit = 0.0006
+
+    /// How often the neighbourly traffic is counted, in ticks.
+    ///
+    /// Not every tick: this pathfinds per settlement, and a realm that grows
+    /// over a long game would turn an offline catch-up into a bill nobody
+    /// asked for (rule 4 — put a cost on the think cadence and multiply, don't
+    /// compound). On the same cadence as `SupplyEngine` for the same reason.
+    static let visitInterval = 40
+
+    public static func advanceOneTick(
+        _ state: WorldState, registry: GameDataRegistry
+    ) -> WorldState {
+        var s = state
+        s = neighbourlyTraffic(s)
+        s = decayTraffic(s)
+        s = beatTracks(s)
+        s = weather(s, registry: registry)
+        return s
+    }
+
+    /// **People going back and forth between towns that are near each other.**
+    ///
+    /// Each settlement to its *nearest* neighbour, weighted by the smaller of
+    /// the two populations — a hamlet beside a city wears the road at a
+    /// hamlet's rate, because it is the hamlet's feet doing the walking.
+    ///
+    /// Nearest-only, so this is O(settlements) rather than O(settlements²): a
+    /// realm of twenty towns pathfinds twenty times, not a hundred and ninety.
+    /// The network that comes out is a chain between neighbours, which is what
+    /// a road network *is* before anybody plans one.
+    static func neighbourlyTraffic(_ state: WorldState) -> WorldState {
+        guard state.tick % visitInterval == 0, state.settlements.count > 1 else { return state }
+        var s = state
+        let seats = Dictionary(
+            s.settlements.compactMap { settlement -> (UUID, HexCoord)? in
+                guard let regionID = settlement.regionID,
+                      let region = s.regions.first(where: { $0.id == regionID })
+                else { return nil }
+                return (settlement.id, region.coord)
+            }) { first, _ in first }
+
+        for settlement in s.settlements {
+            guard let here = seats[settlement.id] else { continue }
+            // The nearest other town, by hexes — sorted by id on a tie so the
+            // choice cannot depend on array order (which is not stable).
+            let nearest = s.settlements
+                .filter { $0.id != settlement.id && seats[$0.id] != nil }
+                .min { a, b in
+                    let da = here.distance(to: seats[a.id]!)
+                    let db = here.distance(to: seats[b.id]!)
+                    return da == db ? a.id.uuidString < b.id.uuidString : da < db
+                }
+            guard let nearest, let there = seats[nearest.id] else { continue }
+            let walkers = Double(min(settlement.pawns.count, nearest.pawns.count))
+            guard walkers > 0 else { continue }
+            let byCoord = Dictionary(s.regions.map { ($0.coord, $0) }) { first, _ in first }
+            guard let route = s.roads.route(from: here, to: there, regions: byCoord) else { continue }
+            let laid = walkers * trafficPerPersonVisit * Double(visitInterval)
+            for (a, b) in zip(route.hexes, route.hexes.dropFirst()) {
+                s.roadTraffic[RoadLink.key(a, b), default: 0] += laid
+            }
+        }
+        return s
+    }
+
+    /// Records that somebody went this way. Called by whoever moves across the
+    /// map — the caravans, the supply runs, the expeditions — so the roads
+    /// appear where the world actually travels rather than where a table says.
+    public static func travelled(_ state: WorldState, route: [HexCoord]) -> WorldState {
+        guard route.count > 1 else { return state }
+        var s = state
+        for (from, to) in zip(route, route.dropFirst()) {
+            s.roadTraffic[RoadLink.key(from, to), default: 0] += trafficPerJourney
+        }
+        return s
+    }
+
+    static func decayTraffic(_ state: WorldState) -> WorldState {
+        guard !state.roadTraffic.isEmpty else { return state }
+        var s = state
+        for (key, value) in s.roadTraffic {
+            let next = value * (1 - trafficDecayPerTick)
+            if next < 0.01 { s.roadTraffic.removeValue(forKey: key) } else { s.roadTraffic[key] = next }
+        }
+        return s
+    }
+
+    /// Where the ground has been walked enough, it is a track.
+    static func beatTracks(_ state: WorldState) -> WorldState {
+        var s = state
+        let byCoord = coordIndex(s)
+        for (key, traffic) in s.roadTraffic where traffic >= trackThreshold {
+            guard s.roads.links[key] == nil,
+                  let ends = ends(of: key),
+                  byCoord[ends.0] != nil, byCoord[ends.1] != nil else { continue }
+            s.roads.lay(RoadLink(a: ends.0, b: ends.1, grade: .track))
+        }
+        return s
+    }
+
+    /// What the sky does to a way nobody is mending.
+    ///
+    /// Traffic *keeps* a road as well as making one: a way in daily use is
+    /// repaired by the people using it, and a way nobody takes goes under. So
+    /// the network thins back to what the world actually needs rather than
+    /// accumulating every road ever built, which is what would happen if wear
+    /// were flat.
+    static func weather(_ state: WorldState, registry: GameDataRegistry) -> WorldState {
+        var s = state
+        var ruined: [(HexCoord, HexCoord)] = []
+        for link in s.roads.all {
+            let traffic = s.roadTraffic[link.id] ?? 0
+            // A way in daily use is kept by the people using it. Scaled against
+            // `trackThreshold`, so this stays right when that number moves —
+            // which it already has once, by a factor of twenty.
+            let kept = min(0.9, traffic / trackThreshold * 0.5)
+            var next = link
+            next.condition = max(0, link.condition - link.grade.wearPerTick * (1 - kept))
+            if next.condition <= 0 {
+                // A track that fails is simply gone; anything dearer falls back
+                // to the grade below rather than vanishing, because the levelled
+                // ground under a paved road does not stop existing.
+                if let lower = fallback(from: link.grade) {
+                    s.roads.update(RoadLink(a: link.a, b: link.b, grade: lower, condition: 0.5))
+                } else {
+                    ruined.append((link.a, link.b))
+                }
+            } else {
+                s.roads.update(next)
+            }
+        }
+        for (a, b) in ruined { s.roads.remove(a, b) }
+        return s
+    }
+
+    static func fallback(from grade: RoadGrade) -> RoadGrade? {
+        switch grade {
+        case .track: return nil
+        case .road:  return .track
+        case .paved: return .road
+        // A railway that fails leaves its embankment, which is a road.
+        case .rail:  return .road
+        }
+    }
+
+    // MARK: - What the council should build
+
+    /// The one edge most worth making, and what it would cost.
+    ///
+    /// Scored by **traffic × how bad the country is**, because that is exactly
+    /// where a road pays: a made way across a plain saves a tenth of the
+    /// journey, and one through a fen or over a pass saves half of it. The
+    /// council therefore ends up building the pass — which is the piece a
+    /// player would have chosen, arrived at from the numbers rather than from a
+    /// list of special cases.
+    public static func wanted(
+        in state: WorldState, registry: GameDataRegistry
+    ) -> (link: RoadLink, cost: Double)? {
+        let byCoord = coordIndex(state)
+        var best: (link: RoadLink, cost: Double, score: Double)?
+
+        for (key, traffic) in state.roadTraffic.sorted(by: { $0.key < $1.key }) {
+            guard let ends = ends(of: key),
+                  let here = byCoord[ends.0], let there = byCoord[ends.1] else { continue }
+            let existing = state.roads.links[key]
+            guard let grade = nextGrade(after: existing?.grade, state: state) else { continue }
+
+            // The worse of the two hexes decides: a road is only as good as its
+            // hardest stretch, and it is the hard stretch you are paying to fix.
+            let country = max(TerrainCost.of(here), TerrainCost.of(there))
+            let gain = country - max(1, country / grade.speed)
+            let score = traffic * gain
+            guard score > 0 else { continue }
+            let cost = grade.cost * max(TerrainCost.buildingCost(here), TerrainCost.buildingCost(there))
+            if best == nil || score > best!.score {
+                best = (RoadLink(a: ends.0, b: ends.1, grade: grade), cost, score)
+            }
+        }
+        guard let best else { return nil }
+        return (best.link, best.cost)
+    }
+
+    /// The next grade this world may lay on an edge that is currently at
+    /// `current`. Gated by era *and* tech, so a road is something the colony
+    /// learns to make rather than something it always could.
+    ///
+    /// **One rung at a time.** This used to hand back the best grade the world
+    /// could reach, and `RoadProbe` showed what that does: by the time a colony
+    /// had any traffic worth acting on it was modern, so the council laid
+    /// *railways* across bare country and never built a road or a paved way in
+    /// two hundred years. Three of the four grades were content nothing could
+    /// ever produce.
+    ///
+    /// A colony beats a path, levels it into a road, paves the road and lays
+    /// rail on the route that has earned it. Each step is cheap enough to be
+    /// affordable when it is wanted, which is also rule 21: a ladder whose only
+    /// rung is the dearest one is a ladder nobody climbs.
+    static func nextGrade(after current: RoadGrade?, state: WorldState) -> RoadGrade? {
+        let ladder: [RoadGrade] = [.road, .paved, .rail]
+        func reachable(_ grade: RoadGrade) -> Bool {
+            guard state.era >= grade.era else { return false }
+            guard let tech = grade.requiresTech else { return true }
+            return state.researchedTechs.contains(tech)
+        }
+        return ladder.first { grade in
+            grade > (current ?? .track) && reachable(grade)
+        }
+    }
+
+    /// Lays one road, if the colony can pay for it out of what it can spare.
+    ///
+    /// **A rate, not a store** (rule 16): the reserve is a multiple of the
+    /// price of the thing being bought, never a share of the warehouse — a
+    /// granary multiplies the cap, and a reserve that grows with the cap is a
+    /// colony that can suddenly never afford anything again.
+    public static func build(
+        _ state: WorldState, registry: GameDataRegistry
+    ) -> WorldState {
+        guard let (link, cost) = wanted(in: state, registry: registry),
+              let index = state.settlements.indices.first(where: { _ in true })
+        else { return state }
+        let purse = state.settlements[index].storage[.materials]
+        guard purse >= cost * reserveMultiple else { return state }
+        guard let paid = EffectApplier.payCost([.materials: cost], from: state,
+                                               settlementID: state.settlements[index].id)
+        else { return state }
+
+        var s = paid
+        s.roads.lay(link)
+        let what = link.grade.displayName
+        s.settlements[index].journal.append(
+            tick: s.tick, kind: .construction,
+            text: LocalizedText(values: [
+                .en: "A \(what.resolve(.en).lowercased()) now runs to the next country.",
+                .cs: "K sousední krajině teď vede \(what.resolve(.cs).lowercased())."]))
+        return s
+    }
+
+    // MARK: - Helpers
+
+    static func coordIndex(_ state: WorldState) -> [HexCoord: Region] {
+        Dictionary(state.regions.map { ($0.coord, $0) }) { first, _ in first }
+    }
+
+    static func ends(of key: String) -> (HexCoord, HexCoord)? {
+        let halves = key.split(separator: "|")
+        guard halves.count == 2 else { return nil }
+        func coord(_ part: Substring) -> HexCoord? {
+            let parts = part.split(separator: ",")
+            guard parts.count == 2, let q = Int(parts[0]), let r = Int(parts[1]) else { return nil }
+            return HexCoord(q, r)
+        }
+        guard let a = coord(halves[0]), let b = coord(halves[1]) else { return nil }
+        return (a, b)
+    }
+}

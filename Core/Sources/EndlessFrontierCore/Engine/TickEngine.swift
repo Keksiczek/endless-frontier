@@ -31,6 +31,10 @@ public enum TickEngine {
             // One of your towns keeping another alive: a cart loaded and sent,
             // rather than an accountant's entry moving goods nobody carried.
             s = SupplyEngine.advanceOneTick(s, registry: registry)
+            // The ways between places: traffic beats a track, weather takes
+            // one back. Before the caravans move, so a road laid this tick is
+            // one they can already use.
+            s = RoadEngine.advanceOneTick(s, registry: registry)
             let caravanStep = CaravanEngine.advanceOneTick(s, registry: registry)
             s = caravanStep.state
             fired.append(contentsOf: caravanStep.fired)

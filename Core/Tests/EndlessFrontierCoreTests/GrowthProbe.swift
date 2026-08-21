@@ -28,7 +28,7 @@ struct GrowthProbe {
         ·   a year is \(registry.config.ticksPerYear) ticks \
         (\(String(format: "%.1f", Double(registry.config.ticksPerYear)
                   * registry.config.realSecondsPerTick / 3600))h real)
-        year   pop  adult  pairs  wed  fert  preg  chance   food  came   deaths
+        year   pop  adult  young  pairs  wed  fert  waste  slots  preg  chance   food  came   deaths
         """)
 
         for step in 1...20 {
@@ -56,6 +56,50 @@ struct GrowthProbe {
                         && y <= PopulationEngine.fertileMaxYears
                 }
             }
+            // **Three columns aimed at one hypothesis.** `fert` has run 1–4 for
+            // the whole second century of every measured run and nothing has
+            // ever said *why*. Bond formation is not the suspect — a pair meets
+            // about once a year, a chat is +7 against a decay of 2.1, and a
+            // wedding wants 45, so nine years does it.
+            //
+            // The suspect is `SocialEngine.encounter`, which picks two
+            // colonists **uniformly at random**. In an ageing colony most
+            // people are old, `maxRelationsPerPawn` is five, and a young
+            // adult's five slots fill with people they cannot have children
+            // with. `FestivalEngine.whoMeetsWhom` is the one thing that
+            // age-matches, and the fires are occasional.
+            //
+            //   young  adults inside the fertile window
+            //   waste  bonds joining a fertile adult to somebody past it
+            //   slots  share of fertile adults whose five slots are full
+            //
+            // If the hypothesis is right, `waste` climbs and `slots` saturates
+            // exactly while `fert` collapses. If it is wrong, they will not,
+            // and the fix is somewhere else — which is the point of looking
+            // before touching anything (rule 68).
+            func fertile(_ id: UUID) -> Bool {
+                guard let p = s.pawns.first(where: { $0.id == id }) else { return false }
+                let y = p.ageYears(ticksPerYear: ticksPerYear)
+                return y >= PopulationEngine.fertileMinYears
+                    && y <= PopulationEngine.fertileMaxYears
+            }
+            let young = s.pawns.count {
+                $0.isAdult(ticksPerYear: ticksPerYear) && fertile($0.id)
+            }
+            let wasted = s.relationships.count { bond in
+                fertile(bond.a) != fertile(bond.b)
+            }
+            let youngIDs = s.pawns
+                .filter { $0.isAdult(ticksPerYear: ticksPerYear) && fertile($0.id) }
+                .map(\.id)
+            var held: [UUID: Int] = [:]
+            for bond in s.relationships {
+                held[bond.a, default: 0] += 1
+                held[bond.b, default: 0] += 1
+            }
+            let saturated = youngIDs.count { (held[$0] ?? 0) >= SocialEngine.maxRelationsPerPawn }
+            let slotShare = youngIDs.isEmpty ? 0 : Double(saturated) / Double(youngIDs.count)
+
             let pregnant = s.pawns.count { $0.pregnancyTicksRemaining > 0 }
             // The best chance any one couple actually has this tick, so a zero
             // says "the roll never fires" rather than "the roll never happens".
@@ -84,9 +128,10 @@ struct GrowthProbe {
             // that costs — so this column is the one that decides whether the
             // curve has a future at all.
             let came = s.journal.entries.count { $0.kind == .arrival }
-            print(String(format: "%4d %5d %5d %6d %5d %5d %5d %8.5f %6d %5d   %@",
-                         step * 10, s.pawns.count, adults, couples, courting,
-                         fertilePairs, pregnant, best, Int(s.storage[.food]), came, deaths))
+            print(String(format: "%4d %5d %5d %6d %6d %5d %5d %6d %5.0f%% %5d %8.5f %6d %5d   %@",
+                         step * 10, s.pawns.count, adults, young, couples, courting,
+                         fertilePairs, wasted, slotShare * 100, pregnant, best,
+                         Int(s.storage[.food]), came, deaths))
         }
         print("──────────────────────────────────────────────────────────────\n")
     }

@@ -2916,3 +2916,70 @@ A fen eats easily and has no stone at all — massif weight 0.06, no iron in any
 seam — so a colony founded on one must trade or move for the whole industrial
 chain, and has peat to trade with. Its water lies through the middle of the map
 rather than along an edge, which no other country does.
+
+---
+
+## 13. 2026-08-21 — the world map gets a shape, and three cheap things
+
+Keks: *"klidně větší features"*. So the big one first.
+
+### 13.1 — roads
+
+The design is `docs/ROADS.md`; the short version is that the world map had no
+road concept, so **distance was a number nothing the colony did could change**.
+Three systems were the poorer for it in the same way — travel time was
+`hexes × 26`, `TradeRoute` named two ends and no path, and forty-six
+conveyances carried a `regionPace` of 0.7…50 that the world had nowhere to
+spend. The third is the "bank with no reader" shape outright.
+
+A road is **per hex-edge**. You do not build a road to the mountains, you build
+the piece between here and the next hex — so a half-finished road is a real
+state, a road can be cut, and the network grows where the world actually goes
+rather than where a designer drew a line.
+
+The council's rule is one line and does all the work: score every edge by
+**traffic × how bad the country is**, and build the best. A made way across a
+plain saves a tenth of the journey and one through a fen or over a pass saves
+half of it, so the council ends up building the pass — the piece a player would
+have chosen, arrived at from the numbers instead of from a list of cases.
+
+### 13.2 — what the probe found, which is the point of having one
+
+`RoadTests` (20) proved the system reachable *in the API*. `RoadProbe` walked
+two hundred years of a real world and found three faults, none of which any
+unit test could have seen:
+
+| Measured | Fault |
+|---|---|
+| total traffic at year 200: **4** | `trackThreshold` was **60**. No track could ever be worn, in any world, ever |
+| track 0, road 0, paved 0, rail 4 | `nextGrade` returned the *top* rung, so the council laid railways across bare country and never built a road |
+| worst condition 0.04 | wear was scaled against the unreachable threshold, so nothing was ever "kept" |
+| journey saved: **0–4%** | the network did nothing at all |
+
+All three are the same family this project keeps finding — rules 65, 66, 67 —
+and the first was written the same afternoon as a rule warning about it.
+Re-measured after: see `RoadProbe`, and **read it before touching a number.**
+
+A fourth, found by the wiring test: `RegionExpeditionEngine` had a
+`routeHexes` helper and **never called it**. My own bank with no reader, in the
+system whose doc warns about them.
+
+### 13.3 — the cheap things
+
+- **A colony lived in one file.** `.atomic` promises a save is never *half*
+  written and promises nothing about it being loadable. `WorldStore` rotates to
+  `.bak` and falls back when the current file will not decode; the order —
+  encode, rotate, write — is what guarantees at least one loadable world
+  survives any single failure. `loadRecovering()` says which one you got, so the
+  app can tell the player rather than silently rewinding a session.
+- **Three hundred and eleven recipes in one flat alphabetical list.** Grouped by
+  what comes out, affordable first, with a search that collapses the groups
+  while it is in use — grouping is for browsing and a search is not browsing,
+  the same reasoning as §9.8.
+- **The game had no introduction of any kind.** `FirstRunView`: four cards, once,
+  in the game's own voice. Not a tutorial with arrows — the whole proposition is
+  that it goes on without you, and hand-holding steps would promise something
+  the rest of it does not keep. The four things that are not guessable: a tick
+  is two real minutes, the council runs it in the gaps, food is a chain (a full
+  granary and a hungry colony means *you have no cook*), and everything drawn is
+  really there.

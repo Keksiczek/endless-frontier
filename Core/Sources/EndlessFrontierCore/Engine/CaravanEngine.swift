@@ -43,8 +43,48 @@ public enum CaravanEngine {
         let pace = registry.map {
             StableEngine.bestRegionPace(origin, crossing: crossed, registry: $0)
         } ?? 1
-        let plain = Double(o.coord.distance(to: d.coord) * ticksPerHex)
-        return max(minTravelTicks, Int((plain / max(0.1, pace)).rounded()))
+        // **Over the roads, where there are any.** `RoadNetwork.route` returns
+        // the journey in plain-hex equivalents, so hard country costs more than
+        // one hex and a made way through it costs less — which is the whole
+        // reason to build one. An empty network routes across open ground and
+        // comes back to what this used to be.
+        //
+        // The route already knows what is travelling, so the pace is **not**
+        // divided out again here: the first cut of this did, and a lorry got
+        // its own speed applied twice.
+        let plain = Double(ticksPerHex) * crossing(from: o, to: d, in: state, pace: pace)
+        return max(minTravelTicks, Int(plain.rounded()))
+    }
+
+    /// The journey in plain-hexes **for this traveller**: over the network if it
+    /// can be routed, and straight-line otherwise (an unexplored corner of the
+    /// map, or a world that has not laid a stone yet).
+    ///
+    /// The mover's own speed is applied inside `RoadNetwork.stepCost`, where it
+    /// can differ by what it is standing on — which is the point of paving. The
+    /// fallback has no ground to stand on, so it divides plainly.
+    static func crossing(
+        from origin: Region, to destination: Region, in state: WorldState, pace: Double
+    ) -> Double {
+        let byCoord = Dictionary(state.regions.map { ($0.coord, $0) }) { first, _ in first }
+        let mover: RoadNetwork.Mover = pace > 1.05 ? .wheeled(pace: pace) : .onFoot
+        if let route = state.roads.route(from: origin.coord, to: destination.coord,
+                                         regions: byCoord, mover: mover) {
+            return route.cost
+        }
+        return Double(origin.coord.distance(to: destination.coord)) / max(0.1, pace)
+    }
+
+    /// The hexes a caravan will actually pass through, so whoever dispatched it
+    /// can record that somebody went that way. Roads appear where the world
+    /// travels; this is the half that says where that was.
+    public static func routeHexes(
+        from origin: Settlement, to destination: Settlement, in state: WorldState
+    ) -> [HexCoord] {
+        guard let o = region(of: origin, in: state),
+              let d = region(of: destination, in: state) else { return [] }
+        let byCoord = Dictionary(state.regions.map { ($0.coord, $0) }) { first, _ in first }
+        return state.roads.route(from: o.coord, to: d.coord, regions: byCoord)?.hexes ?? []
     }
 
     /// The biomes a road between two regions runs through.
@@ -129,6 +169,11 @@ public enum CaravanEngine {
             totalTicks: ticks
         )
         s.caravans.append(caravan)
+        // Somebody went this way. Enough of them and the ground is a track;
+        // enough traffic through bad country and the council pays to make it a
+        // road. See `RoadEngine`.
+        s = RoadEngine.travelled(s, route: routeHexes(from: s.settlements[oi],
+                                                     to: destination, in: s))
         return s
     }
 

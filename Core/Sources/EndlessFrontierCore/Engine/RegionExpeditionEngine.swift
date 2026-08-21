@@ -62,6 +62,12 @@ public enum RegionExpeditionEngine {
             s.settlements[seat].pawns[index].expeditionID = expedition.id
         }
         s.regionExpeditions.append(expedition)
+        // They walked it, so the ground remembers. Without this the roads only
+        // ever appear along trade lanes and the country a colony *explores*
+        // never wears a path — which is exactly the "bank with no reader" the
+        // generation handoff is about, in my own new system.
+        s = RoadEngine.travelled(s, route: routeHexes(from: s.settlements[seat],
+                                                     to: target, in: s))
         s.settlements[seat].journal.append(
             tick: s.tick, kind: .work,
             text: LocalizedText(values: [
@@ -79,8 +85,25 @@ public enum RegionExpeditionEngine {
               let seat = state.regions.first(where: { $0.id == home }) else {
             return travelTicksPerHex * 3
         }
-        let hexes = seat.coord.distance(to: target.coord)
-        return min(travelCeiling, max(travelTicksPerHex, hexes * travelTicksPerHex))
+        // Over the roads where there are any. `route` answers in plain-hex
+        // equivalents, so a party crossing a fen pays for the fen and a party
+        // on a made way through it does not — the reason a colony builds one.
+        let byCoord = Dictionary(state.regions.map { ($0.coord, $0) }) { first, _ in first }
+        let crossing = state.roads.route(from: seat.coord, to: target.coord,
+                                         regions: byCoord)?.cost
+            ?? Double(seat.coord.distance(to: target.coord))
+        let ticks = Int((crossing * Double(travelTicksPerHex)).rounded())
+        return min(travelCeiling, max(travelTicksPerHex, ticks))
+    }
+
+    /// The hexes a party sent to `target` will walk, for `RoadEngine.travelled`.
+    static func routeHexes(
+        from settlement: Settlement, to target: Region, in state: WorldState
+    ) -> [HexCoord] {
+        guard let home = settlement.regionID,
+              let seat = state.regions.first(where: { $0.id == home }) else { return [] }
+        let byCoord = Dictionary(state.regions.map { ($0.coord, $0) }) { first, _ in first }
+        return state.roads.route(from: seat.coord, to: target.coord, regions: byCoord)?.hexes ?? []
     }
 
     /// Who goes: fit adults nobody at home is depending on, best scouts first.

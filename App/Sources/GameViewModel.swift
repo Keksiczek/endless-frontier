@@ -1215,6 +1215,88 @@ final class GameViewModel {
             .sorted { $0.name.resolve(AppStrings.language) < $1.name.resolve(AppStrings.language) }
     }
 
+    /// What the player has typed into the bench's search field.
+    ///
+    /// On the view model rather than in the view so it survives the panel being
+    /// rebuilt, which SwiftUI does freely — a search box that clears itself
+    /// every time the world ticks is worse than no search box.
+    var recipeSearch: String = ""
+
+    /// **The bench, in an order a person can use.**
+    ///
+    /// Three hundred and eleven recipes in one flat alphabetical list is a
+    /// wall: the thing you want is never near the top, and nothing tells you
+    /// which of them you could make right now. So:
+    ///
+    /// - **grouped by what comes out** — arms, armour, trinkets, materials —
+    ///   because a player opens this panel wanting a *kind* of thing;
+    /// - **what you can afford first** inside each group, since a recipe you
+    ///   can act on is worth more than one you cannot;
+    /// - and a **search** that, while it is in use, collapses the groups into
+    ///   one flat list worst-first. Grouping is for browsing, and a search is
+    ///   not browsing — the same reasoning as the colonists panel (§9.8).
+    var recipeGroups: [(title: String, recipes: [RecipeDefinition])] {
+        let query = recipeSearch.trimmingCharacters(in: .whitespaces).lowercased()
+        let all = recipesHere
+        guard query.isEmpty else {
+            let hits = all.filter { recipe in
+                recipe.name.resolve(AppStrings.language).lowercased().contains(query)
+                    || recipe.outputItemID.contains(query)
+                    || recipe.materials.keys.contains { $0.contains(query) }
+            }
+            return hits.isEmpty ? [] : [(searchTitle, byAffordability(hits))]
+        }
+        var buckets: [(String, [RecipeDefinition])] = []
+        for group in RecipeGroup.allCases {
+            let members = all.filter { group.contains($0, registry: registry) }
+            guard !members.isEmpty else { continue }
+            buckets.append((group.title, byAffordability(members)))
+        }
+        return buckets
+    }
+
+    private var searchTitle: String {
+        AppStrings.language == .cs ? "Nalezeno" : "Found"
+    }
+
+    /// Affordable first, then alphabetically. Stable, so the list does not
+    /// reshuffle under a thumb every time a hauler drops off an ingot.
+    private func byAffordability(_ recipes: [RecipeDefinition]) -> [RecipeDefinition] {
+        recipes.sorted { a, b in
+            let (ca, cb) = (canCraft(a), canCraft(b))
+            if ca != cb { return ca }
+            return a.name.resolve(AppStrings.language) < b.name.resolve(AppStrings.language)
+        }
+    }
+
+    /// What a recipe makes, as one of the four things a player comes here for.
+    /// Read off the *output item*, so a recipe cannot end up in a group that
+    /// disagrees with what it produces.
+    enum RecipeGroup: CaseIterable {
+        case arms, armour, goods, materials
+
+        func contains(_ recipe: RecipeDefinition, registry: GameDataRegistry) -> Bool {
+            guard let item = registry.item(recipe.outputItemID) else { return self == .goods }
+            switch self {
+            case .arms:      return item.equipSlot == .weapon
+            case .armour:    return item.equipSlot == .armor
+            case .materials: return item.slot == .material
+            case .goods:     return item.equipSlot != .weapon && item.equipSlot != .armor
+                                  && item.slot != .material
+            }
+        }
+
+        var title: String {
+            let cs = AppStrings.language == .cs
+            switch self {
+            case .arms:      return cs ? "Zbraně" : "Arms"
+            case .armour:    return cs ? "Zbroj" : "Armour"
+            case .goods:     return cs ? "Zboží" : "Goods"
+            case .materials: return cs ? "Materiál" : "Materials"
+            }
+        }
+    }
+
     /// Whether everything a recipe needs is on hand at the selected settlement.
     func canCraft(_ recipe: RecipeDefinition) -> Bool {
         CraftingEngine.canCraft(recipe, in: world,

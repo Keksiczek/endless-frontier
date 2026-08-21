@@ -209,6 +209,7 @@ Read these three, in order, when picking work up cold:
 | Architecture rules | `docs/architecture/LAYERS.md` |
 | Footprints, lots, pawn-like animals | `docs/RIMWORLD_LAYER.md` |
 | Mounts, carts and later transport | `docs/MOUNTS_AND_VEHICLES.md` |
+| Roads, chokepoints and what rail costs | `docs/ROADS.md` |
 | Event / tech schemas | `docs/data-schemas/` |
 
 **Historical, do not plan from:** `ROADMAP.md`, `NEXT_STEPS.md`, `HANDOFF.md`.

@@ -160,6 +160,20 @@ public struct WorldState: Codable, Sendable, Equatable {
     public var regions: [Region]
     public var tradeRoutes: [TradeRoute]
     public var caravans: [Caravan]
+    /// **Every made way between two hexes.** See `RoadNetwork`.
+    ///
+    /// Defaulted and non-optional: a save written before the world had roads
+    /// decodes to an empty network, which is exactly what it had (rule 3).
+    public var roads: RoadNetwork = RoadNetwork()
+    /// How much traffic each hex-edge has carried, keyed like a `RoadLink`.
+    ///
+    /// This is what makes roads appear *where the world actually goes* rather
+    /// than where a table says they should: caravans, supply runs and
+    /// expeditions all record their route, the ground wears into a track, and
+    /// the council pays to make a road out of the piece carrying the most
+    /// traffic through the worst country.
+    public var roadTraffic: [String: Double] = [:]
+
     /// Parties out of the valley entirely, walking to a ruin or an anomaly
     /// somewhere on the world map. See `RegionExpeditionEngine`.
     public var regionExpeditions: [RegionExpedition]

@@ -138,6 +138,20 @@ a generator does texture well and melody badly. See §11.30.
 
 ---
 
+### 2.6 ~~The world map has no roads~~ — **done 2026-08-21**
+
+`RoadLink` / `RoadNetwork` / `RoadEngine`, and `docs/ROADS.md` for the whole
+design. What it closed: travel time was `hexes × 26` and nothing the colony did
+could change it; `TradeRoute` named two ends and no path; and forty-six
+conveyances carried a `regionPace` of 0.7…50 that the world had nowhere to
+spend. Roads appear where the world actually goes — caravans and expeditions
+record their route, traffic wears a track, and the council pays to make a road
+out of whichever edge carries the most traffic through the worst country.
+
+Still open there: bridges, cutting a road in war, infrastructure ruins, and a
+road the *player* lays rather than the council. Measure with `RoadProbe` before
+touching a number.
+
 ## 3. What the design promises and has not delivered
 
 ### 3.1 Layer 3 — the narrator
@@ -168,9 +182,9 @@ embassy, a tribute, a joint venture, a border they can see on the map.
 
 | Thing | State | Worth |
 |---|---|---|
-| Onboarding | none — a new player is dropped into a village with a build bar | high |
+| Onboarding | **done 2026-08-21** — `FirstRunView`: four cards, the four things that are not guessable | done |
 | Accessibility | 21 files carry labels; the canvas itself is unlabelled to VoiceOver | medium |
-| Saves | one file, no slots, no backup, no export; a bad write is unrecoverable | medium |
+| Saves | **backup done 2026-08-21** — `.bak` rotation and a fallback when the save will not decode. Slots and export still missing | partly |
 | Haptics | none | low |
 | App icon | one 1024 png, present | done |
 | Release profiling | never done; all timings so far are debug builds | high before ship |

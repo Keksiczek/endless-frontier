@@ -36,12 +36,78 @@ struct CraftingPanel: View {
                 }
                 if !recipes.isEmpty {
                     SectionHeader(title: cs ? "Výroba" : "Crafting")
-                    ForEach(recipes) { recipe in
-                        row(recipe)
+                    // Three hundred and eleven recipes is a wall without this.
+                    // See `GameViewModel.recipeGroups`.
+                    search
+                    let groups = game.recipeGroups
+                    if groups.isEmpty {
+                        Text(cs ? "Nic takového se tu nedělá."
+                                : "Nothing here is made of that.")
+                            .font(.caption)
+                            .foregroundStyle(Theme.textDim)
+                    }
+                    ForEach(groups, id: \.title) { group in
+                        GroupHeader(title: group.title, count: group.recipes.count)
+                        ForEach(group.recipes) { recipe in
+                            row(recipe)
+                        }
                     }
                 }
             }
             .frontierCard()
+        }
+    }
+
+    /// A field, and a way out of it. Never a magnifying glass on its own — a
+    /// search you cannot see the contents of is one you forget you typed in.
+    private var search: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "magnifyingglass")
+                .font(.caption2)
+                .foregroundStyle(Theme.textDim)
+            TextField(cs ? "Hledat recept nebo surovinu" : "Search a recipe or material",
+                      text: $game.recipeSearch)
+                .font(.caption)
+                .textFieldStyle(.plain)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+            if !game.recipeSearch.isEmpty {
+                Button {
+                    game.recipeSearch = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.textDim)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(cs ? "Zrušit hledání" : "Clear search")
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(Theme.ink.opacity(0.35), in: RoundedRectangle(cornerRadius: 7))
+    }
+
+    /// Quieter than a `SectionHeader` — these sit *inside* Crafting rather
+    /// than beside it, and a second full-weight header would read as a peer.
+    private struct GroupHeader: View {
+        let title: String
+        let count: Int
+
+        var body: some View {
+            HStack(spacing: 6) {
+                Text(title.uppercased())
+                    .font(.caption2.weight(.semibold))
+                    .kerning(0.8)
+                    .foregroundStyle(Theme.textDim)
+                Text("\(count)")
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(Theme.textDim.opacity(0.7))
+                Rectangle()
+                    .fill(Theme.textDim.opacity(0.18))
+                    .frame(height: 1)
+            }
+            .padding(.top, 2)
         }
     }
 

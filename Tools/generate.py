@@ -623,6 +623,13 @@ def do_merge(draft_path: Path) -> None:
 
     target = path_for(kind)
     backup = target.with_suffix(".json.before-merge")
+    # A run killed between the copy and the outcome leaves its backup behind,
+    # and `GameData` is a **bundled resource directory** — so the stray file is
+    # copied into the app, shows up in `git status` as something to commit, and
+    # sits there looking like content. Two of them had been in the tree for
+    # days. Sweep before writing a new one.
+    for stale in target.parent.glob("*.json.before-merge"):
+        stale.unlink()
     shutil.copy(target, backup)
     merged = load(target) + draft
     target.write_text(json.dumps(merged, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

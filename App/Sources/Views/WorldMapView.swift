@@ -75,6 +75,29 @@ struct WorldMapView: View {
         TimelineView(.animation(minimumInterval: 0.25)) { timeline in
             Canvas { ctx, _ in
                 let t = timeline.date.timeIntervalSinceReferenceDate
+                // **The ways themselves, under everything else.** The Core has
+                // owned a road network since `RoadEngine`; nothing drew it, so
+                // the one thing the colony builds *on the world map* was
+                // invisible. Under the trade threads on purpose: a route is a
+                // contract and a road is the ground it runs over.
+                for link in game.world.roads.all {
+                    let a = tilePosition(link.a)
+                    let b = tilePosition(link.b)
+                    var way = Path()
+                    way.move(to: a)
+                    way.addLine(to: b)
+                    let look = RoadStyle.of(link)
+                    ctx.stroke(way, with: .color(look.color),
+                               style: StrokeStyle(lineWidth: look.width, lineCap: .round,
+                                                  dash: look.dash))
+                    // A railway is two rails and its sleepers, so it cannot be
+                    // mistaken for a road that happens to be wider.
+                    if link.grade == .rail {
+                        ctx.stroke(way, with: .color(look.color.opacity(0.55)),
+                                   style: StrokeStyle(lineWidth: look.width * 2.4,
+                                                      dash: [1.5, 4]))
+                    }
+                }
                 for route in game.tradeRoutes {
                     guard let a = position(ofSettlement: route.fromID),
                           let b = position(ofSettlement: route.toID) else { continue }
@@ -105,6 +128,24 @@ struct WorldMapView: View {
             }
         }
         .allowsHitTesting(false)
+    }
+
+    /// How each grade of way is drawn.
+    ///
+    /// A track is a broken hairline, a road is solid, paving is heavier and
+    /// warmer, and rail has its sleepers. **Condition fades the whole line**,
+    /// so a network going under looks like one — the same reading
+    /// `RoadLink.effectiveSpeed` gives the simulation.
+    private enum RoadStyle {
+        static func of(_ link: RoadLink) -> (color: Color, width: CGFloat, dash: [CGFloat]) {
+            let kept = max(0.25, min(1, link.condition))
+            switch link.grade {
+            case .track: return (Theme.boneFaint.opacity(0.42 * kept), 1.1, [2, 4])
+            case .road:  return (Theme.boneDim.opacity(0.62 * kept), 1.8, [])
+            case .paved: return (Theme.bone.opacity(0.72 * kept), 2.6, [])
+            case .rail:  return (Theme.textDim.opacity(0.78 * kept), 1.4, [])
+            }
+        }
     }
 
     /// Where a settlement's hex sits on the virtual canvas.

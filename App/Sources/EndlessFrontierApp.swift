@@ -2,6 +2,12 @@ import SwiftUI
 
 @main
 struct EndlessFrontierApp: App {
+    /// Whether this person has read the introduction. `@AppStorage`, not
+    /// `WorldState`: what somebody has read is a fact about them and not about
+    /// the world, and a world rolled back must not un-teach them (rule 5).
+    @AppStorage("hasSeenFirstRun") private var hasSeenFirstRun = false
+    @State private var showFirstRun = false
+
     @State private var game = GameViewModel.bootstrapped()
     @Environment(\.scenePhase) private var scenePhase
     /// When the current session began, so notification permission is asked for
@@ -77,6 +83,26 @@ struct EndlessFrontierApp: App {
                 }
                 .overlay {
                     if game.isCatchingUp { CatchUpOverlay(game: game) }
+                }
+                // The first two minutes. Over the catch-up overlay, because a
+                // brand-new world has nothing to catch up on and a returning
+                // player has already read this.
+                .overlay {
+                    if showFirstRun && !game.isCatchingUp {
+                        FirstRunView(isPresented: Binding(
+                            get: { showFirstRun },
+                            set: { still in
+                                showFirstRun = still
+                                if !still { hasSeenFirstRun = true }
+                            }))
+                    }
+                }
+                .task {
+                    // Only ever on a world nobody has played yet. A save that
+                    // exists is a player who has been here, whatever the flag
+                    // says — reinstalling the app should not lecture somebody
+                    // about their own colony.
+                    showFirstRun = !hasSeenFirstRun && game.world.tick == 0
                 }
         }
     }

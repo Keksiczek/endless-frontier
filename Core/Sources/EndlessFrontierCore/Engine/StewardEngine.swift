@@ -125,6 +125,13 @@ public enum StewardEngine {
             // does not come back: a daughter town on charted ground.
             s = foundIfItCan(s, index: index, registry: registry)
         }
+        // …and the ways between them. Once per pass rather than per settlement:
+        // a road belongs to the world, and `RoadEngine.wanted` already picks the
+        // single edge carrying the most traffic through the worst country.
+        //
+        // Last, deliberately. A colony short of beds should raise a roof before
+        // it paves anything, and everything above it takes what it needs first.
+        s = RoadEngine.build(s, registry: registry)
         return s
     }
 

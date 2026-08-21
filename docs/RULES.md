@@ -637,3 +637,53 @@ fires, do the arithmetic before you rewrite the mechanic.
    `bays` was itself making a 2-wide palisade and a 3-wide stone wall come out
    identical. `StructureVariant.signature` makes "no two are drawn alike" a
    thing a test can fail.
+65. **A budget for a bank you have not measured is a guess, and the guess was
+   wrong by twenty times.** `RoadEngine.trackThreshold` was sixty crossings —
+   chosen to feel like "a busy lane wears a path inside a normal game". Total
+   traffic across the *whole map* after two hundred measured years was **four**.
+   Not one track could ever have been worn, in any world, ever. Rule 6 in the
+   plainest form it takes, in a system written the same day as a rule about it.
+   The decay compounded it: the first value erased three quarters of the
+   evidence over a long game, on a four-journey budget. **Journeys between
+   regions are rare** — a caravan every few years, an expedition when the
+   council has hands to spare — so any threshold counting them belongs in single
+   figures. `RoadProbe` is the instrument; run it before touching a number.
+66. **A ladder that hands back its top rung has only one rung.**
+   `RoadEngine.nextGrade` returned the best grade the world could reach, which
+   sounds like generosity and is not: by the time a colony has traffic worth
+   acting on it is modern, so the council laid **railways across bare country**
+   and never built a road or a paved way in two centuries. Three of the four
+   grades were content nothing could ever produce — the motion-bank shape (rule
+   47) wearing a progression as a disguise. Return the *next* rung: a colony
+   beats a path, levels it, paves it, and rails the route that has earned it.
+67. **"Nothing was recorded" and "nothing happened" are the same number and
+   different bugs.** A wiring test that asserts only `traffic > 0` fails
+   identically whether the engine forgot to record the journey or the journey
+   never took place — and the first cut of `RoadWiringTests` was the second: a
+   caravan needs an escort, `canDispatch` refused an empty one, and the test
+   read as a broken engine for as long as it took to look. **Assert the
+   precondition first** (`caravans.count == 1`), then the thing you came for.
+68. **A metric aimed at the wrong journey argues convincingly for breaking
+   something that works.** `RoadProbe` reported a 5% saving through four rounds
+   of tuning, and each round I changed a threshold to chase it. The roads were
+   fine: the metric measured the longest journey to any *explored region* — a
+   hex of wilderness at the edge of the map that nothing would ever build
+   toward — while the roads between the towns were real and climbing the whole
+   ladder from track to rail. The columns that told the truth were the ones
+   added last, `busiest` and `routes`, because **a total says nothing about how
+   it is spread** and a track is worn by traffic on one edge. Measure the thing
+   the feature is *for*, and when a number will not move, suspect the number.
+69. **A rate that only fires on an event is not a rate.** Roads were worn by
+   caravan dispatches and expedition departures — thirteen of them in two
+   hundred years, because supply only moves when somebody is short and the
+   council only explores out of overflow. What actually wears a road is people
+   going back and forth between towns that are near each other, which exists
+   **as long as the towns do** and scales with how many live in them.
+   `TradeRoute` looked like the answer and was a third dead end: `tradeRoutes`
+   is empty in every world the harness plays, so that clause did nothing at all.
+   When a system needs a background rate, find the thing that is *always true*,
+   not the thing that happens sometimes.
+70. **Editing a source file while its test build is running fails the build,
+   not the test.** `input file ... was modified during the build` cost a
+   twenty-minute probe run. Long measurements and appending to test files do
+   not mix: let the build settle first.

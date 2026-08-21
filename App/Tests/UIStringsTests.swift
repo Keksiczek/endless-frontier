@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+@testable import EndlessFrontier
 
 /// The content files have been audited for Czech since 2026-08-11 and
 /// `ContentTests` keeps them that way — but it walks `GameData/*.json`, and the
@@ -170,5 +171,44 @@ struct UIStringsTests {
             }
         }
         return false
+    }
+}
+
+/// **The first two minutes**, which the game did not have at all: a new player
+/// was put in a village with a build bar and left to work out the tick rate,
+/// the council, the food chain and the tappable world on their own.
+@Suite("The introduction says the four things that are not guessable")
+struct FirstRunTests {
+    @Test("Both languages say the same number of things")
+    func bothLanguagesAreComplete() {
+        #expect(FirstRunView.Page.english.count == FirstRunView.Page.czech.count)
+        #expect(FirstRunView.Page.english.count == 4)
+    }
+
+    /// The project ships nothing half-translated (`ContentTests` guards the
+    /// game data; this is the app's own side of the same rule).
+    @Test("Nothing in it is blank, and the Czech is not the English")
+    func nothingIsUntranslated() {
+        for (en, cs) in zip(FirstRunView.Page.english, FirstRunView.Page.czech) {
+            #expect(!en.title.isEmpty && !en.body.isEmpty)
+            #expect(!cs.title.isEmpty && !cs.body.isEmpty)
+            #expect(en.title != cs.title, "'\(en.title)' was never translated")
+            #expect(en.body != cs.body)
+            #expect(en.symbol == cs.symbol, "the same page must carry the same mark in both")
+        }
+    }
+
+    /// Each card exists to name one thing that costs an hour to learn the hard
+    /// way. If a rewrite drops one, this says which.
+    @Test("It still covers the tick, the council, the chain and the canvas")
+    func itCoversWhatItIsFor() {
+        let english = FirstRunView.Page.english.map { ($0.title + " " + $0.body).lowercased() }
+        func mentions(_ words: [String]) -> Bool {
+            english.contains { page in words.contains { page.contains($0) } }
+        }
+        #expect(mentions(["two real minutes", "tick"]), "the tick rate")
+        #expect(mentions(["council"]), "that nobody is waiting for orders")
+        #expect(mentions(["cook", "chain"]), "that food is a chain")
+        #expect(mentions(["tap"]), "that the world answers")
     }
 }
