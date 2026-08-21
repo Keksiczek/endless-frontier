@@ -73,6 +73,16 @@ struct TribesPanel: View {
                 }
                 .help(tribe.standing < 45 ? AppStrings.pactNeedsTrust : "")
             }
+            // The one act that leaves something behind. A gift is spent the
+            // moment it is given; a road is on the map next year, shortens the
+            // journey both ways, and can be torn up by the people it was built
+            // for. Absent only when the way already runs all the way to them.
+            if let cost = game.roadCost(toward: tribe) {
+                action(AppStrings.buildRoadToward, icon: "road.lanes", cost: cost,
+                       enabled: game.canBuildRoad(toward: tribe)) {
+                    game.buildRoad(toward: tribe.id)
+                }
+            }
             Spacer(minLength: 0)
         }
         .padding(.top, 2)

@@ -513,3 +513,263 @@ struct RoadLadderTests {
                 "the council skipped the ladder and laid the dearest thing it could reach")
     }
 }
+
+/// **What a war does to the ways.**
+///
+/// `RoadNetwork.remove` existed from the day the network did and nothing called
+/// it: the model could lose a road and the world never did. A chokepoint is
+/// only worth holding if losing it costs something, so this is the payoff
+/// `RegionFeature.pass` has been waiting for.
+@Suite("Raiders wreck the road they walk in on")
+struct RoadCuttingTests {
+    private func world() throws -> WorldState {
+        GameWorldFactory.newGame(registry: try GameDataRegistry.bundled(), seed: 17,
+                                 now: Date(timeIntervalSince1970: 1_700_000_000))
+    }
+
+    /// The plain case, and the one that says it is *their* road and not a die.
+    @Test("A raid takes down a way on the raiders' line of march")
+    func aRaidCutsTheRoad() throws {
+        var s = try world()
+        guard let capital = s.settlements.first,
+              let seat = s.regions.first(where: { $0.id == capital.regionID }),
+              let next = seat.coord.neighbors().first(where: { n in s.regions.contains { $0.coord == n } }),
+              let neighbourRegion = s.regions.first(where: { $0.coord == next })
+        else { return }
+        s.roads.lay(RoadLink(a: seat.coord, b: next, grade: .paved))
+
+        let after = RoadEngine.cut(s, from: neighbourRegion.id, to: capital.id)
+        let left = after.roads.link(seat.coord, next)
+        #expect(left?.grade == .road,
+                "paving torn up leaves the levelled ground under it, not nothing")
+        #expect((left?.condition ?? 1) < 1, "…and what is left is not in good repair")
+    }
+
+    /// A track has nothing under it.
+    @Test("A cut track is simply gone")
+    func aTrackDoesNotSurvive() throws {
+        var s = try world()
+        guard let capital = s.settlements.first,
+              let seat = s.regions.first(where: { $0.id == capital.regionID }),
+              let next = seat.coord.neighbors().first(where: { n in s.regions.contains { $0.coord == n } }),
+              let neighbourRegion = s.regions.first(where: { $0.coord == next })
+        else { return }
+        s.roads.lay(RoadLink(a: seat.coord, b: next, grade: .track))
+        #expect(RoadEngine.cut(s, from: neighbourRegion.id, to: capital.id)
+                    .roads.link(seat.coord, next) == nil)
+    }
+
+    /// They wreck what hurts most, which is what makes a pass worth holding
+    /// rather than a hex worth ignoring.
+    @Test("They tear up the dearest piece, not the nearest")
+    func theyCutWhatCostsMost() throws {
+        var s = try world()
+        guard let capital = s.settlements.first,
+              let seat = s.regions.first(where: { $0.id == capital.regionID }) else { return }
+        // A two-hex march: one cheap plain, then one dear mountain.
+        let ring = seat.coord.neighbors().filter { n in s.regions.contains { $0.coord == n } }
+        guard let middle = ring.first,
+              let far = middle.neighbors().first(where: { n in
+                  n != seat.coord && s.regions.contains { $0.coord == n } })
+        else { return }
+        for (index, region) in s.regions.enumerated() {
+            if region.coord == middle { s.regions[index].biomeID = "plains" }
+            if region.coord == far { s.regions[index].biomeID = "mountains" }
+        }
+        s.roads.lay(RoadLink(a: seat.coord, b: middle, grade: .paved))
+        s.roads.lay(RoadLink(a: middle, b: far, grade: .paved))
+        guard let raiders = s.regions.first(where: { $0.coord == far }) else { return }
+
+        let after = RoadEngine.cut(s, from: raiders.id, to: capital.id)
+        #expect(after.roads.link(middle, far)?.grade == .road,
+                "the mountain stretch cost the most to make and is what they take")
+        #expect(after.roads.link(seat.coord, middle)?.grade == .paved,
+                "…and the easy stretch is left alone")
+    }
+
+    @Test("A colony with no roads loses nothing, and does not crash finding out")
+    func nothingToCut() throws {
+        let s = try world()
+        guard let capital = s.settlements.first,
+              let elsewhere = s.regions.first(where: { $0.id != capital.regionID }) else { return }
+        #expect(RoadEngine.cut(s, from: elsewhere.id, to: capital.id).roads.isEmpty)
+    }
+}
+
+/// **A ceiling enforced in one of three places is not a ceiling.**
+///
+/// `grudgeCeiling` was applied only where crowding adds to it; a raid (+6) and
+/// a quarrel (+3) walked past. `DiplomacyProbe` showed the consequence at once:
+/// all five peoples pinned at **119**, the same number to the point, because
+/// they reach 110 by crowding and then step over it. A figure every neighbour
+/// shares carries no information — it stops telling a people you have wronged
+/// from one you have not.
+@Suite("A grudge has one door and a top")
+struct GrudgeCeilingTests {
+    private func tribe(grudge: Double) -> Tribe {
+        Tribe(id: UUID(uuidString: "00000000-0000-0000-0000-0000000000E1")!,
+              name: "Them", foundedTick: 0,
+              originStory: LocalizedText(values: [.en: "They left.", .cs: "Odešli."]),
+              population: 40, genes: Genes(), grudge: grudge)
+    }
+
+    @Test("Anger cannot be pushed past the ceiling, from any direction")
+    func theCeilingHolds() {
+        var t = tribe(grudge: DiplomacyEngine.grudgeCeiling - 1)
+        DiplomacyEngine.resent(&t, by: 50)
+        #expect(t.grudge == DiplomacyEngine.grudgeCeiling)
+        DiplomacyEngine.resent(&t, by: 6)
+        #expect(t.grudge == DiplomacyEngine.grudgeCeiling, "a raid must not step over it either")
+    }
+
+    @Test("…and never below nothing")
+    func itDoesNotGoNegative() {
+        var t = tribe(grudge: 2)
+        DiplomacyEngine.resent(&t, by: -40)
+        #expect(t.grudge == 0)
+    }
+
+    /// The regression the probe found: five peoples, one number.
+    @Test("Two peoples wronged differently do not end up equally angry")
+    func angerStillDiscriminates() {
+        var wronged = tribe(grudge: 20)
+        var left = tribe(grudge: 20)
+        for _ in 0..<40 { DiplomacyEngine.resent(&wronged, by: 6) }
+        DiplomacyEngine.resent(&left, by: 6)
+        #expect(wronged.grudge > left.grudge)
+        #expect(wronged.grudge <= DiplomacyEngine.grudgeCeiling)
+    }
+}
+
+/// **Where the crowding ceiling went.**
+///
+/// A lower ceiling for grudge-from-size was tried and measured: wars over two
+/// hundred years fell from **67 to 2**. Crowding feeds grudge, grudge drags
+/// standing, and war fires below a standing threshold — so capping the source
+/// caps the conflict, and §8.5's finding was that a world nothing can anger has
+/// nothing in it. What survives is the real fault: the ceiling was honoured at
+/// one of the three places anger is added, so every people overshot to 119.
+@Suite("Growth still makes a people angry enough to act")
+struct CrowdingCeilingTests {
+    private func tribe(grudge: Double) -> Tribe {
+        Tribe(id: UUID(uuidString: "00000000-0000-0000-0000-0000000000E2")!,
+              name: "Them", foundedTick: 0,
+              originStory: LocalizedText(values: [.en: "They left.", .cs: "Odešli."]),
+              population: 40, genes: Genes(), grudge: grudge)
+    }
+
+    /// The regression guard for the revert: if somebody caps crowding again,
+    /// this fails and the comment above says what it cost last time.
+    @Test("Size alone can still carry a people to the top of the scale")
+    func crowdingReachesTheCeiling() {
+        var t = tribe(grudge: 0)
+        for _ in 0..<200 { DiplomacyEngine.resentCrowding(&t, by: 8) }
+        #expect(t.grudge == DiplomacyEngine.grudgeCeiling,
+                "capping this took the measured war count from 67 to 2")
+    }
+
+    @Test("…and not past it")
+    func itStillHonoursTheCeiling() {
+        var t = tribe(grudge: DiplomacyEngine.grudgeCeiling)
+        DiplomacyEngine.resentCrowding(&t, by: 50)
+        #expect(t.grudge == DiplomacyEngine.grudgeCeiling)
+    }
+}
+
+/// **A road to a neighbour** — the verb `docs/NEIGHBOURS.md` puts first,
+/// because it is the one that stands on the map.
+///
+/// The three verbs the game already had (gift, demand, pact) are a one-off
+/// spend of influence that moves a number and is then over. `DiplomacyProbe`
+/// measured standings swinging over bands of sixty to a hundred and sixty
+/// points, which makes a gift's twelve into noise — so what a verb needs is not
+/// a bigger number but something that **accrues, is visible, and can be lost**.
+@Suite("A road toward a people is a thing you can see and lose")
+struct RoadTowardTests {
+    private func world() throws -> (WorldState, GameDataRegistry) {
+        let registry = try GameDataRegistry.bundled()
+        var s = GameWorldFactory.newGame(registry: registry, seed: 23,
+                                         now: Date(timeIntervalSince1970: 1_700_000_000))
+        s.era = .medieval
+        s.settlements[0].storage[.materials] = 6000
+        for index in s.tribes.indices { s.tribes[index].discovered = true }
+        return (s, registry)
+    }
+
+    private func metTribe(_ s: WorldState) -> Tribe? {
+        s.tribes.first { $0.discovered && $0.regionID != nil
+            && $0.regionID != s.settlements.first?.regionID }
+    }
+
+    @Test("Building toward a people lays a stretch and costs materials")
+    func itLaysARoadAndCharges() throws {
+        let (s, reg) = try world()
+        guard let them = metTribe(s) else { return }
+        let purse = s.settlements[0].storage[.materials]
+
+        let after = GameEngine.buildRoadToward(s, tribeID: them.id, registry: reg)
+        #expect(!after.roads.isEmpty, "the verb did nothing at all")
+        #expect(after.settlements[0].storage[.materials] < purse, "…and it was free")
+    }
+
+    /// The whole point: it accrues, and it eases the grievance of being the
+    /// larger neighbour.
+    @Test("It buys standing, and takes something off the grudge")
+    func itMovesTheRelationship() throws {
+        var (s, reg) = try world()
+        guard let them = metTribe(s),
+              let index = s.tribes.firstIndex(where: { $0.id == them.id }) else { return }
+        s.tribes[index].standing = 0
+        s.tribes[index].grudge = 40
+
+        let after = GameEngine.buildRoadToward(s, tribeID: them.id, registry: reg)
+        #expect(after.tribes[index].standing > 0)
+        #expect(after.tribes[index].grudge < 40)
+    }
+
+    /// **The fault this test exists for.** `roadTowardCost` used to answer by
+    /// calling `buildRoadToward` and seeing what changed — so a colony that
+    /// could not afford the stretch got the same `nil` as one whose road was
+    /// finished. A panel has to tell a price it cannot pay from a road that is
+    /// already built.
+    @Test("A colony too poor to build is still told the price")
+    func priceIsNotTheSameAsPossibility() throws {
+        var (s, reg) = try world()
+        guard let them = metTribe(s) else { return }
+        let price = GameEngine.roadTowardCost(s, tribeID: them.id, registry: reg)
+        #expect(price != nil, "there is a road to build and no price was given")
+
+        s.settlements[0].storage[.materials] = 0
+        #expect(GameEngine.roadTowardCost(s, tribeID: them.id, registry: reg) == price,
+                "an empty warehouse must not make the road look finished")
+        #expect(GameEngine.buildRoadToward(s, tribeID: them.id, registry: reg).roads.isEmpty,
+                "…and it must still not be built")
+    }
+
+    /// It grows outward from home rather than scattering paving in the
+    /// wilderness, so a half-built road goes part of the way.
+    @Test("The road grows out from home, one stretch at a time")
+    func itGrowsOutward() throws {
+        var (s, reg) = try world()
+        guard let them = metTribe(s),
+              let seatID = s.settlements[0].regionID,
+              let seat = s.regions.first(where: { $0.id == seatID }) else { return }
+
+        s = GameEngine.buildRoadToward(s, tribeID: them.id, registry: reg)
+        #expect(s.roads.touching(seat.coord).count == 1,
+                "the first stretch must start at the colony, not somewhere out there")
+        let first = s.roads.all.count
+        s = GameEngine.buildRoadToward(s, tribeID: them.id, registry: reg)
+        #expect(s.roads.all.count >= first, "a second call must carry the road further or up a grade")
+    }
+
+    @Test("A people nobody has met cannot be built toward")
+    func strangersHaveNoRoad() throws {
+        var (s, reg) = try world()
+        guard let them = metTribe(s),
+              let index = s.tribes.firstIndex(where: { $0.id == them.id }) else { return }
+        s.tribes[index].discovered = false
+        #expect(GameEngine.roadTowardCost(s, tribeID: them.id, registry: reg) == nil)
+        #expect(GameEngine.buildRoadToward(s, tribeID: them.id, registry: reg).roads.isEmpty)
+    }
+}

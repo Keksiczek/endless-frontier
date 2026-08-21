@@ -229,6 +229,107 @@ public enum GameEngine {
         return s
     }
 
+    /// **Builds the next stretch of road toward a neighbour's country.**
+    ///
+    /// The verb `docs/NEIGHBOURS.md` puts first, because it is the one that
+    /// stands on the map. The other three — gift, demand, pact — are a one-off
+    /// spend of influence that moves a number and is then over. A road:
+    ///
+    /// - **is visible**, in the grade you paid for;
+    /// - **is mutual**, and that is the point rather than a drawback. It
+    ///   shortens the journey *both ways*, so it is a commitment and not a
+    ///   present. A road to a people who later hate you is a road their warband
+    ///   walks in on, and `RoadEngine.cut` means it is also a thing they take
+    ///   from you;
+    /// - **accrues**. `DiplomacyProbe` measured standings swinging over bands
+    ///   of sixty to a hundred and sixty points, which makes a gift's twelve
+    ///   into noise. What a verb needs is not a bigger number but a *rate*, and
+    ///   a road earns its standing every year it stands.
+    ///
+    /// One edge per call, cheapest-useful grade, paid in materials — the same
+    /// shape as the council's own road-building, so a player and the steward are
+    /// spending on the same terms. Returns the state unchanged if there is
+    /// nowhere to build, nothing to build with, or the road already runs all
+    /// the way.
+    public static func buildRoadToward(
+        _ state: WorldState, tribeID: UUID, registry: GameDataRegistry
+    ) -> WorldState {
+        guard let tribeIndex = state.tribes.firstIndex(where: { $0.id == tribeID }),
+              state.tribes[tribeIndex].discovered,
+              let theirRegionID = state.tribes[tribeIndex].regionID,
+              let theirs = state.regions.first(where: { $0.id == theirRegionID }),
+              let capitalIndex = state.settlements.indices.first,
+              let seatID = state.settlements[capitalIndex].regionID,
+              let seat = state.regions.first(where: { $0.id == seatID })
+        else { return state }
+
+        guard let (link, cost) = nextStretch(state, toward: theirs, from: seat),
+              let paid = EffectApplier.payCost([.materials: cost], from: state,
+                                               settlementID: state.settlements[capitalIndex].id)
+        else { return state }
+
+        var s = paid
+        s.roads.lay(link)
+        // Standing for the commitment, and it eases the grievance of being the
+        // larger neighbour — a road is the one thing a big colony can offer
+        // that costs it something the smaller one can see.
+        s.tribes[tribeIndex].standing = min(100, s.tribes[tribeIndex].standing
+                                            + registry.config.giftStandingGain / 2)
+        DiplomacyEngine.resent(&s.tribes[tribeIndex], by: -4)
+        let what = link.grade.displayName
+        s.settlements[capitalIndex].journal.append(
+            tick: s.tick, kind: .construction,
+            text: LocalizedText(values: [
+                .en: "A \(what.resolve(.en).lowercased()) now reaches toward \(s.tribes[tribeIndex].name).",
+                .cs: "Směrem k \(s.tribes[tribeIndex].name) teď vede \(what.resolve(.cs).lowercased())."]))
+        return s
+    }
+
+    /// The first stretch on the way there that is not yet as made as this world
+    /// knows how to make it, and what it would cost.
+    ///
+    /// Nearest first, so the road grows out from home and a half-built one goes
+    /// *part* of the way rather than being a scatter of paving in the
+    /// wilderness.
+    static func nextStretch(
+        _ state: WorldState, toward theirs: Region, from seat: Region
+    ) -> (link: RoadLink, cost: Double)? {
+        let byCoord = Dictionary(state.regions.map { ($0.coord, $0) }) { first, _ in first }
+        guard let march = state.roads.route(from: seat.coord, to: theirs.coord,
+                                            regions: byCoord) else { return nil }
+        for (a, b) in zip(march.hexes, march.hexes.dropFirst()) {
+            guard let grade = RoadEngine.nextGrade(after: state.roads.link(a, b)?.grade,
+                                                   state: state),
+                  let here = byCoord[a], let there = byCoord[b] else { continue }
+            return (RoadLink(a: a, b: b, grade: grade),
+                    grade.cost * max(TerrainCost.buildingCost(here),
+                                     TerrainCost.buildingCost(there)))
+        }
+        return nil
+    }
+
+    /// What the next stretch toward this people would cost, or `nil` when the
+    /// road already runs all the way and there is nothing left to build.
+    ///
+    /// **Asked without paying.** The first cut answered by calling
+    /// `buildRoadToward` and looking at what changed — which works, because
+    /// these are pure functions, and is wrong anyway: a colony that cannot
+    /// afford the stretch gets an unchanged world back, so "too poor" and
+    /// "nothing to build" came out as the same `nil`. A panel needs to tell a
+    /// price it cannot pay from a road that is finished.
+    public static func roadTowardCost(
+        _ state: WorldState, tribeID: UUID, registry: GameDataRegistry
+    ) -> Double? {
+        guard let tribe = state.tribes.first(where: { $0.id == tribeID }),
+              tribe.discovered,
+              let theirRegionID = tribe.regionID,
+              let theirs = state.regions.first(where: { $0.id == theirRegionID }),
+              let seatID = state.settlements.first?.regionID,
+              let seat = state.regions.first(where: { $0.id == seatID })
+        else { return nil }
+        return nextStretch(state, toward: theirs, from: seat)?.cost
+    }
+
     /// Presses a people for tribute: their stores, at the price of their trust.
     public static func demandTribute(
         _ state: WorldState, tribeID: UUID, registry: GameDataRegistry

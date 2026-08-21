@@ -58,6 +58,8 @@ enum AppStrings {
 
     // Diplomacy — what the Leader's standing buys
     static var sendGift: String { s("Send a gift", "Poslat dar") }
+    /// The one act toward a people that leaves something on the map.
+    static var buildRoadToward: String { s("Build a road", "Postavit cestu") }
     static var demandTribute: String { s("Demand tribute", "Žádat tribut") }
     static var proposePact: String { s("Propose a pact", "Nabídnout spojenectví") }
     static var pactNeedsTrust: String {

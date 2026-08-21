@@ -2983,3 +2983,44 @@ system whose doc warns about them.
   is two real minutes, the council runs it in the gaps, food is a chain (a full
   granary and a hungry colony means *you have no cook*), and everything drawn is
   really there.
+
+
+### 13.4 — the second century is not a graveyard any more (measured 2026-08-21)
+
+The premise this batch was going to start from — *"the curve peaks at 69 around
+year eighty and decays to 29 by year two hundred, of old age"* (§11.17) — is
+**stale**, and measuring before touching it is the only reason that was found.
+
+`GrowthProbe.theCurve`, seed 4242, on today's code:
+
+```
+year   pop  adult  young  pairs  wed  fert  waste  slots   chance
+  40    55    43     29     18    70    10     37    93%   0.00345
+ 100    90    66     48     31    52    22     76   100%   0.00380
+ 200   283   229    150    103     8    68    214    90%   0.00282
+```
+
+Monotonic growth to 283, `fert` climbing 7 → 68. The housing work of §11.17 and
+the three mid-era dwellings of §12.5 evidently fixed it between them, and
+nobody re-ran the probe to notice.
+
+**What the new columns found instead**, and it is a ceiling rather than a
+decline:
+
+- `slots` sits at **90–100% from year ten onward**. Every fertile adult has all
+  five of `SocialEngine.maxRelationsPerPawn` full, always — so the hypothesis
+  that started this (a young adult's slots filling with people too old to have
+  children with) is confirmed as a *fact* and acquitted as a *cause*.
+- `waste` climbs to 214 bonds joining a fertile adult to somebody past it,
+  against 103 partnerships. Most of the colony's social life is, in fertility
+  terms, spent.
+- **`wed` collapses 70 → 8** while the population quintuples. In a town of 283
+  with 150 fertile adults, eight pairs are close enough to marry. Courtship is
+  choking on the slot cap: nobody has room for a new strong bond.
+
+That last one is the thing to watch. It is not hurting the curve *yet* — births
+still outrun deaths — but it is a ceiling sitting there from year ten, and a
+colony cannot grow past what its social life can pair off. Whether to raise
+`maxRelationsPerPawn`, prune bonds by usefulness rather than by weakness, or
+leave it, is a decision nobody has taken. **Do not tune it without re-running
+the probe either side.**

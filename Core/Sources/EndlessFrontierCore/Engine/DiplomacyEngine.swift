@@ -228,6 +228,48 @@ public enum DiplomacyEngine {
     /// How much a grudge can ever weigh, so a hated colony is at war rather
     /// than at war with arithmetic.
     static let grudgeCeiling = 110.0
+
+    /// **The one way a grudge goes up.**
+    ///
+    /// `grudgeCeiling` was applied at exactly one of the three places anger is
+    /// added — the crowding clause — while a raid (+6) and a quarrel (+3) walked
+    /// straight past it. `DiplomacyProbe` showed what that does: every one of
+    /// five peoples sitting at **119**, the same number to the point, because
+    /// they all reach the cap by crowding and then step over it.
+    ///
+    /// A ceiling enforced in one of three places is not a ceiling, and a number
+    /// every neighbour is pinned to carries no information: it stops
+    /// distinguishing a people you have wronged from one you have not. That is
+    /// §8.5 inverted — then nothing could make anybody angry, now everything
+    /// makes everybody as angry as it is possible to be.
+    static func resent(_ tribe: inout Tribe, by amount: Double) {
+        tribe.grudge = min(grudgeCeiling, max(0, tribe.grudge + amount))
+    }
+
+    /// **Anger that comes from nothing but the size of you.**
+    ///
+    /// This had a *lower* ceiling of its own for one measurement, on the
+    /// reasoning that being big is a grievance and not the same grievance as
+    /// being raided, so growth alone should carry a people to resentful and no
+    /// further. It reads well and it gutted the game: `DiplomacyProbe` went
+    /// from **67 wars in two hundred years to 2**, and from 92 fights to 53.
+    ///
+    /// The chain is crowding → grudge → `drift` pulls standing down →
+    /// `standing < warStanding` → war, so a cap on crowding's grudge is a cap
+    /// on how far standing can ever fall, and §8.5's whole finding was that a
+    /// world where nothing can make a people angry has nothing in it. Reverted.
+    ///
+    /// The fault that measurement *did* find is real and is fixed elsewhere:
+    /// `grudgeCeiling` was enforced at one of the three places anger is added,
+    /// so every people overshot to exactly 119. A ceiling honoured in one place
+    /// out of three is not a ceiling — that is what `resent` is for.
+    ///
+    /// If the saturation is worth attacking again, attack the **relief** rather
+    /// than the source: trade and marriage take three off a grudge that grows
+    /// by eight a year, and §8.5 claimed they "work it off". They do not.
+    static func resentCrowding(_ tribe: inout Tribe, by amount: Double) {
+        resent(&tribe, by: amount)
+    }
     /// How many times the tribe's own numbers the colony may reach before the
     /// people who were here first start to mind.
     static let crowdingRatio = 1.6
@@ -269,9 +311,7 @@ public enum DiplomacyEngine {
 
         // What being a big, growing neighbour costs you, banked before anything
         // else is weighed. See `crowding`.
-        s.tribes[tribeIndex].grudge = min(
-            grudgeCeiling,
-            s.tribes[tribeIndex].grudge + crowding(s, tribeIndex: tribeIndex))
+        resentCrowding(&s.tribes[tribeIndex], by: crowding(s, tribeIndex: tribeIndex))
 
         let ours = meanGenes(capital.pawns)
         let theirs = s.tribes[tribeIndex].genes
@@ -336,7 +376,7 @@ public enum DiplomacyEngine {
         // Quarrels over hunting grounds.
         if standing < disputeStanding, rng.nextUnit() < disputeChance {
             s.tribes[tribeIndex].standing = clamp(standing - 4)
-            s.tribes[tribeIndex].grudge += 3
+            resent(&s.tribes[tribeIndex], by: 3)
             s.settlements[capitalIndex].stats.morale = max(
                 0, s.settlements[capitalIndex].stats.morale - 2)
         }
@@ -469,8 +509,13 @@ public enum DiplomacyEngine {
             0, s.settlements[capitalIndex].stats.stability - 5)
         s.globalStats = s.globalStats.applying(delta: 6, to: "threatLevel")
         s.tribes[tribeIndex].wars += 1
-        s.tribes[tribeIndex].grudge += 6
+        resent(&s.tribes[tribeIndex], by: 6)
         s.tribes[tribeIndex].standing = clamp(s.tribes[tribeIndex].standing - 8)
+        // …and they wreck the road on their way in. A chokepoint is only worth
+        // holding if losing it costs something, and this is what makes the
+        // colony's own network a thing war can take away.
+        s = RoadEngine.cut(s, from: s.tribes[tribeIndex].regionID,
+                           to: s.settlements[capitalIndex].id)
         return s
     }
 

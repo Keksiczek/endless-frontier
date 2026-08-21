@@ -687,3 +687,23 @@ fires, do the arithmetic before you rewrite the mechanic.
    not the test.** `input file ... was modified during the build` cost a
    twenty-minute probe run. Long measurements and appending to test files do
    not mix: let the build settle first.
+71. **Fixing a saturated number by capping its source caps everything
+   downstream of it.** `DiplomacyProbe` showed all five peoples pinned at
+   maximum grudge, which is a real complaint: a figure every neighbour shares
+   tells a people you have wronged from one you have not. The tempting fix —
+   let *crowding* carry a people only to resentful, since being big is not the
+   same grievance as being raided — reads well and took the measured war count
+   from **67 in two hundred years to 2**, and fights from 92 to 53. The chain
+   is crowding → grudge → `drift` pulls standing down → `standing < warStanding`
+   → war, so a cap on the source is a cap on the conflict, and §8.5's whole
+   finding was that a world nothing can anger has nothing in it. Reverted.
+   **When a number saturates, attack the relief, not the source** — trade and
+   marriage take three off a grudge that grows by eight a year, and §8.5 claimed
+   they "work it off". They do not.
+72. **Two changes, one measurement, and you cannot tell which did what.** The
+   same probe run carried a genuine bug fix (a ceiling enforced at one of three
+   places, so grudge overshot to 119) and a balance change made on a hunch. Both
+   landed together; the numbers moved a long way; and separating "the overshoot
+   is gone" from "the wars are gone" took reading the mechanism rather than the
+   table. Change one thing per measurement, or write down in advance which
+   column each change is supposed to move.

@@ -312,6 +312,74 @@ public enum RoadEngine {
         return s
     }
 
+    // MARK: - What a war does to the ways
+
+    /// **Cuts the road a warband walks in on.**
+    ///
+    /// `RoadNetwork.remove` has existed since the network did, and nothing
+    /// called it — the model could lose a road and the world never did. This is
+    /// the payoff `RegionFeature.pass` has been waiting for since it was
+    /// written: a chokepoint only matters if holding it, or losing it, changes
+    /// something.
+    ///
+    /// Not a random edge. Raiders wreck what is **on their own line of march**,
+    /// and of that they wreck the piece that hurts most to lose — the one
+    /// through the worst country, which is exactly the piece the colony paid
+    /// the most to make (`TerrainCost.buildingCost`). A cut pass is a season's
+    /// work and a long way round.
+    ///
+    /// A cut takes the way down one grade rather than deleting it: an
+    /// embankment does not stop existing because somebody tore up the rails,
+    /// and a colony that has to *repair* rather than *rebuild* has a decision
+    /// worth making. A track has nothing under it and simply goes.
+    ///
+    /// Returns the state unchanged when there is nothing on their road to cut,
+    /// which is the ordinary case for a colony that has built nothing.
+    public static func cut(
+        _ state: WorldState, from raiderRegionID: UUID?, to settlementID: UUID
+    ) -> WorldState {
+        guard let raiderRegionID,
+              let from = state.regions.first(where: { $0.id == raiderRegionID }),
+              let seat = state.settlements.first(where: { $0.id == settlementID })?.regionID,
+              let target = state.regions.first(where: { $0.id == seat }),
+              !state.roads.isEmpty
+        else { return state }
+
+        let byCoord = coordIndex(state)
+        guard let march = state.roads.route(from: from.coord, to: target.coord,
+                                            regions: byCoord) else { return state }
+
+        // The dearest piece of made way on their line of march.
+        var worst: (link: RoadLink, cost: Double)?
+        for (a, b) in zip(march.hexes, march.hexes.dropFirst()) {
+            guard let link = state.roads.link(a, b) else { continue }
+            guard let here = byCoord[a], let there = byCoord[b] else { continue }
+            let dearness = link.grade.cost
+                * max(TerrainCost.buildingCost(here), TerrainCost.buildingCost(there))
+            if worst == nil || dearness > worst!.cost { worst = (link, dearness) }
+        }
+        guard let worst else { return state }
+
+        var s = state
+        if let lower = fallback(from: worst.link.grade) {
+            s.roads.update(RoadLink(a: worst.link.a, b: worst.link.b,
+                                    grade: lower, condition: 0.35))
+        } else {
+            s.roads.remove(worst.link.a, worst.link.b)
+        }
+        // Traffic remembers the lane, so the council will want to mend it
+        // rather than forgetting the route existed.
+        if let index = s.settlements.firstIndex(where: { $0.id == settlementID }) {
+            let what = worst.link.grade.displayName
+            s.settlements[index].journal.append(
+                tick: s.tick, kind: .danger,
+                text: LocalizedText(values: [
+                    .en: "They tore up the \(what.resolve(.en).lowercased()) behind them.",
+                    .cs: "Za sebou strhli \(what.resolve(.cs).lowercased())."]))
+        }
+        return s
+    }
+
     // MARK: - Helpers
 
     static func coordIndex(_ state: WorldState) -> [HexCoord: Region] {

@@ -838,6 +838,29 @@ final class GameViewModel {
         persist()
     }
 
+    /// What the next stretch of road toward this people would cost, or `nil`
+    /// when the way already runs all the way to them.
+    ///
+    /// Deliberately answers the price even when the colony cannot pay it: the
+    /// button shows what it wants and goes dim, which is a different thing from
+    /// the button not being there because the road is finished.
+    func roadCost(toward tribe: Tribe) -> Double? {
+        GameEngine.roadTowardCost(world, tribeID: tribe.id, registry: registry)
+    }
+
+    func canBuildRoad(toward tribe: Tribe) -> Bool {
+        guard let cost = roadCost(toward: tribe) else { return false }
+        return (selectedSettlement ?? world.settlements.first)?
+            .storage[.materials] ?? 0 >= cost
+    }
+
+    /// Lays the next stretch toward a people. Unlike a gift, this one leaves
+    /// something on the map — and something they can take away again.
+    func buildRoad(toward tribeID: UUID) {
+        world = GameEngine.buildRoadToward(world, tribeID: tribeID, registry: registry)
+        persist()
+    }
+
     /// How long the Leader has left to answer the decision on the desk, in
     /// ticks. Negative would mean it's already gone.
     func ticksLeft(for pending: PendingEvent) -> Int {

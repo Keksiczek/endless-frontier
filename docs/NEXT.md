@@ -118,6 +118,16 @@ plainly have them and re-run `GrowthProbe`, or split "drawn storeys" from
 
 </details>
 
+### 2.7 Courtship has a ceiling — measured 2026-08-21
+
+`slots` (share of fertile adults with all five relationship slots full) reads
+**90–100% from year ten onward**, and `wed` (pairs close enough to marry) falls
+70 → 8 while the population climbs 55 → 283. Not hurting the curve yet; a
+ceiling that has been there the whole time.
+
+The old claim in `BACKLOG.md` §11.17 — that a colony peaks at 69 and decays to
+29 — is **stale and was fixed by the housing work**. See §13.4 for the numbers.
+
 ### 2.4 The era ladder is probably unreachable, and nobody has measured it
 
 `eras.json` asks for population **18 → 45 → 110 → 260 → 600**. The colony sits
