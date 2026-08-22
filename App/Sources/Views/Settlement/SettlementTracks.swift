@@ -36,16 +36,65 @@ struct SettlementTracks {
     /// than turned.
     static let earth = (r: 0.34, g: 0.28, b: 0.21)
 
-    init?(settlement: Settlement?) {
-        guard let settlement, let colony = settlement.colony,
-              !settlement.paths.isEmpty else { return nil }
+    /// The made ways arriving from the world map, as segments across the
+    /// valley: from the point they cross the map's edge in to the town.
+    private let highways: [(from: LocalPoint, to: LocalPoint, halfWidth: Double)]
+
+    init?(settlement: Settlement?, approaches: [RoadApproach] = []) {
+        guard let settlement, let colony = settlement.colony else { return nil }
+        guard !settlement.paths.isEmpty || !approaches.isEmpty else { return nil }
         wear = settlement.paths.lookup()
         width = max(1, colony.width)
         height = max(1, colony.height)
+        let heart = SettlementGeometry.heart
+        highways = approaches.map { approach in
+            (from: approach.edgePoint, to: heart,
+             halfWidth: Self.halfWidth(of: approach.link.grade))
+        }
     }
 
-    /// How beaten the ground is at a point of the local map, 0…1.
+    /// How wide a made way lies on the ground, in map units, measured from its
+    /// middle. A build-grid tile is `span / 34` ≈ 0.021 across, so a track is
+    /// about one tile wide and a railway about two — which is the difference
+    /// between a way people walk and a way something is driven along.
+    static func halfWidth(of grade: RoadGrade) -> Double {
+        switch grade {
+        case .track: return 0.008
+        case .road:  return 0.011
+        case .paved: return 0.013
+        case .rail:  return 0.013
+        }
+    }
+
+    /// How beaten the ground is at a point of the local map, 0…1 — the ways
+    /// the town wore for itself and the ways the world laid to its door,
+    /// whichever is the more trodden.
     func wear(atU u: Double, v: Double) -> Double {
+        max(worn(atU: u, v: v), highway(atU: u, v: v))
+    }
+
+    /// A made way arriving from the world map, drawn into the same ground the
+    /// town's own streets are — so a road does not stop dead at the fence and
+    /// start again as a different kind of drawing.
+    private func highway(atU u: Double, v: Double) -> Double {
+        var best = 0.0
+        for way in highways {
+            let dx = way.to.x - way.from.x, dy = way.to.y - way.from.y
+            let lengthSquared = max(1e-9, dx * dx + dy * dy)
+            let t = max(0, min(1, ((u - way.from.x) * dx + (v - way.from.y) * dy) / lengthSquared))
+            let px = way.from.x + dx * t, py = way.from.y + dy * t
+            let distance = ((u - px) * (u - px) + (v - py) * (v - py)).squareRoot()
+            guard distance < way.halfWidth else { continue }
+            // Hard in the middle, feathered at the verge — a road has a
+            // shoulder, and a hard edge on ground drawn at this grain reads as
+            // a ruled line rather than as something laid on the earth.
+            best = max(best, min(1, 1.15 - distance / way.halfWidth * 0.6))
+        }
+        return best
+    }
+
+    private func worn(atU u: Double, v: Double) -> Double {
+        guard !wear.isEmpty else { return 0 }
         let heart = SettlementGeometry.heart, span = SettlementGeometry.span
         // Fractional build-grid coordinates, measured from tile *centres* so
         // the interpolation is symmetric about a tile rather than about its

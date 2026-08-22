@@ -940,6 +940,19 @@ final class GameViewModel {
         .sorted { $0.cost < $1.cost }
     }
 
+    /// **The made ways arriving at a settlement**, for its own canvas to draw.
+    ///
+    /// A road was a fact about the world map that only the world map ever
+    /// showed, so a colony with a highway to its neighbour had nothing of it on
+    /// its own ground. The settlement draws these into the earth it stands on,
+    /// which is where the town's own worn streets are drawn too — so a road
+    /// arrives and becomes a street rather than stopping at the fence.
+    func approaches(to settlement: Settlement) -> [RoadApproach] {
+        guard let region = world.regions.first(where: { $0.id == settlement.regionID })
+        else { return [] }
+        return world.roads.approaches(to: region.coord)
+    }
+
     /// **Every edge the player could lay a way on**, for the map to draw.
     ///
     /// The panel's list answers "what can I build from *here*"; the map needs

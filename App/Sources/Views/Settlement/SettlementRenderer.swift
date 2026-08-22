@@ -129,6 +129,9 @@ enum SettlementRenderer {
         camera: Camera,
         continuousTick: Double = 0,
         caravans: [Caravan] = [],
+        /// The made ways arriving from the world map, drawn into the ground
+        /// they cross so a highway does not stop at the valley's edge.
+        approaches: [RoadApproach] = [],
         /// How far through its season the year has got, 0…1. Snow lies deeper
         /// at midwinter than on its first day, and spring's mud dries.
         seasonProgress: Double = 0.5,
@@ -157,9 +160,14 @@ enum SettlementRenderer {
         let showLabels = zoom >= 1.6
         SettlementGround.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
                               sun: sun, seasonProgress: seasonProgress,
-                              tracks: SettlementTracks(settlement: settlement),
+                              tracks: SettlementTracks(settlement: settlement,
+                                                       approaches: approaches),
                               registry: registry)
         zones(&context, rect: rect, settlement: settlement, season: season)
+        // Stone and iron. Earth roads are already in the ground's own colour
+        // (`SettlementTracks`); what is left is the ways that are *made* of
+        // something, which no amount of packed earth can say.
+        highways(&context, rect: rect, approaches: approaches, zoom: zoom)
         // The trails out to the wood and the quarry — the one journey nobody
         // makes from a doorway, so it is not on the build grid and cannot be
         // worn into it.
@@ -704,6 +712,62 @@ enum SettlementRenderer {
     /// structure and to the deposits the colony is actually harvesting — the
     /// routes the colonists genuinely walk. The town stops floating on lawn
     /// and starts being *connected*.
+    /// **The paved and the railed, where they cross the valley.**
+    ///
+    /// A track and a road are ground: they are drawn by wearing the earth bare
+    /// along their line, in the ground's own opaque colour, which is what
+    /// `SettlementTracks` does for the town's streets and for these. Paving and
+    /// rail are not ground — they are stone somebody cut and iron somebody
+    /// laid, and no shade of packed earth can say so.
+    ///
+    /// Opaque, like everything drawn over the ground: the earth tiles overlap
+    /// by a third of themselves and anything see-through doubles along every
+    /// seam of it (rule 9).
+    private static func highways(
+        _ context: inout GraphicsContext, rect: CGRect,
+        approaches: [RoadApproach], zoom: CGFloat
+    ) {
+        let heart = point(colonyHeart, in: rect)
+        for approach in approaches where approach.link.grade == .paved || approach.link.grade == .rail {
+            let edge = point(approach.edgePoint, in: rect)
+            var way = Path()
+            way.move(to: edge)
+            way.addLine(to: heart)
+            // A way in poor repair is a way with the country coming back
+            // through it, so the stone narrows rather than fading — fading is
+            // translucency, and translucency is the thing that cannot be done
+            // here.
+            let kept = max(0.35, min(1, approach.link.condition))
+            let width = SettlementTracks.halfWidth(of: approach.link.grade)
+                * 2 * rect.width * kept
+            switch approach.link.grade {
+            case .paved:
+                context.stroke(way, with: .color(Color(red: 0.53, green: 0.51, blue: 0.47)),
+                               style: StrokeStyle(lineWidth: width, lineCap: .round))
+                context.stroke(way, with: .color(Color(red: 0.44, green: 0.42, blue: 0.38)),
+                               style: StrokeStyle(lineWidth: width * 0.42, lineCap: .round,
+                                                  dash: [width * 0.5, width * 0.8]))
+            case .rail:
+                context.stroke(way, with: .color(Color(red: 0.30, green: 0.25, blue: 0.20)),
+                               style: StrokeStyle(lineWidth: width, lineCap: .butt,
+                                                  dash: [max(1, 2.4 * zoom), max(1, 4.2 * zoom)]))
+                let gauge = width * 0.30
+                let dx = heart.x - edge.x, dy = heart.y - edge.y
+                let length = max(1, (dx * dx + dy * dy).squareRoot())
+                let nx = -dy / length * gauge, ny = dx / length * gauge
+                for side in [1.0, -1.0] {
+                    var rail = Path()
+                    rail.move(to: CGPoint(x: edge.x + nx * side, y: edge.y + ny * side))
+                    rail.addLine(to: CGPoint(x: heart.x + nx * side, y: heart.y + ny * side))
+                    context.stroke(rail, with: .color(Color(red: 0.62, green: 0.61, blue: 0.60)),
+                                   style: StrokeStyle(lineWidth: max(0.8, 1.2 * zoom), lineCap: .round))
+                }
+            case .track, .road:
+                break
+            }
+        }
+    }
+
     /// **The trails out of the town**, to the wood and the quarry and the herb
     /// patch — and nothing else.
     ///

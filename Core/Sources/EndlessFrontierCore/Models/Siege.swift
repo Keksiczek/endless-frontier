@@ -119,6 +119,30 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         /// where things are — is exactly what a turret needs.
         public enum Kind: String, Codable, Sendable { case person, emplacement }
 
+        /// **What a raider came here to do**, and goes on doing until it is
+        /// done or they are.
+        ///
+        /// Every raider used to want the same thing — the nearest colonist —
+        /// and `aim` re-decided it from scratch every step, so the whole field
+        /// converged into two lines that shuffled sideways against each other
+        /// and nobody on it had an intention that outlived a single step.
+        /// Keks: *"chovat se že útočí nějak cíleně, ne že teď vedle sebe
+        /// hýbají dvě čáry lidí."*
+        ///
+        /// A warband is not one thing. Some of it comes to fight, some of it
+        /// came for the granary and will walk round a line rather than through
+        /// it, and some of it came to burn a particular roof. That is three
+        /// different destinations out of the same arithmetic, and it is what
+        /// makes a raid look aimed rather than magnetic.
+        public enum Intent: String, Codable, Sendable, CaseIterable {
+            /// Fight whoever is in the way. What the whole warband used to be.
+            case fight
+            /// The stores. Turns aside only for somebody actually blocking.
+            case plunder
+            /// One building, picked before they set off.
+            case burn
+        }
+
         /// A colonist's pawn id, a raider's own stable id, or — for an
         /// emplacement — the id of the building itself.
         public let id: UUID
@@ -136,10 +160,18 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         public var target: UUID?
         /// Down, or gone from the field.
         public var down: Bool
+        /// What they came for. Colonists defend and towers stand still, so
+        /// this only ever means anything on a raider.
+        public var intent: Intent = .fight
+        /// The place their intent is aimed at — the roof they came to burn.
+        /// `nil` for everybody whose business is with people rather than with
+        /// a piece of ground.
+        public var goal: LocalPoint?
 
         public init(id: UUID, side: Side, at: LocalPoint, strength: Double,
                     target: UUID? = nil, down: Bool = false,
-                    kind: Kind = .person) {
+                    kind: Kind = .person, intent: Intent = .fight,
+                    goal: LocalPoint? = nil) {
             self.id = id
             self.side = side
             self.kind = kind
@@ -147,10 +179,12 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
             self.strength = strength
             self.target = target
             self.down = down
+            self.intent = intent
+            self.goal = goal
         }
 
         private enum CodingKeys: String, CodingKey {
-            case id, side, kind, at, strength, target, down
+            case id, side, kind, at, strength, target, down, intent, goal
         }
 
         /// Written by hand because a synthesised decoder does **not** fall back
@@ -166,6 +200,10 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
             strength = try c.decode(Double.self, forKey: .strength)
             target = try c.decodeIfPresent(UUID.self, forKey: .target)
             down = try c.decodeIfPresent(Bool.self, forKey: .down) ?? false
+            // A raid saved before anybody had a purpose is a field of people
+            // who all came to fight, which is what it was.
+            intent = try c.decodeIfPresent(Intent.self, forKey: .intent) ?? .fight
+            goal = try c.decodeIfPresent(LocalPoint.self, forKey: .goal)
         }
     }
 

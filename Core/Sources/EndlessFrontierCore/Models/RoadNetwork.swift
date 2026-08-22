@@ -73,6 +73,44 @@ public struct RoadNetwork: Codable, Sendable, Equatable {
     public func touching(_ coord: HexCoord) -> [RoadLink] {
         coord.neighbors().compactMap { link(coord, $0) }
     }
+
+    /// **The ways arriving at a settlement, and which side of the valley they
+    /// come in on.**
+    ///
+    /// A road is a fact about the world map and it was only ever *drawn* there,
+    /// so a colony with a paved highway running to its neighbour showed nothing
+    /// of it on its own ground — Keks: *"silnice jsou jen na mapě světa i když
+    /// jsem je chtěl viditelné na mapě osady."* The settlement's canvas needs
+    /// two things to draw one: which way it goes, and what grade it is.
+    ///
+    /// The bearing is `Bearing.angle`, the same conversion a raid and a trader
+    /// and a caravan all use, so a road toward the people to the north comes
+    /// in over the northern fence and not over an invented one.
+    public func approaches(to coord: HexCoord) -> [RoadApproach] {
+        coord.neighbors().compactMap { neighbour in
+            guard let link = link(coord, neighbour),
+                  let angle = Bearing.angle(from: coord, toward: neighbour) else { return nil }
+            return RoadApproach(link: link, angle: angle)
+        }
+        // Stable, because a drawing walks it every frame.
+        .sorted { $0.link.id < $1.link.id }
+    }
+}
+
+/// A made way arriving at a settlement, with the bearing it arrives on.
+public struct RoadApproach: Sendable, Equatable {
+    public let link: RoadLink
+    /// Radians, measured the way `Bearing` measures everything: the line
+    /// something coming *from* the neighbouring hex walks in along.
+    public let angle: Double
+
+    public init(link: RoadLink, angle: Double) {
+        self.link = link
+        self.angle = angle
+    }
+
+    /// Where this way crosses the edge of the settlement's local map.
+    public var edgePoint: LocalPoint { Bearing.edgePoint(along: angle) }
 }
 
 // MARK: - Getting there

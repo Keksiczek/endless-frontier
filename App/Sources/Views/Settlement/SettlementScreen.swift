@@ -114,6 +114,7 @@ struct SettlementScreen: View {
                     settlement: settlement, map: map, registry: game.registry,
                     season: game.season, weather: game.climate.weather(game.season),
                     caravans: game.world.caravans,
+                    approaches: game.approaches(to: settlement),
                     clock: game.tickClock, selection: $selection,
                     buildPlan: $buildPlan, battleReplay: battleReplay,
                     focus: game.spotlight,

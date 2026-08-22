@@ -1031,3 +1031,51 @@ struct LayableEdgeTests {
         }
     }
 }
+
+/// A road was a fact about the world map that only the world map ever showed.
+/// Keks: *"silnice jsou jen na mapě světa i když jsem je chtěl viditelné na
+/// mapě osady."* The settlement's own canvas needs the way and the side of
+/// the valley it comes in on.
+@Suite("The ways arriving at a settlement")
+struct RoadApproachTests {
+
+    @Test("A road to the north comes in over the northern fence")
+    func approachesCarryTheRightBearing() {
+        let home = HexCoord(0, 0), north = HexCoord(0, -1)
+        var net = RoadNetwork()
+        net.lay(RoadLink(a: home, b: north, grade: .paved))
+        let approaches = net.approaches(to: home)
+        #expect(approaches.count == 1)
+        let expected = Bearing.angle(from: home, toward: north)
+        #expect(approaches.first.map { abs($0.angle - (expected ?? 0)) < 1e-9 } == true)
+        // …and it leaves the valley on the same side of it.
+        let edge = approaches[0].edgePoint
+        #expect(edge.y < 0.5, "a way to the north must cross the map's northern edge")
+    }
+
+    @Test("A hex with no ways to it has no ways arriving")
+    func noRoadsNoApproaches() {
+        #expect(RoadNetwork().approaches(to: HexCoord(3, -2)).isEmpty)
+    }
+
+    @Test("Every way touching a hex arrives at it")
+    func allSixCanArrive() {
+        let home = HexCoord(1, 1)
+        var net = RoadNetwork()
+        for neighbour in home.neighbors() {
+            net.lay(RoadLink(a: home, b: neighbour, grade: .road))
+        }
+        let approaches = net.approaches(to: home)
+        #expect(approaches.count == 6)
+        // Six ways in on six different bearings, not six drawn over each other.
+        #expect(Set(approaches.map { Int(($0.angle * 1000).rounded()) }).count == 6)
+    }
+
+    @Test("The list is in the same order every time it is asked for")
+    func orderIsStable() {
+        let home = HexCoord(0, 0)
+        var net = RoadNetwork()
+        for neighbour in home.neighbors() { net.lay(RoadLink(a: home, b: neighbour)) }
+        #expect(net.approaches(to: home).map(\.link.id) == net.approaches(to: home).map(\.link.id))
+    }
+}

@@ -102,6 +102,10 @@ struct SettlementCanvasView: View {
     /// Shipments on the road right now. The legs that cross this valley are
     /// drawn; the rest of the journey is out in country this map does not show.
     var caravans: [Caravan] = []
+    /// The made ways arriving at this valley from the world map, so a road
+    /// somebody paid for is visible where they live rather than only on the
+    /// map of the world.
+    var approaches: [RoadApproach] = []
     /// The simulation clock, so an expedition walks smoothly rather than
     /// jumping once a minute.
     let clock: TickClock
@@ -145,7 +149,7 @@ struct SettlementCanvasView: View {
                         &context, size: size, settlement: settlement, map: map,
                         registry: registry, time: t, season: season,
                         camera: camera, continuousTick: now,
-                        caravans: caravans,
+                        caravans: caravans, approaches: approaches,
                         seasonProgress: seasonProgress(at: now),
                         weather: weather,
                         battleReplay: battleReplay,
