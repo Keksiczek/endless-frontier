@@ -35,6 +35,9 @@ public enum TickEngine {
             // one back. Before the caravans move, so a road laid this tick is
             // one they can already use.
             s = RoadEngine.advanceOneTick(s, registry: registry)
+            // …and the ways *inside* a town, which nobody builds: the track
+            // from a roof to the work it sleeps beside, worn by walking it.
+            s = PathEngine.advanceOneTick(s, registry: registry)
             let caravanStep = CaravanEngine.advanceOneTick(s, registry: registry)
             s = caravanStep.state
             fired.append(contentsOf: caravanStep.fired)

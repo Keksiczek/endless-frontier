@@ -157,10 +157,14 @@ enum SettlementRenderer {
         let showLabels = zoom >= 1.6
         SettlementGround.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
                               sun: sun, seasonProgress: seasonProgress,
+                              tracks: SettlementTracks(settlement: settlement),
                               registry: registry)
         zones(&context, rect: rect, settlement: settlement, season: season)
-        paths(&context, rect: rect, settlement: settlement, registry: registry,
-              map: map, zoom: zoom)
+        // The trails out to the wood and the quarry — the one journey nobody
+        // makes from a doorway, so it is not on the build grid and cannot be
+        // worn into it.
+        trails(&context, rect: rect, settlement: settlement, registry: registry,
+               map: map, zoom: zoom)
         heartGlow(&context, rect: rect)
         // The sea, before the river and the landscape: everything else stands
         // on the land it leaves.
@@ -700,18 +704,26 @@ enum SettlementRenderer {
     /// structure and to the deposits the colony is actually harvesting — the
     /// routes the colonists genuinely walk. The town stops floating on lawn
     /// and starts being *connected*.
-    private static func paths(
+    /// **The trails out of the town**, to the wood and the quarry and the herb
+    /// patch — and nothing else.
+    ///
+    /// This used to draw a curve from the heart of the colony to every
+    /// building in it, which was invented: no colonist ever walks from the
+    /// green to the smithy and back for its own sake, and the drawing was
+    /// there because the town needed *something* between its boxes. It has
+    /// that now, and it is real — `SettlementPaths`, worn by the journeys the
+    /// engine actually gives people, drawn into the ground itself.
+    ///
+    /// What is left here is the half that was always true. A deposit is out in
+    /// the valley rather than on the build grid, so no amount of walking to it
+    /// wears a build-grid tile; and only a deposit somebody is *assigned* to
+    /// work gets a trail, which is the same rule it always had.
+    private static func trails(
         _ context: inout GraphicsContext, rect: CGRect,
         settlement: Settlement, registry: GameDataRegistry, map: LocalMap, zoom: CGFloat
     ) {
         let heart = point(colonyHeart, in: rect)
         var targets: [CGPoint] = []
-        for building in layout(settlement: settlement, registry: registry, rect: rect)
-        where !building.underConstruction && building.glyph != .house {
-            targets.append(building.center)
-        }
-        // Only deposits someone is assigned to work — an untouched wood has
-        // no trail beaten to it.
         let worked = Set(settlement.pawns.map(\.assignedWork))
         for node in map.nodes
         where map.isExplored(node.position) && worked.contains(node.kind.work) {

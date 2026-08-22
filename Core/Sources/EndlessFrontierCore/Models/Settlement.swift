@@ -250,6 +250,11 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     /// the town is actually run. See `ColonyPolicy`.
     public var policy: ColonyPolicy
 
+    /// The ways worn into the colony's own ground by the journeys its people
+    /// make. Written only by `PathEngine`; read by the canvas. See
+    /// `SettlementPaths` — nothing here is built or paid for, it is walked.
+    public var paths: SettlementPaths = SettlementPaths()
+
     /// The party out at a given point of interest, if one is.
     public func expedition(forPOI poiID: Int) -> POIExpedition? {
         expeditions.first { $0.poiID == poiID }
@@ -345,6 +350,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         case stockpile, rawProgress, lastBattle, battleHistory, policy, siege
         case craftOrders, kitchenProgress
         case outbreak, lastOutbreakTick, captives
+        case paths
     }
 
     public init(from decoder: Decoder) throws {
@@ -409,5 +415,8 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         // Decode-if-present: a save from before standing orders loads as a
         // colony under none, and plays exactly as it did.
         policy = try c.decodeIfPresent(ColonyPolicy.self, forKey: .policy) ?? ColonyPolicy()
+        // A save written before the settlement had ways in it loads with none,
+        // and `PathEngine` wears them back in over the following seasons.
+        paths = try c.decodeIfPresent(SettlementPaths.self, forKey: .paths) ?? SettlementPaths()
     }
 }

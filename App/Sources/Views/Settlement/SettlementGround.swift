@@ -56,6 +56,7 @@ enum SettlementGround {
         season: Season, zoom: CGFloat,
         sun: SettlementLight.Sun = SettlementLight.sun(time: 0),
         seasonProgress: Double = 0.5,
+        tracks: SettlementTracks? = nil,
         registry: GameDataRegistry
     ) {
         let cols = LocalMap.gridColumns, rows = LocalMap.gridRows
@@ -140,7 +141,13 @@ enum SettlementGround {
                     // keeps a field from reading as one printed colour.
                     let dim = (h >> 12) & 7 < 2
 
-                    batches[Tone(cover: cover, skin: skin, band: band, dim: dim),
+                    // The ways people have worn across this piece of ground.
+                    // Resolved into the tile's *finished* colour rather than
+                    // laid over it as a translucent sheet: tiles overlap, and
+                    // anything see-through doubles along every seam (rule 9).
+                    let track = tracks?.band(atU: u, v: v) ?? 0
+
+                    batches[Tone(cover: cover, skin: skin, band: band, dim: dim, track: track),
                             default: Path()].addRect(tile)
 
                     if skin != .bare {
@@ -189,6 +196,10 @@ enum SettlementGround {
         let band: Int
         /// The one-in-four tiles drawn a shade darker for grain.
         let dim: Bool
+        /// How beaten this ground is, 0 (nobody goes this way) to
+        /// `SettlementTracks.steps`. See `SettlementPaths` — a way in a town is
+        /// walked, not built.
+        var track: Int = 0
 
         /// A total order over tones, so the buckets are always filled in the
         /// same sequence. Darkest band first, so a lit tile's overgrown edge
@@ -202,10 +213,13 @@ enum SettlementGround {
         /// second, for as long as the settlement is on screen. Sampling a
         /// running build put **every** sample inside this sort. The valley was
         /// spending its whole frame budget rebuilding two constant arrays.
+        /// A track is more significant than the cover under it, so a street's
+        /// overgrown edge falls *over* the grass beside it rather than under —
+        /// packed earth is the thing on top.
         var order: Int {
             let cover = Tone.coverOrder[cover] ?? 0
             let skin = Tone.skinOrder[skin] ?? 0
-            return (band * 256) + (cover * 16) + (skin * 2) + (dim ? 0 : 1)
+            return (band * 4096) + (track * 256) + (cover * 16) + (skin * 2) + (dim ? 0 : 1)
         }
 
         private static let coverOrder: [GroundCover: Int] = Dictionary(
@@ -224,6 +238,15 @@ enum SettlementGround {
             r = r * (1 - w) + skin.r * w
             g = g * (1 - w) + skin.g * w
             b = b * (1 - w) + skin.b * w
+        }
+        // Trodden bare. Over the season's skin, because a street in winter is
+        // the one strip of a valley the snow gets kicked off.
+        if tone.track > 0 {
+            let w = Double(tone.track) / Double(SettlementTracks.steps) * SettlementTracks.deepestTint
+            let earth = SettlementTracks.earth
+            r = r * (1 - w) + earth.r * w
+            g = g * (1 - w) + earth.g * w
+            b = b * (1 - w) + earth.b * w
         }
         if tone.dim {
             r *= 0.90; g *= 0.90; b *= 0.90
