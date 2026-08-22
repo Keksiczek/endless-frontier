@@ -111,4 +111,67 @@ struct ZZBattleDiag {
         }
         print("──────────────────────────────────────────────────────────────\n")
     }
+
+    /// **How aimed a raid is**, which is what the "two lines waving swords"
+    /// complaint was actually about.
+    ///
+    /// `churn` is the share of marks that changed from one step to the next.
+    /// Before the hysteresis every fighter re-chose every step off nothing but
+    /// distance, so this was most of the field. `spread` is how far apart the
+    /// raiders' destinations are — one number that says whether a warband is
+    /// converging on one point or going about its several businesses.
+    @Test("how aimed a raid is")
+    func theShapeOfAnIntention() throws {
+        let registry = try GameDataRegistry.bundled()
+        var world = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        world = TickEngine.advance(world, ticks: 3000, registry: registry).state
+
+        print("""
+
+        ── intent ─────────────────────────────────────────────────────
+        churn is the share of marks that changed step to step; before the
+        hysteresis it was most of the field, every step.
+
+        raiders | fight plunder burn | steps churn | roofs fired | plundered
+        """)
+
+        for strength in [10.0, 25.0, 60.0, 120.0] {
+            guard var settlement = world.settlements.first else { break }
+            settlement.siege = nil
+            settlement = SiegeEngine.begin(
+                settlement, attackerStrength: strength, attackerName: "Test",
+                fortification: 10, tick: world.tick, registry: registry,
+                seed: 99 &+ UInt64(strength))
+            guard var staged = settlement.siege else { continue }
+            SiegeEngine.stageIfNeeded(&staged, in: settlement, registry: registry)
+            var byIntent: [Siege.Combatant.Intent: Int] = [:]
+            for raider in staged.fighters where raider.side == .raider {
+                byIntent[raider.intent, default: 0] += 1
+            }
+            let before = settlement.colony?.placements.reduce(0.0) { $0 + $1.condition } ?? 0
+
+            var switches = 0, held = 0, ran = 0
+            var previous: [UUID: UUID] = [:]
+            while settlement.siege?.isFinished == false, ran < 400 {
+                let to = (settlement.siege?.advancedTo ?? 0) + 1
+                settlement = SiegeEngine.fight(settlement, to: to, registry: registry).settlement
+                ran += 1
+                guard let siege = settlement.siege else { break }
+                for fighter in siege.fighters where !fighter.down && fighter.target != nil {
+                    if let was = previous[fighter.id] {
+                        if was == fighter.target { held += 1 } else { switches += 1 }
+                    }
+                    previous[fighter.id] = fighter.target
+                }
+            }
+            let after = settlement.colony?.placements.reduce(0.0) { $0 + $1.condition } ?? 0
+            let churn = held + switches == 0 ? 0 : Double(switches) / Double(held + switches)
+            print(String(format: "%7.0f | %5d %7d %4d | %5d %5.0f%% | %11.2f | %9.0f",
+                         strength,
+                         byIntent[.fight] ?? 0, byIntent[.plunder] ?? 0, byIntent[.burn] ?? 0,
+                         ran, churn * 100, before - after,
+                         settlement.lastBattle?.plunder ?? 0))
+        }
+        print("──────────────────────────────────────────────────────────────\n")
+    }
 }

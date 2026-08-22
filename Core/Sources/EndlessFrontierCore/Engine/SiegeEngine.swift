@@ -52,6 +52,42 @@ public enum SiegeEngine {
     /// always said and nothing could previously act on.
     public static let bowRange = 0.16
 
+    // MARK: - Coming here to do something
+
+    /// **How much better a new mark has to be before somebody turns to it.**
+    ///
+    /// `aim` used to re-decide every fighter's target from scratch, every step,
+    /// off nothing but distance — so as the field moved, everybody's nearest
+    /// enemy kept changing, the whole warband converged on whoever was in the
+    /// middle, and no one on the ground had an intention that outlived a single
+    /// step. Keks: *"chovat se že útočí nějak cíleně, ne že teď vedle sebe
+    /// hýbají dvě čáry lidí a sem tam někdo přiběhne nebo zmizí."*
+    ///
+    /// A mark is **kept** until it is down, gone, or something is decisively
+    /// nearer. Decisively is this: two-thirds of the distance. Somebody a
+    /// hair's breadth closer is not a reason to turn your back on the man you
+    /// are fighting, and the shimmer that came of pretending otherwise is the
+    /// whole of what "the fighting is not very dynamic" was describing.
+    static let switchMargin = 0.66
+
+    /// How far from their line of march somebody with somewhere to be will
+    /// turn aside to fight, as a multiple of `reach`.
+    ///
+    /// A raider making for the granary walks past a man three ranks away. They
+    /// do not walk past one standing in the gateway. Anything wider than this
+    /// and an intent is only a slower way of doing what everybody already did.
+    static let inTheWay = 2.6
+
+    /// What a warband is made of. Shares of it, summing to one.
+    ///
+    /// Not a personality system: it is three destinations out of the same
+    /// arithmetic, and it is what makes a raid look aimed. A camp will pick
+    /// these for itself once raids come from a place on the map rather than
+    /// out of nothing (`docs/HANDOFF-2026-08-22.md` §5); until then every
+    /// warband is mixed the same way.
+    static let plunderShare = 0.30
+    static let burnShare = 0.15
+
     /// How many steps the two ranks take to cross the ground between them when
     /// the colony holds its line. Nothing branches on this — the approach is
     /// emergent — but `meleePerStep` needs a divisor and this is where it
@@ -247,12 +283,41 @@ public enum SiegeEngine {
         // the two are kept equal every step — the aggregate is what decides
         // whether the raid broke, and the figures are what it is made of.
         let share = max(0, siege.strength) / Double(count)
+        // What each of them came for, and — for the ones who came to burn
+        // something — which roof. Rolled off the siege's own seed, so the same
+        // raid always brings the same warband (rule 2); a fresh `SeededRNG`
+        // here rather than the step's, because this happens once at the muster
+        // and must not shift when a step's rolls change.
+        var muster = SeededRNG(seed: siege.seed &* 0x2545_F491_4F6C_DD1D &+ 0x9E37)
+        let roofs = burnableRoofs(of: settlement)
         for index in 0..<count {
+            let roll = muster.nextUnit()
+            var intent: Siege.Combatant.Intent = .fight
+            var goal: LocalPoint?
+            if roll < burnShare, !roofs.isEmpty {
+                intent = .burn
+                goal = roofs[Int(muster.nextUnit() * Double(roofs.count)) % roofs.count]
+            } else if roll < burnShare + plunderShare {
+                intent = .plunder
+            }
             out.append(Siege.Combatant(
                 id: raiderID(seed: siege.seed, index: index), side: .raider,
-                at: field.attackerPost(index: index, of: count), strength: share))
+                at: field.attackerPost(index: index, of: count), strength: share,
+                intent: intent, goal: goal))
         }
         siege.fighters = out
+    }
+
+    /// The roofs somebody might come to burn: what stands, finished, and is
+    /// not a house — a warband fires the granary and the smithy, and the point
+    /// of one is that the colony *loses* something it built.
+    ///
+    /// In the map's own stored order, so the pick is reproducible.
+    static func burnableRoofs(of settlement: Settlement) -> [LocalPoint] {
+        guard let colony = settlement.colony else { return [] }
+        return colony.placements
+            .filter { !$0.underConstruction && $0.condition > 0 }
+            .map { SettlementGeometry.canvasPoint(for: $0, in: colony) }
     }
 
     /// A stable id for one raider. Derived from the siege's own seed, so two
@@ -450,10 +515,37 @@ public enum SiegeEngine {
                 continue
             }
             let me = siege.fighters[index]
-            siege.fighters[index].target = me.side == .colony
-                ? nearest(to: me.at, among: raiders)?.id
-                : nearest(to: me.at, among: colony, preferringWeak: true)?.id
+            let crowd = me.side == .colony ? raiders : colony
+            // Somebody with somewhere to be only fights what gets in the way;
+            // everybody else takes the field as it comes.
+            let horizon = me.side == .raider && me.intent != .fight
+                ? reach * inTheWay : Double.infinity
+            siege.fighters[index].target = mark(
+                for: me, among: crowd, horizon: horizon,
+                preferringWeak: me.side == .raider)
         }
+    }
+
+    /// **The one they are going for — kept.**
+    ///
+    /// Held until the mark is down, out of the crowd, beyond this fighter's
+    /// horizon, or until something else is *decisively* nearer
+    /// (`switchMargin`). Without the last clause everybody re-chose every step
+    /// off nothing but distance, so the whole field converged and a battle was
+    /// two lines shuffling sideways.
+    static func mark(
+        for me: Siege.Combatant, among crowd: [Siege.Combatant],
+        horizon: Double, preferringWeak: Bool
+    ) -> UUID? {
+        guard let best = nearest(to: me.at, among: crowd, preferringWeak: preferringWeak),
+              SiegeField.distance(me.at, best.at) <= horizon else { return nil }
+        guard let current = me.target,
+              let held = crowd.first(where: { $0.id == current }),
+              SiegeField.distance(me.at, held.at) <= horizon
+        else { return best.id }
+        let heldScore = score(from: me.at, to: held, preferringWeak: preferringWeak)
+        let bestScore = score(from: me.at, to: best, preferringWeak: preferringWeak)
+        return bestScore < heldScore * switchMargin ? best.id : current
     }
 
     /// The point a fighter is trying to reach in order to be within reach of
@@ -617,8 +709,25 @@ public enum SiegeEngine {
         switch me.side {
         case .raider:
             guard !me.down else { return nil }
-            // Whoever they closed on — or the stores, if nobody is in the way.
-            return me.target.flatMap { places[$0] } ?? field.heart
+            switch me.intent {
+            case .fight:
+                // Whoever they closed on — or the stores, if nobody is in the way.
+                return me.target.flatMap { places[$0] } ?? field.heart
+            case .plunder:
+                // The stores. Somebody standing in the gateway is a thing to
+                // be got past; somebody three ranks over is not their business.
+                if let block = me.target.flatMap({ places[$0] }),
+                   SiegeField.distance(me.at, block) <= reach * inTheWay { return block }
+                return field.heart
+            case .burn:
+                // One roof, picked at the muster. Once they are standing on it
+                // the ransacking does the rest, and a raider who has arrived
+                // has no further business walking.
+                guard let goal = me.goal else { return field.heart }
+                if let block = me.target.flatMap({ places[$0] }),
+                   SiegeField.distance(me.at, block) <= reach * inTheWay { return block }
+                return goal
+            }
         case .colony:
             // A tower stands where it was built. That is the whole of what a
             // tower is, and it is why one is worth attacking.
@@ -1056,7 +1165,19 @@ public enum SiegeEngine {
                 guard let tile = SettlementGeometry.tile(at: raider.at, in: colony),
                       let placement = colony.placement(at: tile),
                       !placement.underConstruction else { continue }
-                chips[placement.id, default: 0] += ransackDamagePerStep
+                // Somebody who came for *this* roof does it properly. Otherwise
+                // an intent would only mean walking somewhere particular, and
+                // the colony would never notice it had been aimed at.
+                let camePreparedForIt = raider.intent == .burn
+                    && raider.goal.flatMap { SettlementGeometry.tile(at: $0, in: colony) }
+                        .map { placement.covers($0) } == true
+                chips[placement.id, default: 0] += camePreparedForIt
+                    ? burnDamagePerStep : ransackDamagePerStep
+                if camePreparedForIt,
+                   !siege.moments.contains(where: { $0.kind == .torch }) {
+                    siege.moments.append(moment(siege, .torch, amount: burnDamagePerStep,
+                                                spot: raider.at))
+                }
             }
         }
 
@@ -1074,6 +1195,15 @@ public enum SiegeEngine {
     /// Condition a raider takes out of the building they are ransacking, per
     /// step. Small: a raid should leave a town needing work, not a ruin.
     static let ransackDamagePerStep = 0.006
+
+    /// …and what somebody who came to burn *that* roof takes out of it.
+    ///
+    /// Six times an incidental ransacking, which over a long fight is a
+    /// building the colony has to rebuild rather than repair. That is the
+    /// whole point of an intent: if a warband that came for the granary does
+    /// the same harm as one that wandered into it, nothing was aimed at
+    /// anything and the mechanic is a walk with a name on it.
+    static let burnDamagePerStep = 0.036
 
     /// How much a swing takes out of the thing doing the swinging, and how much
     /// a blow takes out of what stopped it.
@@ -1122,16 +1252,24 @@ public enum SiegeEngine {
         }
     }
 
+    /// How far somebody is worth going, which is not the same as how far away
+    /// they are. One function, because `nearest` and `mark` compare the same
+    /// two people and a disagreement between them is a fighter who keeps
+    /// turning round (rule 35).
+    static func score(
+        from point: LocalPoint, to who: Siege.Combatant, preferringWeak: Bool
+    ) -> Double {
+        let d = SiegeField.distance(point, who.at)
+        guard preferringWeak else { return d }
+        return d * (0.55 + 0.45 * min(1, max(0, who.strength / 100)))
+    }
+
     private static func nearest(
         to point: LocalPoint, among crowd: [Siege.Combatant], preferringWeak: Bool = false
     ) -> Siege.Combatant? {
-        func score(_ who: Siege.Combatant) -> Double {
-            let d = SiegeField.distance(point, who.at)
-            guard preferringWeak else { return d }
-            return d * (0.55 + 0.45 * min(1, max(0, who.strength / 100)))
-        }
-        return crowd.min {
-            let a = score($0), b = score($1)
+        crowd.min {
+            let a = score(from: point, to: $0, preferringWeak: preferringWeak)
+            let b = score(from: point, to: $1, preferringWeak: preferringWeak)
             return a == b ? $0.id.uuidString < $1.id.uuidString : a < b
         }
     }

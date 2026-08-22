@@ -419,6 +419,9 @@ enum SettlementBattle {
                     &context, at: SettlementRenderer.point(p, in: rect),
                     along: blow(of: moment, at: p, field: field, siege: siege),
                     age: age, fatal: moment.kind == .death, unit: unit, seed: moment.id)
+            case .torch:
+                torch(&context, rect: rect, fade: fade, unit: unit,
+                      at: moment.spot ?? field.heart, seed: UInt64(moment.id))
             case .plunder:
                 plunder(&context, field: field, rect: rect, fade: fade, unit: unit,
                         at: moment.spot)
@@ -801,6 +804,35 @@ enum SettlementBattle {
             let s = unit * 0.010
             context.fill(Path(CGRect(x: p.x - s / 2, y: p.y - s / 2, width: s, height: s)),
                          with: .color(Theme.accent.opacity(0.55 * fade)))
+        }
+    }
+
+    /// **A roof going up.** Somebody came for this building and is standing on
+    /// it — the fire is drawn where they are, which is where the Core says the
+    /// harm is being done rather than at the middle of town.
+    private static func torch(
+        _ context: inout GraphicsContext, rect: CGRect,
+        fade: Double, unit: CGFloat, at spot: LocalPoint, seed: UInt64
+    ) {
+        let p = SettlementRenderer.point(spot, in: rect)
+        var hash = seed &* 0x9E37_79B9_7F4A_7C15 &+ 1
+        for i in 0..<5 {
+            hash = hash &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+            let sway = (Double((hash >> 33) % 1000) / 1000 - 0.5) * 0.9
+            let rise = 0.35 + Double(i) * 0.22
+            let size = unit * CGFloat(0.016 * (1 - rise * 0.5))
+            let x = p.x + CGFloat(sway) * unit * 0.012
+            let y = p.y - CGFloat(rise) * unit * 0.020
+            var flame = Path()
+            flame.move(to: CGPoint(x: x, y: y + size))
+            flame.addQuadCurve(to: CGPoint(x: x, y: y - size),
+                               control: CGPoint(x: x - size * 0.9, y: y))
+            flame.addQuadCurve(to: CGPoint(x: x, y: y + size),
+                               control: CGPoint(x: x + size * 0.9, y: y))
+            // Hotter at the base, going to smoke at the top.
+            let heat = 1 - rise * 0.6
+            context.fill(flame, with: .color(Color(red: 0.95, green: 0.45 + 0.25 * heat,
+                                                   blue: 0.12).opacity(0.75 * fade * heat)))
         }
     }
 

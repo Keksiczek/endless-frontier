@@ -144,7 +144,8 @@ struct BattleReportCard: View {
     /// The distinct beats that happened, in the order a battle runs.
     private var beats: [BattleMoment.Kind] {
         let present = Set(battle.moments.map(\.kind))
-        let order: [BattleMoment.Kind] = [.volley, .charge, .clash, .wound, .death, .plunder, .repelled]
+        let order: [BattleMoment.Kind] = [.volley, .charge, .clash, .wound, .death,
+                                         .torch, .plunder, .repelled]
         return order.filter { present.contains($0) }
     }
 
@@ -155,6 +156,7 @@ struct BattleReportCard: View {
         case .clash:    return cs ? "Střet u zdi" : "Clash"
         case .wound:    return "\(battle.wounded) " + (cs ? "raněných" : "wounded")
         case .death:    return "\(battle.deaths) " + (cs ? "padlých" : "fell")
+        case .torch:    return cs ? "Zapálili střechu" : "A roof fired"
         case .plunder:  return (cs ? "kořist " : "plunder ") + "\(Int(battle.plunder))"
         case .repelled: return cs ? "odraženo" : "held"
         }
@@ -167,6 +169,7 @@ struct BattleReportCard: View {
         case .clash:    return "bolt.fill"
         case .wound:    return "cross.case.fill"
         case .death:    return "xmark"
+        case .torch:    return "flame.fill"
         case .plunder:  return "shippingbox.fill"
         case .repelled: return "shield.fill"
         }
@@ -174,7 +177,7 @@ struct BattleReportCard: View {
 
     private func beatTint(_ kind: BattleMoment.Kind) -> Color {
         switch kind {
-        case .death, .plunder: return Theme.danger
+        case .death, .plunder, .torch: return Theme.danger
         case .repelled:        return Theme.good
         default:               return Theme.textDim
         }

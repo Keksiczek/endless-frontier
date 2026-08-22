@@ -11,6 +11,7 @@ public struct BattleMoment: Codable, Sendable, Equatable, Identifiable {
         case wound       // a named defender is hurt
         case death       // …or killed
         case plunder     // stores carried off
+        case torch       // a roof they came for, going up
         case repelled    // the attack breaks
     }
 

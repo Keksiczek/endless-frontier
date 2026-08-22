@@ -82,6 +82,7 @@ struct TradePanel: View {
         case .charge: return cs ? "nápor" : "charge"
         case .clash: return cs ? "střet" : "clash"
         case .repelled: return nil          // already in the headline
+        case .torch: return cs ? "střecha v plamenech" : "a roof fired"
         case .plunder: return cs ? "ztraceno \(Int(moment.amount))" : "\(Int(moment.amount)) lost"
         case .wound: return (moment.pawnName ?? "?") + (cs ? " zraněn" : " wounded")
         case .death: return (moment.pawnName ?? "?") + (cs ? " padl" : " killed")

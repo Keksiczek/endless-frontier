@@ -804,3 +804,18 @@ fires, do the arithmetic before you rewrite the mechanic.
    sixty-eight colonists**, because the builders' standing orders for timber
    were older than every batch of spears. Anything finite must outrank anything
    endless in a shared queue, or the endless thing is the only thing.
+84. **A decision remade from scratch every step is not a decision.** `aim`
+   re-chose every fighter's target each action step off nothing but distance,
+   so as the field moved everybody's nearest enemy kept changing: measured,
+   **42–48 % of all marks changed from one step to the next** in a fight of
+   sixty raiders, which is half the field turning round twice a second. It
+   reads exactly as reported — *"dvě čáry lidí co se hýbají vedle sebe a sem
+   tam někdo přiběhne nebo zmizí"* — and every individual step of it was
+   correct. The fix is not a better rule for choosing, it is **hysteresis**: a
+   mark is kept until it is gone or something is decisively better
+   (`SiegeEngine.switchMargin`, two-thirds of the distance), which took the
+   same fights to 8–13 %. Of any per-step choice, ask what it costs to change
+   your mind; if the answer is nothing, the thing choosing has no intention,
+   only a gradient. The second half is the same lesson upstream: everybody
+   *wanting* the same thing converges a field however stable their marks are,
+   so a warband musters with three purposes in it (`Combatant.Intent`).
