@@ -13,7 +13,10 @@ import Foundation
 /// as it would have.
 enum SiegeTestSupport {
     static func fightItOut(
-        _ world: WorldState, registry: GameDataRegistry, ticks: Int = 6
+                /// Generous by default: a fight runs until a side breaks now, not
+        /// until a clock expires, so "fight it out" cannot be a fixed number of
+        /// ticks any more. It stops as soon as the siege is over.
+        _ world: WorldState, registry: GameDataRegistry, ticks: Int = 60
     ) -> WorldState {
         var s = world
         let start = s.tick

@@ -773,3 +773,34 @@ fires, do the arithmetic before you rewrite the mechanic.
    it is safe precisely because the field is derived: recomputing it from
    `(mapSeed, coord)` gives exactly the map the generator would have drawn, and
    the same map a newly explored hex on the frontier will get.
+80. **A rate quoted per step in a fight whose length is decided by the fight is
+   not a rate.** `meleePerStep` divides the line's weight by `steps` — one full
+   weight across the fight — which is exactly right while the clock ends the
+   fight, and a trap the moment the fight ends when somebody breaks: a line that
+   can only ever deal its own weight cannot take a warband past
+   `routAtShare`, so the fight **cannot end**. Measured with the clock taken
+   out: ninety raiders against six defenders, eighty steps, 90 → 56 strength and
+   three hundred more to go. If length becomes an outcome, every per-step number
+   has to be re-read as a rate — or the clock has to stay as a backstop, which
+   is what shipped.
+81. **A filter on one side of a two-sided system is a system with one side.**
+   `SiegeEngine.loose` filtered on `side == .colony`, so in every fight the game
+   has ever run the raiders had **no ranged attack at all** — they walked toward
+   people shooting at them and then swung. It reads as "the fighting is not very
+   dynamic", which is a complaint about feel that turns out to be a missing
+   half. Worth grepping for: any engine phase that names a side.
+82. **Two circles drawn for different purposes will overlap somewhere.**
+   `SiegeField.isInside` is `wallReach`, and the watch forms up at
+   `formUpReach`, which is **smaller** — so the back rank of a well-manned line
+   was standing inside the circle that means "among the stores", and a town of
+   sixty was plundered through a line that never broke while a town of ten lost
+   nothing. Being somewhere is not the same fact as having got past somebody;
+   when a rule means the second, it has to ask the second.
+83. **A standing order in a queue sorted by age holds its place for ever.**
+   `CraftingEngine.workableBenches` takes the oldest workable order per shop,
+   and a standing order (`wanted == nil`) never completes — so the first one
+   ever placed owned that bench for the rest of the colony's history. Measured:
+   fifty years of a council arming its people produced **seventeen weapons for
+   sixty-eight colonists**, because the builders' standing orders for timber
+   were older than every batch of spears. Anything finite must outrank anything
+   endless in a shared queue, or the endless thing is the only thing.

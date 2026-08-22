@@ -461,10 +461,42 @@ enum SettlementFigures {
     /// otherwise the axe or the pick or the scythe they work with — and if
     /// their trade has no edge on it, their fists.
     enum Armament {
-        case bow
-        case blade
+        /// Something they actually own, drawn as what it is.
+        case held(CombatProfile)
         /// No weapon. They swing whatever their trade puts in their hand.
         case none
+
+        /// A bare bow, for callers that have no item to hand (tests, and the
+        /// old two-shape world).
+        static let bow = Armament.held(CombatProfile(damage: 1, kind: .ranged))
+        static let blade = Armament.held(CombatProfile(damage: 1, kind: .melee))
+    }
+
+    /// **What a weapon looks like, worked out from what it is.**
+    ///
+    /// The same move `StructureVariant` makes for buildings and
+    /// `SettlementConveyances` makes for carts: there are eighty-two weapons
+    /// and there will be more, so the difference between them has to fall out
+    /// of their own fields rather than out of a drawing per weapon. Keks:
+    /// *"vsichni by meli mit svou vyzbroj viditelnou pokud nejakou maji."*
+    ///
+    /// `projectile` decides the family, `damage` decides how long and heavy the
+    /// haft is, and `caliber` decides how big the business end looks.
+    struct WeaponLook {
+        let projectile: ProjectileKind
+        /// How much weapon there is, 0…1 — a knife against a poleaxe.
+        let heft: Double
+        let caliber: Double
+
+        init(_ profile: CombatProfile) {
+            projectile = profile.projectile
+            // Damage runs from about 2 for a knife to about 40 for the heavy
+            // end of the book. Rooted rather than linear, so the difference
+            // between a knife and a sword is visible and the difference
+            // between a rifle and a heavier rifle is not absurd.
+            heft = min(1, max(0, (profile.damage / 30).squareRoot()))
+            caliber = profile.caliber ?? 1
+        }
     }
 
     /// `skin` is the fighter's *own* tone — bare fists belong to the face above
@@ -478,65 +510,205 @@ enum SettlementFigures {
         let wood = Color(red: 0.60, green: 0.48, blue: 0.34).opacity(alpha)
         let iron = Color(red: 0.80, green: 0.83, blue: 0.88).opacity(alpha)
 
-        if case .none = armed {
+        guard case .held(let profile) = armed else {
             improvisedArms(work: work, at: hand, scale: scale, alpha: alpha,
                            time: time, wood: wood, iron: iron, context: &context)
             return
         }
-        guard case .bow = armed else {
-            // A blade, swung: back over the shoulder, then down and through.
-            let swing = sin(time * 7)
-            let angle = -2.3 + swing * 1.5
-            let reach = 4.2 * scale
-            context.stroke(Path { p in
-                p.move(to: hand)
-                p.addLine(to: CGPoint(x: hand.x + CGFloat(cos(angle)) * reach,
-                                      y: hand.y + CGFloat(sin(angle)) * reach))
-            }, with: .color(iron), style: StrokeStyle(lineWidth: 1.1 * scale, lineCap: .round))
-            // The arc it cuts, faint, so the swing reads at a glance.
-            context.stroke(Path { p in
-                p.addArc(center: hand, radius: reach,
-                         startAngle: .radians(angle - 0.5), endAngle: .radians(angle),
-                         clockwise: false)
-            }, with: .color(Theme.bone.opacity(alpha * 0.22)), lineWidth: 0.8 * scale)
-            return
+        let look = WeaponLook(profile)
+        switch look.projectile {
+        case .none:
+            melee(look, at: hand, scale: scale, time: time,
+                  wood: wood, iron: iron, context: &context)
+        case .arrow:
+            bow(look, at: hand, scale: scale, alpha: alpha, time: time,
+                wood: wood, crossbow: false, context: &context)
+        case .bolt:
+            bow(look, at: hand, scale: scale, alpha: alpha, time: time,
+                wood: wood, crossbow: true, context: &context)
+        case .stone:
+            sling(look, at: hand, scale: scale, alpha: alpha, time: time,
+                  context: &context)
+        case .dart:
+            tube(look, at: hand, scale: scale, time: time, colour: wood,
+                 bore: 0.5, context: &context)
+        case .ball, .bullet, .shot:
+            firearm(look, at: hand, scale: scale, alpha: alpha, time: time,
+                    wood: wood, iron: iron, context: &context)
+        case .shell, .grenade, .rocket:
+            tube(look, at: hand, scale: scale, time: time, colour: iron,
+                 bore: 1.6, context: &context)
+        case .beam:
+            emitter(look, at: hand, scale: scale, alpha: alpha, time: time,
+                    context: &context)
         }
+    }
 
-        // A bow, on a cycle: nock, draw, loose, and the arrow away.
-        let cycle = (time * 1.6).truncatingRemainder(dividingBy: 1)
-        let draw = cycle < 0.7 ? cycle / 0.7 : 0            // pulled back…
-        let loosed = cycle >= 0.7 ? (cycle - 0.7) / 0.3 : 0 // …then gone
-        let limb = 2.8 * scale
+    // MARK: - The families
 
+    /// Swung: how long the haft is, and how heavy the head, comes from `heft` —
+    /// a knife is a stub with an edge, a poleaxe is a shaft you can see across
+    /// the valley.
+    private static func melee(
+        _ look: WeaponLook, at hand: CGPoint, scale: CGFloat, time: Double,
+        wood: Color, iron: Color, context: inout GraphicsContext
+    ) {
+        let swing = sin(time * 7)
+        let angle = -2.3 + swing * 1.5
+        let reach = (2.2 + 3.4 * CGFloat(look.heft)) * scale
+        let tip = CGPoint(x: hand.x + CGFloat(cos(angle)) * reach,
+                          y: hand.y + CGFloat(sin(angle)) * reach)
+        // A heavy weapon is hafted: wood most of the way, iron at the end.
+        if look.heft > 0.55 {
+            let joint = CGPoint(x: hand.x + CGFloat(cos(angle)) * reach * 0.62,
+                                y: hand.y + CGFloat(sin(angle)) * reach * 0.62)
+            context.stroke(Path { p in p.move(to: hand); p.addLine(to: joint) },
+                           with: .color(wood),
+                           style: StrokeStyle(lineWidth: 1.0 * scale, lineCap: .round))
+            context.stroke(Path { p in p.move(to: joint); p.addLine(to: tip) },
+                           with: .color(iron),
+                           style: StrokeStyle(lineWidth: 1.5 * scale, lineCap: .round))
+        } else {
+            context.stroke(Path { p in p.move(to: hand); p.addLine(to: tip) },
+                           with: .color(iron),
+                           style: StrokeStyle(lineWidth: (0.8 + 0.6 * CGFloat(look.heft)) * scale,
+                                              lineCap: .round))
+        }
+        // The arc it cuts, faint, so the swing reads at a glance.
         context.stroke(Path { p in
-            p.addArc(center: hand, radius: limb,
-                     startAngle: .degrees(-58), endAngle: .degrees(58), clockwise: false)
-        }, with: .color(wood), lineWidth: 0.9 * scale)
-        // The string, bent back as far as the draw has come.
-        let pull = CGFloat(draw) * 1.7 * scale
-        let limbAngle = 58.0 * Double.pi / 180
-        let top = CGPoint(x: hand.x + limb * CGFloat(cos(-limbAngle)),
-                          y: hand.y + limb * CGFloat(sin(-limbAngle)))
-        let bottom = CGPoint(x: hand.x + limb * CGFloat(cos(limbAngle)),
-                             y: hand.y + limb * CGFloat(sin(limbAngle)))
-        context.stroke(Path { p in
-            p.move(to: top)
-            p.addQuadCurve(to: bottom, control: CGPoint(x: hand.x - pull, y: hand.y))
-        }, with: .color(Theme.boneDim.opacity(alpha)), lineWidth: 0.5)
-        // The arrow: on the string while drawing, in the air after.
+            p.addArc(center: hand, radius: reach,
+                     startAngle: .radians(angle - 0.5), endAngle: .radians(angle),
+                     clockwise: false)
+        }, with: .color(Theme.bone.opacity(0.22)), lineWidth: 0.8 * scale)
+    }
+
+    /// A bow on a cycle — nock, draw, loose — or a crossbow, which is the same
+    /// limbs laid across a stock and does not bend in the hand.
+    private static func bow(
+        _ look: WeaponLook, at hand: CGPoint, scale: CGFloat, alpha: Double,
+        time: Double, wood: Color, crossbow: Bool, context: inout GraphicsContext
+    ) {
+        let cycle = (time * (crossbow ? 0.9 : 1.6)).truncatingRemainder(dividingBy: 1)
+        let draw = cycle < 0.7 ? cycle / 0.7 : 0
+        let loosed = cycle >= 0.7 ? (cycle - 0.7) / 0.3 : 0
+        let limb = (2.2 + 1.2 * CGFloat(look.heft)) * scale
+
+        if crossbow {
+            // The stock, held level, with the limbs across the front of it.
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x - limb * 0.8, y: hand.y))
+                p.addLine(to: CGPoint(x: hand.x + limb, y: hand.y))
+            }, with: .color(wood), style: StrokeStyle(lineWidth: 1.1 * scale, lineCap: .round))
+            context.stroke(Path { p in
+                p.move(to: CGPoint(x: hand.x + limb, y: hand.y - limb * 0.7))
+                p.addLine(to: CGPoint(x: hand.x + limb, y: hand.y + limb * 0.7))
+            }, with: .color(wood), lineWidth: 0.9 * scale)
+        } else {
+            context.stroke(Path { p in
+                p.addArc(center: hand, radius: limb,
+                         startAngle: .degrees(-58), endAngle: .degrees(58), clockwise: false)
+            }, with: .color(wood), lineWidth: 0.9 * scale)
+            let pull = CGFloat(draw) * 1.7 * scale
+            let limbAngle = 58.0 * Double.pi / 180
+            let top = CGPoint(x: hand.x + limb * CGFloat(cos(-limbAngle)),
+                              y: hand.y + limb * CGFloat(sin(-limbAngle)))
+            let bottom = CGPoint(x: hand.x + limb * CGFloat(cos(limbAngle)),
+                                 y: hand.y + limb * CGFloat(sin(limbAngle)))
+            context.stroke(Path { p in
+                p.move(to: top)
+                p.addQuadCurve(to: bottom, control: CGPoint(x: hand.x - pull, y: hand.y))
+            }, with: .color(Theme.boneDim.opacity(alpha)), lineWidth: 0.5)
+        }
+        // What is on the string, or in the air.
         if loosed > 0 {
             let flight = CGFloat(loosed) * 9 * scale
             context.stroke(Path { p in
                 p.move(to: CGPoint(x: hand.x + limb + flight, y: hand.y))
                 p.addLine(to: CGPoint(x: hand.x + limb + flight + 2.2 * scale, y: hand.y))
             }, with: .color(Theme.bone.opacity(alpha * (1 - Double(loosed) * 0.5))),
-               style: StrokeStyle(lineWidth: 0.6 * scale, lineCap: .round))
+               style: StrokeStyle(lineWidth: 0.6 * scale * CGFloat(look.caliber), lineCap: .round))
         } else {
+            let pull = CGFloat(draw) * 1.7 * scale
             context.stroke(Path { p in
-                p.move(to: CGPoint(x: hand.x - pull, y: hand.y))
+                p.move(to: CGPoint(x: hand.x - (crossbow ? 0 : pull), y: hand.y))
                 p.addLine(to: CGPoint(x: hand.x + limb * 1.1, y: hand.y))
             }, with: .color(Theme.bone.opacity(alpha * 0.8)), lineWidth: 0.5 * scale)
         }
+    }
+
+    /// A sling: a cord whirled, and the stone away.
+    private static func sling(
+        _ look: WeaponLook, at hand: CGPoint, scale: CGFloat, alpha: Double,
+        time: Double, context: inout GraphicsContext
+    ) {
+        let whirl = time * 5
+        let radius = 2.4 * scale
+        let pouch = CGPoint(x: hand.x + CGFloat(cos(whirl)) * radius,
+                            y: hand.y + CGFloat(sin(whirl)) * radius)
+        context.stroke(Path { p in p.move(to: hand); p.addLine(to: pouch) },
+                       with: .color(Theme.boneDim.opacity(alpha * 0.8)), lineWidth: 0.5 * scale)
+        context.fill(Path(ellipseIn: CGRect(
+            x: pouch.x - 0.7 * scale, y: pouch.y - 0.7 * scale,
+            width: 1.4 * scale, height: 1.4 * scale)),
+            with: .color(Theme.bone.opacity(alpha)))
+    }
+
+    /// Anything with a barrel and a stock: the barrel's length comes from the
+    /// heft, and the smoke is most of what black powder looks like.
+    private static func firearm(
+        _ look: WeaponLook, at hand: CGPoint, scale: CGFloat, alpha: Double,
+        time: Double, wood: Color, iron: Color, context: inout GraphicsContext
+    ) {
+        let barrel = (2.6 + 3.2 * CGFloat(look.heft)) * scale
+        let muzzle = CGPoint(x: hand.x + barrel, y: hand.y)
+        context.stroke(Path { p in
+            p.move(to: CGPoint(x: hand.x - 1.6 * scale, y: hand.y + 0.5 * scale))
+            p.addLine(to: hand)
+        }, with: .color(wood), style: StrokeStyle(lineWidth: 1.2 * scale, lineCap: .round))
+        context.stroke(Path { p in p.move(to: hand); p.addLine(to: muzzle) },
+                       with: .color(iron),
+                       style: StrokeStyle(lineWidth: (0.7 + 0.5 * CGFloat(look.caliber)) * scale,
+                                          lineCap: .round))
+        // The report, on its own beat.
+        let shot = (time * 2.2).truncatingRemainder(dividingBy: 1)
+        guard shot < 0.18 else { return }
+        let bloom = CGFloat(1 - shot / 0.18)
+        context.fill(Path(ellipseIn: CGRect(
+            x: muzzle.x - 1.4 * scale * bloom, y: muzzle.y - 1.4 * scale * bloom,
+            width: 2.8 * scale * bloom, height: 2.8 * scale * bloom)),
+            with: .color(Theme.bone.opacity(alpha * 0.35 * Double(bloom))))
+    }
+
+    /// A tube held to the shoulder or the lips — a blowpipe at one end of the
+    /// ages and a launcher at the other, the same silhouette at two sizes.
+    private static func tube(
+        _ look: WeaponLook, at hand: CGPoint, scale: CGFloat, time: Double,
+        colour: Color, bore: CGFloat, context: inout GraphicsContext
+    ) {
+        let length = (3.0 + 2.6 * CGFloat(look.heft)) * scale
+        context.stroke(Path { p in
+            p.move(to: CGPoint(x: hand.x - 1.2 * scale, y: hand.y - 0.6 * scale))
+            p.addLine(to: CGPoint(x: hand.x + length, y: hand.y - 1.0 * scale))
+        }, with: .color(colour),
+           style: StrokeStyle(lineWidth: bore * scale, lineCap: .round))
+    }
+
+    /// Nothing is thrown: a line that exists for an instant, and a lit core.
+    private static func emitter(
+        _ look: WeaponLook, at hand: CGPoint, scale: CGFloat, alpha: Double,
+        time: Double, context: inout GraphicsContext
+    ) {
+        let length = 3.4 * scale
+        context.stroke(Path { p in
+            p.move(to: hand)
+            p.addLine(to: CGPoint(x: hand.x + length, y: hand.y))
+        }, with: .color(Theme.textDim.opacity(alpha)),
+           style: StrokeStyle(lineWidth: 1.2 * scale, lineCap: .round))
+        let pulse = 0.5 + 0.5 * sin(time * 9)
+        context.fill(Path(ellipseIn: CGRect(
+            x: hand.x + length - 0.6 * scale, y: hand.y - 0.6 * scale,
+            width: 1.2 * scale, height: 1.2 * scale)),
+            with: .color(Theme.accent.opacity(alpha * (0.4 + 0.6 * pulse))))
     }
 
     /// A few strokes of the trade's tool at the hand position.

@@ -41,7 +41,21 @@ public enum CombatEngine {
         // Made well **and** kept well: `effectiveness` is quality times what is
         // left of the piece, so a blade that has been through four raids hits
         // like the cheaper blade it has become (§11.26 C).
-        return CombatProfile(damage: combat.damage * item.effectiveness, kind: combat.kind)
+        // **Everything the weapon is**, with only the damage worn down.
+        //
+        // This used to build a two-field profile — damage and class — and drop
+        // `projectile`, `range`, `caliber`, `shots` and the rest on the floor.
+        // So the one query that asks "what is this colonist holding" could only
+        // ever answer "something ranged" or "something melee", which is why
+        // eighty-two weapons are drawn as three silhouettes: the drawing had
+        // nothing else to go on. Rule 47's other face — a field nothing reads
+        // is dead content, and a *reader* that drops the fields is how a live
+        // field becomes dead.
+        return CombatProfile(
+            damage: combat.damage * item.effectiveness, kind: combat.kind,
+            projectile: combat.projectile, range: combat.range,
+            spread: combat.spread, caliber: combat.caliber,
+            shots: combat.shots, blast: combat.blast)
     }
 
     /// How hard a wound lands on a colonist, given the armour they are wearing

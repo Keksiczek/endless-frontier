@@ -105,6 +105,102 @@ nothing** — this is the check to repeat before adding any more.
 drawn and they do not yet decide a hit — that is the next slice, and until it
 lands they should not be tuned as though they were.
 
+## What a fight is actually made of, measured
+
+`ZZBattleDiag` (`EF_DIAG=1`), against a real colony of 68 with 28 on the line:
+
+```
+raiders  line armed | steps  ran   secs | ended on       | volleys  kinds        | wounds
+      4    28    16 |    20    4      6 | warband broken |       4  arrow,stone  |      0
+     25    28    16 |    23   10     14 | warband broken |      10  arrow,stone  |      0
+     60    28    16 |    33   27     38 | warband broken |      34  arrow,stone  |      2
+     120   28    16 |    43   43     60 | clock ran out  |      80  arrow,stone  |     20
+```
+
+Three complaints, three different faults, and they had to be measured apart:
+
+**"It did not last as long as it should."** A raid ran between **seven and
+thirty-six seconds** end to end. `Siege.stepsTotal` was 24 at twelve attackers
+and a step is 1.4 real seconds while somebody is watching. It is 40 now, and —
+more importantly — the clock stopped being the referee: `isFinished` ends on the
+**rout** (`Siege.routAtShare`), and only falls back on the clock for a stalemate.
+
+**"The salvos are always the same animation."** They were: `armed 17 of 68 —
+["none": 13, "arrow": 4]`, and `kinds on the shelf: []`. Four colonists in the
+whole colony carried something that shoots and all four carried a bow, so every
+volley in the game was arrows however many weapons the book holds. That is not a
+drawing fault — `SettlementProjectiles` composes eleven kinds — it is that
+nothing ranged is ever *made*.
+
+**"The fighting is not very dynamic."** `loose` filtered on `side == .colony`,
+so **the raiders had no ranged attack at all**: every fight in the game was the
+colony shooting at people walking toward it. `returnFire` is the other half, and
+what a warband carries comes from the age it is fighting in (`raiderArms`), so a
+raid in the age of powder does not look like a raid in the age of bows.
+
+### And what the fight now writes down
+
+`BattleMoment` carries `part` and `wound`, so a beat is "a stab to Mara's left
+arm" rather than a name and a number. The anatomy was already there — `Body` has
+had head, torso, two arms and two legs, each with its own condition and its own
+`missing`, since the animals got it, and `condition <= 0` already takes a limb —
+but nothing recorded *where*, and `MedicineEngine.wound` did not say. It says
+now (`wounded`), and the wound kind comes from the weapon (`WoundKind.from`)
+rather than from a die: a blade cuts, an arrow stabs, a ball bruises, a shell
+burns.
+
+### Two faults the lengthening exposed
+
+- **A holding line leaked.** `shoulder` parts bodies without caring which side
+  they are on, so a raider could be squeezed *through* an intact line; and
+  `isInside` is a circle of `wallReach` while the watch forms up at
+  `formUpReach`, **inside** it, so the back rank of a well-manned line stood in
+  the same circle as the stores. Measured: a town of sixty held its line, lost
+  nobody and was plundered, while a town of ten — too thin to have a back rank —
+  lost nothing. Defending made the sack worse. Getting at the stores means
+  getting past everybody still standing (`holdTheLine`).
+- **A broken line used to end the fight**, which meant losing protected the
+  grain. It does not any more: they have the run of the place and they stay for
+  it.
+
+### Why nothing but bows was ever in anybody's hands
+
+`armed 17 of 68 — ["none": 13, "arrow": 4]`, and the shelf empty. Three separate
+faults stacked, and the first two are the same shape as the council's:
+
+1. **`CombatEngine.weaponProfile` threw the weapon away.** It rebuilt a
+   two-field `CombatProfile` — damage and class — and dropped `projectile`,
+   `range`, `caliber`, `shots` and `blast` on the floor. The one query that asks
+   "what is this colonist holding" could only answer "something ranged" or
+   "something melee", which is why eighty-two weapons were drawn as three
+   silhouettes: the drawing had nothing else to go on. Rule 47's other face — a
+   *reader* that drops the fields is how a live field becomes dead content.
+2. **`bestGear` ranks by `worth`, and `worth` is damage.** A bow has less of it
+   than an axe, every time, so the quartermaster made blades and only blades.
+   `rangedShare` keeps two in five of an armed line able to shoot; the militia
+   has counted melee and ranged separately since it was written.
+3. **A standing order held its bench for ever.** `workableBenches` sorts
+   oldest-first and takes one order per shop — and a standing order never
+   finishes. The builders' standing orders for timber and brick were older than
+   every batch of spears, so the gear bench was never reached. An order with an
+   *end* takes the bench first now; the trickle takes what is left.
+
+Measured across the same fifty years, with nothing else changed:
+
+| | before | after |
+|---|---|---|
+| armed | 17 of 68 | **49 of 69** |
+| on the line | 16 | **27** |
+| carrying something ranged | 4 | **17** |
+| kinds in hand | `arrow` | `arrow, stone, none` |
+
+### Still short, and not the combat system's fault
+
+A band of four against twenty-eight armed defenders is over in six seconds, and
+should be. `BanditEngine` sizes a warband off `temptation` — how full the stores
+are — and never off what it would have to fight. See `docs/COUNCIL.md` for the
+shape of that argument and `DangerProbe` for the instrument.
+
 ## What is still owed
 
 1. **Ammunition.** A gun with no rounds is a club; nothing consumes anything
@@ -112,7 +208,8 @@ lands they should not be tuned as though they were.
    `SiegeEngine.loose`, is the mechanic — and until it exists, do not generate
    ammunition items, because they would be things nothing consumes (rule 47).
 2. **A weapon in the hand.** `SettlementFigures.Armament` is `bow | blade |
-   none`, so eighty-two weapons are drawn as three. The fix is the one
+   none`, so eighty-two weapons are drawn as three. Keks: *"vsichni by meli mit
+   svou vyzbroj viditelnou pokud nejakou maji."* The fix is the one
    `SettlementConveyances` uses: compose the silhouette from length, barrel,
    stock and what it is made of, driven by `projectile` and the era, rather
    than one drawing per weapon.

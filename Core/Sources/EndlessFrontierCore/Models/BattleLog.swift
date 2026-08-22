@@ -47,6 +47,14 @@ public struct BattleMoment: Codable, Sendable, Equatable, Identifiable {
     /// What was fired. Nil in every fight recorded before weapons had
     /// projectiles, and read as an arrow — which is what those fights drew.
     public let projectile: ProjectileKind?
+    /// **Where it landed, and what made it.**
+    ///
+    /// The anatomy has been in `Body` since animals got one — head, torso, two
+    /// arms, two legs, each with its own condition and its own `missing` — and
+    /// the battle record threw all of it away: a beat said a name and a number.
+    /// Keks: *"chybi detailni log boju ze nekdo zasahl nekoho nekam."*
+    public let part: BodyPartKind?
+    public let wound: WoundKind?
 
     /// How big the thing was, against an arrow at 1. Carried on the moment
     /// rather than looked up, because a replay has no fighters left to ask.
@@ -59,7 +67,8 @@ public struct BattleMoment: Codable, Sendable, Equatable, Identifiable {
                 pawnName: String? = nil, amount: Double = 0,
                 spot: LocalPoint? = nil, from: LocalPoint? = nil,
                 projectile: ProjectileKind? = nil, caliber: Double? = nil,
-                shots: Int? = nil) {
+                shots: Int? = nil, part: BodyPartKind? = nil,
+                wound: WoundKind? = nil) {
         self.id = id
         self.at = min(1, max(0, at))
         self.kind = kind
@@ -71,13 +80,15 @@ public struct BattleMoment: Codable, Sendable, Equatable, Identifiable {
         self.projectile = projectile
         self.caliber = caliber
         self.shots = shots
+        self.part = part
+        self.wound = wound
     }
 
     // MARK: - Codable (resilient: the place postdates the first battles)
 
     private enum CodingKeys: String, CodingKey {
         case id, at, kind, pawnID, pawnName, amount, spot
-        case from, projectile, caliber, shots
+        case from, projectile, caliber, shots, part, wound
     }
 
     public init(from decoder: Decoder) throws {
@@ -93,6 +104,8 @@ public struct BattleMoment: Codable, Sendable, Equatable, Identifiable {
         projectile = try c.decodeIfPresent(ProjectileKind.self, forKey: .projectile)
         caliber = try c.decodeIfPresent(Double.self, forKey: .caliber)
         shots = try c.decodeIfPresent(Int.self, forKey: .shots)
+        part = try c.decodeIfPresent(BodyPartKind.self, forKey: .part)
+        wound = try c.decodeIfPresent(WoundKind.self, forKey: .wound)
     }
 }
 

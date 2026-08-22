@@ -88,8 +88,17 @@ public enum QuartermasterEngine {
                 registry.recipes[order.recipeID]
                     .flatMap { registry.item($0.outputItemID)?.equipSlot } == slot
             }) else { continue }
-            guard let pick = bestGear(for: slot, at: settlement, in: s, registry: registry)
-            else { continue }
+            // A line of swordsmen has nobody on the wall. When the share that
+            // can shoot has fallen too low, the next batch is bows — and if the
+            // colony cannot work one, it falls back to the best of anything.
+            let wantRanged = slot == .weapon
+                && wantsRanged(at: settlement, registry: registry)
+            let pick = (wantRanged
+                        ? bestGear(for: slot, at: settlement, in: s,
+                                   registry: registry, preferring: .ranged)
+                        : nil)
+                ?? bestGear(for: slot, at: settlement, in: s, registry: registry)
+            guard let pick else { continue }
             s.settlements[index] = CraftingEngine.place(
                 s.settlements[index], recipeID: pick,
                 count: min(shortfall, batch), tick: s.tick, registry: registry)
@@ -222,7 +231,7 @@ public enum QuartermasterEngine {
     ///
     /// Deliberately says nothing about whether the *materials* are on the pile
     /// — that is the one question `bestGear` adds and this does not.
-    private static func canWork(
+    static func canWork(
         _ recipe: RecipeDefinition, for slot: EquipmentSlot, at settlement: Settlement,
         in state: WorldState, registry: GameDataRegistry
     ) -> Bool {
@@ -249,15 +258,59 @@ public enum QuartermasterEngine {
     /// **Best, not cheapest.** A town with a workshop and iron on the shelf
     /// should be turning out swords, not the bronze spear it started with; the
     /// affordability rule below is what stops that from beggaring it.
+    /// **What share of an armed line should be able to shoot.**
+    ///
+    /// `bestGear` ranks by `worth`, which is damage — and a bow has less of it
+    /// than an axe, every time. So the quartermaster made blades and only
+    /// blades: measured after fifty years, **four of sixty-eight colonists
+    /// carried anything ranged, all four a bow, and the shelf held nothing
+    /// ranged at all**. Every volley in every fight was arrows for want of
+    /// anything else, which is what "the salvos are always the same animation"
+    /// turns out to be — a supply problem wearing a drawing's clothes.
+    ///
+    /// A line needs both: `CombatEngine.militia` has always counted melee and
+    /// ranged separately, and `SiegeEngine.loose` gives the shooting its own
+    /// phase. Two in five is enough that a colony always has somebody on the
+    /// wall and never so many that nobody meets the charge.
+    static let rangedShare = 0.4
+
+    /// Whether the line is short of people who can shoot.
+    static func wantsRanged(
+        at settlement: Settlement, registry: GameDataRegistry
+    ) -> Bool {
+        var armed = 0, shooting = 0
+        for pawn in settlement.pawns {
+            guard let weapon = CombatEngine.weaponProfile(pawn, registry: registry)
+            else { continue }
+            armed += 1
+            if weapon.kind == .ranged { shooting += 1 }
+        }
+        // …and what is waiting on the shelf to be handed out.
+        for item in settlement.inventory {
+            guard let combat = registry.item(item.definitionID)?.combat else { continue }
+            armed += 1
+            if combat.kind == .ranged { shooting += 1 }
+        }
+        guard armed > 0 else { return true }
+        return Double(shooting) / Double(armed) < rangedShare
+    }
+
     static func bestGear(
         for slot: EquipmentSlot, at settlement: Settlement,
-        in state: WorldState, registry: GameDataRegistry
+        in state: WorldState, registry: GameDataRegistry,
+        /// When set, only weapons of this class are considered — how the
+        /// quartermaster keeps a share of the line able to shoot.
+        preferring wanted: WeaponClass? = nil
     ) -> String? {
         let held = CraftingEngine.materialCounts(settlement)
         return registry.recipes.values
             .filter { recipe in
                 guard canWork(recipe, for: slot, at: settlement,
                               in: state, registry: registry) else { return false }
+                if let wanted {
+                    guard registry.item(recipe.outputItemID)?.combat?.kind == wanted
+                    else { return false }
+                }
                 // And the made things it is built out of — iron, timber, hide —
                 // are on the pile. Ordering a sword the colony has no ingot for
                 // parks the bench on an order it can never start.

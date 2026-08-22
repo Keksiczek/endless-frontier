@@ -52,7 +52,7 @@ struct SiegeTests {
     /// How far the world clock has to run for a siege opened on `tick` to be
     /// carried to its end.
     private func endStep(of siege: Siege) -> Int {
-        siege.openedAt + siege.steps
+        siege.openedAt + Siege.stepsHardCeiling
     }
 
     // MARK: - It is actually live
@@ -141,7 +141,7 @@ struct SiegeTests {
         #expect(!(try #require(s.siege).inContact))
 
         var met = false
-        for step in 1...(s.siege?.steps ?? Siege.stepsTotal) {
+        for step in 1...Siege.stepsHardCeiling {
             s = SiegeEngine.advance(s, to: opened + step, registry: reg)
             guard let siege = s.siege else { break }
             if siege.inContact { met = true; break }
@@ -158,7 +158,7 @@ struct SiegeTests {
         let reg = try registry()
         var s = try besieged(colony(pawns: 8, defense: 6), strength: 90)
         let opened = try #require(s.siege).openedAt
-        s = SiegeEngine.advance(s, to: opened + (s.siege?.steps ?? Siege.stepsTotal),
+        s = SiegeEngine.advance(s, to: opened + Siege.stepsHardCeiling,
                                 registry: reg)
         let hurt = s.pawns.filter { $0.health < 100 }.count
         #expect(hurt >= 3, "ninety raiders and only \(hurt) of eight came away marked")
@@ -219,7 +219,7 @@ struct SiegeTests {
             let who = try #require(siege.line.first)
             s = SiegeEngine.order(s, pawnID: who, moveTo: siege.place(of: who) ?? .init(x: 0.5, y: 0.5))
             s = SiegeEngine.order(s, posture: .press)
-            return SiegeEngine.advance(s, to: siege.openedAt + Siege.stepsTotal, registry: reg)
+            return SiegeEngine.advance(s, to: siege.openedAt + Siege.stepsHardCeiling, registry: reg)
         }
         let a = try run(), b = try run()
         #expect(a.pawns.map(\.health) == b.pawns.map(\.health))
@@ -232,8 +232,8 @@ struct SiegeTests {
         let back = try JSONDecoder().decode(
             Settlement.self, from: try JSONEncoder().encode(mid))
         #expect(back.siege?.orders.count == 1, "the order is part of the world")
-        let x = SiegeEngine.advance(mid, to: siege.openedAt + Siege.stepsTotal, registry: reg)
-        let y = SiegeEngine.advance(back, to: siege.openedAt + Siege.stepsTotal, registry: reg)
+        let x = SiegeEngine.advance(mid, to: siege.openedAt + Siege.stepsHardCeiling, registry: reg)
+        let y = SiegeEngine.advance(back, to: siege.openedAt + Siege.stepsHardCeiling, registry: reg)
         #expect(x.pawns.map(\.health) == y.pawns.map(\.health))
     }
 
@@ -258,10 +258,10 @@ struct SiegeTests {
         var gave = try besieged(colony(), strength: 60)
         gave = SiegeEngine.order(gave, posture: .giveGround)
         let opened = try #require(gave.siege).openedAt
-        gave = SiegeEngine.advance(gave, to: opened + Siege.stepsTotal, registry: reg)
+        gave = SiegeEngine.advance(gave, to: opened + Siege.stepsHardCeiling, registry: reg)
 
         var held = try besieged(colony(), strength: 60)
-        held = SiegeEngine.advance(held, to: opened + Siege.stepsTotal, registry: reg)
+        held = SiegeEngine.advance(held, to: opened + Siege.stepsHardCeiling, registry: reg)
 
         #expect(gave.storage[.food] < held.storage[.food])
         // …and they had to physically be in the stores to do it.
@@ -307,7 +307,7 @@ struct SiegeTests {
         var fast = try besieged(colony())
         var slow = try besieged(colony())
         let opened = try #require(fast.siege).openedAt
-        let end = opened + Siege.stepsTotal
+        let end = opened + Siege.stepsHardCeiling
 
         fast = SiegeEngine.advance(fast, to: end, registry: reg)
         for step in stride(from: opened + 1, through: end, by: 1) {
@@ -329,13 +329,10 @@ struct SiegeTests {
         world.tick = 100
         world.settlements = [try besieged(colony())]
 
-        // Four world ticks of the ordinary loop, with nobody steering.
-        for tick in 100..<104 {
-            for step in 0..<WorldClock.actionStepsPerTick {
-                world = ActionLoop.advanceStep(
-                    world, clock: WorldClock(tick: tick, step: step), registry: reg)
-            }
-        }
+        // The ordinary loop, with nobody steering, for as long as the fight
+        // takes — it ends when a side breaks, so a fixed count of ticks is not
+        // "until it is over" any more.
+        world = SiegeTestSupport.fightItOut(world, registry: reg)
         #expect(world.settlements[0].siege == nil, "it was fought without us")
         #expect(world.settlements[0].lastBattle != nil)
     }
@@ -349,7 +346,7 @@ struct SiegeTests {
             var s = try besieged(colony())
             s = SiegeEngine.order(s, posture: posture)
             let opened = try #require(s.siege).openedAt
-            return SiegeEngine.advance(s, to: opened + Siege.stepsTotal, registry: reg)
+            return SiegeEngine.advance(s, to: opened + Siege.stepsHardCeiling, registry: reg)
         }
         let a = try run(.press), b = try run(.press)
         #expect(a.pawns.map(\.health) == b.pawns.map(\.health))
@@ -415,7 +412,7 @@ struct SiegeTests {
         let reg = try registry()
         var s = try besieged(colony(defense: 60), strength: 90)
         let opened = try #require(s.siege).openedAt
-        s = SiegeEngine.advance(s, to: opened + Siege.stepsTotal, registry: reg)
+        s = SiegeEngine.advance(s, to: opened + Siege.stepsHardCeiling, registry: reg)
         #expect(s.pawns.contains { $0.health < 100 } || s.pawns.count < 8,
                 "ninety raiders against a wall of sixty and not a scratch")
     }
@@ -463,8 +460,8 @@ struct SiegeTests {
         #expect(after.moments.count == before.moments.count)
 
         // And carrying both to the end lands in the same place.
-        let a = SiegeEngine.advance(s, to: opened + Siege.stepsTotal, registry: reg)
-        let b = SiegeEngine.advance(back, to: opened + Siege.stepsTotal, registry: reg)
+        let a = SiegeEngine.advance(s, to: opened + Siege.stepsHardCeiling, registry: reg)
+        let b = SiegeEngine.advance(back, to: opened + Siege.stepsHardCeiling, registry: reg)
         #expect(a.pawns.map(\.health) == b.pawns.map(\.health))
     }
 
@@ -496,7 +493,7 @@ struct SiegeTests {
                 // assault (`Siege.lengthFor`), so "run it to the end" means
                 // running it to the end of this one.
                 let siege = try #require(s.siege)
-                s = SiegeEngine.advance(s, to: siege.openedAt + siege.steps, registry: reg)
+                s = SiegeEngine.advance(s, to: siege.openedAt + Siege.stepsHardCeiling, registry: reg)
                 #expect(s.siege == nil,
                         "a \(strength)-strong raid at \(posture) never ended")
                 #expect(s.lastBattle != nil)
@@ -509,7 +506,7 @@ struct SiegeTests {
         let reg = try registry()
         var s = try besieged(colony(pawns: 2, defense: 0), strength: 400)
         let opened = try #require(s.siege).openedAt
-        s = SiegeEngine.advance(s, to: opened + Siege.stepsTotal, registry: reg)
+        s = SiegeEngine.advance(s, to: opened + Siege.stepsHardCeiling, registry: reg)
         #expect(s.siege == nil)
     }
 
@@ -620,12 +617,10 @@ struct SiegeTests {
         s = SiegeEngine.order(s, posture: .press)
         world.settlements = [s]
 
-        for tick in 100..<104 {
-            for step in 0..<WorldClock.actionStepsPerTick {
-                world = ActionLoop.advanceStep(
-                    world, clock: WorldClock(tick: tick, step: step), registry: reg)
-            }
-        }
+        // A fight is as long as it needs to be now — it ends when a side
+        // breaks, and only falls back on the clock — so "carry it to the end"
+        // cannot be a fixed four ticks any more.
+        world = SiegeTestSupport.fightItOut(world, registry: reg)
         #expect(world.settlements[0].siege == nil)
         #expect(world.tribes[0].population < 60,
                 "a warband that was pressed does not all walk home")

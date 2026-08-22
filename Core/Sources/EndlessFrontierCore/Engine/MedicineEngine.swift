@@ -143,7 +143,20 @@ public enum MedicineEngine {
         _ pawn: Pawn, amount: Double, tick: Int, rng: inout SeededRNG,
         from kind: WoundKind? = nil
     ) -> Pawn {
-        guard amount > 0 else { return pawn }
+        wounded(pawn, amount: amount, tick: tick, rng: &rng, from: kind).pawn
+    }
+
+    /// The same, and it says **where it landed and what made it**.
+    ///
+    /// The body has known both since it was written; the caller was told
+    /// neither, so a battle record could only ever say a name and a number. A
+    /// beat that reads "a stab to Mara's left arm" is the same event with the
+    /// two facts it always had carried out of the function.
+    public static func wounded(
+        _ pawn: Pawn, amount: Double, tick: Int, rng: inout SeededRNG,
+        from kind: WoundKind? = nil
+    ) -> (pawn: Pawn, part: BodyPartKind?, wound: WoundKind?) {
+        guard amount > 0 else { return (pawn, nil, nil) }
         var p = pawn
         let part = Body.struckPart(roll: rng.nextUnit())
         // What made it, so the card can say "a stab to the left arm" rather
@@ -153,7 +166,7 @@ public enum MedicineEngine {
         p.body.injure(part, by: amount, id: rng.nextUUID(), tick: tick, from: made)
         p.health = max(0, p.health - amount)
         if !p.body.isAlive { p.health = 0 }
-        return p
+        return (p, part, made)
     }
 
     /// How much of a day's work a colonist is actually good for, given what has

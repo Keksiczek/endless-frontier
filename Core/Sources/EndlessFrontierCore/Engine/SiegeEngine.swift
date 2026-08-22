@@ -69,11 +69,22 @@ public enum SiegeEngine {
     /// The share of their weight a fighter lands in one step of contact, in a
     /// fight of `steps` steps.
     ///
-    /// Was a static off `Siege.stepsTotal`, which was fine while every fight
-    /// was that long and wrong the moment they stopped being: a long siege
-    /// would have delivered its line's weight three times over, and a short one
-    /// half of it. The contract is *one full weight across the fight*, so it
-    /// has to be measured against the fight it is in.
+    /// **A rate, not a share.**
+    ///
+    /// It was `1 / (steps - approach)` — one full weight of the line delivered
+    /// across the fight — which was exactly right while a fight was `steps`
+    /// long and ended when the clock said so. It stopped being right the moment
+    /// a fight ran until somebody broke: a line that delivers its whole weight
+    /// over the fight can only ever take the warband down by that weight, so if
+    /// that is less than `Siege.routAtShare` the fight **cannot end**. Measured
+    /// after the clock came out: ninety raiders against six defenders, eighty
+    /// steps in, strength 90 → 71.8 and falling by a quarter a step — a grind
+    /// with no bottom.
+    ///
+    /// The contract is *one full weight across the fight*, measured against
+    /// the fight it is in — which is right again now that the clock is back as
+    /// a backstop. Taking it out and making it a flat rate was tried while the
+    /// fight was unbounded, and the note above is what that measured.
     static func meleePerStep(steps: Int) -> Double {
         1 / Double(max(1, steps - typicalApproachSteps))
     }
@@ -171,7 +182,10 @@ public enum SiegeEngine {
         /// Where the attackers actually live, as a bearing off the world map.
         /// Nil when nobody knows — a beast out of the woods has no hex to come
         /// from — and then the line falls back to the roll it always used.
-        approachBearing: Double? = nil
+        approachBearing: Double? = nil,
+        /// The age the fight happens in. A warband carries the arms of its own
+        /// century — see `Siege.era` and `raiderArms`.
+        era: Era = .earlySettlement
     ) -> Settlement {
         var rng = SeededRNG(seed: seed)
         var s = settlement
@@ -198,7 +212,8 @@ public enum SiegeEngine {
             attackerTribeID: attackerTribeID, approach: approach,
             attackers: BattleResolver.drawnStrength(attackerStrength),
             openingStrength: attackerStrength, fortification: facing,
-            seed: rng.next(), line: Array(line), carriesOff: carriesOff)
+            seed: rng.next(), line: Array(line), carriesOff: carriesOff,
+            era: era)
         stageIfNeeded(&siege, in: s, registry: registry)
         s.siege = siege
         return s
@@ -351,6 +366,10 @@ public enum SiegeEngine {
         // carries, and what leaves it.
         let arms = armaments(of: s.pawns, registry: registry)
         loose(&siege, power: power, arms: arms, cover: cover, chips: &chips, rng: &rng)
+        // …and the warband looses back. Before the melee, like the colony's
+        // own volley, so the approach is a exchange of fire rather than a walk.
+        s = returnFire(s, siege: &siege, field: field, cover: cover,
+                       chips: &chips, rng: &rng)
         strike(&siege, power: power, met: met, rng: &rng)
         s = answer(s, siege: &siege, met: met, field: field, cover: cover,
                    chips: &chips, rng: &rng)
@@ -359,8 +378,15 @@ public enum SiegeEngine {
         // and a coat that stopped forty blows should be a coat somebody wants
         // replacing (§11.26 C).
         s = wearGear(s, met: met)
+        // …and whoever is left decides whether there is still a line to hold.
+        breakIfSpent(&siege)
         // Ransacking is harm too, so it goes into the same tally and the town
         // is charged **once**, at the end of the step.
+        // The line, once more, after the fighting has moved people: whoever is
+        // still standing is still in the way. Without this the clamp is a
+        // snapshot from before the melee and a raider could be *past* the last
+        // defender by the time the stores are counted.
+        holdTheLine(&siege, field: field)
         s = ransack(s, siege: &siege, field: field, chips: &chips, registry: registry)
         return BuildingEngine.chip(s, by: chips)
     }
@@ -471,7 +497,49 @@ public enum SiegeEngine {
                                          places: places, posts: posts) else { continue }
             siege.fighters[index].at = SiegeField.stride(from: me.at, toward: goal, pace: pace)
         }
-        shoulder(&siege)
+        shoulder(&siege, field: field)
+    }
+
+    /// **A line that is holding does not leak.**
+    ///
+    /// `shoulder` parts bodies that are standing inside each other, and it has
+    /// no idea which side anybody is on — so with enough defenders pressing,
+    /// a raider could be squeezed *through* an intact line and end up among the
+    /// stores. Measured: a town of sixty held its line the whole raid, lost
+    /// nobody, and was plundered — while a town of ten, too thin to shove
+    /// anybody anywhere, lost nothing at all. Defending made the sack worse.
+    ///
+    /// So bodies still part sideways, and then nobody ends up further in than
+    /// the defender standing nearest the stores. Once the line is gone the
+    /// clamp lifts, which is exactly what losing the fight should mean.
+    static func holdTheLine(_ siege: inout Siege, field: SiegeField) {
+        // **Giving ground means giving ground.** The line has fallen back into
+        // the town on purpose, so it is not standing between anybody and the
+        // stores — that is the whole trade the posture offers, and clamping
+        // here would quietly cancel it.
+        guard siege.posture != .giveGround else { return }
+        let held = siege.fighters.filter {
+            $0.side == .colony && !$0.down && $0.kind != .emplacement
+        }
+        guard !held.isEmpty else { return }
+        // Level with the back rank, and no further: getting past the last
+        // person standing is something you do by beating them, not by being
+        // shoved. An arm's length of slack here was enough to let one raider
+        // through a line of twenty-eight and into the grain.
+        let floor = held.map { field.reachFromHeart($0.at) }.min() ?? 0
+        for index in siege.fighters.indices where siege.fighters[index].side == .raider {
+            guard !siege.fighters[index].down else { continue }
+            let out = field.reachFromHeart(siege.fighters[index].at)
+            guard out < floor, out > 0 else { continue }
+            // A hair outside, not exactly on it. Clamping to the boundary and
+            // then testing `< innermost` is a comparison that a rounding error
+            // decides, and it decided it: one raider a fraction of a
+            // thousandth past the back rank was a sacked granary.
+            let scale = (floor + 1e-6) / out
+            siege.fighters[index].at = LocalPoint(
+                x: field.heart.x + (siege.fighters[index].at.x - field.heart.x) * scale,
+                y: field.heart.y + (siege.fighters[index].at.y - field.heart.y) * scale)
+        }
     }
 
     /// Bodies take up room: one relaxation pass that parts anybody standing
@@ -495,8 +563,9 @@ public enum SiegeEngine {
     /// moves, so the result does not depend on who is updated first, and two
     /// bodies on exactly the same spot part by their place in the array rather
     /// than by anything that could differ between runs.
-    private static func shoulder(_ siege: inout Siege) {
+    private static func shoulder(_ siege: inout Siege, field: SiegeField) {
         for _ in 0..<shoulderPasses { shoulderOnce(&siege) }
+        holdTheLine(&siege, field: field)
     }
 
     /// How many times the press settles per step. One pass leaves a knot of a
@@ -691,6 +760,132 @@ public enum SiegeEngine {
         }
     }
 
+    /// **The line gives way.**
+    ///
+    /// A colony does not stand and be killed to the last defender any more than
+    /// a warband fights to its last man. When `lineBreaksBelow` of those who
+    /// turned out are still on their feet, the rest fall back — which ends the
+    /// fight the way a fight ends, and hands the town to the raiders for what
+    /// is left of the raid rather than for ever.
+    ///
+    /// Deliberately not a roll: it is the same fight every replay (rule 2), and
+    /// a line that broke because of a die is a line the player cannot reason
+    /// about.
+    static func breakIfSpent(_ siege: inout Siege) {
+        guard !siege.line.isEmpty else { return }
+        let held = siege.standing.count
+        guard held > 0 else { return }
+        guard Double(held) / Double(siege.line.count) < Siege.lineBreaksBelow else { return }
+        for id in siege.standing {
+            siege.withdrawn.insert(id)
+            markDown(id, in: &siege)
+        }
+        siege.moments.append(moment(siege, .clash, amount: Double(held)))
+    }
+
+    // MARK: - …and they shoot back
+
+    /// What share of a warband's weight is shooting rather than swinging.
+    ///
+    /// **The raiders had no ranged attack at all.** `loose` filtered on
+    /// `side == .colony`, so every fight in the game was the same shape: the
+    /// colony looses arrows at people walking toward it, and then everybody
+    /// swings. Keks, watching one: *"boj neni moc dynamicky."* It is not one
+    /// fight — it is one side of one.
+    ///
+    /// A third, so a warband is a body of men with some bows in it rather than
+    /// a second army of archers. The rest of their weight still goes into the
+    /// melee, exactly as it did.
+    static let raiderArcherShare = 0.33
+
+    /// How hard a raider's shot lands, per point of strength, per step.
+    /// Deliberately under `attackerDamagePerStrength`: an arrow across open
+    /// ground is worth less than a blow at arm's length, and the shooting is
+    /// meant to make the approach cost something rather than to decide it.
+    static let raiderShotPerStrength = 0.09
+
+    /// How far a warband's shot carries, and what leaves it.
+    ///
+    /// From the age rather than from an item, because a raider is a figure with
+    /// a strength and not a colonist with an inventory. Reading it off the era
+    /// is what makes a raid in the age of powder look and sound unlike a raid
+    /// in the age of bows — which is most of what "the salvos are always the
+    /// same animation" was about.
+    static func raiderArms(_ era: Era) -> (kind: ProjectileKind, range: Double, caliber: Double) {
+        switch era {
+        case .earlySettlement: return (.stone, bowRange * 0.75, 0.9)
+        case .ancient:         return (.arrow, bowRange, 1)
+        case .medieval:        return (.bolt, bowRange * 1.15, 1.1)
+        case .earlyIndustrial: return (.ball, bowRange * 1.3, 1.4)
+        case .modern:          return (.bullet, bowRange * 1.7, 0.8)
+        case .nearFuture:      return (.beam, bowRange * 2, 1)
+        }
+    }
+
+    /// **The warband looses at the line.**
+    ///
+    /// The mirror of `loose`, and deliberately not the same function: a raider
+    /// has no equipment to read, the colony's walls turn part of what comes in,
+    /// and what a shot costs the colony is a wound on a named person rather
+    /// than a number off a pool.
+    private static func returnFire(
+        _ settlement: Settlement, siege: inout Siege, field: SiegeField,
+        cover: CoverField, chips: inout [UUID: Double], rng: inout SeededRNG
+    ) -> Settlement {
+        var s = settlement
+        let arms = raiderArms(siege.era)
+        let holding = siege.fighters.filter {
+            $0.side == .colony && !$0.down && $0.kind != .emplacement
+        }
+        guard !holding.isEmpty else { return s }
+        let shooters = siege.fighters.filter { $0.side == .raider && !$0.down }
+        guard !shooters.isEmpty else { return s }
+
+        var total = 0.0
+        var from: LocalPoint?
+        var at: LocalPoint?
+        var shots = 0
+        for shooter in shooters {
+            guard let mark = nearest(to: shooter.at, among: holding) else { continue }
+            let gap = SiegeField.distance(shooter.at, mark.at)
+            // Out of range, or close enough that they are swinging rather than
+            // shooting — the melee already has them.
+            guard gap <= arms.range, gap > reach else { continue }
+            guard let index = s.pawns.firstIndex(where: { $0.id == mark.id }),
+                  s.pawns[index].health > 0 else { continue }
+
+            let loosed = shooter.strength * raiderShotPerStrength
+                * siege.posture.exposure * (0.8 + rng.nextUnit() * 0.4) * rangedPerStep
+            // What the ground and the wall between them are worth. The same two
+            // the melee answer respects, so a colonist behind a parapet is
+            // behind it whichever way the harm is coming.
+            let sheltered = 1 - cover.struck(shooter.at, mark.at).fraction * coverBite
+            let turned = wallShare(fortification: siege.fortification,
+                                   cover: cover.shelter(at: mark.at, from: shooter.at).fraction)
+            let landed = loosed * sheltered * (1 - turned)
+            guard landed > 0 else { continue }
+            // A shot the wall stopped is a shot *into* the wall.
+            if let struck = cover.struck(shooter.at, mark.at).building, loosed > landed {
+                chips[struck, default: 0] += (loosed - landed) * chipPerShotStopped
+            }
+            s = hurt(s, at: index, by: landed, siege: &siege,
+                     impact: mark.at, rng: &rng, from: WoundKind.from(arms.kind))
+            total += landed
+            shots += 1
+            // The heaviest shot of the volley is the one drawn.
+            if from == nil || landed >= total / Double(max(1, shots)) {
+                from = shooter.at
+                at = mark.at
+            }
+        }
+        guard total > 0, let from, let at else { return s }
+        siege.moments.append(moment(
+            siege, .volley, amount: total, spot: at, from: from,
+            projectile: arms.kind, caliber: arms.caliber,
+            shots: min(12, max(1, shots))))
+        return s
+    }
+
     /// The line, where it is in contact.
     private static func strike(
         _ siege: inout Siege, power: [UUID: (melee: Double, ranged: Double)],
@@ -760,35 +955,63 @@ public enum SiegeEngine {
             }
             guard past > 0 else { continue }
 
-            let hit = past * CombatEngine.woundMultiplier(s.pawns[index])
-            let name = s.pawns[index].name
-            let before = siege.damage[pair.on, default: 0]
             // Between the two of them, which is where a blow actually lands and
             // where the blood goes. Half an arm's length from the man taking it.
             let impact = LocalPoint(x: (attacker.at.x + mark.at.x) / 2,
                                     y: (attacker.at.y + mark.at.y) / 2)
-            // A blow lands *somewhere*: an arm, a leg — not a smaller number.
-            // And it was made by *something*: a warband leaves cuts and stabs,
-            // a wolf pack leaves bites, and `attackerTribeID` is the same
-            // honest test of which it was that decides whether anybody can be
-            // taken alive (`CaptiveEngine.take`).
-            s.pawns[index] = MedicineEngine.wound(
-                s.pawns[index], amount: hit, tick: siege.startTick, rng: &rng,
-                from: siege.attackerTribeID == nil ? .bite : nil)
-            siege.damage[pair.on] = before + hit
-
-            if s.pawns[index].health <= 0 {
-                siege.withdrawn.insert(pair.on)
-                markDown(pair.on, in: &siege)
-                siege.moments.append(moment(siege, .death, pawnID: pair.on,
-                                            pawnName: name, amount: hit, spot: impact))
-                continue
-            }
-            let beats = Int((before + hit) / woundBeat) - Int(before / woundBeat)
-            guard beats > 0 else { continue }
-            siege.moments.append(moment(siege, .wound, pawnID: pair.on, pawnName: name,
-                                        amount: Double(beats) * woundBeat, spot: impact))
+            s = hurt(s, at: index, by: past, siege: &siege, impact: impact,
+                     rng: &rng, from: WoundKind.from(.none))
         }
+        return s
+    }
+
+    /// **What harm does to a named colonist**, wherever it came from.
+    ///
+    /// Its own function because there are two sources now — a blow at arm's
+    /// length and a shot across the field — and the wound, the tally, the death
+    /// and the beat the canvas plays all have to be the same for both. Two
+    /// copies of this would be two slightly different ways to die.
+    @discardableResult
+    private static func hurt(
+        _ settlement: Settlement, at index: Int, by past: Double,
+        siege: inout Siege, impact: LocalPoint, rng: inout SeededRNG,
+        /// What did it. A blade cuts, an arrow stabs, a ball bruises and a
+        /// shell burns — `WoundKind.from(_:)`. Nil lets the body roll one, which
+        /// is what every blow in the game used to get.
+        from made: WoundKind? = nil
+    ) -> Settlement {
+        var s = settlement
+        guard past > 0, s.pawns[index].health > 0 else { return s }
+        let who = s.pawns[index].id
+        let hit = past * CombatEngine.woundMultiplier(s.pawns[index])
+        let name = s.pawns[index].name
+        let before = siege.damage[who, default: 0]
+        // A blow lands *somewhere*: an arm, a leg — not a smaller number.
+        // And it was made by *something*: a warband leaves cuts and stabs,
+        // a wolf pack leaves bites, and `attackerTribeID` is the same
+        // honest test of which it was that decides whether anybody can be
+        // taken alive (`CaptiveEngine.take`).
+        // A beast bites whatever it is holding; anybody else leaves what their
+        // weapon leaves.
+        let struck = MedicineEngine.wounded(
+            s.pawns[index], amount: hit, tick: siege.startTick, rng: &rng,
+            from: siege.attackerTribeID == nil ? .bite : made)
+        s.pawns[index] = struck.pawn
+        siege.damage[who] = before + hit
+
+        if s.pawns[index].health <= 0 {
+            siege.withdrawn.insert(who)
+            markDown(who, in: &siege)
+            siege.moments.append(moment(siege, .death, pawnID: who,
+                                        pawnName: name, amount: hit, spot: impact,
+                                        part: struck.part, wound: struck.wound))
+            return s
+        }
+        let beats = Int((before + hit) / woundBeat) - Int(before / woundBeat)
+        guard beats > 0 else { return s }
+        siege.moments.append(moment(siege, .wound, pawnID: who, pawnName: name,
+                                    amount: Double(beats) * woundBeat, spot: impact,
+                                    part: struck.part, wound: struck.wound))
         return s
     }
 
@@ -798,8 +1021,28 @@ public enum SiegeEngine {
         chips: inout [UUID: Double], registry: GameDataRegistry
     ) -> Settlement {
         var s = settlement
-        let breaking = siege.fighters.filter {
-            $0.side == .raider && !$0.down && field.isInside($0.at)
+        // **Past the fighting, not merely past a radius.**
+        //
+        // `isInside` is a circle of `wallReach`, and the watch forms up at
+        // `formUpReach` — *inside* it — so the back rank of a well-manned line
+        // is standing in the same circle the stores are. A raider level with
+        // that rank counted as being among the grain, which is how a town of
+        // sixty was plundered through an intact line while a town of ten, too
+        // thin to have a back rank at all, lost nothing. Defending made the
+        // sack worse, measured.
+        //
+        // Getting at the stores means getting **past everybody still standing**.
+        // Once nobody is, every raider inside the wall qualifies — which is
+        // what losing the fight is supposed to mean.
+        let holding = siege.posture == .giveGround ? [] : siege.fighters.filter {
+            $0.side == .colony && !$0.down && $0.kind != .emplacement
+        }
+        let innermost = holding.map { field.reachFromHeart($0.at) }.min()
+        let breaking = siege.fighters.filter { fighter in
+            guard fighter.side == .raider, !fighter.down,
+                  field.isInside(fighter.at) else { return false }
+            guard let innermost else { return true }
+            return field.reachFromHeart(fighter.at) < innermost
         }
         guard !breaking.isEmpty else { return s }
 
@@ -1126,20 +1369,28 @@ public enum SiegeEngine {
     /// those are the edges of the window the canvas plays against, and a beat
     /// sitting exactly on one is a beat that has either always happened or
     /// never happened.
-    static func momentPosition(step: Int) -> Double {
-        min(0.995, max(0.005, (Double(step) + 0.5) / Double(Siege.stepsTotal)))
+    /// **Where a beat sits in the fight it belongs to.**
+    ///
+    /// Against *this* fight's own length, not against `Siege.stepsTotal`. The
+    /// constant was the whole clock once; now a fight runs until somebody
+    /// breaks, so a long one had every beat past the fortieth stacked on 0.995
+    /// — the canvas played a battle and then a pile.
+    static func momentPosition(step: Int, of steps: Int = Siege.stepsTotal) -> Double {
+        min(0.995, max(0.005, (Double(step) + 0.5) / Double(max(1, steps))))
     }
 
     private static func moment(
         _ siege: Siege, _ kind: BattleMoment.Kind, pawnID: UUID? = nil,
         pawnName: String? = nil, amount: Double = 0, spot: LocalPoint? = nil,
         from: LocalPoint? = nil, projectile: ProjectileKind? = nil,
-        caliber: Double? = nil, shots: Int? = nil
+        caliber: Double? = nil, shots: Int? = nil,
+        part: BodyPartKind? = nil, wound: WoundKind? = nil
     ) -> BattleMoment {
-        BattleMoment(id: siege.moments.count, at: momentPosition(step: siege.step),
+        BattleMoment(id: siege.moments.count,
+                     at: momentPosition(step: siege.step, of: siege.steps),
                      kind: kind, pawnID: pawnID, pawnName: pawnName, amount: amount,
                      spot: spot, from: from, projectile: projectile,
-                     caliber: caliber, shots: shots)
+                     caliber: caliber, shots: shots, part: part, wound: wound)
     }
 
     /// What everybody is holding, for the fighters who are holding something.

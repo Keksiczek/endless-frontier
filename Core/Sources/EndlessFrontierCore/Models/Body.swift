@@ -119,6 +119,22 @@ public enum WoundKind: String, Codable, Sendable, CaseIterable {
     /// The number that makes the name mean something rather than decorate a
     /// line of text: a stab is what kills somebody an hour after the fighting
     /// stopped, and a bruise is what they walk off.
+    /// **What a given shot leaves behind.**
+    ///
+    /// A wound used to be rolled — `MedicineEngine.ordinaryWound` off a die —
+    /// so an arrow, a musket ball and a sword all left whatever came up. What
+    /// hurt somebody is known at the moment it happens, and it is the
+    /// difference between "a cut to the left arm" and "wound".
+    public static func from(_ projectile: ProjectileKind) -> WoundKind {
+        switch projectile {
+        // Nothing left the weapon: it was swung.
+        case .none: return .cut
+        case .arrow, .bolt, .dart, .bullet: return .stab
+        case .stone, .ball, .shot: return .bruise
+        case .shell, .grenade, .rocket, .beam: return .burn
+        }
+    }
+
     public var bleedFactor: Double {
         switch self {
         case .cut:    return 1.0

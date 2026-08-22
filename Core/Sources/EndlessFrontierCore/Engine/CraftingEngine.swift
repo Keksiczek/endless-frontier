@@ -130,10 +130,29 @@ public enum CraftingEngine {
     ) -> [Int] {
         var taken: Set<String> = []
         var picked: [Int] = []
+        // **An order with an end takes the bench first.**
+        //
+        // This was oldest-first, and a *standing* order never finishes — so the
+        // first one ever placed held its bench for the rest of the colony's
+        // history and everything queued behind it waited for ever. Measured:
+        // fifty years of a council arming its people produced **seventeen
+        // weapons for sixty-eight colonists**, because the builders' standing
+        // orders for timber and brick were older than every batch of spears
+        // and never gave the bench up.
+        //
+        // Standing orders are a background trickle by design (they are how the
+        // colony always has some timber about); a batch of four coats is a job
+        // somebody wants done. The job goes first, and the trickle takes what
+        // is left.
         for entry in settlement.craftOrders.enumerated()
-            .sorted(by: { $0.element.placedTick == $1.element.placedTick
-                          ? $0.offset < $1.offset
-                          : $0.element.placedTick < $1.element.placedTick }) {
+            .sorted(by: { a, b in
+                let (endsA, endsB) = (a.element.wanted != nil, b.element.wanted != nil)
+                if endsA != endsB { return endsA }
+                if a.element.placedTick != b.element.placedTick {
+                    return a.element.placedTick < b.element.placedTick
+                }
+                return a.offset < b.offset
+            }) {
             guard !entry.element.paused,
                   let recipe = registry.recipes[entry.element.recipeID],
                   isWorkable(recipe, at: settlement, researched: researched) else { continue }

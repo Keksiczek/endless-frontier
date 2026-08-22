@@ -2335,12 +2335,12 @@ enum SettlementRenderer {
             // What is actually in their hands. A colony's militia is its
             // farmers: somebody who owns nothing swings the tool of their
             // trade, and somebody whose trade has no edge on it swings fists.
-            let armed: SettlementFigures.Armament
-            switch CombatEngine.weaponProfile(pawn, registry: registry)?.kind {
-            case .ranged: armed = .bow
-            case .melee:  armed = .blade
-            case nil:     armed = .none
-            }
+            // **What they are actually holding**, not which of two families it
+            // belongs to. `weaponProfile` carries the whole weapon now, so a
+            // crossbow is not a bow and a musket is not a crossbow.
+            let armed: SettlementFigures.Armament = CombatEngine
+                .weaponProfile(pawn, registry: registry)
+                .map { .held($0) } ?? .none
             // What they are on, if the yard put them on something. Drawn
             // first, so the body sits on it rather than behind it — and asked
             // of the motion bank too, because a rider's legs do not walk.

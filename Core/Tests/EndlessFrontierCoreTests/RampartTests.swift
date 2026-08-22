@@ -498,7 +498,7 @@ struct RaidAnswerTests {
                 s, attackerStrength: 40, attackerName: "Raid \(i)",
                 fortification: 0, tick: 100 + i * 10, registry: r,
                 seed: UInt64(0xC0DE + i))
-            s = SiegeEngine.advance(s, to: (s.siege?.openedAt ?? 0) + Siege.stepsTotal,
+            s = SiegeEngine.advance(s, to: (s.siege?.openedAt ?? 0) + Siege.stepsHardCeiling,
                                     registry: r)
         }
         #expect(s.battleHistory.count == Settlement.battlesKept)

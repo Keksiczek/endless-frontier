@@ -186,21 +186,30 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
     /// How many action steps a siege runs before it is decided one way or the
     /// other, when nothing says otherwise.
     ///
-    /// Three world ticks' worth on the shared grid — long enough that the
-    /// player's orders can change it twice, short enough to be a fight rather
-    /// than a chore. Kept as the default a save without a length falls back to,
-    /// and as the yardstick `lengthFor` measures against.
-    public static let stepsTotal = 24
+    /// **Read in real seconds, because that is what a player experiences.**
+    /// `GameViewModel.siegeStepSeconds` is 1.4 while somebody is watching, so
+    /// this is about a minute for a middling raid, half that for a handful of
+    /// bandits, and a little over two minutes for a host.
+    ///
+    /// It was 24 — thirty-four seconds — and measured fights ran shorter still,
+    /// between **seven and thirty-six seconds** end to end (`ZZBattleDiag`).
+    /// Keks: *"netrvalo jak dlouho by melo."*
+    ///
+    /// It is no longer the clock: `isFinished` ends a fight when a side breaks.
+    /// What this still does is set the *pace* — `meleePerStep` divides the
+    /// line's weight by it, so a bigger number is a slower, longer exchange
+    /// rather than a shorter one that hits harder.
+    public static let stepsTotal = 40
 
     /// The shortest a fight can be and still be one. Below about this the
     /// approach is not over before the thing is decided, and a raid the player
     /// cannot react to is a number, not a battle.
-    public static let stepsFloor = 12
+    public static let stepsFloor = 20
 
     /// …and the longest. A fight that runs on for ever is a bug wearing
     /// drama's coat, and the siege holds the colony's line the whole time it
     /// lasts.
-    public static let stepsCeiling = 72
+    public static let stepsCeiling = 96
 
     /// **How long *this* fight lasts.**
     ///
@@ -258,6 +267,14 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
     /// Rolls come from this and the step index, so a step's outcome is a pure
     /// function of where it sits in the fight.
     public let seed: UInt64
+    /// **The age the fight is being fought in.**
+    ///
+    /// A warband carries the arms of its own century, and until this was here
+    /// the fight had no way to know which century that was: `fightOneStep`
+    /// takes a `Settlement`, and an era belongs to the world. Stored on the
+    /// siege rather than looked up, so a raid saved half-fought is finished
+    /// with the weapons it started with.
+    public var era: Era = .earlySettlement
 
     /// **How many steps this fight runs**, from how big it is. See
     /// `lengthFor(attackers:defenders:)`.
@@ -307,7 +324,8 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         approach: Double, attackers: Int,
         openingStrength: Double, fortification: Double, seed: UInt64,
         line: [UUID], posture: Posture = .hold, carriesOff: Double = 1,
-        steps: Int? = nil
+        steps: Int? = nil,
+        era: Era = .earlySettlement
     ) {
         self.id = id
         self.startTick = startTick
@@ -323,6 +341,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         self.fortification = max(0, fortification)
         self.seed = seed
         self.steps = steps ?? Self.lengthFor(attackers: attackers)
+        self.era = era
         self.line = line
         self.withdrawn = []
         self.posture = posture
@@ -342,9 +361,49 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         min(1, Double(step) / Double(max(1, steps)))
     }
 
-    /// Whether the fighting is over: they broke, or they ran out of fight.
+    /// **What share of its opening weight a warband will take before it runs.**
+    ///
+    /// Nobody fights to the last man. A raid is a business proposition, and it
+    /// stops being one long before the warband is annihilated — so the fight
+    /// ends when they break, which is a thing that *happens in the fight*
+    /// rather than a number the clock reaches.
+    public static let routAtShare = 0.30
+
+    /// …and how thin the line can get before the rest of it gives way. A
+    /// colony does not stand and be killed to the last defender either.
+    public static let lineBreaksBelow = 0.25
+
+    /// A last stop, so a fight that somehow cannot resolve is a long fight and
+    /// not a hung game. Nothing should ever reach it; `ZZBattleDiag` prints
+    /// when anything does.
+    public static let stepsHardCeiling = 400
+
+    /// Whether the warband has had enough.
+    public var routed: Bool {
+        strength <= max(0, openingStrength * Self.routAtShare)
+    }
+
+    /// **Whether the fighting is over.**
+    ///
+    /// Keks: *"bojovat by se melo dokud nepadne jedna strana nebo utecou."*
+    /// It used to end on `step >= steps` alone — a clock — so a fight one
+    /// exchange from being decided was told the time was up, and a raid could
+    /// be over in seven seconds with both sides intact.
+    ///
+    /// It ends on the **rout** now, which is a thing that happens in the fight.
+    /// The clock is still here and is now only a backstop, because a fight
+    /// where neither side can finish the other does exist: measured with the
+    /// clock taken out entirely, ninety raiders against six defenders ran
+    /// eighty steps for 90 → 56 strength and would have needed three hundred
+    /// more. A stalemate has to end somehow, and "they gave it up and went
+    /// home" is the honest reading of one.
+    ///
+    /// **A broken line does not end it.** They have the run of the place and
+    /// they stay for it — ending here, which is what it used to do, meant a
+    /// colony whose line gave way *kept its stores*, so a town of ten came out
+    /// of a raid better than a town of sixty.
     public var isFinished: Bool {
-        strength <= 0 || step >= steps || standing.isEmpty
+        routed || step >= steps
     }
 
     /// The colonists actually holding the line right now.
@@ -353,7 +412,10 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
     }
 
     /// Whether the colony held. Only meaningful once it is finished.
-    public var repelled: Bool { strength <= 0 }
+    ///
+    /// Breaking a warband counts, and it is the ordinary way a raid ends now:
+    /// they do not have to be killed to the last man to have been driven off.
+    public var repelled: Bool { routed }
 
     // MARK: - The field, read
 
@@ -393,7 +455,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         case attackerTribeID
         case approach, attackers, openingStrength, strength, fortification, seed
         case line, withdrawn, posture, damage, moments, plundered, carriesOff
-        case steps
+        case steps, era
         case fighters, orders
     }
 
@@ -416,6 +478,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         // A save from before fights had lengths of their own gets the old
         // fixed one, which is exactly what it was fought at.
         steps = try c.decodeIfPresent(Int.self, forKey: .steps) ?? Self.stepsTotal
+        era = try c.decodeIfPresent(Era.self, forKey: .era) ?? .earlySettlement
         withdrawn = try c.decodeIfPresent(Set<UUID>.self, forKey: .withdrawn) ?? []
         posture = try c.decodeIfPresent(Posture.self, forKey: .posture) ?? .hold
         carriesOff = try c.decodeIfPresent(Double.self, forKey: .carriesOff) ?? 1
