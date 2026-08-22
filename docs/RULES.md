@@ -735,3 +735,41 @@ fires, do the arithmetic before you rewrite the mechanic.
    four means converged on 0.5 *even after* selection had been given real
    teeth. Anything that enters a closed system from "outside" has to come from
    somewhere the world actually models, or it is a leak into a constant.
+76. **A guard that is right in general starves the one case it was never asked
+   about.** `StewardEngine.canAffordToKeep` weighs a building's *materials
+   production* against its upkeep — sound, and the reason a colony stopped
+   building itself to death (rule 25). But a **warehouse produces nothing**, so
+   a colony pinned at its materials cap was refused, permanently, the one
+   building that raises the cap: being at the brim does not change the ledger
+   the brake reads, so the refusal is stable for ever. Shelter already had an
+   exemption for exactly this shape of trap. When a brake can refuse the answer
+   to the problem the colony is actually having, the problem needs its own
+   exemption, not a softer brake.
+77. **A shared, finite queue with no share-out is a queue one party owns.**
+   `CraftingEngine.maxOrders` is twelve. `StewardEngine.keepMaterialsComing`
+   stood one *standing* order per wanted material — and `wantedMaterials` unions
+   every building of every era the colony has reached plus everything the gear
+   bench asks for, which is comfortably a dozen past the first age. So the
+   council held the whole bench for ever, which silently did three things: the
+   player's own orders were **refused** (`place` returns the settlement
+   unchanged and the button just does nothing), `QuartermasterEngine` — which
+   runs after it — could never queue a spear or a coat, and every material
+   trickled at a twelfth of the bench's effort. Any queue an autopilot shares
+   with the player needs a share, and the player's half must be the one that
+   cannot be taken.
+78. **A set sorted alphabetically is a priority list nobody wrote.**
+   The same standing orders were walked in `wantedMaterials`' own order, which
+   is `Set.sorted()` — so what the colony made first was decided by the first
+   letter of an item id. Measured: a medieval colony at 600 of 600 materials
+   could build **one** thing in the whole book, a well, because a warehouse
+   wants four timber bundles and nothing had ever asked for them. When a list
+   feeds a finite worker, order it by what it unblocks.
+79. **A derived field added to a generated model is `nil` for ever in every
+   world that already exists.** `Region.river` is written at generation, like
+   the biome and the landform, so a save made the day before had no water on it
+   and would have kept none — and `nil` is also the honest value for a dry hex,
+   so nothing downstream could tell "this country is dry" from "this save
+   predates rivers". The fix is a `SaveMigrator` step in the *same change*, and
+   it is safe precisely because the field is derived: recomputing it from
+   `(mapSeed, coord)` gives exactly the map the generator would have drawn, and
+   the same map a newly explored hex on the frontier will get.

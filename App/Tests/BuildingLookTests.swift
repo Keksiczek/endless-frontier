@@ -102,6 +102,12 @@ struct BuildingLookTests {
         // sizing answers was that the buildings were too small for what has to
         // fit inside them, so a body that fills less than three quarters of its
         // plot across is the bug coming back.
+        // …and down as well as across. Sizing solves on whichever axis binds
+        // first, so before `bodySize` learned to take up the slack a house on a
+        // square lot filled 85% across and **58% down** — a squat model of a
+        // house with bare ground above and below, and a room shrunk to match.
+        #expect(walls.height >= b.footprintH * 0.72,
+                "a \(w)×\(h) body is \(walls.height) tall on a \(b.footprintH) lot")
         #expect(walls.width >= b.footprintW * 0.72,
                 "a \(w)×\(h) building is rattling around in its own lot")
     }

@@ -71,6 +71,11 @@ public enum QuartermasterEngine {
         // things in the same seasons (rule 2 — `EquipmentSlot.allCases` is a
         // declared order, not a hashed one).
         for slot in EquipmentSlot.allCases {
+            // The same share of the bench the builders' standing orders respect
+            // — see `StewardEngine.councilBenchShare`. Gear queued past it is
+            // gear the player cannot make room for.
+            guard s.settlements[index].craftOrders.count
+                    < StewardEngine.councilBenchShare else { break }
             let bare = hands.count { $0.equipment[slot] == nil }
             let onTheShelf = settlement.inventory.count {
                 registry.item($0.definitionID)?.equipSlot == slot

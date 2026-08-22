@@ -97,7 +97,7 @@ public struct WorldState: Codable, Sendable, Equatable {
     /// pawns (every inhabitant is a colonist with genes/age/wealth) and each
     /// settlement gained a living local map. v1 saves are not migratable —
     /// their macro `population` no longer has meaning — so they are reset.
-    public static let currentSchemaVersion = 2
+    public static let currentSchemaVersion = 3
 
     /// The oldest save the current build can load. Older saves are discarded
     /// and the player starts a fresh V2 world.

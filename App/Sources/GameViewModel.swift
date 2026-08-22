@@ -1347,9 +1347,17 @@ final class GameViewModel {
     /// - and a **search** that, while it is in use, collapses the groups into
     ///   one flat list worst-first. Grouping is for browsing, and a search is
     ///   not browsing — the same reasoning as the colonists panel (§9.8).
+    /// Show only what the colony could put on the bench this moment.
+    ///
+    /// Three hundred and eleven recipes sorted affordable-first is still three
+    /// hundred and eleven recipes: the ones you can act on are at the top of
+    /// *each group*, so finding them means scrolling past every group's tail.
+    /// Keks: *"crafteni je stale neprehledne."*
+    var onlyCraftable = false
+
     var recipeGroups: [(title: String, recipes: [RecipeDefinition])] {
         let query = recipeSearch.trimmingCharacters(in: .whitespaces).lowercased()
-        let all = recipesHere
+        let all = onlyCraftable ? recipesHere.filter(canCraft) : recipesHere
         guard query.isEmpty else {
             let hits = all.filter { recipe in
                 recipe.name.resolve(AppStrings.language).lowercased().contains(query)

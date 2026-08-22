@@ -123,16 +123,37 @@ enum SettlementInterior {
         // hut with the furniture jittered a few pixels. A household keeps some
         // of what it could keep: the seed picks which corners are used and what
         // stands in them, so two houses on one street are two houses.
-        let corners = shuffled(corners, roll: { roll() })
-        let kept = plan.clutter.isEmpty ? 0
-            : max(1, min(plan.clutter.count, 1 + Int(roll() * Double(plan.clutter.count))))
-        for (i, fitting) in shuffled(plan.clutter, roll: { roll() }).prefix(kept).enumerated() {
-            let corner = corners[i % corners.count]
-            slots.append(Slot(dx: corner.dx * (0.80 + roll() * 0.14),
-                              dy: corner.dy * (0.80 + roll() * 0.14),
-                              fitting: fitting))
-        }
+        slots += clutterSlots(for: glyph, seed: h)
         return slots
+    }
+
+    /// The things in the corners: what a room keeps that nobody works at.
+    ///
+    /// Its own function because a house with somebody living in it takes a
+    /// different route through `draw` — beds first — and used to arrive with no
+    /// corners furnished at all.
+    static func clutterSlots(
+        for glyph: SettlementRenderer.BuildingGlyph, seed: UInt64
+    ) -> [Slot] {
+        let plan = furnishing(glyph)
+        guard !plan.clutter.isEmpty else { return [] }
+        var h = seed | 1
+        func roll() -> Double {
+            h ^= h >> 33; h = h &* 0xFF51_AFD7_ED55_8CCD; h ^= h >> 29
+            return Double((h >> 40) & 0xFFFF) / 65535
+        }
+        let nooks = shuffled(corners, roll: { roll() })
+        // At least two, where there are two to keep. One thing in a corner is
+        // a room with a box in it; the difference between that and a room
+        // somebody lives in is a couple of objects.
+        let kept = max(min(2, plan.clutter.count),
+                       min(plan.clutter.count, 1 + Int(roll() * Double(plan.clutter.count))))
+        return shuffled(plan.clutter, roll: { roll() }).prefix(kept).enumerated().map { i, fitting in
+            let nook = nooks[i % nooks.count]
+            return Slot(dx: nook.dx * (0.80 + roll() * 0.14),
+                        dy: nook.dy * (0.80 + roll() * 0.14),
+                        fitting: fitting)
+        }
     }
 
     /// A seeded shuffle — deterministic in whatever `roll` is drawing from, so
@@ -170,8 +191,16 @@ enum SettlementInterior {
         }).map { Slot(dx: $0.dx, dy: $0.dy, fitting: .bed) }
     }
 
+    /// The places a room keeps things that are not workstations.
+    ///
+    /// Four corners was too few twice over: a plan wanting five things put the
+    /// fifth on top of the first (`i % corners.count`), and four objects in a
+    /// room read as a diagram of a room rather than a room. The four mid-wall
+    /// nooks are pulled further in on the axis they sit against, so nothing
+    /// stands in the doorway or through a wall.
     private static let corners: [(dx: Double, dy: Double)] = [
         (-0.34, -0.30), (0.34, -0.30), (-0.34, 0.30), (0.34, 0.30),
+        (0, -0.32), (-0.36, 0), (0.36, 0), (0, 0.31),
     ]
 
     /// `count` places spread around the inside of the walls, walking the
@@ -335,8 +364,14 @@ enum SettlementInterior {
         // hearth. Anything else is furnished around the work done in it.
         let plan: [Slot]
         if glyph == .house, residents > 0 {
+            // A bed apiece and a fire — **and the rest of what a household
+            // owns.** This branch used to stop at the beds, so the moment
+            // anybody moved in, a home lost the table, the shelf and the barrel
+            // that made it a home: an occupied house was furnished with less
+            // than an empty one.
             plan = bedSlots(seed: seed, sleepers: residents)
                 + [Slot(dx: 0, dy: 0.12, fitting: .hearth)]
+                + clutterSlots(for: glyph, seed: seed &* 0x9E37_79B9)
         } else {
             plan = slots(for: glyph, seed: seed, stations: workers)
         }

@@ -7,6 +7,13 @@ import EndlessFrontierCore
 struct WorldMapScreen: View {
     @Bindable var game: GameViewModel
     @State private var selectedRegionID: UUID?
+    /// **The neighbours, on a phone.** `TribesPanel` lived only inside
+    /// `detailPanel`, and `detailPanel` is only built in the `.regular` size
+    /// class — so on an iPhone the whole of diplomacy was unreachable: every
+    /// verb (gift, trade, scholars, marriage, envoy, tribute, a road toward
+    /// them) shipped, tested, and with no way in. Keks: *"diplomacie
+    /// nedosažitelná."*
+    @State private var showingNeighbours = false
     /// The region whose chunk is open for survey, if any.
     @State private var surveyRegion: Region?
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -35,6 +42,45 @@ struct WorldMapScreen: View {
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
                         }
                     }
+            }
+        }
+        // The way in to the neighbours on a compact screen. On iPad the panel
+        // is always on the right, so the button would be a second door to a
+        // room you are already standing in.
+        .overlay(alignment: .topTrailing) {
+            if sizeClass != .regular, !game.world.tribes.isEmpty {
+                Button {
+                    showingNeighbours = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "tent.2.fill").font(.caption)
+                        Text("\(game.world.tribes.count)")
+                            .font(.caption.monospacedDigit().weight(.semibold))
+                    }
+                    .foregroundStyle(Theme.text)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(.ultraThinMaterial, in: Capsule())
+                }
+                .padding(.trailing, 12)
+                .padding(.top, 8)
+            }
+        }
+        .sheet(isPresented: $showingNeighbours) {
+            NavigationStack {
+                ScrollView {
+                    TribesPanel(game: game).padding(16)
+                }
+                .background(Theme.surface)
+                .navigationTitle(AppStrings.language == .cs ? "Sousedé" : "Neighbours")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(AppStrings.language == .cs ? "Hotovo" : "Done") {
+                            showingNeighbours = false
+                        }
+                    }
+                }
             }
         }
         // The valley was never empty: as long as unmet peoples wait beyond the

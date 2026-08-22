@@ -289,14 +289,37 @@ public enum StewardEngine {
     /// bench, from an order nobody was ever placing. A standing order is the
     /// right shape for it: the colony always wants some timber about, the way
     /// it always wants some food.
+    /// **How much of the bench the council may take.**
+    ///
+    /// `CraftingEngine.maxOrders` is twelve and this used to be all of them: one
+    /// standing order per wanted material, and `wantedMaterials` unions the
+    /// material list of *every building the colony has unlocked in every era it
+    /// has reached* plus everything the gear bench asks for. Past the first age
+    /// that is comfortably a dozen, so the queue filled with council orders and
+    /// stayed full — which does three things at once, all of them invisible:
+    ///
+    /// - the player's own orders are **refused**, because `CraftingEngine.place`
+    ///   returns the settlement unchanged when the queue is full and the panel's
+    ///   buttons go dead;
+    /// - `QuartermasterEngine` can never queue a spear or a coat, because it
+    ///   runs after this one;
+    /// - and every material trickles, because the bench's effort is split
+    ///   twelve ways.
+    ///
+    /// Keks: *"crafteni je stale neprehledne … a crafti spatne."* Four slots
+    /// left free is a bench the player still owns. If they fill it themselves,
+    /// the council simply waits — which is the right way round.
+    static let councilBenchShare = 8
+
     static func keepMaterialsComing(
         _ state: WorldState, index: Int, registry: GameDataRegistry
     ) -> WorldState {
         var s = state
         let settlement = s.settlements[index]
         // Only what this colony is actually short of, and only what it could
-        // plausibly make here.
-        for materialID in wantedMaterials(for: settlement, in: s, registry: registry) {
+        // plausibly make here — **most useful first**.
+        for materialID in shoppingList(for: settlement, in: s, registry: registry) {
+            guard s.settlements[index].craftOrders.count < councilBenchShare else { break }
             let held = CraftingEngine.materialCounts(settlement)[materialID] ?? 0
             guard held < materialStock else { continue }
             // One standing order per material is enough — it never finishes.
@@ -350,6 +373,36 @@ public enum StewardEngine {
         wanted.formUnion(QuartermasterEngine.wantedMaterials(
             for: settlement, in: state, registry: registry))
         return wanted.sorted()
+    }
+
+    /// **What to make first.**
+    ///
+    /// `wantedMaterials` is a *set* — everything any building or piece of gear
+    /// might ask for, sorted alphabetically, which is to say in no order at
+    /// all. Walked in that order against a bench of twelve slots, the council
+    /// stood a dozen standing orders and split its crafters twelve ways, and
+    /// the four timber bundles standing between the colony and a warehouse
+    /// arrived at a twelfth of the rate — if the alphabet ever got that far.
+    ///
+    /// So: the materials that unblock a building the colony **wants right now**
+    /// come first, and among those the one that unblocks the most. Everything
+    /// else follows in its old order, because a colony should still keep a
+    /// little of everything about.
+    static func shoppingList(
+        for settlement: Settlement, in state: WorldState, registry: GameDataRegistry
+    ) -> [String] {
+        let all = wantedMaterials(for: settlement, in: state, registry: registry)
+        // What is wanted but blocked, and on what.
+        var unblocks: [String: Int] = [:]
+        for def in wantedHere(settlement, in: state, registry: registry)
+        where !GameEngine.hasMaterials(def.materialCost, in: state,
+                                       settlementID: settlement.id) {
+            for material in def.materialCost.keys { unblocks[material, default: 0] += 1 }
+        }
+        return all.sorted { a, b in
+            let (ua, ub) = (unblocks[a] ?? 0, unblocks[b] ?? 0)
+            return ua == ub ? a < b : ua > ub
+        }
     }
 
     /// The cheapest recipe making a given material that this colony could
@@ -606,8 +659,31 @@ public enum StewardEngine {
     static func buildableHere(
         _ settlement: Settlement, in state: WorldState, registry: GameDataRegistry
     ) -> [BuildingDefinition] {
+        wantedHere(settlement, in: state, registry: registry).filter { def in
+            GameEngine.hasMaterials(def.materialCost, in: state, settlementID: settlement.id)
+        }
+    }
+
+    /// Everything the colony **would** break ground on if the made things were
+    /// on the shelf — every guard `buildableHere` applies except that one.
+    ///
+    /// Split out because the difference between the two lists is the council's
+    /// shopping list, and until this existed nothing computed it. A colony in
+    /// the medieval age, six hundred materials of six hundred, could build
+    /// exactly **one** thing — a well — because a warehouse wants four timber
+    /// bundles, a granary wants timber bundles, and nearly every definition in
+    /// the book names some made thing. The store it needed was blocked on four
+    /// bundles it had never been asked to make.
+    static func wantedHere(
+        _ settlement: Settlement, in state: WorldState, registry: GameDataRegistry
+    ) -> [BuildingDefinition] {
         let shortOfRoofs = ResourceLoop.housingCapacity(settlement, registry: registry)
             < bedsWanted(for: settlement.population)
+        // What is spilling over the brim right now. A colony at its cap is
+        // **destroying everything it earns**, every tick, and the building that
+        // stops that is not a discretionary purchase — the same argument
+        // shelter already wins below.
+        let spilling = brimmingResources(settlement)
         return registry.buildings.values.filter { def in
             guard state.unlockedBuildings.contains(def.id) || def.era == .earlySettlement
             else { return false }
@@ -632,6 +708,7 @@ public enum StewardEngine {
                 .first { $0.definitionID == def.id }?.count ?? 0
             let allowed = 1 + Int(settlement.population / soulsPerRepeatBuilding)
             guard (shortOfRoofs && def.sleepers > 0) || standing < allowed else { return false }
+
             // …and the colony can still *keep* it standing (rule 25) — unless
             // it is a roof and there are not enough. **Shelter is not a
             // discretionary purchase.** The upkeep brake refused huts the
@@ -641,10 +718,25 @@ public enum StewardEngine {
             // means still no roofs. Caught by "A town at its housing ceiling
             // raises a roof" — the same exemption the repeat cap already makes
             // one line above, and for the same reason.
-            guard (shortOfRoofs && def.sleepers > 0)
+            //
+            // **And a store for a good that is spilling is exempt too**, for
+            // a reason the brake cannot see: it weighs a building's *materials
+            // production* against its upkeep, and a warehouse produces nothing
+            // at all. So a colony pinned at its materials cap was refused the
+            // one building that raises the cap — for ever, because being at the
+            // cap does not change the ledger the brake reads. Measured from the
+            // player's side: year 28, six hundred materials of six hundred, a
+            // market and no warehouse, and the council answering with an
+            // observatory. Keks: *"nestavi sklady materialu a divne budovy."*
+            //
+            // The trade is not close. A warehouse costs twenty-five and holds
+            // three hundred and fifty; its upkeep is `upkeepRateOfCost` of that
+            // twenty-five, against a colony throwing away its whole quarry
+            // output every tick it stands full.
+            let answersTheBrim = spilling.contains { def.storage[$0] > 0 }
+            guard (shortOfRoofs && def.sleepers > 0) || answersTheBrim
                     || canAffordToKeep(def, at: settlement, registry: registry) else { return false }
-            return GameEngine.hasMaterials(def.materialCost, in: state,
-                                           settlementID: settlement.id)
+            return true
         }
     }
 

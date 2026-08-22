@@ -39,10 +39,14 @@ struct CraftingPanel: View {
                     // Three hundred and eleven recipes is a wall without this.
                     // See `GameViewModel.recipeGroups`.
                     search
+                    craftableToggle
                     let groups = game.recipeGroups
                     if groups.isEmpty {
-                        Text(cs ? "Nic takového se tu nedělá."
-                                : "Nothing here is made of that.")
+                        Text(game.onlyCraftable
+                             ? (cs ? "Nic z toho teď nejde vyrobit — přepni filtr."
+                                   : "None of it can be made right now — clear the filter.")
+                             : (cs ? "Nic takového se tu nedělá."
+                                   : "Nothing here is made of that."))
                             .font(.caption)
                             .foregroundStyle(Theme.textDim)
                     }
@@ -56,6 +60,29 @@ struct CraftingPanel: View {
             }
             .frontierCard()
         }
+    }
+
+    /// **The one control that makes three hundred recipes usable.** Sorting
+    /// affordable-first puts the actionable ones at the top of *each* group,
+    /// which still means scrolling past every group's tail to find the next.
+    private var craftableToggle: some View {
+        Button {
+            game.onlyCraftable.toggle()
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: game.onlyCraftable
+                      ? "checkmark.circle.fill" : "circle")
+                    .font(.caption2)
+                Text(cs ? "Jen co teď jde vyrobit" : "Only what can be made now")
+                    .font(.caption)
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(game.onlyCraftable ? Theme.accent : Theme.textDim)
+            .padding(.vertical, 7).padding(.horizontal, 10)
+            .background(game.onlyCraftable ? Theme.accent.opacity(0.12) : Theme.surfaceInset,
+                        in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 
     /// A field, and a way out of it. Never a magnifying glass on its own — a
@@ -224,6 +251,12 @@ struct CraftingPanel: View {
     private func row(_ recipe: RecipeDefinition) -> some View {
         let ready = game.canCraft(recipe)
         return HStack(spacing: 12) {
+            // **Whether you can make it, said in a colour rather than in four
+            // per cent of opacity.** The dot beside it is the output's rarity —
+            // two different facts that looked like one grey circle.
+            Capsule()
+                .fill(ready ? Theme.good : Theme.danger.opacity(0.55))
+                .frame(width: 3)
             if let rarity = game.recipeOutputRarity(recipe) {
                 Circle().fill(rarity.color).frame(width: 10, height: 10)
                     .opacity(ready ? 1 : 0.4)
@@ -264,19 +297,35 @@ struct CraftingPanel: View {
     /// Each ingredient as held-of-needed, so a blocked recipe names what is
     /// short rather than just refusing.
     private func ingredients(_ recipe: RecipeDefinition) -> some View {
-        FlowRow(spacing: 6) {
-            ForEach(recipe.materials.sorted { $0.key < $1.key }, id: \.key) { material, needed in
-                let held = game.materialCount(material)
-                Text("\(game.itemName(material)) \(held)/\(needed)")
+        // **Short first, and the satisfied stores not at all.**
+        //
+        // Every row carried a `600/14` chip for the materials it costs, on a
+        // colony holding six hundred materials — the same satisfied number
+        // repeated down three hundred rows, competing for the eye with the one
+        // ingredient that is actually missing. A store you have enough of is
+        // not news; a shelf you are three short of is the whole row.
+        let short = recipe.materials.filter { game.materialCount($0.key) < $0.value }
+        let held = recipe.materials.filter { game.materialCount($0.key) >= $0.value }
+        let shortResources = ResourceType.allCases.filter {
+            recipe.resourceCost[$0] > 0
+                && Int(game.selectedSettlement?.storage[$0] ?? 0) < Int(recipe.resourceCost[$0])
+        }
+        return FlowRow(spacing: 6) {
+            ForEach(short.sorted { $0.key < $1.key }, id: \.key) { material, needed in
+                Text("\(game.itemName(material)) \(game.materialCount(material))/\(needed)")
                     .font(.caption2.monospacedDigit())
-                    .foregroundStyle(held >= needed ? Theme.textDim : Theme.danger)
+                    .foregroundStyle(Theme.danger)
             }
-            ForEach(ResourceType.allCases.filter { recipe.resourceCost[$0] > 0 }, id: \.self) { resource in
-                let needed = Int(recipe.resourceCost[resource])
-                let held = Int(game.selectedSettlement?.storage[resource] ?? 0)
-                Label("\(held)/\(needed)", systemImage: resource.symbolName)
+            ForEach(shortResources, id: \.self) { resource in
+                Label("\(Int(game.selectedSettlement?.storage[resource] ?? 0))/\(Int(recipe.resourceCost[resource]))",
+                      systemImage: resource.symbolName)
                     .font(.caption2.monospacedDigit())
-                    .foregroundStyle(held >= needed ? Theme.textDim : Theme.danger)
+                    .foregroundStyle(Theme.danger)
+            }
+            ForEach(held.sorted { $0.key < $1.key }, id: \.key) { material, needed in
+                Text("\(game.itemName(material)) \(game.materialCount(material))/\(needed)")
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(Theme.textDim)
             }
         }
     }

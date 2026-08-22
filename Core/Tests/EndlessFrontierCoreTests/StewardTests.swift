@@ -466,3 +466,112 @@ struct StewardTests {
         #expect(back.stewardEnabled, "the saves that need it most are the old ones")
     }
 }
+
+/// What the council does when a store is at the brim, and how much of the
+/// bench it is allowed to take.
+@Suite("A council that leaves room")
+struct CouncilRoomTests {
+
+    /// A colony holding everything it can hold, with a store to build.
+    static func brimming(_ registry: GameDataRegistry) -> WorldState {
+        var state = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        state.era = .medieval
+        state.settlements[0].storage[.materials] =
+            state.settlements[0].storageCapacity[.materials]
+        return state
+    }
+
+    @Test("A colony at its materials cap may raise the store that lifts it")
+    func theBrimBeatsTheUpkeepBrake() throws {
+        // The brake weighs a building's **materials production** against its
+        // upkeep, and a warehouse produces nothing — so a colony pinned at its
+        // cap was refused, for ever, the one building that raises the cap.
+        let registry = try GameDataRegistry.bundled()
+        var state = Self.brimming(registry)
+        // Enough standing buildings that the upkeep brake genuinely bites.
+        for _ in 0..<12 {
+            state.settlements[0].buildings.append(
+                BuildingInstance.founding("library", at: state.settlements[0].id, slot: 0))
+        }
+        // The made things a warehouse is built out of, on the shelf.
+        let warehouse = try #require(registry.building("warehouse"))
+        for (material, needed) in warehouse.materialCost {
+            state.settlements[0].stockpile[material] = needed * 3
+        }
+        let settlement = state.settlements[0]
+        #expect(StewardEngine.brimmingResources(settlement).contains(.materials))
+        let able = StewardEngine.buildableHere(settlement, in: state, registry: registry)
+        #expect(able.contains { $0.id == "warehouse" },
+                "a colony at its cap must be able to raise the store that lifts it")
+    }
+
+    @Test("The council shops for what is standing between it and a building")
+    func theShoppingListIsOrdered() throws {
+        // `wantedMaterials` is a set sorted alphabetically, which against a
+        // bench of twelve slots meant the four timber bundles between the
+        // colony and a warehouse arrived at a twelfth of the rate — if the
+        // alphabet reached them at all.
+        let registry = try GameDataRegistry.bundled()
+        var state = Self.brimming(registry)
+        state.settlements[0].stockpile = [:]
+        let list = StewardEngine.shoppingList(for: state.settlements[0], in: state,
+                                              registry: registry)
+        #expect(!list.isEmpty)
+        // Whatever is first must be a material some building the colony wants
+        // is actually waiting on.
+        let blocking = Set(StewardEngine.wantedHere(state.settlements[0], in: state,
+                                                    registry: registry)
+            .filter { !GameEngine.hasMaterials($0.materialCost, in: state,
+                                               settlementID: state.settlements[0].id) }
+            .flatMap { $0.materialCost.keys })
+        #expect(blocking.contains(try #require(list.first)),
+                "the council's first order is \(list.first ?? "nothing"), which unblocks nothing")
+    }
+
+    @Test("A brimming colony reaches for a store, not for something novel")
+    func theBrimIsAnswered() throws {
+        let registry = try GameDataRegistry.bundled()
+        var state = Self.brimming(registry)
+        // Fed, housed and with its ground broken, so the clauses above stores
+        // fall through and this one gets its turn.
+        state.settlements[0].storage[.food] = state.settlements[0].storageCapacity[.food]
+        for _ in 0..<40 {
+            state.settlements[0].buildings.append(
+                BuildingInstance.founding("hut", at: state.settlements[0].id, slot: 0))
+        }
+        // …and the made things on the shelf, or the whole book is unbuildable
+        // and the clause has nothing to choose between.
+        for def in registry.buildings.values {
+            for (material, needed) in def.materialCost {
+                state.settlements[0].stockpile[material] =
+                    max(state.settlements[0].stockpile[material, default: 0], needed * 4)
+            }
+        }
+        let pick = StewardEngine.nextBuilding(for: state.settlements[0], in: state,
+                                              registry: registry)
+        let chosen = pick.flatMap { registry.building($0) }
+        #expect(chosen != nil)
+        let spilling = StewardEngine.brimmingResources(state.settlements[0])
+        #expect(spilling.contains { (chosen?.storage[$0] ?? 0) > 0 },
+                "picked \(pick ?? "nothing"), which holds none of \(spilling)")
+    }
+
+    @Test("The council never takes the whole bench")
+    func theBenchStaysOpen() throws {
+        let registry = try GameDataRegistry.bundled()
+        var state = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        state.era = .medieval
+        state.unlockedBuildings = Set(registry.buildings.keys)
+        // Run the council's own pass many times over; its standing orders never
+        // finish, so without a share it fills every slot and stays there.
+        for _ in 0..<40 {
+            state = StewardEngine.keepMaterialsComing(state, index: 0, registry: registry)
+            state = QuartermasterEngine.advance(state, index: 0, registry: registry)
+        }
+        let queued = state.settlements[0].craftOrders.count
+        #expect(queued <= StewardEngine.councilBenchShare,
+                "the council queued \(queued) of \(CraftingEngine.maxOrders)")
+        #expect(queued < CraftingEngine.maxOrders,
+                "a full bench refuses the player's own orders silently")
+    }
+}

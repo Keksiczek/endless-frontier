@@ -544,8 +544,44 @@ enum SettlementStructures {
         let s = s0 * (0.9 + sizeJ * 0.2)
         let aspect = min(1.7, max(0.6, rawAspect))
         let shape = bodyShape(glyph)
-        return (s * Double(shape.width) * aspect, s * Double(shape.height))
+        var width = s * Double(shape.width) * aspect
+        var height = s * Double(shape.height)
+
+        // **Fill the other axis too.**
+        //
+        // `lotSize` solves for the size that just fits, on *whichever* axis
+        // binds first — and then the other one is left short by exactly the
+        // ratio between them. For the ordinary house shape (1.6 wide by 1.1
+        // tall) on a square lot that is 85% of the plot across and **58% of it
+        // down**: a wide, squat model of a house with a band of bare ground
+        // above and below it. Keks, at zoom: *"budovy mají malý interiér"* —
+        // and the room is drawn inside these walls, so everything in it was
+        // shrunk by the same amount before a single fitting was placed.
+        //
+        // The slack is computable from what is already here: the axis that did
+        // not bind is short by `(lotH/lotW) · shapeW·aspect / shapeH`, and every
+        // caller passes `rawAspect` as the lot's own width over its height.
+        // Stretching by exactly that reaches the same fill the bound axis has
+        // and — by construction — never passes it.
+        //
+        // Capped, because a hall that fills a square plot perfectly is a
+        // square, and the silhouettes are how you tell a hall from a hut across
+        // the valley. `maxStretch` is the most identity this will trade for
+        // ground.
+        let slack = rawAspect > 0
+            ? (Double(shape.width) * aspect) / (Double(shape.height) * rawAspect)
+            : 1
+        if slack > 1 {
+            height *= min(maxStretch, slack)
+        } else if slack > 0 {
+            width *= min(maxStretch, 1 / slack)
+        }
+        return (width, height)
     }
+
+    /// How far a body may be stretched toward its lot before it stops looking
+    /// like the kind of building it is. See `bodySize`.
+    static let maxStretch: Double = 1.35
 
     /// How wide and tall each kind of building's walls run, in multiples of
     /// `s`. Most are the house's proportions; the ones that are not are the

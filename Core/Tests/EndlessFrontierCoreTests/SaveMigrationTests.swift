@@ -73,4 +73,36 @@ struct SaveMigrationTests {
         #expect(loaded?.schemaVersion == WorldState.currentSchemaVersion)
         #expect(loaded?.settlements.first?.name == "New")
     }
+
+
+    @Test("An older save gets the water put on its map")
+    func riversAreBackfilled() throws {
+        // `Region.river` is written at generation, so a world that already
+        // existed had `nil` on every hex and would have kept it for ever — no
+        // rivers, no bridges, and no way to tell dry country from a save made
+        // before there was any water.
+        let registry = try GameDataRegistry.bundled()
+        var old = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        old.schemaVersion = 2
+        for index in old.regions.indices { old.regions[index].river = nil }
+        #expect(old.regions.allSatisfy { $0.river == nil })
+
+        let migrated = SaveMigrator.migrate(old)
+        #expect(migrated.schemaVersion == WorldState.currentSchemaVersion)
+        #expect(migrated.regions.contains { $0.river != nil },
+                "a valley with no water anywhere is the bug this migration exists for")
+        // …and exactly the map the generator would have drawn for this seed.
+        for region in migrated.regions {
+            #expect(region.river == MapGenerator.river(at: region.coord,
+                                                       mapSeed: migrated.mapSeed))
+        }
+    }
+
+    @Test("A save already at the current version is left alone")
+    func currentSavesAreUntouched() throws {
+        let registry = try GameDataRegistry.bundled()
+        let world = GameWorldFactory.newGame(registry: registry, seed: 7)
+        #expect(SaveMigrator.migrate(world) == world)
+    }
+
 }
