@@ -1,7 +1,10 @@
 # Docs — what is where
 
 > **Start here if you are picking this up cold:**
-> [`HANDOFF-2026-08-21-evening.md`](HANDOFF-2026-08-21-evening.md) — the
+> [`HANDOFF-2026-08-22.md`](HANDOFF-2026-08-22.md) — combat measured apart into
+> three faults, the council that could build one building, and the six things
+> Keks asked for next in his own order.
+> Before it: [`HANDOFF-2026-08-21-evening.md`](HANDOFF-2026-08-21-evening.md) — the
 > narrator, the chronicle's names, what `GeneProbe` measured twice, roads over
 > water, and a save bug that had been throwing away every road since it shipped.
 > [`HANDOFF-2026-08-21.md`](HANDOFF-2026-08-21.md) is the morning before it, and
@@ -24,6 +27,7 @@ Read in this order when picking work up cold:
 |---|---|
 | The chronicle, the annals, and the narrator seam | [CHRONICLE.md](CHRONICLE.md) |
 | Why the council built *that* | [COUNCIL.md](COUNCIL.md) |
+| Weapons, volleys, and what a fight is made of | [ARMS_AND_PROJECTILES.md](ARMS_AND_PROJECTILES.md) |
 | Roads, water, bridges, ruins and what rail costs | [ROADS.md](ROADS.md) |
 | What does this engine own? | [CODEMAPS/engines.md](CODEMAPS/engines.md) |
 | Is this an entity or still a number? | [CODEMAPS/models.md](CODEMAPS/models.md) |
