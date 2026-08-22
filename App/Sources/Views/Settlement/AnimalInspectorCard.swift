@@ -12,6 +12,11 @@ struct AnimalInspectorCard: View {
     let animal: Animal
     /// Set when this beast belongs to the colony rather than to the valley.
     var kept: TamedAnimal?
+    /// Whether the hunters have already been pointed at this one
+    /// (`Designation`), and the way to point them at it. Nil for a beast the
+    /// colony keeps — you do not put the hunt on your own ox.
+    var marked: Bool = false
+    var onHunt: (() -> Void)?
     var onClose: () -> Void
 
     private var cs: Bool { AppStrings.language == .cs }
@@ -32,6 +37,10 @@ struct AnimalInspectorCard: View {
             if !animal.conditions.isEmpty { conditions }
             if kept == nil, animal.tameProgress > 0.01 { taming }
             body_
+            // The one thing you could not do about a beast on your own ground:
+            // ask for it. A mark, not an order to a person — the hunters take
+            // a marked animal before any other in reach.
+            if kept == nil, let onHunt { huntButton(onHunt) }
         }
         .padding(16)
         .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
@@ -40,6 +49,22 @@ struct AnimalInspectorCard: View {
                 .strokeBorder(Theme.accent.opacity(kept != nil ? 0.45 : 0.20), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.4), radius: 18, y: 8)
+    }
+
+    /// Point the hunters at this one, or take the mark off it.
+    private func huntButton(_ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(marked ? AppStrings.liftTheOrder
+                         : Designation.Kind.hunt.label.resolve(AppStrings.language),
+                  systemImage: marked ? "arrow.uturn.backward" : "scope")
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+        }
+        .buttonStyle(.plain)
+        .background(marked ? Theme.surfaceInset : Theme.accent.opacity(0.22),
+                    in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .foregroundStyle(marked ? Theme.textDim : Theme.accent)
     }
 
     private var header: some View {

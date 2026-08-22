@@ -561,6 +561,43 @@ final class GameViewModel {
 
     func dismissSiteOutcome() { lastSiteOutcome = nil }
 
+    // MARK: - Marking a thing for work
+
+    /// **Marks a thing the colony should work next, or lifts the mark.**
+    ///
+    /// The one write the canvas's selection is allowed to make, and it goes
+    /// through the engine like every other order (a road, a battle posture) —
+    /// the renderer itself still writes nothing.
+    func mark(_ target: Designation.Target) {
+        guard let index = world.settlements.firstIndex(where: { $0.id == selectedSettlement?.id })
+        else { return }
+        world.settlements[index] = DesignationEngine.toggle(
+            world.settlements[index], target: target, tick: world.tick)
+        persist()
+    }
+
+    func isMarked(_ target: Designation.Target) -> Bool {
+        guard let settlement = selectedSettlement else { return false }
+        return DesignationEngine.isMarked(settlement, target: target)
+    }
+
+    /// How many colonists hold the trade that would carry out this order.
+    /// Nought is why a mark can sit there for a season, and the card says so.
+    func hands(for kind: Designation.Kind) -> Int {
+        guard let settlement = selectedSettlement else { return 0 }
+        let work: WorkKind
+        switch kind {
+        case .fell: work = .logging
+        case .mine: work = .mining
+        case .haul: work = .idle          // hauling is anybody with free hands
+        case .hunt: work = .hunting
+        }
+        if kind == .haul {
+            return settlement.pawns.count { $0.carrying != nil || $0.assignedWork != .idle }
+        }
+        return settlement.pawns.count { $0.assignedWork == work }
+    }
+
     /// The outlaws living in this hex, if any. Not a people — they have no
     /// standing and there is nothing to negotiate (see `OutlawCamp`) — so the
     /// map says who they are and offers exactly one thing to do about them.

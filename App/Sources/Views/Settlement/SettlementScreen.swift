@@ -268,7 +268,11 @@ struct SettlementScreen: View {
                     })
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if case let .animal(id) = selection, let found = game.animal(id) {
-                AnimalInspectorCard(animal: found.animal, kept: found.kept) {
+                AnimalInspectorCard(
+                    animal: found.animal, kept: found.kept,
+                    marked: game.isMarked(.animal(id)),
+                    onHunt: found.kept == nil ? { game.mark(.animal(id)) } : nil
+                ) {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -279,6 +283,18 @@ struct SettlementScreen: View {
                 } onClose: {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if case let .thing(target, label) = selection {
+                // A tree, a seam, a heap: the things the colony works. The card
+                // marks them (`Designation`) rather than ordering anybody.
+                let kind = Designation.Kind.forTarget(target)
+                WorkOrderCard(
+                    label: label, kind: kind, marked: game.isMarked(target),
+                    hands: game.hands(for: kind),
+                    onOrder: { game.mark(target) },
+                    onClose: {
+                        withAnimation(.easeOut(duration: 0.15)) { selection = .none }
+                    })
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if case let .landmark(text) = selection {
                 HStack(spacing: 8) {

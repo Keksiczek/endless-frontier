@@ -209,6 +209,10 @@ enum SettlementRenderer {
         // And the beasts that stopped running and stayed.
         SettlementWildlife.drawTamed(&context, rect: rect, settlement: settlement,
                                      map: map, time: time, zoom: zoom)
+        // What the player has asked for, over the things it points at: a mark
+        // you cannot see is a mark you do not believe in.
+        SettlementMarks.draw(&context, rect: rect, settlement: settlement,
+                             map: map, time: time, zoom: zoom)
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels,

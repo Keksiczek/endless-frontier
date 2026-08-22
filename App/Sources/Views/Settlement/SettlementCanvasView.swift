@@ -25,6 +25,15 @@ enum CanvasSelection: Equatable {
     /// A tapped beast, wild or kept. The wild are pawns with bodies and lives;
     /// until now they were the only thing on the canvas you could not ask about.
     case animal(UUID)
+    /// **A tapped thing the colony can be told to work**: a tree, a seam of
+    /// rock, a heap lying out in the open.
+    ///
+    /// These used to be `.landmark`, which is a *string* — so the map could
+    /// name what you had tapped and nothing more, and the only thing to do
+    /// about a wood you wanted cleared was to hope somebody wandered over.
+    /// Carrying the target's identity is what lets the card offer an order
+    /// (`Designation`); the label rides along because the card says it too.
+    case thing(target: Designation.Target, label: String)
 }
 
 /// Somewhere the canvas is being asked to take the player.
@@ -460,15 +469,15 @@ struct SettlementCanvasView: View {
         // The things lying about: a heap of timber at the stump that is on its
         // way in, the wood it came out of, the rock somebody is cutting into.
         for pile in map.piles where map.isExplored(pile.position) {
-            probe.offer(.landmark(pileLabel(pile)),
+            probe.offer(.thing(target: .pile(pile.id), label: pileLabel(pile)),
                         at: SettlementRenderer.point(pile.position, in: rect))
         }
         for tree in map.trees where map.isExplored(tree.position) {
-            probe.offer(.landmark(treeLabel(tree)),
+            probe.offer(.thing(target: .tree(tree.id), label: treeLabel(tree)),
                         at: SettlementRenderer.point(tree.position, in: rect))
         }
         for rock in map.rocks where map.isExplored(rock.position) {
-            probe.offer(.landmark(rockLabel(rock)),
+            probe.offer(.thing(target: .rock(rock.id), label: rockLabel(rock)),
                         at: SettlementRenderer.point(rock.position, in: rect))
         }
         // The land's own furniture: flowers, reeds, a snag, a cactus, the

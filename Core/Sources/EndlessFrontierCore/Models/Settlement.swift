@@ -167,6 +167,11 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     /// kept for what they do. They eat out of the stores, they can be hurt, and
     /// a badly kept one goes back to the woods.
     public var tamed: [TamedAnimal]
+    /// **What the player has pointed at.** Trees marked to be felled, rock to
+    /// be broken, heaps to be carried in, beasts to be hunted — see
+    /// `Designation`. The engines that already choose targets take a marked
+    /// one first; nothing here orders a person anywhere.
+    public var designations: [Designation] = []
     /// What the colony can move a body or a load with. A mount here points at
     /// a beast in `tamed`; a cart stands on its own. See
     /// `docs/MOUNTS_AND_VEHICLES.md`.
@@ -347,6 +352,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         case huntPhases
         case tamed
         case conveyances
+        case designations
         case stockpile, rawProgress, lastBattle, battleHistory, policy, siege
         case craftOrders, kitchenProgress
         case outbreak, lastOutbreakTick, captives
@@ -398,6 +404,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         relationships = try c.decodeIfPresent([Relationship].self, forKey: .relationships) ?? []
         expeditions = try c.decodeIfPresent([POIExpedition].self, forKey: .expeditions) ?? []
         tamed = try c.decodeIfPresent([TamedAnimal].self, forKey: .tamed) ?? []
+        designations = try c.decodeIfPresent([Designation].self, forKey: .designations) ?? []
         conveyances = try c.decodeIfPresent([Conveyance].self, forKey: .conveyances) ?? []
         stockpile = try c.decodeIfPresent([String: Int].self, forKey: .stockpile) ?? [:]
         rawProgress = try c.decodeIfPresent([String: Double].self, forKey: .rawProgress) ?? [:]

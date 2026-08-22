@@ -443,6 +443,10 @@ public enum ResourceLoop {
         s = PlagueEngine.advanceOneTick(
             s, registry: registry, tick: tick, era: era,
             season: Season(tick: tick, ticksPerYear: config.ticksPerYear), mapSeed: mapSeed)
+        // 9b-ii-b. The player's own marks, swept: a tree that has been felled
+        //          and a heap that has been carried in are gone, and a mark on
+        //          them is an icon over grass.
+        s = DesignationEngine.prune(s)
         // 9b-iii. …and the people a full granary attracts who belong to
         //         nobody. Only where the world has no camp for them to come
         //         from: `OutlawCampEngine` owns raids now, and runs at world
@@ -867,7 +871,8 @@ public enum ResourceLoop {
         var dropped: [(itemID: String, amount: Int, at: LocalPoint)] = []
         let timberDemand = demand[.forest, default: 0]
         if timberDemand > 0, !map.trees.isEmpty {
-            let cut = FloraEngine.fell(map, loggers: max(1, Int(timberDemand / harvestPerWorker)))
+            let cut = FloraEngine.fell(map, loggers: max(1, Int(timberDemand / harvestPerWorker)),
+                                       marked: DesignationEngine.trees(settlement))
             map = cut.map
             for stump in cut.stumps {
                 dropped.append((itemID: "wood", amount: timberPerTree, at: stump))
@@ -876,7 +881,8 @@ public enum ResourceLoop {
         let stoneDemand = demand[.stone, default: 0]
             + demand[.ironOre, default: 0] + demand[.clay, default: 0]
         if stoneDemand > 0, !map.rocks.isEmpty {
-            let cut = FloraEngine.quarry(map, miners: max(1, Int(stoneDemand / harvestPerWorker)))
+            let cut = FloraEngine.quarry(map, miners: max(1, Int(stoneDemand / harvestPerWorker)),
+                                         marked: DesignationEngine.rocks(settlement))
             map = cut.map
             // What the pick broke out is lying at the outcrop, exactly as
             // timber lies at the stump. Taking only `.map` here — which is what

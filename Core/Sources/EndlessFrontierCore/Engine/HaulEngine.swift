@@ -128,6 +128,9 @@ public enum HaulEngine {
         // and is decided at the heap (`storePosition(_:for:registry:from:)`).
         let yard = storePosition(s, registry: registry)
         let ticksPerYear = max(1, registry.config.ticksPerYear)
+        // What the player has pointed at, gathered once for the whole pass
+        // rather than per hauler per step.
+        let wanted = DesignationEngine.piles(s)
         // Claims are swept on the tick, not on every step: it is a whole pass
         // over the piles against a set of the living, and nobody dies eight
         // times in two minutes (rule 4).
@@ -220,7 +223,8 @@ public enum HaulEngine {
             let looking = turnedRound
                 || (clock.tick % JobBoard.interval == 0 && clock.step == 0)
             guard let index = held
-                    ?? (looking ? nearestUnclaimed(in: map, to: yard) : nil) else { continue }
+                    ?? (looking ? nearestUnclaimed(in: map, to: yard, marked: wanted) : nil)
+            else { continue }
             // Claim it, walk to it, and pick it up when they get there.
             map.piles[index].claimedBy = s.pawns[i].id
             let pilePosition = map.piles[index].position
@@ -387,13 +391,25 @@ public enum HaulEngine {
     }
 
     /// The nearest heap nobody has claimed.
-    static func nearestUnclaimed(in map: LocalMap, to point: LocalPoint) -> Int? {
+    /// The next heap worth walking to. **A heap the player marked is fetched
+    /// before any other**, however far it is — that is the whole of what
+    /// marking one means (`Designation`) — and otherwise the nearest.
+    static func nearestUnclaimed(
+        in map: LocalMap, to point: LocalPoint, marked: Set<UUID> = []
+    ) -> Int? {
         var best: Int?
         var bestDistance = Double.greatestFiniteMagnitude
+        var bestMarked = false
         for (index, pile) in map.piles.enumerated() where pile.claimedBy == nil {
             guard map.isExplored(pile.position) else { continue }
             let dx = pile.position.x - point.x, dy = pile.position.y - point.y
             let d = dx * dx + dy * dy
+            let wanted = marked.contains(pile.id)
+            if wanted != bestMarked {
+                guard wanted else { continue }
+                bestMarked = true; bestDistance = d; best = index
+                continue
+            }
             if d < bestDistance { bestDistance = d; best = index }
         }
         return best

@@ -259,6 +259,9 @@ enum AppStrings {
         s("\(adults) adults in the room", "\(adults) dospělých v sále")
     }
 
+    /// Taking back a mark on a thing (`Designation`).
+    static var liftTheOrder: String { s("Never mind", "Zrušit příkaz") }
+
     static var whoSpoke: String { s("Who spoke", "Kdo mluvil") }
     static var showEverybody: String { s("All of them", "Všichni") }
     static var showFewer: String { s("Fewer", "Méně") }

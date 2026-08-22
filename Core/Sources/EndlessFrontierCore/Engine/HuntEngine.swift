@@ -107,7 +107,10 @@ public enum HuntEngine {
     /// culls and what keeps a hunted herd healthy.
     public static func run(
         _ map: LocalMap, hunters: [Hunter], at posts: [UUID: LocalPoint],
-        tick: Int, seed: UInt64
+        tick: Int, seed: UInt64,
+        /// Beasts the player has marked for the hunt (`Designation`). A marked
+        /// animal is taken before any other in reach.
+        marked: Set<UUID> = []
     ) -> Bag {
         var bag = Bag(map: map)
         guard !hunters.isEmpty, !map.wildlife.animals.isEmpty else { return bag }
@@ -117,7 +120,8 @@ public enum HuntEngine {
 
         for hunter in hunters {
             let from = posts[hunter.id] ?? LocalPoint(x: 0.5, y: 0.52)
-            guard let index = quarry(in: animals, from: from, taken: taken) else {
+            guard let index = quarry(in: animals, from: from, taken: taken,
+                                     marked: marked) else {
                 // Nothing within reach: still out there, still looking.
                 bag.phases[hunter.id] = .stalking
                 continue
@@ -177,7 +181,8 @@ public enum HuntEngine {
 
     /// The beast a hunter goes for: the nearest one in reach, and among those
     /// at similar range, the one least able to get away.
-    static func quarry(in animals: [Animal], from: LocalPoint, taken: Set<UUID>) -> Int? {
+    static func quarry(in animals: [Animal], from: LocalPoint, taken: Set<UUID>,
+                       marked: Set<UUID> = []) -> Int? {
         var best: Int?
         var bestScore = Double.greatestFiniteMagnitude
         for (index, animal) in animals.enumerated() {
@@ -185,10 +190,14 @@ public enum HuntEngine {
             let dx = animal.position.x - from.x, dy = animal.position.y - from.y
             let distance = (dx * dx + dy * dy).squareRoot()
             guard distance <= reach else { continue }
-            // Distance first, but a lame or sick beast is worth a step further.
+            // Distance first, but a lame or sick beast is worth a step further
+            // — and a beast the player pointed at is worth the whole valley:
+            // the mark takes it clear of every unmarked animal in reach
+            // (`Designation`), while still being bounded by `reach`, because a
+            // hunting party is not a teleport.
             let frailty = (animal.canWalk ? 0.0 : -0.06)
                 + (animal.health / animal.species.baseHealth - 1) * 0.04
-            let score = distance + frailty
+            let score = distance + frailty - (marked.contains(animal.id) ? reach * 2 : 0)
             if score < bestScore { bestScore = score; best = index }
         }
         return best

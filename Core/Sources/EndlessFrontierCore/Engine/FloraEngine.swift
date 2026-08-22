@@ -35,16 +35,25 @@ public enum FloraEngine {
     /// fells a sapling while an oak is standing — and a tree that comes down is
     /// removed from the map.
     public static func fell(
-        _ map: LocalMap, loggers: Int
+        _ map: LocalMap, loggers: Int, marked: Set<Int> = []
     ) -> (map: LocalMap, timber: Double, felled: Int, stumps: [LocalPoint]) {
         guard loggers > 0, !map.trees.isEmpty else { return (map, 0, 0, []) }
 
-        // The standing wood worth an axe, biggest first. Ties break on id so
-        // the same world always fells the same tree.
+        // The standing wood worth an axe. **A tree the player marked comes
+        // first** (`Designation`), and after that the biggest — nobody fells a
+        // sapling while an oak is standing. Ties break on id so the same world
+        // always fells the same tree.
         let workable = map.trees.indices
-            .filter { map.trees[$0].growth >= minimumWorkableGrowth }
+            // A sapling is not worth an axe — **unless somebody pointed at it.**
+            // Clearing a thicket off the ground you want to build on is a real
+            // reason to fell a small tree, and a mark the colony silently
+            // ignores is worse than no mark at all.
+            .filter { map.trees[$0].growth >= minimumWorkableGrowth
+                        || marked.contains(map.trees[$0].id) }
             .sorted {
                 let a = map.trees[$0], b = map.trees[$1]
+                let wantedA = marked.contains(a.id), wantedB = marked.contains(b.id)
+                if wantedA != wantedB { return wantedA }
                 if a.timberYield != b.timberYield { return a.timberYield > b.timberYield }
                 return a.id < b.id
             }
@@ -88,14 +97,18 @@ public enum FloraEngine {
     /// unit of clay*. Wood falls at the stump and hewn stone falls at the face;
     /// this is the same rule for the third and commonest kind of working.
     public static func quarry(
-        _ map: LocalMap, miners: Int
+        _ map: LocalMap, miners: Int, marked: Set<Int> = []
     ) -> (map: LocalMap, yield: [LocalResourceKind: Double],
           broken: [(kind: LocalResourceKind, amount: Double, at: LocalPoint)]) {
         guard miners > 0, !map.rocks.isEmpty else { return (map, [:], []) }
+        // Marked rock first, then the softest — the seam somebody pointed at
+        // is worth more than the one that is easiest to break.
         let workable = map.rocks.indices
             .filter { !map.rocks[$0].isSpent }
             .sorted {
                 let a = map.rocks[$0], b = map.rocks[$1]
+                let wantedA = marked.contains(a.id), wantedB = marked.contains(b.id)
+                if wantedA != wantedB { return wantedA }
                 if a.kind.hardness != b.kind.hardness { return a.kind.hardness < b.kind.hardness }
                 return a.id < b.id
             }

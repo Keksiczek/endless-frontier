@@ -214,7 +214,8 @@ public enum WildlifeEngine {
 
         let bag = HuntEngine.run(map, hunters: party, at: posts, tick: tick,
                                  seed: wildlifeSeed(mapSeed: mapSeed, settlementID: s.id,
-                                                    tick: tick) ^ 0x48_55_4E_54)
+                                                    tick: tick) ^ 0x48_55_4E_54,
+                                 marked: DesignationEngine.animals(s))
         // Taken before the early return below, because a hunt where nothing was
         // caught is still a hunt happening — that is the tick where the canvas
         // should show somebody creeping through the wood, and returning early
