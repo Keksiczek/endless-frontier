@@ -961,3 +961,73 @@ struct RiverTests {
                                                     biomeID: biome)))
     }
 }
+
+/// The map, not the list. A road is a line between two places, and the
+/// affordance for laying one was a row of text in a panel — so the edges the
+/// player could actually build on had to be askable all at once.
+@Suite("Every stretch the player could lay")
+struct LayableEdgeTests {
+
+    private func registry() throws -> GameDataRegistry { try GameDataRegistry.bundled() }
+
+    private func world(_ seed: UInt64 = 4242) throws -> WorldState {
+        GameWorldFactory.newGame(registry: try registry(), seed: seed,
+                                 now: Date(timeIntervalSince1970: 1_700_000_000))
+    }
+
+    @Test("An edge is offered once, not once from each end")
+    func edgesAreNotDoubled() throws {
+        var state = try world()
+        state.era = .medieval
+        let edges = GameEngine.layableEdges(state)
+        #expect(Set(edges.map(\.link.id)).count == edges.count)
+    }
+
+    @Test("Nothing is offered through country nobody has walked")
+    func fogIsNotRoadable() throws {
+        var state = try world()
+        state.era = .medieval
+        let known = Set(state.regions.filter { $0.explorationState != .unknown }.map(\.coord))
+        for edge in GameEngine.layableEdges(state) {
+            #expect(known.contains(edge.link.a) && known.contains(edge.link.b))
+        }
+    }
+
+    /// Rule 28 — an empty list is not a diagnosis. The map's whole affordance
+    /// hangs off this being non-empty once the age allows a road at all.
+    /// Rule 28 — an empty list is not a diagnosis, it is a question. At the
+    /// founding this comes back empty and **that is correct**: one hex is
+    /// charted and a road wants two ends. The affordance appears with the
+    /// second explored hex, which is what this asserts.
+    @Test("A charted neighbour is a stretch the player can lay")
+    func thereIsSomethingToLay() throws {
+        var state = try world()
+        state.era = .medieval
+        #expect(GameEngine.layableEdges(state).isEmpty,
+                "one charted hex has no edge to anywhere — the panel is right to be empty")
+        let home = HexCoord(0, 0)
+        guard let index = state.regions.firstIndex(where: { $0.coord == home.neighbors()[0] })
+        else { return }
+        state.regions[index].explorationState = .fullyExplored
+        let edges = GameEngine.layableEdges(state)
+        #expect(edges.count == 1, "one charted neighbour is exactly one stretch")
+        #expect(edges.first?.link.grade == .road)
+        #expect((edges.first?.cost ?? 0) > 0, "a way somebody could have for nothing is not a decision")
+    }
+
+    @Test("The map's edges agree with the panel's rows")
+    func mapAndPanelAgree() throws {
+        var state = try world()
+        state.era = .medieval
+        for index in state.regions.indices where abs(state.regions[index].coord.q) <= 2
+            && abs(state.regions[index].coord.r) <= 2 {
+            state.regions[index].explorationState = .fullyExplored
+        }
+        #expect(!GameEngine.layableEdges(state).isEmpty, "rule 67: assert the precondition first")
+        for edge in GameEngine.layableEdges(state) {
+            let asked = GameEngine.stretch(state, from: edge.link.a, to: edge.link.b)
+            #expect(asked?.link.grade == edge.link.grade)
+            #expect(asked.map { abs($0.cost - edge.cost) < 0.001 } == true)
+        }
+    }
+}

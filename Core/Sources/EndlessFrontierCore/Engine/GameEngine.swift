@@ -401,6 +401,39 @@ public enum GameEngine {
                                  existing: state.roads.link(a, b)))
     }
 
+    /// **Every edge on the map the player could lay a way on right now.**
+    ///
+    /// The affordance for laying a road was a list of neighbours in a panel —
+    /// which is a fine way to buy a road and a poor way to *see* one, because
+    /// a road is a line between two places and a row of text is not. What the
+    /// map wants is the edges themselves, and it needs all of them at once
+    /// rather than one hex's worth.
+    ///
+    /// Indexed once. `stretch` looks a region up by walking `regions`, so
+    /// asking it six times per hex over a charted world is quadratic in the
+    /// map — fine for one panel and not for something a drawing reads.
+    public static func layableEdges(_ state: WorldState) -> [(link: RoadLink, cost: Double)] {
+        let byCoord = Dictionary(state.regions.map { ($0.coord, $0) }) { a, _ in a }
+        var seen = Set<String>()
+        var out: [(link: RoadLink, cost: Double)] = []
+        for region in state.regions where region.explorationState != .unknown {
+            for coord in region.coord.neighbors() {
+                let key = RoadLink.key(region.coord, coord)
+                guard !seen.contains(key) else { continue }
+                guard let there = byCoord[coord], there.explorationState != .unknown else { continue }
+                guard let grade = RoadEngine.nextGrade(after: state.roads.link(region.coord, coord)?.grade,
+                                                       state: state) else { continue }
+                seen.insert(key)
+                let link = RoadLink(a: region.coord, b: coord, grade: grade)
+                out.append((link, RoadEngine.price(grade, here: region, there: there,
+                                                   existing: state.roads.link(region.coord, coord))))
+            }
+        }
+        // Sorted, because a dictionary's order is not stable and a drawing that
+        // walks this list would otherwise reshuffle itself between frames.
+        return out.sorted { $0.link.id < $1.link.id }
+    }
+
     // MARK: - An embassy
 
     /// **Posts a colonist to live among a people.**

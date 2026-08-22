@@ -197,11 +197,26 @@ one-rung-at-a-time ladder and the same price as the council pays — so a
 player-laid road is never a cheaper way of buying what the council would have
 built anyway.
 
-The affordance is the region panel: **Ways from here**, one row per neighbour,
-cheapest first, with the grade and the price on it. Nothing shows in the first
-age, because nothing can be laid in it — `RoadGrade.road` wants `.ancient`, and
-a founding party wears tracks and builds nothing. That is §5's ladder doing its
-job and not an empty panel.
+There are two affordances, and the second is the one that reads as a map.
+
+**Ways from here**, in the region panel: one row per neighbour, cheapest first,
+with the grade and the price on it. Fine for buying a road, poor for seeing
+one — a road is a line between two places and a row of text is not.
+
+**The map itself.** *Lay ways* on the world screen draws every stretch that
+could be made, on the edge it would run along, with its price on it: bone where
+the colony can pay, red where it cannot. Tapping picks the stretch (measured to
+the *segment*, so a long edge tapped near one end is still that edge), and the
+chip that appears over it says what grade it would be and spends the materials.
+`GameEngine.layableEdges` answers the whole map at once and indexes the regions
+by coordinate first — `stretch` looks a region up by walking the list, which is
+fine for one panel's six rows and quadratic for a drawing.
+
+Nothing shows in the first age, because nothing can be laid in it —
+`RoadGrade.road` wants `.ancient`, and a founding party wears tracks and builds
+nothing. Nothing shows at the founding either, whatever the age: one hex is
+charted and a road wants two ends. Both are §5's ladder doing its job and not
+an empty panel — the button is not drawn at all when there is nothing to lay.
 
 ## 9. The water, and the bridges over it
 

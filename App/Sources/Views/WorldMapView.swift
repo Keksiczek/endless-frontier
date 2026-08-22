@@ -15,6 +15,18 @@ struct WorldMapView: View {
     @State private var committedZoom: CGFloat = 1
     @State private var pan: CGSize = .zero
     @State private var committedPan: CGSize = .zero
+    /// **Laying ways by tapping the map itself.**
+    ///
+    /// The affordance was a list of neighbours in the region panel, with a
+    /// price on each — a fine way to *buy* a road and a poor way to see one,
+    /// because a road is a line between two places and a row of text is not.
+    /// Keks: the tap belongs on the edge, and it wanted the drawing first.
+    /// The drawing exists now.
+    @State private var layingWays = false
+    /// The edge the player has touched but not yet paid for. A road is money
+    /// out of the store and the store is the colony's whole margin, so it is
+    /// asked for twice: once to pick the stretch, once to buy it.
+    @State private var pendingEdge: RoadLink?
 
     var body: some View {
         GeometryReader { geo in
@@ -34,6 +46,7 @@ struct WorldMapView: View {
             }
             .clipped()
             .overlay(alignment: .topLeading) { homeButton }
+            .overlay(alignment: .bottomLeading) { wayButton }
         }
     }
 
@@ -63,6 +76,7 @@ struct WorldMapView: View {
                     .position(tilePosition(region.coord))
             }
             tradeLayer
+            if layingWays { wayLayer }
         }
         // Centre the origin in a large virtual canvas.
         .frame(width: 1200, height: 1200)
@@ -156,6 +170,139 @@ struct WorldMapView: View {
             }
         }
         .allowsHitTesting(false)
+    }
+
+    // MARK: - Laying a way
+
+    /// The switch into and out of way-laying. Only once there is something to
+    /// lay: nothing can be built in the first age (`RoadGrade.road` wants
+    /// `.ancient`), and a button that does nothing is worse than no button.
+    @ViewBuilder
+    private var wayButton: some View {
+        if !game.layableEdges.isEmpty {
+            Button {
+                withAnimation(.snappy) {
+                    layingWays.toggle()
+                    pendingEdge = nil
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: layingWays ? "xmark" : "road.lanes")
+                        .font(.caption)
+                    Text(layingWays
+                         ? (AppStrings.language == .cs ? "Hotovo" : "Done")
+                         : (AppStrings.language == .cs ? "Stavět cesty" : "Lay ways"))
+                        .font(.caption.weight(.semibold))
+                }
+                .foregroundStyle(layingWays ? Theme.ink : Theme.text)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(layingWays ? AnyShapeStyle(Theme.accent) : AnyShapeStyle(.ultraThinMaterial),
+                            in: Capsule())
+            }
+            .padding(12)
+        }
+    }
+
+    /// **Every stretch that could be made, drawn where it would run.**
+    ///
+    /// A ghost line on the edge itself, with its price on it; the one the
+    /// player has touched is lit and says what it is. Tapping empty ground
+    /// puts the choice down again.
+    ///
+    /// The list is asked for once per redraw rather than inside the canvas
+    /// closure — `layableEdges` walks every charted hex, and a canvas body is
+    /// not a place to do that (rule 38).
+    private var wayLayer: some View {
+        let edges = game.layableEdges
+        let purse = game.selectedSettlementStorage(.materials)
+        return ZStack {
+            Canvas { ctx, _ in
+                for edge in edges {
+                    let a = tilePosition(edge.link.a), b = tilePosition(edge.link.b)
+                    let chosen = edge.link.id == pendingEdge?.id
+                    let affordable = purse >= edge.cost
+                    // Drawn short of both centres, so the line reads as the
+                    // edge between two hexes rather than as a spoke out of one.
+                    let dx = b.x - a.x, dy = b.y - a.y
+                    let length = max(1, (dx * dx + dy * dy).squareRoot())
+                    let trim: CGFloat = hexSize * 0.34
+                    var way = Path()
+                    way.move(to: CGPoint(x: a.x + dx / length * trim, y: a.y + dy / length * trim))
+                    way.addLine(to: CGPoint(x: b.x - dx / length * trim, y: b.y - dy / length * trim))
+                    let tint = chosen ? Theme.accent
+                        : (affordable ? Theme.bone.opacity(0.42) : Theme.danger.opacity(0.30))
+                    ctx.stroke(way, with: .color(tint),
+                               style: StrokeStyle(lineWidth: chosen ? 4 : 2.4,
+                                                  lineCap: .round, dash: chosen ? [] : [4, 4]))
+                    let mid = CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
+                    ctx.draw(Text("\(Int(edge.cost.rounded()))")
+                                .font(.system(size: 9, weight: .semibold).monospacedDigit())
+                                .foregroundStyle(chosen ? Theme.accent
+                                                 : (affordable ? Theme.textDim : Theme.danger)),
+                             at: mid)
+                }
+            }
+            .frame(width: 1200, height: 1200)
+            .contentShape(Rectangle())
+            .onTapGesture { location in
+                pendingEdge = nearestEdge(to: location, among: edges)?.link
+            }
+            if let pendingEdge, let edge = edges.first(where: { $0.link.id == pendingEdge.id }) {
+                wayConfirmation(edge)
+                    .position(x: (tilePosition(edge.link.a).x + tilePosition(edge.link.b).x) / 2,
+                              y: (tilePosition(edge.link.a).y + tilePosition(edge.link.b).y) / 2 - hexSize * 0.7)
+            }
+        }
+    }
+
+    /// What the chosen stretch is and what it costs, with the one button that
+    /// spends the money on it.
+    @ViewBuilder
+    private func wayConfirmation(_ edge: (link: RoadLink, cost: Double)) -> some View {
+        let affordable = game.selectedSettlementStorage(.materials) >= edge.cost
+        Button {
+            game.layRoad(from: edge.link.a, to: edge.link.b)
+            pendingEdge = nil
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "hammer.fill").font(.system(size: 9))
+                Text(edge.link.grade.displayName.resolve(AppStrings.language))
+                    .font(.system(size: 11, weight: .semibold))
+                Image(systemName: ResourceType.materials.symbolName).font(.system(size: 9))
+                Text("\(Int(edge.cost.rounded()))")
+                    .font(.system(size: 11, weight: .semibold).monospacedDigit())
+            }
+            .foregroundStyle(affordable ? Theme.ink : Theme.textDim)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(affordable ? AnyShapeStyle(Theme.accent) : AnyShapeStyle(Theme.surfaceRaised),
+                        in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(!affordable)
+    }
+
+    /// The stretch nearest the point tapped, if the tap landed near one at all.
+    ///
+    /// Measured to the **segment**, not to its midpoint: a long edge tapped
+    /// near one end is still that edge, and picking by midpoint would hand the
+    /// tap to whichever road happened to be shorter.
+    private func nearestEdge(
+        to point: CGPoint, among edges: [(link: RoadLink, cost: Double)]
+    ) -> (link: RoadLink, cost: Double)? {
+        var best: (edge: (link: RoadLink, cost: Double), distance: CGFloat)?
+        for edge in edges {
+            let a = tilePosition(edge.link.a), b = tilePosition(edge.link.b)
+            let dx = b.x - a.x, dy = b.y - a.y
+            let lengthSquared = max(0.001, dx * dx + dy * dy)
+            let t = max(0, min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSquared))
+            let px = a.x + dx * t, py = a.y + dy * t
+            let distance = ((point.x - px) * (point.x - px) + (point.y - py) * (point.y - py)).squareRoot()
+            if best == nil || distance < best!.distance { best = (edge, distance) }
+        }
+        guard let best, best.distance <= hexSize * 0.45 else { return nil }
+        return best.edge
     }
 
     /// How each grade of way is drawn.

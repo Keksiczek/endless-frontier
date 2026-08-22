@@ -940,6 +940,16 @@ final class GameViewModel {
         .sorted { $0.cost < $1.cost }
     }
 
+    /// **Every edge the player could lay a way on**, for the map to draw.
+    ///
+    /// The panel's list answers "what can I build from *here*"; the map needs
+    /// "what can I build anywhere", which is a different question and a much
+    /// more expensive one — indexed once in the Core rather than walked per
+    /// hex (`GameEngine.layableEdges`).
+    var layableEdges: [(link: RoadLink, cost: Double)] {
+        GameEngine.layableEdges(world)
+    }
+
     /// Lays the way the player picked, and saves.
     func layRoad(from a: HexCoord, to b: HexCoord) {
         world = GameEngine.layRoad(world, from: a, to: b, registry: registry)
