@@ -97,6 +97,15 @@ public enum GameWorldFactory {
                             standing: .founder)
         }
 
+        // **The outlaws already live here.** Three camps out in the country,
+        // each with a strength of its own that grows while nobody troubles
+        // it — so a raid is a thing a place did rather than weather. The hexes
+        // they sit on become `.outlawCamp`, which is what the map draws.
+        let peoples = nativeTribes(regions: regions, seed: seed)
+        let outlaws = OutlawCampEngine.found(
+            regions: regions, tribes: peoples, seed: seed, language: language)
+        regions = outlaws.regions
+
         return WorldState(
             tick: 0,
             lastRealTimestamp: now,
@@ -110,7 +119,8 @@ public enum GameWorldFactory {
             regions: regions,
             roads: roads,
             figures: figures,
-            tribes: nativeTribes(regions: regions, seed: seed)
+            tribes: peoples,
+            camps: outlaws.camps
         )
     }
 

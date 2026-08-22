@@ -191,6 +191,43 @@ enum SettlementInterior {
         }).map { Slot(dx: $0.dx, dy: $0.dy, fitting: .bed) }
     }
 
+    /// **What is actually in store, standing on the floor.**
+    ///
+    /// Keks: *"ve skladu neleží suroviny."* A granary was furnished with two
+    /// sacks whether the colony was starving or sitting on four thousand, so
+    /// the one building whose whole purpose is *how much is in it* was the one
+    /// building that could not show it. The fittings above are furniture; this
+    /// is stock, and it fills the floor from the back wall forward.
+    ///
+    /// Presentation only, and derived: it reads `Settlement.storage` against
+    /// `storageCapacity` and writes nothing (the canvas never feeds the
+    /// simulation).
+    static func storeSlots(fullness: Double, fitting: Fitting, seed: UInt64) -> [Slot] {
+        let share = min(1, max(0, fullness))
+        guard share > 0.02 else { return [] }
+        // A full store is a packed floor; an empty one is a swept one. Rows of
+        // three, because a wall of goods reads as goods and a scatter reads as
+        // mess.
+        let count = max(1, Int((share * Double(storeCeiling)).rounded()))
+        var h = seed | 1
+        func roll() -> Double {
+            h ^= h >> 33; h = h &* 0xFF51_AFD7_ED55_8CCD; h ^= h >> 29
+            return Double((h >> 40) & 0xFFFF) / 65535
+        }
+        let perRow = 3
+        return (0..<count).map { i in
+            let row = i / perRow, column = i % perRow
+            // Back wall first, then forward — a store fills from the far end.
+            let dy = -0.30 + Double(row) * 0.17 + (roll() - 0.5) * 0.03
+            let dx = -0.26 + Double(column) * 0.26 + (roll() - 0.5) * 0.05
+            return Slot(dx: dx, dy: min(0.30, dy), fitting: fitting)
+        }
+    }
+
+    /// The most stock one room will show. Past this it is a wall of sacks and
+    /// another sack says nothing.
+    static let storeCeiling = 9
+
     /// The places a room keeps things that are not workstations.
     ///
     /// Four corners was too few twice over: a plan wanting five things put the
@@ -336,7 +373,10 @@ enum SettlementInterior {
         _ context: inout GraphicsContext,
         glyph: SettlementRenderer.BuildingGlyph,
         at c: CGPoint, footprint: CGSize, size: CGFloat, seed: UInt64, era: Era,
-        workers: Int, residents: Int = 0, night: Double, time: Double
+        workers: Int, residents: Int = 0, night: Double, time: Double,
+        /// How full this building's own store is, 0…1, and what the goods in
+        /// it look like. Nil for a building that stores nothing.
+        stock: (fullness: Double, fitting: Fitting)? = nil
     ) {
         guard isLegible(footprint: footprint) else { return }
         // **Inside the walls that are actually drawn**, not inside the lot.
@@ -375,7 +415,13 @@ enum SettlementInterior {
         } else {
             plan = slots(for: glyph, seed: seed, stations: workers)
         }
-        for slot in plan {
+        // …and the goods, over the furniture rather than instead of it: a
+        // granary still has its scales and its shelf, it just also has the
+        // grain.
+        let stocked = stock.map {
+            storeSlots(fullness: $0.fullness, fitting: $0.fitting, seed: seed &* 0x2545_F491)
+        } ?? []
+        for slot in plan + stocked {
             let p = CGPoint(x: c.x + CGFloat(slot.dx) * footprint.width,
                             y: c.y + CGFloat(slot.dy) * footprint.height)
             fitting(&context, slot.fitting, at: p, scale: min(room.width, room.height),

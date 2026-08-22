@@ -156,12 +156,22 @@ public struct BattleLog: Codable, Sendable, Equatable, Identifiable {
     /// pawns the canvas sends running to the wall, so the line that holds is
     /// made of people you know by name.
     public let line: [UUID]
+    /// **Where they came from**, when it was an outlaw camp (`OutlawCamp`).
+    ///
+    /// The record is what survives the fight — `Settlement.siege` is gone the
+    /// moment it ends — so anything that wants to ask *who attacked us over
+    /// the last two centuries* has to be able to ask it here. Without this a
+    /// probe can only count the raids that happen to be live at the instant it
+    /// samples, which measured **14 raids in two hundred years** for a colony
+    /// that had far more than fourteen.
+    public var attackerCampID: UUID?
 
     public init(id: UUID, tick: Int, attackerName: String, defenderName: String,
                 moments: [BattleMoment], repelled: Bool,
                 attackerLabel: LocalizedText? = nil, approach: Double = 0,
                 steps: Int = Siege.stepsTotal,
-                attackers: Int = 0, line: [UUID] = []) {
+                attackers: Int = 0, line: [UUID] = [],
+                attackerCampID: UUID? = nil) {
         self.id = id
         self.tick = tick
         self.attackerName = attackerName
@@ -173,13 +183,14 @@ public struct BattleLog: Codable, Sendable, Equatable, Identifiable {
         self.steps = max(1, steps)
         self.attackers = attackers
         self.line = line
+        self.attackerCampID = attackerCampID
     }
 
     // MARK: - Codable (resilient: the staging postdates the first battles)
 
     private enum CodingKeys: String, CodingKey {
         case id, tick, attackerName, attackerLabel, defenderName, moments, repelled
-        case approach, attackers, line, steps
+        case approach, attackers, line, steps, attackerCampID
     }
 
     public init(from decoder: Decoder) throws {
@@ -195,6 +206,7 @@ public struct BattleLog: Codable, Sendable, Equatable, Identifiable {
         steps = try c.decodeIfPresent(Int.self, forKey: .steps) ?? Siege.stepsTotal
         attackers = try c.decodeIfPresent(Int.self, forKey: .attackers) ?? 0
         line = try c.decodeIfPresent([UUID].self, forKey: .line) ?? []
+        attackerCampID = try c.decodeIfPresent(UUID.self, forKey: .attackerCampID)
     }
 
     /// The attacker as the player should read it: the translated word for a

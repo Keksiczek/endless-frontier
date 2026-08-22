@@ -25,6 +25,20 @@ public enum BanditEngine {
     static let minimumPopulation = 12
     /// How full the stores have to be before anybody notices.
     static let noticedAtShare = 0.35
+    /// **What is worth the walk, in sacks rather than in shelf-space.**
+    ///
+    /// The share of capacity was the only measure of a colony's wealth, and a
+    /// share of a capacity is a measure of the colony's *buildings*: measured
+    /// over two centuries, a colony sitting on **6 280 food** had granaries
+    /// for 44 300, so it read as 14 % full and no outlaw ever noticed it —
+    /// **one raid from a camp in two hundred years**, and the raids the player
+    /// did see were tribes and wolves. A warband does not count your shelves.
+    /// Below this a colony genuinely has nothing worth carrying home.
+    static let worthTheWalk = 400.0
+    /// …and how much *above* that is worth every man the camp has. A colony
+    /// holding this much on top of `worthTheWalk` is as tempting as outlaws
+    /// ever get (`wealthCeiling`).
+    static let hardToRefuse = 800.0
     /// The most the stores may multiply the odds by.
     static let wealthCeiling = 3.0
     /// A watched colony is a colony they go around: at this many spears per
@@ -35,6 +49,12 @@ public enum BanditEngine {
     /// …and never less than this, or a band arrives that a shepherd sees off.
     static let minimumStrength = 14.0
 
+    /// **The old path: a band out of nowhere.**
+    ///
+    /// Kept, and kept *only* as the fallback. `OutlawCampEngine` owns raids
+    /// now, because a raid should come from a place — but a world with no
+    /// camps left in it (an old save, or a country whose camps have all been
+    /// burned out) must still not be free to rob.
     public static func advanceOneTick(
         _ settlement: Settlement, registry: GameDataRegistry, tick: Int,
         era: Era, mapSeed: UInt64
@@ -48,7 +68,20 @@ public enum BanditEngine {
         guard lure > 0 else { return s }
         let odds = baseChance * lure * (1 - watchfulness(s, registry: registry))
         guard rng.nextUnit() < min(0.4, odds) else { return s }
+        return raid(s, registry: registry, tick: tick, era: era, lure: lure, rng: &rng)
+    }
 
+    /// The warband itself, once something has decided they are coming.
+    ///
+    /// Split out so `OutlawCampEngine` can fall back to it without repeating
+    /// the roll: whether they come is one question and who they are is
+    /// another, and conflating the two is how the band's *size* ended up
+    /// read off the granary.
+    static func raid(
+        _ settlement: Settlement, registry: GameDataRegistry, tick: Int,
+        era: Era, lure: Double, rng: inout SeededRNG
+    ) -> Settlement {
+        var s = settlement
         let strength = max(minimumStrength, lure * strengthPerShare)
         let band = name(era: era, rng: &rng)
         s = SiegeEngine.begin(
@@ -81,9 +114,20 @@ public enum BanditEngine {
         // now the roof over food and goods, not over political capital.
         let capacity = max(1, settlement.storageCapacity[.food]
                               + settlement.storageCapacity[.materials])
-        let full = (settlement.storage[.food] + settlement.storage[.materials]) / capacity
-        guard full > noticedAtShare else { return 0 }
-        return min(wealthCeiling, (full - noticedAtShare) / (1 - noticedAtShare) * wealthCeiling)
+        let stores = settlement.storage[.food] + settlement.storage[.materials]
+        // **Two readings, and the louder one wins.**
+        //
+        // *Full for its size* is the question a village asks — a hamlet with
+        // its one shed brimming is worth robbing. *How much is actually in
+        // there* is the question a town asks, and it is the one the old
+        // formula could not ask at all, because building another warehouse
+        // made the same grain read as less of it.
+        let full = stores / capacity
+        let share = full > noticedAtShare
+            ? min(wealthCeiling, (full - noticedAtShare) / (1 - noticedAtShare) * wealthCeiling)
+            : 0
+        let haul = min(wealthCeiling, max(0, (stores - worthTheWalk) / hardToRefuse))
+        return max(share, haul)
     }
 
     /// How well watched the place is, 0…1 — how much of the odds a garrison

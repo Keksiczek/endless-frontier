@@ -210,6 +210,10 @@ struct RegionDetailCard: View {
                 tribeRow(tribe)
             }
 
+            if let camp = game.camp(in: region.id), region.explorationState != .unknown {
+                campRow(camp)
+            }
+
             // An explored region is a place, not a row of stats — open it.
             if region.explorationState == .fullyExplored,
                game.settlement(in: region) == nil,
@@ -365,6 +369,35 @@ struct RegionDetailCard: View {
         }
         .padding(10)
         .background(Theme.surfaceInset.opacity(0.6), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    /// The outlaws in this hex: what they are, how they look from outside,
+    /// and — deliberately — no standing pill and nothing to say to them. They
+    /// are not a people, and the panel has to read that way (see `OutlawCamp`).
+    private func campRow(_ camp: OutlawCamp) -> some View {
+        let language = AppStrings.language
+        return VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: "flame.fill")
+                    .font(.caption)
+                    .foregroundStyle(Theme.danger)
+                Text(camp.name.resolve(language))
+                    .font(.subheadline.weight(.semibold))
+                Spacer()
+                Text(game.campStrengthWord(camp))
+                    .font(.caption2.weight(.semibold))
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Theme.surfaceInset, in: Capsule())
+            }
+            Text(camp.kind.blurb.resolve(language))
+                .font(.caption)
+                .foregroundStyle(Theme.textDim)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(10)
+        .background(Theme.danger.opacity(0.10),
+                    in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     private var subtitle: String {

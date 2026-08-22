@@ -74,6 +74,10 @@ public enum ActionLoop {
         // warband walks home. Charged here, where the tribes are reachable.
         for siege in concluded {
             s = SiegeEngine.chargeAttacker(s, for: siege)
+            // …and the same for outlaws, who are not a people: what walked
+            // home rejoins the camp, and what got past the door is now theirs
+            // until somebody goes and takes it back.
+            s = OutlawCampEngine.charge(s, for: siege)
         }
         return s
     }

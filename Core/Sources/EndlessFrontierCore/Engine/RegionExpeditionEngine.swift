@@ -168,6 +168,16 @@ public enum RegionExpeditionEngine {
     ) -> SiteEncounter? {
         guard let region = state.regions.first(where: { $0.id == expedition.regionID })
         else { return nil }
+        // An outlaw camp is not a *find*: what is in it is the camp, and the
+        // camp is a thing the world keeps. Laid out from its own strength,
+        // its own kind and its own hoard — see `OutlawCampEngine.encounter`.
+        if region.kind == .outlawCamp,
+           let camp = state.camps.first(where: { $0.regionID == region.id }) {
+            return OutlawCampEngine.encounter(
+                for: camp, party: expedition.memberIDs, at: state.tick,
+                seed: self.seed(mapSeed: state.mapSeed, regionID: region.id,
+                                tick: expedition.departedTick) ^ 0x0A71)
+        }
         // Reuse the valley's vocabulary: a place is a place. The region's kind
         // picks which of them it reads as, and its hazard says how bad.
         let kind: LocalPOIKind
@@ -224,6 +234,29 @@ public enum RegionExpeditionEngine {
                 s.settlements[seat].inventory.append(
                     ItemInstance(id: rng.nextUUID(), definitionID: itemID))
             }
+        }
+
+        // A camp pays in what it *took*, and the payment is the point: a raid
+        // that emptied your granary is a raid you can go and undo. Kept off
+        // the site table entirely — there is no loot table for a camp, only
+        // the plunder it is holding.
+        if let region = s.regions.first(where: { $0.id == expedition.regionID }),
+           region.kind == .outlawCamp {
+            let (after, clearing) = OutlawCampEngine.sacked(
+                s, regionID: region.id, settlementIndex: seat, share: cleared)
+            s = after
+            if let clearing {
+                s.settlements[seat].journal.append(
+                    tick: s.tick, kind: clearing.broken ? .discovery : .danger,
+                    text: clearing.broken
+                        ? LocalizedText(values: [
+                            .en: "\(clearing.campName.resolve(.en)) are broken up, and what they took is home.",
+                            .cs: "\(clearing.campName.resolve(.cs)) jsou rozprášeni a co odnesli, je zpátky."])
+                        : LocalizedText(values: [
+                            .en: "The party bloodied \(clearing.campName.resolve(.en)) and came away.",
+                            .cs: "Výprava potrápila \(clearing.campName.resolve(.cs)) a stáhla se."]))
+            }
+            return s
         }
 
         // The site's own table, scaled by what they actually got through.

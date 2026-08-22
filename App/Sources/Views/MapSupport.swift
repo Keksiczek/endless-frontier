@@ -66,6 +66,10 @@ extension RegionKind {
         case .anomaly: return "sparkles"
         case .sanctuary: return "sun.max.fill"
         case .lostCity: return "building.2.fill"
+        // Outlaws. Not a settlement and not a find — a place with people in it
+        // who belong to nobody, and the map has to say so before a raid walks
+        // out of it.
+        case .outlawCamp: return "flame.fill"
         case .wilderness: return nil
         }
     }

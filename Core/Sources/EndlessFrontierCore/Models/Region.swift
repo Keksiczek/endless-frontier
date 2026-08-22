@@ -18,6 +18,16 @@ public enum RegionKind: String, Codable, Sendable, CaseIterable {
     case anomaly        // strange, shifting region (dynamic events)
     case sanctuary      // a sacred valley — a pilgrimage blesses the colony
     case lostCity = "lost_city"   // a dead city — rich salvage among the bones
+    /// **An outlaw camp.** A place on the map with people in it who belong to
+    /// nobody: no standing, no diplomacy, nothing to negotiate. Raids come
+    /// from here, and a colony can walk out and burn it out. See `OutlawCamp`.
+    ///
+    /// Placed at world creation on ordinary country far from anybody rather
+    /// than rolled in `MapGenerator.rollKind`, because it is not a *find* —
+    /// the map has exactly as many of these as the world was founded with,
+    /// and adding it to the site budget would have quietly made every other
+    /// site rarer.
+    case outlawCamp = "outlaw_camp"
 }
 
 /// Selects which region a dynamic region-changing event applies to.
@@ -99,6 +109,6 @@ public struct Region: Codable, Sendable, Identifiable, Equatable {
     public var hasActiveSite: Bool {
         explorationState == .fullyExplored
             && !siteCleared
-            && [.ruins, .dungeon, .anomaly, .sanctuary, .lostCity].contains(kind)
+            && [.ruins, .dungeon, .anomaly, .sanctuary, .lostCity, .outlawCamp].contains(kind)
     }
 }

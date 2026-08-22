@@ -335,8 +335,17 @@ public enum FarmEngine {
             let firstRow = placement.height > 1 ? placement.coord.y + 1 : placement.coord.y
             let columns = max(1, Int((Double(def.plots) / Double(rows)).rounded(.up)))
             let tileW = Double(placement.width) / Double(columns)
-            let halfWidth = SettlementGeometry.span * tileW / Double(max(1, colony.width)) * 0.40
-            let halfHeight = SettlementGeometry.span / Double(max(1, colony.height)) * 0.38
+            // **The plots tile the ground; they do not dot it.**
+            //
+            // Keks, looking at a farm: *"budovy stále nemají úplně ok
+            // footprint, hlavně políčko."* At 0.40 and 0.38 of a tile each plot
+            // was four fifths of its own square with a gap of wild grass all
+            // round it, so six plots read as six green patches lying near a
+            // shed rather than as one field the shed stands at the top of.
+            // Half a tile is edge-to-edge; a hair under it keeps the furrow
+            // between two plots visible, which is what a field looks like.
+            let halfWidth = SettlementGeometry.span * tileW / Double(max(1, colony.width)) * 0.485
+            let halfHeight = SettlementGeometry.span / Double(max(1, colony.height)) * 0.475
             for index in 0..<def.plots {
                 let column = Double(index % columns)
                 let row = Double(min(rows - 1, index / columns))

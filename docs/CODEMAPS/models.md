@@ -89,6 +89,9 @@ WorldState
  │   └ captives, expeditions, tamed
  ├ regions: [Region]          the hex world
  ├ tribes: [Tribe]            emergent neighbours
+ ├ camps: [OutlawCamp]        outlaws — a place, a strength of its own, a
+ │                            hoard of what they took. **Not a faction:**
+ │                            no standing, nothing to negotiate
  ├ era, tick, mapSeed, researchedTechs, unlockedBuildings
  └ chronicle: [WorldRecord]   one per in-game year
 ```

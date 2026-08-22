@@ -137,6 +137,81 @@ struct CanvasLayoutTests {
     }
 }
 
+/// Keks: *"ve skladu neleží suroviny."* A store was furnished with two sacks
+/// whether the colony was starving or sitting on four thousand — the one
+/// building whose whole point is *how much is in it* was the one that could
+/// not show it.
+@Suite("A store shows what is in it")
+struct StoreContentsTests {
+
+    private func granaryRegistry() -> GameDataRegistry {
+        GameDataRegistry(
+            buildings: [
+                BuildingDefinition(id: "granary", era: .earlySettlement, name: "Granary",
+                                   cost: [.materials: 30], storage: [.food: 500],
+                                   footprint: TileSize(width: 2, height: 2), look: "granary"),
+                BuildingDefinition(id: "hut", era: .earlySettlement, name: "Hut",
+                                   cost: [.materials: 10], housing: 30)
+            ],
+            techs: [], eras: [], biomes: [], events: [], config: .default)
+    }
+
+    private func town(food: Double, capacity: Double) -> Settlement {
+        var s = Settlement(
+            id: UUID(uuidString: "00000000-0000-0000-0000-00000000BBB1")!,
+            name: "Store Town",
+            buildings: [BuildingInstance(definitionID: "granary", count: 1)])
+        s.storage = [.food: food, .materials: 0]
+        s.storageCapacity = [.food: capacity, .materials: capacity]
+        return s
+    }
+
+    @Test("A full granary is drawn fuller than an empty one")
+    func stockFollowsTheStores() {
+        let registry = granaryRegistry()
+        let empty = SettlementRenderer.stock(of: "granary", in: town(food: 0, capacity: 1000),
+                                             registry: registry)
+        let half = SettlementRenderer.stock(of: "granary", in: town(food: 500, capacity: 1000),
+                                            registry: registry)
+        let full = SettlementRenderer.stock(of: "granary", in: town(food: 1000, capacity: 1000),
+                                            registry: registry)
+        #expect(empty?.fullness == 0)
+        #expect((half?.fullness ?? 0) > 0.4 && (half?.fullness ?? 0) < 0.6)
+        #expect(full?.fullness == 1)
+        // Grain is sacks, not crates: what a store holds decides what stands
+        // on its floor.
+        #expect(full?.fitting == .sack)
+    }
+
+    @Test("A building that stores nothing shows no stock")
+    func onlyStoresAreStocked() {
+        #expect(SettlementRenderer.stock(of: "hut", in: town(food: 900, capacity: 1000),
+                                         registry: granaryRegistry()) == nil)
+    }
+
+    @Test("The floor fills as the store does, and stops when it is packed")
+    func slotsGrowWithFullness() {
+        let empty = SettlementInterior.storeSlots(fullness: 0, fitting: .sack, seed: 7)
+        let some = SettlementInterior.storeSlots(fullness: 0.3, fitting: .sack, seed: 7)
+        let packed = SettlementInterior.storeSlots(fullness: 1, fitting: .sack, seed: 7)
+        #expect(empty.isEmpty, "a swept store is swept")
+        #expect(some.count > 0 && some.count < packed.count)
+        #expect(packed.count == SettlementInterior.storeCeiling)
+        // …and every sack is inside the room, not through a wall.
+        #expect(packed.allSatisfy { abs($0.dx) < 0.5 && abs($0.dy) < 0.5 })
+    }
+
+    /// The same store drawn twice must look the same, or a granary shuffles
+    /// its own sacks every frame.
+    @Test("A store's floor does not shuffle between frames")
+    func stockIsStable() {
+        let a = SettlementInterior.storeSlots(fullness: 0.7, fitting: .crate, seed: 42)
+        let b = SettlementInterior.storeSlots(fullness: 0.7, fitting: .crate, seed: 42)
+        #expect(a.map(\.dx) == b.map(\.dx))
+        #expect(a.map(\.dy) == b.map(\.dy))
+    }
+}
+
 @Suite("The camera")
 struct CameraTests {
     /// Zoom works by scaling the rect the world maps into rather than by a

@@ -145,6 +145,16 @@ public enum LocalMapGenerator {
         case .dungeon:
             pois.append(LocalPOI(id: poiID, kind: .cave,
                                  position: frontierPoint(river: river, shore: shore, rng: &rng))); poiID += 1
+        case .outlawCamp:
+            // What an outlaw camp looks like from the ridge: a caravan that
+            // never arrived, and the pile it never arrived with. Both are POI
+            // kinds the game already draws — a camp is a *place*, and a place
+            // the renderer has no idea about is the fault this project keeps
+            // finding (see `docs/RULES.md` on the entity layer being invisible).
+            let hollow = landPoint(river: river, shore: shore, rng: &rng)
+            pois.append(LocalPOI(id: poiID, kind: .wreck, position: hollow)); poiID += 1
+            pois.append(LocalPOI(id: poiID, kind: .treasure,
+                                 position: frontierPoint(river: river, shore: shore, rng: &rng))); poiID += 1
         default:
             break
         }

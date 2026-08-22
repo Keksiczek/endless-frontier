@@ -43,6 +43,27 @@ struct SaveMigrationTests {
         #expect(migrated.worldFlags["b"] == true)
     }
 
+    /// The player who has been in one save for two hundred years is exactly
+    /// the player camps were built for — a world that already existed would
+    /// otherwise have had every raid conjured out of nowhere for ever.
+    @Test("A world saved before the outlaws had homes gets them")
+    func outlawsMoveIntoAnOldWorld() throws {
+        let registry = try GameDataRegistry.bundled()
+        var old = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        old.camps = []
+        for index in old.regions.indices where old.regions[index].kind == .outlawCamp {
+            old.regions[index].kind = .wilderness
+        }
+        old.schemaVersion = 3
+        let migrated = SaveMigrator.migrate(old)
+        #expect(migrated.camps.count == OutlawCampEngine.foundingCamps)
+        #expect(migrated.regions.count { $0.kind == .outlawCamp } == OutlawCampEngine.foundingCamps)
+        // …and running the chain twice does not stack three more on top.
+        var again = migrated
+        again.schemaVersion = 3
+        #expect(SaveMigrator.migrate(again).camps.count == OutlawCampEngine.foundingCamps)
+    }
+
     @Test("A future save is left forward-compatibly intact")
     func futureSaveUntouched() {
         let future = WorldState(schemaVersion: 99, settlements: [Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-201f323261d7")!, name: "A")])

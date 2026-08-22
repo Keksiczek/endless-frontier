@@ -82,6 +82,10 @@ public enum TickEngine {
             if s.tick % ticksPerYear == 0 {
                 s = SocietyEngine.advanceYear(s, registry: registry)
             }
+            // The outlaws: camps fatten in the hills, and a camp with enough
+            // in it walks down to a colony worth robbing. World level, because
+            // a raid spends the camp that sent it — see `OutlawCampEngine`.
+            s = OutlawCampEngine.advanceOneTick(s, registry: registry, tick: s.tick)
             // Midsummer — deliberately half a year from the turn above, so the
             // one night the colony is a village is not buried under wages,
             // classes and an election.

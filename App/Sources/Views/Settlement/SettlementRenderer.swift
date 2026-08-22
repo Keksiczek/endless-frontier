@@ -1816,6 +1816,12 @@ enum SettlementRenderer {
         let placementID: UUID?
         /// How sound the building is, 0…1.
         let condition: Double
+        /// How full the colony's store of the thing **this** building keeps
+        /// is, 0…1, and what those goods look like on a floor. Nil for a
+        /// building that stores nothing. Derived from `Settlement.storage`
+        /// against `storageCapacity` — the drawing reads the simulation and
+        /// never the other way round.
+        var stock: (fullness: Double, fitting: SettlementInterior.Fitting)?
     }
 
     /// The same structure mapped to pixels for one frame.
@@ -1844,6 +1850,12 @@ enum SettlementRenderer {
         let residents: Int
         /// How sound it is, 0…1 — cracks, then a hole in the roof, then a ruin.
         let condition: Double
+        /// How full the colony's store of the thing **this** building keeps
+        /// is, 0…1, and what those goods look like on a floor. Nil for a
+        /// building that stores nothing. Derived from `Settlement.storage`
+        /// against `storageCapacity` — the drawing reads the simulation and
+        /// never the other way round.
+        var stock: (fullness: Double, fitting: SettlementInterior.Fitting)?
     }
 
     /// A stable per-building seed for cosmetic variation — from a placement's
@@ -1996,7 +2008,8 @@ enum SettlementRenderer {
                            era: b.era, fabric: b.fabric, floors: b.floors,
                            workers: b.assignedPawnIDs.count,
                            residents: b.placementID.map { household[$0] ?? 0 } ?? 0,
-                           condition: b.condition)
+                           condition: b.condition,
+                           stock: stock(of: b.definitionID, in: settlement, registry: registry))
         }
         return onScreen(all, viewport: viewport)
     }
@@ -2188,6 +2201,38 @@ enum SettlementRenderer {
         }
     }
 
+    /// **What is standing on this building's floor.**
+    ///
+    /// A store is drawn from the colony's own books: the resource this
+    /// definition holds the most room for, as a share of the colony's roof
+    /// over that resource. A granary in a colony sitting on four thousand
+    /// sacks is packed to the walls; the same granary the winter after is
+    /// swept. Nothing here writes anything.
+    static func stock(
+        of definitionID: String, in settlement: Settlement, registry: GameDataRegistry
+    ) -> (fullness: Double, fitting: SettlementInterior.Fitting)? {
+        guard let def = registry.building(definitionID) else { return nil }
+        // What this building is for, rather than what it happens to hold a
+        // little of: the resource it makes the most room for.
+        var kept: (resource: ResourceType, room: Double)?
+        for resource in ResourceType.allCases where def.storage[resource] > 0 {
+            if kept == nil || def.storage[resource] > kept!.room {
+                kept = (resource, def.storage[resource])
+            }
+        }
+        guard let kept else { return nil }
+        let roof = settlement.storageCapacity[kept.resource]
+        guard roof > 0 else { return nil }
+        let fullness = min(1, max(0, settlement.storage[kept.resource] / roof))
+        let fitting: SettlementInterior.Fitting
+        switch kept.resource {
+        case .food: fitting = .sack
+        case .materials: fitting = .crate
+        default: fitting = .barrel
+        }
+        return (fullness, fitting)
+    }
+
     private static func buildings(
         _ context: inout GraphicsContext, placed: [PlacedBuilding],
         time: Double, night: Double = 0, showLabels: Bool = false,
@@ -2199,7 +2244,13 @@ enum SettlementRenderer {
         // knit into one cleared, built-up ground the town sits on.
         for building in placed {
             floorPlot(&context, at: building.center, footprint: building.footprint,
-                      underConstruction: building.underConstruction)
+                      underConstruction: building.underConstruction,
+                      // **A farm's ground is its field.** Cleared earth was
+                      // laid over the whole lot and the plots drawn on top of
+                      // it, so the one building that is mostly *ground under
+                      // crop* read as a yard with some green in it. Only the
+                      // top row — the yard the shed stands in — is swept.
+                      yardOnly: building.glyph == .farm)
         }
         // Then what the town throws across its own ground. Every shadow in one
         // path, filled once: a shadow must never fall on the *building* next
@@ -2216,7 +2267,7 @@ enum SettlementRenderer {
                     footprint: building.footprint, size: building.size,
                     seed: building.seed, era: building.era,
                     workers: building.workers, residents: building.residents,
-                    night: night, time: time)
+                    night: night, time: time, stock: building.stock)
             }
         }
         for building in placed {
@@ -2330,12 +2381,16 @@ enum SettlementRenderer {
     /// only from the layout; nothing here touches the simulation.
     private static func floorPlot(
         _ context: inout GraphicsContext, at c: CGPoint, footprint: CGSize,
-        underConstruction: Bool
+        underConstruction: Bool, yardOnly: Bool = false
     ) {
         guard footprint.width > 2, footprint.height > 2 else { return }
         // A hair of margin so neighbouring lots still read as separate parcels.
-        let w = footprint.width * 0.92, h = footprint.height * 0.92
-        let rect = CGRect(x: c.x - w / 2, y: c.y - h / 2, width: w, height: h)
+        let w = footprint.width * 0.92
+        // A farm keeps only the strip its shed stands on; the rest of the lot
+        // is `FarmEngine`'s plots, drawn as broken earth by `SettlementCrops`.
+        let h = footprint.height * (yardOnly ? 0.34 : 0.92)
+        let top = yardOnly ? c.y - footprint.height / 2 + h / 2 : c.y - h / 2
+        let rect = CGRect(x: c.x - w / 2, y: top, width: w, height: h)
         let radius = min(w, h) * 0.16
         let shape = Path(roundedRect: rect, cornerRadius: radius)
         if underConstruction {

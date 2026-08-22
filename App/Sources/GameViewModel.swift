@@ -561,6 +561,26 @@ final class GameViewModel {
 
     func dismissSiteOutcome() { lastSiteOutcome = nil }
 
+    /// The outlaws living in this hex, if any. Not a people — they have no
+    /// standing and there is nothing to negotiate (see `OutlawCamp`) — so the
+    /// map says who they are and offers exactly one thing to do about them.
+    func camp(in regionID: UUID) -> OutlawCamp? {
+        world.camps.first { $0.regionID == regionID }
+    }
+
+    /// How a camp reads from the outside. A colony counts fires, not heads, so
+    /// this is deliberately a word rather than the number the engine holds.
+    func campStrengthWord(_ camp: OutlawCamp) -> String {
+        let cs = AppStrings.language == .cs
+        if !camp.isActive(at: world.tick) { return cs ? "vypálený" : "burned out" }
+        switch camp.strength {
+        case ..<25: return cs ? "hrstka" : "a handful"
+        case ..<55: return cs ? "banda" : "a band"
+        case ..<90: return cs ? "silná banda" : "a strong band"
+        default: return cs ? "malá armáda" : "a small army"
+        }
+    }
+
     /// The region a find came from, so the outcome can be shown over the ground
     /// it happened on rather than in a bare dialog.
     func region(named name: String) -> Region? {
@@ -576,6 +596,10 @@ final class GameViewModel {
         case .dungeon: return cs ? "Sestoupit do podzemí" : "Delve Dungeon"
         case .anomaly: return cs ? "Zkoumat anomálii" : "Probe Anomaly"
         case .sanctuary: return cs ? "Vykonat pouť" : "Make Pilgrimage"
+        case .outlawCamp:
+            // A camp is not a find and it is not a people: the one thing you
+            // can do about it is go there and put it down.
+            return cs ? "Vyčistit tábor psanců" : "Clear the Outlaw Camp"
         case .lostCity:
             // A dead city takes several runs to strip — say which this is.
             let run = (region.siteVisits ?? 0) + 1

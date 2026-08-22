@@ -97,7 +97,7 @@ public struct WorldState: Codable, Sendable, Equatable {
     /// pawns (every inhabitant is a colonist with genes/age/wealth) and each
     /// settlement gained a living local map. v1 saves are not migratable —
     /// their macro `population` no longer has meaning — so they are reset.
-    public static let currentSchemaVersion = 3
+    public static let currentSchemaVersion = 4
 
     /// The oldest save the current build can load. Older saves are discarded
     /// and the player starts a fresh V2 world.
@@ -194,6 +194,11 @@ public struct WorldState: Codable, Sendable, Equatable {
     public var figures: [ChronicleFigure] = []
     /// Neighbouring peoples who grew out of your own settlement.
     public var tribes: [Tribe]
+    /// **The outlaws, and where they live.** Not peoples: a camp has no
+    /// standing and nothing to negotiate — see `OutlawCamp`. Defaulted and
+    /// decoded with `decodeIfPresent`, so every save written before the
+    /// bandits had somewhere to come from loads straight through (rule 3).
+    public var camps: [OutlawCamp] = []
     /// Events awaiting the Leader's decision (see `PendingEvent`).
     public var pendingEvents: [PendingEvent]
 
@@ -230,6 +235,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         records: [WorldRecord] = [],
         figures: [ChronicleFigure] = [],
         tribes: [Tribe] = [],
+        camps: [OutlawCamp] = [],
         pendingEvents: [PendingEvent] = []
     ) {
         self.schemaVersion = schemaVersion
@@ -264,6 +270,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         self.records = records
         self.figures = figures
         self.tribes = tribes
+        self.camps = camps
         self.pendingEvents = pendingEvents
     }
 
@@ -289,7 +296,7 @@ public struct WorldState: Codable, Sendable, Equatable {
              regionExpeditions, activeExpedition, eventHistory, eventCooldowns,
              scheduledEffects, activeQuests, completedQuests, pendingLawProposal, records,
              figures, tribes, pendingEvents
-        case actionStep, stewardEnabled
+        case actionStep, stewardEnabled, camps
     }
 
     public init(from decoder: Decoder) throws {
@@ -343,6 +350,7 @@ public struct WorldState: Codable, Sendable, Equatable {
         records = value(.records, [])
         figures = value(.figures, [])
         tribes = value(.tribes, [])
+        camps = value(.camps, [])
         pendingEvents = value(.pendingEvents, [])
     }
 
@@ -380,6 +388,11 @@ public struct WorldState: Codable, Sendable, Equatable {
         try c.encode(records, forKey: .records)
         try c.encode(figures, forKey: .figures)
         try c.encode(tribes, forKey: .tribes)
+        // Encoded explicitly, like everything else here: this encoder is
+        // hand-written, so a field that is not named on both sides is a field
+        // that silently does not exist between one save and the next — which
+        // is exactly how the roads were lost.
+        try c.encode(camps, forKey: .camps)
         try c.encode(pendingEvents, forKey: .pendingEvents)
     }
 }

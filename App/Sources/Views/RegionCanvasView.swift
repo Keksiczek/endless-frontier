@@ -251,6 +251,7 @@ struct RegionCanvasView: View {
         case .anomaly: return cs ? "anomálie" : "anomaly"
         case .sanctuary: return cs ? "svatyně" : "sanctuary"
         case .lostCity: return cs ? "mrtvé město" : "lost city"
+        case .outlawCamp: return cs ? "tábor psanců" : "outlaw camp"
         case .homeland, .wilderness: return nil
         }
     }

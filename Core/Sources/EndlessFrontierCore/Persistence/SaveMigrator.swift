@@ -34,6 +34,28 @@ public enum SaveMigrator {
                     at: s.regions[index].coord, mapSeed: s.mapSeed)
             }
             return s
+        },
+        // **3 → 4: the outlaws move in.**
+        //
+        // Camps are founded at world creation, so a world that already existed
+        // would have had none for ever — every raid in it conjured out of
+        // nowhere, which is the whole fault `OutlawCamp` was written to fix.
+        // The player who has been in one save for two hundred years is exactly
+        // the player this was built for.
+        //
+        // Safe to found rather than to guess, for the same reason the rivers
+        // were: the placement is a pure function of `(mapSeed, regions)`, so an
+        // old world gets the camps its seed would have been born with. Skipped
+        // where a save already has them, so re-running the chain cannot stack
+        // three more camps on a world every time it loads.
+        3: { state in
+            guard state.camps.isEmpty, !state.regions.isEmpty else { return state }
+            var s = state
+            let founded = OutlawCampEngine.found(
+                regions: s.regions, tribes: s.tribes, seed: s.mapSeed, language: s.language)
+            s.regions = founded.regions
+            s.camps = founded.camps
+            return s
         }
     ]
 

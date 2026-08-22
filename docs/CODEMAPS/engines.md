@@ -61,7 +61,12 @@ raw off the shelf badly.
 ## The wild
 
 `WildlifeEngine` (herds, ageing the wood), `AnimalEngine` (per-animal think),
-`HuntEngine`, `TamingEngine`, `BanditEngine` (temptation ∝ full stores).
+`HuntEngine`, `TamingEngine`, `BanditEngine` (**why** a raid comes: temptation ∝
+full stores, less what the garrison and the wall put them off — plus the band
+conjured out of nothing, kept only as the fallback for a world with no camps),
+`OutlawCampEngine` (**who** comes: a camp is a place on the map with a strength
+of its own that grows, sends warbands on a bearing, keeps what it takes, and can
+be walked into and burned out — see `OutlawCamp`).
 
 ## Society, faith, neighbours
 

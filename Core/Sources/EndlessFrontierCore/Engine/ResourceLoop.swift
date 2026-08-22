@@ -197,7 +197,8 @@ public enum ResourceLoop {
                               // Where this colony actually stands. A tundra
                               // valley in January is not a coastal one.
                               climate: Climate.of($0, in: state, registry: registry),
-                              research: research)
+                              research: research,
+                              hasOutlawCamps: !state.camps.isEmpty)
         }
         s.globalStats = recomputeGlobalStats(s, registry: registry)
         return s
@@ -217,7 +218,13 @@ public enum ResourceLoop {
         /// rather than read off a `WorldState` the settlement engines do not
         /// have — they stay pure functions of a settlement, which is the rule
         /// the whole Core is built on.
-        research: [ResearchStat: Double] = [:]
+        research: [ResearchStat: Double] = [:],
+        /// Whether the world has anywhere for a raid to come from. A camp
+        /// sends its own warband at world level (`OutlawCampEngine`), and the
+        /// band conjured out of nothing here is only the fallback for a world
+        /// that has none — otherwise a colony is robbed twice on the same
+        /// check, by the same people, from two different directions.
+        hasOutlawCamps: Bool = false
     ) -> Settlement {
         var s = settlement
         let profile = s.specialization.profile
@@ -436,9 +443,14 @@ public enum ResourceLoop {
         s = PlagueEngine.advanceOneTick(
             s, registry: registry, tick: tick, era: era,
             season: Season(tick: tick, ticksPerYear: config.ticksPerYear), mapSeed: mapSeed)
-        // 9b-iii. …and the people a full granary attracts who belong to nobody.
-        s = BanditEngine.advanceOneTick(
-            s, registry: registry, tick: tick, era: era, mapSeed: mapSeed)
+        // 9b-iii. …and the people a full granary attracts who belong to
+        //         nobody. Only where the world has no camp for them to come
+        //         from: `OutlawCampEngine` owns raids now, and runs at world
+        //         level because a raid *spends* the camp that sent it.
+        if !hasOutlawCamps {
+            s = BanditEngine.advanceOneTick(
+                s, registry: registry, tick: tick, era: era, mapSeed: mapSeed)
+        }
         // 9c. The farmyard: hunters gentle what they can, and the beasts the
         //     colony already keeps eat, work and occasionally leave.
         s = TamingEngine.advanceOneTick(s, registry: registry, tick: tick, mapSeed: mapSeed)

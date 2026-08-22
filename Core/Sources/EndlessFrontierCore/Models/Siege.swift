@@ -292,6 +292,11 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
     /// is only known when the fighting stops, so the tribe is charged at the
     /// end rather than when the raid was declared.
     public let attackerTribeID: UUID?
+    /// The camp they walked out of, when outlaws sent them. Kept apart from
+    /// `attackerTribeID` on purpose: a camp is not a people, it has no
+    /// standing to lose and nothing to negotiate, and the only thing charged
+    /// to it at the end is what the fighting cost it — see `OutlawCamp`.
+    public var attackerCampID: UUID?
     /// The bearing they came in on, so the canvas draws the same fight the
     /// simulation is running.
     public let approach: Double
@@ -359,6 +364,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         id: UUID, startTick: Int, openedAt: Int,
         attackerName: String, attackerLabel: LocalizedText? = nil,
         attackerTribeID: UUID? = nil,
+        attackerCampID: UUID? = nil,
         approach: Double, attackers: Int,
         openingStrength: Double, fortification: Double, seed: UInt64,
         line: [UUID], posture: Posture = .hold, carriesOff: Double = 1,
@@ -372,6 +378,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         self.attackerName = attackerName
         self.attackerLabel = attackerLabel
         self.attackerTribeID = attackerTribeID
+        self.attackerCampID = attackerCampID
         self.approach = approach
         self.attackers = attackers
         self.openingStrength = max(0, openingStrength)
@@ -490,7 +497,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
 
     private enum CodingKeys: String, CodingKey {
         case id, startTick, advancedTo, openedAt, attackerName, attackerLabel
-        case attackerTribeID
+        case attackerTribeID, attackerCampID
         case approach, attackers, openingStrength, strength, fortification, seed
         case line, withdrawn, posture, damage, moments, plundered, carriesOff
         case steps, era
@@ -506,6 +513,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         attackerName = try c.decode(String.self, forKey: .attackerName)
         attackerLabel = try c.decodeIfPresent(LocalizedText.self, forKey: .attackerLabel)
         attackerTribeID = try c.decodeIfPresent(UUID.self, forKey: .attackerTribeID)
+        attackerCampID = try c.decodeIfPresent(UUID.self, forKey: .attackerCampID)
         approach = try c.decodeIfPresent(Double.self, forKey: .approach) ?? 0
         attackers = try c.decodeIfPresent(Int.self, forKey: .attackers) ?? 1
         openingStrength = try c.decodeIfPresent(Double.self, forKey: .openingStrength) ?? 0

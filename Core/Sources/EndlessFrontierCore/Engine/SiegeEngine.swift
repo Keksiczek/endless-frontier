@@ -210,6 +210,9 @@ public enum SiegeEngine {
         attackerName: String,
         attackerLabel: LocalizedText? = nil,
         attackerTribeID: UUID? = nil,
+        /// The outlaw camp they walked out of, when a camp sent them. What the
+        /// attempt costs *them* is charged in `OutlawCampEngine.charge`.
+        attackerCampID: UUID? = nil,
         fortification: Double,
         tick: Int,
         registry: GameDataRegistry,
@@ -221,7 +224,12 @@ public enum SiegeEngine {
         approachBearing: Double? = nil,
         /// The age the fight happens in. A warband carries the arms of its own
         /// century — see `Siege.era` and `raiderArms`.
-        era: Era = .earlySettlement
+        era: Era = .earlySettlement,
+        /// How many of them are on the field, when the caller knows better
+        /// than the ordinary reckoning. A starving band is a crowd of people
+        /// who cannot fight and a handful of deserters is not — same strength,
+        /// different number of bodies (`OutlawCamp.Kind.bodyShare`).
+        drawn: Int? = nil
     ) -> Settlement {
         var rng = SeededRNG(seed: seed)
         var s = settlement
@@ -245,8 +253,9 @@ public enum SiegeEngine {
             id: id, startTick: tick,
             openedAt: WorldClock(tick: tick, step: 0).absoluteStep,
             attackerName: attackerName, attackerLabel: attackerLabel,
-            attackerTribeID: attackerTribeID, approach: approach,
-            attackers: BattleResolver.drawnStrength(attackerStrength),
+            attackerTribeID: attackerTribeID, attackerCampID: attackerCampID,
+            approach: approach,
+            attackers: drawn ?? BattleResolver.drawnStrength(attackerStrength),
             openingStrength: attackerStrength, fortification: facing,
             seed: rng.next(), line: Array(line), carriesOff: carriesOff,
             era: era)
@@ -1578,7 +1587,10 @@ public enum SiegeEngine {
             moments: moments, repelled: siege.repelled,
             attackerLabel: siege.attackerLabel, approach: siege.approach,
             steps: siege.steps,
-            attackers: siege.attackers, line: siege.line)
+            attackers: siege.attackers, line: siege.line,
+            // Carried into the record, because the siege is gone the moment it
+            // ends and "who has been robbing us" is a question about the past.
+            attackerCampID: siege.attackerCampID)
         s.lastBattle = record
         // …and it is kept. A colony that fought four raids has four records,
         // newest first, and dismissing the card no longer throws one away.

@@ -53,6 +53,22 @@ struct BanditTests {
         #expect(fat > 1, "a colony sitting on everything it owns is a target")
     }
 
+    /// **The measured fault, and the reason it hid for so long.** A share of
+    /// capacity is a measure of the colony's *buildings*: a town holding 6 280
+    /// food behind granaries for 44 300 read as 14 % full, which is "nothing
+    /// worth the walk" — so building another warehouse made the same grain
+    /// invisible to outlaws. Two centuries produced **one** camp raid.
+    @Test("A full barn is worth robbing however much shelf-space is beside it")
+    func theHaulIsCountedInSacksNotShelves() {
+        let rich = town(food: 6_280, capacity: 44_300)
+        #expect(BanditEngine.temptation(rich) > 2,
+                "a colony sitting on six thousand sacks is a target whatever its cap is")
+        // …and the poor stay poor: this must not turn "has a granary" into bait.
+        #expect(BanditEngine.temptation(town(food: 200, capacity: 44_300)) == 0)
+        // The old reading still works where it always did — a small full shed.
+        #expect(BanditEngine.temptation(town(food: 900, capacity: 1_000)) > 0.5)
+    }
+
     /// Rule 6, on the danger side: if a rich colony never actually sees a band,
     /// the whole system is a number nobody meets.
     @Test("A rich, unwatched colony really is robbed, inside a generation")

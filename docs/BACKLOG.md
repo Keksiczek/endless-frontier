@@ -398,6 +398,14 @@ Three things added, each a different shape:
   forest had no enemies however rich it got. Outlaws are drawn by a full granary
   and cannot be negotiated with: there is no standing to mend and no tribe to
   charge. Spears and a wall make you a poor target, never an impossible one.
+  **They come from somewhere now** (2026-08-22, `OutlawCampEngine`): three
+  camps live on the map from the first tick, each with a kind (deserters,
+  starving, a walled hold), a strength of its own that grows while nobody
+  troubles it, and a hoard of everything it has carried off your granary. A
+  raid walks in on the bearing of the hex they live on, spends the camp that
+  sent it, and a party can be sent out to burn them out and bring the plunder
+  home — after which they lie low for a season and fill up again. Still not a
+  faction: no standing, no grudge, no peace to buy.
 - **Wolves stopped looting like a warband.** `Siege.carriesOff`: a warband came
   with sacks and a pack took a sheep, and both walked off with eight to
   thirty-five per cent of the granary. With a pack every three years that
