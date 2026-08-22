@@ -9,19 +9,19 @@ loads through `GameDataRegistry.bundled()`; views never read JSON directly.
 
 | File | Entries | What it defines |
 |---|---|---|
-| `buildings.json` | 49 | Cost, production, footprint, `storage` (typed per resource), `sleepers`/`floors`, `work`, `look`, adjacency |
-| `techs.json` | 31 | The tech DAG. `knowledgeCost`, `requires`, `repeatable` |
+| `buildings.json` | 56 | Cost, production, footprint, `storage` (typed per resource), `sleepers`/`floors`, `work`, `look`, adjacency |
+| `techs.json` | 37 | The tech DAG. `knowledgeCost`, `requires`, `repeatable` |
 | `eras.json` | 5 | Milestones gating each age (tech / stat / population / settlements) |
-| `biomes.json` | 6 | plains, forest, desert, tundra, mountains, coast |
-| `events.json` | 72 | Storyteller templates — conditions, weights, effects, choices |
-| `items.json` | 156 | Equipment, materials, artifacts. Rarity, slots, combat profile |
-| `recipes.json` | 29 | `outputItemID` ← `materials` + `requiresBuilding` |
-| `meals.json` | 8 | What a cook can make out of the harvest |
-| `laws.json` | 10 | What the assembly votes on; modifiers |
-| `cults.json` | 6 | Faiths a temple can seed |
-| `plagues.json` | 5 | Illnesses |
+| `biomes.json` | 7 | plains, forest, desert, tundra, mountains, coast, wetlands |
+| `events.json` | 182 | Storyteller templates — conditions, weights, effects, choices |
+| `items.json` | 337 | Equipment, materials, artifacts. Rarity, slots, combat profile |
+| `recipes.json` | 311 | `outputItemID` ← `materials` + `requiresBuilding` |
+| `meals.json` | 47 | What a cook can make out of the harvest |
+| `laws.json` | 30 | What the assembly votes on. `modifiers`, and `vote_bias`: the four genes, `poor_favour`, and `trade_favour` — what the law is worth to each trade's living |
+| `cults.json` | 21 | Faiths a temple can seed |
+| `plagues.json` | 17 | Illnesses |
 | `quests.json` | 7 | Multi-stage chains |
-| `motions.json` | 48 | **How a body moves.** Each part of the figure as a wave (`amplitude`/`frequency`/`phase`), plus `lean`, `bob`, `slouch`, `reach`. `serves_activities` + `serves_work` say which colonists it may be chosen for — without those a clip loads and is never seen |
+| `motions.json` | 129 | **How a body moves.** Each part of the figure as a wave (`amplitude`/`frequency`/`phase`), plus `lean`, `bob`, `slouch`, `reach`. `serves_activities` + `serves_work` say which colonists it may be chosen for — without those a clip loads and is never seen |
 | `map-gen.json` | 11 keys | Hex world generation tuning |
 | `world-config.json` | 8 groups | **Every tuning constant** — see below |
 

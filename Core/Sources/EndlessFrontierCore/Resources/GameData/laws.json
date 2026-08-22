@@ -23,7 +23,12 @@
     },
     "vote_bias": {
       "sociability": -0.2,
-      "poor_favour": 0.15
+      "poor_favour": 0.15,
+      "trade_favour": {
+        "cooking": -0.25,
+        "farming": 0.1,
+        "trade": -0.12
+      }
     }
   },
   {
@@ -42,7 +47,12 @@
       "morale_flat": 6
     },
     "vote_bias": {
-      "sociability": 0.35
+      "sociability": 0.35,
+      "trade_favour": {
+        "cooking": 0.3,
+        "farming": -0.15,
+        "priest": 0.12
+      }
     },
     "effects": [
       {
@@ -76,7 +86,12 @@
     },
     "vote_bias": {
       "fertility": 0.4,
-      "sociability": 0.1
+      "sociability": 0.1,
+      "trade_favour": {
+        "healing": 0.22,
+        "farming": 0.1,
+        "trade": -0.12
+      }
     }
   },
   {
@@ -97,7 +112,13 @@
     },
     "vote_bias": {
       "industry": 0.3,
-      "sociability": 0.1
+      "sociability": 0.1,
+      "trade_favour": {
+        "research": 0.35,
+        "farming": -0.12,
+        "logging": -0.1,
+        "mining": -0.1
+      }
     }
   },
   {
@@ -123,7 +144,13 @@
       "morale_flat": -2
     },
     "vote_bias": {
-      "courage": -0.25
+      "courage": -0.25,
+      "trade_favour": {
+        "garrison": 0.4,
+        "hunting": 0.12,
+        "farming": -0.12,
+        "crafting": -0.1
+      }
     }
   },
   {
@@ -143,7 +170,13 @@
     },
     "vote_bias": {
       "sociability": 0.25,
-      "poor_favour": -0.1
+      "poor_favour": -0.1,
+      "trade_favour": {
+        "trade": 0.4,
+        "building": 0.2,
+        "scouting": 0.15,
+        "farming": -0.1
+      }
     }
   },
   {
@@ -164,7 +197,13 @@
     },
     "vote_bias": {
       "industry": -0.2,
-      "sociability": 0.15
+      "sociability": 0.15,
+      "trade_favour": {
+        "logging": -0.35,
+        "foraging": 0.28,
+        "hunting": 0.22,
+        "building": -0.18
+      }
     }
   },
   {
@@ -185,7 +224,12 @@
       "morale_flat": -2
     },
     "vote_bias": {
-      "poor_favour": 0.4
+      "poor_favour": 0.4,
+      "trade_favour": {
+        "trade": -0.25,
+        "priest": 0.25,
+        "crafting": -0.12
+      }
     }
   },
   {
@@ -203,7 +247,13 @@
     "modifiers": {},
     "vote_bias": {
       "courage": 0.35,
-      "industry": 0.15
+      "industry": 0.15,
+      "trade_favour": {
+        "scouting": 0.4,
+        "garrison": 0.15,
+        "farming": -0.15,
+        "cooking": -0.1
+      }
     },
     "effects": [
       {
@@ -243,7 +293,13 @@
     },
     "vote_bias": {
       "sociability": 0.3,
-      "courage": -0.1
+      "courage": -0.1,
+      "trade_favour": {
+        "priest": 0.45,
+        "building": 0.22,
+        "mining": 0.15,
+        "research": -0.15
+      }
     },
     "effects": [
       {
@@ -272,7 +328,13 @@
     },
     "vote_bias": {
       "sociability": 0.2,
-      "industry": -0.2
+      "industry": -0.2,
+      "trade_favour": {
+        "healing": 0.25,
+        "farming": -0.15,
+        "logging": -0.15,
+        "mining": -0.15
+      }
     }
   },
   {
@@ -293,7 +355,12 @@
     },
     "vote_bias": {
       "poor_favour": -0.3,
-      "industry": 0.15
+      "industry": 0.15,
+      "trade_favour": {
+        "farming": 0.3,
+        "crafting": 0.18,
+        "foraging": -0.15
+      }
     }
   },
   {
@@ -314,7 +381,12 @@
     },
     "vote_bias": {
       "sociability": 0.1,
-      "poor_favour": -0.1
+      "poor_favour": -0.1,
+      "trade_favour": {
+        "priest": 0.45,
+        "research": -0.25,
+        "crafting": -0.12
+      }
     }
   },
   {
@@ -335,7 +407,12 @@
     },
     "vote_bias": {
       "sociability": 0.3,
-      "courage": -0.15
+      "courage": -0.15,
+      "trade_favour": {
+        "trade": 0.22,
+        "building": 0.18,
+        "garrison": -0.25
+      }
     }
   },
   {
@@ -357,7 +434,13 @@
     },
     "vote_bias": {
       "industry": -0.3,
-      "sociability": 0.2
+      "sociability": 0.2,
+      "trade_favour": {
+        "research": 0.25,
+        "healing": 0.2,
+        "farming": -0.15,
+        "mining": -0.18
+      }
     }
   },
   {
@@ -400,7 +483,12 @@
     ],
     "vote_bias": {
       "poor_favour": 0.4,
-      "industry": -0.2
+      "industry": -0.2,
+      "trade_favour": {
+        "trade": -0.35,
+        "crafting": -0.15,
+        "building": 0.15
+      }
     }
   },
   {
@@ -421,7 +509,12 @@
     },
     "vote_bias": {
       "poor_favour": 0.4,
-      "industry": -0.3
+      "industry": -0.3,
+      "trade_favour": {
+        "cooking": 0.28,
+        "farming": -0.18,
+        "trade": -0.25
+      }
     }
   },
   {
@@ -441,7 +534,14 @@
     },
     "vote_bias": {
       "industry": 0.4,
-      "sociability": -0.2
+      "sociability": -0.2,
+      "trade_favour": {
+        "logging": 0.4,
+        "mining": 0.35,
+        "building": 0.25,
+        "farming": -0.22,
+        "research": -0.15
+      }
     },
     "effects": [
       {
@@ -470,7 +570,13 @@
     },
     "vote_bias": {
       "sociability": 0.3,
-      "poor_favour": 0.1
+      "poor_favour": 0.1,
+      "trade_favour": {
+        "trade": 0.25,
+        "building": 0.15,
+        "garrison": -0.22,
+        "farming": -0.1
+      }
     }
   },
   {
@@ -491,7 +597,13 @@
     },
     "vote_bias": {
       "sociability": 0.2,
-      "industry": -0.1
+      "industry": -0.1,
+      "trade_favour": {
+        "research": 0.25,
+        "priest": 0.15,
+        "farming": -0.15,
+        "logging": -0.12
+      }
     }
   },
   {
@@ -512,7 +624,13 @@
     },
     "vote_bias": {
       "sociability": 0.25,
-      "industry": -0.3
+      "industry": -0.3,
+      "trade_favour": {
+        "priest": 0.45,
+        "farming": -0.35,
+        "logging": -0.25,
+        "foraging": 0.15
+      }
     }
   },
   {
@@ -532,7 +650,13 @@
     },
     "vote_bias": {
       "industry": 0.3,
-      "poor_favour": -0.1
+      "poor_favour": -0.1,
+      "trade_favour": {
+        "crafting": 0.45,
+        "research": 0.2,
+        "mining": -0.15,
+        "trade": -0.15
+      }
     },
     "effects": [
       {
@@ -562,7 +686,13 @@
     },
     "vote_bias": {
       "industry": -0.2,
-      "sociability": 0.2
+      "sociability": 0.2,
+      "trade_favour": {
+        "priest": 0.25,
+        "research": 0.2,
+        "farming": -0.18,
+        "logging": -0.15
+      }
     }
   },
   {
@@ -583,7 +713,12 @@
     },
     "vote_bias": {
       "poor_favour": -0.2,
-      "industry": 0.3
+      "industry": 0.3,
+      "trade_favour": {
+        "farming": 0.4,
+        "cooking": -0.15,
+        "trade": 0.12
+      }
     }
   },
   {
@@ -611,7 +746,14 @@
     ],
     "vote_bias": {
       "industry": -0.3,
-      "sociability": 0.15
+      "sociability": 0.15,
+      "trade_favour": {
+        "priest": 0.4,
+        "healing": 0.18,
+        "logging": -0.2,
+        "mining": -0.2,
+        "building": -0.18
+      }
     }
   },
   {
@@ -632,7 +774,12 @@
     },
     "vote_bias": {
       "sociability": -0.4,
-      "courage": -0.1
+      "courage": -0.1,
+      "trade_favour": {
+        "garrison": 0.4,
+        "scouting": -0.2,
+        "trade": -0.35
+      }
     }
   },
   {
@@ -660,7 +807,14 @@
     ],
     "vote_bias": {
       "industry": 0.3,
-      "poor_favour": -0.15
+      "poor_favour": -0.15,
+      "trade_favour": {
+        "logging": -0.3,
+        "mining": -0.3,
+        "building": 0.2,
+        "crafting": 0.12,
+        "trade": 0.15
+      }
     }
   },
   {
@@ -682,7 +836,14 @@
     },
     "vote_bias": {
       "industry": 0.25,
-      "sociability": -0.2
+      "sociability": -0.2,
+      "trade_favour": {
+        "farming": 0.25,
+        "mining": 0.22,
+        "logging": 0.2,
+        "research": -0.3,
+        "healing": -0.22
+      }
     }
   },
   {
@@ -703,7 +864,13 @@
     },
     "vote_bias": {
       "industry": -0.2,
-      "sociability": 0.2
+      "sociability": 0.2,
+      "trade_favour": {
+        "research": 0.4,
+        "farming": -0.18,
+        "logging": -0.15,
+        "mining": -0.15
+      }
     }
   },
   {
@@ -732,7 +899,13 @@
     "vote_bias": {
       "poor_favour": 0.2,
       "industry": -0.1,
-      "sociability": 0.15
+      "sociability": 0.15,
+      "trade_favour": {
+        "farming": 0.35,
+        "trade": 0.18,
+        "building": 0.15,
+        "crafting": -0.15
+      }
     }
   }
 ]

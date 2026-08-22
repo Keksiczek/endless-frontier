@@ -248,22 +248,10 @@ public enum SocietyEngine {
         guard let pick = rng.weightedIndex(weights) else { return nil }
         let law = eligible[pick]
 
-        var votesFor = 0
-        var votesAgainst = 0
-        for pawn in settlement.pawns where pawn.isAdult(ticksPerYear: ticksPerYear) {
-            let cls = settlement.society.wealthClass(of: pawn.wealth)
-            var inclination = 0.4 + rng.nextUnit() * 0.3
-            inclination += law.voteBias.inclination(pawn, wealthClass: cls)
-            if pawn.id == settlement.leaderID { inclination += 0.1 }
-            if inclination > 0.55 {
-                votesFor += cls.votes
-            } else {
-                votesAgainst += cls.votes
-            }
-        }
-        return LawProposal(definitionID: law.id, settlementID: settlement.id,
-                           proposedTick: state.tick,
-                           votesFor: votesFor, votesAgainst: votesAgainst)
+        // Every adult weighs it for themselves, on what they are, what they do,
+        // what they know and how their own life is going — see `AssemblyEngine`.
+        return AssemblyEngine.vote(on: law, in: settlement, state: state,
+                                   registry: registry, rng: &rng)
     }
 
     /// Morale cost of overruling the assembly, either way.

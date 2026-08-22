@@ -819,3 +819,33 @@ fires, do the arithmetic before you rewrite the mechanic.
    only a gradient. The second half is the same lesson upstream: everybody
    *wanting* the same thing converges a field however stable their marks are,
    so a warband musters with three purposes in it (`Combatant.Intent`).
+85. **A `Dictionary` is not an order, and a sum has one.** `AssemblyEngine`
+   added a colonist's six reasons with `terms.values.reduce(0, +)`. Swift draws
+   a fresh hash seed per *process*, so the same six numbers were added in a
+   different order on a replay and rounded one ulp differently — and a
+   colonist standing one ulp from the line then voted the other way. Caught by
+   "The same assembly reaches the same result twice", and the identical fault
+   was already sitting in `loudest`, which picked the biggest term out of the
+   same dictionary. Determinism is not only "the same rolls": **anything a
+   dictionary iterates has to be walked in an order the program owns** — the
+   enum's `allCases`, a sorted key list — before it is summed, compared or
+   reported.
+86. **A need is a satisfaction, not a complaint — read the field, not the
+   name.** `PawnNeeds.hunger` counts *fullness*: `PawnEngine` decays it toward
+   zero and `<= 0` is how somebody starves. `AssemblyEngine.hardship` read
+   `hunger / 100` as suffering, so the assembly counted a colony with full
+   bellies as the one desperate for change, and the test written alongside it
+   set `hunger = 95` to mean "starving" and passed for the wrong reason. A
+   green test proves the code and the test agree, not that either is right;
+   when a field's meaning is not in its name, go and read the engine that
+   writes it.
+87. **A term has to be calibrated in both directions.** The vote's die started
+   at `0.4 + U × 0.3` against biases that rarely reached 0.2, so the die
+   decided and the reasons decorated — the fault rule 23 is about. Narrowing
+   it to ±0.17 produced the mirror image: a trade favour of 0.4 could not be
+   crossed by any doubt, and sixty loggers who had never felled a tree voted
+   **60–0** on a hewing law. A term that nothing can cross is as dead as one
+   that crosses everything. Write the arithmetic down next to the constants
+   (`widestDoubt / 2 > widestLivelihood × greenShare`) and guard it with a test
+   that reads the data, so the next law that stakes 0.9 on a trade fails in
+   the suite rather than in a colony that votes as one body.

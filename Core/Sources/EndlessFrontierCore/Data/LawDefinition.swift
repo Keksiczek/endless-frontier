@@ -80,22 +80,36 @@ public struct VoteBias: Codable, Sendable, Equatable {
     public let courage: Double
     /// How much the poor favour it over the wealthy (negative = the rich prefer it).
     public let poorFavour: Double
+    /// **What it would mean for somebody's work.**
+    ///
+    /// Genes say what kind of person somebody is; this says what they do all
+    /// day, which is most of what an ordinary person's politics is actually
+    /// about. A hewing law is a lumberjack's living and a forester's grievance,
+    /// and until this existed both of them voted on temperament alone.
+    /// Keyed by `WorkKind.rawValue`; a trade the law says nothing about is 0.
+    public let tradeFavour: [String: Double]
 
     public init(
         industry: Double = 0, fertility: Double = 0,
-        sociability: Double = 0, courage: Double = 0, poorFavour: Double = 0
+        sociability: Double = 0, courage: Double = 0, poorFavour: Double = 0,
+        tradeFavour: [String: Double] = [:]
     ) {
         self.industry = industry
         self.fertility = fertility
         self.sociability = sociability
         self.courage = courage
         self.poorFavour = poorFavour
+        self.tradeFavour = tradeFavour
     }
 
     private enum CodingKeys: String, CodingKey {
         case industry, fertility, sociability, courage
         case poorFavour = "poor_favour"
+        case tradeFavour = "trade_favour"
     }
+
+    /// What this law is worth to somebody who does `work` for a living.
+    public func favour(of work: WorkKind) -> Double { tradeFavour[work.rawValue] ?? 0 }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -104,6 +118,7 @@ public struct VoteBias: Codable, Sendable, Equatable {
         sociability = try c.decodeIfPresent(Double.self, forKey: .sociability) ?? 0
         courage = try c.decodeIfPresent(Double.self, forKey: .courage) ?? 0
         poorFavour = try c.decodeIfPresent(Double.self, forKey: .poorFavour) ?? 0
+        tradeFavour = try c.decodeIfPresent([String: Double].self, forKey: .tradeFavour) ?? [:]
     }
 
     /// A colonist's inclination toward the motion, 0…1-ish before the roll.

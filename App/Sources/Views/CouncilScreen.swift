@@ -227,6 +227,8 @@ private struct MotionCard: View {
     @Bindable var game: GameViewModel
     let proposal: LawProposal
     @State private var spendStanding = false
+    /// The room folds to its four loudest until somebody wants the rest.
+    @State private var wholeRoom = false
 
     private var cs: Bool { AppStrings.language == .cs }
 
@@ -269,6 +271,7 @@ private struct MotionCard: View {
                 }
             }
             voteTally
+            theRoom
             HStack(spacing: 10) {
                 Button {
                     game.resolveProposal(approve: false, spendInfluence: spendStanding)
@@ -323,6 +326,49 @@ private struct MotionCard: View {
         }
     }
 
+    /// **Who spoke, and why.**
+    ///
+    /// The tally is a number and the number is not an assembly: two hundred
+    /// and eleven to two hundred and four says nothing about the town, and
+    /// *"Mara, dřevorubec — ublíží to řemeslu"* says all of it. `AssemblyEngine`
+    /// records the loudest handful with the term that actually moved each of
+    /// them; this prints them, loudest first.
+    ///
+    /// Empty for a motion saved before any of this existed, which is why it is
+    /// a `@ViewBuilder` and not a card that would sit there blank.
+    @ViewBuilder
+    private var theRoom: some View {
+        if !proposal.voices.isEmpty {
+            let shown = wholeRoom ? proposal.voices : Array(proposal.voices.prefix(4))
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(AppStrings.whoSpoke.uppercased())
+                        .font(.caption2.weight(.bold)).tracking(1.1)
+                        .foregroundStyle(Theme.textDim)
+                    Spacer()
+                    if proposal.turnout > 0 {
+                        Text(AppStrings.turnout(proposal.turnout))
+                            .font(.caption2.monospacedDigit()).foregroundStyle(Theme.textDim)
+                    }
+                }
+                ForEach(shown) { voice in
+                    VoiceRow(voice: voice)
+                }
+                if proposal.voices.count > 4 {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.18)) { wholeRoom.toggle() }
+                    } label: {
+                        Text(wholeRoom ? AppStrings.showFewer
+                                       : "\(AppStrings.showEverybody) (\(proposal.voices.count))")
+                            .font(.caption2.weight(.semibold))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Theme.accent)
+                }
+            }
+        }
+    }
+
     private var warning: String {
         if proposal.councilApproves {
             return cs ? "Sněm je pro. Veto proti jeho vůli tě bude stát přízeň lidu."
@@ -330,6 +376,39 @@ private struct MotionCard: View {
         }
         return cs ? "Sněm je proti. Schválit navzdory jeho vůli tě bude stát přízeň lidu."
                   : "The assembly is against. Ratifying anyway will cost you standing."
+    }
+}
+
+/// One colonist's vote: who they are, which way they went, and the one thing
+/// that decided it. The bar on the right is how firmly they held it — a
+/// colonist at a hair's breadth said "if you like", one at the full width
+/// stood up.
+private struct VoiceRow: View {
+    let voice: AssemblyVoice
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: voice.forIt ? "hand.thumbsup.fill" : "hand.thumbsdown.fill")
+                .font(.caption2)
+                .foregroundStyle(voice.forIt ? Theme.good : Theme.danger)
+                .frame(width: 14)
+            VStack(alignment: .leading, spacing: 1) {
+                HStack(spacing: 5) {
+                    Text(voice.name).font(.caption.weight(.semibold))
+                    Text(AppStrings.roleName(voice.trade))
+                        .font(.caption2).foregroundStyle(Theme.textDim)
+                }
+                Text(AppStrings.voteReason(voice.reason, forIt: voice.forIt,
+                                           wealth: voice.wealth))
+                    .font(.caption2).foregroundStyle(Theme.textDim)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 6)
+            Capsule()
+                .fill((voice.forIt ? Theme.good : Theme.danger).opacity(0.55))
+                .frame(width: max(3, 26 * voice.conviction), height: 3)
+                .padding(.top, 6)
+        }
     }
 }
 

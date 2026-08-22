@@ -65,8 +65,10 @@ raw off the shelf badly.
 
 ## Society, faith, neighbours
 
-`SocietyEngine` (wages → classes → gini → unrest, elections, the assembly),
-`FaithEngine`, `DiplomacyEngine`, `MultiCityEngine`, `SupplyEngine`,
+`SocietyEngine` (wages → classes → gini → unrest, elections, who sits),
+`AssemblyEngine` (**how each of them votes**: nature, standing, trade,
+experience, hardship, household — and the named voices the council screen
+prints), `FaithEngine`, `DiplomacyEngine`, `MultiCityEngine`, `SupplyEngine`,
 `CaravanEngine`, `VisitorEngine`, `CaptiveEngine`, `ExpansionEngine`,
 `ExplorationEngine`, `RegionExpeditionEngine`, `SiteEngine`, `SiteVisitEngine`,
 `LocalPOIEngine`.

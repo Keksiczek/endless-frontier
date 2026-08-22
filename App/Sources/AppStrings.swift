@@ -201,6 +201,68 @@ enum AppStrings {
         }
     }
 
+    /// **What somebody would actually say if you asked them why.**
+    ///
+    /// `AssemblyEngine` records the term that moved a colonist furthest from
+    /// the middle; this turns that into a sentence. Direction matters — a
+    /// woodcutter for a hewing law and a woodcutter against a forest law are
+    /// the same *reason* and opposite sentences — and so does standing, which
+    /// is the one reason that names a group rather than a person.
+    ///
+    /// Czech carries no gender here on purpose: a pawn has no sex in the
+    /// model, so anything in the past tense ("byl"/"byla") would be a guess.
+    /// Present tense and verbless phrases agree with everybody.
+    static func voteReason(_ reason: VoteReason, forIt: Bool, wealth: WealthClass) -> String {
+        switch reason {
+        case .nature:
+            return forIt ? s("It suits the kind of person they are", "Má to v povaze")
+                         : s("It goes against their grain", "Příčí se to jeho povaze")
+        case .trade:
+            return forIt ? s("It would be good for their trade", "Prospěje to řemeslu")
+                         : s("It would hurt their trade", "Ublíží to řemeslu")
+        case .standing:
+            let group: String
+            switch wealth {
+            case .poor:    group = s("the poor", "chudině")
+            case .middle:  group = s("the middling sort", "střední vrstvě")
+            case .wealthy: group = s("the wealthy", "zámožným")
+            }
+            let payers: String
+            switch wealth {
+            case .poor:    payers = s("The poor", "Chudina")
+            case .middle:  payers = s("The middling sort", "Střední vrstva")
+            case .wealthy: payers = s("The wealthy", "Zámožní")
+            }
+            return forIt ? s("It favours \(group)", "Nahrává to \(group)")
+                         : s("\(payers) would pay for it", "\(payers) na to doplatí")
+        case .experience:
+            return forIt ? s("Years in the trade say it is worth it",
+                             "Za ta léta v řemesle ví, že to stojí za to")
+                         : s("Years in the trade say otherwise",
+                             "Za ta léta v řemesle ví své")
+        case .hardship:
+            return forIt ? s("Things could hardly be worse", "Hůř už být nemůže")
+                         : s("Life is hard enough already", "Život je tvrdý i bez toho")
+        case .household:
+            return s("Their household votes this way", "Doma to tak vidí")
+        case .leader:
+            return s("They lead here, and they stand by it",
+                     "Vede tuhle osadu a stojí si za tím")
+        case .undecided:
+            return s("Nothing much moved them", "Nic zvláštního nepřevážilo")
+        }
+    }
+
+    /// How many adults were in the room — which the tally cannot say, because
+    /// a vote is weighted by class.
+    static func turnout(_ adults: Int) -> String {
+        s("\(adults) adults in the room", "\(adults) dospělých v sále")
+    }
+
+    static var whoSpoke: String { s("Who spoke", "Kdo mluvil") }
+    static var showEverybody: String { s("All of them", "Všichni") }
+    static var showFewer: String { s("Fewer", "Méně") }
+
     // Era. The names live in the Core now — a chapter heading in the annals is
     // content, and content is not kept in two places.
     static func eraTitle(_ era: Era) -> String {
