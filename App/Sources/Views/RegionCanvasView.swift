@@ -41,6 +41,41 @@ struct RegionCanvasView: View {
         game.tribes.first { $0.regionID == region.id }
     }
 
+    /// **The people who live here, as a place.** Derived from the tribe's own
+    /// numbers by `TribeCamp` — real roofs, real pawns with bodies and days —
+    /// and cached against what those numbers *are*, so it is rebuilt when the
+    /// people change and not thirty times a second.
+    ///
+    /// Nothing here is simulated and nothing is saved: it is exactly as much
+    /// of a people as the drawing needs, which is stage one of the two
+    /// `docs/HANDOFF-2026-08-22.md` §4.4 lays out.
+    @State private var camp: Settlement?
+    @State private var campKey: String?
+
+    private var currentCampKey: String? {
+        guard let tribe = residentTribe else { return nil }
+        return "\(tribe.id)|\(Int(tribe.population))|\(Int(tribe.stores))"
+            + "|\(Int(tribe.defense))|\(tribe.wars)|\(game.world.era.rawValue)"
+    }
+
+    /// Off the main actor. Deriving a camp lays out a build grid, which is the
+    /// same work the colony does at its founding — cheap enough to do once and
+    /// far too dear to do while a sheet is animating in.
+    private func refreshCamp() async {
+        let key = currentCampKey
+        guard key != campKey else { return }
+        campKey = key
+        guard let people = residentTribe else { camp = nil; return }
+        let seed = game.world.mapSeed
+        let era = game.world.era
+        let registry = game.registry
+        let language = AppStrings.language
+        camp = await Task.detached(priority: .userInitiated) {
+            TribeCamp.settlement(for: people, mapSeed: seed, era: era,
+                                 registry: registry, language: language)
+        }.value
+    }
+
     var body: some View {
         ZStack {
             Theme.ink.ignoresSafeArea()
@@ -52,6 +87,8 @@ struct RegionCanvasView: View {
                             &context, size: size, map: map,
                             season: game.season, time: t, camera: camera,
                             regionKind: region.kind, tribe: residentTribe,
+                            camp: camp,
+                            continuousTick: game.tickClock.continuous(at: timeline.date),
                             registry: game.registry)
                     }
                 }
@@ -68,6 +105,8 @@ struct RegionCanvasView: View {
         }
         .foregroundStyle(Theme.text)
         .presentationBackground(Theme.ink)
+        .task { await refreshCamp() }
+        .task(id: currentCampKey) { await refreshCamp() }
     }
 
     /// The tap-to-ask layer and, when the land is open, the reason you came:

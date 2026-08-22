@@ -510,8 +510,15 @@ enum SettlementRenderer {
         camera: Camera,
         regionKind: RegionKind,
         tribe: Tribe?,
+        /// **The people who live here, as a settlement.** Derived from the
+        /// tribe by `TribeCamp` and never stored — real roofs on a real build
+        /// grid and real pawns with bodies, drawn by the same code that draws
+        /// your own town. Nil falls back to the old ring of tents, which is
+        /// all a people who are not there yet needs.
+        camp: Settlement? = nil,
         seasonProgress: Double = 0.5,
         continuousTick: Double = 0,
+        selectedPawnID: UUID? = nil,
         registry: GameDataRegistry
     ) {
         let viewRect = CGRect(origin: .zero, size: size)
@@ -562,7 +569,26 @@ enum SettlementRenderer {
         if regionKind == .anomaly {
             anomalyGlow(&context, rect: rect, time: time)
         }
-        if let tribe {
+        if let camp, camp.colony?.placements.isEmpty == false {
+            // **The same drawing your own town gets.** A people is not a
+            // different kind of thing from a colony, so nothing here is a
+            // second renderer: the lots, the roofs, the insides, the smoke and
+            // the figures walking their day all come out of the code that
+            // already draws yours (`docs/HANDOFF-2026-08-22.md` §4.4, stage
+            // one — and stage one adds nothing to the tick).
+            let placed = layout(settlement: camp, registry: registry, rect: rect,
+                                viewport: CGRect(origin: .zero, size: size))
+            buildings(&context, placed: placed, time: time, night: night,
+                      showLabels: showLabels, zoom: zoom, sun: sun,
+                      selectedBuildingID: nil)
+            SettlementFigures.smoke(
+                &context,
+                houses: placed.filter { $0.glyph == .house && !$0.underConstruction },
+                time: time, zoom: zoom)
+            agents(&context, rect: rect, settlement: camp, map: map,
+                   continuousTick: continuousTick, registry: registry,
+                   time: time, zoom: zoom, selectedPawnID: selectedPawnID)
+        } else if let tribe {
             SettlementStructures.camp(
                 &context, rect: rect, population: tribe.population,
                 tint: campTint(tribe.status), time: time,

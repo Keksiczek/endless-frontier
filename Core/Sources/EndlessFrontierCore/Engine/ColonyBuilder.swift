@@ -434,11 +434,36 @@ public enum ColonyBuilder {
 
     /// `true` if a `size` footprint with its top-left at `coord` fits in `map`
     /// (all tiles in bounds and unoccupied).
+    /// **What ground is already taken, asked once instead of per tile.**
+    ///
+    /// `fits` calls `ColonyMap.placement(at:)`, which walks every placement in
+    /// the colony — and the three functions that *search* for a spot call
+    /// `fits` on every tile of a 34×34 grid. So laying out a town was
+    /// `placements × 1156 × footprint × placements`: measured, `seededLayout`
+    /// for a twenty-building camp took **321 ms**, which is ten frames gone on
+    /// a drawing. Rule 38's shape exactly — a linear search on the inside of a
+    /// loop that looked like a lookup. Nobody noticed because the colony only
+    /// ever paid it at the founding and at load.
+    ///
+    /// One pass over the placements, then every tile question is a set lookup.
+    static func occupied(in map: ColonyMap) -> Set<TileCoord> {
+        var taken = Set<TileCoord>(minimumCapacity: map.occupiedTileCount)
+        for placement in map.placements {
+            for tile in placement.footprint { taken.insert(tile) }
+        }
+        return taken
+    }
+
     static func fits(_ size: TileSize, at coord: TileCoord, in map: ColonyMap) -> Bool {
+        fits(size, at: coord, in: map, occupied: occupied(in: map))
+    }
+
+    static func fits(_ size: TileSize, at coord: TileCoord, in map: ColonyMap,
+                     occupied: Set<TileCoord>) -> Bool {
         for dy in 0..<size.height {
             for dx in 0..<size.width {
                 let tile = TileCoord(coord.x + dx, coord.y + dy)
-                if !map.isInBounds(tile) || map.placement(at: tile) != nil { return false }
+                if !map.isInBounds(tile) || occupied.contains(tile) { return false }
                 // The green is not building land. `nearestFit` measures from the
                 // district centre and the first district centre *is* the heart,
                 // so without this the very first building a colony raises goes
@@ -453,10 +478,11 @@ public enum ColonyBuilder {
 
     /// The first top-left (row-major) where a `size` footprint fits, if any.
     static func firstFit(_ size: TileSize, in map: ColonyMap) -> TileCoord? {
+        let taken = occupied(in: map)
         for y in 0..<map.height {
             for x in 0..<map.width {
                 let coord = TileCoord(x, y)
-                if fits(size, at: coord, in: map) { return coord }
+                if fits(size, at: coord, in: map, occupied: taken) { return coord }
             }
         }
         return nil
@@ -590,20 +616,21 @@ public enum ColonyBuilder {
         let ring = SettlementGeometry.ringRadiusInTiles(atReach: SiegeField.wallReach, in: map)
         let cx = Double(map.width) / 2, cy = Double(map.height) / 2
         var best: (coord: TileCoord, score: Double)?
+        let occupiedTiles = occupied(in: map)
         for y in 0...(map.height - size.height) {
             for x in 0...(map.width - size.width) {
                 let coord = TileCoord(x, y)
-                // Distance first, `fits` second, and the order matters: `fits`
-                // walks every placement in the colony, while a ring holds about
-                // a tenth of the grid. Asking the dear question about the nine
-                // tenths that were never candidates is what made a long trace
-                // noticeably slower (rule 4).
+                // Distance first, `fits` second, and the order still matters
+                // even now that `fits` is a set lookup rather than a walk over
+                // every placement: a ring holds about a tenth of the grid, and
+                // the cheap question rules out the other nine tenths (rule 4).
                 let mx = Double(x) + Double(size.width) / 2
                 let my = Double(y) + Double(size.height) / 2
                 let dx = mx - cx, dy = my - cy
                 let out = (dx * dx + dy * dy).squareRoot()
                 let error = abs(out - ring)
-                guard error <= ringSlack, fits(size, at: coord, in: map) else { continue }
+                guard error <= ringSlack,
+                      fits(size, at: coord, in: map, occupied: occupiedTiles) else { continue }
                 let gap = taken.isEmpty ? .pi : taken
                     .map { abs(angleDifference(atan2(dy, dx), $0)) }
                     .min() ?? .pi
@@ -628,10 +655,11 @@ public enum ColonyBuilder {
         let cx = Double(centre.x) - Double(size.width - 1) / 2
         let cy = Double(centre.y) - Double(size.height - 1) / 2
         var best: (coord: TileCoord, d2: Double)?
+        let taken = occupied(in: map)
         for y in 0...(map.height - size.height) {
             for x in 0...(map.width - size.width) {
                 let coord = TileCoord(x, y)
-                guard fits(size, at: coord, in: map) else { continue }
+                guard fits(size, at: coord, in: map, occupied: taken) else { continue }
                 let dx = Double(x) - cx, dy = Double(y) - cy
                 let d2 = dx * dx + dy * dy
                 if d2 < (best?.d2 ?? .infinity) { best = (coord, d2) }
