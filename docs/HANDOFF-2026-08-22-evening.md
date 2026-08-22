@@ -10,7 +10,7 @@ probe or a diag still in the tree.
 | | |
 |---|---|
 | Last pushed | `5e0c7c6` |
-| Core tests | green on every suite touched; the full run was last clean before the outlaw work |
+| Core tests | green on every suite touched, including the two perf guards re-run alone |
 | App tests | **165 in 26 suites**, green |
 | iOS build | green |
 
@@ -106,7 +106,8 @@ engines read.
   suite beside a two-hundred-year diag put the machine at a load average of
   22, and `TribeCampTests` ("deriving is cheap", 150 ms budget) and
   `OfflineCatchUpTests` ("no O(n²) regression", 4.5× budget) both failed. With
-  the simulators shut down and nothing else running, `TribeCampTests` passes.
+  the simulators shut down and nothing else running, **both pass**:
+  `TribeCampTests` 11/11, `OfflineCatchUpTests` 3/3 in 889 s.
   **Do not run a probe and the suite at once on this machine** — you will
   measure the load, not the code.
 
