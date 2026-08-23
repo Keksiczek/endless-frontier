@@ -16,7 +16,51 @@ public enum FloraEngine {
     /// Axe-work one logger lands on a tree in one tick.
     static let chopPerTick = 0.06
     /// Below this the wood is too thin to be worth working — loggers move on.
-    static let minimumWorkableGrowth = 0.35
+    ///
+    /// **Raised to bearing age.** It was 0.35 and `bearingGrowth` is 0.5, so
+    /// every tree in the valley was felled *before it had ever set seed*. That
+    /// is overfishing, and it is invisible in the tree count: measured on
+    /// Keks's save with the seed stand and the faster seeding already in, the
+    /// wood came back from seven trees to forty-eight over fifty years and had
+    /// **zero bearing trees the whole way** — every sapling that reached 0.35
+    /// met an axe within seventeen ticks. A wood that can only ever be
+    /// replenished by seed blowing over the valley wall is not a wood the
+    /// colony is keeping; it is one it is being given.
+    ///
+    /// At bearing age the two numbers agree: anything worth felling has
+    /// already dropped seed at least once, and `seedStand` keeps enough of them
+    /// standing to go on doing it.
+    static let minimumWorkableGrowth = bearingGrowth
+
+    /// **How many trees a colony leaves standing, whatever it needs.**
+    ///
+    /// Measured on Keks's save (tick 6805, 113 years in): **seven trees left in
+    /// the whole valley, every one of them at growth 0.0**, with nine loggers
+    /// assigned. Nothing was workable, so no `wood` reached the shelf, so
+    /// `saw_timber` and `burn_charcoal` had no input, so there were no timber
+    /// bundles and no charcoal — and with no charcoal `smelt_iron` had never
+    /// run once in a hundred years: the iron ore on his shelf stood at exactly
+    /// 193 across a decade of replay. **Every building in the book with a
+    /// crafted cost, every generator, and the whole iron-and-steel half of the
+    /// item tree were unreachable**, and had been for most of the colony's
+    /// life. Twenty-eight of fifty-nine buildings need no made thing, and those
+    /// twenty-eight are precisely what his town is built of.
+    ///
+    /// The arithmetic was never survivable. Nine loggers at `chopPerTick` fell
+    /// a tree apiece every seventeen ticks — about half a tree a tick — while
+    /// `reseeded` planted **one sapling every hundred ticks**, and a sapling
+    /// needs five hundred to seventeen hundred ticks to be worth an axe. Two
+    /// rates two orders of magnitude apart with no floor between them: rule 6's
+    /// shape, and the state it runs to is absorbing. A colony cannot recover
+    /// from having felled its last tree, because there is nothing left to seed
+    /// from and nothing it can build to fix it.
+    ///
+    /// So a stand is kept back. Not a comfort — a **hard floor**, because the
+    /// alternative is a colony that has quietly ended its own industry and has
+    /// no way to be told. A tree the player marked is still felled: clearing
+    /// ground you want to build on is a decision, and a mark the colony ignores
+    /// is worse than no mark (`Designation`).
+    static let seedStand = 16
 
     /// Ages every tree by a tick. Cheap on purpose: growth is a function of
     /// age, so this is one increment per tree and no allocation when the wood
@@ -43,6 +87,17 @@ public enum FloraEngine {
         // first** (`Designation`), and after that the biggest — nobody fells a
         // sapling while an oak is standing. Ties break on id so the same world
         // always fells the same tree.
+        // What the axes may take before the stand is down to its seed
+        // (`seedStand`). Counted over the trees that actually **bear**, not
+        // over the whole wood: forty saplings and no parent is a wood with no
+        // future, and a count that cannot tell those apart will happily let the
+        // colony fell the last four trees that were holding it up. Marked trees
+        // are outside the reckoning entirely — the player pointing at a thicket
+        // is a decision, not an appetite.
+        var bearing = 0
+        for tree in map.trees where tree.growth >= bearingGrowth { bearing += 1 }
+        let spare = max(0, bearing - seedStand)
+        var takenFromTheStand = 0
         let workable = map.trees.indices
             // A sapling is not worth an axe — **unless somebody pointed at it.**
             // Clearing a thicket off the ground you want to build on is a real
@@ -67,6 +122,14 @@ public enum FloraEngine {
         var stumps: [LocalPoint] = []
         for (worker, index) in workable.prefix(loggers).enumerated() {
             _ = worker
+            // The wood is down to its seed and nobody asked for this one: the
+            // axe goes elsewhere. Checked before the work goes in, so a colony
+            // at the floor does not leave half-chopped trees standing round the
+            // valley for ever.
+            if !marked.contains(map.trees[index].id) {
+                guard takenFromTheStand < spare else { continue }
+                takenFromTheStand += 1
+            }
             updated.trees[index].chopped += chopPerTick
             if updated.trees[index].chopped >= 1 {
                 timber += updated.trees[index].timberYield
@@ -195,7 +258,43 @@ public enum FloraEngine {
     /// Without it a colony that fells its **last** tree has nothing left to
     /// seed from and the wood is gone for ever, which is the lock this whole
     /// function exists to break.
-    static let windBorneBelow = 0.12
+    ///
+    /// **Raised past the seed stand.** It was 0.12 of the ceiling — nineteen
+    /// trees — while `seedStand` keeps twenty-four back, so a wood held at its
+    /// floor by the axes was permanently *above* the wind-borne threshold and
+    /// permanently below bearing age: no parent to seed from, no wind to seed
+    /// without one, and nothing growing. Two guards that each look correct and
+    /// between them leave a gap the game sits in for ever.
+    static let windBorneBelow = 0.30
+
+    /// Grown enough to bear seed. Not `isMature` — a tree drops seed long
+    /// before it is worth an axe, and asking for full growth is what made the
+    /// wood need a *mature* parent it was never allowed to keep.
+    static let bearingGrowth = 0.5
+
+    /// How many saplings one pass may set, at most.
+    ///
+    /// One, before this — every hundred ticks — against nine loggers taking
+    /// about half a tree a tick. Two rates two orders of magnitude apart
+    /// (`seedStand`). A wood thickens from its own edges, so the number scales
+    /// with what is standing and bearing, and the ceiling keeps a mature forest
+    /// from filling the valley in a season.
+    static let mostSaplingsPerPass = 8
+
+    /// How many bearing trees it takes to set one sapling in a pass.
+    static let bearersPerSapling = 6
+
+    /// How much seed a **thin** wood gets regardless of what is bearing.
+    ///
+    /// The scaled rate alone is not enough to bring a stripped valley back
+    /// inside a lifetime, and that is the case that matters: a colony with no
+    /// wood can build nothing with a crafted cost, so "wait forty years"
+    /// is the same answer as "never". Measured on Keks's save, seeding from
+    /// bearers alone took his valley from seven trees to seventeen in a decade
+    /// — and the seed stand meant not one of them could be felled. Open ground
+    /// takes seed readily; a closed wood does not, which is why this is the
+    /// floor and not the rate.
+    static let thinWoodSaplings = 4
 
     /// Lets the wood come back on its own.
     ///
@@ -236,43 +335,52 @@ public enum FloraEngine {
         // `OfflineCatchUpTests.catchUpScalesLinearly` exists to catch, and it
         // caught it. `map.trees` is append-only with increasing ids, so index
         // order is already id order and there is nothing to sort.
-        var matureCount = 0
-        for tree in map.trees where tree.isMature { matureCount += 1 }
+        var bearers: [Tree] = []
+        for tree in map.trees where tree.growth >= bearingGrowth { bearers.append(tree) }
 
-        let origin: LocalPoint
-        let species: TreeSpecies
-        if matureCount > 0 {
-            var skip = Int(rng.nextUnit() * Double(matureCount)) % matureCount
-            var chosen: Tree?
-            for tree in map.trees where tree.isMature {
-                if skip == 0 { chosen = tree; break }
-                skip -= 1
-            }
-            guard let parent = chosen else { return map }
-            origin = parent.position
-            species = parent.species
-        } else if Double(map.trees.count) < Double(woodCeiling) * windBorneBelow {
-            // Nothing left to seed from. Seed rides in over the valley wall.
-            let palette = FloraFactory.species(for: map.biomeID)
-            guard !palette.isEmpty else { return map }
-            species = palette[Int(rng.nextUnit() * Double(palette.count)) % palette.count]
-            origin = LocalPoint(x: rng.nextUnit(), y: rng.nextUnit())
-        } else {
+        // How much seed there is to set this pass. A thick wood spreads faster
+        // than a thin one, and a bare valley gets the one seed the wind brings.
+        let updatedCount = map.trees.count
+        let windBorne = bearers.isEmpty
+        if windBorne, Double(updatedCount) >= Double(woodCeiling) * windBorneBelow {
             return map
         }
+        let palette = FloraFactory.species(for: map.biomeID)
+        if windBorne, palette.isEmpty { return map }
+        // A thin wood is mostly open ground, and open ground takes seed — from
+        // its own few bearers and from over the valley wall alike.
+        let thin = Double(updatedCount) < Double(woodCeiling) * windBorneBelow
+        let fromBearers = bearers.count / bearersPerSapling
+        let wanted = min(mostSaplingsPerPass,
+                         max(thin ? thinWoodSaplings : 1, fromBearers))
 
-        // Close to the parent — a wood thickens at its edge rather than
-        // teleporting a sapling across the valley.
-        let spread = 0.06
-        let at = LocalPoint(
-            x: min(0.98, max(0.02, origin.x + (rng.nextUnit() - 0.5) * spread * 2)),
-            y: min(0.98, max(0.02, origin.y + (rng.nextUnit() - 0.5) * spread * 2)))
-
-        // Never under a roof or on broken ground: a colony does not have to
-        // weed its own streets, and a sapling in a wall would be a tree the
-        // router has to path around for no reason anybody chose.
-        guard isClearGround(map, at) else { return map }
-        return plant(map, species: species, at: at)
+        var updated = map
+        for _ in 0..<wanted {
+            guard updated.trees.count < woodCeiling else { break }
+            let origin: LocalPoint
+            let species: TreeSpecies
+            if windBorne {
+                species = palette[Int(rng.nextUnit() * Double(palette.count)) % palette.count]
+                origin = LocalPoint(x: rng.nextUnit(), y: rng.nextUnit())
+            } else {
+                let parent = bearers[Int(rng.nextUnit() * Double(bearers.count)) % bearers.count]
+                origin = parent.position
+                species = parent.species
+            }
+            // Close to the parent — a wood thickens at its edge rather than
+            // teleporting a sapling across the valley.
+            let spread = 0.06
+            let at = LocalPoint(
+                x: min(0.98, max(0.02, origin.x + (rng.nextUnit() - 0.5) * spread * 2)),
+                y: min(0.98, max(0.02, origin.y + (rng.nextUnit() - 0.5) * spread * 2)))
+            // Never under a roof or on broken ground: a colony does not have to
+            // weed its own streets, and a sapling in a wall would be a tree the
+            // router has to path around for no reason anybody chose. A seed
+            // that falls badly is simply a seed that did not take.
+            guard isClearGround(updated, at) else { continue }
+            updated = plant(updated, species: species, at: at)
+        }
+        return updated
     }
 
     /// Whether a sapling may take root here — nothing standing on it, and not

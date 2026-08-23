@@ -79,6 +79,10 @@ struct ZZSaveDiag {
                        "clay", "brick", "rough_stone"]
             print("shelf: " + raw.map { "\($0) \(s.stockpile[$0, default: 0])" }
                     .joined(separator: "  "))
+            let trees = s.localMap?.trees ?? []
+            let workable = trees.filter { $0.growth >= FloraEngine.minimumWorkableGrowth }.count
+            let bearing = trees.filter { $0.growth >= FloraEngine.bearingGrowth }.count
+            print("wood: \(trees.count) trees, \(workable) workable, \(bearing) bearing")
             let loggers = s.pawns.filter { $0.assignedWork == .logging }.count
             let crafters = s.pawns.filter { $0.assignedWork == .crafting }.count
             let atBench = s.pawns.filter { $0.currentJob?.kind == .craftItem }.count
@@ -98,12 +102,16 @@ struct ZZSaveDiag {
         }
 
         report("as saved", state)
-        // A decade, played the way the game plays itself when nobody is looking.
-        for _ in 0..<10 {
+        // Played the way the game plays itself when nobody is looking.
+        // `EF_YEARS` because a wood comes back over decades, not over a decade:
+        // ten years is long enough to see whether saplings are being set and
+        // far too short to see whether any of them ever reaches an axe.
+        let years = Int(ProcessInfo.processInfo.environment["EF_YEARS"] ?? "") ?? 10
+        for year in 1...years {
             state = BalanceHarness.autoPlay(state, registry: registry)
             state = TickEngine.advance(state, ticks: registry.config.ticksPerYear,
                                        registry: registry).state
+            if year % 10 == 0 { report("\(year) years on", state) }
         }
-        report("ten years on", state)
     }
 }

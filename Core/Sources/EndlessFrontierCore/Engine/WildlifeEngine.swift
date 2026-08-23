@@ -173,11 +173,15 @@ public enum WildlifeEngine {
             // with no callers, so a felled valley stayed bare for ever and the
             // colony lost `timber_bundle` — and with it every building that
             // lists a crafted cost. See `FloraEngine.reseeded`.
-            // Once a season rather than once a shift. A sapling needs thousands
-            // of ticks to be worth an axe, so seeding ten times as often buys
+            // Twice a season rather than once a shift. A sapling needs
+            // hundreds of ticks to be worth an axe, so seeding every shift buys
             // nothing a player could see and costs a scan of the wood each time
-            // (rule 4).
-            if tick % (LaborEngine.staffingInterval * 10) == 0 {
+            // (rule 4) — but once every hundred ticks, against nine loggers
+            // taking half a tree a tick, was a supply two orders of magnitude
+            // under the demand (`FloraEngine.seedStand`). This is the other
+            // half of that fix; the seed stand is what keeps parents alive to
+            // make it possible.
+            if tick % (LaborEngine.staffingInterval * 5) == 0 {
                 map = FloraEngine.reseeded(map, mapSeed: mapSeed, tick: tick)
             }
         }

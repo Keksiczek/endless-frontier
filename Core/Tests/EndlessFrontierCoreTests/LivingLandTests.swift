@@ -51,13 +51,29 @@ struct FloraTests {
         #expect(after.trees.count == 1)
     }
 
+    /// A wood big enough that the axes are allowed to swing.
+    ///
+    /// `FloraEngine.seedStand` keeps a stand of bearing trees back whatever the
+    /// colony needs — a valley felled to its last tree can never grow another,
+    /// and that is the state Keks's save was in. So a test about *how* a tree
+    /// comes down has to stand it in a wood that can spare it. Willows, at
+    /// exactly bearing age: the least timber of any species at the least growth
+    /// that counts, so whatever the test is really about still sorts first.
+    static func stand(_ count: Int = FloraEngine.seedStand + 1) -> [Tree] {
+        (0..<count).map { i in
+            Tree(id: 900 + i, species: .willow,
+                 position: LocalPoint(x: 0.05 + Double(i) * 0.002, y: 0.95),
+                 age: Int(Double(TreeSpecies.willow.maturityTicks) * FloraEngine.bearingGrowth) + 1)
+        }
+    }
+
     /// Work banked in the tree, not in the colonist — the whole reason a tree
     /// is an object.
     @Test("Axe-work stays in the tree between shifts")
     func choppingIsBanked() {
         var map = mapWith(trees: [Tree(id: 0, species: .pine,
                                        position: LocalPoint(x: 0.4, y: 0.4),
-                                       age: TreeSpecies.pine.maturityTicks)])
+                                       age: TreeSpecies.pine.maturityTicks)] + Self.stand())
         map = FloraEngine.fell(map, loggers: 1).map
         let first = map.trees[0].chopped
         #expect(first > 0)
@@ -70,12 +86,12 @@ struct FloraTests {
         var map = mapWith(trees: [Tree(id: 0, species: .oak,
                                        position: LocalPoint(x: 0.4, y: 0.4),
                                        age: TreeSpecies.oak.maturityTicks,
-                                       chopped: 0.99)])
+                                       chopped: 0.99)] + Self.stand())
         let result = FloraEngine.fell(map, loggers: 1)
         map = result.map
         #expect(result.felled == 1)
         #expect(result.timber > 0)
-        #expect(map.trees.isEmpty)
+        #expect(!map.trees.contains { $0.id == 0 })
     }
 
     @Test("Nobody fells a sapling while grown wood is standing")
@@ -84,7 +100,7 @@ struct FloraTests {
             Tree(id: 0, species: .oak, position: LocalPoint(x: 0.4, y: 0.4), age: 0),
             Tree(id: 1, species: .oak, position: LocalPoint(x: 0.5, y: 0.5),
                  age: TreeSpecies.oak.maturityTicks)
-        ])
+        ] + Self.stand())
         let after = FloraEngine.fell(map, loggers: 1).map
         #expect(after.trees.first { $0.id == 0 }?.chopped == 0)
         #expect((after.trees.first { $0.id == 1 }?.chopped ?? 0) > 0)

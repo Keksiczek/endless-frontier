@@ -71,13 +71,17 @@ public enum CraftingEngine {
         let hands = crafters.reduce(0.0) { $0 + effort(of: $1) }
         guard hands > 0 else { return s }
 
-        // **One bench per shop.** A colony with a workshop and a foundry has
-        // two benches and works two things at once; one with three workshops
-        // still has one workshop's worth of queue, because the shops are the
-        // same shop. Before this the whole settlement advanced a single order a
-        // tick however much it had built, so raising a second forge bought
-        // nothing at all.
-        let benches = workableBenches(at: s, researched: researched, registry: registry)
+        // **A bench per shop that stands**, not one per *kind* of shop.
+        //
+        // Keks: *"asi by bylo fajn moct z toho seznamu craftit paralelně."* His
+        // town has seven lumberyards, six bloomeries and a queue seven orders
+        // long, and it worked **one lumberyard order at a time** — because the
+        // bench was keyed on the building's id and a second lumberyard was the
+        // same key. Building the sixth one bought exactly nothing, which is the
+        // same fault the note below this used to describe having fixed and only
+        // half fixed.
+        let benches = workableBenches(at: s, researched: researched,
+                                      crafters: crafters.count, registry: registry)
         guard !benches.isEmpty else { return s }
         // The hands are split between the benches that have work. Somebody has
         // to be standing at each of them.
@@ -126,9 +130,19 @@ public enum CraftingEngine {
     /// shelf is bare is skipped rather than blocking the ones behind it: a
     /// colony waiting on iron still makes its arrows.
     static func workableBenches(
-        at settlement: Settlement, researched: Set<String>, registry: GameDataRegistry
+        at settlement: Settlement, researched: Set<String>,
+        crafters: Int = 1, registry: GameDataRegistry
     ) -> [Int] {
-        var taken: Set<String> = []
+        // How many of each shop are actually standing — that is how many orders
+        // of that kind can be worked at once. A yard with no shop at all takes
+        // as many hands as the colony has crafters: stitching leather under a
+        // tree needs a person, not a building.
+        var room: [String: Int] = [:]
+        for instance in settlement.buildings {
+            room[instance.definitionID, default: 0] += instance.count
+        }
+        room[""] = max(1, crafters)
+        var taken: [String: Int] = [:]
         var picked: [Int] = []
         // **An order with an end takes the bench first.**
         //
@@ -159,9 +173,16 @@ public enum CraftingEngine {
             // Recipes needing no shop share one imaginary bench — a colony
             // stitching leather in its yard is not two colonies.
             let bench = recipe.requiresBuilding ?? ""
-            guard !taken.contains(bench) else { continue }
-            taken.insert(bench)
+            guard taken[bench, default: 0] < room[bench, default: 0] else { continue }
+            taken[bench, default: 0] += 1
             picked.append(entry.offset)
+            // **And never more benches than there are people to stand at
+            // them.** The hands are split evenly across the benches that have
+            // work, so opening a ninth bench for five crafters does not make
+            // the colony faster — it makes every order crawl, and a batch
+            // somebody is waiting on never lands (rule 15's shape: a rate
+            // divided by an entity count the player can grow without limit).
+            if picked.count >= max(1, crafters) { break }
         }
         return picked
     }
