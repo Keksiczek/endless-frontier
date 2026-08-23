@@ -8,7 +8,7 @@
     "era": "early_settlement",
     "requires": [],
     "cost": {
-      "knowledge": 90
+      "knowledge": 220
     },
     "effects": [
       {
@@ -32,7 +32,7 @@
       "basic_tools"
     ],
     "cost": {
-      "knowledge": 150
+      "knowledge": 380
     },
     "effects": [
       {
@@ -62,7 +62,7 @@
       "basic_tools"
     ],
     "cost": {
-      "knowledge": 180
+      "knowledge": 450
     },
     "effects": [
       {
@@ -92,7 +92,7 @@
       "basic_tools"
     ],
     "cost": {
-      "knowledge": 360
+      "knowledge": 900
     },
     "effects": [
       {
@@ -120,7 +120,7 @@
       "writing"
     ],
     "cost": {
-      "knowledge": 440
+      "knowledge": 1100
     },
     "effects": [
       {
@@ -149,7 +149,7 @@
       "currency"
     ],
     "cost": {
-      "knowledge": 800
+      "knowledge": 2400
     },
     "effects": [
       {
@@ -181,7 +181,7 @@
       "basic_tools"
     ],
     "cost": {
-      "knowledge": 105
+      "knowledge": 260
     },
     "effects": [
       {
@@ -211,7 +211,7 @@
       "bronze_tools"
     ],
     "cost": {
-      "knowledge": 480
+      "knowledge": 1200
     },
     "effects": [
       {
@@ -249,7 +249,7 @@
       "writing"
     ],
     "cost": {
-      "knowledge": 520
+      "knowledge": 1300
     },
     "effects": [
       {
@@ -280,7 +280,7 @@
       "currency"
     ],
     "cost": {
-      "knowledge": 880
+      "knowledge": 2640
     },
     "effects": [
       {
@@ -310,7 +310,7 @@
       "currency"
     ],
     "cost": {
-      "knowledge": 800
+      "knowledge": 2400
     },
     "effects": [
       {
@@ -334,7 +334,7 @@
       "currency"
     ],
     "cost": {
-      "knowledge": 760
+      "knowledge": 2280
     },
     "effects": [
       {
@@ -366,7 +366,7 @@
       "engineering"
     ],
     "cost": {
-      "knowledge": 1440
+      "knowledge": 3600
     },
     "effects": [
       {
@@ -394,7 +394,7 @@
       "steam_power"
     ],
     "cost": {
-      "knowledge": 1680
+      "knowledge": 4200
     },
     "effects": [
       {
@@ -418,7 +418,7 @@
       "machining"
     ],
     "cost": {
-      "knowledge": 1920
+      "knowledge": 4800
     },
     "effects": [
       {
@@ -448,7 +448,7 @@
       "machining"
     ],
     "cost": {
-      "knowledge": 2000
+      "knowledge": 5000
     },
     "effects": [
       {
@@ -478,7 +478,7 @@
       "engineering"
     ],
     "cost": {
-      "knowledge": 1840
+      "knowledge": 4600
     },
     "effects": [
       {
@@ -512,7 +512,7 @@
       "steam_power"
     ],
     "cost": {
-      "knowledge": 2480
+      "knowledge": 5460
     },
     "effects": [
       {
@@ -542,7 +542,7 @@
       "chemistry"
     ],
     "cost": {
-      "knowledge": 2560
+      "knowledge": 5630
     },
     "effects": [
       {
@@ -575,7 +575,7 @@
       "combustion"
     ],
     "cost": {
-      "knowledge": 3040
+      "knowledge": 6690
     },
     "effects": [
       {
@@ -604,7 +604,7 @@
       "chemistry"
     ],
     "cost": {
-      "knowledge": 2800
+      "knowledge": 6160
     },
     "effects": [
       {
@@ -638,7 +638,7 @@
       "electricity"
     ],
     "cost": {
-      "knowledge": 3280
+      "knowledge": 7220
     },
     "effects": [
       {
@@ -669,7 +669,7 @@
       "mathematics"
     ],
     "cost": {
-      "knowledge": 3920
+      "knowledge": 8620
     },
     "effects": [
       {
@@ -703,7 +703,7 @@
       "electricity"
     ],
     "cost": {
-      "knowledge": 3300
+      "knowledge": 7260
     },
     "effects": [
       {
@@ -732,7 +732,7 @@
       "computing"
     ],
     "cost": {
-      "knowledge": 3900
+      "knowledge": 8580
     },
     "effects": [
       {
@@ -761,7 +761,7 @@
       "computing"
     ],
     "cost": {
-      "knowledge": 3200
+      "knowledge": 7040
     },
     "effects": [
       {
@@ -786,7 +786,7 @@
       "robotics"
     ],
     "cost": {
-      "knowledge": 3600
+      "knowledge": 7920
     },
     "effects": [
       {
@@ -821,7 +821,7 @@
       "robotics"
     ],
     "cost": {
-      "knowledge": 4000
+      "knowledge": 8800
     },
     "effects": [
       {
@@ -853,7 +853,7 @@
       "fusion_power"
     ],
     "cost": {
-      "knowledge": 4400
+      "knowledge": 9680
     },
     "effects": [
       {
@@ -877,7 +877,7 @@
       "scholarship"
     ],
     "cost": {
-      "knowledge": 5000
+      "knowledge": 15000
     },
     "repeatable": true,
     "effects": [
@@ -904,7 +904,7 @@
       "currency"
     ],
     "cost": {
-      "knowledge": 4400
+      "knowledge": 13200
     },
     "repeatable": true,
     "effects": [
@@ -929,7 +929,7 @@
     "era": "ancient",
     "requires": [],
     "cost": {
-      "knowledge": 900
+      "knowledge": 2250
     },
     "effects": [],
     "description": {
@@ -946,7 +946,7 @@
     "era": "ancient",
     "requires": [],
     "cost": {
-      "knowledge": 700
+      "knowledge": 1750
     },
     "effects": [
       {
@@ -970,7 +970,7 @@
       "agriculture"
     ],
     "cost": {
-      "knowledge": 3200
+      "knowledge": 9600
     },
     "effects": [
       {
@@ -997,7 +997,7 @@
       "engineering"
     ],
     "cost": {
-      "knowledge": 3000
+      "knowledge": 9000
     },
     "effects": [
       {
@@ -1024,7 +1024,7 @@
       "masonry"
     ],
     "cost": {
-      "knowledge": 3400
+      "knowledge": 10200
     },
     "effects": [
       {
@@ -1051,7 +1051,7 @@
       "scholarship"
     ],
     "cost": {
-      "knowledge": 3600
+      "knowledge": 10800
     },
     "effects": [
       {
@@ -1066,5 +1066,612 @@
       "cs": "Co se bylinkáři naučí každou zimu, zapsané a znovu naučené."
     },
     "repeatable": true
+  },
+  {
+    "id": "snares",
+    "name": {
+      "en": "Snares and Traps",
+      "cs": "Oka a pasti"
+    },
+    "era": "early_settlement",
+    "requires": [
+      "basic_tools"
+    ],
+    "cost": {
+      "knowledge": 260
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.huntYield",
+        "delta": 0.2,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "A line of snares works the wood while the hunters sleep.",
+      "cs": "Řada ok pracuje v lese, i když lovci spí."
+    }
+  },
+  {
+    "id": "porterage",
+    "name": {
+      "en": "Baskets and Straps",
+      "cs": "Nůše a řemení"
+    },
+    "era": "early_settlement",
+    "requires": [
+      "basic_tools"
+    ],
+    "cost": {
+      "knowledge": 300
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.carryCapacity",
+        "delta": 0.2,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "A back-basket and a strap: the same walk, twice the load.",
+      "cs": "Nůše na zádech a řemen přes čelo — stejná cesta, dvakrát tolik."
+    }
+  },
+  {
+    "id": "butchery",
+    "name": {
+      "en": "Butchery",
+      "cs": "Řeznictví"
+    },
+    "era": "ancient",
+    "requires": [
+      "snares"
+    ],
+    "cost": {
+      "knowledge": 900
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.huntYield",
+        "delta": 0.25,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "Nothing of a carcass is left in the wood but the bones.",
+      "cs": "Z ulovené zvěře nezůstane v lese nic než kosti."
+    }
+  },
+  {
+    "id": "yokes",
+    "name": {
+      "en": "Yokes and Litters",
+      "cs": "Jha a nosítka"
+    },
+    "era": "ancient",
+    "requires": [
+      "porterage",
+      "the_wheel"
+    ],
+    "cost": {
+      "knowledge": 1100
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.carryCapacity",
+        "delta": 0.2,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "A yoke shares a load between two shoulders, or two people.",
+      "cs": "Jho rozdělí náklad mezi dvě ramena — nebo dva lidi."
+    }
+  },
+  {
+    "id": "apprenticeship",
+    "name": {
+      "en": "Apprenticeship",
+      "cs": "Vyučení"
+    },
+    "era": "ancient",
+    "requires": [
+      "writing"
+    ],
+    "cost": {
+      "knowledge": 1200
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.trainingSpeed",
+        "delta": 0.25,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "A trade learned beside somebody who knows it, not alone.",
+      "cs": "Řemeslo se učí vedle toho, kdo je umí — ne samo."
+    }
+  },
+  {
+    "id": "pit_props",
+    "name": {
+      "en": "Pit Props",
+      "cs": "Důlní výdřeva"
+    },
+    "era": "ancient",
+    "requires": [
+      "bronze_tools"
+    ],
+    "cost": {
+      "knowledge": 1300
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.gatherYield",
+        "delta": 0.2,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "Timbered galleries: a face that can be worked all winter.",
+      "cs": "Vydřevená chodba — porub, který vydrží celou zimu."
+    }
+  },
+  {
+    "id": "ramparts",
+    "name": {
+      "en": "Ramparts and Ditches",
+      "cs": "Valy a příkopy"
+    },
+    "era": "medieval",
+    "requires": [
+      "masonry"
+    ],
+    "cost": {
+      "knowledge": 2400
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.wallStrength",
+        "delta": 0.3,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "Earth thrown up before the wall is worth as much as the wall.",
+      "cs": "Val nasypaný před hradbou vydá za hradbu samu."
+    }
+  },
+  {
+    "id": "crop_rotation",
+    "name": {
+      "en": "Crop Rotation",
+      "cs": "Trojpolní systém"
+    },
+    "era": "medieval",
+    "requires": [
+      "agriculture",
+      "guilds"
+    ],
+    "cost": {
+      "knowledge": 2600
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.cropYield",
+        "delta": 0.18,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "Three fields, one of them resting: the ground keeps its heart.",
+      "cs": "Tři pole, jedno vždy ladem — půda si udrží sílu."
+    }
+  },
+  {
+    "id": "deep_shafts",
+    "name": {
+      "en": "Deep Shafts",
+      "cs": "Hlubinné šachty"
+    },
+    "era": "medieval",
+    "requires": [
+      "engineering"
+    ],
+    "cost": {
+      "knowledge": 2900
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.gatherYield",
+        "delta": 0.25,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "Below the weathered rock the seams run clean.",
+      "cs": "Pod zvětralou skálou jdou žíly čistě."
+    }
+  },
+  {
+    "id": "masters_and_journeymen",
+    "name": {
+      "en": "Masters and Journeymen",
+      "cs": "Mistři a tovaryši"
+    },
+    "era": "medieval",
+    "requires": [
+      "guilds",
+      "apprenticeship"
+    ],
+    "cost": {
+      "knowledge": 3000
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.trainingSpeed",
+        "delta": 0.3,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "A guild that examines its own turns hands into craftsmen faster.",
+      "cs": "Cech, který zkouší své vlastní, vychová řemeslníka dřív."
+    }
+  },
+  {
+    "id": "game_laws",
+    "name": {
+      "en": "Game Laws",
+      "cs": "Lovecká práva"
+    },
+    "era": "medieval",
+    "requires": [
+      "butchery"
+    ],
+    "cost": {
+      "knowledge": 2700
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.huntYield",
+        "delta": 0.2,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "A wood hunted by rule is a wood that still holds game in twenty years.",
+      "cs": "Les lovený podle pravidel má zvěř i za dvacet let."
+    }
+  },
+  {
+    "id": "bastions",
+    "name": {
+      "en": "Bastions",
+      "cs": "Bastiony"
+    },
+    "era": "early_industrial",
+    "requires": [
+      "ramparts",
+      "engineering"
+    ],
+    "cost": {
+      "knowledge": 3800
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.wallStrength",
+        "delta": 0.35,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "Angled works, so nothing that comes at the wall is unwatched.",
+      "cs": "Šikmá opevnění — na hradbu se nedá jít odnikud nepozorovaně."
+    }
+  },
+  {
+    "id": "blasting",
+    "name": {
+      "en": "Blasting",
+      "cs": "Trhaviny"
+    },
+    "era": "early_industrial",
+    "requires": [
+      "chemistry"
+    ],
+    "cost": {
+      "knowledge": 4200
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.gatherYield",
+        "delta": 0.35,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "A charge does in a morning what a season of picks could not.",
+      "cs": "Nálož zvládne za dopoledne, co sezona krumpáčů nedokázala."
+    }
+  },
+  {
+    "id": "wagonways",
+    "name": {
+      "en": "Wagonways",
+      "cs": "Povozní dráhy"
+    },
+    "era": "early_industrial",
+    "requires": [
+      "railways",
+      "yokes"
+    ],
+    "cost": {
+      "knowledge": 4400
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.carryCapacity",
+        "delta": 0.3,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "Rails laid to the face: a cart that runs where a cart could not.",
+      "cs": "Koleje až k porubu — vozík projede tam, kde povoz ne."
+    }
+  },
+  {
+    "id": "technical_schools",
+    "name": {
+      "en": "Technical Schools",
+      "cs": "Průmyslové školy"
+    },
+    "era": "early_industrial",
+    "requires": [
+      "scholarship",
+      "masters_and_journeymen"
+    ],
+    "cost": {
+      "knowledge": 4600
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.trainingSpeed",
+        "delta": 0.3,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "A trade taught in a room before it is learned at the bench.",
+      "cs": "Řemeslo vyučené ve škole dřív, než se zkusí u ponku."
+    }
+  },
+  {
+    "id": "refrigeration",
+    "name": {
+      "en": "Refrigeration",
+      "cs": "Chlazení"
+    },
+    "era": "modern",
+    "requires": [
+      "electricity"
+    ],
+    "cost": {
+      "knowledge": 6200
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.huntYield",
+        "delta": 0.3,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "Meat that keeps is meat that was not wasted.",
+      "cs": "Maso, které vydrží, je maso, které nepřišlo nazmar."
+    }
+  },
+  {
+    "id": "hydraulics",
+    "name": {
+      "en": "Hydraulics",
+      "cs": "Hydraulika"
+    },
+    "era": "modern",
+    "requires": [
+      "combustion"
+    ],
+    "cost": {
+      "knowledge": 6600
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.gatherYield",
+        "delta": 0.4,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "A ram that never tires, working the face all night.",
+      "cs": "Kladivo, které se neunaví, buší do porubu celou noc."
+    }
+  },
+  {
+    "id": "palletisation",
+    "name": {
+      "en": "Palletisation",
+      "cs": "Paletizace"
+    },
+    "era": "modern",
+    "requires": [
+      "mass_production"
+    ],
+    "cost": {
+      "knowledge": 6800
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.carryCapacity",
+        "delta": 0.4,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "Everything on a pallet, and one pair of hands moves a wagonload.",
+      "cs": "Všechno na paletě — a jeden člověk uveze celý vůz."
+    }
+  },
+  {
+    "id": "reinforced_concrete",
+    "name": {
+      "en": "Reinforced Concrete",
+      "cs": "Železobeton"
+    },
+    "era": "modern",
+    "requires": [
+      "chemistry",
+      "bastions"
+    ],
+    "cost": {
+      "knowledge": 7000
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.wallStrength",
+        "delta": 0.4,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "A wall with iron in its bones.",
+      "cs": "Hradba, která má v kostech železo."
+    }
+  },
+  {
+    "id": "exosuits",
+    "name": {
+      "en": "Exosuits",
+      "cs": "Exoskelety"
+    },
+    "era": "near_future",
+    "requires": [
+      "robotics"
+    ],
+    "cost": {
+      "knowledge": 9000
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.carryCapacity",
+        "delta": 0.5,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "A frame worn on the body: a load is a matter of will, not of back.",
+      "cs": "Rám nesený na těle — náklad je otázka vůle, ne zad."
+    }
+  },
+  {
+    "id": "autonomous_mining",
+    "name": {
+      "en": "Autonomous Mining",
+      "cs": "Autonomní těžba"
+    },
+    "era": "near_future",
+    "requires": [
+      "robotics"
+    ],
+    "cost": {
+      "knowledge": 9400
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.gatherYield",
+        "delta": 0.5,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "The face is worked whether or not anybody is awake.",
+      "cs": "Porub jede, ať už je někdo vzhůru, nebo ne."
+    }
+  },
+  {
+    "id": "neural_tutors",
+    "name": {
+      "en": "Neural Tutors",
+      "cs": "Neurální učitelé"
+    },
+    "era": "near_future",
+    "requires": [
+      "artificial_intelligence",
+      "technical_schools"
+    ],
+    "cost": {
+      "knowledge": 9800
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.trainingSpeed",
+        "delta": 0.5,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "A lifetime of a trade, taught in a winter.",
+      "cs": "Celoživotní řemeslo, vyučené za jednu zimu."
+    }
+  },
+  {
+    "id": "force_barriers",
+    "name": {
+      "en": "Force Barriers",
+      "cs": "Silová pole"
+    },
+    "era": "near_future",
+    "requires": [
+      "fusion_power",
+      "reinforced_concrete"
+    ],
+    "cost": {
+      "knowledge": 10200
+    },
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "global.wallStrength",
+        "delta": 0.5,
+        "mode": "additive"
+      }
+    ],
+    "description": {
+      "en": "A wall that is only there when something comes at it.",
+      "cs": "Hradba, která je tam jen ve chvíli, kdy na ni někdo jde."
+    }
   }
 ]

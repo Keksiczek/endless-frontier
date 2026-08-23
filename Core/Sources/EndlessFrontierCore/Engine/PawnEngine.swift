@@ -58,7 +58,11 @@ public enum PawnEngine {
         laws: LawModifiers = LawModifiers(),
         climate: Climate = .temperate,
         /// What the colony's studies have done to how fast a hurt body mends.
-        recoveryFactor: Double = 1
+        recoveryFactor: Double = 1,
+        /// …and to how fast somebody gets good at their trade
+        /// (`ResearchStat.trainingSpeed`). The slowest-acting study in the
+        /// game: it changes nothing this year and everything in twenty.
+        trainingFactor: Double = 1
     ) -> Settlement {
         guard !settlement.pawns.isEmpty else { return settlement }
         var s = settlement
@@ -192,7 +196,7 @@ public enum PawnEngine {
                         * seasonFactor * gatherFactor * lawFactor * ableness
                 }
 
-                var xp = (s.pawns[i].skillXP[work] ?? 0) + xpPerTickWorking
+                var xp = (s.pawns[i].skillXP[work] ?? 0) + xpPerTickWorking * trainingFactor
                 let level = s.pawns[i].skill(work)
                 if xp >= xpPerLevel, level < maxSkill {
                     s.pawns[i].skills[work] = level + 1

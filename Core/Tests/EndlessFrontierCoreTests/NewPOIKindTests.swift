@@ -1344,6 +1344,123 @@ struct ResearchStatTests {
 
     /// A stat nothing in `techs.json` ever grants is a stat the player can
     /// never have — the same fault from the content side.
+    /// **The guard the file's own documentation promised and nobody wrote.**
+    ///
+    /// `ResearchStat` says "a test here fails if a case is never read by any
+    /// engine". Every seam below is written by hand, which is a fine test and
+    /// a bad *guarantee*: the next stat added is only covered if somebody
+    /// remembers to add a test for it. This walks the engine sources instead,
+    /// the way the app's string audit walks its views — a declared lever that
+    /// nothing multiplies is a lie on the science screen.
+    @Test("Every research stat is read by an engine, not merely declared")
+    func everyStatHasASeam() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/EndlessFrontierCore")
+        var sources: [String] = []
+        let walk = FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil)
+        while let url = walk?.nextObject() as? URL {
+            guard url.pathExtension == "swift",
+                  // Declaring a case is not reading it.
+                  url.lastPathComponent != "ResearchStat.swift" else { continue }
+            sources.append(try String(contentsOf: url, encoding: .utf8))
+        }
+        #expect(sources.count > 40, "found \(sources.count) engine sources — the path is wrong")
+
+        for stat in ResearchStat.allCases {
+            let read = sources.contains {
+                $0.contains("researchFactor(.\(stat.rawValue))")
+                    || $0.contains("researchBonus(.\(stat.rawValue))")
+                    || $0.contains("research[.\(stat.rawValue)]")
+            }
+            #expect(read, """
+                `\(stat.rawValue)` is declared and never read: a study that \
+                moved it would change nothing, and the science screen would \
+                say it had.
+                """)
+        }
+    }
+
+    /// The hunters' half of the food chain, which had no study touching it
+    /// until the tree turned out to be exhausted by year seventy.
+    @Test("A studied colony brings more home off the same kill")
+    func huntYieldReachesTheTable() throws {
+        let reg = try GameDataRegistry.bundled()
+        func hunted(_ factor: Double) -> Double {
+            var world = GameWorldFactory.newGame(registry: reg, seed: 4242)
+            for index in world.settlements[0].pawns.indices {
+                world.settlements[0].pawns[index].assignedWork = .hunting
+            }
+            world.settlements[0].storage[.food] = 0
+            for tick in 1...400 {
+                world.settlements[0] = WildlifeEngine.advanceOneTick(
+                    world.settlements[0], registry: reg, tick: tick, era: .earlySettlement,
+                    mapSeed: world.mapSeed, huntYield: factor)
+            }
+            return world.settlements[0].storage[.food]
+        }
+        let plain = hunted(1), studied = hunted(2)
+        #expect(plain > 0, "nothing was hunted at all — this fixture measures nothing")
+        #expect(studied > plain * 1.5, "\(studied) against \(plain)")
+    }
+
+    /// One pair of hands, one trip: what a study of yokes and barrows is worth.
+    @Test("A studied colony carries more in one trip")
+    func carryCapacityReachesTheLoad() throws {
+        let reg = try GameDataRegistry.bundled()
+        let world = GameWorldFactory.newGame(registry: reg, seed: 4242)
+        let plain = HaulEngine.carryLimit(world.settlements[0], registry: reg)
+        let studied = HaulEngine.carryLimit(world.settlements[0], registry: reg, learned: 2)
+        #expect(studied > plain, "\(studied) against \(plain)")
+        // …and a study that has not yet bought a whole armful buys nothing,
+        // rather than a fraction of a log.
+        #expect(HaulEngine.carryLimit(world.settlements[0], registry: reg, learned: 1.01) == plain)
+    }
+
+    /// Studied fortification: the same wall, worth more when they come.
+    @Test("A studied colony's wall counts for more")
+    func wallStrengthReachesTheDefence() throws {
+        let reg = try GameDataRegistry.bundled()
+        func defence(_ factor: Double) -> Double {
+            var world = GameWorldFactory.newGame(registry: reg, seed: 4242)
+            world.statModifiers[ResearchStat.wallStrength.rawValue] = factor - 1
+            world.settlements[0].buildings.append(
+                BuildingInstance(definitionID: "palisade", count: 2))
+            for tick in 1...120 {
+                world.tick = tick
+                world = ResourceLoop.advanceOneTick(world, registry: reg)
+            }
+            return world.settlements[0].stats.defense
+        }
+        let plain = defence(1), studied = defence(2)
+        #expect(plain > 0, "the fixture built no wall at all")
+        #expect(studied > plain, "\(studied) against \(plain)")
+    }
+
+    /// The slowest-acting study in the game: nothing this year, everything in
+    /// twenty.
+    @Test("A studied colony gets good at its trades sooner")
+    func trainingSpeedReachesTheSkill() throws {
+        let reg = try GameDataRegistry.bundled()
+        func skill(_ factor: Double) -> Int {
+            var settlement = GameWorldFactory.newGame(registry: reg, seed: 4242).settlements[0]
+            for index in settlement.pawns.indices {
+                settlement.pawns[index].assignedWork = .logging
+                settlement.pawns[index].skills[.logging] = 0
+                settlement.pawns[index].skillXP[.logging] = 0
+            }
+            for tick in 1...600 {
+                settlement = PawnEngine.advanceOneTick(
+                    settlement, registry: reg, tick: tick,
+                    gatheringFactors: [.logging: 1], trainingFactor: factor)
+            }
+            return settlement.pawns.reduce(0) { $0 + $1.skill(.logging) }
+        }
+        let plain = skill(1), studied = skill(3)
+        #expect(studied > plain, "\(studied) against \(plain)")
+    }
+
     @Test("Every research stat is granted by some tech")
     func everyStatIsGrantable() throws {
         let reg = try GameDataRegistry.bundled()

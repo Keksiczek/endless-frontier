@@ -347,7 +347,12 @@ public enum ResourceLoop {
         // …and whatever is chained at the gate. A wolf that stayed is worth
         // several spears, which is why gentling one is worth a season.
         let kennel = TamingEngine.bonuses(s)
-        let defenseTarget = buildingDefense + ItemEngine.colonyDefenseBonus(s, registry: registry)
+        // What the wall is worth is what the colony *built* times what it has
+        // learned about building walls (`ResearchStat.wallStrength`) — studied
+        // fortification, rather than another row in the build menu. Applied to
+        // the built part only: a study of ramparts does not sharpen the dog.
+        let defenseTarget = buildingDefense * (research[.wallStrength] ?? 1)
+            + ItemEngine.colonyDefenseBonus(s, registry: registry)
             + profile.defenseFlat + laws.defenseFlat + kennel.defense
         s.stats.defense += (defenseTarget - s.stats.defense) * 0.15
 
@@ -423,6 +428,16 @@ public enum ResourceLoop {
         if shut < 1 {
             for work in WorkKind.allCases { factors[work] = (factors[work] ?? 1) * shut }
         }
+        // What the colony has *learned* about taking things out of the ground
+        // (`ResearchStat.gatherYield`) — a better axe-head, a shored adit, a
+        // knowledge of where the herbs are. Applied to the trades that work
+        // the land, and not to the ones that make things out of what they
+        // brought back: a study of forestry is not a study of baking.
+        if let learned = research[.gatherYield], learned != 1 {
+            for work in [WorkKind.logging, .mining, .foraging] {
+                factors[work] = (factors[work] ?? 1) * learned
+            }
+        }
         // 8c. Their own business — a need past its threshold sending somebody
         //     to the granary or to a fire — has moved to `ActionLoop`, which
         //     runs eight times inside this tick and *before* it. So a meal
@@ -432,7 +447,8 @@ public enum ResourceLoop {
         s = PawnEngine.advanceOneTick(s, registry: registry, tick: tick,
                                       gatheringFactors: factors, laws: laws,
                                       climate: climate,
-                                      recoveryFactor: research[.recovery] ?? 1)
+                                      recoveryFactor: research[.recovery] ?? 1,
+                                      trainingFactor: research[.trainingSpeed] ?? 1)
         // 9b. Bleeding, mending, and the healers doing the mending. After the
         //     pawns' own tick so a wound taken this minute is bleeding by the
         //     next one — and so the healer's trade finally has something to do.
@@ -502,7 +518,8 @@ public enum ResourceLoop {
 
         // 11. Wildlife: the herd grows and is culled; predators may strike.
         s = WildlifeEngine.advanceOneTick(s, registry: registry, tick: tick, era: era,
-                                          mapSeed: mapSeed, climate: climate)
+                                          mapSeed: mapSeed, climate: climate,
+                                          huntYield: research[.huntYield] ?? 1)
 
         // 11b. Village life: chats, quarrels, weddings — bonds that feed the
         //      recreation need and fill the journal.

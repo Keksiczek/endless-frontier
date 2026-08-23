@@ -598,6 +598,13 @@ final class GameViewModel {
         return settlement.pawns.count { $0.assignedWork == work }
     }
 
+    /// A prisoner the colony is holding, by id. They are not in `pawns` —
+    /// `Settlement.population` is derived from that array — so nothing else
+    /// could look them up either.
+    func captive(_ id: UUID) -> Captive? {
+        selectedSettlement?.captives.first { $0.id == id }
+    }
+
     /// The outlaws living in this hex, if any. Not a people — they have no
     /// standing and there is nothing to negotiate (see `OutlawCamp`) — so the
     /// map says who they are and offers exactly one thing to do about them.

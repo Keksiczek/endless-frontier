@@ -213,6 +213,12 @@ enum SettlementRenderer {
         // you cannot see is a mark you do not believe in.
         SettlementMarks.draw(&context, rect: rect, settlement: settlement,
                              map: map, time: time, zoom: zoom)
+        // …and the people the colony is holding. They have been in the save
+        // since `CaptiveEngine` was written and on the screen never.
+        SettlementCaptives.draw(&context, rect: rect, settlement: settlement,
+                                map: map, registry: registry, time: time, zoom: zoom,
+                                ticksPerYear: registry.config.ticksPerYear,
+                                selected: selectedPawnID)
         deposits(&context, rect: rect, map: map, season: season, zoom: zoom,
                  showLabels: showLabels)
         pois(&context, rect: rect, map: map, time: time, showLabels: showLabels,

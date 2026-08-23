@@ -49,7 +49,10 @@ public enum WildlifeEngine {
         tick: Int,
         era: Era,
         mapSeed: UInt64,
-        climate: Climate = .temperate
+        climate: Climate = .temperate,
+        /// What the colony has learned about hunting and butchering
+        /// (`ResearchStat.huntYield`). 1 when nothing has been studied.
+        huntYield: Double = 1
     ) -> Settlement {
         guard var map = settlement.localMap else { return settlement }
         var s = settlement
@@ -139,7 +142,8 @@ public enum WildlifeEngine {
         if map.wildlife.usesEntities {
             if tick % AnimalEngine.thinkInterval == 0 {
                 map = huntWithParty(&s, map: map, registry: registry, tick: tick,
-                                    mapSeed: mapSeed, ticksPerYear: ticksPerYear)
+                                    mapSeed: mapSeed, ticksPerYear: ticksPerYear,
+                                    huntYield: huntYield)
                 // And the wild moves: prey drift with the herd and bolt from
                 // anything that means them harm — hunters included, which is
                 // why a herd worked hard drifts to the far side of the valley.
@@ -195,7 +199,7 @@ public enum WildlifeEngine {
     /// brings back meat and hides — or somebody comes back mauled.
     static func huntWithParty(
         _ s: inout Settlement, map: LocalMap, registry: GameDataRegistry,
-        tick: Int, mapSeed: UInt64, ticksPerYear: Int
+        tick: Int, mapSeed: UInt64, ticksPerYear: Int, huntYield: Double = 1
     ) -> LocalMap {
         let capacity = map.wildlife.preyCapacity
         guard capacity > 0,
@@ -223,12 +227,15 @@ public enum WildlifeEngine {
         s.huntPhases = bag.phases
         guard !bag.kills.isEmpty || !bag.wounds.isEmpty else { return bag.map }
 
-        // The carcass, banked: meat on the table and a hide off its back.
+        // The carcass, banked: meat on the table and a hide off its back —
+        // and what a colony has learned about butchering it (`.huntYield`).
         if bag.meat > 0 {
-            s.storage[.food] = min(s.storageCapacity[.food], s.storage[.food] + bag.meat)
+            s.storage[.food] = min(s.storageCapacity[.food],
+                                   s.storage[.food] + bag.meat * huntYield)
         }
         if bag.hides > 0 {
-            s.stockpile[ResourceLoop.hideItemID, default: 0] += bag.hides
+            s.stockpile[ResourceLoop.hideItemID, default: 0]
+                += Int((Double(bag.hides) * huntYield).rounded())
         }
         // And whoever got it wrong.
         for wound in bag.wounds {

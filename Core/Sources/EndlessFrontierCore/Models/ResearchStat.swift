@@ -49,10 +49,40 @@ public enum ResearchStat: String, CaseIterable, Sendable {
     /// being a season and being a year.
     case recovery
 
+    // **The five added when the tree turned out to be too short to be a tree.**
+    //
+    // Measured (`EF_PROBE=1 … ResearchProbe`): a colony finishes **all 37
+    // techs by year 70** and then banks knowledge for a century and a half
+    // with nothing to buy. The instinct is to write more techs, and it is
+    // wrong on its own: with six levers in the whole game, twenty more studies
+    // would have been twenty more `+1 knowledgeOutput` — research that
+    // produces research, which is the fault this file was written to end.
+    // A tree is only as long as the number of *different things* a study can
+    // change.
+
+    /// What a kill brings home. Meat on the table and a hide off its back —
+    /// the hunters' half of the food chain, which had no study touching it.
+    case huntYield
+    /// What the axe and the pick take out of a day: timber at the stump,
+    /// stone and ore at the face, herbs out of the wood.
+    case gatherYield
+    /// How much one pair of hands carries in one trip. The difference between
+    /// a colony that is behind on its hauling and one that is not.
+    case carryCapacity
+    /// What the wall is worth when somebody comes over the ground at it.
+    /// Studied fortification, rather than another building to raise.
+    case wallStrength
+    /// How fast a colonist gets good at their trade. The slowest-acting study
+    /// in the game and the one that compounds — a colony that studies teaching
+    /// is a colony of masters twenty years later.
+    case trainingSpeed
+
     public var kind: Kind {
         switch self {
         case .knowledgeOutput, .influenceOutput: return .addedToOutput
-        case .cropYield, .buildSpeed, .buildingWear, .recovery: return .factor
+        case .cropYield, .buildSpeed, .buildingWear, .recovery,
+             .huntYield, .gatherYield, .carryCapacity, .wallStrength, .trainingSpeed:
+            return .factor
         }
     }
 

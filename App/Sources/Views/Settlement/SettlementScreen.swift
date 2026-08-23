@@ -267,6 +267,14 @@ struct SettlementScreen: View {
                         withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                     })
                 .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if case let .captive(id) = selection, let held = game.captive(id) {
+                CaptiveCard(
+                    captive: held, ticksPerYear: game.ticksPerYear,
+                    heldYears: max(0, (game.world.tick - held.takenTick) / max(1, game.ticksPerYear))
+                ) {
+                    withAnimation(.easeOut(duration: 0.15)) { selection = .none }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if case let .animal(id) = selection, let found = game.animal(id) {
                 AnimalInspectorCard(
                     animal: found.animal, kept: found.kept,

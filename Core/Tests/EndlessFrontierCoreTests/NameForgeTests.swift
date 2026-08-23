@@ -22,13 +22,50 @@ struct NameForgeTests {
 
     @Test("Region pools have identical sizes in both languages")
     func regionPoolParity() {
-        #expect(NameForge.csRegionStems.count == NameForge.enRegionStems.count)
-        #expect(NameForge.csRegionSuffixes.count == NameForge.enRegionSuffixes.count)
+        #expect(NameForge.csRegionStems.count == NameForge.regionFirsts)
+        #expect(NameForge.enRegionStems.count == NameForge.regionFirsts)
+        #expect(NameForge.csRegionAdjectives.count == NameForge.regionFirsts)
+        #expect(NameForge.enRegionAdjectives.count == NameForge.regionFirsts)
+        #expect(NameForge.csRegionSuffixes.count == NameForge.regionSeconds)
+        #expect(NameForge.enRegionSuffixes.count == NameForge.regionSeconds)
+        #expect(NameForge.csRegionNouns.count == NameForge.regionSeconds)
+        #expect(NameForge.enRegionNouns.count == NameForge.regionSeconds)
         #expect(NameForge.csRegionEpithets.count == NameForge.enRegionEpithets.count)
         #expect(NameForge.regionNameSpace
-                == NameForge.csRegionStems.count
-                * NameForge.csRegionSuffixes.count
-                * NameForge.csRegionEpithets.count)
+                == NameForge.regionShapes * NameForge.regionFirsts * NameForge.regionSeconds)
+    }
+
+    /// **The complaint this was rewritten for.** Keks, looking at his phone:
+    /// *"názvy map jsou skoro stejné, nudné, v okolí mám to samé."* The index
+    /// walked in ones and the epithet changed once every `stems × suffixes`
+    /// indices, so a quarter of the map was "Far" something.
+    @Test("A player's own neighbourhood is not one name with the middle swapped")
+    func nearbyNamesDoNotRhyme() {
+        for language in GameLanguage.allCases {
+            let names = HexCoord.disc(radius: 3).map {
+                MapGenerator.name(for: $0, mapSeed: 4242, language: language)
+            }
+            // The first word is the one the eye reads. Thirty-seven hexes
+            // sharing five of them is what "boring" looked like.
+            let firstWords = Set(names.map { $0.split(separator: " ").first.map(String.init) ?? $0 })
+            #expect(firstWords.count > names.count / 2,
+                    "\(language): \(firstWords.count) different first words across \(names.count) hexes")
+            // …and the shapes differ: some names are one word, some two, some
+            // three. A map where every name has the same rhythm reads as one
+            // name however many stems it has.
+            let shapes = Set(names.map { $0.split(separator: " ").count })
+            #expect(shapes.count >= 2, "\(language): every name has the same shape")
+        }
+    }
+
+    /// Czech has to stay *Czech*: the adjective bank is deliberately the soft
+    /// `-í` kind, which does not inflect for gender, so no pairing can come
+    /// out ungrammatical whichever noun it lands on.
+    @Test("Czech place names agree with themselves")
+    func czechNamesAgree() {
+        for adjective in NameForge.csRegionAdjectives {
+            #expect(adjective.hasSuffix("í"), "\(adjective) inflects for gender")
+        }
     }
 
     @Test("Nearby hexes never share a name, in either language")

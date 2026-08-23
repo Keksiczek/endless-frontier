@@ -57,9 +57,15 @@ public enum HaulEngine {
     /// walk — a cart does not make you faster, it makes the trip worth more,
     /// and those are different sentences about a colony.
     public static func carryLimit(
-        _ settlement: Settlement, registry: GameDataRegistry
+        _ settlement: Settlement, registry: GameDataRegistry,
+        /// What the colony has learned about carrying — a yoke, a pannier, a
+        /// barrow (`ResearchStat.carryCapacity`). Applied to the arms and to
+        /// the cart alike, and rounded down, so a study that has not yet
+        /// bought a whole extra armful buys nothing.
+        learned: Double = 1
     ) -> Int {
-        armfuls + StableEngine.cargoCapacity(settlement, registry: registry)
+        let base = Double(armfuls + StableEngine.cargoCapacity(settlement, registry: registry))
+        return max(1, Int(base * learned))
     }
 
     // MARK: - Dropping
@@ -114,7 +120,10 @@ public enum HaulEngine {
     /// whole in-game week at minimum. The eight-fold finer grid is why a hauler
     /// now reads as a person crossing a town rather than as scenery.
     public static func advanceStep(
-        _ settlement: Settlement, registry: GameDataRegistry, clock: WorldClock
+        _ settlement: Settlement, registry: GameDataRegistry, clock: WorldClock,
+        /// `ResearchStat.carryCapacity`, passed from `ActionLoop` because a
+        /// hauling step has no `WorldState` to ask.
+        carryFactor: Double = 1
     ) -> Settlement {
         guard var map = settlement.localMap else { return settlement }
         guard !map.piles.isEmpty || settlement.pawns.contains(where: { $0.carrying != nil })
@@ -233,7 +242,7 @@ public enum HaulEngine {
                 // As much of the heap as they can carry, and the rest stays
                 // where it is for the next trip — which is what makes a cart
                 // worth building.
-                let limit = carryLimit(s, registry: registry)
+                let limit = carryLimit(s, registry: registry, learned: carryFactor)
                 let pile: HaulPile
                 if map.piles[index].amount > limit {
                     map.piles[index].amount -= limit

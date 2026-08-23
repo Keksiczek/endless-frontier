@@ -25,6 +25,9 @@ enum CanvasSelection: Equatable {
     /// A tapped beast, wild or kept. The wild are pawns with bodies and lives;
     /// until now they were the only thing on the canvas you could not ask about.
     case animal(UUID)
+    /// **A tapped prisoner.** They are pawns the colony is holding rather than
+    /// colonists, so they are not in `pawns` and never answered a tap.
+    case captive(UUID)
     /// **A tapped thing the colony can be told to work**: a tree, a seam of
     /// rock, a heap lying out in the open.
     ///
@@ -249,8 +252,13 @@ struct SettlementCanvasView: View {
         }
     }
 
+    /// Which figure is lit. A prisoner is drawn by `SettlementFigures` like
+    /// anybody else and their ids cannot collide with a colonist's, so one
+    /// value carries both rather than the renderer learning a second word for
+    /// "the person being looked at".
     private var selectedPawnID: UUID? {
         if case let .pawn(id) = selection { return id }
+        if case let .captive(id) = selection { return id }
         return nil
     }
 
@@ -417,6 +425,17 @@ struct SettlementCanvasView: View {
             guard map.isExplored(pose.position) else { continue }
             probe.offer(.pawn(pawn.id),
                         at: SettlementRenderer.point(pose.position, in: rect))
+        }
+        // The people the colony is holding, in the same layer as its own —
+        // they are standing in the yard, and a tap that goes through them to
+        // the ground behind is the fault this whole feature is about.
+        for (index, captive) in settlement.captives.enumerated() {
+            let where_ = SettlementCaptives.position(
+                captive, index: index, count: settlement.captives.count,
+                heart: SettlementGeometry.heart)
+            guard map.isExplored(where_) else { continue }
+            probe.offer(.captive(captive.id),
+                        at: SettlementRenderer.point(where_, in: rect))
         }
         if let hit = probe.take() { return hit }
 

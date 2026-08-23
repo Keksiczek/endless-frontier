@@ -42,7 +42,8 @@ public enum ActionLoop {
                     next, registry: registry, clock: clock,
                     laws: SocietyEngine.modifiers(next, registry: registry))
             }
-            next = HaulEngine.advanceStep(next, registry: registry, clock: clock)
+            next = HaulEngine.advanceStep(next, registry: registry, clock: clock,
+                                          carryFactor: s.researchFactor(.carryCapacity))
             // …and the people walking in from outside the valley. A trader with
             // mules crossing your fields is a body over ground like any other,
             // and it was the last one still measured per world tick — thirty-
