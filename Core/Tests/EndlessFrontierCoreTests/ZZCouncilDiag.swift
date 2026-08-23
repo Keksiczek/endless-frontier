@@ -70,6 +70,49 @@ struct ZZCouncilDiag {
                          def.cost[.materials], String(describing: def.storage.nonZero)))
         }
     }
+    
+    /// **What the town is made of after two centuries.**
+    ///
+    /// The clause Keks reported on — *"staví knihovny a univerzity několikrát a
+    /// nijaké výrobní nebo obranné budovy ne"* — is only visible in the tally,
+    /// not in one sitting's pick. Prints what stands, by count, and what share
+    /// of it makes something, keeps something, houses somebody or defends.
+    @Test("what a colony ends up made of")
+    func theTown() throws {
+        let registry = try GameDataRegistry.bundled()
+        var state = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        for _ in 0..<20 {
+            state = BalanceHarness.autoPlay(state, registry: registry)
+            state = TickEngine.advance(state, ticks: 600, registry: registry).state
+        }
+        guard let s = state.settlements.first else { return }
+        let standing = s.buildings
+            .compactMap { instance -> (String, Int, BuildingDefinition)? in
+                guard let def = registry.building(instance.definitionID) else { return nil }
+                return (instance.definitionID, instance.count, def)
+            }
+            .sorted { $0.1 == $1.1 ? $0.0 < $1.0 : $0.1 > $1.1 }
+
+        func share(_ keep: (BuildingDefinition) -> Bool) -> Int {
+            standing.filter { keep($0.2) }.reduce(0) { $0 + $1.1 }
+        }
+        let total = standing.reduce(0) { $0 + $1.1 }
+        print("""
+
+        ── what the council built, two hundred years ──────────────────
+        \(total) buildings, \(s.pawns.count) souls, era \(state.era.rawValue)
+        makes something  \(share { def in ResourceType.allCases.contains { def.production[$0] > 0 } })
+        a place to work  \(share { $0.work != nil })
+        defends          \(share { $0.defense > 0 })
+        houses           \(share { $0.housing > 0 })
+        stores           \(share { def in def.storage.amounts.contains { $0.value > 0 } })
+        ───────────────────────────────────────────────────────────────
+        """)
+        for (id, count, _) in standing.prefix(18) {
+            print(String(format: "  %-24@ %3d", id, count))
+        }
+        print("")
+    }
 }
 
 extension Resources {

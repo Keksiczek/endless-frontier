@@ -586,22 +586,29 @@ public enum StewardEngine {
             return generator
         }
 
-        // 4. Otherwise — and *only* out of genuine surplus — the cheapest
-        //    thing the colony does not have at all. Breadth before depth, so a
-        //    town gets a library and a quarry before a second farm.
+        // 4. Otherwise — and *only* out of genuine surplus — **what this
+        //    colony is actually short of**, weighed by the people in the room.
         //
-        //    Gated on brimming stores on purpose: a colony that builds whenever
-        //    it can afford to never has anything in hand, which is how the
-        //    first cut of this drove materials to one and kept them there.
+        //    This clause used to be "the cheapest thing we do not have yet,
+        //    and once we have one of everything, the cheapest thing at all",
+        //    which is the whole of the late game and is why Keks's town had
+        //    five observatories and no smithy: *"steward staví knihovny a
+        //    univerzity několikrát a nijaké výrobní nebo obranné budovy ne."*
+        //    Nothing in it asked what the colony lacked, and nothing asked who
+        //    was on the council. See `CouncilAppetite`.
+        //
+        //    Still gated on brimming stores: a colony that builds whenever it
+        //    can afford to never has anything in hand, which is how the first
+        //    cut of this drove materials to one and kept them there.
         guard hasSomethingSpare(settlement) else { return nil }
-        let standing = Set(settlement.buildings.map(\.definitionID))
-        let novel = affordable.filter { !standing.contains($0.id) }
-        return (novel.isEmpty ? affordable : novel)
-            .min { a, b in
-                let ca = a.cost[.materials], cb = b.cost[.materials]
-                return ca == cb ? a.id < b.id : ca < cb
-            }?
-            .id
+        let wanted = affordable
+            .map { (def: $0, score: CouncilAppetite.score($0, for: settlement,
+                                                          in: state, registry: registry)) }
+            .filter { $0.score >= CouncilAppetite.worthBuilding }
+        guard !wanted.isEmpty else { return nil }
+        return wanted.min { a, b in
+            a.score == b.score ? a.def.id < b.def.id : a.score > b.score
+        }?.def.id
     }
 
     /// Whether the colony has enough put by to build for its own sake.
@@ -648,9 +655,43 @@ public enum StewardEngine {
     /// whole point of typing capacity: a colony can be drowning in timber and
     /// short of grain in the same season, and one number could not say so.
     public static func brimmingResources(_ settlement: Settlement) -> [ResourceType] {
-        ResourceType.allCases.filter { resource in
+        let people = max(1, settlement.population)
+        return ResourceType.allCases.filter { resource in
             let roof = settlement.storageCapacity[resource]
-            return roof > 0 && settlement.storage[resource] >= roof * brimming
+            guard roof > 0, settlement.storage[resource] >= roof * brimming else { return false }
+            // **And there is such a thing as enough roof.**
+            //
+            // Measured after the council learned to weigh what it builds: a
+            // colony of 158 souls stood at **124 buildings, 81 of them stores**
+            // — eleven banks, eleven markets, eleven universities, twelve
+            // railyards. Every one of them was a *store*, so every one of them
+            // was chosen by the clause above, which had no notion of enough:
+            // full store → build roof → fill it → build roof, for two
+            // centuries. The materials roof reached 44 300 for 232 people.
+            //
+            // A store defers a spill; it never ends one. Past this much room
+            // per soul the colony is not short of a warehouse, it is producing
+            // more than it can ever use, and the council should let it spill
+            // and spend its materials on something that does something.
+            return roof / people < roofEnough(resource)
+        }
+    }
+
+    /// How much room per soul is **enough** of a given good, past which more
+    /// roof answers nothing.
+    ///
+    /// Food and materials are spent every tick, so a colony wants a real
+    /// buffer of both — a bad winter is a season of eating the store. Energy
+    /// is drawn steadily and generated steadily. Knowledge and standing are
+    /// spent in lumps by research and by decisions, and a colony sitting on
+    /// four hundred of either is not going to be saved by a fifth bank.
+    static func roofEnough(_ resource: ResourceType) -> Double {
+        switch resource {
+        case .food: return 60
+        case .materials: return 60
+        case .energy: return 25
+        case .knowledge: return 20
+        case .influence: return 20
         }
     }
 
