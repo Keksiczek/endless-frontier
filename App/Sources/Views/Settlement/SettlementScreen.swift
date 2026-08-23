@@ -267,6 +267,16 @@ struct SettlementScreen: View {
                         withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                     })
                 .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if case let .raider(id) = selection,
+                      let siege = game.selectedSettlement?.siege,
+                      let raider = siege.raiders.first(where: { $0.id == id }) {
+                RaiderCard(
+                    raider: raider, siege: siege,
+                    band: siege.attackerLabel?.resolve(AppStrings.language) ?? siege.attackerName
+                ) {
+                    withAnimation(.easeOut(duration: 0.15)) { selection = .none }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if case let .captive(id) = selection, let held = game.captive(id) {
                 CaptiveCard(
                     captive: held, ticksPerYear: game.ticksPerYear,
@@ -328,7 +338,8 @@ struct SettlementScreen: View {
                 BuildingInspectorCard(
                     definition: building.definition, standing: building.standing,
                     upkeep: building.upkeep,
-                    synergies: game.synergyText(for: building.definition)
+                    synergies: game.synergyText(for: building.definition),
+                    holding: game.holding(inBuilding: building.definition.id)
                 ) {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }

@@ -25,6 +25,10 @@ enum CanvasSelection: Equatable {
     /// A tapped beast, wild or kept. The wild are pawns with bodies and lives;
     /// until now they were the only thing on the canvas you could not ask about.
     case animal(UUID)
+    /// **A tapped raider.** They stand on your ground, they are the only
+    /// people on the field the game would not tell you anything about, and
+    /// the orders the player gives are given *at* them.
+    case raider(UUID)
     /// **A tapped prisoner.** They are pawns the colony is holding rather than
     /// colonists, so they are not in `pawns` and never answered a tap.
     case captive(UUID)
@@ -425,6 +429,15 @@ struct SettlementCanvasView: View {
             guard map.isExplored(pose.position) else { continue }
             probe.offer(.pawn(pawn.id),
                         at: SettlementRenderer.point(pose.position, in: rect))
+        }
+        // The people who came to take the place. Above the colonists in the
+        // same layer, because during a fight they are what the eye is on — and
+        // until now a tap went through them to the grass.
+        if let siege = settlement.siege {
+            for raider in siege.raiders where !raider.down {
+                probe.offer(.raider(raider.id),
+                            at: SettlementRenderer.point(raider.at, in: rect))
+            }
         }
         // The people the colony is holding, in the same layer as its own —
         // they are standing in the yard, and a tap that goes through them to

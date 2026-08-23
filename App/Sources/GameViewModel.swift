@@ -598,6 +598,22 @@ final class GameViewModel {
         return settlement.pawns.count { $0.assignedWork == work }
     }
 
+    /// **What is lying in a store of this kind**, biggest heap first.
+    ///
+    /// The colony keeps one `stockpile`, not one per building, so this is the
+    /// honest answer to "what is in this warehouse": what the colony is
+    /// holding of the goods a building of this kind keeps. Empty for anything
+    /// that stores nothing.
+    func holding(inBuilding definitionID: String) -> [(name: String, count: Int)] {
+        guard let def = registry.building(definitionID),
+              def.storage.amounts.contains(where: { $0.value > 0 }),
+              let settlement = selectedSettlement else { return [] }
+        return settlement.stockpile
+            .filter { $0.value > 0 }
+            .sorted { $0.value == $1.value ? $0.key < $1.key : $0.value > $1.value }
+            .map { (name: itemName($0.key), count: $0.value) }
+    }
+
     /// A prisoner the colony is holding, by id. They are not in `pawns` —
     /// `Settlement.population` is derived from that array — so nothing else
     /// could look them up either.

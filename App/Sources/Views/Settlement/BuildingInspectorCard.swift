@@ -9,6 +9,14 @@ struct BuildingInspectorCard: View {
     let standing: Int
     let upkeep: Resources
     var synergies: [String] = []
+    /// **What is actually lying in it**, biggest heap first — the goods, by
+    /// name and count, out of the colony's own `stockpile`.
+    ///
+    /// Keks: *"nejde vybrat itemy na zemi ve skladu."* The floor of a store
+    /// has drawn its goods since `SettlementInterior.Goods`, and they were a
+    /// picture: nothing you could tap, and no way to ask what the pile was.
+    /// A store is the one building whose whole content *is* its contents.
+    var holding: [(name: String, count: Int)] = []
     var onClose: () -> Void
 
     private var cs: Bool { AppStrings.language == .cs }
@@ -17,9 +25,33 @@ struct BuildingInspectorCard: View {
         definition.description.resolve(AppStrings.language)
     }
 
+    /// The goods, as rows. Only for a building that keeps any.
+    @ViewBuilder
+    private var contents: some View {
+        if !holding.isEmpty {
+            VStack(alignment: .leading, spacing: 5) {
+                Text((cs ? "V NĚM LEŽÍ" : "WHAT IS IN IT").uppercased())
+                    .font(.caption2.weight(.bold)).tracking(1.1)
+                    .foregroundStyle(Theme.textDim)
+                ForEach(holding.prefix(6), id: \.name) { row in
+                    HStack(spacing: 8) {
+                        Image(systemName: "shippingbox.fill")
+                            .font(.caption2).foregroundStyle(Theme.accent.opacity(0.7))
+                        Text(row.name).font(.caption).foregroundStyle(Theme.text)
+                        Spacer()
+                        Text("\(row.count)")
+                            .font(.caption.monospacedDigit().weight(.semibold))
+                            .foregroundStyle(Theme.textDim)
+                    }
+                }
+            }
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
+            contents
             if !descriptionText.isEmpty {
                 Text(descriptionText)
                     .font(.caption)

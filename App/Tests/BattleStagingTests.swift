@@ -70,6 +70,38 @@ struct BattleStagingTests {
     /// whole fight whatever tick it happened on. At the tick's own pace eight
     /// rounds came out as one exchange every seven and a half seconds, which is
     /// a fight you can watch and see nothing happen in.
+    /// **The fight the player stands in used to jump.** `Siege.progress` is
+    /// `step / steps`, and a step only moves when the simulation resolves one,
+    /// so every beat arrived in a leap: an arrow never flew, impacts landed in
+    /// a lump, and the replay of a finished fight looked better than the live
+    /// one. Keks: *"souboje jsou rozhozené, efekty a grafika nesedí."*
+    @Test("A live fight moves between its steps, not in jumps")
+    func liveFightIsInterpolated() {
+        let perTick = Double(WorldClock.actionStepsPerTick)
+        var siege = Siege(
+            id: UUID(), startTick: 10, openedAt: 10 * Int(perTick),
+            attackerName: "Broken men", approach: 0, attackers: 6,
+            openingStrength: 60, fortification: 0, seed: 1, line: [], steps: 40)
+        // Four steps resolved: the fight is 4/40 through, and no further until
+        // the fifth lands.
+        siege.advancedTo = siege.openedAt + 4
+        let atStep = SettlementBattle.liveProgress(
+            of: siege, continuousTick: Double(siege.advancedTo) / perTick)
+        #expect(abs(atStep - 4.0 / 40) < 0.001)
+
+        // Half a step later the picture is half a step further on — which is
+        // the whole of what an arrow needs to be in the air.
+        let halfway = SettlementBattle.liveProgress(
+            of: siege, continuousTick: Double(siege.advancedTo) / perTick + 0.5 / perTick)
+        #expect(halfway > atStep, "\(halfway) against \(atStep)")
+        #expect(abs(halfway - 4.5 / 40) < 0.001)
+
+        // …and it never runs ahead of the step the simulation has reached.
+        let far = SettlementBattle.liveProgress(
+            of: siege, continuousTick: Double(siege.advancedTo) / perTick + 5)
+        #expect(abs(far - 5.0 / 40) < 0.001, "the drawing may not outrun the fight")
+    }
+
     @Test("A fight is played back faster than the tick that carried it")
     func liveWindow() {
         var settlement = Settlement(id: UUID(), name: "Home", regionID: UUID())

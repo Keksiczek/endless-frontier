@@ -228,7 +228,8 @@ enum SettlementBattle {
         // recording being played back, it is the thing itself, and the record
         // grows a beat at a time as the simulation writes it.
         if let siege = settlement.siege {
-            return (log(of: siege, defender: settlement.name), siege.progress)
+            return (log(of: siege, defender: settlement.name),
+                    liveProgress(of: siege, continuousTick: continuousTick))
         }
         // A replay outranks the finished fight: the player asked for this one.
         if let replay {
@@ -242,6 +243,34 @@ enum SettlementBattle {
         let elapsed = (continuousTick - Double(log.tick)) * speed
         guard elapsed >= 0, elapsed <= 1 + lingerFraction else { return nil }
         return (log, min(1, elapsed))
+    }
+
+    /// **How far through a live fight the picture is, between steps.**
+    ///
+    /// `Siege.progress` is `step / steps`, and a step only moves when the
+    /// simulation resolves one — eight to a tick, one every couple of real
+    /// seconds. So the canvas was playing a fight that **jumped**: every beat
+    /// was stamped at a progress the drawing arrived at in one leap, so an
+    /// arrow never flew (`flight` went 0 → gone in a single frame), impacts
+    /// appeared in a lump, and a volley loosed at the far edge of its own step
+    /// was drawn as if it had already landed. Keks: *"souboje jsou rozhozené,
+    /// efekty a grafika nesedí."*
+    ///
+    /// The replay path never had this — it interpolates against real seconds —
+    /// which is exactly why a replayed fight looked better than the one you
+    /// were standing in.
+    ///
+    /// The clock the canvas already holds is the fix: `continuousTick` is
+    /// fractional, and `WorldClock.actionStepsPerTick` steps fit in a tick, so
+    /// the share of the current step that has elapsed is a division. Nothing
+    /// here changes what happens — the simulation still resolves a step at a
+    /// time — it only draws the time *between* two of them.
+    static func liveProgress(of siege: Siege, continuousTick: Double) -> Double {
+        let perTick = Double(WorldClock.actionStepsPerTick)
+        // The tick the last resolved step sat in, as a fraction.
+        let resolvedAt = Double(siege.advancedTo) / perTick
+        let within = min(1, max(0, (continuousTick - resolvedAt) * perTick))
+        return min(1, (Double(siege.step) + within) / Double(max(1, siege.steps)))
     }
 
     /// A live siege, read as the record the drawing already speaks.
