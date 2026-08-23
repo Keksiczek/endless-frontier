@@ -10,9 +10,9 @@ tree, named where it appears.
 
 | | |
 |---|---|
-| Last pushed | `a8b08bc` |
+| Last pushed | `515d600` |
 | Core | steward, appetite, building, research, content, map and name suites green |
-| App | **167 tests in 26 suites**, green |
+| App | **168 tests in 26 suites**, green |
 
 ---
 
@@ -92,7 +92,35 @@ Four things, in his words, none of them started:
    lots, buildings and fields rather than following the edges of them. Wants a
    router that prefers open ground and the edges of lots — the same problem the
    world map solved with `RoadEngine.cut`, one scale down.
-4. A **handoff and a brief for a clean run** — §4.
+4. **"Souboje začínají salvami, co nesedí — mělo by se střílet na dostřel
+   luku, podle skillu lovce atd."** Partly answered and mostly not:
+
+   - *Fixed* (`515d600`): the live fight was drawn in **jumps**, because
+     `Siege.progress` is `step / steps` and a step only moves when the
+     simulation resolves one. Arrows never flew; impacts arrived in a lump.
+     `SettlementBattle.liveProgress` interpolates between steps now.
+   - *Open, and this is the part he means*: **when a volley happens has nothing
+     to do with range.** `SiegeEngine.loose` fires on the step, not on whether
+     anybody is inside a bow's reach, and what a shot is worth does not read
+     the shooter's skill. It should: `raiderArms`/`weaponProfile` already carry
+     `range`, `SiegeField.distance` already measures it, and `Pawn.skills`
+     already holds what a hunter is worth with a bow. Until then a fight opens
+     with a salvo at whatever distance the line happens to be standing at,
+     which is what "nesedí" is.
+   - Also open: **the arms in a raider's hands and the effect drawn for them
+     can disagree.** `RaiderCard` reads the age; the projectile drawn reads
+     `moment.projectile`; a camp of deserters carries the arms of a *later*
+     age (`OutlawCamp.armsEra`). Those three have never been checked against
+     each other.
+
+5. **"Zoom kamery na eventy nebo směr raidu je taky takový divný."** The camera
+   flies to what the Core says happened (`ef-camera-follows-events`), and the
+   raid's own bearing (`Siege.approach`) decides where the warband walks in
+   from. One of the two is wrong on screen and nobody has measured which:
+   start by printing the approach bearing beside where the camera actually
+   settles.
+
+6. A **handoff and a brief for a clean run** — §4.
 
 ---
 
@@ -134,6 +162,16 @@ Paste this into a fresh chat.
 > map's `RoadEngine.cut` is the same problem one scale up and is worth reading
 > first. `AgentMotion` must keep walking the same lines the renderer draws, or
 > people will cut corners their own paths do not.
+>
+> **5. Volleys should be about range, not about the step.** `SiegeEngine.loose`
+> fires because a step happened; it should fire because somebody is inside a
+> bow's reach, and be worth what the shooter's skill with that bow is worth.
+> `weaponProfile` carries `range`, `SiegeField.distance` measures it, and
+> `Pawn.skills[.hunting]` is the number Keks named. Check what the raider is
+> *drawn* holding against what the record says was fired while you are in there.
+>
+> **6. The camera on events and on the raid's direction reads wrong.** Print
+> `Siege.approach` beside where the camera settles before changing either.
 >
 > **Rules that will bite:** one SwiftPM run at a time (two starve each other
 > and the perf guards fail on a loaded machine); `swift test --package-path
