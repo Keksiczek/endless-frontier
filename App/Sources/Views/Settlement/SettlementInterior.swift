@@ -224,6 +224,31 @@ enum SettlementInterior {
         }
     }
 
+    /// **What is on the floor, by kind.**
+    ///
+    /// `storeSlots` answers *how full*; this answers *what of*. A colony's
+    /// `stockpile` is concrete goods — logs, cut stone, hides, ore — and a
+    /// warehouse holding four hundred logs and one holding four hundred hides
+    /// were the same drawing, which is the abstract-number fault the piles
+    /// outside the door do not have.
+    enum Goods: String, Sendable, CaseIterable {
+        case timber, stone, ore, hide, cloth, grain
+
+        /// What a raw material id reads as on a floor. Unknown goods fall to
+        /// crates rather than being dropped — a store holding something the
+        /// drawing has no shape for still has something in it.
+        static func of(_ itemID: String) -> Goods {
+            switch itemID {
+            case "wood", "timber_bundle", "plank", "planks": return .timber
+            case "rough_stone", "cut_stone", "brick", "clay": return .stone
+            case "iron_ore", "coal", "copper_ore", "ingot", "iron_ingot": return .ore
+            case "hide", "leather", "pelt": return .hide
+            case "cloth", "wool", "linen", "thread": return .cloth
+            default: return .grain
+            }
+        }
+    }
+
     /// The most stock one room will show. Past this it is a wall of sacks and
     /// another sack says nothing.
     static let storeCeiling = 9
@@ -376,7 +401,12 @@ enum SettlementInterior {
         workers: Int, residents: Int = 0, night: Double, time: Double,
         /// How full this building's own store is, 0…1, and what the goods in
         /// it look like. Nil for a building that stores nothing.
-        stock: (fullness: Double, fitting: Fitting)? = nil
+        stock: (fullness: Double, fitting: Fitting)? = nil,
+        /// The concrete goods this store is holding, biggest heap first — logs,
+        /// cut stone, hides. Answers *what of*, where `stock` answers *how
+        /// full*, and it is what stops a warehouse of timber and a warehouse of
+        /// hides being the same drawing.
+        goods: [(kind: Goods, count: Int)] = []
     ) {
         guard isLegible(footprint: footprint) else { return }
         // **Inside the walls that are actually drawn**, not inside the lot.
@@ -421,6 +451,16 @@ enum SettlementInterior {
         let stocked = stock.map {
             storeSlots(fullness: $0.fullness, fitting: $0.fitting, seed: seed &* 0x2545_F491)
         } ?? []
+        // The goods themselves, along the back wall, before the furniture so
+        // a bench stands in front of the pile rather than under it.
+        for (index, heap) in goods.prefix(3).enumerated() {
+            let across = -0.24 + Double(index) * 0.24
+            goodsStack(&context, heap.kind,
+                       at: CGPoint(x: c.x + CGFloat(across) * footprint.width,
+                                   y: c.y - footprint.height * 0.30),
+                       scale: min(room.width, room.height), palette: palette,
+                       count: heap.count)
+        }
         for slot in plan + stocked {
             let p = CGPoint(x: c.x + CGFloat(slot.dx) * footprint.width,
                             y: c.y + CGFloat(slot.dy) * footprint.height)
@@ -450,7 +490,7 @@ enum SettlementInterior {
 
     // MARK: - Surfaces
 
-    private struct Palette {
+    struct Palette {
         let floor: Color
         let plank: Color
         let wall: Color
@@ -552,6 +592,65 @@ enum SettlementInterior {
     // MARK: - Furniture
 
     /// One fitting, drawn small and flat — this is a room seen from above.
+    /// One stack of goods: shapes that read from across the valley — log ends,
+    /// squared blocks, a rolled hide — rather than the same crate six times.
+    static func goodsStack(
+        _ context: inout GraphicsContext, _ kind: Goods, at p: CGPoint,
+        scale: CGFloat, palette: Palette, count: Int
+    ) {
+        let s = max(2.2, scale * 0.15)
+        let high = max(1, min(3, count))
+        for row in 0..<high {
+            let y = p.y - CGFloat(row) * s * 0.42
+            switch kind {
+            case .timber:
+                // Log ends, seen from above the pile.
+                for i in 0..<3 {
+                    let x = p.x + CGFloat(i - 1) * s * 0.42
+                    context.fill(Path(ellipseIn: CGRect(x: x - s * 0.19, y: y - s * 0.19,
+                                                        width: s * 0.38, height: s * 0.38)),
+                                 with: .color(palette.wood))
+                    context.stroke(Path(ellipseIn: CGRect(x: x - s * 0.19, y: y - s * 0.19,
+                                                          width: s * 0.38, height: s * 0.38)),
+                                   with: .color(Theme.ink.opacity(0.4)), lineWidth: 0.4)
+                }
+            case .stone:
+                for i in 0..<2 {
+                    let r = CGRect(x: p.x + CGFloat(i) * s * 0.5 - s * 0.5,
+                                   y: y - s * 0.2, width: s * 0.46, height: s * 0.36)
+                    context.fill(Path(r), with: .color(palette.wall))
+                    context.stroke(Path(r), with: .color(Theme.ink.opacity(0.4)), lineWidth: 0.4)
+                }
+            case .ore:
+                for i in 0..<3 {
+                    let x = p.x + CGFloat(i - 1) * s * 0.34
+                    context.fill(Path(ellipseIn: CGRect(x: x - s * 0.14, y: y - s * 0.12,
+                                                        width: s * 0.28, height: s * 0.24)),
+                                 with: .color(Theme.boneDim.opacity(0.75)))
+                }
+            case .hide:
+                let r = CGRect(x: p.x - s * 0.42, y: y - s * 0.16,
+                               width: s * 0.84, height: s * 0.3)
+                context.fill(Path(roundedRect: r, cornerRadius: s * 0.15),
+                             with: .color(palette.cloth))
+                context.stroke(Path(roundedRect: r, cornerRadius: s * 0.15),
+                               with: .color(Theme.ink.opacity(0.35)), lineWidth: 0.4)
+            case .cloth:
+                let r = CGRect(x: p.x - s * 0.34, y: y - s * 0.2,
+                               width: s * 0.68, height: s * 0.34)
+                context.fill(Path(r), with: .color(palette.cloth.opacity(0.9)))
+                context.stroke(Path(r), with: .color(Theme.bone.opacity(0.3)), lineWidth: 0.4)
+            case .grain:
+                let r = CGRect(x: p.x - s * 0.26, y: y - s * 0.28,
+                               width: s * 0.52, height: s * 0.5)
+                context.fill(Path(roundedRect: r, cornerRadius: s * 0.22),
+                             with: .color(Theme.accent.opacity(0.5)))
+                context.stroke(Path(roundedRect: r, cornerRadius: s * 0.22),
+                               with: .color(Theme.ink.opacity(0.35)), lineWidth: 0.4)
+            }
+        }
+    }
+
     private static func fitting(
         _ context: inout GraphicsContext, _ kind: Fitting, at p: CGPoint,
         scale: CGFloat, palette: Palette, night: Double, time: Double, seed: UInt64

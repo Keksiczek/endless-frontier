@@ -183,6 +183,32 @@ struct StoreContentsTests {
         #expect(full?.fitting == .sack)
     }
 
+    /// The half the first pass missed: a store showed *how full* and never
+    /// *what of*, so a warehouse of timber and one of hides were the same
+    /// drawing.
+    @Test("A store shows the goods it is actually holding")
+    func goodsFollowTheStockpile() {
+        var s = town(food: 100, capacity: 1000)
+        s.stockpile = ["wood": 300, "hide": 8, "rough_stone": 60]
+        let goods = SettlementRenderer.goods(of: "granary", in: s, registry: granaryRegistry())
+        #expect(goods.map(\.kind) == [.timber, .stone, .hide],
+                "biggest heap first, so a store reads as what it mostly is")
+        // …and a heap is a heap, not a bar chart: past a wagonload more of the
+        // same thing looks the same.
+        #expect(goods[0].count == 3)
+        #expect(goods[2].count == 1)
+        #expect(SettlementRenderer.goods(of: "hut", in: s, registry: granaryRegistry()).isEmpty,
+                "a house is not a warehouse")
+    }
+
+    @Test("An unknown good still stands somewhere on the floor")
+    func unknownGoodsAreNotDropped() {
+        #expect(SettlementInterior.Goods.of("wood") == .timber)
+        #expect(SettlementInterior.Goods.of("hide") == .hide)
+        #expect(SettlementInterior.Goods.of("some_new_thing") == .grain,
+                "a store holding something the drawing has no shape for still has something in it")
+    }
+
     @Test("A building that stores nothing shows no stock")
     func onlyStoresAreStocked() {
         #expect(SettlementRenderer.stock(of: "hut", in: town(food: 900, capacity: 1000),

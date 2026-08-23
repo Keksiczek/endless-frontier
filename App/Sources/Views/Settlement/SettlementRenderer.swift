@@ -1832,6 +1832,9 @@ enum SettlementRenderer {
         /// against `storageCapacity` — the drawing reads the simulation and
         /// never the other way round.
         var stock: (fullness: Double, fitting: SettlementInterior.Fitting)?
+        /// …and *what* is in it: the colony's own stockpile, biggest heap
+        /// first. Only stores get any.
+        var goods: [(kind: SettlementInterior.Goods, count: Int)] = []
     }
 
     /// The same structure mapped to pixels for one frame.
@@ -1866,6 +1869,9 @@ enum SettlementRenderer {
         /// against `storageCapacity` — the drawing reads the simulation and
         /// never the other way round.
         var stock: (fullness: Double, fitting: SettlementInterior.Fitting)?
+        /// …and *what* is in it: the colony's own stockpile, biggest heap
+        /// first. Only stores get any.
+        var goods: [(kind: SettlementInterior.Goods, count: Int)] = []
     }
 
     /// A stable per-building seed for cosmetic variation — from a placement's
@@ -2019,7 +2025,8 @@ enum SettlementRenderer {
                            workers: b.assignedPawnIDs.count,
                            residents: b.placementID.map { household[$0] ?? 0 } ?? 0,
                            condition: b.condition,
-                           stock: stock(of: b.definitionID, in: settlement, registry: registry))
+                           stock: stock(of: b.definitionID, in: settlement, registry: registry),
+                           goods: goods(of: b.definitionID, in: settlement, registry: registry))
         }
         return onScreen(all, viewport: viewport)
     }
@@ -2243,6 +2250,38 @@ enum SettlementRenderer {
         return (fullness, fitting)
     }
 
+    /// **What a store is actually holding**, in the order it holds most of.
+    ///
+    /// The colony's `stockpile` is concrete goods; `storage` is the abstract
+    /// ledger. A warehouse draws the first, because that is what a person
+    /// walking into it would see.
+    static func goods(
+        of definitionID: String, in settlement: Settlement, registry: GameDataRegistry
+    ) -> [(kind: SettlementInterior.Goods, count: Int)] {
+        guard let def = registry.building(definitionID),
+              !def.storage.amounts.filter({ $0.value > 0 }).isEmpty,
+              !settlement.stockpile.isEmpty else { return [] }
+        var byKind: [SettlementInterior.Goods: Int] = [:]
+        for (itemID, count) in settlement.stockpile where count > 0 {
+            byKind[SettlementInterior.Goods.of(itemID), default: 0] += count
+        }
+        // Sorted by how much of it there is, ties on the kind's own name so a
+        // store does not reshuffle its floor between frames.
+        return byKind.sorted {
+            $0.value == $1.value ? $0.key.rawValue < $1.key.rawValue : $0.value > $1.value
+        }.map { (kind: $0.key, count: heapHeight($0.value)) }
+    }
+
+    /// How high a heap of `count` goods stands, 1…3. A store is not a bar
+    /// chart: past a wagonload more of the same thing looks the same.
+    static func heapHeight(_ count: Int) -> Int {
+        switch count {
+        case ..<20: return 1
+        case ..<120: return 2
+        default: return 3
+        }
+    }
+
     private static func buildings(
         _ context: inout GraphicsContext, placed: [PlacedBuilding],
         time: Double, night: Double = 0, showLabels: Bool = false,
@@ -2277,7 +2316,8 @@ enum SettlementRenderer {
                     footprint: building.footprint, size: building.size,
                     seed: building.seed, era: building.era,
                     workers: building.workers, residents: building.residents,
-                    night: night, time: time, stock: building.stock)
+                    night: night, time: time, stock: building.stock,
+                    goods: building.goods)
             }
         }
         for building in placed {
