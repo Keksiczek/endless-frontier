@@ -102,6 +102,10 @@
       {
         "type": "unlock_building",
         "buildingId": "watchtower"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "watermill"
       }
     ],
     "description": {
@@ -292,6 +296,10 @@
         "stat": "global.buildSpeed",
         "delta": 0.3,
         "mode": "additive"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "horse_mill"
       }
     ],
     "description": {

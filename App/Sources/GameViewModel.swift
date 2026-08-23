@@ -184,10 +184,30 @@ final class GameViewModel {
     /// hand that is panning it.
     private(set) var spotlight: CanvasFocus?
 
+    /// When the camera was last taken somewhere **it did not ask to go**.
+    ///
+    /// Keks: *"Zoom kamery na eventy nebo směr raidu je taky takový divný."*
+    /// Measured by reading what sets it: every journal line of kind `.danger`
+    /// grabbed the camera, and a raid writes one of those per wound, per death
+    /// and per load carried off. So the camera framed the field, then snapped
+    /// to a wounded farmer, then to the next one, then to the stores — several
+    /// flights a second, each overruling the last, in the middle of the one
+    /// event the player most wants to watch. Nothing was aiming *wrong*; there
+    /// were simply five things aiming at once.
+    private var lastGrab: Date = .distantPast
+
+    /// How long the camera is left alone after the game has taken it somewhere.
+    /// Long enough that a burst of journal lines out of one incident is **one**
+    /// flight; short enough that a fire an hour later still gets its own.
+    static let cameraRespite: TimeInterval = 12
+
     /// Take me there. What a tapped toast, or a "show me" button, calls.
+    ///
+    /// The player asking always wins — no respite, and no fight to lose it to.
     func lookAt(_ subject: ColonyLogEntry.Subject?) {
         guard let focus = CanvasFocus(subject) else { return }
         spotlight = focus
+        lastGrab = Date()
     }
 
     /// Frame the ground a fight is being fought on.
@@ -204,6 +224,7 @@ final class GameViewModel {
         spotlight = CanvasFocus(
             id: id, target: .place(SiegeField(approach: approach).muster),
             scale: SettlementRenderer.Camera.opening)
+        lastGrab = Date()
     }
 
     /// Battles the player has already been shown. A fight lands as a `BattleLog`
@@ -390,8 +411,18 @@ final class GameViewModel {
                 // raid is not a line of text going past — it is happening
                 // somewhere, and hunting the valley for it is how you find out
                 // it finished while you were looking.
-                if entry.kind == .danger, let focus = CanvasFocus(entry.subject) {
+                //
+                // **Once, though, and never during a fight.** A live siege is
+                // already framed on the ground it is being fought over
+                // (`lookAtTheField`), and every wound it deals writes another
+                // `.danger` line; letting each of those re-aim is how the
+                // camera came to lurch from casualty to casualty while the
+                // battle it was meant to be showing happened off screen.
+                if entry.kind == .danger, siege == nil,
+                   Date().timeIntervalSince(lastGrab) >= Self.cameraRespite,
+                   let focus = CanvasFocus(entry.subject) {
                     spotlight = focus
+                    lastGrab = Date()
                 }
             }
         }

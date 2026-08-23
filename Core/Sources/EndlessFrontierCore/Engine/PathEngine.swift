@@ -75,6 +75,18 @@ public enum PathEngine {
         let green = TileCoord(SettlementGeometry.greenOrigin(colony.width) + SettlementGeometry.greenTiles / 2,
                               SettlementGeometry.greenOrigin(colony.height) + SettlementGeometry.greenTiles / 2)
 
+        // **What the ground is, before anybody walks on it.** Built once for
+        // the whole pass — a hundred colonists asking tile by tile what stands
+        // where would walk the placements list a hundred times (rule 38).
+        // Read off the field as it was *last* pass, so today's traffic gathers
+        // onto yesterday's ways rather than onto ways it is laying as it goes:
+        // an order-dependent route is a route that depends on the order pawns
+        // happen to sit in the array, which is not determinism you can rely on.
+        let ground = SettlementRoute.Ground(colony: colony, worn: s.paths.lookup())
+        // Two colonists out of the same house doing the same work walk the same
+        // street. Routing it twice is the same answer for the same money.
+        var routes: [Route: [TileCoord]] = [:]
+
         for pawn in s.pawns where !pawn.isAway {
             guard let homeID = pawn.homeID, let home = homes[homeID] else { continue }
             let from = centre(of: home)
@@ -89,13 +101,32 @@ public enum PathEngine {
                 to = green
             }
             guard abs(to.x - from.x) + abs(to.y - from.y) <= furthestJourney else { continue }
-            for tile in SettlementPaths.line(from: from, to: to) {
+            let key = Route(from: from, to: to)
+            let walked: [TileCoord]
+            if let known = routes[key] {
+                walked = known
+            } else {
+                // The two lots this journey runs between are the walker's own
+                // ground; everything else standing in the way is gone round.
+                let ends = [home, colony.placement(at: to)].compactMap { $0 }
+                walked = SettlementRoute.walk(from: from, to: to,
+                                              ground: ground, freeLots: ends)
+                routes[key] = walked
+            }
+            for tile in walked {
                 field[tile, default: 0] += gainPerWalker
             }
         }
 
         s.paths.replace(with: field, floor: forgetBelow)
         return s
+    }
+
+    /// One journey, as the two ends of it. Two people making the same journey
+    /// are one route worked out once.
+    struct Route: Hashable {
+        let from: TileCoord
+        let to: TileCoord
     }
 
     /// The middle tile of a placement's lot — where its door is, near enough.

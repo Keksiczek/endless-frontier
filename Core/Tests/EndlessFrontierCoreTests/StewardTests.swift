@@ -547,6 +547,17 @@ struct CouncilRoomTests {
                     max(state.settlements[0].stockpile[material, default: 0], needed * 4)
             }
         }
+        // And **the lights on**. Power moved above stores (§2c) — a brownout is
+        // a bleed every tick and a full store is only a spill — so a colony
+        // that cannot answer its own draw reaches for a generator and never
+        // gets to the clause under test. This one is medieval, so its people
+        // draw, and it needs something turning before the question being asked
+        // here is the question this test means to ask.
+        while StewardEngine.generation(of: state.settlements[0], registry: registry)
+            < StewardEngine.energyDraw(of: state.settlements[0], in: state, registry: registry) {
+            state.settlements[0].buildings.append(
+                BuildingInstance.founding("windmill", at: state.settlements[0].id, slot: 0))
+        }
         let pick = StewardEngine.nextBuilding(for: state.settlements[0], in: state,
                                               registry: registry)
         let chosen = pick.flatMap { registry.building($0) }

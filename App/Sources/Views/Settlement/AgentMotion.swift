@@ -356,8 +356,17 @@ enum AgentMotion {
         /// the world with extra steps.
         let ridden: [UUID: Conveyance]
 
+        /// The ground the town stands on, and the ways already worn into it —
+        /// what a walk has to go round, and what it would rather go along.
+        /// Read straight off the settlement so a colonist crossing town walks
+        /// the same street `PathEngine` wore (`WalkRoutes`).
+        let colony: ColonyMap?
+        let worn: [TileCoord: Double]
+
         init(settlement: Settlement, registry: GameDataRegistry, continuousTick: Double = 0,
              replay: SettlementBattle.Replay? = nil) {
+            self.colony = settlement.colony
+            self.worn = settlement.paths.lookup()
             let layout = SettlementRenderer.normalizedLayout(settlement: settlement, registry: registry)
             self.layout = layout
             var homes: [LocalPoint] = []
@@ -608,15 +617,36 @@ enum AgentMotion {
         // the case the cap was defending against does not arise.
         let legStart = current.at
         let legEnd = nextAt <= legStart ? nextAt + 1 : nextAt
-        let walk = distance(previous.place, current.place) / walkSpeed
+        // **The street, not the ruler.** A leg worth routing is walked along
+        // the same way `PathEngine` wears its track — round the lots rather
+        // than over them — so the person and the path on the ground agree. A
+        // short hop has no route and keeps the straight line it always had.
+        let street = WalkRoutes.shared.route(
+            from: previous.place, to: current.place,
+            colony: scene.colony, worn: scene.worn)
+        // Time enough for the walk they are *actually* making: going round a
+        // works is further than going through it, and a pace that ignored that
+        // would have people breaking into a trot at every corner (rule 34).
+        let span = street.map { WalkAlong.length($0) }
+            ?? distance(previous.place, current.place)
+        let walk = span / walkSpeed
         let travelSlice = min(max(0.004, walk), legEnd - legStart)
         let progress = t - legStart
         if previous.place != current.place, progress < travelSlice {
             let u = smoothstep(progress / travelSlice)
+            // A touch of path wobble so walkers don't ride rails. Gentler on a
+            // routed street: the way is a tile wide and a walker who wanders
+            // off it is walking through the wall it goes round.
+            let wobble = sin(u * .pi * 3 + unit(seed) * 6) * (street == nil ? 0.006 : 0.003)
+            if let street {
+                let step = WalkAlong.point(street, at: u)
+                return Pose(position: clampPoint(LocalPoint(x: step.at.x + wobble,
+                                                            y: step.at.y + wobble * 0.6)),
+                            activity: .walking, stride: 1,
+                            facing: facing(from: step.at, to: step.heading))
+            }
             let x = previous.place.x + (current.place.x - previous.place.x) * u
             let y = previous.place.y + (current.place.y - previous.place.y) * u
-            // A touch of path wobble so walkers don't ride rails.
-            let wobble = sin(u * .pi * 3 + unit(seed) * 6) * 0.006
             return Pose(position: clampPoint(LocalPoint(x: x + wobble, y: y + wobble * 0.6)),
                         activity: .walking, stride: 1,
                         facing: facing(from: previous.place, to: current.place))

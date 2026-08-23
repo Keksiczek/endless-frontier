@@ -63,7 +63,25 @@ enum SettlementRenderer {
         /// building is two to four tiles across now instead of one to three, so
         /// there is genuinely more to look *at*, and the point of the settlement
         /// screen is seeing what people are doing rather than counting roofs.
-        static let opening: CGFloat = 2.0
+        ///
+        /// **And to 2.8 on 2026-08-23**, because the grid did not stop at 24.
+        /// `ColonyBuilder.grownOutward` takes in another ring of four tiles
+        /// every time a building will not fit, up to 90 a side, and
+        /// `SettlementGeometry.span` does *not* follow it — so the town keeps
+        /// the same slice of the valley and its tiles get smaller every time it
+        /// grows. Keks's save is at 36×36 after three of those rings: a 2×2 hut
+        /// covers `2/36 × 0.70` = 0.039 of the map, which at a zoom of 2 is
+        /// about **30 points on a phone**. A house the size of a thumbnail is
+        /// what *"mapa je malá"* looks like from the inside.
+        ///
+        /// 2.8 puts that hut at about 42 points and a third of the map's width
+        /// across the screen — the town, not the valley. The real fix is for
+        /// the span to grow with the grid so a tile keeps its size, and that is
+        /// a wider change: the charted ground (`LocalMapGenerator`) and the
+        /// rock kept off the grid (`StoneEngine.colonyClearance`) are both
+        /// derived from the span and would have to grow with it, or a colony
+        /// would grow into its own fog.
+        static let opening: CGFloat = 2.8
         static let minScale: CGFloat = 1
         /// How far in the camera will go.
         ///

@@ -115,6 +115,39 @@
     }
   },
   {
+    "id": "charcoal_kiln",
+    "work": "crafting",
+    "look": "forge",
+    "era": "early_settlement",
+    "name": {
+      "en": "Charcoal Kiln",
+      "cs": "Milíř"
+    },
+    "cost": {
+      "materials": 18
+    },
+    "material_cost": {
+      "timber_bundle": 2
+    },
+    "workers": 1,
+    "production": {
+      "energy": 3
+    },
+    "consumption": {
+      "materials": 2
+    },
+    "pollution": 2,
+    "morale_effect": 0,
+    "description": {
+      "en": "A smouldering mound of turf and timber. The first heat a colony can make on purpose — and it eats the wood it burns.",
+      "cs": "Doutnající hromada drnu a dřeva. První teplo, které osada vyrobí schválně — a spolkne dřevo, které pálí."
+    },
+    "footprint": {
+      "w": 2,
+      "h": 2
+    }
+  },
+  {
     "id": "hunters_lodge",
     "look": "lodge",
     "era": "early_settlement",
@@ -277,6 +310,43 @@
     "footprint": {
       "w": 3,
       "h": 2
+    }
+  },
+  {
+    "id": "watermill",
+    "work": "crafting",
+    "look": "mill",
+    "era": "ancient",
+    "name": {
+      "en": "Watermill",
+      "cs": "Vodní mlýn"
+    },
+    "cost": {
+      "materials": 45
+    },
+    "material_cost": {
+      "timber_bundle": 6
+    },
+    "workers": 2,
+    "production": {
+      "energy": 7
+    },
+    "consumption": {},
+    "morale_effect": 0,
+    "adjacency": [
+      {
+        "neighbor": "workshop",
+        "resource": "materials",
+        "bonus": 2
+      }
+    ],
+    "description": {
+      "en": "A wheel in the race turns day and night, in any weather, and asks nothing but a millwright.",
+      "cs": "Kolo v náhonu se točí dnem i nocí, za každého počasí, a nechce nic než mlynáře."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 3
     }
   },
   {
@@ -800,6 +870,39 @@
       "h": 3
     },
     "look": "workshop"
+  },
+  {
+    "id": "horse_mill",
+    "work": "crafting",
+    "look": "mill",
+    "era": "medieval",
+    "name": {
+      "en": "Horse Mill",
+      "cs": "Žentour"
+    },
+    "cost": {
+      "materials": 30
+    },
+    "material_cost": {
+      "timber_bundle": 3,
+      "leather": 2
+    },
+    "workers": 2,
+    "production": {
+      "energy": 4
+    },
+    "consumption": {
+      "food": 0.6
+    },
+    "morale_effect": 0,
+    "description": {
+      "en": "A beam, a beast and a circle worn into the yard. Power the wind cannot fail to deliver — paid for in fodder.",
+      "cs": "Rameno, dobytče a kruh vyšlapaný na dvoře. Síla, kterou vítr nemůže zklamat — placená pící."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 2
+    }
   },
   {
     "id": "factory",

@@ -17,6 +17,52 @@ public enum CombatEngine {
     /// base power joins the melee-side bucket.
     static let rangedBasePenalty = 0.5
 
+    // MARK: - Whose hands the weapon is in
+
+    /// What an unpractised hand gets out of a weapon…
+    ///
+    /// **One, deliberately.** The first cut of this ran `0.7…1.3` around an
+    /// even hand, which reads well and is a silent 30% nerf to every fight in
+    /// the game: a militia is farmers who own a weapon, most of them have never
+    /// stood a watch, so the *distribution* sits at skill zero and the whole
+    /// balance moves with the floor (rule 23 — calibrate from the distribution,
+    /// not from the midpoint of a range). `CombatTests`' armed garrison stopped
+    /// repelling the raid it has always repelled, and it was right to.
+    ///
+    /// So practice only ever **adds**. An unskilled colonist fights exactly as
+    /// well as they did before this existed, and the drilled one is worth half
+    /// as much again.
+    static let noviceHandling = 1.0
+    /// …and what a master's adds on top of it, at `PawnEngine.maxSkill`.
+    static let masteryHandling = 0.5
+
+    /// How much of a weapon a given colonist actually gets out of it.
+    ///
+    /// Keks, watching a fight: *"mělo by se střílet na dostřel luku, podle
+    /// skillu lovce atd."* The range half of that was already true — `loose`
+    /// gates on `CombatProfile.range` — but the *skill* half was not read
+    /// anywhere at all: `militia` weighed health, courage and the piece in the
+    /// hand, and a bow was worth exactly the same in a master hunter's hands as
+    /// in a farmer's. Rule 47: `Pawn.skills` carried the number and nothing in
+    /// the combat path asked for it.
+    ///
+    /// A bow is a hunter's tool and a soldier's alike, so it reads the better
+    /// of the two trades — a lifetime of taking deer and a lifetime of drill
+    /// both make a shot land. A blade is drill only.
+    ///
+    /// Spans `1.0…1.5`: never a penalty, only what drill and a lifetime of
+    /// taking deer are worth on top. See `noviceHandling` for why the range
+    /// does not straddle one.
+    public static func handling(_ pawn: Pawn, for kind: WeaponClass) -> Double {
+        let practice: Int
+        switch kind {
+        case .ranged: practice = max(pawn.skill(.hunting), pawn.skill(.garrison))
+        case .melee:  practice = pawn.skill(.garrison)
+        }
+        let share = min(1, Double(practice) / Double(PawnEngine.maxSkill))
+        return noviceHandling + share * masteryHandling
+    }
+
     /// The colony's fighting strength, split by how it is delivered.
     public struct Militia: Equatable {
         public var melee: Double = 0
@@ -76,11 +122,15 @@ public enum CombatEngine {
             let condition = pawn.health / 100
             let base = (baseUnarmedPower + pawn.genes.courage * couragePower) * condition
             if let weapon = weaponProfile(pawn, registry: registry) {
+                // The weapon's own weight is what practice multiplies — bare
+                // hands and heart belong to the person and are worth the same
+                // whether or not anybody ever drilled them.
+                let inHand = weapon.damage * condition * handling(pawn, for: weapon.kind)
                 switch weapon.kind {
                 case .melee:
-                    m.melee += base + weapon.damage * condition
+                    m.melee += base + inHand
                 case .ranged:
-                    m.ranged += base * rangedBasePenalty + weapon.damage * condition
+                    m.ranged += base * rangedBasePenalty + inHand
                 }
             } else {
                 m.melee += base

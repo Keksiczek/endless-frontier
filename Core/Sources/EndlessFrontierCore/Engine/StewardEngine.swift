@@ -492,6 +492,39 @@ public enum StewardEngine {
             return roof
         }
 
+        // 2c. Light and heat, **before** anywhere to put things.
+        //
+        //     The council had no clause for energy at all until this; then it
+        //     had one, and it sat under the store clause, where it could not
+        //     fire. Both faults were measured on Keks's own two-hundred-year
+        //     save (tick 6805, ninety souls, ninety-eight buildings):
+        //
+        //     - **It counted the wrong demand.** `domesticEnergyDemand` is what
+        //       the *people* draw — `90 × 0.05 × 0.3` = **1.35** a tick in the
+        //       medieval age. What his town actually drew was six universities
+        //       at two apiece, so **13.35**, against one windmill making five.
+        //       The colony was in the dark for decades and the clause read
+        //       `5 > 1.35` and said the grid was fine. Rule 8's shape: two
+        //       numbers for one thing, and the council asking the smaller one.
+        //     - **It could not have fired anyway.** The store clause above it
+        //       was permanently true — his materials roof stood at 3 500 for
+        //       ninety souls, under `roofEnough`'s 60 apiece — so every surplus
+        //       for a century went into another warehouse (rule 27).
+        //
+        //     A store defers a spill. A brownout is a bleed every tick, in
+        //     morale, for as long as it lasts. Above stores is where that
+        //     belongs — and it costs the stores nothing in the long run,
+        //     because this clause stops asking the moment the grid covers its
+        //     draw, whereas a store clause with nothing above it never stops.
+        //
+        //     Below fields and roofs, though. You can read by firelight; you
+        //     cannot eat next year's harvest this winter.
+        let draw = energyDraw(of: settlement, in: state, registry: registry)
+        if draw > 0, generation(of: settlement, registry: registry) < draw,
+           let generator = best(of: affordable, by: { $0.production[.energy] }) {
+            return generator
+        }
+
         // 3. Somewhere to put things. A store at the brim is a colony throwing
         //    away everything it earns.
         //
@@ -545,45 +578,15 @@ public enum StewardEngine {
             // 27 did the rest — everything below it starved. Measured, seed
             // 2025: `Emake` flat at 5.0 (one windmill) from year sixty to year
             // two hundred while demand climbed to 5.9 and the store sat at zero
-            // from year 170. The brownout clause below was never reached, not
-            // once, because the colony was hungry.
+            // from year 170. The brownout clause — which sat *below* this one
+            // at the time — was never reached, not once, because the colony was
+            // hungry. (It sits above the stores now, at 2c, for the same reason
+            // this branch had to go.)
             //
             // Falling through is the honest answer. An empty larder with the
             // ground already broken and a cook already standing is not a
-            // building problem, and the council saying nothing lets the clauses
-            // under it — light, and breadth — have their turn.
-        }
-
-        // 3c. Light and heat. The council had **no clause for energy at all** —
-        //     the word appeared once in this file, in a comment about an old
-        //     bug — so a colony browned out and never once answered it.
-        //
-        //     Measured, seed 2025 at twelve thousand ticks: population 240 in
-        //     the early industrial age draws `240 * 0.05 * 1.0` = twelve a tick
-        //     (`ResourceLoop.domesticEnergyDemand`), the store went to zero
-        //     around year 167 and stayed there, and morale bled
-        //     `brownoutMoralePenalty` every tick for the rest of the run. Three
-        //     windmills — five each, thirty-five materials each — would have
-        //     covered it, out of a store of seven thousand. The council could
-        //     always afford the answer; nobody ever asked the question.
-        //
-        //     Rule 16 wearing its other face: demand scales with **people** and
-        //     supply with **buildings**, so this gap widens on its own every
-        //     year the colony grows. It cannot be tuned away in
-        //     `eraEnergyDemand`, because the multiplier is what makes an age
-        //     feel different — it has to be *answered*, per tick, by a council
-        //     that looks.
-        //
-        //     Below food and above breadth: a brownout is a standing bleed, not
-        //     a death. Guarded by `best` returning nil when nothing affordable
-        //     generates, so an early colony with no windmill unlocked falls
-        //     straight through rather than starving the clause below it
-        //     (rule 27).
-        let draw = ResourceLoop.domesticEnergyDemand(
-            population: settlement.population, era: state.era, config: registry.config)
-        if draw > 0, generation(of: settlement, registry: registry) < draw,
-           let generator = best(of: affordable, by: { $0.production[.energy] }) {
-            return generator
+            // building problem, and the council saying nothing lets the clause
+            // under it — breadth — have its turn.
         }
 
         // 4. Otherwise — and *only* out of genuine surplus — **what this
@@ -644,6 +647,29 @@ public enum StewardEngine {
         of settlement: Settlement, registry: GameDataRegistry
     ) -> Double {
         production(of: settlement, .energy, registry: registry)
+    }
+
+    /// **Everything drawing on the grid** — the colonists and their buildings
+    /// both.
+    ///
+    /// The two halves behave completely differently (rule 16): the domestic
+    /// draw scales with *people* and grows every year the colony does, while
+    /// the operating draw scales with *buildings* and jumps the day a
+    /// university goes up. A council that asks about only one of them is
+    /// answering a question nobody has.
+    ///
+    /// Nameplate, like `production`, and for the same reason: a university with
+    /// nobody in it is still a university the town will want to light.
+    public static func energyDraw(
+        of settlement: Settlement, in state: WorldState, registry: GameDataRegistry
+    ) -> Double {
+        let domestic = ResourceLoop.domesticEnergyDemand(
+            population: settlement.population, era: state.era, config: registry.config)
+        let operating = settlement.buildings.reduce(0.0) { acc, instance in
+            acc + (registry.building(instance.definitionID)?.consumption[.energy] ?? 0)
+                * Double(instance.count)
+        }
+        return domestic + operating
     }
 
     /// Whether any store is full enough to be spilling.
