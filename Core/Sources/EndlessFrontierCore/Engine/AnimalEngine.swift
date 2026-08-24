@@ -226,6 +226,9 @@ public enum AnimalEngine {
     public static func roam(
         _ map: LocalMap, tick: Int, threats: [LocalPoint] = []
     ) -> LocalMap {
+        // What the beasts may not walk into. Nil on a dry map, so an inland
+        // valley pays nothing for a test it cannot fail.
+        let deep = deepWater(on: map)
         guard !map.wildlife.animals.isEmpty else { return map }
         var rng = SeededRNG(seed: map.terrainSeed
                             &+ UInt64(bitPattern: Int64(tick)) &* 0xD1B5_4A32_D192_ED03
@@ -294,7 +297,7 @@ public enum AnimalEngine {
                 pace = stride
             }
             let from = animal.position
-            animal.position = step(from: from, toward: target, by: pace)
+            animal.position = step(from: from, toward: target, by: pace, deep: deep)
             // …and the same stride with a beginning and an end, so the canvas
             // can draw the crossing. It takes as long as *walking that far*
             // takes, not as long as it is until the beast decides again: a deer
@@ -367,13 +370,53 @@ public enum AnimalEngine {
     }
 
     /// One step toward a point, kept on the map.
-    static func step(from: LocalPoint, toward: LocalPoint, by distance: Double) -> LocalPoint {
+    /// One stride toward somewhere, kept out of the deep.
+    ///
+    /// `isWater` was asked in a handful of places in the whole engine and none
+    /// of them was the wild: a herd would drift out to sea and graze there.
+    /// The shallows are fine — beasts wade and drink — and the deep is refused,
+    /// so a step that would end out of its depth ends at the water's edge
+    /// instead. A beast already in deep water (an old save, a shore that moved)
+    /// is not frozen: it may always move, it just cannot move *further* out.
+    static func step(from: LocalPoint, toward: LocalPoint, by distance: Double,
+                     deep: ((LocalPoint) -> Bool)? = nil) -> LocalPoint {
         let dx = toward.x - from.x, dy = toward.y - from.y
         let length = (dx * dx + dy * dy).squareRoot()
         guard length > 1e-6 else { return from }
         let t = min(1, distance / length)
-        return LocalPoint(x: min(0.97, max(0.03, from.x + dx * t)),
-                          y: min(0.97, max(0.03, from.y + dy * t)))
+        let landing = LocalPoint(x: min(0.97, max(0.03, from.x + dx * t)),
+                                 y: min(0.97, max(0.03, from.y + dy * t)))
+        guard let deep, deep(landing), !deep(from) else { return landing }
+        // Back off along the same line until there is ground under it. Coarse
+        // on purpose: eight tries is a stride's worth of resolution and this
+        // runs for every beast on every think.
+        for back in 1...7 {
+            let share = 1 - Double(back) / 8
+            let nearer = LocalPoint(x: from.x + (landing.x - from.x) * share,
+                                    y: from.y + (landing.y - from.y) * share)
+            if !deep(nearer) { return nearer }
+        }
+        return from
+    }
+
+    /// The deep water on a map, as a test — or nil where there is none.
+    ///
+    /// The same reckoning the router uses (`PathEngine.waterDepth`), asked of a
+    /// bare `LocalMap` rather than of a settlement, because the wild lives on
+    /// the map and not in the town.
+    static func deepWater(on map: LocalMap) -> ((LocalPoint) -> Bool)? {
+        let shore = map.shore
+        let river = map.river.flows ? map.river : nil
+        guard shore != nil || river != nil else { return nil }
+        return { p in
+            if let shore, shore.isWater(p) {
+                return shore.distanceInland(p) <= -PathEngine.shallowsReach
+            }
+            if let river {
+                return abs(p.y - river.y(atX: p.x)) <= PathEngine.riverHalfWidth * 0.55
+            }
+            return false
+        }
     }
 
     /// Lets the wild breed back toward what the land can feed. Only mature,

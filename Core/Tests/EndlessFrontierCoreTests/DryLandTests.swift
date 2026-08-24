@@ -89,6 +89,82 @@ struct DryLandTests {
                 "a dry valley pays for a test it can never fail")
     }
 
+    @Test("A beast will not walk into deep water")
+    func theWildKeepsItsFeet() throws {
+        let registry = try GameDataRegistry.bundled()
+        let map = Self.coastMaps(1, registry: registry)[0]
+        let deep = try #require(AnimalEngine.deepWater(on: map),
+                                "a coast map with no deep water in it")
+        let shore = try #require(map.shore)
+
+        // A beast standing on the beach, told to walk straight out to sea.
+        let landing: LocalPoint
+        switch shore.side {
+        case .north: landing = LocalPoint(x: 0.5, y: 0.02)
+        case .south: landing = LocalPoint(x: 0.5, y: 0.98)
+        case .west:  landing = LocalPoint(x: 0.02, y: 0.5)
+        case .east:  landing = LocalPoint(x: 0.98, y: 0.5)
+        }
+        // Somewhere dry to set off from: walk in from the middle.
+        let from = LocalPoint(x: 0.5, y: 0.5)
+        #expect(!deep(from), "the middle of the map is out of its depth")
+        let to = AnimalEngine.step(from: from, toward: landing, by: 0.9, deep: deep)
+        #expect(!deep(to), "a beast walked into the deep")
+    }
+
+    @Test("A beast already out of its depth is not frozen there")
+    func theStrandedCanStillMove() throws {
+        let registry = try GameDataRegistry.bundled()
+        let map = Self.coastMaps(1, registry: registry)[0]
+        let deep = try #require(AnimalEngine.deepWater(on: map))
+        let shore = try #require(map.shore)
+        // A save written before the wild knew about water can have a beast in
+        // it. Refusing to move it would leave it there for ever.
+        let stuck: LocalPoint
+        switch shore.side {
+        case .north: stuck = LocalPoint(x: 0.5, y: 0.01)
+        case .south: stuck = LocalPoint(x: 0.5, y: 0.99)
+        case .west:  stuck = LocalPoint(x: 0.01, y: 0.5)
+        case .east:  stuck = LocalPoint(x: 0.99, y: 0.5)
+        }
+        guard deep(stuck) else { return }
+        let out = AnimalEngine.step(from: stuck, toward: LocalPoint(x: 0.5, y: 0.5),
+                                    by: 0.1, deep: deep)
+        #expect(out != stuck, "a stranded beast cannot move at all")
+    }
+
+    @Test("A colony does not build in the sea")
+    func nothingIsBuiltInTheSea() throws {
+        let registry = try GameDataRegistry.bundled()
+        var settlement = Settlement(
+            id: UUID(uuidString: "00000000-0000-0000-DBBB-f7695d4586ee")!,
+            name: "Strand", kind: .capital)
+        // A shore that reaches **into the built ground**. A generated coast
+        // usually keeps its water outside the build grid, so a test taking one
+        // at random measures nothing — the case worth refusing is the colony
+        // whose grid genuinely touches the sea.
+        var map = Self.coastMaps(1, registry: registry)[0]
+        map.shore = ShoreShape(side: .north, depth: 0.35, amplitude: 0.04, phase: 0)
+        settlement.localMap = map
+        settlement = ColonyBuilder.ensureMap(settlement)
+        let wet = ColonyBuilder.drowned(in: settlement)
+        #expect(!wet.isEmpty, "a coast colony whose grid touches no water")
+
+        // Raise a run of buildings the way the colony does when nobody steers.
+        for _ in 0..<24 {
+            settlement = ColonyBuilder.placeSiteAtFirstFit(
+                settlement, definitionID: "hut", registry: registry).settlement
+        }
+        let placed = settlement.colony?.placements ?? []
+        #expect(!placed.isEmpty, "nothing was built at all")
+        for placement in placed {
+            for tile in placement.footprint {
+                #expect(!wet.contains(tile),
+                        "\(placement.definitionID) stands in the sea at \(tile)")
+            }
+        }
+    }
+
     @Test("Nothing grows or outcrops in the water")
     func thingsAreOnLand() throws {
         let registry = try GameDataRegistry.bundled()

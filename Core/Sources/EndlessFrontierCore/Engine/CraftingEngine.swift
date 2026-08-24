@@ -144,6 +144,9 @@ public enum CraftingEngine {
         room[""] = max(1, crafters)
         var taken: [String: Int] = [:]
         var picked: [Int] = []
+        // Everything else standing on the bench, so an order can be asked
+        // whether anybody is waiting on what it is eating.
+        let wanting = settlement.craftOrders.compactMap { registry.recipes[$0.recipeID] }
         // **An order with an end takes the bench first.**
         //
         // This was oldest-first, and a *standing* order never finishes — so the
@@ -169,7 +172,12 @@ public enum CraftingEngine {
             }) {
             guard !entry.element.paused,
                   let recipe = registry.recipes[entry.element.recipeID],
-                  isWorkable(recipe, at: settlement, researched: researched) else { continue }
+                  isWorkable(recipe, at: settlement, researched: researched),
+                  // A job somebody asked for never yields; a standing trickle
+                  // stands aside for something that is short of what they share.
+                  entry.element.wanted != nil
+                    || !yieldsTheBench(recipe, at: settlement, to: wanting)
+            else { continue }
             // Recipes needing no shop share one imaginary bench — a colony
             // stitching leather in its yard is not two colonies.
             let bench = recipe.requiresBuilding ?? ""
@@ -186,6 +194,51 @@ public enum CraftingEngine {
         }
         return picked
     }
+
+    /// **Whether this standing order should stand aside for one that is
+    /// waiting on the same stuff.**
+    ///
+    /// Measured on Keks's save: `saw_timber` and `burn_charcoal` both want
+    /// `wood`, the valley's wood arrives a few sticks at a time, and the timber
+    /// order was placed at tick 60 — so the saw took every stick and charcoal
+    /// stayed at zero, which kept `smelt_iron` at zero, which kept the whole
+    /// iron half of the item tree unreachable for a century.
+    ///
+    /// **Contention is the trigger, not the shelf.** A flat "stop at eighteen"
+    /// was tried first and was worse: bricks froze at eighteen while the clay
+    /// piled to ninety and the colony's building programme slowed, because
+    /// nothing else wanted clay and stopping bought nobody anything (rule 16 —
+    /// a flat cap against a growing town). An order yields only when it already
+    /// has plenty **and** something else on the bench is short of an input the
+    /// two of them share.
+    ///
+    /// A job with an end (`wanted`) never yields: that is somebody asking for
+    /// four coats, not a background trickle.
+    static func yieldsTheBench(
+        _ recipe: RecipeDefinition, at settlement: Settlement,
+        to others: [RecipeDefinition]
+    ) -> Bool {
+        guard settlement.stockpile[recipe.outputItemID, default: 0] >= standingOrderStock
+        else { return false }
+        let mine = Set(recipe.materials.keys)
+        guard !mine.isEmpty else { return false }
+        return others.contains { other in
+            guard other.id != recipe.id else { return false }
+            // Somebody else wants one of my inputs, and is short of *something*
+            // — which is what being blocked looks like from here.
+            guard !mine.isDisjoint(with: other.materials.keys) else { return false }
+            return !hasMaterials(other, at: settlement)
+        }
+    }
+
+    /// How many of a made material a standing order keeps on the shelf before
+    /// it will consider standing aside.
+    ///
+    /// The same number the council keeps of a building material
+    /// (`StewardEngine.materialStock`) plus a little, because the bench is
+    /// upstream of the council and a colony that hits exactly twelve and stops
+    /// has nothing in hand the moment anybody builds.
+    public static let standingOrderStock = 18
 
     /// The best hand in the shop. Quality follows whoever is actually good at
     /// this, not the average of everyone standing near the anvil — an

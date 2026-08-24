@@ -180,17 +180,21 @@ public enum SettlementRoute {
         // never overshoot and the route stays a true cheapest one.
         var best: [TileCoord: Double] = [a: 0]
         var cameFrom: [TileCoord: TileCoord] = [:]
-        var open: [(estimate: Double, cost: Double, at: TileCoord)] =
-            [(heuristic(a, b), 0, a)]
+        // **A heap, because the frontier is not small.**
+        //
+        // This used to be a linear scan for the cheapest node, on the grounds
+        // that "a small frontier … is measurably not the cost here" — a claim
+        // nobody had measured. `RouteCostTests` measured it: 4.4 ms a leg on a
+        // town of sixty, and a colony re-routes every walker at once whenever
+        // its layout changes, which is half a second of dropped frames. The
+        // scan is O(n) inside a loop that runs O(n) times, and the frontier of
+        // a boxed A* is hundreds of tiles wide.
+        var open = Frontier()
+        open.push((heuristic(a, b), 0, a))
         var settled = Set<TileCoord>()
         var expanded = 0
 
-        while !open.isEmpty, expanded < mostNodes {
-            // A small frontier; a linear pick keeps this a hundred lines
-            // shorter than a heap and is measurably not the cost here.
-            var pick = 0
-            for i in open.indices where isBefore(open[i], open[pick]) { pick = i }
-            let node = open.remove(at: pick)
+        while let node = open.pop(), expanded < mostNodes {
             guard !settled.contains(node.at) else { continue }
             settled.insert(node.at)
             expanded += 1
@@ -204,7 +208,7 @@ public enum SettlementRoute {
                 if let known = best[next], known <= cost { continue }
                 best[next] = cost
                 cameFrom[next] = node.at
-                open.append((cost + heuristic(next, b), cost, next))
+                open.push((cost + heuristic(next, b), cost, next))
             }
         }
         return SettlementPaths.line(from: a, to: b)
@@ -220,6 +224,43 @@ public enum SettlementRoute {
 
     static func heuristic(_ a: TileCoord, _ b: TileCoord) -> Double {
         Double(abs(a.x - b.x) + abs(a.y - b.y)) * pavedCost
+    }
+
+    /// The open set, as a binary heap.
+    ///
+    /// Ordered by `isBefore`, so the *same* tie-break the linear scan used —
+    /// a route must not change shape because it got faster (rule 3).
+    struct Frontier {
+        typealias Node = (estimate: Double, cost: Double, at: TileCoord)
+        private var items: [Node] = []
+
+        mutating func push(_ node: Node) {
+            items.append(node)
+            var child = items.count - 1
+            while child > 0 {
+                let parent = (child - 1) / 2
+                guard isBefore(items[child], items[parent]) else { break }
+                items.swapAt(child, parent)
+                child = parent
+            }
+        }
+
+        mutating func pop() -> Node? {
+            guard let first = items.first else { return nil }
+            items.swapAt(0, items.count - 1)
+            items.removeLast()
+            var parent = 0
+            while true {
+                let left = parent * 2 + 1, right = left + 1
+                var best = parent
+                if left < items.count, isBefore(items[left], items[best]) { best = left }
+                if right < items.count, isBefore(items[right], items[best]) { best = right }
+                guard best != parent else { break }
+                items.swapAt(parent, best)
+                parent = best
+            }
+            return first
+        }
     }
 
     /// Deterministic ordering for the frontier: cheapest estimate first, and

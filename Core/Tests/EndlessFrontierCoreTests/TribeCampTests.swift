@@ -165,18 +165,48 @@ struct TribeCampTests {
     /// spot ask `fits` on every tile of a 34×34 grid. Indexing the occupied
     /// tiles once per search took it to 68 ms.
     ///
-    /// The bar below is a **debug** number: tests build without optimisation
-    /// and the shipped build is several times faster. It is set to catch the
-    /// shape of the regression — a linear search inside a grid scan, rule 38 —
-    /// rather than to pin a frame budget, and the camp is derived off the main
-    /// actor anyway.
+    /// **The clock was tried here and has been taken out.**
+    ///
+    /// A 150 ms bar caught the original regression and then cried wolf four
+    /// times in one week: the same code measures about 2 ms a camp run alone
+    /// and 210–830 ms inside a full sweep, because the sweep saturates the
+    /// machine. A guard that fails on a loaded machine gets ignored and then
+    /// deleted, which costs more than it saves — `RouteCostTests` learned the
+    /// same lesson the same week and this follows it.
+    ///
+    /// What is pinned instead is the **shape of the regression**, which is what
+    /// the timing was standing in for: deriving a camp must not walk the whole
+    /// colony for every tile it considers (rule 38). Doubling the population
+    /// doubles the buildings, so a linear-inside-a-scan implementation grows
+    /// with the *square* — measuring one against the other is a ratio, and a
+    /// ratio does not care how busy the machine is.
     @Test("Deriving a people does not walk the whole colony per tile")
     func derivingIsCheap() throws {
         let registry = try registry()
-        let people = tribe(population: 200)
-        let began = Date()
-        for _ in 0..<20 { _ = camp(people, registry: registry) }
-        let each = Date().timeIntervalSince(began) / 20
-        #expect(each < 0.15, "\(Int(each * 1000)) ms each, unoptimised — it was 400")
+        let small = tribe(population: 100)
+        let large = tribe(population: 400)
+
+        func cost(_ people: Tribe) -> Double {
+            // Warmed first, so neither figure carries the one-off work of
+            // faulting the registry in.
+            _ = camp(people, registry: registry)
+            let began = Date()
+            for _ in 0..<8 { _ = camp(people, registry: registry) }
+            return Date().timeIntervalSince(began) / 8
+        }
+        // Measured together and interleaved, so a machine that gets busier
+        // half way through moves both numbers rather than one.
+        let a1 = cost(small), b1 = cost(large)
+        let a2 = cost(small), b2 = cost(large)
+        let small4 = min(a1, a2), large4 = min(b1, b2)
+        #expect(small4 > 0, "the small camp took no measurable time at all")
+
+        // Four times the people. Linear-in-buildings work comes out near 4×;
+        // the linear-search-inside-a-grid-scan this test was written for came
+        // out near 16×, which is the thing to catch.
+        let growth = large4 / small4
+        let times = Int((growth * 10).rounded())
+        #expect(growth < 9,
+                "four times the people cost \(times)/10× the work — something inside the placement scan is walking the colony again")
     }
 }

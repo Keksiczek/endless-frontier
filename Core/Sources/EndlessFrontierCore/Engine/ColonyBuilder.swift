@@ -176,8 +176,12 @@ public enum ColonyBuilder {
         if let map = host.colony, centerFit(def.footprint, in: map) == nil {
             host = clearedOfDerelicts(host)
         }
+        // Ground that is not ground. Worked out once here rather than inside
+        // every fit: the whole grid is scanned, and the answer is the same for
+        // every building raised this tick.
+        let wet = drowned(in: host)
         guard let map = host.colony,
-              let coord = fit(for: def, in: map, registry: registry) else {
+              let coord = fit(for: def, in: map, registry: registry, blocked: wet) else {
             return (settlement, nil)
         }
         let sited = placeSite(host, definitionID: definitionID, at: coord, registry: registry)
@@ -454,6 +458,32 @@ public enum ColonyBuilder {
         return taken
     }
 
+    /// **The tiles of the build grid that are under water.**
+    ///
+    /// Nothing about placing a building had ever asked. `isWater` is consulted
+    /// in exactly a handful of places in the engine and none of them was this
+    /// one, so a coastal colony would happily stand a granary in the sea — the
+    /// same fault as *"vše tam normálně chodí"*, one layer up from the walking.
+    ///
+    /// Deep water only. The shallows are a beach and a ford: people wade them
+    /// (`SettlementRoute.acrossShallows`) and a jetty or a mill belongs on
+    /// them, so refusing to build there would be a rule nobody asked for.
+    /// Returned as tiles to fold into the occupancy set, which is how every
+    /// placement path already asks "may I stand here" — no new question to
+    /// thread through six functions.
+    static func drowned(in settlement: Settlement) -> Set<TileCoord> {
+        guard let colony = settlement.colony,
+              let depth = PathEngine.waterDepth(settlement) else { return [] }
+        var wet = Set<TileCoord>()
+        for y in 0..<max(1, colony.height) {
+            for x in 0..<max(1, colony.width) {
+                let at = SettlementGeometry.canvasPoint(tileX: x, tileY: y, in: colony)
+                if depth(at) == .deep { wet.insert(TileCoord(x, y)) }
+            }
+        }
+        return wet
+    }
+
     static func fits(_ size: TileSize, at coord: TileCoord, in map: ColonyMap) -> Bool {
         fits(size, at: coord, in: map, occupied: occupied(in: map))
     }
@@ -477,8 +507,9 @@ public enum ColonyBuilder {
     }
 
     /// The first top-left (row-major) where a `size` footprint fits, if any.
-    static func firstFit(_ size: TileSize, in map: ColonyMap) -> TileCoord? {
-        let taken = occupied(in: map)
+    static func firstFit(_ size: TileSize, in map: ColonyMap,
+                         blocked: Set<TileCoord> = []) -> TileCoord? {
+        let taken = occupied(in: map).union(blocked)
         for y in 0..<map.height {
             for x in 0..<map.width {
                 let coord = TileCoord(x, y)
@@ -530,7 +561,8 @@ public enum ColonyBuilder {
     /// then opens a second quarter and fills that, and so on — so a town grows
     /// outward into recognisable neighbourhoods instead of packing tighter and
     /// tighter around one point.
-    static func centerFit(_ size: TileSize, in map: ColonyMap) -> TileCoord? {
+    static func centerFit(_ size: TileSize, in map: ColonyMap,
+                          blocked: Set<TileCoord> = []) -> TileCoord? {
         let districts = max(1, (map.placements.count / buildingsPerDistrict) + 1)
         let centres = districtCentres(in: map, count: districts)
 
@@ -551,7 +583,8 @@ public enum ColonyBuilder {
         // is full, the next one, and so on — a colony never fails to build
         // merely because its newest square filled up.
         for index in order {
-            if let spot = nearestFit(size, to: centres[index], in: map) { return spot }
+            if let spot = nearestFit(size, to: centres[index], in: map,
+                                     blocked: blocked) { return spot }
         }
         return nil
     }
@@ -578,11 +611,17 @@ public enum ColonyBuilder {
     /// enclosed rather than with one very thick side. Everything else fills the
     /// quarters from the middle out, exactly as before.
     static func fit(for def: BuildingDefinition, in map: ColonyMap,
-                    registry: GameDataRegistry) -> TileCoord? {
-        guard isRampart(def) else { return centerFit(def.footprint, in: map) }
+                    registry: GameDataRegistry,
+                    /// Ground that is not ground — deep water, chiefly. Folded
+                    /// into the occupancy so every path refuses it for free.
+                    blocked: Set<TileCoord> = []) -> TileCoord? {
+        guard isRampart(def) else {
+            return centerFit(def.footprint, in: map, blocked: blocked)
+        }
         return perimeterFit(def.footprint, in: map,
-                            taken: rampartBearings(in: map, registry: registry))
-            ?? centerFit(def.footprint, in: map)
+                            taken: rampartBearings(in: map, registry: registry),
+                            blocked: blocked)
+            ?? centerFit(def.footprint, in: map, blocked: blocked)
     }
 
     /// Which way round the town the walls that already stand are facing.
@@ -611,12 +650,13 @@ public enum ColonyBuilder {
 
     /// The free spot nearest the wall ring, preferring the side nothing guards.
     static func perimeterFit(_ size: TileSize, in map: ColonyMap,
-                             taken: [Double]) -> TileCoord? {
+                             taken: [Double],
+                             blocked: Set<TileCoord> = []) -> TileCoord? {
         guard map.width >= size.width, map.height >= size.height else { return nil }
         let ring = SettlementGeometry.ringRadiusInTiles(atReach: SiegeField.wallReach, in: map)
         let cx = Double(map.width) / 2, cy = Double(map.height) / 2
         var best: (coord: TileCoord, score: Double)?
-        let occupiedTiles = occupied(in: map)
+        let occupiedTiles = occupied(in: map).union(blocked)
         for y in 0...(map.height - size.height) {
             for x in 0...(map.width - size.width) {
                 let coord = TileCoord(x, y)
@@ -650,12 +690,13 @@ public enum ColonyBuilder {
     }
 
     /// The free spot closest to a given point on the grid.
-    static func nearestFit(_ size: TileSize, to centre: TileCoord, in map: ColonyMap) -> TileCoord? {
+    static func nearestFit(_ size: TileSize, to centre: TileCoord, in map: ColonyMap,
+                           blocked: Set<TileCoord> = []) -> TileCoord? {
         guard map.width >= size.width, map.height >= size.height else { return nil }
         let cx = Double(centre.x) - Double(size.width - 1) / 2
         let cy = Double(centre.y) - Double(size.height - 1) / 2
         var best: (coord: TileCoord, d2: Double)?
-        let taken = occupied(in: map)
+        let taken = occupied(in: map).union(blocked)
         for y in 0...(map.height - size.height) {
             for x in 0...(map.width - size.width) {
                 let coord = TileCoord(x, y)
