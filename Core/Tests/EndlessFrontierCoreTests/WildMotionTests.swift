@@ -17,7 +17,7 @@ struct WildMotionTests {
         for i in 0..<count {
             animals.append(Animal(
                 id: UUID(uuidString: String(format: "00000000-0000-0000-BEA5-%012d", i))!,
-                species: .deer, sex: i.isMultiple(of: 2) ? .female : .male, age: 200))
+                species: "deer", sex: i.isMultiple(of: 2) ? .female : .male, age: 200))
         }
         return LocalMap(river: RiverShape(baseY: 0.8, amplitude: 0, phase: 0),
                         nodes: [], pois: [],
@@ -62,10 +62,10 @@ struct WildMotionTests {
         // running is not a twenty-minute amble.
         var map = Self.valley(8)
         var wolf = Animal(id: UUID(uuidString: "00000000-0000-0000-BEA5-FFFFFFFFFFFF")!,
-                          species: .wolf, sex: .male, age: 200)
+                          species: "wolf", sex: .male, age: 200)
         wolf.position = LocalPoint(x: 0.5, y: 0.52)
         map.wildlife.animals.append(wolf)
-        for index in map.wildlife.animals.indices where map.wildlife.animals[index].species == .deer {
+        for index in map.wildlife.animals.indices where map.wildlife.animals[index].species == "deer" {
             map.wildlife.animals[index].position = LocalPoint(x: 0.52, y: 0.53)
         }
         let after = AnimalEngine.roam(map, tick: 0)

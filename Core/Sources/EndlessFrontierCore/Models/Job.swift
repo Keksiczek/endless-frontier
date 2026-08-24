@@ -198,7 +198,7 @@ public enum JobBoard {
         // it is standing. It moves, so the job's position is only good for as
         // long as the board is — which is exactly why the board is re-posted.
         for animal in map.wildlife.animals
-            .filter({ !$0.species.isPredator && charted($0.position) })
+            .filter({ !$0.isPredator && charted($0.position) })
             .sorted(by: { $0.id.uuidString < $1.id.uuidString }) {
             jobs.append(Job(id: jobID("stalk", animal.id), kind: .stalkAnimal,
                             position: animal.position, animalID: animal.id))

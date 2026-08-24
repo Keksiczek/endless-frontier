@@ -127,7 +127,8 @@ struct BiomeCoverageTests {
             "\(StoneEngine.massifWeight(for: id))",
             "\(stone.iron)/\(stone.clay)",
             "\(RiverShape.chance(biomeID: id))",
-            AnimalFactory.mix(for: id).map { "\($0.0)\($0.1)\($0.2)" }.joined(),
+            AnimalFactory.mix(for: id, registry: Self.registry)
+                .map { "\($0.0.id)\($0.1)\($0.2)" }.joined(),
         ]
     }
 

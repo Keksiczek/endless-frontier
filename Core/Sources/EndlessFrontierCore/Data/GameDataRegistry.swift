@@ -43,6 +43,8 @@ public struct GameDataRegistry: Sendable {
     public let scenery: [String: SceneryDefinition]
     /// What kinds of tree there are. See `FloraDefinition`.
     public let flora: [String: FloraDefinition]
+    /// What kinds of beast there are. See `AnimalDefinition`.
+    public let animals: [String: AnimalDefinition]
 
     /// What the colony can move a body or a load with — mounts and vehicles,
     /// which are one thing. See `docs/MOUNTS_AND_VEHICLES.md`.
@@ -106,6 +108,7 @@ public struct GameDataRegistry: Sendable {
         ground: [GroundDefinition] = [],
         scenery: [SceneryDefinition] = [],
         flora: [FloraDefinition] = [],
+        animals: [AnimalDefinition] = [],
         conveyances: [ConveyanceDefinition] = [],
         config: WorldConfig = .default,
         mapGen: MapGenConfig = .default
@@ -119,6 +122,7 @@ public struct GameDataRegistry: Sendable {
         self.ground = Dictionary(uniqueKeysWithValues: ground.map { ($0.id, $0) })
         self.scenery = Dictionary(uniqueKeysWithValues: scenery.map { ($0.id, $0) })
         self.flora = Dictionary(uniqueKeysWithValues: flora.map { ($0.id, $0) })
+        self.animals = Dictionary(uniqueKeysWithValues: animals.map { ($0.id, $0) })
         self.conveyances = Dictionary(uniqueKeysWithValues: conveyances.map { ($0.id, $0) })
         self.cookableMeals = cookable
         self.foodstuffs = Set(cookable.flatMap(\.ingredients.keys))
@@ -164,6 +168,18 @@ public struct GameDataRegistry: Sendable {
 
     /// One kind of tree, by id.
     public func tree(_ id: String) -> FloraDefinition? { flora[id] }
+
+    /// One kind of beast, by id.
+    public func beast(_ id: String) -> AnimalDefinition? { animals[id] }
+
+    /// The beasts that live in a given country, with how many of each, in a
+    /// stable order. Empty when the content names none — the caller decides
+    /// what an empty valley means rather than being handed a silent default.
+    public func animals(inBiome biomeID: String) -> [(AnimalDefinition, AnimalDefinition.Range)] {
+        animals.values.sorted { $0.id < $1.id }.compactMap { def in
+            def.biomes.first { $0.id == biomeID }.map { (def, $0) }
+        }
+    }
 
     /// The species that grow in a given country, in a stable order.
     ///
@@ -381,6 +397,7 @@ public struct GameDataRegistry: Sendable {
         let ground = try optional([GroundDefinition].self, "ground", else: [])
         let scenery = try optional([SceneryDefinition].self, "scenery", else: [])
         let flora = try optional([FloraDefinition].self, "flora", else: [])
+        let animals = try optional([AnimalDefinition].self, "animals", else: [])
         let conveyances = try optional([ConveyanceDefinition].self, "conveyances", else: [])
         return GameDataRegistry(
             buildings: try load([BuildingDefinition].self, "buildings"),
@@ -399,6 +416,7 @@ public struct GameDataRegistry: Sendable {
             ground: ground,
             scenery: scenery,
             flora: flora,
+            animals: animals,
             conveyances: conveyances,
             config: try load(WorldConfig.self, "world-config"),
             mapGen: mapGen

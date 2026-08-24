@@ -67,7 +67,7 @@ public enum StableEngine {
             .filter { beast in
                 guard !taken.contains(beast.id), beast.animal.isAlive else { return false }
                 guard let wanted = def.requiresAnimal else { return false }
-                return beast.animal.species.rawValue == wanted
+                return beast.animal.species == wanted
             }
             .min { $0.id.uuidString < $1.id.uuidString }
     }

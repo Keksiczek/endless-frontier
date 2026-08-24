@@ -36,31 +36,13 @@ public enum TamingEngine {
     /// This is what makes taming a *choice*: a boar is worth the season it
     /// costs, a bear is a long shot that pays for itself at the gate, and
     /// nobody sane spends a winter on a hare.
-    public static func wildness(_ species: AnimalSpecies) -> Double {
-        switch species {
-        case .boar: return 0.55
-        case .goat: return 0.62
-        case .deer: return 0.45
-        case .badger: return 0.38
-        case .elk: return 0.30
-        case .wolf: return 0.25
-        case .fox: return 0.30
-        case .bear: return 0.12
-        case .lynx: return 0.18
-        case .hare: return 0.60
-        case .grouse: return 0.52
-        }
+    public static func wildness(_ species: String, registry: GameDataRegistry) -> Double {
+        registry.beast(species)?.tameability ?? 0.4
     }
 
     /// What a tamed beast of this kind is *for*.
-    public static func calling(_ species: AnimalSpecies) -> TamedRole {
-        switch species {
-        // An elk carries more than a deer and a goat carries a pack up ground
-        // nothing else will climb; both earn their keep.
-        case .boar, .deer, .elk, .goat: return .beastOfBurden
-        case .wolf, .bear, .lynx: return .guard
-        case .fox, .hare, .badger, .grouse: return .companion
-        }
+    public static func calling(_ species: String, registry: GameDataRegistry) -> TamedRole {
+        registry.beast(species)?.role ?? .companion
     }
 
     // MARK: - Working at it
@@ -91,17 +73,17 @@ public enum TamingEngine {
         // The likeliest beast: nearest the town, and the most biddable of those.
         let heart = SettlementGeometry.heart
         guard let index = updated.wildlife.animals.indices
-            .filter({ !updated.wildlife.animals[$0].species.isPredator
+            .filter({ !updated.wildlife.animals[$0].isPredator
                         || settlement.stats.defense > 20 })
             .min(by: { a, b in
                 let pa = updated.wildlife.animals[a], pb = updated.wildlife.animals[b]
-                let da = distance(pa.position, heart) - wildness(pa.species) * 0.2
-                let db = distance(pb.position, heart) - wildness(pb.species) * 0.2
+                let da = distance(pa.position, heart) - wildness(pa.species, registry: registry) * 0.2
+                let db = distance(pb.position, heart) - wildness(pb.species, registry: registry) * 0.2
                 return da < db
             }) else { return settlement }
 
         var beast = updated.wildlife.animals[index]
-        beast.tameProgress += workPerTamer * Double(tamers) * wildness(beast.species)
+        beast.tameProgress += workPerTamer * Double(tamers) * wildness(beast.species, registry: registry)
         if beast.tameProgress < 1 {
             updated.wildlife.animals[index] = beast
             s.localMap = updated
@@ -113,11 +95,11 @@ public enum TamingEngine {
         beast.tameProgress = 1
         beast.position = ResourceLoop.jitter(heart, by: 0.06, rng: &rng)
         s.localMap = updated
-        s.tamed.append(TamedAnimal(animal: beast, role: calling(beast.species),
+        s.tamed.append(TamedAnimal(animal: beast, role: calling(beast.species, registry: registry),
                                    tamedTick: tick))
         s.journal.append(tick: tick, kind: .arrival, text: LocalizedText(values: [
-            .en: "A \(beast.species.displayName.resolve(.en).lowercased()) stopped running and stayed.",
-            .cs: "\(beast.species.displayName.resolve(.cs)) přestal utíkat a zůstal."]))
+            .en: "A \(registry.beast(beast.species)?.name.resolve(.en).lowercased() ?? beast.species) stopped running and stayed.",
+            .cs: "\(registry.beast(beast.species)?.name.resolve(.cs) ?? beast.species) přestal utíkat a zůstal."]))
         return s
     }
 
@@ -140,7 +122,7 @@ public enum TamingEngine {
             let meal = feedPerTick
             if food >= meal {
                 food -= meal
-                beast.animal.health = min(beast.animal.species.baseHealth,
+                beast.animal.health = min(beast.animal.baseHealth,
                                           beast.animal.health + 0.2)
             } else {
                 beast.animal.health = max(0, beast.animal.health - 0.6)
@@ -148,16 +130,16 @@ public enum TamingEngine {
 
             guard beast.animal.isAlive else {
                 s.journal.append(tick: tick, kind: .death, text: LocalizedText(values: [
-                    .en: "The colony's \(beast.animal.species.displayName.resolve(.en).lowercased()) did not last the season.",
-                    .cs: "\(beast.animal.species.displayName.resolve(.cs)) osady sezónu nepřečkal."]))
+                    .en: "The colony's \((registry.beast(beast.animal.species)?.name.resolve(.en) ?? beast.animal.species).lowercased()) did not last the season.",
+                    .cs: "\((registry.beast(beast.animal.species)?.name.resolve(.cs) ?? beast.animal.species)) osady sezónu nepřečkal."]))
                 continue
             }
             // Badly kept, and it goes back to what it was.
-            let condition = beast.animal.health / beast.animal.species.baseHealth
+            let condition = beast.animal.health / beast.animal.baseHealth
             if condition < neglectBelow, rng.nextUnit() < 0.05 {
                 s.journal.append(tick: tick, kind: .departure, text: LocalizedText(values: [
-                    .en: "The \(beast.animal.species.displayName.resolve(.en).lowercased()) went back to the woods.",
-                    .cs: "\(beast.animal.species.displayName.resolve(.cs)) se vrátil do lesa."]))
+                    .en: "The \((registry.beast(beast.animal.species)?.name.resolve(.en) ?? beast.animal.species).lowercased()) went back to the woods.",
+                    .cs: "\((registry.beast(beast.animal.species)?.name.resolve(.cs) ?? beast.animal.species)) se vrátil do lesa."]))
                 continue
             }
             kept.append(beast)
@@ -175,7 +157,7 @@ public enum TamingEngine {
     public static func bonuses(_ settlement: Settlement) -> (haul: Double, defense: Double, mood: Double) {
         var haul = 0.0, defense = 0.0, mood = 0.0
         for beast in settlement.tamed {
-            let vigour = min(1, beast.animal.health / beast.animal.species.baseHealth)
+            let vigour = min(1, beast.animal.health / beast.animal.baseHealth)
             switch beast.role {
             case .beastOfBurden: haul += 0.12 * vigour
             case .guard: defense += 3.5 * vigour

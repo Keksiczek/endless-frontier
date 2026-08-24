@@ -56,15 +56,15 @@ public enum AnimalEngine {
             animal.age += max(1, steps)
 
             // Cold and heat, when the season leaves the beast's comfort band.
-            let cold = outside < animal.species.comfortLow
-            let hot = outside > animal.species.comfortHigh
+            let cold = outside < animal.comfortLow
+            let hot = outside > animal.comfortHigh
             if cold {
                 worsen(&animal, .frostbite,
-                       by: (animal.species.comfortLow - outside) * exposureRate * n,
+                       by: (animal.comfortLow - outside) * exposureRate * n,
                        label: LocalizedText(values: [.en: "Frostbite", .cs: "Omrzliny"]))
             } else if hot {
                 worsen(&animal, .heatstroke,
-                       by: (outside - animal.species.comfortHigh) * exposureRate * n,
+                       by: (outside - animal.comfortHigh) * exposureRate * n,
                        label: LocalizedText(values: [.en: "Heatstroke", .cs: "Úpal"]))
             }
 
@@ -102,8 +102,8 @@ public enum AnimalEngine {
 
             if suffering > 0 {
                 animal.health = max(0, animal.health - suffering * sufferingPerTick * n)
-            } else if animal.health < animal.species.baseHealth {
-                animal.health = min(animal.species.baseHealth, animal.health + thrivePerTick * n)
+            } else if animal.health < animal.baseHealth {
+                animal.health = min(animal.baseHealth, animal.health + thrivePerTick * n)
             }
 
             // Old age comes for it in the end.
@@ -169,7 +169,7 @@ public enum AnimalEngine {
     public static func hunt(_ map: LocalMap, count: Int) -> (map: LocalMap, taken: Int) {
         guard count > 0 else { return (map, 0) }
         let prey = map.wildlife.animals.enumerated()
-            .filter { !$0.element.species.isPredator }
+            .filter { !$0.element.isPredator }
             .sorted { lhs, rhs in
                 if lhs.element.canWalk != rhs.element.canWalk { return !lhs.element.canWalk }
                 return lhs.element.health < rhs.element.health
@@ -233,7 +233,7 @@ public enum AnimalEngine {
         let animals = map.wildlife.animals
 
         // Where the herd is, so prey have something to keep together around.
-        let prey = animals.filter { !$0.species.isPredator }
+        let prey = animals.filter { !$0.isPredator }
         let centre: LocalPoint
         if prey.isEmpty {
             centre = LocalPoint(x: 0.5, y: 0.52)
@@ -242,29 +242,29 @@ public enum AnimalEngine {
                 x: prey.reduce(0) { $0 + $1.position.x } / Double(prey.count),
                 y: prey.reduce(0) { $0 + $1.position.y } / Double(prey.count))
         }
-        let predators = animals.filter { $0.species.isPredator }.map(\.position)
+        let predators = animals.filter { $0.isPredator }.map(\.position)
 
         var moved: [Animal] = []
         moved.reserveCapacity(animals.count)
         for var animal in animals {
             // The lame do not roam. Nor does anything badly hurt.
-            guard animal.canWalk, animal.health > animal.species.baseHealth * 0.25 else {
+            guard animal.canWalk, animal.health > animal.baseHealth * 0.25 else {
                 animal.activity = .resting
                 moved.append(animal)
                 continue
             }
             let scared = nearest(to: animal.position, among: predators + threats,
-                                 within: animal.species.isPredator ? hunterAlarmRange : alarmRange,
+                                 within: animal.isPredator ? hunterAlarmRange : alarmRange,
                                  ignoringSelf: animal.position)
             let target: LocalPoint
             let pace: Double
-            if let scared, !animal.species.isPredator {
+            if let scared, !animal.isPredator {
                 // Straight away from it, and quickly.
                 animal.activity = .fleeing
                 target = LocalPoint(x: animal.position.x * 2 - scared.x,
                                     y: animal.position.y * 2 - scared.y)
                 pace = bolt
-            } else if animal.species.isPredator {
+            } else if animal.isPredator {
                 // A predator goes where the eating is.
                 if let meal = nearest(to: animal.position, among: prey.map(\.position),
                                       within: 1, ignoringSelf: animal.position) {
@@ -393,7 +393,7 @@ public enum AnimalEngine {
 
         var rng = SeededRNG(seed: map.terrainSeed &+ UInt64(bitPattern: Int64(tick)) &* 0x85EB_CA6B)
         let breeders = map.wildlife.animals.filter {
-            !$0.species.isPredator && $0.health > $0.species.baseHealth * 0.6
+            !$0.isPredator && $0.health > $0.baseHealth * 0.6
         }
         guard !breeders.isEmpty else { return map }
 

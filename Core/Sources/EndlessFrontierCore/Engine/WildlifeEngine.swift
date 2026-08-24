@@ -258,7 +258,7 @@ public enum WildlifeEngine {
                                                       tick: tick) ^ 0x60_52_45_44)
             s.pawns[i] = MedicineEngine.wound(s.pawns[i], amount: wound.damage,
                                               tick: tick, rng: &goring)
-            let beast = wound.species.displayName
+            let beast = registry.beast(wound.species)?.name ?? LocalizedText(wound.species)
             if s.pawns[i].health <= 0 {
                 s.pawns.remove(at: i)
                 s.deathTallies[PawnDeathCause.beast.rawValue, default: 0] += 1

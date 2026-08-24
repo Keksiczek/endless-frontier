@@ -1,0 +1,463 @@
+[
+  {
+    "id": "deer",
+    "name": {
+      "en": "Deer",
+      "cs": "Jelen"
+    },
+    "build": "deer",
+    "diet": "grazer",
+    "size": 3.4,
+    "baseHealth": 90.0,
+    "comfortLow": -20.0,
+    "comfortHigh": 32.0,
+    "biomes": [
+      {
+        "id": "forest",
+        "min": 7,
+        "max": 10
+      },
+      {
+        "id": "coast",
+        "min": 5,
+        "max": 8
+      },
+      {
+        "id": "tundra",
+        "min": 5,
+        "max": 8
+      },
+      {
+        "id": "mountains",
+        "min": 3,
+        "max": 5
+      },
+      {
+        "id": "wetlands",
+        "min": 4,
+        "max": 6
+      },
+      {
+        "id": "desert",
+        "min": 1,
+        "max": 3
+      },
+      {
+        "id": "plains",
+        "min": 10,
+        "max": 14
+      }
+    ],
+    "description": {
+      "en": "Light on its feet and always listening. The herd is what a hunter walks out for.",
+      "cs": "Lehký v nohou a pořád naslouchá. Za stádem hajný vyráží nejčastěji."
+    },
+    "tameability": 0.45,
+    "role": "beast_of_burden"
+  },
+  {
+    "id": "elk",
+    "name": {
+      "en": "Elk",
+      "cs": "Los"
+    },
+    "build": "elk",
+    "diet": "grazer",
+    "size": 4.2,
+    "baseHealth": 150.0,
+    "comfortLow": -38.0,
+    "comfortHigh": 24.0,
+    "biomes": [
+      {
+        "id": "forest",
+        "min": 2,
+        "max": 3
+      },
+      {
+        "id": "tundra",
+        "min": 3,
+        "max": 5
+      },
+      {
+        "id": "wetlands",
+        "min": 1,
+        "max": 2
+      }
+    ],
+    "description": {
+      "en": "Weight and a rack to match it. Takes a cold nothing else here will, and cannot stand a hot summer.",
+      "cs": "Hmota a paroží podle toho. Snese mráz, který tady nesnese nic, a horké léto ho zabije."
+    },
+    "tameability": 0.3,
+    "role": "beast_of_burden"
+  },
+  {
+    "id": "goat",
+    "name": {
+      "en": "Wild goat",
+      "cs": "Koza bezoárová"
+    },
+    "build": "goat",
+    "diet": "grazer",
+    "size": 2.6,
+    "baseHealth": 70.0,
+    "comfortLow": -30.0,
+    "comfortHigh": 36.0,
+    "biomes": [
+      {
+        "id": "mountains",
+        "min": 4,
+        "max": 7
+      },
+      {
+        "id": "desert",
+        "min": 2,
+        "max": 4
+      }
+    ],
+    "description": {
+      "en": "Where the ground gives out, it goes on. The only meat some crags will ever offer.",
+      "cs": "Kde země končí, ona pokračuje. Na některých skalách je to jediné maso, co kdy bude."
+    },
+    "tameability": 0.62,
+    "role": "beast_of_burden"
+  },
+  {
+    "id": "boar",
+    "name": {
+      "en": "Boar",
+      "cs": "Kanec"
+    },
+    "build": "boar",
+    "diet": "forager",
+    "size": 3.0,
+    "baseHealth": 110.0,
+    "comfortLow": -15.0,
+    "comfortHigh": 38.0,
+    "biomes": [
+      {
+        "id": "forest",
+        "min": 3,
+        "max": 5
+      },
+      {
+        "id": "coast",
+        "min": 1,
+        "max": 2
+      },
+      {
+        "id": "mountains",
+        "min": 2,
+        "max": 3
+      },
+      {
+        "id": "wetlands",
+        "min": 4,
+        "max": 6
+      },
+      {
+        "id": "desert",
+        "min": 1,
+        "max": 2
+      },
+      {
+        "id": "plains",
+        "min": 2,
+        "max": 3
+      }
+    ],
+    "description": {
+      "en": "Low, heavy at the front, and it does not run first. Roots up a field in one night.",
+      "cs": "Nízký, těžký vepředu, a neutíká první. Rozryje pole za jednu noc."
+    },
+    "tameability": 0.55,
+    "role": "beast_of_burden"
+  },
+  {
+    "id": "hare",
+    "name": {
+      "en": "Hare",
+      "cs": "Zajíc"
+    },
+    "build": "small",
+    "diet": "grazer",
+    "size": 1.5,
+    "baseHealth": 35.0,
+    "comfortLow": -25.0,
+    "comfortHigh": 32.0,
+    "biomes": [
+      {
+        "id": "forest",
+        "min": 4,
+        "max": 7
+      },
+      {
+        "id": "coast",
+        "min": 5,
+        "max": 8
+      },
+      {
+        "id": "tundra",
+        "min": 3,
+        "max": 5
+      },
+      {
+        "id": "mountains",
+        "min": 3,
+        "max": 5
+      },
+      {
+        "id": "wetlands",
+        "min": 3,
+        "max": 5
+      },
+      {
+        "id": "desert",
+        "min": 4,
+        "max": 6
+      },
+      {
+        "id": "plains",
+        "min": 6,
+        "max": 9
+      }
+    ],
+    "description": {
+      "en": "A snare's worth of meat and gone before you finish looking at it.",
+      "cs": "Na oko masa a pryč dřív, než se na něj dokoukáš."
+    },
+    "tameability": 0.6,
+    "role": "companion"
+  },
+  {
+    "id": "grouse",
+    "name": {
+      "en": "Grouse",
+      "cs": "Tetřev"
+    },
+    "build": "small",
+    "diet": "forager",
+    "size": 1.3,
+    "baseHealth": 22.0,
+    "comfortLow": -30.0,
+    "comfortHigh": 30.0,
+    "biomes": [
+      {
+        "id": "forest",
+        "min": 3,
+        "max": 5
+      },
+      {
+        "id": "coast",
+        "min": 2,
+        "max": 4
+      },
+      {
+        "id": "tundra",
+        "min": 2,
+        "max": 3
+      },
+      {
+        "id": "wetlands",
+        "min": 6,
+        "max": 9
+      },
+      {
+        "id": "plains",
+        "min": 3,
+        "max": 5
+      }
+    ],
+    "description": {
+      "en": "Sits until you are almost on it, then all noise and no bird.",
+      "cs": "Sedí, dokud na něj skoro nešlápneš, a pak je z toho jen rámus a žádný pták."
+    },
+    "tameability": 0.52,
+    "role": "companion"
+  },
+  {
+    "id": "fox",
+    "name": {
+      "en": "Fox",
+      "cs": "Liška"
+    },
+    "build": "canid",
+    "diet": "hunter",
+    "size": 2.2,
+    "baseHealth": 55.0,
+    "comfortLow": -20.0,
+    "comfortHigh": 32.0,
+    "biomes": [
+      {
+        "id": "forest",
+        "min": 2,
+        "max": 3
+      },
+      {
+        "id": "coast",
+        "min": 2,
+        "max": 3
+      },
+      {
+        "id": "tundra",
+        "min": 1,
+        "max": 2
+      },
+      {
+        "id": "wetlands",
+        "min": 2,
+        "max": 3
+      },
+      {
+        "id": "desert",
+        "min": 2,
+        "max": 3
+      },
+      {
+        "id": "plains",
+        "min": 2,
+        "max": 3
+      }
+    ],
+    "description": {
+      "en": "Small trouble with a good coat. Takes the hens and rarely the hunter's arrow.",
+      "cs": "Malý průšvih s dobrým kožichem. Vezme slepice a šíp ho potká málokdy."
+    },
+    "tameability": 0.3,
+    "role": "companion"
+  },
+  {
+    "id": "wolf",
+    "name": {
+      "en": "Wolf",
+      "cs": "Vlk"
+    },
+    "build": "canid",
+    "diet": "hunter",
+    "size": 3.2,
+    "baseHealth": 110.0,
+    "comfortLow": -35.0,
+    "comfortHigh": 30.0,
+    "biomes": [
+      {
+        "id": "forest",
+        "min": 1,
+        "max": 2
+      },
+      {
+        "id": "tundra",
+        "min": 2,
+        "max": 4
+      },
+      {
+        "id": "mountains",
+        "min": 1,
+        "max": 2
+      }
+    ],
+    "description": {
+      "en": "Comes down in a bad winter, and comes down in numbers.",
+      "cs": "V zlé zimě sejde dolů — a sejde jich víc."
+    },
+    "tameability": 0.25,
+    "role": "guard"
+  },
+  {
+    "id": "bear",
+    "name": {
+      "en": "Bear",
+      "cs": "Medvěd"
+    },
+    "build": "canid",
+    "diet": "hunter",
+    "size": 4.6,
+    "baseHealth": 170.0,
+    "comfortLow": -35.0,
+    "comfortHigh": 28.0,
+    "biomes": [
+      {
+        "id": "mountains",
+        "min": 1,
+        "max": 2
+      }
+    ],
+    "description": {
+      "en": "The one thing in the valley that does not care that you are armed.",
+      "cs": "Jediné v údolí, co nezajímá, že jsi ozbrojený."
+    },
+    "tameability": 0.12,
+    "role": "guard"
+  },
+  {
+    "id": "lynx",
+    "name": {
+      "en": "Lynx",
+      "cs": "Rys"
+    },
+    "build": "lynx",
+    "diet": "hunter",
+    "size": 2.8,
+    "baseHealth": 80.0,
+    "comfortLow": -32.0,
+    "comfortHigh": 28.0,
+    "biomes": [
+      {
+        "id": "forest",
+        "min": 1,
+        "max": 2
+      },
+      {
+        "id": "mountains",
+        "min": 1,
+        "max": 2
+      }
+    ],
+    "description": {
+      "en": "Seen once a decade and it has been watching the whole time.",
+      "cs": "Uvidíš ho jednou za deset let, a on tě sleduje celou dobu."
+    },
+    "tameability": 0.18,
+    "role": "guard"
+  },
+  {
+    "id": "badger",
+    "name": {
+      "en": "Badger",
+      "cs": "Jezevec"
+    },
+    "build": "badger",
+    "diet": "forager",
+    "size": 2.0,
+    "baseHealth": 60.0,
+    "comfortLow": -26.0,
+    "comfortHigh": 30.0,
+    "biomes": [
+      {
+        "id": "forest",
+        "min": 2,
+        "max": 3
+      },
+      {
+        "id": "coast",
+        "min": 1,
+        "max": 2
+      },
+      {
+        "id": "wetlands",
+        "min": 2,
+        "max": 4
+      },
+      {
+        "id": "plains",
+        "min": 1,
+        "max": 3
+      }
+    ],
+    "description": {
+      "en": "Digs, eats what it finds, and fights far above its weight when cornered.",
+      "cs": "Ryje, sní co najde, a zahnaný do kouta se bije nad svou váhu."
+    },
+    "tameability": 0.38,
+    "role": "companion"
+  }
+]

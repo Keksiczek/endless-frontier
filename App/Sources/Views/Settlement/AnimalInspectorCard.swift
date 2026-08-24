@@ -10,6 +10,8 @@ import EndlessFrontierCore
 /// it doing, and how far anybody has got with gentling it.
 struct AnimalInspectorCard: View {
     let animal: Animal
+    /// The book, for what this kind of beast is called.
+    let registry: GameDataRegistry
     /// Set when this beast belongs to the colony rather than to the valley.
     var kept: TamedAnimal?
     /// Whether the hunters have already been pointed at this one
@@ -20,16 +22,16 @@ struct AnimalInspectorCard: View {
     var onClose: () -> Void
 
     private var cs: Bool { AppStrings.language == .cs }
-    private var vigour: Double { animal.health / max(1, animal.species.baseHealth) }
+    private var vigour: Double { animal.health / max(1, animal.baseHealth) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
             HStack(spacing: 10) {
                 vital(icon: "heart.fill", label: cs ? "Zdraví" : "Health",
-                      text: "\(Int(animal.health))/\(Int(animal.species.baseHealth))",
+                      text: "\(Int(animal.health))/\(Int(animal.baseHealth))",
                       tint: vigour < 0.4 ? Theme.danger : Theme.good)
-                vital(icon: animal.species.isPredator ? "pawprint.fill" : "leaf.fill",
+                vital(icon: animal.isPredator ? "pawprint.fill" : "leaf.fill",
                       label: cs ? "Věk" : "Age",
                       text: "\(animal.age / 60) \(cs ? "let" : "yrs")",
                       tint: Theme.textDim)
@@ -70,7 +72,7 @@ struct AnimalInspectorCard: View {
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(kept?.name ?? animal.species.displayName.resolve(AppStrings.language))
+                Text(kept?.name ?? (registry.beast(animal.species)?.name ?? LocalizedText(animal.species)).resolve(AppStrings.language))
                     .font(.system(.title3, design: .serif).weight(.semibold))
                     .foregroundStyle(Theme.text)
                 HStack(spacing: 6) {

@@ -2578,7 +2578,7 @@ enum SettlementRenderer {
                     s: SettlementFigures.bodyHeight(zoom: zoom), facing: CGFloat(pose.facing),
                     time: time, loaded: pawn.carrying != nil,
                     beast: ridden.animalID.flatMap { id in
-                        settlement.tamed.first { $0.id == id }?.animal.species
+                        settlement.tamed.first { $0.id == id }?.animal.build
                     },
                     context: &context)
                 // Somebody on a beast sits above it; somebody walking beside a

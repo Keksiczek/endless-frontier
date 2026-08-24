@@ -30,7 +30,7 @@ enum SettlementWildlife {
     /// the far side of it. The old slow figure-eight is left as the answer for
     /// maps generated before the wild had bodies.
     static func herdCenter(map: LocalMap, time: Double) -> LocalPoint {
-        let prey = map.wildlife.animals.filter { !$0.species.isPredator }
+        let prey = map.wildlife.animals.filter { !$0.isPredator }
         if !prey.isEmpty {
             return LocalPoint(x: prey.reduce(0) { $0 + $1.position.x } / Double(prey.count),
                               y: prey.reduce(0) { $0 + $1.position.y } / Double(prey.count))
@@ -74,11 +74,18 @@ enum SettlementWildlife {
     /// pen and the saddle are then one drawing each, which is what stops a
     /// ridden elk being a second, worse elk.
     static func body(
-        _ species: AnimalSpecies, at: CGPoint, s: CGFloat, time: Double,
+        _ build: AnimalDefinition.Build, at: CGPoint, s: CGFloat, time: Double,
         phase: Double, walking: Bool, context: inout GraphicsContext
     ) {
         let doing: AnimalActivity = walking ? .wary : .grazing
-        switch species {
+        // **The build, not the species.**
+        //
+        // This switched on eleven species by name, so the eight bodies the
+        // canvas can draw were reachable only by being one of eleven enum
+        // cases — a twelfth beast would have come out as whatever the fallback
+        // was. Species are `animals.json` now and each names the build it
+        // wears (`AnimalDefinition.Build`).
+        switch build {
         case .deer: deer(&context, at: at, s: s, time: time, phase: phase,
                          doing: doing, urgency: 1, crown: .antlersIfStag)
         case .elk:  deer(&context, at: at, s: s, time: time, phase: phase,
@@ -87,9 +94,9 @@ enum SettlementWildlife {
                          doing: doing, urgency: 1, crown: .curvedHorns)
         case .boar: boar(&context, at: at, s: s, time: time, phase: phase,
                          doing: doing, urgency: 1)
-        case .hare, .grouse:
+        case .small:
             hare(&context, at: at, s: s, time: time, phase: phase, doing: doing)
-        case .fox, .wolf, .bear:
+        case .canid:
             prowler(&context, at: at, s: s, time: time, hungry: false)
         case .lynx:
             lynx(&context, at: at, s: s, time: time, doing: doing, urgency: 1)
@@ -113,12 +120,12 @@ enum SettlementWildlife {
             let position = tamedPosition(kept, index: index, time: time)
             guard map.isExplored(position) else { continue }
             let at = SettlementRenderer.point(position, in: rect)
-            let s = size(kept.animal.species) * zoom
+            let s = size(kept.animal) * zoom
 
             // Kept stock is not roamed by `AnimalEngine`, so its `activity`
             // is whatever it held when it was gentled. A beast in the pen is a
             // beast at grass, and saying so beats reading a stale field.
-            body(kept.animal.species, at: at, s: s, time: time, phase: phase,
+            body(kept.animal.build, at: at, s: s, time: time, phase: phase,
                  walking: false, context: &context)
             // The collar: a small ring under it, in the colony's own amber, so
             // a tamed wolf never reads as one that came out of the trees.
@@ -157,21 +164,13 @@ enum SettlementWildlife {
     /// people-sized things, so they take their scale from the same place people
     /// do — a deer a little lower than a colonist, a hare you have to look for,
     /// a bear you do not.
-    static func size(_ species: AnimalSpecies) -> CGFloat {
-        switch species {
-        case .grouse: return 1.3
-        case .hare: return 1.5
-        case .badger: return 2.0
-        case .fox:  return 2.2
-        case .goat: return 2.6
-        case .lynx: return 2.8
-        case .boar: return 3.0
-        case .wolf: return 3.2
-        case .deer: return 3.4
-        case .elk:  return 4.2
-        case .bear: return 4.6
-        }
-    }
+    /// How big a beast is drawn against a person.
+    ///
+    /// Read off the animal rather than a table of eleven names — a beast
+    /// carries its own size (`AnimalDefinition.size`), so a species the content
+    /// adds is drawn at the size the content gave it instead of at whatever
+    /// the fallback happened to be.
+    static func size(_ animal: Animal) -> CGFloat { CGFloat(animal.size) }
 
     /// Every beast the simulation is actually running, standing where the
     /// simulation says it is standing.
@@ -197,7 +196,7 @@ enum SettlementWildlife {
             guard map.isExplored(where_) else { continue }
             let at = SettlementRenderer.point(where_, in: rect)
             let ailing = !animal.conditions.isEmpty
-                || animal.health < animal.species.baseHealth * 0.55
+                || animal.health < animal.baseHealth * 0.55
             // A running beast is drawn running — but *not* by speeding the
             // clock up. `time * urgency` looks right until the activity
             // changes, at which point the phase jumps by (urgency − 1) × time,
@@ -209,7 +208,7 @@ enum SettlementWildlife {
             let urgency = animal.activity == .fleeing ? 3.4
                 : (animal.activity == .stalking ? 1.8 : 1.0)
             let beat = time
-            let s = size(animal.species) * zoom * (1 + (urgency - 1) * 0.06)
+            let s = size(animal) * zoom * (1 + (urgency - 1) * 0.06)
 
             // **What it is doing is the simulation's to say.** `activity` is set
             // by `AnimalEngine.roam` — the enum's own cases spell out the poses
@@ -220,7 +219,11 @@ enum SettlementWildlife {
             // it. The clock's job is *when, within* a pose — a grazing deer
             // still lifts its head now and then — never *which* pose.
             let doing = animal.activity
-            switch animal.species {
+            // **The build, not the species.** Eleven names, eight bodies —
+            // and a twelfth beast could only ever have come out as the
+            // fallback. A species names its build in `animals.json` and is
+            // drawn as the animal it says it is.
+            switch animal.build {
             case .deer:
                 deer(&context, at: at, s: s, time: beat, phase: phase,
                      doing: doing, urgency: urgency, crown: .antlersIfStag)
@@ -235,23 +238,19 @@ enum SettlementWildlife {
             case .boar:
                 boar(&context, at: at, s: s, time: beat, phase: phase,
                      doing: doing, urgency: urgency)
-            case .hare:
+            case .small:
+                // Something a snare takes: it sits tight and then breaks
+                // cover, which is the hare's crouch-and-bolt and the grouse's
+                // alike, at whatever size the beast is drawn.
                 hare(&context, at: at, s: s, time: beat, phase: phase, doing: doing)
-            case .grouse:
-                // A bird that sits tight and then breaks cover — which is the
-                // hare's crouch-and-bolt exactly, at a smaller size.
-                hare(&context, at: at, s: s, time: beat, phase: phase, doing: doing)
-            case .fox:
-                prowler(&context, at: at, s: s, time: beat, hungry: false,
-                        doing: doing, urgency: urgency)
             case .lynx:
                 lynx(&context, at: at, s: s, time: beat, doing: doing, urgency: urgency)
             case .badger:
                 badger(&context, at: at, s: s, time: beat, doing: doing, urgency: urgency)
-            case .wolf:
-                prowler(&context, at: at, s: s, time: beat, hungry: ailing,
-                        doing: doing, urgency: urgency)
-            case .bear:
+            case .canid:
+                // A dog's outline. Whether it looks hungry is the beast's own
+                // condition, not its name — a starving fox prowls like a
+                // starving wolf.
                 prowler(&context, at: at, s: s, time: beat, hungry: ailing,
                         doing: doing, urgency: urgency)
             }

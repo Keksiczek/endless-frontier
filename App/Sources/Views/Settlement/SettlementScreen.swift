@@ -287,7 +287,7 @@ struct SettlementScreen: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if case let .animal(id) = selection, let found = game.animal(id) {
                 AnimalInspectorCard(
-                    animal: found.animal, kept: found.kept,
+                    animal: found.animal, registry: game.registry, kept: found.kept,
                     marked: game.isMarked(.animal(id)),
                     onHunt: found.kept == nil ? { game.mark(.animal(id)) } : nil
                 ) {

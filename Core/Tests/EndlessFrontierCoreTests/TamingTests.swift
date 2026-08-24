@@ -7,6 +7,8 @@ import Foundation
 /// reach, a beast that costs nothing to keep, or one that is worth nothing.
 @Suite("Beasts that work for you")
 struct TamingTests {
+    static let book = try! GameDataRegistry.bundled()
+
 
     private var registry: GameDataRegistry {
         GameDataRegistry(buildings: [], techs: [], eras: [], biomes: [], events: [],
@@ -17,7 +19,7 @@ struct TamingTests {
         UUID(uuidString: String(format: "00000000-0000-0000-7A3D-%012d", n))!
     }
 
-    private func colony(species: AnimalSpecies = .boar, hunters: Int = 2,
+    private func colony(species: String = "boar", hunters: Int = 2,
                         food: Double = 500, defense: Double = 0) -> Settlement {
         var s = Settlement(id: id(900), name: "Farmyard", regionID: UUID())
         s.pawns = (0..<hunters).map { i in
@@ -51,7 +53,7 @@ struct TamingTests {
     /// meant to cross. Taming has to actually finish.
     @Test("A beast worked at long enough comes round")
     func tamingIsReachable() {
-        let after = run(colony(species: .boar, hunters: 2), ticks: 600)
+        let after = run(colony(species: "boar", hunters: 2), ticks: 600)
         #expect(!after.tamed.isEmpty, "two hunters, a hundred visits, and nothing came round")
         #expect(after.localMap?.wildlife.animals.isEmpty == true,
                 "it should be off the wild list once it is on the books")
@@ -65,18 +67,18 @@ struct TamingTests {
 
     @Test("A biddable beast comes round sooner than a stubborn one")
     func wildnessMatters() {
-        #expect(TamingEngine.wildness(.boar) > TamingEngine.wildness(.bear))
-        #expect(TamingEngine.wildness(.hare) > TamingEngine.wildness(.wolf))
-        let boar = run(colony(species: .boar), ticks: 200).tamed.count
-        let bear = run(colony(species: .bear, defense: 40), ticks: 200).tamed.count
+        #expect(TamingEngine.wildness("boar", registry: Self.book) > TamingEngine.wildness("bear", registry: Self.book))
+        #expect(TamingEngine.wildness("hare", registry: Self.book) > TamingEngine.wildness("wolf", registry: Self.book))
+        let boar = run(colony(species: "boar"), ticks: 200).tamed.count
+        let bear = run(colony(species: "bear", defense: 40), ticks: 200).tamed.count
         #expect(boar >= bear)
     }
 
     @Test("Nobody gentles a wolf from behind a fence they have not built")
     func predatorsNeedAStrongColony() {
-        let weak = run(colony(species: .wolf, defense: 0), ticks: 600)
+        let weak = run(colony(species: "wolf", defense: 0), ticks: 600)
         #expect(weak.tamed.isEmpty, "a defenceless colony has no business with wolves")
-        let strong = run(colony(species: .wolf, defense: 40), ticks: 600)
+        let strong = run(colony(species: "wolf", defense: 40), ticks: 600)
         #expect(!strong.tamed.isEmpty)
     }
 
@@ -84,7 +86,7 @@ struct TamingTests {
     func theFarmyardIsCapped() {
         var s = colony()
         s.tamed = (0..<TamingEngine.maxTamed).map { i in
-            TamedAnimal(animal: Animal(id: id(600 + i), species: .deer, sex: .male, age: 100),
+            TamedAnimal(animal: Animal(id: id(600 + i), species: "deer", sex: .male, age: 100),
                         role: .beastOfBurden, tamedTick: 0)
         }
         let after = run(s, ticks: 200)
@@ -96,7 +98,7 @@ struct TamingTests {
     @Test("A kept beast eats out of the colony's stores")
     func animalsEat() {
         var s = colony(food: 100)
-        s.tamed = [TamedAnimal(animal: Animal(id: id(700), species: .boar, sex: .male, age: 200),
+        s.tamed = [TamedAnimal(animal: Animal(id: id(700), species: "boar", sex: .male, age: 200),
                                role: .beastOfBurden, tamedTick: 0)]
         let before = s.storage[ResourceType.food]
         let after = run(s, ticks: 40)
@@ -106,7 +108,7 @@ struct TamingTests {
     @Test("A colony that cannot feed its animals loses them")
     func starvedAnimalsLeaveOrDie() {
         var s = colony(hunters: 0, food: 0)
-        s.tamed = [TamedAnimal(animal: Animal(id: id(701), species: .deer, sex: .female,
+        s.tamed = [TamedAnimal(animal: Animal(id: id(701), species: "deer", sex: .female,
                                               age: 200, health: 20),
                                role: .beastOfBurden, tamedTick: 0)]
         let after = run(s, ticks: 400)
@@ -117,20 +119,20 @@ struct TamingTests {
 
     @Test("Each calling is worth its own thing, and none of them everything")
     func bonusesAreByRole() {
-        func withBeast(_ species: AnimalSpecies, _ role: TamedRole) -> Settlement {
+        func withBeast(_ species: String, _ role: TamedRole) -> Settlement {
             var s = colony()
             s.tamed = [TamedAnimal(animal: Animal(id: id(800), species: species,
                                                   sex: .male, age: 200),
                                    role: role, tamedTick: 0)]
             return s
         }
-        let mule = TamingEngine.bonuses(withBeast(.boar, .beastOfBurden))
+        let mule = TamingEngine.bonuses(withBeast("boar", .beastOfBurden))
         #expect(mule.haul > 0 && mule.defense == 0)
 
-        let hound = TamingEngine.bonuses(withBeast(.wolf, .guard))
+        let hound = TamingEngine.bonuses(withBeast("wolf", .guard))
         #expect(hound.defense > 0 && hound.haul == 0)
 
-        let friend = TamingEngine.bonuses(withBeast(.fox, .companion))
+        let friend = TamingEngine.bonuses(withBeast("fox", .companion))
         #expect(friend.mood > 0)
     }
 
@@ -138,7 +140,7 @@ struct TamingTests {
     func bonusesAreCapped() {
         var s = colony()
         s.tamed = (0..<20).map { i in
-            TamedAnimal(animal: Animal(id: id(810 + i), species: .boar, sex: .male, age: 200),
+            TamedAnimal(animal: Animal(id: id(810 + i), species: "boar", sex: .male, age: 200),
                         role: .beastOfBurden, tamedTick: 0)
         }
         #expect(TamingEngine.bonuses(s).haul <= 0.6)
@@ -148,7 +150,7 @@ struct TamingTests {
     func vigourMatters() {
         func beast(health: Double) -> Settlement {
             var s = colony()
-            s.tamed = [TamedAnimal(animal: Animal(id: id(820), species: .wolf, sex: .male,
+            s.tamed = [TamedAnimal(animal: Animal(id: id(820), species: "wolf", sex: .male,
                                                   age: 200, health: health),
                                    role: .guard, tamedTick: 0)]
             return s
@@ -159,9 +161,9 @@ struct TamingTests {
 
     @Test("A species is kept for what it is good at")
     func callingsMakeSense() {
-        #expect(TamingEngine.calling(.boar) == .beastOfBurden)
-        #expect(TamingEngine.calling(.wolf) == .guard)
-        #expect(TamingEngine.calling(.hare) == .companion)
+        #expect(TamingEngine.calling("boar", registry: Self.book) == .beastOfBurden)
+        #expect(TamingEngine.calling("wolf", registry: Self.book) == .guard)
+        #expect(TamingEngine.calling("hare", registry: Self.book) == .companion)
     }
 
     // MARK: - The rules that must not break
@@ -170,8 +172,8 @@ struct TamingTests {
     func tamingIsDeterministic() {
         let a = run(colony(), ticks: 300)
         let b = run(colony(), ticks: 300)
-        #expect(a.tamed.map(\.id) == b.tamed.map(\.id))
-        #expect(a.tamed.map(\.role) == b.tamed.map(\.role))
+        #expect(a.tamed.map { $0.id } == b.tamed.map { $0.id })
+        #expect(a.tamed.map { $0.role } == b.tamed.map { $0.role })
     }
 
     @Test("A save from before taming has an empty farmyard and wild beasts")

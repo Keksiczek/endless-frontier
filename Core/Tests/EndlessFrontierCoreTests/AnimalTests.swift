@@ -5,27 +5,29 @@ import Testing
 /// Animals are pawn-like: a life with a body that can be hurt part by part.
 @Suite("Animals")
 struct AnimalTests {
+    static let book = try! GameDataRegistry.bundled()
+
     @Test("Species carry their own traits")
     func speciesTraits() {
-        #expect(AnimalSpecies.wolf.isPredator)
-        #expect(!AnimalSpecies.deer.isPredator)
-        #expect(AnimalSpecies.bear.baseHealth > AnimalSpecies.hare.baseHealth)
-        #expect(AnimalSpecies.deer.bodyPlan.contains(.torso))
+        #expect(LegacyAnimalSpecies.wolf.isPredator)
+        #expect(!LegacyAnimalSpecies.deer.isPredator)
+        #expect(LegacyAnimalSpecies.bear.baseHealth > LegacyAnimalSpecies.hare.baseHealth)
+        #expect(AnimalBodyPartKind.wholeBody.contains(.torso))
     }
 
     @Test("A newborn animal is whole and alive")
     func newbornIsWhole() {
-        let a = Animal(id: UUID(), species: .deer, sex: .female, age: 100)
+        let a = Animal(id: UUID(), species: "deer", sex: .female, age: 100)
         #expect(a.isAlive)
         #expect(a.canWalk)
-        #expect(a.health == AnimalSpecies.deer.baseHealth)
+        #expect(a.health == LegacyAnimalSpecies.deer.baseHealth)
         #expect(a.body.count == 6)
         #expect(a.body.allSatisfy { !$0.missing })
     }
 
     @Test("Losing legs eventually cripples; losing a vital part kills")
     func injuriesTakeParts() {
-        var bear = Animal(id: UUID(), species: .bear, sex: .male, age: 500)
+        var bear = Animal(id: UUID(), species: "bear", sex: .male, age: 500)
         bear.injure(.frontLeftLeg, by: 45)       // >40 destroys the part
         #expect(bear.bodyPart(.frontLeftLeg)?.missing == true)
         #expect(bear.canWalk)                    // still three legs
@@ -34,7 +36,7 @@ struct AnimalTests {
         #expect(!bear.canWalk)                   // one leg left
         #expect(bear.isAlive)                    // legs aren't fatal on their own
 
-        var deer = Animal(id: UUID(), species: .deer, sex: .female, age: 300)
+        var deer = Animal(id: UUID(), species: "deer", sex: .female, age: 300)
         #expect(deer.injure(.torso, by: 60) == false)  // a destroyed vital part is fatal
         #expect(!deer.isAlive)
     }
@@ -42,13 +44,13 @@ struct AnimalTests {
     @Test("The wild population is a deterministic mix of living beasts")
     func factoryProducesLivingBeasts() {
         var rng = SeededRNG(seed: 12345)
-        let pop = AnimalFactory.wildPopulation(rng: &rng)
+        let pop = AnimalFactory.wildPopulation(registry: Self.book, rng: &rng)
         #expect(pop.count >= 20)
-        #expect(pop.filter { $0.species == .deer }.count >= 10)
+        #expect(pop.filter { $0.species == "deer" }.count >= 10)
         #expect(pop.allSatisfy { $0.isAlive && $0.canWalk })
 
         var rng2 = SeededRNG(seed: 12345)
-        let pop2 = AnimalFactory.wildPopulation(rng: &rng2)
+        let pop2 = AnimalFactory.wildPopulation(registry: Self.book, rng: &rng2)
         #expect(pop == pop2)                                 // same seed, same beasts
     }
 
@@ -59,19 +61,19 @@ struct AnimalTests {
     @Test("The wild actually contains predators")
     func predatorsAreSeeded() {
         var rng = SeededRNG(seed: 4242)
-        let forest = AnimalFactory.wildPopulation(biomeID: "forest", rng: &rng)
-        #expect(forest.contains { $0.species.isPredator },
+        let forest = AnimalFactory.wildPopulation(biomeID: "forest", registry: Self.book, rng: &rng)
+        #expect(forest.contains { $0.isPredator },
                 "a forest with no teeth in it is not a forest")
     }
 
     @Test("The wild says what country it lives in")
     func wildDiffersByBiome() {
         var a = SeededRNG(seed: 7), b = SeededRNG(seed: 7)
-        let desert = AnimalFactory.wildPopulation(biomeID: "desert", rng: &a)
-        let plains = AnimalFactory.wildPopulation(biomeID: "plains", rng: &b)
+        let desert = AnimalFactory.wildPopulation(biomeID: "desert", registry: Self.book, rng: &a)
+        let plains = AnimalFactory.wildPopulation(biomeID: "plains", registry: Self.book, rng: &b)
         #expect(desert.count < plains.count, "a desert is not as full as a meadow")
-        #expect(desert.filter { $0.species == .deer }.count
-                < plains.filter { $0.species == .deer }.count)
+        #expect(desert.filter { $0.species == "deer" }.count
+                < plains.filter { $0.species == "deer" }.count)
     }
 
     /// A hard frontier valley must actually be harder than the homeland — the
@@ -79,10 +81,10 @@ struct AnimalTests {
     @Test("Wilder country carries more teeth")
     func hazardBringsWolves() {
         var calm = SeededRNG(seed: 99), wild = SeededRNG(seed: 99)
-        let home = AnimalFactory.wildPopulation(biomeID: "plains", hazard: 0, rng: &calm)
-        let frontier = AnimalFactory.wildPopulation(biomeID: "plains", hazard: 6, rng: &wild)
-        #expect(frontier.filter { $0.species.isPredator }.count
-                > home.filter { $0.species.isPredator }.count)
+        let home = AnimalFactory.wildPopulation(biomeID: "plains", hazard: 0, registry: Self.book, rng: &calm)
+        let frontier = AnimalFactory.wildPopulation(biomeID: "plains", hazard: 6, registry: Self.book, rng: &wild)
+        #expect(frontier.filter { $0.isPredator }.count
+                > home.filter { $0.isPredator }.count)
     }
 
     @Test("Old saves without an animals list still load")

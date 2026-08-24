@@ -597,7 +597,7 @@ public struct WildlifeState: Codable, Sendable, Equatable {
     public var preyCapacity: Int { Int(max(0, deerCapacity / 4)) }
 
     /// The game actually alive on this map right now.
-    public var preyCount: Int { animals.count { !$0.species.isPredator } }
+    public var preyCount: Int { animals.count { !$0.isPredator } }
 
     /// How well-stocked the wild is (0…1) — hunting yield scales with this.
     ///

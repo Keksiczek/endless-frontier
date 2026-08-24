@@ -744,7 +744,7 @@ struct ConveyanceBankTests {
     @Test("Nothing in the bank points at something that does not exist")
     func referencesResolve() throws {
         let registry = try GameDataRegistry.bundled()
-        let species = Set(AnimalSpecies.allCases.map(\.rawValue))
+        let species = Set(LegacyAnimalSpecies.allCases.map(\.rawValue))
         let covers = Set(GroundCover.allCases.map(\.rawValue))
         for def in registry.conveyances.values {
             if let animal = def.requiresAnimal {
@@ -925,7 +925,7 @@ struct StableEngineTests {
                 "an elk-less colony saddled an elk")
 
         let elk = Animal(id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-0000000000E1")!,
-                         species: .elk, sex: .male, age: 4 * 60,
+                         species: "elk", sex: .male, age: 4 * 60,
                          position: LocalPoint(x: 0.5, y: 0.5))
         s.tamed = [TamedAnimal(animal: elk, role: .beastOfBurden, tamedTick: 1)]
         #expect(StableEngine.canBuild("pack_elk", in: w, settlement: s, registry: reg))
@@ -985,7 +985,7 @@ struct StableEngineTests {
         var s = colony(reg, materials: ["leather": 4, "wood": 4],
                        buildings: ["hunters_lodge"])
         let elk = Animal(id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-0000000000E2")!,
-                         species: .elk, sex: .male, age: 4 * 60,
+                         species: "elk", sex: .male, age: 4 * 60,
                          position: LocalPoint(x: 0.5, y: 0.5))
         s.tamed = [TamedAnimal(animal: elk, role: .beastOfBurden, tamedTick: 1)]
         s = StableEngine.build(s, definitionID: "pack_elk", in: world(s), registry: reg)
@@ -1004,7 +1004,7 @@ struct StableEngineTests {
         var s = colony(reg, materials: ["leather": 4, "wood": 4],
                        buildings: ["hunters_lodge"])
         let elk = Animal(id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-0000000000E3")!,
-                         species: .elk, sex: .male, age: 4 * 60,
+                         species: "elk", sex: .male, age: 4 * 60,
                          position: LocalPoint(x: 0.5, y: 0.5))
         s.tamed = [TamedAnimal(animal: elk, role: .beastOfBurden, tamedTick: 1)]
         s = StableEngine.build(s, definitionID: "pack_elk", in: world(s), registry: reg)
@@ -1395,6 +1395,13 @@ struct ResearchStatTests {
                 world.settlements[0].pawns[index].assignedWork = .hunting
             }
             world.settlements[0].storage[.food] = 0
+            // **Room to measure in.** This compares two yields as a ratio, and
+            // a ratio against a *capped* quantity measures the cap. The
+            // studied run filled the granary — 500 of 500 — so a doubled hunt
+            // could only ever read as `500 > plain * 1.5`, and the test failed
+            // the day the meat numbers moved at all rather than the day the
+            // study stopped working.
+            world.settlements[0].storageCapacity[.food] = 100_000
             for tick in 1...400 {
                 world.settlements[0] = WildlifeEngine.advanceOneTick(
                     world.settlements[0], registry: reg, tick: tick, era: .earlySettlement,

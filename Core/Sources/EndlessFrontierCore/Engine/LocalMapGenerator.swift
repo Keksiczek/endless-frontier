@@ -185,7 +185,7 @@ public enum LocalMapGenerator {
         var wildRNG = SeededRNG(
             seed: seed(mapSeed: mapSeed, regionID: regionID) ^ 0xB3A5_7C0D_1E9F_4472)
         let residents = AnimalFactory.wildPopulation(
-            biomeID: biomeID, hazard: hazard, rng: &wildRNG)
+            biomeID: biomeID, hazard: hazard, registry: registry, rng: &wildRNG)
         let wildlife = WildlifeState(
             deerHerd: herd, deerCapacity: capacity,
             predatorPressure: pressure, animals: residents, usesEntities: true)

@@ -156,7 +156,7 @@ enum SettlementConveyances {
     static func draw(
         _ def: ConveyanceDefinition, thing: Conveyance, at anchor: CGPoint,
         s: CGFloat, facing: CGFloat, time: Double, loaded: Bool,
-        beast: AnimalSpecies? = nil,
+        beast: AnimalDefinition.Build? = nil,
         context ctx: inout GraphicsContext
     ) {
         let seed = hash(thing.id)
@@ -343,7 +343,7 @@ enum SettlementConveyances {
     private static func draught(
         _ parts: Build, def: ConveyanceDefinition, anchor: CGPoint, bed: CGRect,
         s: CGFloat, mirror: CGFloat, time: Double, body: Color, trim: Color,
-        line: CGFloat, beast: AnimalSpecies?, seed: UInt64,
+        line: CGFloat, beast: AnimalDefinition.Build?, seed: UInt64,
         ctx: inout GraphicsContext
     ) {
         switch parts.draught {

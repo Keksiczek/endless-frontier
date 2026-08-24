@@ -20,7 +20,20 @@ public enum AnimalSex: String, Codable, Sendable, CaseIterable {
 /// A wild species — a handful to start, prey and predators, each with its own
 /// hardiness and comfort band. Traits live here (a Flyweight of the kind
 /// `ThingDef` is in RimWorld) so an `Animal` instance stays light.
-public enum AnimalSpecies: String, Codable, Sendable, CaseIterable {
+/// **What saves written before beasts were data are carrying.**
+///
+/// Species used to be this enum with six hand-written tables hanging off it,
+/// and an `Animal` stored the case. They are `animals.json` now
+/// (`AnimalDefinition`), so a twelfth beast is a JSON entry rather than Swift
+/// in five files — but every colony already on disk has `"species": "deer"`
+/// and no numbers beside it, and `Animal.init(from:)` has no registry.
+///
+/// So these eleven are **frozen**. Nothing is ever added: no save can contain
+/// a beast that did not exist when it was written. A snapshot of history, not
+/// a second source of truth — `animals.json` is the authority for everything
+/// the world puts on a map from now on, and `AnimalContentTests` holds the two
+/// in agreement for the eleven that appear in both.
+enum LegacyAnimalSpecies: String, CaseIterable {
     case deer, boar, hare, fox, wolf, bear
     // Six species meant one valley's wild was every valley's wild, and the
     // country a colony sat in said almost nothing about what walked through it.
@@ -29,7 +42,7 @@ public enum AnimalSpecies: String, Codable, Sendable, CaseIterable {
     // badger in the hedges and a grouse worth a snare.
     case elk, goat, lynx, badger, grouse
 
-    public var isPredator: Bool {
+    var isPredator: Bool {
         switch self {
         case .wolf, .bear, .fox, .lynx: return true
         // A badger is an omnivore, but for this simulation what matters is
@@ -40,7 +53,7 @@ public enum AnimalSpecies: String, Codable, Sendable, CaseIterable {
     }
 
     /// Full health for an adult of this species.
-    public var baseHealth: Double {
+    var baseHealth: Double {
         switch self {
         case .bear: return 170
         case .elk: return 150
@@ -57,7 +70,7 @@ public enum AnimalSpecies: String, Codable, Sendable, CaseIterable {
 
     /// The comfort band, in °C — below `comfortLow` it suffers cold, above
     /// `comfortHigh` it suffers heat. (Consumed by the temperature layer later.)
-    public var comfortLow: Double {
+    var comfortLow: Double {
         switch self {
         case .elk: return -38
         case .bear, .wolf: return -35
@@ -69,7 +82,7 @@ public enum AnimalSpecies: String, Codable, Sendable, CaseIterable {
         case .boar: return -15
         }
     }
-    public var comfortHigh: Double {
+    var comfortHigh: Double {
         switch self {
         case .boar: return 38
         case .goat: return 36
@@ -82,7 +95,7 @@ public enum AnimalSpecies: String, Codable, Sendable, CaseIterable {
         }
     }
 
-    public var displayName: LocalizedText {
+    var displayName: LocalizedText {
         switch self {
         case .deer: return LocalizedText(values: [.en: "Deer", .cs: "Jelen"])
         case .boar: return LocalizedText(values: [.en: "Boar", .cs: "Kanec"])
@@ -100,14 +113,61 @@ public enum AnimalSpecies: String, Codable, Sendable, CaseIterable {
 
     /// The body every animal of this kind is born with. A quadruped plan for
     /// all of them for now; species can diverge later.
-    public var bodyPlan: [AnimalBodyPartKind] {
+    var bodyPlan: [AnimalBodyPartKind] {
         [.head, .torso, .frontLeftLeg, .frontRightLeg, .backLeftLeg, .backRightLeg]
+    }
+
+    /// How big it is drawn against a person.
+    ///
+    /// **Load-bearing, not decoration.** Meat, retaliation and whether a beast
+    /// is dangerous at all are derived from size now, so a beast that falls
+    /// back to a default size is a beast that is quietly the wrong animal —
+    /// which is exactly what happened when this was missing: every `Animal`
+    /// built by name came out at `Animal.defaultSize`, so a boar stopped being
+    /// dangerous and a bear stopped being worth a season's eating.
+    var size: Double {
+        switch self {
+        case .grouse: return 1.3
+        case .hare: return 1.5
+        case .badger: return 2.0
+        case .fox: return 2.2
+        case .goat: return 2.6
+        case .lynx: return 2.8
+        case .boar: return 3.0
+        case .wolf: return 3.2
+        case .deer: return 3.4
+        case .elk: return 4.2
+        case .bear: return 4.6
+        }
+    }
+
+    var build: AnimalDefinition.Build {
+        switch self {
+        case .elk: return .elk
+        case .goat: return .goat
+        case .boar: return .boar
+        case .hare, .grouse: return .small
+        case .fox, .wolf, .bear: return .canid
+        case .lynx: return .lynx
+        case .badger: return .badger
+        case .deer: return .deer
+        }
     }
 }
 
 /// A part of an animal's body — losing a vital one kills, losing a leg cripples.
 public enum AnimalBodyPartKind: String, Codable, Sendable, CaseIterable {
     case head, torso, frontLeftLeg, frontRightLeg, backLeftLeg, backRightLeg
+
+    /// The body every animal is born with.
+    ///
+    /// It hung off the species and answered the same six parts for all eleven
+    /// of them, which is a table pretending to be a decision. It belongs to the
+    /// part kinds, and a species that wants a different body will need the game
+    /// to grow wings before it needs a field.
+    public static let wholeBody: [AnimalBodyPartKind] = [
+        .head, .torso, .frontLeftLeg, .frontRightLeg, .backLeftLeg, .backRightLeg
+    ]
 
     /// A part whose destruction is fatal.
     public var isVital: Bool { self == .head || self == .torso }
@@ -171,7 +231,8 @@ public enum AnimalActivity: String, Codable, Sendable {
 /// One wild animal: a life the world can eventually run the way it runs a pawn.
 public struct Animal: Codable, Sendable, Equatable, Identifiable {
     public let id: UUID
-    public var species: AnimalSpecies
+    /// Which kind of beast this is — an `AnimalDefinition` id.
+    public var species: String
     public var sex: AnimalSex
     /// Age in world ticks.
     public var age: Int
@@ -208,37 +269,98 @@ public struct Animal: Codable, Sendable, Equatable, Identifiable {
     /// unless a hunter starts working at them.
     public var tameProgress: Double
 
-    public init(id: UUID, species: AnimalSpecies, sex: AnimalSex, age: Int,
+    // MARK: - What this beast is, carried on the beast
+
+    /// Full health for an adult of its kind, how big it is drawn, the body the
+    /// canvas draws, and whether it hunts.
+    ///
+    /// **Copied onto the animal when it is born**, for the reason `Tree` does
+    /// the same: these are read in the middle of a hunt, a roam and a frame —
+    /// `isPredator` alone is asked once per animal per animal every think —
+    /// and threading a registry through `AnimalEngine.roam`, `HuntEngine` and
+    /// the canvas would be a registry in twenty signatures to answer a question
+    /// a beast already knows about itself.
+    public let baseHealth: Double
+    public let size: Double
+    public let build: AnimalDefinition.Build
+    public let isPredator: Bool
+    /// The comfort band in °C. Carried for the same reason the rest is: the
+    /// cold check runs on every beast every tick, deep inside a pure engine
+    /// function with no book to hand.
+    public let comfortLow: Double
+    public let comfortHigh: Double
+
+    public init(id: UUID, species: String, sex: AnimalSex, age: Int,
                 health: Double? = nil, body: [AnimalBodyPart]? = nil,
                 conditions: [AnimalCondition] = [],
                 position: LocalPoint = LocalPoint(x: 0.5, y: 0.5),
                 walk: WalkPath? = nil,
                 activity: AnimalActivity = .grazing,
-                tameProgress: Double = 0) {
+                tameProgress: Double = 0,
+                baseHealth: Double? = nil, size: Double? = nil,
+                build: AnimalDefinition.Build? = nil, isPredator: Bool? = nil,
+                comfortLow: Double? = nil, comfortHigh: Double? = nil) {
+        let legacy = LegacyAnimalSpecies(rawValue: species)
         self.walk = walk
         self.id = id
         self.species = species
         self.sex = sex
         self.age = age
-        self.health = health ?? species.baseHealth
-        self.body = body ?? species.bodyPlan.map { AnimalBodyPart(kind: $0) }
+        self.baseHealth = baseHealth ?? legacy?.baseHealth ?? 80
+        self.size = size ?? legacy?.size ?? Animal.defaultSize
+        self.build = build ?? legacy?.build ?? .deer
+        self.isPredator = isPredator ?? legacy?.isPredator ?? false
+        self.comfortLow = comfortLow ?? legacy?.comfortLow ?? -25
+        self.comfortHigh = comfortHigh ?? legacy?.comfortHigh ?? 30
+        self.health = health ?? self.baseHealth
+        self.body = body ?? AnimalBodyPartKind.wholeBody.map { AnimalBodyPart(kind: $0) }
         self.conditions = conditions
         self.position = position
         self.activity = activity
         self.tameProgress = min(1, max(0, tameProgress))
     }
 
+    /// One of a kind the content describes.
+    public init(id: UUID, definition: AnimalDefinition, sex: AnimalSex, age: Int,
+                health: Double? = nil, position: LocalPoint = LocalPoint(x: 0.5, y: 0.5)) {
+        self.init(id: id, species: definition.id, sex: sex, age: age,
+                  health: health, position: position,
+                  baseHealth: definition.baseHealth, size: definition.size,
+                  build: definition.build, isPredator: definition.isPredator,
+                  comfortLow: definition.comfortLow, comfortHigh: definition.comfortHigh)
+    }
+
+    /// How big a beast nobody described is drawn. Between a fox and a boar —
+    /// the size at which "some animal" is neither a mouse nor a bear.
+    public static let defaultSize: Double = 2.6
+
     // MARK: - Codable (resilient: beasts stood nowhere before they roamed)
 
     private enum CodingKeys: String, CodingKey {
         case id, species, sex, age, health, body, conditions, position, activity
-        case tameProgress, walk
+        case tameProgress, walk, baseHealth, size, build, isPredator
+        case comfortLow, comfortHigh
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(UUID.self, forKey: .id)
-        species = try c.decode(AnimalSpecies.self, forKey: .species)
+        species = try c.decode(String.self, forKey: .species)
+        // A beast born before species were data carries only its name. The
+        // frozen table is what that name meant — see `LegacyAnimalSpecies`.
+        let legacy = LegacyAnimalSpecies(rawValue: species)
+        baseHealth = try c.decodeIfPresent(Double.self, forKey: .baseHealth)
+            ?? legacy?.baseHealth ?? 80
+        size = try c.decodeIfPresent(Double.self, forKey: .size)
+            ?? legacy?.size ?? Animal.defaultSize
+        build = try c.decodeIfPresent(AnimalDefinition.Build.self, forKey: .build)
+            ?? legacy?.build ?? .deer
+        isPredator = try c.decodeIfPresent(Bool.self, forKey: .isPredator)
+            ?? legacy?.isPredator ?? false
+        comfortLow = try c.decodeIfPresent(Double.self, forKey: .comfortLow)
+            ?? legacy?.comfortLow ?? -25
+        comfortHigh = try c.decodeIfPresent(Double.self, forKey: .comfortHigh)
+            ?? legacy?.comfortHigh ?? 30
         sex = try c.decode(AnimalSex.self, forKey: .sex)
         age = try c.decode(Int.self, forKey: .age)
         health = try c.decode(Double.self, forKey: .health)
@@ -287,49 +409,57 @@ public struct Animal: Codable, Sendable, Equatable, Identifiable {
         body.filter { $0.kind.isLeg && !$0.missing }.count >= 2
     }
 
+    /// How much meat one point of an animal's drawn size is worth.
+    ///
+    /// Set so the eleven that shipped keep very nearly the yields they had —
+    /// a bear was 34 at size 4.6, a hare 3 at 1.5 — which is what makes this a
+    /// derivation rather than a rebalance.
+    public static let meatPerSize: Double = 7.2
+
     /// How much meat a carcass of this kind is worth. A bear is a season's
     /// eating and a hare is a supper, and until the hunt took *named animals*
     /// there was no way for that to be true.
     public var meatYield: Double {
-        let size: Double
-        switch species {
-        case .bear: size = 34
-        // An elk feeds a colony for a week, which is the whole reason to take
-        // one on rather than a deer.
-        case .elk: size = 30
-        case .boar: size = 22
-        case .deer: size = 20
-        case .goat: size = 14
-        case .wolf, .lynx: size = 12
-        case .badger: size = 7
-        case .fox: size = 6
-        case .hare: size = 3
-        case .grouse: size = 2
-        }
+        // **Derived from how big it is**, not from a table of eleven numbers.
+        //
+        // Size and meat said the same thing twice (rule 8) and could disagree:
+        // an elk drawn at 4.2 and a bear at 4.6 carried 30 and 34, which is the
+        // same ratio the sizes already gave. A beast the content adds now feeds
+        // the colony in proportion to how big it looks, which is the answer a
+        // player would predict from looking at it.
+        let carcass = size * Animal.meatPerSize
         // A half-starved beast carries less on it.
-        return size * (0.55 + 0.45 * min(1, health / species.baseHealth))
+        return carcass * (0.55 + 0.45 * min(1, health / baseHealth))
     }
 
     /// Whether this is a beast that fights back. A cornered boar is the reason
     /// hunting is dangerous work and not a harvest.
+    /// **Derived from what it is and how big it is**, rather than from a
+    /// twelfth list of names. Anything that hunts fights back, and so does
+    /// anything heavy enough to be worth being afraid of — an elk in rut will
+    /// put a hunter in the ground and a cornered lynx is not a fox, while a
+    /// goat of the same weight only ever runs because it does not hunt.
     public var isDangerous: Bool {
-        switch species {
-        // An elk in rut will put a hunter in the ground, and a cornered lynx
-        // is not a fox. A goat only ever runs.
-        case .bear, .boar, .wolf, .elk, .lynx: return true
-        case .deer, .fox, .hare, .goat, .badger, .grouse: return false
-        }
+        isPredator || size >= Animal.dangerousFrom
     }
 
+    /// How big a plant-eater has to be before it is worth being careful of.
+    /// Set between a goat and a boar, which is where the line was drawn by
+    /// hand before this.
+    public static let dangerousFrom: Double = 2.9
+
     /// What it does to a hunter who gets it wrong, before armour.
+    /// Also derived: what it hits with is what it has, and what it has is its
+    /// weight. Zero for anything that is not dangerous at all, so a hare is a
+    /// hare whatever the arithmetic says.
     public var retaliation: Double {
-        switch species {
-        case .bear: return 34
-        case .boar: return 20
-        case .wolf: return 15
-        default: return 0
-        }
+        guard isDangerous else { return 0 }
+        return size * Animal.retaliationPerSize
     }
+
+    /// A bear at 4.6 comes out around thirty-four and a wolf at 3.2 around
+    /// twenty-three, which is where the hand-written table had them.
+    public static let retaliationPerSize: Double = 7.3
 
     /// Wounds a body part; when its condition hits zero the part is lost, and if
     /// that part was vital the animal dies. Returns whether it is still alive.
@@ -357,13 +487,13 @@ public enum AnimalFactory {
     /// They are put down as a *group*: one loose gathering place, with each
     /// beast a short step from it, because a herd is a herd and six deer
     /// scattered over the whole valley is six lone deer.
-    public static func herd(_ species: AnimalSpecies, count: Int,
+    public static func herd(_ species: AnimalDefinition, count: Int,
                             rng: inout SeededRNG) -> [Animal] {
         (0..<max(0, count)).map { _ in
             let sex: AnimalSex = rng.nextUnit() < 0.5 ? .male : .female
             let years = 1 + rng.nextUnit() * 4          // yearling to a few years
             let id = rng.nextUUID()
-            return Animal(id: id, species: species,
+            return Animal(id: id, definition: species,
                           sex: sex, age: Int(years * Double(ticksPerYear)),
                           position: Animal.scatter(id))
         }
@@ -386,45 +516,37 @@ public enum AnimalFactory {
     /// really does have more teeth in it than the homeland.
     /// Deterministic from `rng`.
     public static func wildPopulation(
-        biomeID: String = "plains", hazard: Int = 0, rng: inout SeededRNG
+        biomeID: String = "plains", hazard: Int = 0,
+        registry: GameDataRegistry, rng: inout SeededRNG
     ) -> [Animal] {
         var animals: [Animal] = []
-        for (species, fewest, most) in mix(for: biomeID) {
+        for (species, fewest, most) in mix(for: biomeID, registry: registry) {
             let count = fewest + Int(rng.nextUnit() * Double(max(1, most - fewest + 1)))
             animals += herd(species, count: count, rng: &rng)
         }
         // Wilder country carries more of them, up to a pack.
         if hazard > 0 {
-            animals += herd(.wolf, count: min(4, 1 + hazard / 2), rng: &rng)
+            // Whatever this country's own hunter is. A valley with no predator
+            // in the book simply stays quiet, rather than having a wolf posted
+            // into it because the code knew that word.
+            if let hunter = registry.animals(inBiome: biomeID)
+                .first(where: { $0.0.isPredator })?.0 {
+                animals += herd(hunter, count: min(4, 1 + hazard / 2), rng: &rng)
+            }
         }
         return animals
     }
 
-    /// What lives in a given country, as `(species, fewest, most)`.
-    public static func mix(for biomeID: String) -> [(AnimalSpecies, Int, Int)] {
-        switch biomeID {
-        case "forest":
-            return [(.deer, 7, 10), (.hare, 4, 7), (.boar, 3, 5), (.fox, 2, 3),
-                    (.wolf, 1, 2), (.elk, 2, 3), (.badger, 2, 3), (.grouse, 3, 5),
-                    (.lynx, 1, 2)]
-        case "coast":
-            return [(.deer, 5, 8), (.hare, 5, 8), (.fox, 2, 3), (.boar, 1, 2),
-                    (.grouse, 2, 4), (.badger, 1, 2)]
-        case "tundra":
-            return [(.deer, 5, 8), (.hare, 3, 5), (.wolf, 2, 4), (.fox, 1, 2),
-                    (.elk, 3, 5), (.grouse, 2, 3)]
-        case "mountains":
-            return [(.deer, 3, 5), (.hare, 3, 5), (.boar, 2, 3), (.bear, 1, 2),
-                    (.wolf, 1, 2), (.goat, 4, 7), (.lynx, 1, 2)]
-        case "wetlands":
-            return [(.grouse, 6, 9), (.boar, 4, 6), (.deer, 4, 6), (.hare, 3, 5),
-                    (.badger, 2, 4), (.fox, 2, 3), (.elk, 1, 2)]
-        case "desert":
-            return [(.hare, 4, 6), (.fox, 2, 3), (.boar, 1, 2), (.deer, 1, 3),
-                    (.goat, 2, 4)]
-        default: // plains & homeland
-            return [(.deer, 10, 14), (.hare, 6, 9), (.boar, 2, 3), (.fox, 2, 3),
-                    (.grouse, 3, 5), (.badger, 1, 3)]
-        }
+    /// What lives in a given country, and how many.
+    ///
+    /// Read off `animals.json` rather than a `switch`, so a beast added to the
+    /// content lives somewhere on the day it ships. A biome the content names
+    /// nothing for gets an empty valley — a content hole, which the tests
+    /// refuse, rather than a silent default that hides it.
+    public static func mix(
+        for biomeID: String, registry: GameDataRegistry
+    ) -> [(AnimalDefinition, Int, Int)] {
+        registry.animals(inBiome: biomeID).map { ($0.0, $0.1.min, $0.1.max) }
     }
+
 }

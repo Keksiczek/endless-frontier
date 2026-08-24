@@ -147,7 +147,7 @@ enum AgentMotion {
         // A kill stands until the engine says otherwise: the carcass has to be
         // carried home, and that is the one moment worth holding on screen.
         if reported == .killed { return HuntEngine.Phase.killed.rawValue }
-        let quarry = map.wildlife.animals.filter { !$0.species.isPredator }
+        let quarry = map.wildlife.animals.filter { !$0.isPredator }
         guard !quarry.isEmpty else { return HuntEngine.Phase.stalking.rawValue }
         let nearest = quarry.map { animal -> Double in
             let dx = animal.position.x - position.x, dy = animal.position.y - position.y
@@ -496,7 +496,7 @@ enum AgentMotion {
             if let face = pick(map.stone.faces(), { StoneField.centre(of: $0) }) { return face }
             return pick(map.rocks, \.position)
         case .hunting:
-            return pick(map.wildlife.animals.filter { !$0.species.isPredator }, \.position)
+            return pick(map.wildlife.animals.filter { !$0.isPredator }, \.position)
         default:
             return nil
         }

@@ -138,9 +138,9 @@ struct DesignationTests {
 
     @Test("The hunt takes the beast that was marked")
     func huntingFollowsTheMark() {
-        let near = Animal(id: UUID(), species: .deer, sex: .female, age: 300,
+        let near = Animal(id: UUID(), species: "deer", sex: .female, age: 300,
                           position: LocalPoint(x: 0.52, y: 0.5))
-        let far = Animal(id: UUID(), species: .deer, sex: .male, age: 300,
+        let far = Animal(id: UUID(), species: "deer", sex: .male, age: 300,
                          position: LocalPoint(x: 0.62, y: 0.5))
         let herd = [near, far]
         let from = LocalPoint(x: 0.5, y: 0.5)
@@ -148,7 +148,7 @@ struct DesignationTests {
         #expect(HuntEngine.quarry(in: herd, from: from, taken: [], marked: [far.id]) == 1)
         // A mark is not a teleport: a beast outside the hunters' reach stays
         // outside it.
-        let away = Animal(id: UUID(), species: .deer, sex: .female, age: 300,
+        let away = Animal(id: UUID(), species: "deer", sex: .female, age: 300,
                           position: LocalPoint(x: 0.99, y: 0.99))
         #expect(HuntEngine.quarry(in: [away], from: from, taken: [], marked: [away.id]) == nil)
     }

@@ -72,6 +72,73 @@ struct FloraContentTests {
     }
 }
 
+/// **The book of beasts, held against the game that puts them on a map.**
+@Suite("Every kind of beast is a real beast")
+struct AnimalContentTests {
+
+    @Test("Every species names a build the canvas can draw")
+    func buildsAreDrawable() throws {
+        let registry = try GameDataRegistry.bundled()
+        #expect(!registry.animals.isEmpty, "animals.json loaded nothing")
+        for (id, def) in registry.animals {
+            #expect(AnimalDefinition.Build.allCases.contains(def.build),
+                    "\(id) wears a build nobody draws")
+        }
+    }
+
+    @Test("Every beast lives somewhere, and every biome has something living in it")
+    func nothingIsStranded() throws {
+        let registry = try GameDataRegistry.bundled()
+        for (id, def) in registry.animals {
+            #expect(!def.biomes.isEmpty, "\(id) is named by no biome, so it lives nowhere")
+            for range in def.biomes {
+                #expect(range.min <= range.max, "\(id) in \(range.id) has a backwards range")
+                #expect(registry.biomes[range.id] != nil,
+                        "\(id) lives in '\(range.id)', which is not a biome")
+            }
+        }
+        for biome in registry.biomes.keys {
+            #expect(!registry.animals(inBiome: biome).isEmpty,
+                    "nothing lives in \(biome)")
+        }
+    }
+
+    @Test("Somewhere for a predator to be, or the whole of that half is dead code")
+    func predatorsExist() throws {
+        let registry = try GameDataRegistry.bundled()
+        // `isPredator` is honoured all over the engine — hunters skip them,
+        // prey flee them, they stalk the weak. A book with none in it makes
+        // every one of those paths unreachable, which is how it was before the
+        // wild was seeded at all.
+        #expect(registry.animals.values.contains { $0.isPredator },
+                "nothing in the book hunts")
+    }
+
+    @Test("The frozen table agrees with the book it was frozen from")
+    func legacyAgreesWithContent() throws {
+        let registry = try GameDataRegistry.bundled()
+        for legacy in LegacyAnimalSpecies.allCases {
+            guard let def = registry.beast(legacy.rawValue) else {
+                Issue.record("\(legacy.rawValue) is in the frozen table and not in animals.json")
+                continue
+            }
+            #expect(def.baseHealth == legacy.baseHealth,
+                    "\(legacy.rawValue) is a different size of life in the two")
+            #expect(def.isPredator == legacy.isPredator,
+                    "\(legacy.rawValue) hunts in one and not the other")
+            #expect(def.build == legacy.build,
+                    "\(legacy.rawValue) is drawn differently in the two")
+            #expect(def.comfortLow == legacy.comfortLow && def.comfortHigh == legacy.comfortHigh,
+                    "\(legacy.rawValue) keeps a different band in the two")
+            // Size is load-bearing — meat, retaliation and danger all derive
+            // from it — so a disagreement here is a beast that is quietly the
+            // wrong animal depending on how it was made.
+            #expect(def.size == legacy.size,
+                    "\(legacy.rawValue) is a different size in the two")
+        }
+    }
+}
+
 @Suite("A wood the colony cannot fell to nothing")
 struct WoodChainTests {
 

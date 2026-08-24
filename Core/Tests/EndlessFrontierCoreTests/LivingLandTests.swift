@@ -17,7 +17,7 @@ private func mapWith(trees: [Tree] = [], rocks: [Rock] = [],
              terrainSeed: seed, trees: trees, rocks: rocks)
 }
 
-private func animal(_ species: AnimalSpecies, id: Int, age: Int = 100,
+private func animal(_ species: String, id: Int, age: Int = 100,
                     health: Double? = nil) -> Animal {
     Animal(id: UUID(uuidString: String(format: "00000000-0000-0000-A11A-%012d", id))!,
            species: species, sex: .female, age: age, health: health)
@@ -160,7 +160,7 @@ struct AnimalLifeTests {
 
     @Test("A tick ages every beast")
     func beastsAge() {
-        let map = mapWith(animals: [animal(.deer, id: 1, age: 50)])
+        let map = mapWith(animals: [animal("deer", id: 1, age: 50)])
         let after = AnimalEngine.advanceOneTick(map, tick: 5, ticksPerYear: 60)
         #expect(after.wildlife.animals[0].age == 51)
     }
@@ -173,19 +173,19 @@ struct AnimalLifeTests {
     func bandsAreReachable() {
         let winter = AnimalEngine.temperature(.winter)
         let summer = AnimalEngine.temperature(.summer)
-        #expect(AnimalSpecies.allCases.contains { winter < $0.comfortLow },
+        #expect(LegacyAnimalSpecies.allCases.contains { winter < $0.comfortLow },
                 "no species can ever suffer cold")
-        #expect(AnimalSpecies.allCases.contains { summer > $0.comfortHigh },
+        #expect(LegacyAnimalSpecies.allCases.contains { summer > $0.comfortHigh },
                 "no species can ever suffer heat")
         // And it must not be *every* species, or winter is just a cull.
-        #expect(AnimalSpecies.allCases.contains { winter >= $0.comfortLow })
-        #expect(AnimalSpecies.allCases.contains { summer <= $0.comfortHigh })
+        #expect(LegacyAnimalSpecies.allCases.contains { winter >= $0.comfortLow })
+        #expect(LegacyAnimalSpecies.allCases.contains { summer <= $0.comfortHigh })
     }
 
     @Test("Winter bites a beast that cannot take the cold")
     func winterBites() {
         // A boar's comfort floor is −15; a hard winter goes below it.
-        var after = mapWith(animals: [animal(.boar, id: 1)], seed: 3)
+        var after = mapWith(animals: [animal("boar", id: 1)], seed: 3)
         // The last quarter of a 60-tick year is winter: ticks 45…59.
         for tick in 45..<60 {
             after = AnimalEngine.advanceOneTick(after, tick: tick, ticksPerYear: 60)
@@ -197,7 +197,7 @@ struct AnimalLifeTests {
     @Test("High summer tells on a thick coat")
     func summerTellsOnTheThickCoated() {
         // A bear's ceiling is 28; high summer goes past it.
-        var after = mapWith(animals: [animal(.bear, id: 1)], seed: 4)
+        var after = mapWith(animals: [animal("bear", id: 1)], seed: 4)
         for tick in 15..<30 {
             after = AnimalEngine.advanceOneTick(after, tick: tick, ticksPerYear: 60)
         }
@@ -207,7 +207,7 @@ struct AnimalLifeTests {
 
     @Test("A beast carrying nothing mends")
     func theUnhurtMend() {
-        let map = mapWith(animals: [animal(.deer, id: 1, health: 40)])
+        let map = mapWith(animals: [animal("deer", id: 1, health: 40)])
         var after = map
         for tick in 0..<10 {
             // Spring: nothing to suffer from.
@@ -218,19 +218,19 @@ struct AnimalLifeTests {
 
     @Test("A beast whose vitals are gone is taken off the map")
     func theDeadAreRemoved() {
-        var dying = animal(.hare, id: 1)
+        var dying = animal("hare", id: 1)
         dying.injure(.head, by: 500)
-        let map = mapWith(animals: [dying, animal(.deer, id: 2)])
+        let map = mapWith(animals: [dying, animal("deer", id: 2)])
         let after = AnimalEngine.advanceOneTick(map, tick: 1, ticksPerYear: 60)
         #expect(after.wildlife.animals.count == 1)
-        #expect(after.wildlife.animals[0].species == .deer)
+        #expect(after.wildlife.animals[0].species == "deer")
     }
 
     /// The hunt takes the lame and the sick before the strong.
     @Test("Hunting takes the weakest prey first")
     func theHuntTakesTheWeak() {
-        let strong = animal(.deer, id: 1, health: 90)
-        let weak = animal(.deer, id: 2, health: 20)
+        let strong = animal("deer", id: 1, health: 90)
+        let weak = animal("deer", id: 2, health: 20)
         let result = AnimalEngine.hunt(mapWith(animals: [strong, weak]), count: 1)
         #expect(result.taken == 1)
         #expect(result.map.wildlife.animals.map(\.id) == [strong.id])
@@ -238,7 +238,7 @@ struct AnimalLifeTests {
 
     @Test("The hunt does not take predators")
     func wolvesAreNotGame() {
-        let result = AnimalEngine.hunt(mapWith(animals: [animal(.wolf, id: 1)]), count: 2)
+        let result = AnimalEngine.hunt(mapWith(animals: [animal("wolf", id: 1)]), count: 2)
         #expect(result.taken == 0)
         #expect(result.map.wildlife.animals.count == 1)
     }
@@ -252,7 +252,7 @@ struct AnimalLifeTests {
 
     @Test("The wild breeds back in spring while there is room")
     func springRefills() {
-        let herd = (1...4).map { animal(.deer, id: $0) }
+        let herd = (1...4).map { animal("deer", id: $0) }
         let map = mapWith(animals: herd, capacity: 80)
         #expect(Season(tick: 0, ticksPerYear: 60) == .spring)
         let after = AnimalEngine.breed(map, tick: 0, ticksPerYear: 60)
@@ -261,7 +261,7 @@ struct AnimalLifeTests {
 
     @Test("Nothing calves in January")
     func winterHasNoCalves() {
-        let herd = (1...4).map { animal(.deer, id: $0) }
+        let herd = (1...4).map { animal("deer", id: $0) }
         let map = mapWith(animals: herd, capacity: 80)
         let after = AnimalEngine.breed(map, tick: 45, ticksPerYear: 60)
         #expect(after.wildlife.animals.count == herd.count)
@@ -269,7 +269,7 @@ struct AnimalLifeTests {
 
     @Test("The same world runs the same wild twice")
     func lifeIsDeterministic() {
-        let map = mapWith(animals: (1...5).map { animal(.deer, id: $0) }, seed: 12345)
+        let map = mapWith(animals: (1...5).map { animal("deer", id: $0) }, seed: 12345)
         var a = map, b = map
         for tick in 0..<50 {
             a = AnimalEngine.advanceOneTick(a, tick: tick, ticksPerYear: 60)

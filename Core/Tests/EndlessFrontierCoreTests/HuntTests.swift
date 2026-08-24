@@ -19,7 +19,7 @@ struct HuntTests {
 
     private func deer(at p: LocalPoint, health: Double? = nil,
                       id: UUID = UUID()) -> Animal {
-        Animal(id: id, species: .deer, sex: .female, age: 120,
+        Animal(id: id, species: "deer", sex: .female, age: 120,
                health: health, position: p)
     }
 
@@ -171,7 +171,7 @@ struct HuntTests {
     @Test("Closing with dangerous game can cost the hunter")
     func dangerousGameFightsBack() {
         let boars = (0..<12).map { i in
-            Animal(id: UUID(), species: .boar, sex: .male, age: 200,
+            Animal(id: UUID(), species: "boar", sex: .male, age: 200,
                    position: LocalPoint(x: 0.5 + Double(i) * 0.004, y: 0.5))
         }
         let party = (0..<12).map { _ in hunter(ranged: 0, melee: 6) }
@@ -185,7 +185,7 @@ struct HuntTests {
     @Test("A bow reaches from cover, so nothing gets a chance to gore you")
     func aBowIsSafe() {
         let boars = (0..<12).map { i in
-            Animal(id: UUID(), species: .boar, sex: .male, age: 200,
+            Animal(id: UUID(), species: "boar", sex: .male, age: 200,
                    position: LocalPoint(x: 0.5 + Double(i) * 0.004, y: 0.5))
         }
         let party = (0..<12).map { _ in hunter(ranged: 10, melee: 1) }
@@ -208,7 +208,7 @@ struct HuntTests {
         if let survivor = bag.map.wildlife.animals.first {
             #expect(survivor.activity == .fleeing)
             #expect(survivor.position.x > 0.52)
-            #expect(survivor.health < survivor.species.baseHealth)
+            #expect(survivor.health < survivor.baseHealth)
         } else {
             #expect(bag.kills.count == 1)
         }

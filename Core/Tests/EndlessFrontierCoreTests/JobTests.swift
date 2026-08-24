@@ -228,7 +228,7 @@ struct HuntingEntityTests {
                     animals: (0..<prey).map {
                         Animal(id: UUID(uuidString: String(format:
                             "00000000-0000-0000-DEE5-%012d", $0))!,
-                               species: .deer, sex: .female, age: 100)
+                               species: "deer", sex: .female, age: 100)
                     },
                     usesEntities: true))
     }
@@ -274,7 +274,7 @@ struct HuntingEntityTests {
         var map = valley(prey: 4)
         map.wildlife.animals.append(
             Animal(id: UUID(uuidString: "00000000-0000-0000-DEE5-FFFFFFFFFFFF")!,
-                   species: .wolf, sex: .male, age: 200))
+                   species: "wolf", sex: .male, age: 200))
         #expect(map.wildlife.preyCount == 4)
     }
 }

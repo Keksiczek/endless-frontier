@@ -310,6 +310,39 @@ gives as its `work` — or the ask the canvas makes will never carry it.""",
         # …and `AgentMotion.Activity` learned `riding` the same way.
         "new_values": {"serves_activities": ("riding",)},
     },
+    "animals": {
+        "file": "animals.json",
+        "brief": """One **kind of beast**. What lives in the valley, what it does when it meets
+somebody, and what it is worth taken or tamed.
+
+`build` is the body the canvas draws and it is a **closed set**: `deer` (high
+shoulder, light frame), `elk` (the same with weight and a rack), `goat` (horns
+sweeping back), `boar` (low, humped, heavy at the front), `small` (something a
+snare takes), `canid` (level back, long muzzle, brush), `lynx` (short-bodied,
+high-rumped, tufted), `badger` (low and broad). A beast asking for anything else
+is an animal that is not there.
+
+`diet` is `grazer`, `forager` or `hunter`. A hunter is what the herd runs from
+and what a lone hunter thinks twice about; the other two are game.
+
+`size` is how big it is drawn against a person, and it is load-bearing — meat,
+retaliation and whether it is dangerous at all are **derived** from it. A grouse
+is 1.3, a boar 3, a bear 4.6. `baseHealth` is full health for an adult and runs
+roughly with size but not slavishly: a boar is tougher than its weight.
+
+`comfortLow`/`comfortHigh` are the band in °C it lives in, and they decide where
+it can actually survive — an elk stops at 24 above, which is why it belongs to
+the cold woods.
+
+`biomes` is where it lives and how many: `[{"id": "forest", "min": 2, "max": 3}]`.
+At least one, and look at what the eleven already cover — a fifth forest deer is
+less use than the first thing that lives in a desert.
+
+`tameability` 0…1 is how readily it gentles and `role` is what a tamed one is
+for (`beast_of_burden`, `guard`, `companion`, `mount`). Together they are the
+whole reason to spend a season on a beast rather than shoot it.""",
+        "new_fields": (),
+    },
     "flora": {
         "file": "flora.json",
         "brief": """One **kind of tree**. Everything about a species that is not its colour —
@@ -412,9 +445,7 @@ there, how hard the weather is, and what the ground looks like.""",
 # these is a Swift change first — a data file and a loader — and only then worth
 # generating into. Saying so here beats generating a file nothing reads.
 NEEDS_SWIFT_FIRST = {
-    "animals": "`AnimalFactory` builds beasts in code; there is no animals.json to write into.",
     "traits": "Pawn genes and traits are code (`Pawn+Genes`), not data.",
-    "flora": "Trees and scenery are chosen by `SettlementFlora` from biome code, not from a file.",
     "names": "Colonist names come from a code table, not from GameData.",
 }
 

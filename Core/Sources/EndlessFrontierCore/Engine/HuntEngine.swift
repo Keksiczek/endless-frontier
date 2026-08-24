@@ -79,7 +79,7 @@ public enum HuntEngine {
         public var kills: [Animal] = []
         /// Hunters hurt by something that fought back, and by how much.
         public var wounds: [(hunterID: UUID, hunterName: String,
-                             species: AnimalSpecies, damage: Double)] = []
+                             species: String, damage: Double)] = []
 
         public var meat: Double { kills.reduce(0) { $0 + $1.meatYield } }
         public var hides: Int { kills.count }
@@ -137,7 +137,7 @@ public enum HuntEngine {
             let sharpness = min(0.28, (fromCover ? hunter.ranged : hunter.melee) * 0.02)
             if rng.nextUnit() < odds + sharpness {
                 // Clean: through the heart, or the throat.
-                beast.injure(fromCover ? .torso : .head, by: beast.species.baseHealth)
+                beast.injure(fromCover ? .torso : .head, by: beast.baseHealth)
                 taken.insert(beast.id)
                 animals[index] = beast
                 bag.kills.append(beast)
@@ -186,7 +186,7 @@ public enum HuntEngine {
         var best: Int?
         var bestScore = Double.greatestFiniteMagnitude
         for (index, animal) in animals.enumerated() {
-            guard !taken.contains(animal.id), !animal.species.isPredator else { continue }
+            guard !taken.contains(animal.id), !animal.isPredator else { continue }
             let dx = animal.position.x - from.x, dy = animal.position.y - from.y
             let distance = (dx * dx + dy * dy).squareRoot()
             guard distance <= reach else { continue }
@@ -196,7 +196,7 @@ public enum HuntEngine {
             // (`Designation`), while still being bounded by `reach`, because a
             // hunting party is not a teleport.
             let frailty = (animal.canWalk ? 0.0 : -0.06)
-                + (animal.health / animal.species.baseHealth - 1) * 0.04
+                + (animal.health / animal.baseHealth - 1) * 0.04
             let score = distance + frailty - (marked.contains(animal.id) ? reach * 2 : 0)
             if score < bestScore { bestScore = score; best = index }
         }
