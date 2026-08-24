@@ -540,8 +540,34 @@ public enum ResourceLoop {
     static let depositFloorFactor: Double = 0.35
     /// Harvest a single assigned worker pulls from a deposit each tick.
     static let harvestPerWorker: Double = 0.45
-    /// How many whole units of timber a felled trunk leaves at the stump.
+    /// How many whole units of timber a felled trunk leaves at the stump,
+    /// before anybody has built anything to cut it better.
     static let timberPerTree = 4
+
+    /// **What a trunk is actually worth to this colony**, once its mills are
+    /// counted (`BuildingDefinition.recovery`).
+    ///
+    /// The wood is the binding constraint on the whole crafted half of the game
+    /// and the forest sets how many trunks exist — so the only honest lever
+    /// left is how little of each one is wasted. A saw pit gets a quarter more
+    /// out of a tree than an axe and a wedge; a powered mill better than half
+    /// again. Rounded down to whole goods, because a pile is a pile, with a
+    /// floor of the bare yield so a mill can never make a tree worth *less*.
+    static func timberYield(
+        of settlement: Settlement, registry: GameDataRegistry
+    ) -> Int {
+        max(timberPerTree, Int((Double(timberPerTree) * (1 + recovery(of: settlement, "wood", registry: registry))).rounded(.down)))
+    }
+
+    /// How much extra of one raw good the standing buildings recover.
+    static func recovery(
+        of settlement: Settlement, _ item: String, registry: GameDataRegistry
+    ) -> Double {
+        settlement.buildings.reduce(0.0) { acc, instance in
+            acc + (registry.building(instance.definitionID)?.recovery[item] ?? 0)
+                * Double(instance.count)
+        }
+    }
     /// Fraction of a node's capacity it regrows each tick (before seasonality).
     static let depositRegrowthFraction: Double = 0.0009
 
@@ -891,8 +917,9 @@ public enum ResourceLoop {
             let cut = FloraEngine.fell(map, loggers: max(1, Int(timberDemand / harvestPerWorker)),
                                        marked: DesignationEngine.trees(settlement))
             map = cut.map
+            let perTrunk = timberYield(of: settlement, registry: registry)
             for stump in cut.stumps {
-                dropped.append((itemID: "wood", amount: timberPerTree, at: stump))
+                dropped.append((itemID: "wood", amount: perTrunk, at: stump))
             }
         }
         let stoneDemand = demand[.stone, default: 0]

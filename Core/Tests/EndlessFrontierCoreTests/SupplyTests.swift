@@ -43,7 +43,7 @@ struct SupplyTests {
         #expect(!after.caravans.isEmpty, "nobody noticed the outpost was starving")
         let cart = after.caravans[0]
         #expect(cart.destinationID == w.settlements[1].id)
-        #expect(cart.resource == .food)
+        #expect(cart.load == .resource(.food))
         #expect(cart.cargo > 0)
         #expect(!cart.guards.isEmpty, "a cart goes out with people, not on its own")
     }

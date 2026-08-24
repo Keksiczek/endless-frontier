@@ -43,6 +43,29 @@ public enum SettlementRoute {
     /// somebody paved this on purpose.
     public static let pavedCost = 0.35
 
+    /// What crossing **water** costs.
+    ///
+    /// Keks: *"ať se věci negenerují a moc nechodí na moře — teď tam jsou POI,
+    /// řeky, vše tam normálně chodí."* Measured by grepping for it: `isWater`
+    /// is asked in exactly two places in the whole engine — planting a sapling
+    /// and one generator fallback. Nothing about walking, hauling, routing,
+    /// building or the beasts has ever asked. The water is drawn and it is not
+    /// *there*.
+    ///
+    /// Dearer than a building and still not forbidden, on purpose: a colony
+    /// laid out across a river must not strand the half of itself on the far
+    /// bank, and a ford is a real thing. What this buys is that a walk goes
+    /// round the water when there is any way round at all — which, on a coast,
+    /// there always is.
+    public static let acrossDeepWater = 40.0
+
+    /// …and what wading through the shallows costs.
+    ///
+    /// Dear enough that a walk keeps to the sand when there is sand, cheap
+    /// enough that a ford is a way across rather than a wall — about three
+    /// times the going on open ground, which is roughly what it is.
+    public static let acrossShallows = 3.0
+
     /// What crossing the ground a building stands on costs.
     ///
     /// High enough that any way round inside the search box wins, low enough
@@ -70,10 +93,28 @@ public enum SettlementRoute {
         let height: Int
         var cost: [Double]
 
-        public init(colony: ColonyMap, worn: [TileCoord: Double]) {
+        /// `water` is the ground the map says is under water — the shore and,
+        /// where it flows, the river. Passed in rather than read off the colony
+        /// because the build grid knows nothing about either: a `ColonyMap` is
+        /// tiles and lots, and the water lives on the `LocalMap` beside it.
+        public init(colony: ColonyMap, worn: [TileCoord: Double],
+                    water: ((LocalPoint) -> PathEngine.WaterDepth)? = nil) {
             width = max(1, colony.width)
             height = max(1, colony.height)
             cost = Array(repeating: openCost, count: width * height)
+            if let water {
+                for y in 0..<height {
+                    for x in 0..<width {
+                        let at = SettlementGeometry.canvasPoint(tileX: x, tileY: y, in: colony)
+                        guard let index = index(TileCoord(x, y)) else { continue }
+                        switch water(at) {
+                        case .dry:     break
+                        case .shallow: cost[index] = acrossShallows
+                        case .deep:    cost[index] = acrossDeepWater
+                        }
+                    }
+                }
+            }
             for (coord, wear) in worn {
                 guard let index = index(coord) else { continue }
                 // Part-worn ground is part of the way there: a track at half

@@ -611,7 +611,7 @@ struct SettlementCanvasView: View {
 
     private func caravanLabel(_ caravan: Caravan, outbound: Bool) -> String {
         let cs = AppStrings.language == .cs
-        let what = caravan.resource.displayName
+        let what = caravan.load.displayName(registry)
         let way = outbound ? (cs ? "odváží" : "carrying out") : (cs ? "veze" : "bringing in")
         return "\(way) \(Int(caravan.cargo)) \(what)"
     }

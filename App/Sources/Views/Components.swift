@@ -1,6 +1,31 @@
 import SwiftUI
 import EndlessFrontierCore
 
+/// What a cart is carrying, said in the player's language.
+///
+/// A caravan used to carry one of five pools and nothing else, so every panel
+/// that drew one asked the resource directly. It can carry **goods** now
+/// (`CaravanCargo`) — timber, charcoal, ore — and a cart of timber has no
+/// resource to ask. The name comes out of the registry, so a good is called
+/// what the content calls it in both languages rather than by its id.
+extension CaravanCargo {
+    var symbolName: String {
+        switch self {
+        case let .resource(resource): return resource.symbolName
+        case .goods: return "shippingbox.fill"
+        }
+    }
+
+    func displayName(_ registry: GameDataRegistry?) -> String {
+        switch self {
+        case let .resource(resource):
+            return resource.displayName
+        case let .goods(item):
+            return registry?.item(item)?.name.resolve(AppStrings.language) ?? item
+        }
+    }
+}
+
 extension ResourceType {
     var symbolName: String {
         switch self {

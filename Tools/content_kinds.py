@@ -43,6 +43,33 @@ ENUM_KEYS = (
 #   · `WorkKind`  — `Pawn.swift`
 #   · building `look` — `SettlementRenderer.BuildingGlyph`, whose `temple` no
 #     building states even though the renderer draws it
+# **A word one kind of content knows is not a word every kind knows.**
+#
+# `SUPPLEMENTS` below is one flat table applied to every data file, and the
+# `type` entry in it is the *event* effect vocabulary. So an item drafted with
+# `"type": "resource_delta"` passed the check — the word is in the table — and
+# then failed to decode, because `ItemEffect.init(from:)` switches on six
+# strings and `resource_delta` is not one of them. Three of them shipped in one
+# batch, and the failure was `Failed to decode items` at *test* time rather than
+# a fault the checker could name.
+#
+# The same shape as the grammar gap the `EFFECT_SHAPES` table below was written
+# for, one level up: there, the checker knew the words and not their fields;
+# here it knows a *neighbouring* kind's words and offers them as this one's.
+#
+# A kind listed here **replaces** the flat supplement for that key rather than
+# adding to it: the point is that the flat one is wrong for this kind, not
+# short.
+SUPPLEMENTS_BY_KIND: dict[str, dict[str, set[str]]] = {
+    # Every string `ItemEffect.init(from:)` switches on (`Item.swift`).
+    "items": {
+        "type": {
+            "skill_bonus", "mood_bonus", "health_regen",
+            "colony_production", "colony_defense", "colony_morale",
+        },
+    },
+}
+
 SUPPLEMENTS: dict[str, set[str]] = {
     "work": {
         "farming", "logging", "mining", "research", "trade", "foraging",

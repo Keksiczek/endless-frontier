@@ -372,8 +372,48 @@ public enum StewardEngine {
         // all.
         wanted.formUnion(QuartermasterEngine.wantedMaterials(
             for: settlement, in: state, registry: registry))
+        // …and **what those things are made of.**
+        //
+        // Measured on Keks's save: the council had a standing order for
+        // `smelt_iron` and none for `burn_charcoal`, so the smelt sat at zero
+        // progress for a hundred years while 193 units of iron ore stacked up
+        // beside it. Charcoal is not a building material and not a piece of
+        // gear, so nothing above ever asked for it — and iron is *both*, so the
+        // council ordered the thing and never the thing it is made of. The
+        // whole iron-and-steel half of the item tree hung off that one gap.
+        //
+        // Closed transitively, because a chain is a chain: steel wants iron
+        // wants charcoal wants wood. Bounded at `chainDepth` passes and
+        // naturally self-limiting — a raw good has no recipe, so `wood` and
+        // `iron_ore` drop out of the closure rather than being ordered from a
+        // bench that could never make them.
+        for _ in 0..<chainDepth {
+            var added: Set<String> = []
+            for material in wanted {
+                guard let recipeID = cheapestRecipe(making: material, at: settlement,
+                                                    in: state, registry: registry),
+                      let recipe = registry.recipes[recipeID] else { continue }
+                for input in recipe.materials.keys where !wanted.contains(input) {
+                    // Only what a bench could actually make. Everything else is
+                    // something the ground gives, and the answer to being short
+                    // of it is a logger or a miner, not an order.
+                    guard cheapestRecipe(making: input, at: settlement,
+                                         in: state, registry: registry) != nil else { continue }
+                    added.insert(input)
+                }
+            }
+            if added.isEmpty { break }
+            wanted.formUnion(added)
+        }
         return wanted.sorted()
     }
+
+    /// How deep the council follows a chain of "and what is *that* made of".
+    ///
+    /// Three is the longest real chain in the book — wood → charcoal → iron →
+    /// steel — and a bound rather than a loop because content is data and a
+    /// recipe that names itself is a thing a generator can write.
+    static let chainDepth = 3
 
     /// **What to make first.**
     ///

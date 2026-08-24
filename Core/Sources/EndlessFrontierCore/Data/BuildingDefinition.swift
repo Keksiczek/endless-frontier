@@ -90,6 +90,28 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
     /// upkeep its build cost wouldn't imply.
     public let upkeep: Resources?
     public let pollution: Double
+    /// **How much more of a raw good this building gets out of the same
+    /// trunk, seam or load**, keyed by the good's item id: `{"wood": 0.6}` is
+    /// three fifths again as much usable timber off a felled tree.
+    ///
+    /// Keks, on a colony whose forest genuinely cannot feed it: *"dřevo mě
+    /// štve, ale přidávat ho není řešení — je to prostě náročné to uživit;
+    /// třeba nějaká industriální pila, co bude zpracovávat dřevo
+    /// efektivněji."* He is right that planting harder is not the answer. The
+    /// forest sets the rate at which trunks exist (`FloraEngine.seedStand`);
+    /// what a colony can change is **how much of each trunk it wastes**, and
+    /// that is a building, not a season.
+    ///
+    /// Recovery is deliberately *not* a recipe. A better recipe competes for
+    /// the same wood at the same bench and the colony ends up running both;
+    /// this multiplies what reaches the shelf in the first place, so it cannot
+    /// be undercut by an older standing order. Summed across every instance
+    /// standing, so a second mill is worth having and a tenth is not much.
+    ///
+    /// Keyed by item rather than by resource because the next one to want it
+    /// is a stone-cutting works reading `rough_stone`, and a `Resources` block
+    /// could not have said that.
+    public let recovery: [String: Double]
     public let footprint: TileSize
     /// The work this building is a place for, when its production doesn't say.
     ///
@@ -206,6 +228,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         storage: Resources = Resources(),
         upkeep: Resources? = nil,
         pollution: Double = 0,
+        recovery: [String: Double] = [:],
         footprint: TileSize = TileSize(),
         work: WorkKind? = nil,
         look: String? = nil,
@@ -227,6 +250,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         self.storage = storage
         self.upkeep = upkeep
         self.pollution = pollution
+        self.recovery = recovery
         self.footprint = footprint
         self.work = work
         self.look = look
@@ -239,7 +263,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         case id, era, name, cost, workers, production, consumption
         case materialCost = "material_cost"
         case moraleEffect = "morale_effect"
-        case defense, housing, storage, upkeep, pollution, footprint, work, look, floors
+        case defense, housing, storage, upkeep, pollution, recovery, footprint, work, look, floors
         case adjacency
         case description
     }
@@ -269,6 +293,7 @@ public struct BuildingDefinition: Codable, Sendable, Identifiable, Equatable {
         }
         upkeep = try c.decodeIfPresent(Resources.self, forKey: .upkeep)
         pollution = try c.decodeIfPresent(Double.self, forKey: .pollution) ?? 0
+        recovery = try c.decodeIfPresent([String: Double].self, forKey: .recovery) ?? [:]
         footprint = try c.decodeIfPresent(TileSize.self, forKey: .footprint) ?? TileSize()
         work = try c.decodeIfPresent(WorkKind.self, forKey: .work)
         look = try c.decodeIfPresent(String.self, forKey: .look)

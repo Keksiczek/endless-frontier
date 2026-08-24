@@ -92,7 +92,7 @@ struct TradePanel: View {
     private func caravanRow(_ caravan: Caravan) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 10) {
-                Image(systemName: caravan.resource.symbolName).foregroundStyle(Theme.accent).frame(width: 20)
+                Image(systemName: caravan.load.symbolName).foregroundStyle(Theme.accent).frame(width: 20)
                 Text("\(game.settlementName(caravan.originID)) → \(game.settlementName(caravan.destinationID))")
                     .font(.subheadline.weight(.medium))
                 Spacer()

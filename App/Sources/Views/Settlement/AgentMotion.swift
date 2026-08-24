@@ -362,11 +362,16 @@ enum AgentMotion {
         /// the same street `PathEngine` wore (`WalkRoutes`).
         let colony: ColonyMap?
         let worn: [TileCoord: Double]
+        /// What the ground says is under water. A walk goes round it —
+        /// `SettlementRoute.acrossWater` — so the town on a coast keeps to its
+        /// own bank instead of strolling out to sea.
+        let water: ((LocalPoint) -> PathEngine.WaterDepth)?
 
         init(settlement: Settlement, registry: GameDataRegistry, continuousTick: Double = 0,
              replay: SettlementBattle.Replay? = nil) {
             self.colony = settlement.colony
             self.worn = settlement.paths.lookup()
+            self.water = PathEngine.waterDepth(settlement)
             let layout = SettlementRenderer.normalizedLayout(settlement: settlement, registry: registry)
             self.layout = layout
             var homes: [LocalPoint] = []
@@ -623,7 +628,7 @@ enum AgentMotion {
         // short hop has no route and keeps the straight line it always had.
         let street = WalkRoutes.shared.route(
             from: previous.place, to: current.place,
-            colony: scene.colony, worn: scene.worn)
+            colony: scene.colony, worn: scene.worn, water: scene.water)
         // Time enough for the walk they are *actually* making: going round a
         // works is further than going through it, and a pace that ignored that
         // would have people breaking into a trot at every corner (rule 34).

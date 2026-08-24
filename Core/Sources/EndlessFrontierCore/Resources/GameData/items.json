@@ -6871,5 +6871,3220 @@
       "en": "A compact, clean energy source for advanced vehicles. Powers the settlement's first hover sleds, but producing it is an expensive, delicate process.",
       "cs": "Kompaktní a čistý zdroj energie pro pokročilá vozidla. Pohání první vznášedla osady, ale jeho výroba je drahý a choulostivý proces."
     }
+  },
+  {
+    "id": "reinforced_hunting_bow",
+    "name": {
+      "en": "Reinforced Hunting Bow",
+      "cs": "Zesílený lovecký luk"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Made by Bowyer Elara using stronger sinew and seasoned ash wood. Better range for hunting larger game on the plains.",
+      "cs": "Zhotovený lučištnicí Elarou ze silnějších šlach a vyzrálého jasanového dřeva. Větší dostřel pro lov větší zvěře na pláních."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 4,
+      "projectile": "arrow",
+      "range": 0.18,
+      "caliber": 1.0,
+      "shots": 1
+    }
+  },
+  {
+    "id": "reinforced_leather_vest",
+    "name": {
+      "en": "Reinforced Leather Vest",
+      "cs": "Zesílená kožená vesta"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "description": {
+      "en": "Sturdy leather panels, stitched together by Tanner Borin, offering more protection than simple hide. A reliable piece for guards on the valley perimeter.",
+      "cs": "Pevné kožené panely, sešité dohromady koželuhou Borinem, nabízející větší ochranu než pouhá kůže. Spolehlivý kus pro stráže na obvodu údolí."
+    },
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 4
+      }
+    ],
+    "armour": {
+      "material": "leather",
+      "coverage": "torso"
+    }
+  },
+  {
+    "id": "percussion_pistol",
+    "name": {
+      "en": "Percussion Pistol",
+      "cs": "Perkusní pistole"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A compact firearm, a product of the colony's first true gunsmith, Old Silas. Reliable for close quarters, but loud.",
+      "cs": "Kompaktní střelná zbraň, výtvor prvního skutečného zbrojíře kolonie, starého Silase. Spolehlivá na blízko, ale hlučná."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 6,
+      "projectile": "bullet",
+      "range": 0.2,
+      "caliber": 0.6,
+      "shots": 1
+    }
+  },
+  {
+    "id": "iron_breastplate",
+    "name": {
+      "en": "Iron Breastplate",
+      "cs": "Železný kyrys"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "description": {
+      "en": "Forged by Blacksmith Greta, this heavy plate protects the vital organs. It's cumbersome, but offers superior defense against raiders.",
+      "cs": "Ukováno kovářkou Gretou, tento těžký plát chrání životně důležité orgány. Je těžkopádný, ale nabízí vynikající obranu proti nájezdníkům."
+    },
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 8
+      }
+    ],
+    "armour": {
+      "material": "plate",
+      "coverage": "torso"
+    }
+  },
+  {
+    "id": "double_barrel_shotgun",
+    "name": {
+      "en": "Double Barrel Shotgun",
+      "cs": "Dvouhlavňová brokovnice"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Crafted by the valley's innovative inventor, Keks. Devastating at short range, especially against swarms of beasts or unarmored foes. Its two barrels can deliver a quick follow-up.",
+      "cs": "Vyrobena údolním inovativním vynálezcem Keksem. Zničující na krátkou vzdálenost, zvláště proti rojům zvířat nebo neobrněným nepřátelům. Její dvě hlavně umožňují rychlou následnou střelbu."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 10,
+      "projectile": "shot",
+      "range": 0.15,
+      "caliber": 2.0,
+      "shots": 8,
+      "spread": 0.05
+    }
+  },
+  {
+    "id": "composite_combat_helmet",
+    "name": {
+      "en": "Composite Combat Helmet",
+      "cs": "Kompozitní bojová přilba"
+    },
+    "rarity": "epic",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "description": {
+      "en": "Advanced materials and design protect the head from most threats. Standard issue for the valley's elite defenders.",
+      "cs": "Pokročilé materiály a design chrání hlavu před většinou hrozeb. Standardní výbava pro elitní obránce údolí."
+    },
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 12
+      }
+    ],
+    "armour": {
+      "material": "composite",
+      "coverage": "head",
+      "helm": true
+    }
+  },
+  {
+    "id": "modular_carbine",
+    "name": {
+      "en": "Modular Carbine",
+      "cs": "Modulární karabina"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A versatile, modern firearm, easily adapted for various tasks from hunting to guard duty. Designed by the colony's engineer, Lena.",
+      "cs": "Všestranná, moderní střelná zbraň, snadno přizpůsobitelná pro různé úkoly od lovu po strážní službu. Navržena kolonijní inženýrkou Lenou."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 8,
+      "projectile": "bullet",
+      "range": 0.35,
+      "caliber": 0.5,
+      "shots": 1
+    }
+  },
+  {
+    "id": "steam_powered_saw",
+    "name": {
+      "en": "Steam Powered Saw",
+      "cs": "Parní pila"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A bulky, noisy contraption that makes short work of timber. Greatly boosts lumber production, but requires careful handling by Forester Old Man Hemlock.",
+      "cs": "Objemný, hlučný stroj, který rychle zpracovává dřevo. Výrazně zvyšuje těžbu dřeva, ale vyžaduje opatrné zacházení od lesníka starého Hemlocka."
+    },
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "logging",
+        "amount": 4
+      }
+    ],
+    "combat": {
+      "class": "melee",
+      "damage": 5,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "rough_stone_axe_tool",
+    "name": {
+      "en": "Rough Stone Axe",
+      "cs": "Hrubá kamenná sekera"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "logging",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A heavy stone lashed to a sturdy wooden handle. Useful for felling small trees and for basic defense. Colonist Jozef crafted this one.",
+      "cs": "Těžký kámen připevněný k pevné dřevěné rukojeti. Užitečná kácení menších stromů a základní obranu. Tuhle vyrobil kolonista Jozef."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 4,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "stitched_hide_cap",
+    "name": {
+      "en": "Stitched Hide Cap",
+      "cs": "Sešívaná kožená čepice"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "armour": {
+      "material": "hide",
+      "coverage": "head",
+      "helm": true
+    },
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A simple cap made from cured hides, stitched together. It offers minor protection from the elements and light blows. Young Marta often wears hers.",
+      "cs": "Jednoduchá čepice ze surových kůží, sešitá dohromady. Poskytuje mírnou ochranu před živly a lehkými údery. Mladá Marta svou často nosí."
+    }
+  },
+  {
+    "id": "short_bow",
+    "name": {
+      "en": "Short Bow",
+      "cs": "Krátký luk"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A well-balanced short bow, easier to wield in dense undergrowth than a longbow, though with less power. Used by hunter Karel.",
+      "cs": "Dobře vyvážený krátký luk, snáze se s ním manipuluje v hustém podrostu než s dlouhým lukem, i když s menší silou. Používá ho lovec Karel."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 6,
+      "projectile": "arrow",
+      "range": 0.18,
+      "caliber": 1.0,
+      "shots": 1
+    }
+  },
+  {
+    "id": "salted_fish",
+    "name": {
+      "en": "Salted Fish",
+      "cs": "Solená ryba"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "food",
+        "perTick": 1.5
+      }
+    ],
+    "description": {
+      "en": "Fish preserved with salt, a staple food that keeps well. The Fisher family's secret recipe makes it quite palatable.",
+      "cs": "Ryby konzervované solí, základní potravina, která se dobře uchovává. Tajný recept rodiny Rybářů ji činí docela chutnou."
+    }
+  },
+  {
+    "id": "basic_pistol",
+    "name": {
+      "en": "Basic Pistol",
+      "cs": "Základní pistole"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A simple, single-shot pistol, crude but effective at close range. Its loud report often scares away more than just the target.",
+      "cs": "Jednoduchá, jednoranná pistole, hrubá, ale účinná na blízko. Její hlasitý výstřel často vystraší víc než jen cíl."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 12,
+      "projectile": "bullet",
+      "range": 0.25,
+      "caliber": 0.6,
+      "shots": 1,
+      "spread": 0.03
+    }
+  },
+  {
+    "id": "riveted_leather_breastplate",
+    "name": {
+      "en": "Riveted Leather Breastplate",
+      "cs": "Nýtovaný kožený kyrys"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "armour": {
+      "material": "leather",
+      "coverage": "torso",
+      "tint": 0.1
+    },
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "Thick, hardened leather reinforced with metal rivets across the chest. A significant upgrade in protection, crafted by master leatherworker Anya.",
+      "cs": "Silná, tvrzená kůže zpevněná kovovými nýty přes hruď. Výrazné vylepšení ochrany, vyrobila mistryně koželuhyně Anya."
+    }
+  },
+  {
+    "id": "simple_hunting_knife",
+    "name": {
+      "en": "Simple Hunting Knife",
+      "cs": "Jednoduchý lovecký nůž"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A basic, sturdy knife with a sharp edge, essential for skinning game and processing resources. Hunter Elias keeps his always sharp.",
+      "cs": "Základní, pevný nůž s ostrou čepelí, nezbytný pro stahování zvěře a zpracování surovin. Lovec Eliáš ten svůj udržuje vždy ostrý."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 5,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "treated_lumber",
+    "name": {
+      "en": "Treated Lumber",
+      "cs": "Ošetřené řezivo"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "substance": "wood",
+    "description": {
+      "en": "Planks of wood, carefully cut, planed, and treated for durability. Essential for constructing more advanced buildings and furniture.",
+      "cs": "Dřevěné prkna, pečlivě nařezaná, ohoblovaná a ošetřená pro dlouhou životnost. Nezbytné pro stavbu pokročilejších budov a nábytku."
+    }
+  },
+  {
+    "id": "frontier_revolver",
+    "name": {
+      "en": "Frontier Revolver",
+      "cs": "Revolver z Pohraničí"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A sturdy, six-shot revolver, a prized possession for any scout or lawkeeper in the untamed valleys. Reliable for putting down threats at medium range.",
+      "cs": "Robustní šestiranný revolver, ceněný majetek každého průzkumníka nebo strážce zákona v nespoutaných údolích. Spolehlivý na zneškodnění hrozeb na střední vzdálenost."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 6,
+      "projectile": "bullet",
+      "range": 0.25,
+      "caliber": 0.6,
+      "shots": 1
+    }
+  },
+  {
+    "id": "colony_shotgun",
+    "name": {
+      "en": "Colony Shotgun",
+      "cs": "Kolonijní brokovnice"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A double-barreled shotgun, heavy and loud, but devastating at close quarters. Ideal for defending the perimeter from aggressive wildlife or unexpected raiders.",
+      "cs": "Dvouhlavňová brokovnice, těžká a hlučná, ale pustošivá zblízka. Ideální pro obranu perimetru před agresivní divokou zvěří nebo nečekanými nájezdníky."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 8,
+      "projectile": "shot",
+      "range": 0.15,
+      "caliber": 1.2,
+      "shots": 8,
+      "spread": 0.05
+    }
+  },
+  {
+    "id": "precision_marksman_rifle",
+    "name": {
+      "en": "Precision Marksman Rifle",
+      "cs": "Přesná ostrostřelecká puška"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A finely crafted bolt-action rifle, capable of hitting targets at extreme distances with pinpoint accuracy. Often seen in the hands of the colony's best hunters, like Elara.",
+      "cs": "Jemně zpracovaná opakovací puška, schopná zasáhnout cíle na extrémní vzdálenosti s naprostou přesností. Často ji lze spatřit v rukou nejlepších lovců kolonie, jako je Elara."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 12,
+      "projectile": "bullet",
+      "range": 0.45,
+      "caliber": 0.4,
+      "shots": 1
+    }
+  },
+  {
+    "id": "leather_skullcap",
+    "name": {
+      "en": "Leather Skullcap",
+      "cs": "Kožená čapka"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "armour": {
+      "material": "leather",
+      "coverage": "head",
+      "helm": true
+    },
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A simple cap made from cured leather, offering basic protection against bumps and minor scrapes. Worn by newly assigned guards before they earn better gear.",
+      "cs": "Jednoduchá čapka z vyčiněné kůže, poskytující základní ochranu proti nárazům a drobným odřeninám. Nosí ji noví strážci, než si zaslouží lepší výstroj."
+    }
+  },
+  {
+    "id": "reinforced_plate_vest",
+    "name": {
+      "en": "Reinforced Plate Vest",
+      "cs": "Vyztužená plátová vesta"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "armour": {
+      "material": "plate",
+      "coverage": "torso"
+    },
+    "description": {
+      "en": "Thick metal plates riveted onto a strong leather backing, providing substantial protection to the vital organs. A common sight among the colony's frontline defenders after the last raid.",
+      "cs": "Silné kovové pláty nýtované na pevném koženém podkladu, poskytující značnou ochranu životně důležitým orgánům. Běžný pohled mezi obránci kolonie po posledním nájezdu."
+    }
+  },
+  {
+    "id": "steam_powered_drill",
+    "name": {
+      "en": "Steam Powered Drill",
+      "cs": "Parní vrtačka"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "mining",
+        "amount": 4
+      },
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A marvel of early industrial engineering, this heavy drill makes quick work of rock and stubborn earth. Jarek the Inventor's latest project greatly improved the mining output.",
+      "cs": "Zázrak raného průmyslového inženýrství, tato těžká vrtačka si rychle poradí se skálou i tvrdou zemí. Nejnovější projekt vynálezce Jarka výrazně zlepšil těžební výnosy."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 5,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "polished_bone_carvings",
+    "name": {
+      "en": "Polished Bone Carvings",
+      "cs": "Leštěné kostěné řezby"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "substance": "foliage",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "Intricately carved and polished bone fragments, often used as decorative elements or components for small charms. Master Carver Lyra uses these to create her most detailed work.",
+      "cs": "Složitě vyřezávané a leštěné kostěné fragmenty, často používané jako dekorativní prvky nebo součásti malých amuletů. Mistr řezbářka Lyra je používá k tvorbě svých nejdetailnějších děl."
+    }
+  },
+  {
+    "id": "powered_exoskeleton_gauntlet",
+    "name": {
+      "en": "Powered Exoskeleton Gauntlet",
+      "cs": "Motorizovaná exoskeletonová rukavice"
+    },
+    "rarity": "epic",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "armour": {
+      "material": "powered",
+      "coverage": "torso"
+    },
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 5
+      },
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A single, heavy gauntlet from a powered exoskeleton suit, enhancing grip and raw power. While not a full suit, it offers a significant advantage in heavy lifting and precise manipulation. Pilot Kai often uses it for repairs.",
+      "cs": "Jednotlivá, těžká rukavice z motorizovaného exoskeletonového obleku, která zlepšuje úchop a hrubou sílu. I když nejde o celý oblek, nabízí významnou výhodu při zvedání těžkých břemen a přesné manipulaci. Pilot Kai ji často používá k opravám."
+    }
+  },
+  {
+    "id": "manual_drill_press",
+    "name": {
+      "en": "Manual Drill Press",
+      "cs": "Ruční vrtačka"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A heavy, hand-cranked drill press, a significant step up from bone awls. Crafted by Master Elias, it greatly speeds up complex woodworking and metalworking tasks.",
+      "cs": "Těžká ruční vrtačka, značné zlepšení oproti kostěným šídům. Vyrobil ji mistr Eliáš a výrazně urychluje složité tesařské a kovářské práce."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 4,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "six_shooter_revolver",
+    "name": {
+      "en": "Six-Shooter Revolver",
+      "cs": "Šestiranný revolver"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A classic, dependable firearm carried by Sheriff Kaden. Its six-round cylinder provides reliable self-defense in the rugged frontier.",
+      "cs": "Klasická, spolehlivá střelná zbraň nošená šerifem Kadenem. Její šestiranný bubínek zajišťuje spolehlivou obranu na drsné hranici."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 8,
+      "projectile": "bullet",
+      "range": 0.18,
+      "caliber": 0.8,
+      "shots": 1
+    }
+  },
+  {
+    "id": "coach_gun",
+    "name": {
+      "en": "Coach Gun",
+      "cs": "Brokovnice do kočáru"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A short, powerful shotgun, favored by the valley's trappers, like Elara, for close-quarters defense against aggressive wildlife. Double barrels ensure a quick follow-up shot.",
+      "cs": "Krátká, výkonná brokovnice, oblíbená mezi trapery z údolí, jako je Elara, pro obranu zblízka proti divoké zvěři. Dvě hlavně zajišťují rychlý následný výstřel."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 10,
+      "projectile": "shot",
+      "range": 0.12,
+      "caliber": 2.0,
+      "shots": 8,
+      "spread": 0.05
+    }
+  },
+  {
+    "id": "standard_military_rifle",
+    "name": {
+      "en": "Standard Military Rifle",
+      "cs": "Standardní vojenská puška"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A robust and accurate bolt-action rifle, standard issue for the valley's defense forces, particularly during the Northern Incursions. Reliable and precise.",
+      "cs": "Odolná a přesná opakovací puška se závěrem, standardní výzbroj obranných sil údolí, zejména během Severních nájezdů. Spolehlivá a přesná."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 15,
+      "projectile": "bullet",
+      "range": 0.35,
+      "caliber": 0.6,
+      "shots": 1
+    }
+  },
+  {
+    "id": "ballistic_vest",
+    "name": {
+      "en": "Ballistic Vest",
+      "cs": "Balistická vesta"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 8
+      }
+    ],
+    "description": {
+      "en": "A modern composite vest offering significant protection against small arms fire. Standard issue for the valley's peacekeepers, often seen on Sergeant Lena.",
+      "cs": "Moderní kompozitní vesta poskytující značnou ochranu proti střelbě z ručních zbraní. Standardní výzbroj strážců míru v údolí, často ji nosí seržantka Lena."
+    },
+    "armour": {
+      "material": "composite",
+      "coverage": "torso"
+    }
+  },
+  {
+    "id": "surveyors_compass",
+    "name": {
+      "en": "Surveyor's Compass",
+      "cs": "Zeměměřičův kompas"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A finely crafted brass compass, essential for navigating uncharted terrain. This very one belonged to the first cartographer, mapping the uncharted peaks of the Whisperwind Mountains.",
+      "cs": "Jemně zpracovaný mosazný kompas, nezbytný pro navigaci v neprobádaném terénu. Tento konkrétní patřil prvnímu kartografovi, který mapoval neznámé vrcholy Hor šeptavého větru."
+    }
+  },
+  {
+    "id": "rugged_denim_overalls",
+    "name": {
+      "en": "Rugged Denim Overalls",
+      "cs": "Odolné džínové montérky"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "Durable workwear made from thick denim. A staple in the workshops of the Iron River Mills, especially for the smiths like Borin, providing comfort and protection during dirty jobs.",
+      "cs": "Odolné pracovní oděvy z hrubého denimu. Základní výbava v dílnách Železných říčních mlýnů, zejména pro kováře jako Borin, poskytující pohodlí a ochranu při špinavých pracích."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "full",
+      "tint": 0.6
+    }
+  },
+  {
+    "id": "precision_machine_parts",
+    "name": {
+      "en": "Precision Machine Parts",
+      "cs": "Přesné strojní součástky"
+    },
+    "rarity": "rare",
+    "slot": "material",
+    "description": {
+      "en": "Finely milled gears, bearings, and linkages, essential for the advanced projects at the New Dawn Foundry. Crucial for constructing complex machinery.",
+      "cs": "Jemně frézovaná ozubená kola, ložiska a spojky, nezbytné pro pokročilé projekty v Kovárně Nového úsvitu. Klíčové pro konstrukci složitých strojů."
+    }
+  },
+  {
+    "id": "early_revolver",
+    "name": {
+      "en": "Early Revolver",
+      "cs": "Raný revolver"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A sturdy, if somewhat clunky, six-shooter. Prospector Elias brought the first one into the valley, showing its surprising accuracy.",
+      "cs": "Pevný, ač poněkud neohrabaný, šestiranný revolver. První do údolí přinesl prospektor Eliáš a předvedl jeho překvapivou přesnost."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 9,
+      "projectile": "bullet",
+      "range": 0.2,
+      "caliber": 0.5,
+      "shots": 1
+    }
+  },
+  {
+    "id": "sturdy_canvas_jacket",
+    "name": {
+      "en": "Sturdy Canvas Jacket",
+      "cs": "Pevná plátěná bunda"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "armour": {
+      "material": "cloth",
+      "coverage": "torso_arms",
+      "tint": 0.2
+    },
+    "description": {
+      "en": "Made from thick, treated canvas, this jacket provides basic protection against the elements and minor scrapes. A favorite of trapper Kael.",
+      "cs": "Ušitá ze silného, ošetřeného plátna, tato bunda poskytuje základní ochranu před živly a drobnými oděrkami. Oblíbená u trapera Káji."
+    }
+  },
+  {
+    "id": "advanced_assault_rifle",
+    "name": {
+      "en": "Advanced Assault Rifle",
+      "cs": "Pokročilá útočná puška"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A cutting-edge firearm designed for rapid fire and versatility. Essential for the valley's more dangerous expeditions and patrols.",
+      "cs": "Špičková střelná zbraň navržená pro rychlou střelbu a všestrannost. Nezbytná pro nebezpečnější expedice a hlídky v údolí."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 20,
+      "projectile": "bullet",
+      "range": 0.4,
+      "caliber": 0.5,
+      "shots": 3,
+      "spread": 0.01
+    }
+  },
+  {
+    "id": "reinforced_composite_helmet",
+    "name": {
+      "en": "Reinforced Composite Helmet",
+      "cs": "Zesílená kompozitní helma"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "armour": {
+      "material": "composite",
+      "coverage": "head",
+      "helm": true
+    },
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 7
+      }
+    ],
+    "description": {
+      "en": "Lightweight yet incredibly strong, offering superior head protection. Standard issue for any colonist venturing into unexplored territories.",
+      "cs": "Lehká, a přesto neuvěřitelně pevná, nabízí vynikající ochranu hlavy. Standardní výbava pro každého kolonistu, který se vydává do neprobádaných území."
+    }
+  },
+  {
+    "id": "early_power_saw",
+    "name": {
+      "en": "Early Power Saw",
+      "cs": "Raná motorová pila"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "logging",
+        "amount": 8
+      }
+    ],
+    "description": {
+      "en": "A loud, heavy, but immensely effective machine for felling trees and processing timber. Logger Borislav calls it his 'steel beast'.",
+      "cs": "Hlasitý, těžký, ale nesmírně efektivní stroj na kácení stromů a zpracování dřeva. Dřevorubec Borislav tomu říká 'ocelová bestie'."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 12,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "micro_processor",
+    "name": {
+      "en": "Micro-processor",
+      "cs": "Mikroprocesor"
+    },
+    "rarity": "rare",
+    "slot": "material",
+    "description": {
+      "en": "Intricate silicon chips containing vast amounts of information. The backbone of advanced technology, vital for upgrading the Research Lab.",
+      "cs": "Složité křemíkové čipy obsahující obrovské množství informací. Páteř pokročilých technologií, klíčové pro modernizaci výzkumné laboratoře."
+    },
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "knowledge",
+        "perTick": 1.0
+      }
+    ]
+  },
+  {
+    "id": "hunting_shotgun",
+    "name": {
+      "en": "Hunting Shotgun",
+      "cs": "Lovecká brokovnice"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A reliable firearm for close-range hunting and defense. Its wide spread is effective against small, fast-moving game. Hunter Olek swears by it.",
+      "cs": "Spolehlivá střelná zbraň pro lov a obranu na krátkou vzdálenost. Její široký rozptyl je účinný proti malé, rychle se pohybující zvěři. Lovec Olek na ni nedá dopustit."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 14,
+      "projectile": "shot",
+      "range": 0.12,
+      "caliber": 0.7,
+      "shots": 8,
+      "spread": 0.04
+    }
+  },
+  {
+    "id": "portable_comm_unit",
+    "name": {
+      "en": "Portable Comm Unit",
+      "cs": "Přenosná komunikační jednotka"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "A compact device enabling colonists to communicate across long distances, crucial for coordinating scouting parties and emergency alerts.",
+      "cs": "Kompaktní zařízení, které umožňuje kolonistům komunikovat na velké vzdálenosti, klíčové pro koordinaci průzkumných skupin a nouzových hlášení."
+    }
+  },
+  {
+    "id": "hunting_rifle_ei",
+    "name": {
+      "en": "Hunting Rifle",
+      "cs": "Lovecká puška"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A reliable firearm for putting food on the table or defending the settlement. Known to be favored by young Elara for her solo hunts beyond the river.",
+      "cs": "Spolehlivá střelná zbraň k obstarání potravy nebo obraně osady. Mladá Elara s ní s oblibou vyráží na své samotné lovy za řeku."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 15,
+      "projectile": "bullet",
+      "range": 0.28,
+      "caliber": 1.0,
+      "shots": 1
+    }
+  },
+  {
+    "id": "pocket_pistol",
+    "name": {
+      "en": "Pocket Pistol",
+      "cs": "Kapesní pistole"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Small, discreet, and surprisingly potent in close quarters. Often carried by traders like Old Man Kael for self-defense on dangerous routes.",
+      "cs": "Malá, nenápadná a překvapivě účinná na blízko. Často ji nosí obchodníci jako starý Kael na sebeobranu na nebezpečných cestách."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 10,
+      "projectile": "bullet",
+      "range": 0.12,
+      "caliber": 0.7,
+      "shots": 1
+    }
+  },
+  {
+    "id": "single_shot_shotgun",
+    "name": {
+      "en": "Single-shot Shotgun",
+      "cs": "Jednoranná brokovnice"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A powerful, if slow-loading, weapon for defending against aggressive wildlife or raiders at short range. The distinct sound of it often scares away the more timid creatures.",
+      "cs": "Silná, byť pomalu se nabíjející zbraň pro obranu proti agresivní zvěři nebo nájezdníkům na krátkou vzdálenost. Její charakteristický zvuk často zaplaší bázlivější tvory."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 20,
+      "projectile": "shot",
+      "range": 0.1,
+      "caliber": 2.0,
+      "shots": 6,
+      "spread": 0.05
+    }
+  },
+  {
+    "id": "sturdy_leather_jacket",
+    "name": {
+      "en": "Sturdy Leather Jacket",
+      "cs": "Odolná kožená bunda"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "Made from thick, tanned hides, offering decent protection against the elements and minor blows. A common sight among the prospectors exploring the upper valley.",
+      "cs": "Vyrobena z tlustých, vyčiněných kůží, nabízí slušnou ochranu proti živlům i menším úderům. Běžný pohled mezi prospektory prozkoumávajícími horní údolí."
+    },
+    "armour": {
+      "material": "leather",
+      "coverage": "torso_arms",
+      "tint": 0.1
+    }
+  },
+  {
+    "id": "crank_hand_drill",
+    "name": {
+      "en": "Crank Hand Drill",
+      "cs": "Ruční vrtačka s kličkou"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A simple, yet effective, mechanical drill used for precision crafting and basic construction. Artisan Finn swears by it for making intricate wooden joints.",
+      "cs": "Jednoduchá, přesto účinná mechanická vrtačka pro přesné řemeslné práce a základní stavebnictví. Řemeslník Finn na ni nedá dopustit při výrobě složitých dřevěných spojů."
+    }
+  },
+  {
+    "id": "auto_submachine_gun",
+    "name": {
+      "en": "Auto Submachine Gun",
+      "cs": "Automatický samopal"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A rapid-fire weapon, ideal for close-quarters combat and suppressing enemy forces. Highly effective in the narrow canyons of the Deadlands, as demonstrated by Scout Commander Vargas.",
+      "cs": "Rychlopalná zbraň, ideální pro boj na blízko a potlačování nepřátelských sil. Velmi účinná v úzkých kaňonech Mrtvých zemí, jak ukázal velitel průzkumníků Vargas."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 12,
+      "projectile": "bullet",
+      "range": 0.18,
+      "caliber": 0.8,
+      "shots": 3,
+      "spread": 0.02
+    }
+  },
+  {
+    "id": "ballistic_helmet",
+    "name": {
+      "en": "Ballistic Helmet",
+      "cs": "Balistická přilba"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 8
+      }
+    ],
+    "description": {
+      "en": "A modern combat helmet made from advanced composite materials, offering superior head protection. A must-have for anyone venturing into hostile territories.",
+      "cs": "Moderní bojová přilba z pokročilých kompozitních materiálů, nabízející vynikající ochranu hlavy. Nezbytnost pro každého, kdo se vydá na nepřátelské území."
+    },
+    "armour": {
+      "material": "composite",
+      "coverage": "head",
+      "helm": true
+    }
+  },
+  {
+    "id": "specialized_machine_parts",
+    "name": {
+      "en": "Specialized Machine Parts",
+      "cs": "Specializované strojní součástky"
+    },
+    "rarity": "rare",
+    "slot": "material",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "materials",
+        "perTick": 2.0
+      }
+    ],
+    "description": {
+      "en": "Precisely manufactured components essential for advanced machinery and automated systems. Traded at a premium by the desert nomads for water and rare minerals.",
+      "cs": "Přesně vyrobené komponenty nezbytné pro pokročilé stroje a automatizované systémy. Pouštní nomádi s nimi obchodují za vodu a vzácné minerály."
+    }
+  },
+  {
+    "id": "simple_cap_and_ball_pistol",
+    "name": {
+      "en": "Simple Cap-and-Ball Pistol",
+      "cs": "Jednoduchá perkusní pistole"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A crude but reliable single-shot pistol, a favorite of trappers and prospectors for its simplicity. Old Man Silas often carries one.",
+      "cs": "Hrubá, ale spolehlivá jednoranná pistole, oblíbená mezi trapery a prospektory pro svou jednoduchost. Starý Silas ji často nosíval."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 10,
+      "projectile": "ball",
+      "range": 0.18,
+      "caliber": 0.7,
+      "shots": 1
+    }
+  },
+  {
+    "id": "reinforced_leather_coat",
+    "name": {
+      "en": "Reinforced Leather Coat",
+      "cs": "Vyztužený kožený kabát"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "Thick leather panels sewn onto a sturdy coat, offering decent protection against the elements and minor threats. Crafted by skilled tailor, Elara.",
+      "cs": "Silné kožené panely přišité na robustní kabát, nabízející slušnou ochranu proti živlům a drobným hrozbám. Dílo zručné švadleny Elary."
+    },
+    "armour": {
+      "material": "leather",
+      "coverage": "torso_arms",
+      "tint": 0.1
+    }
+  },
+  {
+    "id": "bolt_action_hunting_rifle",
+    "name": {
+      "en": "Bolt-Action Hunting Rifle",
+      "cs": "Opakovací lovecká puška"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A precise and powerful rifle, favored by hunters for its accuracy and stopping power. Essential for bringing down larger game in the Northern Peaks.",
+      "cs": "Přesná a výkonná puška, oblíbená lovci pro svou preciznost a účinnost. Nezbytná pro lov velké zvěře v Severních vrších."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 25,
+      "projectile": "bullet",
+      "range": 0.35,
+      "caliber": 0.6,
+      "shots": 1
+    }
+  },
+  {
+    "id": "tactical_ballistic_helmet",
+    "name": {
+      "en": "Tactical Ballistic Helmet",
+      "cs": "Taktická balistická helma"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 7
+      }
+    ],
+    "description": {
+      "en": "A modern combat helmet designed for maximum head protection in skirmishes. The Patrol Leader, Kael, insists all his scouts wear them.",
+      "cs": "Moderní bojová helma navržená pro maximální ochranu hlavy v šarvátkách. Velitel hlídky Kael trvá na tom, aby ji nosili všichni jeho průzkumníci."
+    },
+    "armour": {
+      "material": "composite",
+      "coverage": "head",
+      "helm": true,
+      "tint": 0.3
+    }
+  },
+  {
+    "id": "steam_powered_lathe",
+    "name": {
+      "en": "Steam-Powered Lathe",
+      "cs": "Parní soustruh"
+    },
+    "rarity": "epic",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 8
+      }
+    ],
+    "description": {
+      "en": "A marvel of early industrial engineering, this lathe allows for precision crafting of complex parts, significantly boosting the colony's manufacturing capabilities. Master craftsman, Jorik, spends days at it.",
+      "cs": "Zázrak raného průmyslového inženýrství, tento soustruh umožňuje přesnou výrobu složitých dílů, což výrazně zvyšuje výrobní kapacitu kolonie. Mistr řemeslník Jorik u něj tráví celé dny."
+    }
+  },
+  {
+    "id": "heavy_sledgehammer",
+    "name": {
+      "en": "Heavy Sledgehammer",
+      "cs": "Těžké kladivo"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A hefty tool for breaking stone and driving stakes, surprisingly effective in a close-quarters fight. Old Man Borin uses it to clear stubborn boulders.",
+      "cs": "Robustní nástroj pro lámání kamene a zatloukání kůlů, překvapivě účinný v boji zblízka. Starý Borin ho používá k odklízení tvrdohlavých balvanů."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 8,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "high_tensile_cable",
+    "name": {
+      "en": "High-Tensile Cable",
+      "cs": "Vysokopevnostní lano"
+    },
+    "rarity": "rare",
+    "slot": "material",
+    "substance": "stone",
+    "description": {
+      "en": "Woven from advanced synthetic fibers, this cable can withstand immense strain. Essential for constructing larger bridges and hoisting heavy loads for the new dam project near the Whispering Falls.",
+      "cs": "Upleteno z pokročilých syntetických vláken, toto lano vydrží obrovské zatížení. Nezbytné pro stavbu větších mostů a zvedání těžkých břemen pro nový projekt přehrady u Šeptajících vodopádů."
+    }
+  },
+  {
+    "id": "patched_denim_jacket",
+    "name": {
+      "en": "Patched Denim Jacket",
+      "cs": "Záplatovaná džínová bunda"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A well-worn denim jacket, mended countless times. It's not much for protection, but it keeps the wind out and holds many memories for young Finn.",
+      "cs": "Dobře nošená džínová bunda, nesčetněkrát záplatovaná. Moc nechrání, ale udrží vítr a skrývá mnoho vzpomínek pro mladého Finna."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "torso_arms",
+      "tint": 0.6
+    }
+  },
+  {
+    "id": "blackpowder_revolver",
+    "name": {
+      "en": "Blackpowder Revolver",
+      "cs": "Černoprachový revolver"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A heavy, unreliable but potent sidearm from the early industrial age. Its bark is worse than its bite, but it's often enough to deter raiders, especially when wielded by Sheriff Silas.",
+      "cs": "Těžká, nespolehlivá, ale silná ruční zbraň z raného industriálního věku. Její štěkot je horší než kousnutí, ale často stačí k odrazení nájezdníků, zvláště když ji drží šerif Silas."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 7,
+      "projectile": "bullet",
+      "range": 0.18,
+      "caliber": 0.8,
+      "shots": 1
+    }
+  },
+  {
+    "id": "forged_steel_cuirass",
+    "name": {
+      "en": "Forged Steel Cuirass",
+      "cs": "Kovaný ocelový kyrys"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "armour": {
+      "material": "plate",
+      "coverage": "torso"
+    },
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 15
+      }
+    ],
+    "description": {
+      "en": "Heavy plates of steel, expertly shaped by the colony's smith, Borin. Offers significant protection but restricts movement. A true symbol of emerging industrial might.",
+      "cs": "Těžké ocelové pláty, mistrovsky tvarované kolonijním kovářem Borinem. Nabízí značnou ochranu, ale omezuje pohyb. Skutečný symbol nastupující industriální síly."
+    }
+  },
+  {
+    "id": "lever_action_shotgun",
+    "name": {
+      "en": "Lever-Action Shotgun",
+      "cs": "Páková brokovnice"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A robust shotgun, favored by hunters and homestead defenders for its quick follow-up shots. Old Man Fitzwilliam swears by it for keeping the wild boars away from his crops.",
+      "cs": "Robustní brokovnice, oblíbená lovci a obránci usedlostí pro její rychlé následné výstřely. Starý Fitzwilliam na ni nedá dopustit, když jde o divoká prasata u jeho úrody."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 10,
+      "projectile": "shot",
+      "range": 0.15,
+      "caliber": 2.0,
+      "shots": 8,
+      "spread": 0.05
+    }
+  },
+  {
+    "id": "cordless_power_saw",
+    "name": {
+      "en": "Cordless Power Saw",
+      "cs": "Akumulátorová pila"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "logging",
+        "amount": 10
+      }
+    ],
+    "description": {
+      "en": "A noisy, powerful tool that makes short work of even the thickest trees. Requires careful handling, but greatly speeds up timber production. Loggers argue over who gets to use the one Misha brought from the old world.",
+      "cs": "Hlučný, výkonný nástroj, který si poradí i s těmi nejtlustšími stromy. Vyžaduje opatrné zacházení, ale výrazně urychluje těžbu dřeva. Dřevorubci se hádají, kdo smí používat tu, kterou přinesla Míša ze starého světa."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 5,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "woven_reed_helmet",
+    "name": {
+      "en": "Woven Reed Helmet",
+      "cs": "Pletená rákosová přilba"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "armour": {
+      "material": "wood",
+      "coverage": "head",
+      "helm": true,
+      "tint": 0.1
+    },
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 1
+      }
+    ],
+    "description": {
+      "en": "A simple, lightweight helmet woven from tough river reeds. Provides basic head protection against minor blows or the glare of the sun. Crafted by young Elara for her brother, who kept bumping his head.",
+      "cs": "Jednoduchá, lehká přilba upletená z pevných říčních rákosů. Poskytuje základní ochranu hlavy proti drobným úderům nebo slunečnímu svitu. Vytvořila ji mladá Elara pro svého bratra, který si stále někam narážel hlavu."
+    }
+  },
+  {
+    "id": "bone_hafted_club",
+    "name": {
+      "en": "Bone-Hafted Club",
+      "cs": "Kyj s kostěnou rukojetí"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A sturdy wooden club reinforced with animal bone. Heavier and more dangerous than a simple cudgel, it's favored by the valley's more aggressive hunters like Jax, especially when facing larger prey.",
+      "cs": "Pevný dřevěný kyj vyztužený zvířecí kostí. Těžší a nebezpečnější než obyčejný kyj, oblíbený agresivnějšími lovci v údolí, jako je Jax, zvláště při střetu s větší kořistí."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 4,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "leather_duster",
+    "name": {
+      "en": "Leather Duster",
+      "cs": "Kožený duster"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "armour": {
+      "material": "leather",
+      "coverage": "torso_arms"
+    },
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "A long, heavy leather coat offering protection from the elements and minor scrapes. It's a sign of a traveler or a rancher, like old Barnaby who's always out tending the herds.",
+      "cs": "Dlouhý, těžký kožený kabát, který nabízí ochranu před povětrnostními vlivy a drobnými odřeninami. Je to znamení cestovatele nebo rančera, jako je starý Barnaby, který je vždy venku u stád."
+    }
+  },
+  {
+    "id": "refined_gunpowder",
+    "name": {
+      "en": "Refined Gunpowder",
+      "cs": "Rafinovaný střelný prach"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "substance": "stone",
+    "effects": [
+      {
+        "type": "colony_production",
+        "perTick": 5,
+        "resource": "materials"
+      }
+    ],
+    "description": {
+      "en": "A carefully mixed and granulated explosive compound, crucial for the functioning of early firearms. Its manufacture is a closely guarded secret of the industrious Oakhart family.",
+      "cs": "Pečlivě smíchaná a granulovaná výbušná směs, klíčová pro fungování raných střelných zbraní. Její výroba je pečlivě střeženým tajemstvím průmyslové rodiny Oakhartů."
+    }
+  },
+  {
+    "id": "sharpened_log",
+    "name": {
+      "en": "Sharpened Log",
+      "cs": "Ostrá kláda"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A rough log, sharpened to a point. Used by young Finn to scare off wolves from the chicken coop last winter.",
+      "cs": "Hrubá kláda, zaostřená do špičky. Použil ji mladý Finn, aby zahnal vlky od kurníku minulou zimu."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 4,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "crude_hide_tunic",
+    "name": {
+      "en": "Crude Hide Tunic",
+      "cs": "Hrubá kožená tunika"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Stitched together from several tough animal hides. Provides basic protection, though it's stiff and smells of smoke. Made by Elara for her son, Ben.",
+      "cs": "Sešito z několika tvrdých zvířecích kůží. Poskytuje základní ochranu, i když je tuhá a voní kouřem. Vyrobila Elara pro svého syna Bena."
+    },
+    "armour": {
+      "material": "hide",
+      "coverage": "torso_arms",
+      "tint": 0.1
+    }
+  },
+  {
+    "id": "simple_percussion_pistol",
+    "name": {
+      "en": "Simple Percussion Pistol",
+      "cs": "Jednoduchá perkusní pistole"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A single-shot handgun, reliable enough for close-quarters defense. Carried by Guard Captain Markus on his patrols.",
+      "cs": "Jednostranná pistole, dostatečně spolehlivá pro obranu zblízka. Nosil ji kapitán stráže Markus na svých hlídkách."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 6,
+      "projectile": "bullet",
+      "range": 0.12,
+      "caliber": 0.5,
+      "shots": 1
+    }
+  },
+  {
+    "id": "breach_loading_rifle",
+    "name": {
+      "en": "Breach-Loading Rifle",
+      "cs": "Zadovková puška"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A robust rifle, faster to load than older designs. Preferred by the valley's hunters for its accuracy and power, especially by skilled tracker Lena.",
+      "cs": "Robustní puška, rychlejší k nabíjení než starší modely. Oblíbená u lovců v údolí pro svou přesnost a sílu, zejména u zkušené stopařky Leny."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 9,
+      "projectile": "bullet",
+      "range": 0.25,
+      "caliber": 0.6,
+      "shots": 1
+    }
+  },
+  {
+    "id": "single_barrel_shotgun",
+    "name": {
+      "en": "Single-Barrel Shotgun",
+      "cs": "Jednohlavňová brokovnice"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A simple, powerful shotgun, effective at short range. Used primarily by the farmers to deter aggressive wildlife from their fields. Farmer Old Man Jed always keeps it close.",
+      "cs": "Jednoduchá, výkonná brokovnice, účinná na krátkou vzdálenost. Používána převážně farmáři k odstrašení agresivní divoké zvěře z polí. Starý farmář Jed ji má vždy po ruce."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 8,
+      "projectile": "shot",
+      "range": 0.1,
+      "caliber": 2.0,
+      "shots": 6,
+      "spread": 0.05
+    }
+  },
+  {
+    "id": "studded_leather_vest",
+    "name": {
+      "en": "Studded Leather Vest",
+      "cs": "Nýtovaná kožená vesta"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "Heavy leather reinforced with metal studs, offering better protection than simple hides. A common sight among the colony's guards.",
+      "cs": "Těžká kůže vyztužená kovovými nýty, nabízí lepší ochranu než jednoduché kůže. Běžný pohled mezi strážci kolonie."
+    },
+    "armour": {
+      "material": "leather",
+      "coverage": "torso",
+      "tint": 0.2
+    }
+  },
+  {
+    "id": "prototype_smg",
+    "name": {
+      "en": "Prototype SMG",
+      "cs": "Prototyp samopalu"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "An experimental submachine gun, capable of rapid fire. Still a bit finicky, but devastating in urban skirmishes. Used by technician Kael during tests.",
+      "cs": "Experimentální samopal, schopný rychlé střelby. Stále trochu náladový, ale zničující v městských potyčkách. Používal ho technik Kael během testů."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 10,
+      "projectile": "bullet",
+      "range": 0.18,
+      "caliber": 0.4,
+      "shots": 3,
+      "spread": 0.02
+    }
+  },
+  {
+    "id": "modular_combat_suit",
+    "name": {
+      "en": "Modular Combat Suit",
+      "cs": "Modulární bojový oblek"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 8
+      }
+    ],
+    "description": {
+      "en": "Advanced composite armor with integrated protective layers. Offers comprehensive protection against modern threats, often worn by exploration teams venturing into the wilds.",
+      "cs": "Pokročilá kompozitní zbroj s integrovanými ochrannými vrstvami. Nabízí komplexní ochranu proti moderním hrozbám, často ji nosí průzkumné týmy vydávající se do divočiny."
+    },
+    "armour": {
+      "material": "composite",
+      "coverage": "full",
+      "tint": 0.6
+    }
+  },
+  {
+    "id": "colonial_musket",
+    "name": {
+      "en": "Colonial Musket",
+      "cs": "Koloniální mušket"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A heavy, muzzle-loaded firearm used by early settlers for hunting and defense. Slow to reload but powerful, it's a trusty companion for Ranger Elias.",
+      "cs": "Těžká, zepředu nabíjená střelná zbraň používaná ranými osadníky k lovu a obraně. Pomalá na nabíjení, ale silná, je věrným společníkem rangera Eliáše."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 12,
+      "projectile": "ball",
+      "range": 0.3,
+      "caliber": 1.2,
+      "shots": 1
+    }
+  },
+  {
+    "id": "iron_kettle_hat",
+    "name": {
+      "en": "Iron Kettle Hat",
+      "cs": "Železný hrncový klobouk"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "description": {
+      "en": "A simple, conical iron helmet providing basic head protection. Often worn by militiamen or frontier guards, like the stoic Guard Captain Borislav.",
+      "cs": "Jednoduchá, kónická železná helma poskytující základní ochranu hlavy. Často ji nosili domobranci nebo pohraniční strážci, například stoický kapitán stráže Borislav."
+    },
+    "armour": {
+      "material": "plate",
+      "coverage": "head",
+      "helm": true
+    }
+  },
+  {
+    "id": "compact_shotgun",
+    "name": {
+      "en": "Compact Shotgun",
+      "cs": "Kompaktní brokovnice"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A short-barreled shotgun, ideal for close-quarters engagements. Devastating up close but limited range, it's a favorite of the quick-thinking Hunter Anya.",
+      "cs": "Brokovnice s krátkou hlavní, ideální pro boj zblízka. Zničující na krátkou vzdálenost, ale s omezeným dosahem, je oblíbenou zbraní pohotové lovkyně Anji."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 15,
+      "projectile": "shot",
+      "range": 0.12,
+      "caliber": 2.0,
+      "shots": 6,
+      "spread": 0.08
+    }
+  },
+  {
+    "id": "reinforced_combat_vest",
+    "name": {
+      "en": "Reinforced Combat Vest",
+      "cs": "Zesílená bojová vesta"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "description": {
+      "en": "Lightweight composite plating integrated into a durable fabric vest, offering protection against modern threats. Worn by the colony's rapid response team.",
+      "cs": "Lehké kompozitní pláty integrované do odolné látkové vesty, poskytující ochranu proti moderním hrozbám. Nosí ji pohotovostní tým kolonie."
+    },
+    "armour": {
+      "material": "composite",
+      "coverage": "torso"
+    }
+  },
+  {
+    "id": "hand_crank_grindstone",
+    "name": {
+      "en": "Hand Crank Grindstone",
+      "cs": "Ruční kliková bruska"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A portable grindstone operated by a hand crank. Essential for sharpening tools and refining crude metal parts, a workshop staple for Craftsman Josef.",
+      "cs": "Přenosná bruska poháněná ruční klikou. Nezbytná pro ostření nástrojů a rafinaci surových kovových dílů, základ dílny řemeslníka Josefa."
+    }
+  },
+  {
+    "id": "cordless_reciprocating_saw",
+    "name": {
+      "en": "Cordless Reciprocating Saw",
+      "cs": "Akumulátorová pila ocaska"
+    },
+    "rarity": "epic",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "logging",
+        "amount": 5
+      },
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A powerful, battery-operated saw. Cuts through wood and light metals with ease, speeding up construction and resource gathering for Foreman Gunter.",
+      "cs": "Výkonná, bateriemi poháněná pila. S lehkostí řeže dřevo a lehké kovy, urychluje stavbu a sběr surovin pro stavbyvedoucího Gunthera."
+    }
+  },
+  {
+    "id": "marksman_pistol",
+    "name": {
+      "en": "Marksman Pistol",
+      "cs": "Pistole odstřelovače"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A high-precision pistol with an extended barrel, favored by scouts for accurate long-range shots when a rifle is too cumbersome. Scout Elara's preferred sidearm.",
+      "cs": "Vysoce přesná pistole s prodlouženou hlavní, oblíbená průzkumníky pro přesné střely na dlouhou vzdálenost, když je puška příliš těžkopádná. Oblíbená zbraň průzkumnice Elary."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 10,
+      "projectile": "bullet",
+      "range": 0.25,
+      "caliber": 0.6,
+      "shots": 1
+    }
+  },
+  {
+    "id": "sturdy_canvas_overalls",
+    "name": {
+      "en": "Sturdy Canvas Overalls",
+      "cs": "Pevná plátěná kombinéza"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "description": {
+      "en": "Durable canvas overalls, offering good protection against dirt and minor scrapes. Essential for farmers and builders, especially Farmer Oldrich working the fields.",
+      "cs": "Odolná plátěná kombinéza, poskytující dobrou ochranu proti špíně a drobným odřeninám. Nezbytná pro farmáře a stavitele, zejména pro farmáře Oldřicha pracujícího na polích."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "full",
+      "tint": 0.15
+    }
+  },
+  {
+    "id": "worn_revolver",
+    "name": {
+      "en": "Worn Revolver",
+      "cs": "Opotřebovaný revolver"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "An old, reliable six-shooter. It's seen better days, but still packs a punch for those defending their claim, like prospector Silas.",
+      "cs": "Starý, spolehlivý šestimítný revolver. Lepší časy už má za sebou, ale stále dokáže pomoci těm, kdo si brání svůj nárok, jako prospektor Silas."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 8,
+      "projectile": "bullet",
+      "range": 0.2,
+      "caliber": 0.7,
+      "shots": 1
+    }
+  },
+  {
+    "id": "frontiersman_rifle",
+    "name": {
+      "en": "Frontiersman Rifle",
+      "cs": "Hraničářská puška"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A sturdy, long-barreled rifle, designed for accuracy over distance. Favored by skilled hunters like Elara for bringing down larger game.",
+      "cs": "Robustní puška s dlouhou hlavní, navržená pro přesnost na dálku. Oblíbená zkušenými lovci jako Elara pro lov větší zvěře."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 12,
+      "projectile": "bullet",
+      "range": 0.35,
+      "caliber": 0.8,
+      "shots": 1
+    }
+  },
+  {
+    "id": "rugged_canvas_jacket",
+    "name": {
+      "en": "Rugged Canvas Jacket",
+      "cs": "Odolná plátěná bunda"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A thick canvas jacket, well-worn but still provides decent protection against the elements and minor abrasions. Often worn by Foreman Bjorn.",
+      "cs": "Silná plátěná bunda, sice opotřebovaná, ale stále poskytuje slušnou ochranu před živly a drobnými odřeninami. Často ji nosí mistr Bjorn."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "torso_arms",
+      "tint": 0.2
+    }
+  },
+  {
+    "id": "prototype_steam_drill",
+    "name": {
+      "en": "Prototype Steam Drill",
+      "cs": "Prototyp parní vrtačky"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "mining",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "An clunky, experimental device from engineer Otto's workshop. While prone to breakdowns, when it works, it mines ore significantly faster than any pickaxe.",
+      "cs": "Neohrabané, experimentální zařízení z dílny inženýra Otty. Ačkoliv je náchylné k poruchám, když funguje, těží rudu výrazně rychleji než jakýkoliv krumpáč."
+    }
+  },
+  {
+    "id": "modular_smg",
+    "name": {
+      "en": "Modular SMG",
+      "cs": "Modulární samopal"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A compact and versatile submachine gun, ideal for close-quarters combat. Standard issue for scout teams in the later years of the colony.",
+      "cs": "Kompaktní a všestranný samopal, ideální pro boj zblízka. Standardní výzbroj průzkumných týmů v pozdějších letech kolonie."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 10,
+      "projectile": "bullet",
+      "range": 0.25,
+      "caliber": 0.6,
+      "shots": 3,
+      "spread": 0.05
+    }
+  },
+  {
+    "id": "modular_combat_helmet",
+    "name": {
+      "en": "Modular Combat Helmet",
+      "cs": "Modulární bojová helma"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "description": {
+      "en": "An advanced helmet made from composite materials, offering superior head protection. Equipped with integrated comms and a night-vision attachment for Sergeant Lena.",
+      "cs": "Pokročilá helma z kompozitních materiálů, poskytující vynikající ochranu hlavy. Vybavena integrovanou komunikací a nočním viděním pro seržantku Lenu."
+    },
+    "armour": {
+      "material": "composite",
+      "coverage": "head",
+      "helm": true,
+      "tint": 0.5
+    }
+  },
+  {
+    "id": "synthetic_lubricant",
+    "name": {
+      "en": "Synthetic Lubricant",
+      "cs": "Syntetické mazivo"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "effects": [
+      {
+        "type": "colony_production",
+        "resource": "materials",
+        "perTick": 3
+      }
+    ],
+    "description": {
+      "en": "A viscous, refined oil, crucial for the smooth operation and longevity of advanced machinery. A key product from the colony's refinery.",
+      "cs": "Viskózní, rafinovaný olej, nezbytný pro hladký chod a dlouhou životnost pokročilých strojů. Klíčový produkt z kolonijní rafinerie."
+    }
+  },
+  {
+    "id": "forged_iron_axe",
+    "name": {
+      "en": "Forged Iron Axe",
+      "cs": "Kovaná železná sekera"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "logging",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A well-balanced axe with a sharp, sturdy iron head. Far superior to stone tools for felling trees and can be surprisingly effective in close combat. Carpenter Tomas's favorite.",
+      "cs": "Dobře vyvážená sekera s ostrou, pevnou železnou hlavou. Daleko lepší než kamenné nástroje pro kácení stromů a překvapivě účinná v boji zblízka. Oblíbená sekera tesaře Tomáše."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 7,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "travelers_percussion_pistol",
+    "name": {
+      "en": "Traveler's Percussion Pistol",
+      "cs": "Cestovatelská perkusní pistole"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A compact, reliable sidearm, favored by scout Elara for protection on her long treks beyond the colony's immediate reach. Its single shot packs a punch.",
+      "cs": "Kompaktní a spolehlivá ruční zbraň, oblíbená u průzkumnice Elary pro ochranu na jejích dlouhých výpravách za hranice kolonie. Jediná rána má sílu."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 8,
+      "projectile": "bullet",
+      "range": 0.25,
+      "caliber": 0.6,
+      "shots": 1
+    }
+  },
+  {
+    "id": "padded_canvas_jacket",
+    "name": {
+      "en": "Padded Canvas Jacket",
+      "cs": "Polstrovaná plátěná bunda"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A practical, durable jacket reinforced with padding, often worn by prospectors working the outer hills. It provides decent protection against the elements and minor scrapes.",
+      "cs": "Praktická a odolná bunda vyztužená polstrováním, často nošená prospektory pracujícími ve vnějších kopcích. Poskytuje slušnou ochranu proti živlům a drobným škrábancům."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "torso_arms"
+    }
+  },
+  {
+    "id": "hand_crank_borer",
+    "name": {
+      "en": "Hand-Crank Borer",
+      "cs": "Ruční vrtačka s kličkou"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "An ingenious device for drilling precise holes, a significant boon to carpenter Jarek in his workshop, allowing for more intricate constructions.",
+      "cs": "Důmyslné zařízení pro vrtání přesných děr, velký přínos pro tesaře Jarka v jeho dílně, umožňující složitější konstrukce."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 4,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "refined_oil",
+    "name": {
+      "en": "Refined Oil",
+      "cs": "Rafinovaný olej"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "effects": [
+      {
+        "type": "colony_production",
+        "perTick": 5,
+        "resource": "materials"
+      }
+    ],
+    "description": {
+      "en": "Distilled from crude oil, this clear fluid powers early lamps and lubricates delicate machinery in the workshops of the Ironbrook family, boosting their output.",
+      "cs": "Destilovaný z ropy, tato čirá kapalina pohání rané lampy a maže citlivé stroje v dílnách rodiny Ironbrooků, čímž zvyšuje jejich produkci."
+    }
+  },
+  {
+    "id": "colony_bayonet",
+    "name": {
+      "en": "Colony Bayonet",
+      "cs": "Kolonijní bajonet"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A sturdy blade, originally intended for musket attachment, now often used as a personal defense knife by militia members guarding the outpost at Widow's Peak.",
+      "cs": "Robustní čepel, původně určená k upevnění na mušketu, nyní často používána jako osobní obranný nůž členy milice, kteří střeží základnu na Vdovském štítu."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 6,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "lightweight_composite_vest",
+    "name": {
+      "en": "Lightweight Composite Vest",
+      "cs": "Lehká kompozitní vesta"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 8
+      }
+    ],
+    "description": {
+      "en": "Utilizing advanced layered materials, this vest offers superior protection without hindering mobility. A recent innovation from the Valley's engineers at the 'Forge of Tomorrow' facility.",
+      "cs": "Vesta využívající pokročilé vrstvené materiály nabízí vynikající ochranu, aniž by omezovala pohyblivost. Nedávná inovace inženýrů Údolí z komplexu 'Kovárna zítřka'."
+    },
+    "armour": {
+      "material": "composite",
+      "coverage": "torso"
+    }
+  },
+  {
+    "id": "service_automatic_pistol",
+    "name": {
+      "en": "Service Automatic Pistol",
+      "cs": "Služební automatická pistole"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A reliable sidearm issued to colony guards and specialized rangers, capable of rapid-fire engagement, making it ideal for close-quarters defense.",
+      "cs": "Spolehlivá ruční zbraň vydávaná koloniálním strážím a specializovaným rangerům, schopná rychlé střelby, což ji činí ideální pro obranu na blízko."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 10,
+      "projectile": "bullet",
+      "range": 0.3,
+      "caliber": 0.4,
+      "shots": 2
+    }
+  },
+  {
+    "id": "portable_electric_saw",
+    "name": {
+      "en": "Portable Electric Saw",
+      "cs": "Přenosná elektrická pila"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "logging",
+        "amount": 5
+      },
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "This noisy but efficient tool revolutionizes logging and construction, speeding up the work of lumberjack Old Man Tiber and his team by an incredible margin.",
+      "cs": "Tento hlučný, avšak efektivní nástroj přináší revoluci v dřevorubectví a stavebnictví, neuvěřitelně urychluje práci dřevorubce starého Tiberia a jeho týmu."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 7,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "colony_revolver",
+    "name": {
+      "en": "Colony Revolver",
+      "cs": "Kolonijní revolver"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A compact, robust firearm, designed for personal defense. Reliable, if somewhat slow to reload. A good option for scouting parties encountering unexpected wildlife.",
+      "cs": "Kompaktní, robustní střelná zbraň určená k osobní obraně. Spolehlivá, i když poněkud pomalá na přebíjení. Dobrá volba pro průzkumné skupiny, které se setkají s nečekanou divočinou. Oblíbený mezi osadníky z tábora U Křivého potoka."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 6,
+      "projectile": "bullet",
+      "range": 0.18,
+      "caliber": 0.45,
+      "shots": 6
+    }
+  },
+  {
+    "id": "hunting_carbine",
+    "name": {
+      "en": "Hunting Carbine",
+      "cs": "Lovecká karabina"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A shorter, lighter rifle, ideal for traversing dense forests and hunting medium-sized game. Its accuracy is commendable for its size. Often carried by hunters venturing far from the colony.",
+      "cs": "Kratší, lehčí puška, ideální pro průchod hustými lesy a lov střední zvěře. Její přesnost je na danou velikost chvályhodná. Často ji nosí lovci vydávající se daleko od osady, jako je Petr, který s ní vždy přinese plnou brašnu zvěře."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 9,
+      "projectile": "bullet",
+      "range": 0.32,
+      "caliber": 0.5,
+      "shots": 1
+    }
+  },
+  {
+    "id": "basic_shotgun",
+    "name": {
+      "en": "Basic Shotgun",
+      "cs": "Základní brokovnice"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A single-shot, break-action shotgun. Simple to operate and devastating at close range, making it excellent for pest control or defending the colony perimeter. Often kept at guard posts.",
+      "cs": "Jednoranná zlamovací brokovnice. Jednoduchá na ovládání a zničující na krátkou vzdálenost, což ji činí vynikající pro kontrolu škůdců nebo obranu kolonie. Často se nachází na strážních postech, obzvláště u brány k Západní pláni."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 8,
+      "projectile": "shot",
+      "range": 0.12,
+      "caliber": 2.2,
+      "shots": 8,
+      "spread": 0.08
+    }
+  },
+  {
+    "id": "waxed_canvas_jacket",
+    "name": {
+      "en": "Waxed Canvas Jacket",
+      "cs": "Voskovaná plátěná bunda"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "description": {
+      "en": "A durable jacket made from heavy canvas, treated with beeswax to provide water resistance. Offers modest protection from the elements and light scrapes. A common sight on colony laborers working outdoors.",
+      "cs": "Odolná bunda z těžkého plátna, ošetřená včelím voskem pro voděodolnost. Poskytuje skromnou ochranu před živly a lehkými oděrkami. Běžně ji nosí dělníci z kolonie, kteří pracují venku, třeba starý Jakub na pile."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "torso_arms",
+      "tint": 0.1
+    },
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "reinforced_leather_helmet",
+    "name": {
+      "en": "Reinforced Leather Helmet",
+      "cs": "Zesílená kožená helma"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "description": {
+      "en": "A sturdy helmet constructed from multiple layers of hardened leather, reinforced with small metal studs (decorative, not ballistic). Provides essential head protection for guards and explorers.",
+      "cs": "Robustní helma z několika vrstev tvrzené kůže, vyztužená drobnými kovovými nýty (dekorativní, ne balistické). Poskytuje základní ochranu hlavy strážím a průzkumníkům. Oblíbená u stráží, které hlídají cestu do Horního údolí."
+    },
+    "armour": {
+      "material": "leather",
+      "coverage": "head",
+      "helm": true
+    },
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "manual_boring_tool",
+    "name": {
+      "en": "Manual Boring Tool",
+      "cs": "Ruční vrtací nástroj"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A hand-cranked drill designed for precise woodworking and basic metalwork. Indispensable for crafting furniture, tools, and securing structures. It greatly speeds up the process of construction for skilled hands.",
+      "cs": "Ruční vrtačka s klikou, určená pro přesné opracování dřeva a základní kovoobrábění. Nepostradatelná pro výrobu nábytku, nástrojů a zpevňování staveb. Výrazně urychluje stavební proces pro zručné ruce, jako jsou ruce tesaře Martina."
+    },
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 3
+      },
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      }
+    ],
+    "combat": {
+      "class": "melee",
+      "damage": 2,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "basic_machine_parts",
+    "name": {
+      "en": "Basic Machine Parts",
+      "cs": "Základní strojní součástky"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "description": {
+      "en": "A collection of simple gears, levers, and fasteners, crudely cast or fashioned. Essential for constructing early industrial contraptions, from primitive looms to simple water pumps. Often produced by the colony's first dedicated machinist, Old Grunt.",
+      "cs": "Soubor jednoduchých ozubených kol, pák a spojovacích prvků, hrubě odlitých nebo vyrobených. Nezbytné pro stavbu raných průmyslových zařízení, od primitivních tkalcovských stavů po jednoduché vodní pumpy. Často je vyrábí první kolonijní mechanik, starý Grunt."
+    }
+  },
+  {
+    "id": "reinforced_composite_vest",
+    "name": {
+      "en": "Reinforced Composite Vest",
+      "cs": "Zesílená kompozitní vesta"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "description": {
+      "en": "A modern protective vest, utilizing layers of advanced synthetic fibers and ceramic plates. Offers superior ballistic protection for crucial personnel like perimeter guards and expedition leaders. A rare and valuable asset.",
+      "cs": "Moderní ochranná vesta využívající vrstvy pokročilých syntetických vláken a keramických plátů. Poskytuje vynikající balistickou ochranu pro klíčový personál, jako jsou stráže perimetru a vedoucí expedic. Vzácné a cenné aktivum, často je nosí velitelka Erika na průzkumných misích do Západních hor."
+    },
+    "armour": {
+      "material": "composite",
+      "coverage": "torso"
+    },
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 7
+      }
+    ]
+  },
+  {
+    "id": "settlers_percussion_pistol",
+    "name": {
+      "en": "Settler's Percussion Pistol",
+      "cs": "Perkusní pistole osadníka"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A reliable, single-shot firearm, a significant upgrade from older flintlocks. Often used by Watchman Silas for perimeter patrols.",
+      "cs": "Spolehlivá, jednoranná střelná zbraň, výrazné vylepšení oproti starým křesadlovkám. Strážník Silas ji často používá při hlídkování na perimetru."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 9,
+      "projectile": "bullet",
+      "range": 0.18,
+      "caliber": 0.5,
+      "shots": 1
+    }
+  },
+  {
+    "id": "settlers_hunting_rifle",
+    "name": {
+      "en": "Settler's Hunting Rifle",
+      "cs": "Lovecká puška osadníka"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A sturdy, accurate rifle, ideal for hunting larger game or defending distant outposts. Ranger Lyra depends on it for her long expeditions.",
+      "cs": "Pevná, přesná puška, ideální pro lov větší zvěře nebo obranu vzdálených stanovišť. Strážkyně Lyra se na ni spoléhá při svých dlouhých výpravách."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 14,
+      "projectile": "bullet",
+      "range": 0.28,
+      "caliber": 0.5,
+      "shots": 1
+    }
+  },
+  {
+    "id": "frontier_pump_shotgun",
+    "name": {
+      "en": "Frontier Pump Shotgun",
+      "cs": "Pohraniční opakovací brokovnice"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A powerful and intimidating weapon, favored for close-quarters defense against mutated creatures around the colony's outer farms, especially Miller's.",
+      "cs": "Výkonná a hrozivá zbraň, oblíbená pro obranu na blízko proti zmutovaným tvorům kolem vnějších koloniálních farem, hlavně té Millerovy."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 20,
+      "projectile": "shot",
+      "range": 0.12,
+      "caliber": 1.5,
+      "shots": 8,
+      "spread": 0.05
+    }
+  },
+  {
+    "id": "iron_worker_vest",
+    "name": {
+      "en": "Iron Worker's Vest",
+      "cs": "Vesta železného dělníka"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 4
+      },
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Thick iron plates riveted onto heavy leather, offering reliable protection against sparks and minor impacts in the workshop. Worn daily by foreman Bjorn.",
+      "cs": "Tlusté železné pláty nýtované na silnou kůži, poskytující spolehlivou ochranu proti jiskrám a menším nárazům v dílně. Nosí ji denně předák Bjorn."
+    },
+    "armour": {
+      "material": "plate",
+      "coverage": "torso"
+    }
+  },
+  {
+    "id": "reinforced_composite_headgear",
+    "name": {
+      "en": "Reinforced Composite Headgear",
+      "cs": "Zesílená kompozitní přilba"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 8
+      }
+    ],
+    "description": {
+      "en": "A lightweight yet exceptionally strong helmet, designed to protect against shrapnel and head impacts. A critical piece of gear for the prospecting teams exploring new, dangerous territories.",
+      "cs": "Lehká, ale mimořádně pevná přilba, navržená k ochraně proti střepinám a nárazům do hlavy. Klíčová výstroj pro průzkumné týmy objevující nová, nebezpečná území."
+    },
+    "armour": {
+      "material": "composite",
+      "coverage": "head",
+      "helm": true
+    }
+  },
+  {
+    "id": "colony_hand_auger",
+    "name": {
+      "en": "Colony Hand Auger",
+      "cs": "Kolonijní ruční vrták"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "mining",
+        "amount": 4
+      },
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "A robust, hand-cranked tool for drilling precise holes in wood or soft stone. Often borrowed by Elder Theron to test rock samples for rare minerals.",
+      "cs": "Robustní, ručně ovládaný nástroj pro vrtání přesných otvorů do dřeva nebo měkkého kamene. Často si ho půjčuje Starší Theron k testování hornin na vzácné minerály."
+    }
+  },
+  {
+    "id": "industrial_lubricant",
+    "name": {
+      "en": "Industrial Lubricant",
+      "cs": "Průmyslové mazivo"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "description": {
+      "en": "A viscous, refined oil crucial for the smooth operation and maintenance of the colony's growing industrial machinery. Engineer Kael strictly controls its supply.",
+      "cs": "Hustý, rafinovaný olej, nezbytný pro hladký provoz a údržbu rostoucích průmyslových strojů kolonie. Inženýr Kael přísně kontroluje jeho zásoby."
+    }
+  },
+  {
+    "id": "heavy_duty_overalls",
+    "name": {
+      "en": "Heavy-Duty Overalls",
+      "cs": "Odolné pracovní montérky"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 2
+      },
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Durable canvas work clothes, designed to withstand the grime, sparks, and wear of heavy industrial tasks. A staple for the construction and crafting crews.",
+      "cs": "Odolné plátěné pracovní oděvy, navržené tak, aby vydržely špínu, jiskry a opotřebení při náročných průmyslových úkolech. Základ pro stavební a řemeslné čety."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "full",
+      "tint": 0.6
+    }
+  },
+  {
+    "id": "carpenters_chisel",
+    "name": {
+      "en": "Carpenter's Chisel",
+      "cs": "Tesařské dláto"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A well-balanced chisel with a sharp edge, gifted by Master Elara. Speeds up any fine woodworking task.",
+      "cs": "Vyvážené dláto s ostrou hranou, dar od mistryně Elary. Urychlí každou jemnou tesařskou práci."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 2,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "stitched_leather_arm_guards",
+    "name": {
+      "en": "Stitched Leather Arm Guards",
+      "cs": "Šité kožené chrániče předloktí"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "armour": {
+      "material": "leather",
+      "coverage": "torso"
+    },
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Tough leather strips stitched to protect the forearms. Popular among hunters moving through dense undergrowth.",
+      "cs": "Pevné kožené pásy sešité k ochraně předloktí. Oblíbené mezi lovci, kteří se pohybují hustým podrostem."
+    }
+  },
+  {
+    "id": "travellers_flintlock",
+    "name": {
+      "en": "Traveller's Flintlock",
+      "cs": "Cestovatelská křesadlová pistole"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A compact and reliable pistol, often carried by merchants for self-defense on dangerous roads. Slow to reload, but potent.",
+      "cs": "Kompaktní a spolehlivá pistole, často nošená obchodníky pro sebeobranu na nebezpečných cestách. Pomalu se nabíjí, ale je účinná."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 8,
+      "projectile": "ball",
+      "range": 0.12,
+      "caliber": 0.6,
+      "shots": 1
+    }
+  },
+  {
+    "id": "steel_miner_pick",
+    "name": {
+      "en": "Steel Miner's Pick",
+      "cs": "Ocelový hornický krumpáč"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "mining",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A sturdy pickaxe with a sharpened steel head, vastly improving efficiency in the mines. A prized possession of Miner Borislav.",
+      "cs": "Robustní krumpáč s ostrou ocelovou hlavou, výrazně zvyšuje efektivitu těžby v dolech. Ceněný majetek horníka Borislava."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 5,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "compact_auto_carbine",
+    "name": {
+      "en": "Compact Auto Carbine",
+      "cs": "Kompaktní automatická karabina"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A short, rapid-firing weapon ideal for close-quarters combat or defensive patrols. It chews through ammunition but lays down suppressing fire.",
+      "cs": "Krátká, rychle střílející zbraň ideální pro boj zblízka nebo obranné patroly. Žere munici, ale poskytuje potlačující palbu."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 12,
+      "projectile": "bullet",
+      "range": 0.28,
+      "caliber": 0.4,
+      "shots": 3,
+      "spread": 0.04
+    }
+  },
+  {
+    "id": "polymer_plate_vest",
+    "name": {
+      "en": "Polymer Plate Vest",
+      "cs": "Vesta z polymerových plátů"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "armour": {
+      "material": "composite",
+      "coverage": "torso"
+    },
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 8
+      }
+    ],
+    "description": {
+      "en": "Lightweight but highly resistant composite plates offer superior protection against modern threats. Standard issue for advanced patrols.",
+      "cs": "Lehké, ale vysoce odolné kompozitní pláty nabízejí vynikající ochranu proti moderním hrozbám. Standardní výbava pro pokročilé hlídky."
+    }
+  },
+  {
+    "id": "refined_beeswax",
+    "name": {
+      "en": "Refined Beeswax",
+      "cs": "Rafinovaný včelí vosk"
+    },
+    "rarity": "common",
+    "slot": "material",
+    "substance": "foliage",
+    "description": {
+      "en": "Purified beeswax, useful for candle making, waterproofing, and as a lubricant. Collected diligently by the colony's beekeeper, Old Barnaby.",
+      "cs": "Čištěný včelí vosk, užitečný pro výrobu svíček, impregnaci a jako mazivo. Pilně sbírán kolonijním včelařem, starým Barnabášem."
+    }
+  },
+  {
+    "id": "moss_agate_pendant",
+    "name": {
+      "en": "Moss Agate Pendant",
+      "cs": "Přívěsek z mechového achátu"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "mood_bonus",
+        "amount": 8
+      }
+    ],
+    "description": {
+      "en": "A polished stone with natural green inclusions, said to bring peace and growth to its wearer. A cherished gift to young Elara from her grandmother.",
+      "cs": "Leštěný kámen s přírodními zelenými inkluzemi, prý přináší nositeli klid a růst. Ceněný dar mladé Elaře od její babičky."
+    }
+  },
+  {
+    "id": "bone_scraper_set",
+    "name": {
+      "en": "Bone Scraper Set",
+      "cs": "Sada kostěných škrabek"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "Essential for preparing hides and wood, crafted by young Elara for her leatherworking apprenticeship. These simple tools are surprisingly versatile.",
+      "cs": "Nezbytné pro zpracování kůží a dřeva, vyrobené mladou Elarou pro její učednictví v koželužství. Tyto jednoduché nástroje jsou překvapivě všestranné."
+    }
+  },
+  {
+    "id": "stitched_leather_tunic",
+    "name": {
+      "en": "Stitched Leather Tunic",
+      "cs": "Šitá kožená tunika"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A functional leather tunic, reinforced at the shoulders and chest. A staple from Master Weaver Lena's workshop, providing good protection.",
+      "cs": "Funkční kožená tunika, vyztužená na ramenou a hrudi. Základ z dílny mistryně tkalcovny Leny, poskytující dobrou ochranu."
+    },
+    "armour": {
+      "material": "leather",
+      "coverage": "torso_arms"
+    }
+  },
+  {
+    "id": "gunsmiths_cap_and_ball_pistol",
+    "name": {
+      "en": "Gunsmith's Cap and Ball Pistol",
+      "cs": "Kovotepecká perkusní pistole"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A meticulously crafted pistol by the colony's first gunsmith, Jan. Reliable and surprisingly accurate for its era, a true mark of early industrial craftsmanship.",
+      "cs": "Pečlivě vyrobená pistole od prvního kolonijního puškaře, Jana. Spolehlivá a překvapivě přesná na svou dobu, skutečná ukázka raně průmyslového řemesla."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 12,
+      "projectile": "ball",
+      "range": 0.18,
+      "caliber": 0.6,
+      "shots": 1
+    }
+  },
+  {
+    "id": "muzzle_loading_hunting_rifle",
+    "name": {
+      "en": "Muzzle-Loading Hunting Rifle",
+      "cs": "Předovka lovecká puška"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A heavy, but effective rifle, favored by seasoned hunters like Pavel for its stopping power against larger game. Reloading is slow, but the shot is decisive.",
+      "cs": "Těžká, ale účinná puška, oblíbená zkušenými lovci jako Pavlem pro její sílu proti větší zvěři. Přebíjení je pomalé, ale výstřel je rozhodující."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 18,
+      "projectile": "bullet",
+      "range": 0.25,
+      "caliber": 0.8,
+      "shots": 1
+    }
+  },
+  {
+    "id": "tactical_shotgun",
+    "name": {
+      "en": "Tactical Shotgun",
+      "cs": "Taktická brokovnice"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A modern scattergun, modified for close-quarters defense. Ideal for protecting the perimeter against fast-moving threats or dealing with groups of aggressors.",
+      "cs": "Moderní brokovnice, upravená pro obranu na krátkou vzdálenost. Ideální pro ochranu perimetru proti rychle se pohybujícím hrozbám nebo pro zvládání skupin útočníků."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 25,
+      "projectile": "shot",
+      "range": 0.12,
+      "caliber": 1.2,
+      "shots": 6,
+      "spread": 0.05
+    }
+  },
+  {
+    "id": "advanced_composite_vest",
+    "name": {
+      "en": "Advanced Composite Vest",
+      "cs": "Pokročilá kompozitní vesta"
+    },
+    "rarity": "epic",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 15
+      }
+    ],
+    "description": {
+      "en": "Lightweight and durable, using advanced synthetic fibers and ceramic plates. Standard issue for the colony's special defense unit, providing superior protection.",
+      "cs": "Lehká a odolná, využívající pokročilých syntetických vláken a keramických plátů. Standardní výbava pro speciální obrannou jednotku kolonie, poskytující vynikající ochranu."
+    },
+    "armour": {
+      "material": "composite",
+      "coverage": "torso",
+      "tint": 0.2
+    }
+  },
+  {
+    "id": "portable_plasma_cutter",
+    "name": {
+      "en": "Portable Plasma Cutter",
+      "cs": "Přenosná plazmová řezačka"
+    },
+    "rarity": "epic",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 5
+      },
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "A high-frequency energy tool, capable of effortlessly cutting through dense materials. A marvel of modern engineering, equally useful in construction or self-defense.",
+      "cs": "Vysokofrekvenční energetický nástroj, schopný bez námahy řezat hustými materiály. Zázrak moderního inženýrství, stejně užitečný ve stavebnictví i v sebeobraně."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 10,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "miners_carbide_lamp",
+    "name": {
+      "en": "Miner's Carbide Lamp",
+      "cs": "Hornická karbidová lampa"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "trinket",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "mining",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A sturdy lamp, used by the colony's mining teams for deep excursions. The steady light always brings a measure of comfort, and Old Bronislav claims it makes the rock easier to split.",
+      "cs": "Pevná lampa, používaná hornickými týmy kolonie pro hluboké expedice. Stálé světlo vždy přináší jistou míru pohodlí a starý Bronislav tvrdí, že s ní je kámen snazší rozštípat."
+    }
+  },
+  {
+    "id": "hunting_rifle_carbine",
+    "name": {
+      "en": "Hunting Carbine",
+      "cs": "Lovecká karabina"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "hunting",
+        "amount": 5
+      }
+    ],
+    "description": {
+      "en": "A shorter, lighter rifle, favored by trapper Erik for quick shots in dense woods. A reliable piece of early industrial craftsmanship.",
+      "cs": "Kratší a lehčí puška, kterou trapper Erik upřednostňuje pro rychlé výstřely v hustém lese. Spolehlivý kus raně průmyslového řemesla."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 12,
+      "projectile": "bullet",
+      "range": 0.28,
+      "caliber": 0.6,
+      "shots": 1
+    }
+  },
+  {
+    "id": "frontiers_pistol",
+    "name": {
+      "en": "Frontier Pistol",
+      "cs": "Pistole hraničáře"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "scouting",
+        "amount": 3
+      }
+    ],
+    "description": {
+      "en": "A sturdy, single-shot sidearm, essential for personal defense on the frontier. Scout Elara never leaves camp without hers.",
+      "cs": "Robustní, jednoranná záložní zbraň, nezbytná pro osobní obranu na hranici. Průzkumnice Elara bez ní nikdy neopustí tábor."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 8,
+      "projectile": "bullet",
+      "range": 0.12,
+      "caliber": 0.4,
+      "shots": 1
+    }
+  },
+  {
+    "id": "sturdy_canvas_jacket_ei",
+    "name": {
+      "en": "Sturdy Canvas Jacket",
+      "cs": "Odolná plátěná bunda"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 2
+      }
+    ],
+    "description": {
+      "en": "Thick canvas, treated for durability and water resistance. Offers protection against the elements and minor scrapes, a staple for logger Jakub.",
+      "cs": "Silné plátno, ošetřené pro odolnost a voděodolnost. Poskytuje ochranu před živly a drobnými odřeninami, základní kus oděvu pro dřevorubce Jakuba."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "torso_arms",
+      "tint": 0.1
+    }
+  },
+  {
+    "id": "manual_hand_drill",
+    "name": {
+      "en": "Manual Hand Drill",
+      "cs": "Ruční vrtačka"
+    },
+    "rarity": "common",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A simple crank-operated drill, essential for precision woodworking and basic construction. Carpenter Oldrich relies on it daily.",
+      "cs": "Jednoduchá ruční vrtačka s kličkou, nezbytná pro přesné opracování dřeva a základní stavební práce. Truhlář Oldrich se na ni denně spoléhá."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 2,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "colony_gunpowder",
+    "name": {
+      "en": "Colony Gunpowder",
+      "cs": "Kolonijní střelný prach"
+    },
+    "rarity": "uncommon",
+    "slot": "material",
+    "substance": "air",
+    "description": {
+      "en": "A carefully measured blend of saltpeter, sulfur, and charcoal. Essential for all firearms, Marta's recipe is highly guarded.",
+      "cs": "Pečlivě odměřená směs ledku, síry a dřevěného uhlí. Nezbytná pro všechny střelné zbraně, Martiny receptury jsou pečlivě střeženy."
+    }
+  },
+  {
+    "id": "colony_smg",
+    "name": {
+      "en": "Colony SMG",
+      "cs": "Kolonijní samopal"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 8
+      }
+    ],
+    "description": {
+      "en": "A compact and versatile submachine gun, ideal for close-quarters engagements and rapid suppression. Issued to patrol leader Lena.",
+      "cs": "Kompaktní a všestranný samopal, ideální pro boj zblízka a rychlou potlačovací palbu. Vydán velitelce hlídky Leně."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 10,
+      "projectile": "bullet",
+      "range": 0.2,
+      "caliber": 0.4,
+      "shots": 3,
+      "spread": 0.05
+    }
+  },
+  {
+    "id": "reinforced_plate_vest_modern",
+    "name": {
+      "en": "Reinforced Plate Vest",
+      "cs": "Zesílená plátová vesta"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "effects": [
+      {
+        "type": "colony_defense",
+        "amount": 15
+      }
+    ],
+    "description": {
+      "en": "Lightweight composite plates integrated into a durable textile carrier. Offers excellent protection without sacrificing mobility, standard issue for guard commander Karel.",
+      "cs": "Lehké kompozitní pláty integrované do odolného textilního nosiče. Nabízí vynikající ochranu bez obětování mobility, standardní výbava velitele stráže Karla."
+    },
+    "armour": {
+      "material": "composite",
+      "coverage": "torso",
+      "tint": 0.6
+    }
+  },
+  {
+    "id": "cordless_power_drill",
+    "name": {
+      "en": "Cordless Power Drill",
+      "cs": "Akumulátorová vrtačka"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 8
+      },
+      {
+        "type": "skill_bonus",
+        "work": "building",
+        "amount": 6
+      }
+    ],
+    "description": {
+      "en": "A versatile battery-powered drill, significantly speeding up construction and complex crafting tasks. Engineer Viktor's most cherished tool.",
+      "cs": "Všestranná akumulátorová vrtačka, výrazně urychlující stavební a složité řemeslné práce. Nejcennější nástroj inženýra Viktora."
+    },
+    "combat": {
+      "class": "melee",
+      "damage": 4,
+      "projectile": "none"
+    }
+  },
+  {
+    "id": "flintlock_musket",
+    "name": {
+      "en": "Flintlock Musket",
+      "cs": "Křesadlová mušketa"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "A black powder firearm, slow to reload but capable of inflicting serious damage at range. Favored by the first scouts of the colony, like old Jedediah.",
+      "cs": "Střelná zbraň na černý prach, pomalá na přebíjení, ale schopná způsobit vážné poškození na dálku. Oblíbená prvními zvědy kolonie, jako byl starý Jedediaš."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 12,
+      "projectile": "ball",
+      "range": 0.28,
+      "caliber": 1.2,
+      "shots": 1
+    }
+  },
+  {
+    "id": "leather_overcoat",
+    "name": {
+      "en": "Leather Overcoat",
+      "cs": "Kožený kabát"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "equipSlot": "armor",
+    "description": {
+      "en": "A heavy, treated leather coat offering protection from the elements and light blows. Worn by Colony Foreman Elara during her expeditions.",
+      "cs": "Těžký, ošetřený kožený kabát, který poskytuje ochranu před živly a lehkými údery. Nosila ho Elara, předák kolonie, během svých výprav."
+    },
+    "armour": {
+      "material": "leather",
+      "coverage": "full",
+      "tint": 0.15
+    }
+  },
+  {
+    "id": "hand_drill_press",
+    "name": {
+      "en": "Hand Drill Press",
+      "cs": "Ruční vrtačka"
+    },
+    "rarity": "uncommon",
+    "slot": "equipment",
+    "effects": [
+      {
+        "type": "skill_bonus",
+        "work": "crafting",
+        "amount": 4
+      }
+    ],
+    "description": {
+      "en": "A crank-operated drill press for precision work. Essential for Colony Engineer Kael's workshop.",
+      "cs": "Ruční vrtačka s kličkou pro přesnou práci. Nezbytná pro dílnu koloniálního inženýra Kaela."
+    }
+  },
+  {
+    "id": "combat_shotgun",
+    "name": {
+      "en": "Combat Shotgun",
+      "cs": "Bojová brokovnice"
+    },
+    "rarity": "rare",
+    "slot": "equipment",
+    "equipSlot": "weapon",
+    "description": {
+      "en": "Designed for close-quarters engagements, this shotgun delivers a devastating spread of pellets. A loud, intimidating weapon, often carried by Sergeant Borislav.",
+      "cs": "Navržena pro boj zblízka, tato brokovnice dodává devastující rozptyl broků. Hlasitá, zastrašující zbraň, často nošená seržantem Borislavem."
+    },
+    "combat": {
+      "class": "ranged",
+      "damage": 22,
+      "projectile": "shot",
+      "range": 0.18,
+      "caliber": 2.0,
+      "shots": 8,
+      "spread": 0.06
+    }
   }
 ]

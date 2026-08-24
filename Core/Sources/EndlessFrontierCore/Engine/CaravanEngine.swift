@@ -118,16 +118,45 @@ public enum CaravanEngine {
         _ state: WorldState,
         originID: UUID,
         destinationID: UUID,
-        resource: ResourceType,
+        load: CaravanCargo,
         amount: Double,
         guardIDs: [UUID]
     ) -> Bool {
         guard originID != destinationID, amount > 0, !guardIDs.isEmpty,
               let origin = state.settlements.first(where: { $0.id == originID }),
-              state.settlements.contains(where: { $0.id == destinationID }),
-              origin.storage[resource] >= amount else { return false }
+              state.settlements.contains(where: { $0.id == destinationID })
+        else { return false }
+        // A resource comes out of the pool; a good comes off the shelf. Whole
+        // units for goods — you cannot cart two thirds of a timber bundle.
+        switch load {
+        case let .resource(resource):
+            guard origin.storage[resource] >= amount else { return false }
+        case let .goods(item):
+            guard Double(origin.stockpile[item, default: 0]) >= amount.rounded(.up)
+            else { return false }
+        }
         let guardSet = Set(guardIDs)
         return origin.pawns.contains { guardSet.contains($0.id) }
+    }
+
+    /// The resource-only form every existing caller uses.
+    public static func dispatch(
+        _ state: WorldState, originID: UUID, destinationID: UUID,
+        resource: ResourceType, amount: Double, guardIDs: [UUID],
+        registry: GameDataRegistry? = nil
+    ) -> WorldState {
+        dispatch(state, originID: originID, destinationID: destinationID,
+                 load: .resource(resource), amount: amount, guardIDs: guardIDs,
+                 registry: registry)
+    }
+
+    /// The resource-only form every existing caller uses.
+    public static func canDispatch(
+        _ state: WorldState, originID: UUID, destinationID: UUID,
+        resource: ResourceType, amount: Double, guardIDs: [UUID]
+    ) -> Bool {
+        canDispatch(state, originID: originID, destinationID: destinationID,
+                    load: .resource(resource), amount: amount, guardIDs: guardIDs)
     }
 
     /// Sends a caravan: pulls cargo and the chosen guards out of the origin,
@@ -136,7 +165,7 @@ public enum CaravanEngine {
         _ state: WorldState,
         originID: UUID,
         destinationID: UUID,
-        resource: ResourceType,
+        load: CaravanCargo,
         amount: Double,
         guardIDs: [UUID],
         /// Optional so every existing caller keeps working; with it, the
@@ -144,7 +173,7 @@ public enum CaravanEngine {
         registry: GameDataRegistry? = nil
     ) -> WorldState {
         guard canDispatch(state, originID: originID, destinationID: destinationID,
-                          resource: resource, amount: amount, guardIDs: guardIDs),
+                          load: load, amount: amount, guardIDs: guardIDs),
               let oi = state.settlements.firstIndex(where: { $0.id == originID }) else { return state }
 
         var s = state
@@ -152,7 +181,14 @@ public enum CaravanEngine {
         let guards = s.settlements[oi].pawns.filter { guardSet.contains($0.id) }
         // Remove guards and cargo from the origin.
         s.settlements[oi].pawns.removeAll { guardSet.contains($0.id) }
-        s.settlements[oi].storage[resource] = s.settlements[oi].storage[resource] - amount
+        switch load {
+        case let .resource(resource):
+            s.settlements[oi].storage[resource] = s.settlements[oi].storage[resource] - amount
+        case let .goods(item):
+            let taken = Int(amount.rounded(.down))
+            s.settlements[oi].stockpile[item] =
+                max(0, s.settlements[oi].stockpile[item, default: 0] - taken)
+        }
 
         let destination = s.settlements.first { $0.id == destinationID }!
         let ticks = travelTicks(from: s.settlements[oi], to: destination, in: s,
@@ -162,7 +198,7 @@ public enum CaravanEngine {
             id: rng.nextUUID(),
             originID: originID,
             destinationID: destinationID,
-            resource: resource,
+            load: load,
             cargo: amount,
             guards: guards,
             ticksRemaining: ticks,
@@ -311,16 +347,25 @@ public enum CaravanEngine {
     /// to the origin instead of being destroyed.
     static func deliver(_ caravan: Caravan, into s: inout WorldState) {
         guard let di = s.settlements.firstIndex(where: { $0.id == caravan.destinationID }) else { return }
-        let room = max(0, s.settlements[di].storageCapacity[caravan.resource] - s.settlements[di].storage[caravan.resource])
-        let delivered = min(caravan.cargo, room)
-        s.settlements[di].storage[caravan.resource] += delivered
         s.settlements[di].pawns.append(contentsOf: caravan.guards)
+
+        // **A good has no roof over it.** `stockpile` is not capped the way
+        // `storage` is, so a cart of timber always lands — which is the whole
+        // reason shipping goods is worth doing at all when the pools are full.
+        if let item = caravan.load.itemID {
+            s.settlements[di].stockpile[item, default: 0] += Int(caravan.cargo.rounded(.down))
+            return
+        }
+        guard let resource = caravan.load.resource else { return }
+        let room = max(0, s.settlements[di].storageCapacity[resource] - s.settlements[di].storage[resource])
+        let delivered = min(caravan.cargo, room)
+        s.settlements[di].storage[resource] += delivered
 
         // Return the undeliverable remainder to the origin rather than losing it.
         let returned = caravan.cargo - delivered
         if returned > 0, let oi = s.settlements.firstIndex(where: { $0.id == caravan.originID }) {
-            let originRoom = max(0, s.settlements[oi].storageCapacity[caravan.resource] - s.settlements[oi].storage[caravan.resource])
-            s.settlements[oi].storage[caravan.resource] += min(returned, originRoom)
+            let originRoom = max(0, s.settlements[oi].storageCapacity[resource] - s.settlements[oi].storage[resource])
+            s.settlements[oi].storage[resource] += min(returned, originRoom)
         }
     }
 

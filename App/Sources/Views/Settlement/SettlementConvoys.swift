@@ -31,7 +31,7 @@ enum SettlementConvoys {
             guard let leg = position(of: caravan, for: settlement.id) else { continue }
             guard map.isExplored(leg.position) else { continue }
             cart(&context, at: SettlementRenderer.point(leg.position, in: rect),
-                 resource: caravan.resource, guards: caravan.guards.count,
+                 load: caravan.load, guards: caravan.guards.count,
                  outbound: leg.outbound, raided: caravan.status != .traveling,
                  time: time, zoom: zoom, seed: seed(caravan.id))
         }
@@ -79,13 +79,13 @@ enum SettlementConvoys {
     /// A cart, its ox and its escort. Small, because it is one wagon and not a
     /// column, and marked when it has been in a fight.
     private static func cart(
-        _ context: inout GraphicsContext, at c: CGPoint, resource: ResourceType,
+        _ context: inout GraphicsContext, at c: CGPoint, load: CaravanCargo,
         guards: Int, outbound: Bool, raided: Bool, time: Double, zoom: CGFloat,
         seed: UInt64
     ) {
         let s = 4.0 * zoom
         let wood = Color(red: 0.46, green: 0.36, blue: 0.25)
-        let goods = cargoColour(resource)
+        let goods = cargoColour(load)
         let phase = Double(seed % 997) / 997 * 6.28
 
         context.fill(Path(ellipseIn: CGRect(x: c.x - s * 0.9, y: c.y + s * 0.5,
@@ -149,13 +149,26 @@ enum SettlementConvoys {
         }
     }
 
-    static func cargoColour(_ resource: ResourceType) -> Color {
+    static func cargoColour(_ load: CaravanCargo) -> Color {
+        // A cart of goods is a cart of *things*, and things are the colour of
+        // what they are made of rather than of a ledger column.
+        switch load {
+        case let .goods(item):
+            switch item {
+            case "wood", "timber_bundle": return Color(red: 0.55, green: 0.41, blue: 0.26)
+            case "charcoal": return Color(red: 0.24, green: 0.22, blue: 0.21)
+            case "rough_stone", "brick", "clay": return Color(red: 0.60, green: 0.55, blue: 0.49)
+            case "iron_ore", "iron_ingot": return Color(red: 0.47, green: 0.49, blue: 0.53)
+            default: return Color(red: 0.52, green: 0.50, blue: 0.48)
+            }
+        case .resource(let resource):
         switch resource {
         case .food: return Color(red: 0.78, green: 0.68, blue: 0.38)
         case .materials: return Color(red: 0.52, green: 0.50, blue: 0.48)
         case .knowledge: return Color(red: 0.58, green: 0.66, blue: 0.80)
         case .influence: return Color(red: 0.80, green: 0.62, blue: 0.34)
         case .energy: return Color(red: 0.72, green: 0.74, blue: 0.44)
+            }
         }
     }
 

@@ -47,7 +47,8 @@ import magnitudes
 import references
 from content_kinds import (
     ENUM_KEYS, INTEGER_FIELDS, KINDS, NEEDS_SWIFT_FIRST, READABLE_GLOBAL_STATS,
-    READABLE_SETTLEMENT_STATS, ROOT, SHAPES, SUPPLEMENTS, WRITABLE_GLOBAL_STATS,
+    READABLE_SETTLEMENT_STATS, ROOT, SHAPES, SUPPLEMENTS, SUPPLEMENTS_BY_KIND,
+    WRITABLE_GLOBAL_STATS,
     WRITABLE_SETTLEMENT_STATS, effect_shape_problems, path_for,
 )
 
@@ -90,7 +91,7 @@ def ids_in(entries) -> set[str]:
     return {e["id"] for e in entries if isinstance(e, dict) and isinstance(e.get("id"), str)}
 
 
-def vocabulary(entries) -> dict[str, set[str]]:
+def vocabulary(entries, kind: str | None = None) -> dict[str, set[str]]:
     """Every value the existing content uses for a closed-vocabulary key.
 
     Collected rather than declared: the schema files cover two of the eleven data
@@ -118,6 +119,10 @@ def vocabulary(entries) -> dict[str, set[str]]:
     for key, extra in SUPPLEMENTS.items():
         if key in found:
             found[key] |= extra
+    # …and where this kind has its own vocabulary for a key, that one wins
+    # outright. See `SUPPLEMENTS_BY_KIND`.
+    for key, own in (SUPPLEMENTS_BY_KIND.get(kind or "", {})).items():
+        found[key] = set(own)
     return found
 
 
@@ -255,7 +260,7 @@ def strange_values(node, allowed: dict[str, set[str]], out: list[str]) -> None:
 def check(kind: str, draft: list) -> list[str]:
     """Everything wrong with a draft, in one list. Empty means it may be merged."""
     existing = load(path_for(kind))
-    allowed = vocabulary(existing)
+    allowed = vocabulary(existing, kind)
     faults: list[str] = []
 
     if not isinstance(draft, list):
@@ -421,7 +426,7 @@ def prompt_for(kind: str, count: int, examples: int, note: str | None,
                taken: set[str]) -> str:
     entries = load(path_for(kind))
     spec = KINDS[kind]
-    allowed = vocabulary(entries)
+    allowed = vocabulary(entries, kind)
     shown = sample(entries, examples)
     vocab_lines = "\n".join(
         f"  {key}: {', '.join(sorted(values))}"

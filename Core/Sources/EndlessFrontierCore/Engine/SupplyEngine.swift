@@ -41,6 +41,41 @@ public enum SupplyEngine {
     /// a cart.
     public static let shipped: [ResourceType] = [.food, .materials]
 
+    /// **The goods worth shipping**, by item id.
+    ///
+    /// Keks, on a colony whose whole industry was starved of timber and whose
+    /// valley genuinely cannot feed it: *"to už asi neni řešení, je to prostě
+    /// náročné to uživit … taky můžeme posílat dřevo z jiných osad."* He is
+    /// right on both halves. A plains valley of fifty trees does not feed a
+    /// town of a hundred and thirty, and planting more of them is a rate the
+    /// forest sets, not one the colony does. What a *realm* can do is carry
+    /// timber in from the outpost in the hills that has more wood than people.
+    ///
+    /// Deliberately the **bottom of the chain** and not the whole shelf: the
+    /// raw goods and the first thing made out of each, which is where a
+    /// shortage actually bites. Shipping finished gear between towns is a
+    /// different feature (it would need to move `ItemInstance`s, which carry
+    /// quality and wear), and shipping food-stuffs would quietly undo the
+    /// cooking chain's local character.
+    public static let shippedGoods: [String] = [
+        "wood", "timber_bundle", "charcoal",
+        "rough_stone", "brick", "clay",
+        "iron_ore", "iron_ingot"
+    ]
+
+    /// How many of a good a settlement wants in hand, per pair of hands.
+    ///
+    /// Flat per soul rather than per bench: a colony's appetite for timber is
+    /// its building programme and its fires, and both scale with how many
+    /// people there are. Small — a cart of forty timber bundles is a real
+    /// delivery — so a town is *short* only when it is genuinely bare, and the
+    /// realm does not spend its whole life carting goods in circles.
+    public static let goodsPerSoul: Double = 0.5
+
+    /// The fewest of a good worth loading a cart with. A cart carrying four
+    /// bricks across two valleys is a cart that should not have gone.
+    public static let leastWorthCarting = 12
+
     /// What a settlement wants to have in hand, given how many mouths it feeds.
     public static func comfortable(_ settlement: Settlement, resource: ResourceType) -> Double {
         let mouths = max(1, Double(settlement.pawns.count))
@@ -116,7 +151,80 @@ public enum SupplyEngine {
                 }
             }
         }
+        return shipGoods(s, registry: registry)
+    }
+
+    /// The same pass, for the things on the shelf.
+    ///
+    /// Kept as its own function rather than folded into the loop above because
+    /// the two measure differently at every step: a resource has a roof and a
+    /// per-tick draw, a good is a whole-unit count with neither. Sharing the
+    /// loop would have meant a `switch` in five places to say which of two
+    /// quantities every line meant (rule 8, the other way round).
+    static func shipGoods(_ state: WorldState, registry: GameDataRegistry) -> WorldState {
+        var s = state
+        for item in shippedGoods {
+            let needy = s.settlements.indices
+                .map { (index: $0, gap: wanted(s.settlements[$0]) - Double(s.settlements[$0].stockpile[item, default: 0])) }
+                .filter { $0.gap > 0 }
+                .sorted { $0.gap > $1.gap }
+            guard let want = needy.first,
+                  let giver = goodsDonor(in: s, for: item, excluding: want.index)
+            else { continue }
+
+            let destinationID = s.settlements[want.index].id
+            let originID = s.settlements[giver].id
+            let inFlight = s.caravans.count {
+                $0.originID == originID && $0.destinationID == destinationID
+            }
+            guard inFlight < maxInFlightPerPair else { continue }
+
+            let cargo = min(maxCargo, min(spareGoods(s.settlements[giver], item: item), want.gap))
+            guard cargo >= Double(leastWorthCarting) else { continue }
+
+            let ticksPerYear = max(1, registry.config.ticksPerYear)
+            let escort = s.settlements[giver].pawns
+                .filter { $0.isAdult(ticksPerYear: ticksPerYear) && !$0.isBroken
+                            && !$0.isAway && $0.health > 40 }
+                .prefix(escortSize).map(\.id)
+            guard escort.count == escortSize else { continue }
+
+            let before = s.caravans.count
+            s = CaravanEngine.dispatch(s, originID: originID,
+                                       destinationID: destinationID,
+                                       load: .goods(item), amount: cargo.rounded(.down),
+                                       guardIDs: escort, registry: registry)
+            guard s.caravans.count > before else { continue }
+            if let oi = s.settlements.firstIndex(where: { $0.id == originID }) {
+                let to = s.settlements[want.index].name
+                let goodName = registry.item(item)?.name
+                s.settlements[oi].journal.append(
+                    tick: s.tick, kind: .departure, text: LocalizedText(values: [
+                        .en: "A load of \(goodName?.resolve(.en) ?? item) went out to \(to).",
+                        .cs: "Do \(to) vyjel náklad — \(goodName?.resolve(.cs) ?? item)."]))
+            }
+        }
         return s
+    }
+
+    /// What a settlement wants to have of any one good.
+    static func wanted(_ settlement: Settlement) -> Double {
+        max(1, Double(settlement.pawns.count)) * goodsPerSoul
+    }
+
+    /// The settlement best able to spare some of a good.
+    static func goodsDonor(in state: WorldState, for item: String, excluding index: Int) -> Int? {
+        state.settlements.indices
+            .filter { $0 != index
+                        && spareGoods(state.settlements[$0], item: item) >= Double(leastWorthCarting) }
+            .max { spareGoods(state.settlements[$0], item: item)
+                    < spareGoods(state.settlements[$1], item: item) }
+    }
+
+    /// What a settlement can send of a good without going short itself.
+    static func spareGoods(_ settlement: Settlement, item: String) -> Double {
+        let keep = wanted(settlement) / keepBackShare
+        return max(0, Double(settlement.stockpile[item, default: 0]) - keep)
     }
 
     /// The settlement best able to spare some, if any is.

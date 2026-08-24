@@ -82,7 +82,8 @@ public enum PathEngine {
         // onto yesterday's ways rather than onto ways it is laying as it goes:
         // an order-dependent route is a route that depends on the order pawns
         // happen to sit in the array, which is not determinism you can rely on.
-        let ground = SettlementRoute.Ground(colony: colony, worn: s.paths.lookup())
+        let ground = SettlementRoute.Ground(colony: colony, worn: s.paths.lookup(),
+                                            water: waterDepth(s))
         // Two colonists out of the same house doing the same work walk the same
         // street. Routing it twice is the same answer for the same money.
         var routes: [Route: [TileCoord]] = [:]
@@ -121,6 +122,60 @@ public enum PathEngine {
         s.paths.replace(with: field, floor: forgetBelow)
         return s
     }
+
+    /// **How deep the water is here.**
+    ///
+    /// Keks, having asked for the water to be real at all: *"udělej rovnou
+    /// hlubokou a mělkou."* One `isWater` is a wall — it would send a colony
+    /// the long way round a stream it has waded across every day of its life,
+    /// and make the beach as unwalkable as the open sea. The shallows are the
+    /// part of the water people actually use.
+    public enum WaterDepth: Sendable, Equatable {
+        /// Ground. Nothing to think about.
+        case dry
+        /// Ankle to knee — the surf on a beach, the edge of a channel, a ford.
+        /// Slower going than a road and perfectly ordinary.
+        case shallow
+        /// Over your head. A colony that walks here is a colony drowning.
+        case deep
+    }
+
+    /// What the water does on this settlement's ground, or `nil` where there is
+    /// none — a dry valley pays nothing for a test it cannot fail.
+    ///
+    /// The river is only water where it **flows**: a dry wash on a desert map
+    /// is a line on the ground people cross, and charging anything to walk over
+    /// it would send the whole colony the long way round a ditch.
+    public static func waterDepth(
+        _ settlement: Settlement
+    ) -> ((LocalPoint) -> WaterDepth)? {
+        guard let map = settlement.localMap else { return nil }
+        let shore = map.shore
+        let river = map.river.flows ? map.river : nil
+        guard shore != nil || river != nil else { return nil }
+        return { p in
+            // The sea shelves: `distanceInland` is negative out at sea, so the
+            // first stretch past the waterline is where you can still stand.
+            if let shore, shore.isWater(p) {
+                return shore.distanceInland(p) > -shallowsReach ? .shallow : .deep
+            }
+            // A channel is deepest down its middle and shallow at both edges,
+            // which is what makes a ford a place rather than a rule.
+            if let river {
+                let across = abs(p.y - river.y(atX: p.x))
+                if across <= riverHalfWidth * 0.55 { return .deep }
+                if across <= riverHalfWidth { return .shallow }
+            }
+            return .dry
+        }
+    }
+
+    /// How far out from the waterline you can still put a foot down.
+    public static let shallowsReach = 0.035
+
+    /// How wide the channel is, either side of the river's line. The same
+    /// margin `LocalMapGenerator.landPoint` keeps clear of it.
+    public static let riverHalfWidth = 0.09
 
     /// One journey, as the two ends of it. Two people making the same journey
     /// are one route worked out once.

@@ -300,6 +300,10 @@
       {
         "type": "unlock_building",
         "buildingId": "horse_mill"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "saw_pit"
       }
     ],
     "description": {
@@ -384,6 +388,10 @@
       {
         "type": "unlock_building",
         "buildingId": "power_plant"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "powered_sawmill"
       }
     ],
     "description": {

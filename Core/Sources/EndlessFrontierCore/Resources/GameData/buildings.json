@@ -115,6 +115,84 @@
     }
   },
   {
+    "id": "saw_pit",
+    "work": "logging",
+    "look": "sawmill",
+    "era": "medieval",
+    "name": {
+      "en": "Saw Pit",
+      "cs": "Pilnice"
+    },
+    "cost": {
+      "materials": 40
+    },
+    "material_cost": {
+      "brick": 2
+    },
+    "workers": 2,
+    "production": {
+      "materials": 3
+    },
+    "consumption": {},
+    "recovery": {
+      "wood": 0.3
+    },
+    "morale_effect": 0,
+    "description": {
+      "en": "Two sawyers, a trestle and a long blade. The same tree goes further when it is cut instead of split.",
+      "cs": "Dva pilaři, kozy a dlouhá pila. Týž strom vydá víc, když se řeže místo štípání."
+    },
+    "footprint": {
+      "w": 3,
+      "h": 2
+    }
+  },
+  {
+    "id": "powered_sawmill",
+    "work": "logging",
+    "look": "sawmill",
+    "era": "early_industrial",
+    "name": {
+      "en": "Powered Sawmill",
+      "cs": "Strojní pila"
+    },
+    "cost": {
+      "materials": 95,
+      "knowledge": 20
+    },
+    "material_cost": {
+      "brick": 4,
+      "iron_ingot": 2
+    },
+    "workers": 4,
+    "production": {
+      "materials": 8
+    },
+    "consumption": {
+      "energy": 2
+    },
+    "recovery": {
+      "wood": 0.7
+    },
+    "pollution": 3,
+    "morale_effect": 0,
+    "adjacency": [
+      {
+        "neighbor": "lumberyard",
+        "resource": "materials",
+        "bonus": 3
+      }
+    ],
+    "description": {
+      "en": "A driven blade that takes a trunk down to boards with barely a handful of waste. A valley that cannot grow more trees can still stop wasting the ones it fells.",
+      "cs": "Poháněný list rozebere kmen na prkna a zbyde hrst pilin. Údolí, které neuživí víc stromů, může aspoň přestat plýtvat těmi, co pokácí."
+    },
+    "footprint": {
+      "w": 4,
+      "h": 3
+    }
+  },
+  {
     "id": "charcoal_kiln",
     "work": "crafting",
     "look": "forge",

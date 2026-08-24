@@ -418,12 +418,33 @@ public enum LocalMapGenerator {
     private static func riversidePoint(
         river: RiverShape, shore: ShoreShape? = nil, rng: inout SeededRNG
     ) -> LocalPoint {
-        let x = 0.06 + rng.nextUnit() * 0.88
-        let side: Double = rng.nextUnit() < 0.5 ? -1 : 1
-        let offset = (0.03 + rng.nextUnit() * 0.05) * side
         guard river.flows else { return landPoint(river: river, shore: shore, rng: &rng) }
-        let y = min(0.96, max(0.04, river.y(atX: x) + offset))
-        return LocalPoint(x: x, y: y)
+        // **A bank is only a bank while there is land under it.**
+        //
+        // Keks, on a coast colony: *"ať se věci negenerují a moc nechodí na
+        // moře — teď tam jsou POI, řeky, vše tam normálně chodí."* This picked
+        // a point beside the river and never once asked about the sea, so on a
+        // coast map — where the river runs *into* the water — every reed bed,
+        // pond and riverside landmark near the outflow was placed in open
+        // water. `landPoint`, three lines above, has checked the shore since
+        // the shore existed: one of the two pickers was right and nobody ever
+        // asked the other to be.
+        //
+        // Tried along the river before giving up, so a valley with a mouth in
+        // the sea still gets its riverside places — upstream, where the bank is
+        // a bank.
+        for _ in 0..<24 {
+            let x = 0.06 + rng.nextUnit() * 0.88
+            let side: Double = rng.nextUnit() < 0.5 ? -1 : 1
+            let offset = (0.03 + rng.nextUnit() * 0.05) * side
+            let p = LocalPoint(x: x, y: min(0.96, max(0.04, river.y(atX: x) + offset)))
+            // The same margin `landPoint` keeps: at the waterline the ground is
+            // beach, and a thing standing on it reads as standing in the surf.
+            if let shore, shore.distanceInland(p) < 0.04 { continue }
+            return p
+        }
+        // The river's whole length is in the sea on this map. Dry land it is.
+        return landPoint(river: river, shore: shore, rng: &rng)
     }
 
     static func seed(mapSeed: UInt64, regionID: UUID) -> UInt64 {

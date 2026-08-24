@@ -48,7 +48,8 @@ final class WalkRoutes: @unchecked Sendable {
     /// Both ends are kept exactly as given: a colonist finishes standing at
     /// their bench, not at the middle of the tile it sits on.
     func route(from a: LocalPoint, to b: LocalPoint,
-               colony: ColonyMap?, worn: [TileCoord: Double]) -> [LocalPoint]? {
+               colony: ColonyMap?, worn: [TileCoord: Double],
+               water: ((LocalPoint) -> PathEngine.WaterDepth)? = nil) -> [LocalPoint]? {
         guard let colony, !colony.placements.isEmpty,
               let fromTile = SettlementGeometry.tile(at: a, in: colony),
               let toTile = SettlementGeometry.tile(at: b, in: colony),
@@ -61,14 +62,14 @@ final class WalkRoutes: @unchecked Sendable {
         lock.lock()
         if stamp != signature {
             signature = stamp
-            ground = SettlementRoute.Ground(colony: colony, worn: worn)
+            ground = SettlementRoute.Ground(colony: colony, worn: worn, water: water)
             routes.removeAll(keepingCapacity: true)
         }
         if let known = routes[key] {
             lock.unlock()
             return stitch(known, from: a, to: b)
         }
-        let field = ground ?? SettlementRoute.Ground(colony: colony, worn: worn)
+        let field = ground ?? SettlementRoute.Ground(colony: colony, worn: worn, water: water)
         ground = field
         lock.unlock()
 
