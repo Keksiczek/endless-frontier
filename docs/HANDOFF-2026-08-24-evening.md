@@ -75,3 +75,50 @@ EF_SAVE=~/…/Documents/endless-frontier-world.json EF_YEARS=60 \
 swift test --package-path Core --filter "FloraContent|AnimalContent|WildMotion|DryLand"
 python3 Tools/generate.py kinds
 ```
+
+---
+
+## 5. Added later the same evening: the rooms
+
+`fittings.json` + `FittingDefinition` — the pattern in §2 for the **fourth**
+time, and the one Keks had asked for twice.
+
+Which fittings a building got was a `switch` over building shapes with **no
+notion of when**, so a medieval workshop and a near-future assembly plant were
+furnished from the same two lines and shared their crates. It is a query now:
+*what belongs in this room, in this age.*
+
+- **`shape`** is the drawable declaration — the 21 drawings that exist.
+- **`eras` is the point.** A dated fitting **replaces** the timeless one of its
+  shape, so a far-future workshop is not a museum of its own history.
+- **`tint` and `scale`** keep two entries of one drawing from being the same
+  object: a plank cot and a sprung bed are both `bed`.
+- The age that furnishes a room is the **town's**, not the building's. A
+  windmill raised in the age of bronze is still a windmill; the bench inside it
+  belongs to the century the colony is living in.
+
+90 fittings generated, 27 → 117. Measured: `workshop`, `granary`, `temple` and
+`house` are all furnished differently in the medieval age and the near future.
+
+Also: a tapped tree, seam or heap now says **what it is** — a line out of
+`flora.json` / `animals.json` on the work-order card. Those descriptions were
+content nothing read (rule 47).
+
+### Three faults this turned up
+
+1. **A generator kind needs a `wants` line as well as a `brief`.** Without it
+   every batch dies on `KeyError: 'wants'` — so `flora` and `animals` were
+   listed as generatable for a whole session and could not be generated.
+   `kinds` hid the hole cheerfully.
+2. **A free list of strings is not a vocabulary.** `eras` is `[String]`, so the
+   model wrote `industrial` fourteen times: decodes, loads, belongs to an age
+   no colony reaches. Closed via `SUPPLEMENTS_BY_KIND`.
+3. **A derived query inside a per-frame loop is a rate that scales with
+   content.** `fittings(inRoom:era:)` filtered and sorted the whole book per
+   building per frame and cost `TribeCampTests` its 150 ms budget five times
+   over. Worked out once at load instead (rule 38).
+
+And one older latent flaw the new content exposed: `WearTests` picked its
+sample with `items.values.first { … }` — an arbitrary entry out of a
+dictionary — and eventually landed on a leather halter, worth zero fresh *and*
+worn. Sorted, and picking something that can actually lose value.

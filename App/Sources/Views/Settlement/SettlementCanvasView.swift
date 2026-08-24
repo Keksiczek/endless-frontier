@@ -40,7 +40,12 @@ enum CanvasSelection: Equatable {
     /// about a wood you wanted cleared was to hope somebody wandered over.
     /// Carrying the target's identity is what lets the card offer an order
     /// (`Designation`); the label rides along because the card says it too.
-    case thing(target: Designation.Target, label: String)
+    /// A thing on the ground the colony can be told to work: a tree, a seam, a
+    /// heap. `detail` is what the *book* says it is — a line of flavour out of
+    /// `flora.json` or `animals.json` — so tapping something tells you what it
+    /// is and not only what you may do to it. Without it those descriptions
+    /// were content nothing read (rule 47).
+    case thing(target: Designation.Target, label: String, detail: String? = nil)
 }
 
 /// Somewhere the canvas is being asked to take the player.
@@ -112,6 +117,10 @@ struct SettlementCanvasView: View {
     let map: LocalMap
     let registry: GameDataRegistry
     let season: Season
+    /// The age the town is in. What furnishes its rooms — a workshop in the
+    /// age of machines is not a workshop from four ages ago
+    /// (`FittingDefinition`).
+    var era: Era = .earlySettlement
     /// What the sky is doing (`Climate.weather`). The renderer needs it for one
     /// thing: cloud is what decides whether the moon lights anything.
     var weather: Double = 0
@@ -164,7 +173,7 @@ struct SettlementCanvasView: View {
                     SettlementRenderer.draw(
                         &context, size: size, settlement: settlement, map: map,
                         registry: registry, time: t, season: season,
-                        camera: camera, continuousTick: now,
+                        era: era, camera: camera, continuousTick: now,
                         caravans: caravans, approaches: approaches,
                         seasonProgress: seasonProgress(at: now),
                         weather: weather,
@@ -249,7 +258,7 @@ struct SettlementCanvasView: View {
             let now = Date()
             let scene = AgentMotion.Scene(settlement: settlement, registry: registry,
                                           continuousTick: clock.continuous(at: now),
-                                          replay: battleReplay)
+                                          replay: battleReplay, era: era)
             return AgentMotion.pose(for: pawn, map: map, scene: scene,
                                     time: now.timeIntervalSince(start),
                                     ticksPerYear: registry.config.ticksPerYear).position
@@ -419,7 +428,7 @@ struct SettlementCanvasView: View {
         let t = Date().timeIntervalSince(start)
         let scene = AgentMotion.Scene(settlement: settlement, registry: registry,
                                       continuousTick: clock.continuous(at: Date()),
-                                      replay: battleReplay)
+                                      replay: battleReplay, era: era)
         let ticksPerYear = registry.config.ticksPerYear
         var probe = Probe(location: location, limit: touchRadius)
 
@@ -505,7 +514,9 @@ struct SettlementCanvasView: View {
                         at: SettlementRenderer.point(pile.position, in: rect))
         }
         for tree in map.trees where map.isExplored(tree.position) {
-            probe.offer(.thing(target: .tree(tree.id), label: treeLabel(tree)),
+            probe.offer(.thing(target: .tree(tree.id), label: treeLabel(tree),
+                               detail: registry.tree(tree.species)?.description
+                                   .resolve(AppStrings.language)),
                         at: SettlementRenderer.point(tree.position, in: rect))
         }
         for rock in map.rocks where map.isExplored(rock.position) {

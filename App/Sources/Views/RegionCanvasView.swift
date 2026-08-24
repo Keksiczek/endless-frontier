@@ -87,6 +87,7 @@ struct RegionCanvasView: View {
                         SettlementRenderer.drawWilderness(
                             &context, size: size, map: map,
                             season: game.season, time: t, camera: camera,
+                            era: game.world.era,
                             regionKind: region.kind, tribe: residentTribe,
                             camp: camp,
                             continuousTick: game.tickClock.continuous(at: timeline.date),

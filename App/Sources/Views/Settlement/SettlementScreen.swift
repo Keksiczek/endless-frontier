@@ -112,7 +112,8 @@ struct SettlementScreen: View {
             if let map = game.viewedLocalMap, let settlement = game.selectedSettlement {
                 SettlementCanvasView(
                     settlement: settlement, map: map, registry: game.registry,
-                    season: game.season, weather: game.climate.weather(game.season),
+                    season: game.season, era: game.world.era,
+                    weather: game.climate.weather(game.season),
                     caravans: game.world.caravans,
                     approaches: game.approaches(to: settlement),
                     clock: game.tickClock, selection: $selection,
@@ -302,12 +303,13 @@ struct SettlementScreen: View {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
-            } else if case let .thing(target, label) = selection {
+            } else if case let .thing(target, label, detail) = selection {
                 // A tree, a seam, a heap: the things the colony works. The card
                 // marks them (`Designation`) rather than ordering anybody.
                 let kind = Designation.Kind.forTarget(target)
                 WorkOrderCard(
-                    label: label, kind: kind, marked: game.isMarked(target),
+                    label: label, detail: detail,
+                    kind: kind, marked: game.isMarked(target),
                     hands: game.hands(for: kind),
                     onOrder: { game.mark(target) },
                     onClose: {
@@ -459,7 +461,8 @@ struct SettlementScreen: View {
     private func activityLine(for pawn: Pawn) -> String? {
         guard let map = game.viewedLocalMap, let settlement = game.selectedSettlement else { return nil }
         let scene = AgentMotion.Scene(settlement: settlement, registry: game.registry,
-                                      continuousTick: game.continuousTick())
+                                      continuousTick: game.continuousTick(),
+                                      era: game.world.era)
         let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
                                     time: Date().timeIntervalSinceReferenceDate,
                                     ticksPerYear: game.ticksPerYear)

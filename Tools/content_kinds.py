@@ -61,6 +61,19 @@ ENUM_KEYS = (
 # adding to it: the point is that the flat one is wrong for this kind, not
 # short.
 SUPPLEMENTS_BY_KIND: dict[str, dict[str, set[str]]] = {
+    # **The ages, spelled the way `Era` spells them.**
+    #
+    # `eras` is a free list of strings on a fitting, and the first batch the
+    # model wrote used `industrial` fourteen times — which is not an age. It
+    # decodes (the field is `[String]`), it loads, and the fitting then belongs
+    # to an age no colony ever reaches: dead content that looks alive. Measured
+    # from `Era`, which is the authority.
+    "fittings": {
+        "eras": {
+            "early_settlement", "ancient", "medieval",
+            "early_industrial", "modern", "near_future",
+        },
+    },
     # Every string `ItemEffect.init(from:)` switches on (`Item.swift`).
     "items": {
         "type": {
@@ -310,8 +323,45 @@ gives as its `work` — or the ask the canvas makes will never carry it.""",
         # …and `AgentMotion.Activity` learned `riding` the same way.
         "new_values": {"serves_activities": ("riding",)},
     },
+    "fittings": {
+        "file": "fittings.json",
+        "wants": """entries that name **eras**. The twenty-one timeless shapes already exist; what is missing is what replaces them later — an industrial bench, a modern anvil, a near-future store. An entry with an empty `eras` is almost always a wasted one""",
+        "brief": """One **thing that stands in a room**. What you see when the roof lifts off a
+building.
+
+`shape` is which of the twenty-one drawings it is, and it is a **closed set**:
+bed, hearth, table, bench, anvil, rack, desk, shelf, counter, crate, sack,
+barrel, altar, pew, watchpost, weapons, millstone, machine, cart, panel,
+console. A fitting naming anything else is a thing that is not there.
+
+`role` is `station` (somebody stands and works at it — it gets a place in the
+ring of workers) or `clutter` (it is simply in the room, tucked in a corner).
+
+**`eras` is the point of this file.** A workshop in the age of iron and one in
+the age of machines were furnished identically, and that is the complaint this
+answers. An entry that names ages *replaces* the timeless one of the same shape
+in those ages — so write `{"shape": "bench", "eras": ["early_industrial",
+"modern"]}` and the industrial workshop gets its own bench instead of the
+medieval one. An empty `eras` means every age; use it sparingly, for things
+that genuinely do not change (a bed, a barrel).
+
+`rooms` is which building shapes it belongs in, by the same names — `workshop`,
+`forge`, `granary`, `temple`, `lab`, `plant`, `pad`. At least one.
+
+`tint` is what it is made of — `wood`, `cloth`, `metal`, `stone`, `glow` (a
+fire, a screen, a furnace mouth) — and `scale` 0.5…1.8 is how big it is drawn
+against the ordinary piece of its shape. Those two are what make a plank cot
+and a sprung bed look unlike each other while sharing one drawing.
+
+The most useful thing to write is **the same room in a later age**: what
+replaces the anvil in a modern forge, what a near-future granary keeps its
+grain in. Look at what the timeless entries already cover before adding another
+crate.""",
+        "new_fields": (),
+    },
     "animals": {
         "file": "animals.json",
+        "wants": """beasts for the countries that have least — a desert, a savanna, wetlands. A fifth forest deer is worth less than the first thing that lives on sand. Predators and small game before another large grazer""",
         "brief": """One **kind of beast**. What lives in the valley, what it does when it meets
 somebody, and what it is worth taken or tamed.
 
@@ -345,6 +395,7 @@ whole reason to spend a season on a beast rather than shoot it.""",
     },
     "flora": {
         "file": "flora.json",
+        "wants": """trees for the countries that have least, and shapes the wood does not have yet — the palette is broadleaf-heavy in the temperate biomes and thin everywhere else""",
         "brief": """One **kind of tree**. Everything about a species that is not its colour —
 the colour lives in `scenery.json` under the same id, and both are needed
 before a tree can be drawn.

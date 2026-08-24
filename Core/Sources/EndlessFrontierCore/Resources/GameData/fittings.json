@@ -1,0 +1,2639 @@
+[
+  {
+    "id": "altar",
+    "name": {
+      "en": "Altar",
+      "cs": "Oltář"
+    },
+    "shape": "altar",
+    "role": "station",
+    "tint": "stone",
+    "scale": 1.0,
+    "rooms": [
+      "temple"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Where the colony puts what it cannot fix itself.",
+      "cs": "Kam osada skládá to, co sama nespraví."
+    }
+  },
+  {
+    "id": "anvil",
+    "name": {
+      "en": "Anvil",
+      "cs": "Kovadlina"
+    },
+    "shape": "anvil",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.0,
+    "rooms": [
+      "forge",
+      "workshop"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Struck often enough that the floor around it is worn.",
+      "cs": "Bito tak často, že podlaha kolem je vyšlapaná."
+    }
+  },
+  {
+    "id": "barrel",
+    "name": {
+      "en": "Barrel",
+      "cs": "Sud"
+    },
+    "shape": "barrel",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "aqueduct",
+      "well"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Water, ale, or something that keeps better wet.",
+      "cs": "Voda, pivo, nebo něco, co v mokru vydrží."
+    }
+  },
+  {
+    "id": "barrel_stored",
+    "name": {
+      "en": "Barrel (stored)",
+      "cs": "Sud (uložené)"
+    },
+    "shape": "barrel",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "cookhouse",
+      "farm",
+      "generator",
+      "granary",
+      "house",
+      "market",
+      "plant",
+      "tanks"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Water, ale, or something that keeps better wet.",
+      "cs": "Voda, pivo, nebo něco, co v mokru vydrží."
+    }
+  },
+  {
+    "id": "bed",
+    "name": {
+      "en": "Bed",
+      "cs": "Lůžko"
+    },
+    "shape": "bed",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "barracks",
+      "clinic",
+      "house",
+      "tenement"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Somewhere to lie down. Four to a room and the room is a household.",
+      "cs": "Kde se dá lehnout. Čtyři na místnost a je z toho domácnost."
+    }
+  },
+  {
+    "id": "bed_stored",
+    "name": {
+      "en": "Bed (stored)",
+      "cs": "Lůžko (uložené)"
+    },
+    "shape": "bed",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "barracks",
+      "clinic",
+      "tenement"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Somewhere to lie down. Four to a room and the room is a household.",
+      "cs": "Kde se dá lehnout. Čtyři na místnost a je z toho domácnost."
+    }
+  },
+  {
+    "id": "bench",
+    "name": {
+      "en": "Workbench",
+      "cs": "Ponk"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "forge",
+      "lodge",
+      "mine",
+      "plant",
+      "rail",
+      "sawmill",
+      "workshop"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Tools laid along it, and somebody standing over them.",
+      "cs": "Nářadí podél a někdo nad ním."
+    }
+  },
+  {
+    "id": "cart",
+    "name": {
+      "en": "Handcart",
+      "cs": "Kára"
+    },
+    "shape": "cart",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "farm",
+      "mine",
+      "rail"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Loaded at one end of the day and empty at the other.",
+      "cs": "Ráno naložená, večer prázdná."
+    }
+  },
+  {
+    "id": "console",
+    "name": {
+      "en": "Console",
+      "cs": "Konzole"
+    },
+    "shape": "console",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.0,
+    "rooms": [
+      "dam",
+      "dish",
+      "lab",
+      "pad",
+      "tanks"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Where the age's decisions get made.",
+      "cs": "Kde se dělají rozhodnutí téhle doby."
+    }
+  },
+  {
+    "id": "counter",
+    "name": {
+      "en": "Counter",
+      "cs": "Pult"
+    },
+    "shape": "counter",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "market",
+      "vault"
+    ],
+    "eras": [],
+    "description": {
+      "en": "The line between the shop and the street.",
+      "cs": "Čára mezi krámem a ulicí."
+    }
+  },
+  {
+    "id": "crate",
+    "name": {
+      "en": "Crate",
+      "cs": "Bedna"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "aqueduct",
+      "array",
+      "clinic",
+      "dam",
+      "forge",
+      "granary",
+      "hall",
+      "house",
+      "lab",
+      "lodge",
+      "market",
+      "mine",
+      "pad",
+      "plant",
+      "rail",
+      "sawmill",
+      "tanks",
+      "tenement",
+      "turbine",
+      "vault",
+      "well",
+      "workshop"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Whatever came in and has not been unpacked.",
+      "cs": "Cokoli přišlo a ještě se to nerozbalilo."
+    }
+  },
+  {
+    "id": "desk",
+    "name": {
+      "en": "Desk",
+      "cs": "Psací stůl"
+    },
+    "shape": "desk",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "clinic",
+      "hall",
+      "lab",
+      "vault"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Paper, and somebody who reads it.",
+      "cs": "Papír a někdo, kdo ho čte."
+    }
+  },
+  {
+    "id": "desk_stored",
+    "name": {
+      "en": "Desk (stored)",
+      "cs": "Psací stůl (uložené)"
+    },
+    "shape": "desk",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "dish"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Paper, and somebody who reads it.",
+      "cs": "Papír a někdo, kdo ho čte."
+    }
+  },
+  {
+    "id": "hearth",
+    "name": {
+      "en": "Hearth",
+      "cs": "Ohniště"
+    },
+    "shape": "hearth",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.0,
+    "rooms": [
+      "cookhouse"
+    ],
+    "eras": [],
+    "description": {
+      "en": "The one thing in the room that moves.",
+      "cs": "Jediná věc v místnosti, co se hýbe."
+    }
+  },
+  {
+    "id": "hearth_stored",
+    "name": {
+      "en": "Hearth (stored)",
+      "cs": "Ohniště (uložené)"
+    },
+    "shape": "hearth",
+    "role": "clutter",
+    "tint": "glow",
+    "scale": 1.0,
+    "rooms": [
+      "forge",
+      "house",
+      "lodge",
+      "temple",
+      "tenement"
+    ],
+    "eras": [],
+    "description": {
+      "en": "The one thing in the room that moves.",
+      "cs": "Jediná věc v místnosti, co se hýbe."
+    }
+  },
+  {
+    "id": "machine",
+    "name": {
+      "en": "Machine",
+      "cs": "Stroj"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.0,
+    "rooms": [
+      "dam",
+      "generator",
+      "plant",
+      "tanks",
+      "turbine"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Loud, hot, and worth the wall it stands against.",
+      "cs": "Hlučný, horký, a stojí za tu zeď, u které stojí."
+    }
+  },
+  {
+    "id": "millstone",
+    "name": {
+      "en": "Millstone",
+      "cs": "Mlýnský kámen"
+    },
+    "shape": "millstone",
+    "role": "station",
+    "tint": "stone",
+    "scale": 1.0,
+    "rooms": [
+      "mill",
+      "sawmill"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Turns whether or not anybody is watching.",
+      "cs": "Točí se, ať se dívá kdo chce."
+    }
+  },
+  {
+    "id": "panel",
+    "name": {
+      "en": "Panel",
+      "cs": "Panel"
+    },
+    "shape": "panel",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.0,
+    "rooms": [
+      "array",
+      "pad"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Lit from behind, and it means something to somebody.",
+      "cs": "Podsvícený, a někomu něco říká."
+    }
+  },
+  {
+    "id": "panel_stored",
+    "name": {
+      "en": "Panel (stored)",
+      "cs": "Panel (uložené)"
+    },
+    "shape": "panel",
+    "role": "clutter",
+    "tint": "glow",
+    "scale": 1.0,
+    "rooms": [
+      "dish",
+      "lab"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Lit from behind, and it means something to somebody.",
+      "cs": "Podsvícený, a někomu něco říká."
+    }
+  },
+  {
+    "id": "pew",
+    "name": {
+      "en": "Pew",
+      "cs": "Lavice"
+    },
+    "shape": "pew",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "temple"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Somewhere to sit and be told something.",
+      "cs": "Kde se dá sedět a poslouchat."
+    }
+  },
+  {
+    "id": "rack",
+    "name": {
+      "en": "Rack",
+      "cs": "Regál"
+    },
+    "shape": "rack",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "lodge"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Things hung where they can be reached.",
+      "cs": "Věci pověšené tam, kam se dosáhne."
+    }
+  },
+  {
+    "id": "rack_stored",
+    "name": {
+      "en": "Rack (stored)",
+      "cs": "Regál (uložené)"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "barracks",
+      "dam",
+      "forge",
+      "generator",
+      "house",
+      "mine",
+      "pad",
+      "rail",
+      "sawmill",
+      "tower",
+      "workshop"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Things hung where they can be reached.",
+      "cs": "Věci pověšené tam, kam se dosáhne."
+    }
+  },
+  {
+    "id": "sack",
+    "name": {
+      "en": "Sacks",
+      "cs": "Pytle"
+    },
+    "shape": "sack",
+    "role": "clutter",
+    "tint": "cloth",
+    "scale": 1.0,
+    "rooms": [
+      "cookhouse",
+      "farm",
+      "granary",
+      "market",
+      "mill"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Grain, and the smell of it.",
+      "cs": "Obilí a jeho vůně."
+    }
+  },
+  {
+    "id": "shelf",
+    "name": {
+      "en": "Shelf",
+      "cs": "Police"
+    },
+    "shape": "shelf",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "clinic",
+      "cookhouse",
+      "hall",
+      "house",
+      "lab"
+    ],
+    "eras": [],
+    "description": {
+      "en": "What the room keeps but does not use today.",
+      "cs": "Co si místnost schovává, ale dnes nepotřebuje."
+    }
+  },
+  {
+    "id": "table",
+    "name": {
+      "en": "Table",
+      "cs": "Stůl"
+    },
+    "shape": "table",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "barracks",
+      "cookhouse",
+      "farm",
+      "granary",
+      "house",
+      "tenement"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Where the food goes and the talking happens.",
+      "cs": "Kam se dá jídlo a kde se mluví."
+    }
+  },
+  {
+    "id": "watchpost",
+    "name": {
+      "en": "Watch post",
+      "cs": "Strážní stanoviště"
+    },
+    "shape": "watchpost",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "tower",
+      "wall"
+    ],
+    "eras": [],
+    "description": {
+      "en": "A view of the ground somebody would come across.",
+      "cs": "Výhled na zem, přes kterou by někdo přišel."
+    }
+  },
+  {
+    "id": "weapons",
+    "name": {
+      "en": "Arms rack",
+      "cs": "Stojan na zbraně"
+    },
+    "shape": "weapons",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.0,
+    "rooms": [
+      "barracks",
+      "lodge",
+      "tower",
+      "wall"
+    ],
+    "eras": [],
+    "description": {
+      "en": "Kept ready, and mostly kept.",
+      "cs": "Připravené — a většinou jen připravené."
+    }
+  },
+  {
+    "id": "workbench_industrial",
+    "name": {
+      "en": "Industrial Workbench",
+      "cs": "Průmyslový ponk"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "workshop",
+      "plant"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A sturdy metal surface for precision work, a far cry from rough-hewn timber.",
+      "cs": "Pevná kovová plocha pro přesnou práci, na hony vzdálená hrubě tesanému dřevu."
+    }
+  },
+  {
+    "id": "electro_anvil",
+    "name": {
+      "en": "Electro-Anvil",
+      "cs": "Elektrokovadlina"
+    },
+    "shape": "anvil",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.5,
+    "rooms": [
+      "forge",
+      "plant"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Forging is less about brute strength and more about controlled energy transfer now.",
+      "cs": "Kování je dnes méně o hrubé síle a více o řízeném přenosu energie."
+    }
+  },
+  {
+    "id": "cargo_crate_automated",
+    "name": {
+      "en": "Automated Cargo Crate",
+      "cs": "Automatizovaný nákladní kontejner"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 0.9,
+    "rooms": [
+      "granary",
+      "market",
+      "plant",
+      "vault"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "Sealed and self-stacking, it keeps its contents safe and organized.",
+      "cs": "Uzavřený a samo-stohovací, udržuje svůj obsah v bezpečí a uspořádaný."
+    }
+  },
+  {
+    "id": "altar_primitive",
+    "name": {
+      "en": "Primitive Stone Altar",
+      "cs": "Primitivní kamenný oltář"
+    },
+    "shape": "altar",
+    "role": "station",
+    "tint": "stone",
+    "scale": 1.1,
+    "rooms": [
+      "temple"
+    ],
+    "eras": [
+      "ancient"
+    ],
+    "description": {
+      "en": "Roughly hewn, but consecrated by the first settlers' pleas to unseen forces.",
+      "cs": "Hrubě tesaný, avšak posvěcený prosbami prvních osadníků k neviditelným silám."
+    }
+  },
+  {
+    "id": "machine_early_industrial",
+    "name": {
+      "en": "Early Industrial Machine",
+      "cs": "Raný průmyslový stroj"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.6,
+    "rooms": [
+      "plant",
+      "workshop",
+      "mill"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A complex assembly of gears and steam, driving the new age of production.",
+      "cs": "Složitá sestava ozubených kol a páry, pohánějící novou éru výroby."
+    }
+  },
+  {
+    "id": "bed_memory_foam",
+    "name": {
+      "en": "Memory Foam Bed",
+      "cs": "Postel z paměťové pěny"
+    },
+    "shape": "bed",
+    "role": "station",
+    "tint": "cloth",
+    "scale": 1.1,
+    "rooms": [
+      "house",
+      "tenement",
+      "clinic",
+      "barracks"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Conforming to every curve, offering unparalleled comfort for tired bodies.",
+      "cs": "Přizpůsobí se každé křivce, nabízí bezkonkurenční pohodlí pro unavená těla."
+    }
+  },
+  {
+    "id": "console_holographic",
+    "name": {
+      "en": "Holographic Interface Console",
+      "cs": "Holografická ovládací konzole"
+    },
+    "shape": "console",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.3,
+    "rooms": [
+      "lab",
+      "pad",
+      "tower",
+      "array"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "Data streams projected into the air, manipulated with gestures.",
+      "cs": "Datové toky promítané do vzduchu, ovládané gesty."
+    }
+  },
+  {
+    "id": "rack_tools_medieval",
+    "name": {
+      "en": "Medieval Tools Rack",
+      "cs": "Stojan na středověké nářadí"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "workshop",
+      "forge",
+      "house"
+    ],
+    "eras": [
+      "medieval"
+    ],
+    "description": {
+      "en": "Simple wooden pegs holding hammers, chisels, and other essential implements.",
+      "cs": "Jednoduché dřevěné kolíky držící kladiva, dláta a další nezbytné nástroje."
+    }
+  },
+  {
+    "id": "altar_industrial",
+    "name": {
+      "en": "Industrial Altar",
+      "cs": "Průmyslový oltář"
+    },
+    "shape": "altar",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "temple",
+      "plant"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Where the workers offer their toil to the great machine.",
+      "cs": "Místo, kde dělníci obětují svou dřinu velkému stroji."
+    }
+  },
+  {
+    "id": "precision_bench_modern",
+    "name": {
+      "en": "Precision Workbench",
+      "cs": "Precizní pracovní stůl"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "metal",
+    "scale": 0.9,
+    "rooms": [
+      "workshop",
+      "lab"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A clean, ergonomic surface for intricate assembly.",
+      "cs": "Čistý, ergonomický povrch pro složitou montáž."
+    }
+  },
+  {
+    "id": "data_counter_nf",
+    "name": {
+      "en": "Data Counter",
+      "cs": "Datový pult"
+    },
+    "shape": "counter",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.1,
+    "rooms": [
+      "market",
+      "vault",
+      "lab"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "Interactive display for rapid transactions and information retrieval.",
+      "cs": "Interaktivní displej pro rychlé transakce a získávání informací."
+    }
+  },
+  {
+    "id": "grain_sacks_industrial",
+    "name": {
+      "en": "Industrial Grain Sacks",
+      "cs": "Průmyslové pytle na obilí"
+    },
+    "shape": "sack",
+    "role": "clutter",
+    "tint": "cloth",
+    "scale": 1.3,
+    "rooms": [
+      "granary",
+      "mill",
+      "market"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Coarse, heavy-duty sacks for mechanized transport and storage.",
+      "cs": "Hrubé, odolné pytle pro mechanizovanou přepravu a skladování."
+    }
+  },
+  {
+    "id": "shield_rack_ancient",
+    "name": {
+      "en": "Shield Rack",
+      "cs": "Stojan na štíty"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "barracks",
+      "house"
+    ],
+    "eras": [
+      "ancient"
+    ],
+    "description": {
+      "en": "Simple wooden rack for protecting the household's defensive gear.",
+      "cs": "Jednoduchý dřevěný stojan na ochranné vybavení domácnosti."
+    }
+  },
+  {
+    "id": "cargo_crate_modern_sealed",
+    "name": {
+      "en": "Sealed Cargo Crate",
+      "cs": "Zapečetěná nákladní bedna"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "plant",
+      "vault",
+      "rail"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Hermetically sealed for sensitive components, ready for automated systems.",
+      "cs": "Hermeticky uzavřeno pro citlivé součásti, připraveno pro automatizované systémy."
+    }
+  },
+  {
+    "id": "holographic_command_nf",
+    "name": {
+      "en": "Holographic Command Console",
+      "cs": "Holografická velitelská konzole"
+    },
+    "shape": "console",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.5,
+    "rooms": [
+      "lab",
+      "pad",
+      "tower",
+      "array"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "Floating interfaces for overseeing vast data networks and drone fleets.",
+      "cs": "Plovoucí rozhraní pro dohled nad rozsáhlými datovými sítěmi a flotilami dronů."
+    }
+  },
+  {
+    "id": "ceramic_heater_modern",
+    "name": {
+      "en": "Ceramic Radiant Heater",
+      "cs": "Keramické sálavé topidlo"
+    },
+    "shape": "hearth",
+    "role": "clutter",
+    "tint": "glow",
+    "scale": 0.7,
+    "rooms": [
+      "house",
+      "clinic",
+      "barracks"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Efficient, flameless heating for a comfortable living space.",
+      "cs": "Efektivní, bezplamenné vytápění pro komfortní obytný prostor."
+    }
+  },
+  {
+    "id": "sturdy_workbench_early_industrial",
+    "name": {
+      "en": "Sturdy Workbench",
+      "cs": "Robustní ponk"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.2,
+    "rooms": [
+      "workshop",
+      "mine"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A simple but sturdy wooden bench, good for repairs and basic manufacturing.",
+      "cs": "Jednoduchý, ale robustní dřevěný ponk, vhodný pro opravy a základní výrobu."
+    }
+  },
+  {
+    "id": "hydraulic_press_anvil_modern",
+    "name": {
+      "en": "Hydraulic Press Anvil",
+      "cs": "Hydraulická kovací líska"
+    },
+    "shape": "anvil",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.5,
+    "rooms": [
+      "forge",
+      "plant"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A powerful hydraulic press for shaping metal, far more efficient than manual hammering.",
+      "cs": "Výkonný hydraulický lis pro tvarování kovů, mnohem účinnější než ruční kování."
+    }
+  },
+  {
+    "id": "metal_frame_cot_early_industrial",
+    "name": {
+      "en": "Metal-Frame Cot",
+      "cs": "Lůžko s kovovým rámem"
+    },
+    "shape": "bed",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 0.9,
+    "rooms": [
+      "barracks",
+      "tenement"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A basic sleeping cot with a simple metal frame, common in factory dormitories.",
+      "cs": "Základní lůžko s jednoduchým kovovým rámem, běžné v továrních ubytovnách."
+    }
+  },
+  {
+    "id": "stackable_wooden_crates_industrial",
+    "name": {
+      "en": "Stackable Wooden Crates",
+      "cs": "Stohovatelné dřevěné bedny"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.1,
+    "rooms": [
+      "granary",
+      "market",
+      "mill",
+      "vault"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Standardized crates for transport and storage, ready for loading onto carts or trains.",
+      "cs": "Standardizované bedny pro přepravu a skladování, připravené k naložení na vozy nebo vlaky."
+    }
+  },
+  {
+    "id": "automated_storage_shelf_modern",
+    "name": {
+      "en": "Automated Storage Shelf",
+      "cs": "Automatizovaná skladovací police"
+    },
+    "shape": "shelf",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.3,
+    "rooms": [
+      "lab",
+      "vault",
+      "plant"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "A modern shelving unit with integrated retrieval systems for components or archives.",
+      "cs": "Moderní regálový systém s integrovanými systémy pro vyhledávání komponent nebo archiválií."
+    }
+  },
+  {
+    "id": "holographic_projector_table_nf",
+    "name": {
+      "en": "Holographic Projector Table",
+      "cs": "Holografický projekční stůl"
+    },
+    "shape": "table",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.4,
+    "rooms": [
+      "lab",
+      "hall",
+      "pad"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "A central interface for complex data visualization and collaborative planning, projecting information mid-air.",
+      "cs": "Centrální rozhraní pro komplexní vizualizaci dat a kolaborativní plánování, promítající informace do prostoru."
+    }
+  },
+  {
+    "id": "lever_control_console_early_industrial",
+    "name": {
+      "en": "Lever Control Console",
+      "cs": "Pákový ovládací pult"
+    },
+    "shape": "console",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.0,
+    "rooms": [
+      "plant",
+      "mine",
+      "mill"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A robust console with heavy levers and gauges, used to operate early industrial machinery.",
+      "cs": "Robustní konzole s těžkými pákami a měřidly, používaná k ovládání raných průmyslových strojů."
+    }
+  },
+  {
+    "id": "steam_powered_grinder_industrial",
+    "name": {
+      "en": "Steam-Powered Grinder",
+      "cs": "Parní mlýnek"
+    },
+    "shape": "millstone",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.6,
+    "rooms": [
+      "mill",
+      "plant"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A large, noisy machine using steam power to rapidly process raw materials into finer components or powders.",
+      "cs": "Velký, hlučný stroj využívající páru k rychlému zpracování surovin na jemnější složky nebo prášky."
+    }
+  },
+  {
+    "id": "altar_modern_display",
+    "name": {
+      "en": "Modern Altar Display",
+      "cs": "Moderní oltářní displej"
+    },
+    "shape": "altar",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.2,
+    "rooms": [
+      "temple"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A digital interface for spiritual reflection, displaying ancient texts or cosmic patterns.",
+      "cs": "Digitální rozhraní pro duchovní zamyšlení, zobrazující prastaré texty nebo vesmírné vzory."
+    }
+  },
+  {
+    "id": "iron_frame_bed_early_industrial",
+    "name": {
+      "en": "Iron Frame Bed",
+      "cs": "Železné lůžko"
+    },
+    "shape": "bed",
+    "role": "station",
+    "tint": "metal",
+    "scale": 0.9,
+    "rooms": [
+      "barracks",
+      "tenement"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A simple, mass-produced cot. Better than the floor, barely.",
+      "cs": "Jednoduché, sériově vyráběné lehátko. Lepší než podlaha, sotva."
+    }
+  },
+  {
+    "id": "holographic_transaction_counter_nf",
+    "name": {
+      "en": "Holographic Counter",
+      "cs": "Holografický pult"
+    },
+    "shape": "counter",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.1,
+    "rooms": [
+      "market",
+      "lab",
+      "vault"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "Transparent surfaces display inventory and transaction data for the discerning customer.",
+      "cs": "Průhledné plochy zobrazují data o zásobách a transakcích pro náročného zákazníka."
+    }
+  },
+  {
+    "id": "fusion_heat_panel_nf",
+    "name": {
+      "en": "Fusion Heat Panel",
+      "cs": "Fúzní tepelný panel"
+    },
+    "shape": "hearth",
+    "role": "clutter",
+    "tint": "glow",
+    "scale": 0.8,
+    "rooms": [
+      "house",
+      "tenement",
+      "cookhouse"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "Efficient and clean, a silent hum of controlled energy warms the room.",
+      "cs": "Efektivní a čistý, tichý bzukot řízené energie prohřívá místnost."
+    }
+  },
+  {
+    "id": "manual_control_panel_early_industrial",
+    "name": {
+      "en": "Manual Control Panel",
+      "cs": "Ruční ovládací panel"
+    },
+    "shape": "panel",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "plant",
+      "mill",
+      "mine"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Heavy levers and large buttons for operating machinery. Requires a strong hand.",
+      "cs": "Těžké páky a velká tlačítka pro ovládání strojů. Vyžaduje pevnou ruku."
+    }
+  },
+  {
+    "id": "coarse_grain_sack_ancient",
+    "name": {
+      "en": "Coarse Grain Sacks",
+      "cs": "Hrubé pytle na obilí"
+    },
+    "shape": "sack",
+    "role": "clutter",
+    "tint": "cloth",
+    "scale": 1.1,
+    "rooms": [
+      "granary",
+      "market",
+      "house"
+    ],
+    "eras": [
+      "ancient"
+    ],
+    "description": {
+      "en": "Hand-stitched sacks of rough fiber, filled with the season's harvest.",
+      "cs": "Ručně šité pytle z hrubých vláken, plné úrody této sezóny."
+    }
+  },
+  {
+    "id": "modular_lab_bench_modern",
+    "name": {
+      "en": "Modular Lab Bench",
+      "cs": "Modulární laboratorní stůl"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.3,
+    "rooms": [
+      "lab",
+      "workshop",
+      "clinic"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Adjustable height, integrated power, and chemical-resistant surfaces for precise work.",
+      "cs": "Nastavitelná výška, integrované napájení a chemicky odolné povrchy pro přesnou práci."
+    }
+  },
+  {
+    "id": "rough_wooden_crate_medieval",
+    "name": {
+      "en": "Rough Wooden Crate",
+      "cs": "Hrubá dřevěná bedna"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "market",
+      "granary",
+      "workshop",
+      "house"
+    ],
+    "eras": [
+      "medieval"
+    ],
+    "description": {
+      "en": "Simple planks nailed together, good for storing almost anything, or sitting on.",
+      "cs": "Jednoduchá prkna sbitá dohromady, dobrá k uskladnění čehokoli, nebo k sezení."
+    }
+  },
+  {
+    "id": "plasma_forge_anvil_modern",
+    "name": {
+      "en": "Plasma Forge Anvil",
+      "cs": "Kovářská plazmová výheň"
+    },
+    "shape": "anvil",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.2,
+    "rooms": [
+      "forge",
+      "plant",
+      "lab"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "Precision forging at extreme temperatures, powered by an internal reactor.",
+      "cs": "Přesné kování při extrémních teplotách, poháněné interním reaktorem."
+    }
+  },
+  {
+    "id": "industrial_tool_rack",
+    "name": {
+      "en": "Industrial Tool Rack",
+      "cs": "Průmyslový stojan na nástroje"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.0,
+    "rooms": [
+      "workshop",
+      "forge",
+      "plant"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A sturdy metal rack for organizing and storing the multitude of tools required for industrial work.",
+      "cs": "Pevný kovový stojan pro organizaci a uložení množství nástrojů potřebných k průmyslové práci."
+    }
+  },
+  {
+    "id": "pressurized_storage_barrel_nf",
+    "name": {
+      "en": "Pressurized Storage Barrel",
+      "cs": "Tlakový skladovací sud"
+    },
+    "shape": "barrel",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "granary",
+      "plant",
+      "lab",
+      "vault"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "A sealed, reinforced barrel designed for storing volatile or precious liquids under pressure.",
+      "cs": "Utěsněný, zesílený sud určený pro skladování těkavých nebo vzácných kapalin pod tlakem."
+    }
+  },
+  {
+    "id": "wooden_watchpost_ancient",
+    "name": {
+      "en": "Wooden Watchpost",
+      "cs": "Dřevěná hlídka"
+    },
+    "shape": "watchpost",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.5,
+    "rooms": [
+      "barracks",
+      "hall",
+      "tower"
+    ],
+    "eras": [
+      "ancient",
+      "medieval"
+    ],
+    "description": {
+      "en": "A simple elevated platform for a sentry to observe the surrounding territory.",
+      "cs": "Prostá vyvýšená plošina pro strážce k pozorování okolního území."
+    }
+  },
+  {
+    "id": "modular_seating_pew_modern",
+    "name": {
+      "en": "Modular Seating Pew",
+      "cs": "Modulární sedací lavice"
+    },
+    "shape": "pew",
+    "role": "clutter",
+    "tint": "cloth",
+    "scale": 0.9,
+    "rooms": [
+      "temple",
+      "hall",
+      "clinic",
+      "house"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "Cushioned, flexible seating that can be rearranged for various gatherings or patient waiting areas.",
+      "cs": "Polstrované, flexibilní sezení, které lze přeskládat pro různá shromáždění nebo čekárny pro pacienty."
+    }
+  },
+  {
+    "id": "loom_machine_early_industrial",
+    "name": {
+      "en": "Early Industrial Loom",
+      "cs": "Raný průmyslový stav"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.3,
+    "rooms": [
+      "workshop",
+      "plant"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A mechanical loom, powered by steam or water, capable of faster textile production than hand weaving.",
+      "cs": "Mechanický stav, poháněný párou nebo vodou, schopný rychlejší výroby textilu než ruční tkaní."
+    }
+  },
+  {
+    "id": "integrated_workstation_nf",
+    "name": {
+      "en": "Integrated Workstation",
+      "cs": "Integrovaná pracovní stanice"
+    },
+    "shape": "desk",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.0,
+    "rooms": [
+      "lab",
+      "hall",
+      "tower",
+      "barracks"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "An advanced desk with integrated displays and controls for complex data analysis and system management.",
+      "cs": "Pokročilý stůl s integrovanými displeji a ovládacími prvky pro složitou analýzu dat a správu systémů."
+    }
+  },
+  {
+    "id": "reinforced_storage_crate_medieval",
+    "name": {
+      "en": "Reinforced Storage Crate",
+      "cs": "Zesílená skladovací bedna"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.1,
+    "rooms": [
+      "granary",
+      "market",
+      "barracks",
+      "house"
+    ],
+    "eras": [
+      "medieval"
+    ],
+    "description": {
+      "en": "A sturdy wooden crate reinforced with iron bands, used for safely storing provisions and goods.",
+      "cs": "Pevná dřevěná bedna zesílená železnými pásy, používaná k bezpečnému skladování zásob a zboží."
+    }
+  },
+  {
+    "id": "sonic_forge_anvil_modern",
+    "name": {
+      "en": "Sonic Forge Anvil",
+      "cs": "Kovadlina zvukové kovárny"
+    },
+    "shape": "anvil",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.6,
+    "rooms": [
+      "forge"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Reshaping alloys with focused sound waves.",
+      "cs": "Přetváření slitin fokusovanými zvukovými vlnami."
+    }
+  },
+  {
+    "id": "plasma_hearth_nf",
+    "name": {
+      "en": "Plasma Hearth",
+      "cs": "Plazmové ohniště"
+    },
+    "shape": "hearth",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.2,
+    "rooms": [
+      "house",
+      "tenement"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "Clean, efficient heat for a cold night, with a faint hum.",
+      "cs": "Čisté, účinné teplo pro chladnou noc, se slabým bzučením."
+    }
+  },
+  {
+    "id": "cryosleep_chamber_nf",
+    "name": {
+      "en": "Cryosleep Chamber",
+      "cs": "Kryptospánková komora"
+    },
+    "shape": "bed",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.5,
+    "rooms": [
+      "barracks",
+      "clinic",
+      "house",
+      "tenement"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "More than just a bed, it's a journey into regulated stasis.",
+      "cs": "Víc než jen postel, je to cesta do řízené staze."
+    }
+  },
+  {
+    "id": "steel_storage_shelf_early_industrial",
+    "name": {
+      "en": "Steel Storage Shelf",
+      "cs": "Ocelový skladovací regál"
+    },
+    "shape": "shelf",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.3,
+    "rooms": [
+      "workshop",
+      "granary",
+      "plant"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Heavy-duty storage for factory parts or raw materials.",
+      "cs": "Odolný sklad pro tovární díly nebo suroviny."
+    }
+  },
+  {
+    "id": "laser_rifle_rack_modern",
+    "name": {
+      "en": "Laser Rifle Rack",
+      "cs": "Stojan na laserové pušky"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "barracks",
+      "vault"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Neatly organized energy weapons, ready for defense.",
+      "cs": "Úhledně uspořádané energetické zbraně, připravené k obraně."
+    }
+  },
+  {
+    "id": "nanofabrication_bench_nf",
+    "name": {
+      "en": "Nanofabrication Bench",
+      "cs": "Nanofabrikační stůl"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.4,
+    "rooms": [
+      "lab",
+      "plant"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "Where matter is manipulated at atomic scales. Delicate work, dangerous tools.",
+      "cs": "Kde se hmota manipuluje v atomových měřítkách. Jemná práce, nebezpečné nástroje."
+    }
+  },
+  {
+    "id": "cryo_storage_crate_nf",
+    "name": {
+      "en": "Cryo-Storage Crate",
+      "cs": "Kryo-úložná bedna"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "granary",
+      "plant",
+      "vault"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "Preserving perishables for decades, if the power holds.",
+      "cs": "Uchovává rychle kazící se zboží po desetiletí, pokud vydrží energie."
+    }
+  },
+  {
+    "id": "steam_driven_millstone_early_industrial",
+    "name": {
+      "en": "Steam-Driven Millstone",
+      "cs": "Parní mlýnský kámen"
+    },
+    "shape": "millstone",
+    "role": "station",
+    "tint": "stone",
+    "scale": 1.8,
+    "rooms": [
+      "mill"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "The rumble of steam and grinding grain, ushering in a new age of production.",
+      "cs": "Burácení páry a mletí obilí ohlašující novou éru výroby."
+    }
+  },
+  {
+    "id": "primitive_stone_altar_ancient",
+    "name": {
+      "en": "Primitive Stone Altar",
+      "cs": "Primitivní kamenný oltář"
+    },
+    "shape": "altar",
+    "role": "station",
+    "tint": "stone",
+    "scale": 1.2,
+    "rooms": [
+      "temple"
+    ],
+    "eras": [
+      "ancient"
+    ],
+    "description": {
+      "en": "Rough-hewn stone, where the first prayers were whispered to the valley spirits.",
+      "cs": "Hrubě tesaný kámen, kde byly šeptány první modlitby k duchům údolí."
+    }
+  },
+  {
+    "id": "heavy_duty_workbench_industrial",
+    "name": {
+      "en": "Heavy Duty Workbench",
+      "cs": "Těžký pracovní stůl"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "workshop",
+      "plant"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A solid, unmoving fixture in any busy factory, built for abuse.",
+      "cs": "Pevné, nepohnutelné zařízení v každé rušné továrně, stavěné, aby vydrželo zneužití."
+    }
+  },
+  {
+    "id": "market_stall_counter_early_industrial",
+    "name": {
+      "en": "Market Stall Counter",
+      "cs": "Pult tržního stánku"
+    },
+    "shape": "counter",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "market"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Where goods change hands, and stories are exchanged with the change.",
+      "cs": "Kde zboží mění majitele a s drobnými se vyměňují i příběhy."
+    }
+  },
+  {
+    "id": "integrated_control_desk_modern",
+    "name": {
+      "en": "Integrated Control Desk",
+      "cs": "Integrovaný ovládací pult"
+    },
+    "shape": "desk",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "lab",
+      "plant",
+      "barracks"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A modern operator's console, integrating multiple data streams.",
+      "cs": "Moderní ovládací pult, integrující více datových toků."
+    }
+  },
+  {
+    "id": "automated_storage_rack_nf",
+    "name": {
+      "en": "Automated Storage Rack",
+      "cs": "Automatizovaný úložný regál"
+    },
+    "shape": "shelf",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.3,
+    "rooms": [
+      "vault",
+      "granary",
+      "plant"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "Smart storage for a smart future, goods move themselves.",
+      "cs": "Chytré úložiště pro chytrou budoucnost, zboží se pohybuje samo."
+    }
+  },
+  {
+    "id": "precision_assembly_table_modern",
+    "name": {
+      "en": "Precision Assembly Table",
+      "cs": "Stůl pro přesnou montáž"
+    },
+    "shape": "table",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.0,
+    "rooms": [
+      "workshop",
+      "lab"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Calibrated for delicate work, a steady surface for intricate tasks.",
+      "cs": "Kalibrováno pro jemnou práci, stabilní povrch pro složité úkoly."
+    }
+  },
+  {
+    "id": "reinforced_watchpost_early_industrial",
+    "name": {
+      "en": "Reinforced Watchpost",
+      "cs": "Zesílená strážní věž"
+    },
+    "shape": "watchpost",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.2,
+    "rooms": [
+      "barracks",
+      "tower"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "More than a simple lookout, now with basic defenses against threats.",
+      "cs": "Více než jen jednoduchá hlídka, nyní se základní obranou proti hrozbám."
+    }
+  },
+  {
+    "id": "pressurized_storage_crate_industrial",
+    "name": {
+      "en": "Pressurized Storage Crate",
+      "cs": "Tlaková skladovací bedna"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "granary",
+      "tanks",
+      "vault"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Sealed tight to preserve perishables or volatile compounds.",
+      "cs": "Pevně uzavřeno pro uchování zkazitelných věcí nebo těkavých sloučenin."
+    }
+  },
+  {
+    "id": "hermetic_storage_container_modern",
+    "name": {
+      "en": "Hermetic Storage Container",
+      "cs": "Hermetický skladovací kontejner"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "granary",
+      "plant",
+      "vault"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "For long-term, climate-controlled preservation. Keeps pests out and freshness in for the colony's valuable goods.",
+      "cs": "Pro dlouhodobé, klimatizované uchování. Drží škůdce venku a čerstvost uvnitř pro cenné zásoby kolonie."
+    }
+  },
+  {
+    "id": "reinforced_workbench_early_industrial",
+    "name": {
+      "en": "Reinforced Workbench",
+      "cs": "Zesílený pracovní stůl"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.1,
+    "rooms": [
+      "workshop",
+      "forge"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Built to withstand the early rigors of industrial production. A solid surface for new contraptions and heavier tools.",
+      "cs": "Postavený tak, aby odolal raným nárokům průmyslové výroby. Pevný povrch pro nové stroje a těžší nástroje."
+    }
+  },
+  {
+    "id": "medical_recovery_bed_nf",
+    "name": {
+      "en": "Medical Recovery Bed",
+      "cs": "Léčebné lůžko"
+    },
+    "shape": "bed",
+    "role": "station",
+    "tint": "cloth",
+    "scale": 1.0,
+    "rooms": [
+      "clinic",
+      "house"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "Integrated diagnostics and automated comfort controls for optimal recuperation. Used by Nurse Anya for her patients.",
+      "cs": "Integrovaná diagnostika a automatické ovládání pohodlí pro optimální rekonvalescenci. Sestra Anežka jej používá pro své pacienty."
+    }
+  },
+  {
+    "id": "armory_weapon_rack_medieval",
+    "name": {
+      "en": "Armory Weapon Rack",
+      "cs": "Zbrojní stojan"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "barracks",
+      "hall"
+    ],
+    "eras": [
+      "medieval"
+    ],
+    "description": {
+      "en": "For storing swords, spears, and shields, ready for the watch. Guard Captain Borislav ensures it's always stocked.",
+      "cs": "Pro ukládání mečů, kopí a štítů, připravených na hlídku. Kapitán Borislav dohlíží, aby byl vždy plný."
+    }
+  },
+  {
+    "id": "electric_grinding_mill_modern",
+    "name": {
+      "en": "Electric Grinding Mill",
+      "cs": "Elektrický mlýnek"
+    },
+    "shape": "millstone",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.3,
+    "rooms": [
+      "mill",
+      "plant"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "An efficient, automated millstone, replacing the old steam-powered models. The miller, Jirina, just monitors the controls.",
+      "cs": "Účinný, automatizovaný mlýnský kámen, nahrazující staré parní modely. Mlynářka Jiřina jen sleduje ovládání."
+    }
+  },
+  {
+    "id": "primitive_stone_seating_ancient",
+    "name": {
+      "en": "Primitive Stone Seating",
+      "cs": "Primitivní kamenné sezení"
+    },
+    "shape": "pew",
+    "role": "clutter",
+    "tint": "stone",
+    "scale": 0.9,
+    "rooms": [
+      "temple",
+      "hall"
+    ],
+    "eras": [
+      "ancient"
+    ],
+    "description": {
+      "en": "Simple stone blocks for worshippers to gather, facing the sacred space. Worn smooth by generations.",
+      "cs": "Jednoduché kamenné bloky pro shromažďování věřících, směřující ke svatému místu. Hladké od generací."
+    }
+  },
+  {
+    "id": "industrial_power_anvil",
+    "name": {
+      "en": "Industrial Power Anvil",
+      "cs": "Průmyslová kovadlina"
+    },
+    "shape": "anvil",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "forge",
+      "workshop"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Reinforced for heavier industrial forging, able to withstand repeated blows from automated hammers. Old Vasek still prefers his hand hammer, though.",
+      "cs": "Zesílená pro těžší průmyslové kování, schopná odolat opakovaným úderům automatických kladiv. Starý Vašek ale pořád dává přednost ručnímu kladivu."
+    }
+  },
+  {
+    "id": "quantum_interface_console_nf",
+    "name": {
+      "en": "Quantum Interface Console",
+      "cs": "Kvantová ovládací konzole"
+    },
+    "shape": "console",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.1,
+    "rooms": [
+      "lab",
+      "pad",
+      "array"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "Controlling complex experiments and data streams, vital for Dr. Eleonora's latest research into subspace communication.",
+      "cs": "Řídí složité experimenty a datové toky, zásadní pro nejnovější výzkum doktorky Eleonory v oblasti subprostorové komunikace."
+    }
+  },
+  {
+    "id": "heavy_duty_assembly_bench_industrial",
+    "name": {
+      "en": "Heavy Duty Assembly Bench",
+      "cs": "Těžký montážní stůl"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "workshop",
+      "plant"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A sturdy workbench for complex mechanical assemblies.",
+      "cs": "Robustní pracovní stůl pro složité mechanické montáže."
+    }
+  },
+  {
+    "id": "magnetic_forge_platform_modern",
+    "name": {
+      "en": "Magnetic Forge Platform",
+      "cs": "Magnetická kovací plošina"
+    },
+    "shape": "anvil",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.3,
+    "rooms": [
+      "forge",
+      "plant"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Uses magnetic fields for shaping and tempering, much quieter than traditional anvils.",
+      "cs": "Využívá magnetická pole pro tvarování a kalení, mnohem tišší než tradiční kovadliny."
+    }
+  },
+  {
+    "id": "rough_hewn_storage_crate_ancient",
+    "name": {
+      "en": "Rough-hewn Storage Crate",
+      "cs": "Hrubě tesaná skladovací bedna"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 0.9,
+    "rooms": [
+      "granary",
+      "market",
+      "house"
+    ],
+    "eras": [
+      "ancient"
+    ],
+    "description": {
+      "en": "Simple wooden crate, good for storing roots or dried meat.",
+      "cs": "Jednoduchá dřevěná bedna, dobrá na skladování kořenů nebo sušeného masa."
+    }
+  },
+  {
+    "id": "cast_iron_display_shelf_early_industrial",
+    "name": {
+      "en": "Cast Iron Display Shelf",
+      "cs": "Litinoová prodejní police"
+    },
+    "shape": "shelf",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "market",
+      "workshop"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Heavy and stable, for displaying goods or storing heavy tools.",
+      "cs": "Těžká a stabilní, k vystavení zboží nebo uložení těžkých nástrojů."
+    }
+  },
+  {
+    "id": "automated_surveillance_station_modern",
+    "name": {
+      "en": "Automated Surveillance Station",
+      "cs": "Automatizovaná sledovací stanice"
+    },
+    "shape": "watchpost",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.5,
+    "rooms": [
+      "barracks",
+      "tower",
+      "pad"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Monitors perimeter with optical and thermal sensors. Requires minimal human oversight.",
+      "cs": "Monitoruje perimetr optickými a termálními senzory. Vyžaduje minimální lidský dohled."
+    }
+  },
+  {
+    "id": "holographic_interface_table_nf",
+    "name": {
+      "en": "Holographic Interface Table",
+      "cs": "Holografický interaktivní stůl"
+    },
+    "shape": "table",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.6,
+    "rooms": [
+      "lab",
+      "vault",
+      "array"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "A table-sized display for collaborative data analysis and design.",
+      "cs": "Stolní displej pro společnou analýzu dat a návrhy."
+    }
+  },
+  {
+    "id": "inert_gas_storage_sacks_nf",
+    "name": {
+      "en": "Inert Gas Storage Sacks",
+      "cs": "Sáčky na skladování inertních plynů"
+    },
+    "shape": "sack",
+    "role": "clutter",
+    "tint": "cloth",
+    "scale": 1.1,
+    "rooms": [
+      "granary",
+      "lab",
+      "plant"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "Sealed, permeable sacks that maintain a controlled atmosphere for sensitive materials.",
+      "cs": "Uzavřené, prodyšné sáčky, které udržují řízenou atmosféru pro citlivé materiály."
+    }
+  },
+  {
+    "id": "blast_furnace_hearth_industrial",
+    "name": {
+      "en": "Blast Furnace Hearth",
+      "cs": "Ohniště vysoké pece"
+    },
+    "shape": "hearth",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.8,
+    "rooms": [
+      "forge",
+      "plant"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "The heart of the forge, producing immense heat for metal processing.",
+      "cs": "Srdce kovárny, produkující ohromné teplo pro zpracování kovů."
+    }
+  },
+  {
+    "id": "ancient_sacrificial_altar",
+    "name": {
+      "en": "Ancient Sacrificial Altar",
+      "cs": "Starověký obětní oltář"
+    },
+    "shape": "altar",
+    "role": "station",
+    "tint": "stone",
+    "scale": 1.2,
+    "rooms": [
+      "temple"
+    ],
+    "eras": [
+      "ancient"
+    ],
+    "description": {
+      "en": "Where the first settlers made their offerings to the unknown forces of the valley.",
+      "cs": "Kde první osadníci přinášeli své oběti neznámým silám údolí."
+    }
+  },
+  {
+    "id": "factory_assembly_bench_industrial",
+    "name": {
+      "en": "Factory Assembly Bench",
+      "cs": "Tovární montážní stůl"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "plant",
+      "workshop"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A long, sturdy bench for assembling industrial components with precision.",
+      "cs": "Dlouhý, robustní stůl pro precizní montáž průmyslových komponentů."
+    }
+  },
+  {
+    "id": "holographic_control_console_nf",
+    "name": {
+      "en": "Holographic Control Console",
+      "cs": "Holografická řídící konzole"
+    },
+    "shape": "console",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.5,
+    "rooms": [
+      "lab",
+      "plant",
+      "pad"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "An advanced interface projecting vital colony data in three dimensions.",
+      "cs": "Pokročilé rozhraní promítající životní data kolonie ve třech rozměrech."
+    }
+  },
+  {
+    "id": "modern_tool_storage_rack",
+    "name": {
+      "en": "Modern Tool Storage Rack",
+      "cs": "Moderní stojan na nářadí"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 0.9,
+    "rooms": [
+      "workshop",
+      "lab"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Organized storage for specialized tools and equipment, keeping everything within reach.",
+      "cs": "Uspořádané úložiště pro specializované nástroje a vybavení, vše na dosah ruky."
+    }
+  },
+  {
+    "id": "heavy_wooden_shipping_crate_early_industrial",
+    "name": {
+      "en": "Heavy Wooden Shipping Crate",
+      "cs": "Těžká dřevěná přepravní bedna"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.3,
+    "rooms": [
+      "granary",
+      "market",
+      "rail"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Robust containers used for transporting goods across longer distances on the new rail lines.",
+      "cs": "Robustní nádoby používané k přepravě zboží na delší vzdálenosti po nových železničních tratích."
+    }
+  },
+  {
+    "id": "scribe_desk_medieval",
+    "name": {
+      "en": "Scribe's Desk",
+      "cs": "Písařský stůl"
+    },
+    "shape": "desk",
+    "role": "station",
+    "tint": "wood",
+    "scale": 0.9,
+    "rooms": [
+      "hall",
+      "temple"
+    ],
+    "eras": [
+      "medieval"
+    ],
+    "description": {
+      "en": "Where important documents are painstakingly copied and preserved for future generations.",
+      "cs": "Kde jsou důležité dokumenty pečlivě kopírovány a uchovávány pro budoucí generace."
+    }
+  },
+  {
+    "id": "electric_induction_hearth_modern",
+    "name": {
+      "en": "Electric Induction Hearth",
+      "cs": "Elektrické indukční ohniště"
+    },
+    "shape": "hearth",
+    "role": "station",
+    "tint": "glow",
+    "scale": 0.8,
+    "rooms": [
+      "cookhouse",
+      "house"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A clean and efficient way to cook without open flames, powered by grid electricity.",
+      "cs": "Čistý a efektivní způsob vaření bez otevřeného ohně, napájený z elektrické sítě."
+    }
+  },
+  {
+    "id": "steel_storage_barrel_industrial",
+    "name": {
+      "en": "Steel Storage Barrel",
+      "cs": "Ocelový skladovací sud"
+    },
+    "shape": "barrel",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.0,
+    "rooms": [
+      "granary",
+      "plant",
+      "tanks"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Durable containers for storing liquids or fine powders safely in an industrial setting.",
+      "cs": "Odolné nádoby pro bezpečné skladování kapalin nebo jemných prášků v průmyslovém prostředí."
+    }
+  },
+  {
+    "id": "ancient_temple_bench",
+    "name": {
+      "en": "Stone Bench (Ancient Temple)",
+      "cs": "Kamenná lavice (Starověký chrám)"
+    },
+    "shape": "bench",
+    "role": "clutter",
+    "tint": "stone",
+    "scale": 1.2,
+    "rooms": [
+      "temple"
+    ],
+    "eras": [
+      "ancient"
+    ],
+    "description": {
+      "en": "Roughly hewn stone for weary pilgrims to rest, or for onlookers during rituals.",
+      "cs": "Hrubě otesaný kámen, na kterém si odpočinou unavení poutníci nebo přihlížející při rituálech."
+    }
+  },
+  {
+    "id": "brick_fireplace_early_industrial",
+    "name": {
+      "en": "Brick Fireplace",
+      "cs": "Cihlový krb"
+    },
+    "shape": "hearth",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.3,
+    "rooms": [
+      "house",
+      "tenement"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A compact, efficient fireplace, capable of heating a small room and boiling water.",
+      "cs": "Kompaktní, účinný krb, který vytopí malou místnost a ohřeje vodu."
+    }
+  },
+  {
+    "id": "modern_lab_table",
+    "name": {
+      "en": "Modular Lab Table",
+      "cs": "Modulární laboratorní stůl"
+    },
+    "shape": "table",
+    "role": "station",
+    "tint": "metal",
+    "scale": 0.9,
+    "rooms": [
+      "lab"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A sterile, resilient surface for precise measurements and experimental setups.",
+      "cs": "Sterilní, odolný povrch pro přesná měření a experimentální nastavení."
+    }
+  },
+  {
+    "id": "automated_retrieval_shelf_nf",
+    "name": {
+      "en": "Automated Retrieval Shelf",
+      "cs": "Automatizovaná úložná police"
+    },
+    "shape": "shelf",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.5,
+    "rooms": [
+      "vault",
+      "granary"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "Robotic arms glide silently, retrieving components or rations on demand.",
+      "cs": "Robotické paže tiše klouzají, vyzvedávají komponenty nebo příděly na požádání."
+    }
+  },
+  {
+    "id": "ancient_wooden_storage_crate",
+    "name": {
+      "en": "Wooden Storage Crate",
+      "cs": "Dřevěná skladovací bedna"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.1,
+    "rooms": [
+      "granary",
+      "market",
+      "house"
+    ],
+    "eras": [
+      "ancient"
+    ],
+    "description": {
+      "en": "Roughly nailed planks, holding anything from roots to clay pots. Handles are rare.",
+      "cs": "Nahrubo stlučené prkno, které drží pohromadě vše od kořenů až po hliněné nádoby. Madla jsou vzácná."
+    }
+  },
+  {
+    "id": "industrial_drafting_desk",
+    "name": {
+      "en": "Industrial Drafting Desk",
+      "cs": "Průmyslový rýsovací stůl"
+    },
+    "shape": "desk",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.1,
+    "rooms": [
+      "workshop",
+      "plant",
+      "house"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Heavy timber and iron, built to withstand the rigors of factory planning.",
+      "cs": "Těžké dřevo a železo, stvořené, aby vydrželo námahu při plánování továrny."
+    }
+  },
+  {
+    "id": "musket_rack_early_industrial",
+    "name": {
+      "en": "Musket Rack",
+      "cs": "Stojan na muškety"
+    },
+    "shape": "weapons",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "barracks",
+      "house"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A simple wooden rack to keep muskets and bayonets at the ready.",
+      "cs": "Jednoduchý dřevěný stojan, aby byly muškety a bajonety vždy po ruce."
+    }
+  },
+  {
+    "id": "digital_control_console_modern",
+    "name": {
+      "en": "Digital Control Console",
+      "cs": "Digitální ovládací pult"
+    },
+    "shape": "console",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.2,
+    "rooms": [
+      "plant",
+      "rail",
+      "lab"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Screens flicker with data, allowing operators to oversee complex systems.",
+      "cs": "Obrazovky blikají daty, operátoři dohlížejí na složité systémy."
+    }
+  },
+  {
+    "id": "holographic_exchange_counter_nf",
+    "name": {
+      "en": "Holographic Exchange Counter",
+      "cs": "Holografický výměnný pult"
+    },
+    "shape": "counter",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.3,
+    "rooms": [
+      "market",
+      "vault",
+      "lab"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "No longer just for goods, but for data and services, projected on light.",
+      "cs": "Už neslouží jen pro zboží, ale pro data a služby, promítané světlem."
+    }
+  },
+  {
+    "id": "adaptive_comfort_bed_modern",
+    "name": {
+      "en": "Adaptive Comfort Bed",
+      "cs": "Adaptivní lůžko"
+    },
+    "shape": "bed",
+    "role": "station",
+    "tint": "cloth",
+    "scale": 1.1,
+    "rooms": [
+      "house",
+      "tenement",
+      "clinic",
+      "barracks"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Adjusts to the sleeper's needs for optimal rest and health monitoring.",
+      "cs": "Přizpůsobuje se potřebám spáče pro optimální odpočinek a monitorování zdraví."
+    }
+  }
+]

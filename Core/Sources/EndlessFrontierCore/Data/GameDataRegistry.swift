@@ -45,6 +45,10 @@ public struct GameDataRegistry: Sendable {
     public let flora: [String: FloraDefinition]
     /// What kinds of beast there are. See `AnimalDefinition`.
     public let animals: [String: AnimalDefinition]
+    /// What stands in a room. See `FittingDefinition`.
+    public let fittings: [String: FittingDefinition]
+    /// `fittings` already sorted into the room-and-age each one belongs to.
+    let furnishings: [Furnishing: [FittingDefinition]]
 
     /// What the colony can move a body or a load with — mounts and vehicles,
     /// which are one thing. See `docs/MOUNTS_AND_VEHICLES.md`.
@@ -109,6 +113,7 @@ public struct GameDataRegistry: Sendable {
         scenery: [SceneryDefinition] = [],
         flora: [FloraDefinition] = [],
         animals: [AnimalDefinition] = [],
+        fittings: [FittingDefinition] = [],
         conveyances: [ConveyanceDefinition] = [],
         config: WorldConfig = .default,
         mapGen: MapGenConfig = .default
@@ -123,6 +128,8 @@ public struct GameDataRegistry: Sendable {
         self.scenery = Dictionary(uniqueKeysWithValues: scenery.map { ($0.id, $0) })
         self.flora = Dictionary(uniqueKeysWithValues: flora.map { ($0.id, $0) })
         self.animals = Dictionary(uniqueKeysWithValues: animals.map { ($0.id, $0) })
+        self.fittings = Dictionary(uniqueKeysWithValues: fittings.map { ($0.id, $0) })
+        self.furnishings = Self.furnishings(from: fittings)
         self.conveyances = Dictionary(uniqueKeysWithValues: conveyances.map { ($0.id, $0) })
         self.cookableMeals = cookable
         self.foodstuffs = Set(cookable.flatMap(\.ingredients.keys))
@@ -168,6 +175,42 @@ public struct GameDataRegistry: Sendable {
 
     /// One kind of tree, by id.
     public func tree(_ id: String) -> FloraDefinition? { flora[id] }
+
+    /// What furnishes a given kind of room in a given age, in a stable order.
+    ///
+    /// The *whole* point of the era filter: a workshop in the age of iron and
+    /// one in the age of machines ask this the same way and get different
+    /// furniture back. Sorted by id so the same room lays out the same way
+    /// every frame (rule 3).
+    ///
+    /// **Worked out once, at load.** The canvas asks this per building per
+    /// frame, and filtering and sorting a hundred-odd fittings each time cost
+    /// `TribeCampTests` its 150 ms layout budget five times over the moment the
+    /// content grew — a rate that scales with content, inside a loop that
+    /// scales with the town (rule 38). There are a few dozen rooms and six
+    /// ages; the whole table is smaller than one frame's work was.
+    public func fittings(inRoom room: String, era: Era) -> [FittingDefinition] {
+        furnishings[Furnishing(room: room, era: era)] ?? []
+    }
+
+    /// One room in one age.
+    struct Furnishing: Hashable, Sendable {
+        let room: String
+        let era: Era
+    }
+
+    /// Every room-and-age the content has anything to say about.
+    static func furnishings(from fittings: [FittingDefinition]) -> [Furnishing: [FittingDefinition]] {
+        var out: [Furnishing: [FittingDefinition]] = [:]
+        for def in fittings {
+            for room in def.rooms {
+                for era in Era.allCases where def.belongs(inRoom: room, era: era) {
+                    out[Furnishing(room: room, era: era), default: []].append(def)
+                }
+            }
+        }
+        return out.mapValues { $0.sorted { $0.id < $1.id } }
+    }
 
     /// One kind of beast, by id.
     public func beast(_ id: String) -> AnimalDefinition? { animals[id] }
@@ -398,6 +441,7 @@ public struct GameDataRegistry: Sendable {
         let scenery = try optional([SceneryDefinition].self, "scenery", else: [])
         let flora = try optional([FloraDefinition].self, "flora", else: [])
         let animals = try optional([AnimalDefinition].self, "animals", else: [])
+        let fittings = try optional([FittingDefinition].self, "fittings", else: [])
         let conveyances = try optional([ConveyanceDefinition].self, "conveyances", else: [])
         return GameDataRegistry(
             buildings: try load([BuildingDefinition].self, "buildings"),
@@ -417,6 +461,7 @@ public struct GameDataRegistry: Sendable {
             scenery: scenery,
             flora: flora,
             animals: animals,
+            fittings: fittings,
             conveyances: conveyances,
             config: try load(WorldConfig.self, "world-config"),
             mapGen: mapGen

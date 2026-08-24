@@ -149,7 +149,18 @@ struct WearTests {
     @Test("A worn piece is worth less than the new one on the shelf")
     func theQuartermasterSeesWear() throws {
         let r = try registry()
-        let def = try #require(r.items.values.first { $0.slot == .equipment })
+        // **Sorted, and something that is actually worth something.**
+        //
+        // This was `items.values.first { $0.slot == .equipment }` — an
+        // arbitrary entry out of a dictionary, so which piece it measured
+        // changed the day the content did, and it eventually landed on a
+        // leather halter: no combat, no effects, `worth` of zero fresh *and*
+        // worn, and `used < fresh` is false when both are nothing. The order
+        // was never the point; a piece that can lose value is.
+        let def = try #require(
+            r.items.values.sorted { $0.id < $1.id }
+                .first { $0.slot == .equipment && QuartermasterEngine.worth(of: $0) > 0 },
+            "no piece of equipment in the book is worth anything")
         let fresh = QuartermasterEngine.worth(
             of: def, piece: ItemInstance(definitionID: def.id))
         let used = QuartermasterEngine.worth(

@@ -144,6 +144,14 @@ enum SettlementRenderer {
         registry: GameDataRegistry,
         time: Double,
         season: Season,
+        /// The age the **town** is in, which is what furnishes its rooms.
+        ///
+        /// Not the building's own era: a windmill raised in the age of bronze
+        /// is still a windmill, but the bench inside it belongs to the century
+        /// the colony is living in. That difference is the whole of *"vesnice
+        /// je moderní až v budoucnosti, canvas vypadá stejně"*
+        /// (`FittingDefinition`).
+        era: Era = .earlySettlement,
         camera: Camera,
         continuousTick: Double = 0,
         caravans: [Caravan] = [],
@@ -255,7 +263,7 @@ enum SettlementRenderer {
         // "which roof is the library?" without a single tap.
         buildings(&context, placed: placed, time: time, night: night,
                   showLabels: showLabels, zoom: zoom, sun: sun,
-                  selectedBuildingID: selectedBuildingID)
+                  selectedBuildingID: selectedBuildingID, registry: registry, era: era)
         SettlementFigures.smoke(
             &context,
             houses: placed.filter { $0.glyph == .house && !$0.underConstruction },
@@ -536,6 +544,9 @@ enum SettlementRenderer {
         season: Season,
         time: Double,
         camera: Camera,
+        /// The age the world is in, so a people's own rooms are furnished for
+        /// now rather than for the first age (`FittingDefinition`).
+        era: Era = .earlySettlement,
         regionKind: RegionKind,
         tribe: Tribe?,
         /// **The people who live here, as a settlement.** Derived from the
@@ -608,7 +619,7 @@ enum SettlementRenderer {
                                 viewport: CGRect(origin: .zero, size: size))
             buildings(&context, placed: placed, time: time, night: night,
                       showLabels: showLabels, zoom: zoom, sun: sun,
-                      selectedBuildingID: nil)
+                      selectedBuildingID: nil, registry: registry, era: era)
             SettlementFigures.smoke(
                 &context,
                 houses: placed.filter { $0.glyph == .house && !$0.underConstruction },
@@ -1692,7 +1703,13 @@ enum SettlementRenderer {
     /// put thirteen of them on `hall` and nine on `plant`. A farm, a granary
     /// and a well were the same barrel. Every building names its own archetype
     /// now, and no archetype carries more than four.
-    enum BuildingGlyph {
+    /// The building shapes the canvas can draw.
+    ///
+    /// A `String` raw value because the content names them: `fittings.json`
+    /// says which rooms a piece of furniture belongs in, and `glyph(named:)`
+    /// below already reads the same spellings out of `buildings.json`. One
+    /// vocabulary, written down once.
+    enum BuildingGlyph: String, CaseIterable {
         // Where people live
         case house      // hut, longhouse
         case tenement   // apartment block, arcology — stacked storeys
@@ -2304,7 +2321,11 @@ enum SettlementRenderer {
         _ context: inout GraphicsContext, placed: [PlacedBuilding],
         time: Double, night: Double = 0, showLabels: Bool = false,
         zoom: CGFloat = 1, sun: SettlementLight.Sun = SettlementLight.sun(time: 0),
-        selectedBuildingID: Int?
+        selectedBuildingID: Int?,
+        /// The book the rooms are furnished out of (`FittingDefinition`), and
+        /// the age they are furnished for.
+        registry: GameDataRegistry,
+        era: Era
     ) {
         // Foundations first — every building's plot, drawn before any structure,
         // so a later lot never paints over an earlier roof and adjacent lots
@@ -2332,10 +2353,10 @@ enum SettlementRenderer {
                 SettlementInterior.draw(
                     &context, glyph: building.glyph, at: building.center,
                     footprint: building.footprint, size: building.size,
-                    seed: building.seed, era: building.era,
+                    seed: building.seed, era: era,
                     workers: building.workers, residents: building.residents,
                     night: night, time: time, stock: building.stock,
-                    goods: building.goods)
+                    goods: building.goods, registry: registry)
             }
         }
         for building in placed {

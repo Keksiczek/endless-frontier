@@ -258,7 +258,8 @@ enum AgentMotion {
             LocalPoint(x: center.x + slot.dx * roomW, y: center.y + slot.dy * roomH)
         }
 
-        init(_ b: SettlementRenderer.NormalizedBuilding) {
+        init(_ b: SettlementRenderer.NormalizedBuilding,
+             era: Era, registry: GameDataRegistry) {
             definitionID = b.definitionID
             center = b.center
             halfW = b.footprintW / 2
@@ -276,7 +277,9 @@ enum AgentMotion {
             self.roomW = roomW
             self.roomH = roomH
             let places = SettlementInterior
-                .stationSlots(for: b.glyph, seed: b.seed, stations: b.assignedPawnIDs.count)
+                .stationSlots(for: b.glyph, seed: b.seed,
+                              stations: b.assignedPawnIDs.count,
+                              era: era, registry: registry)
                 .map { LocalPoint(x: b.center.x + $0.dx * roomW,
                                   y: b.center.y + $0.dy * roomH) }
             stations = places
@@ -368,7 +371,11 @@ enum AgentMotion {
         let water: ((LocalPoint) -> PathEngine.WaterDepth)?
 
         init(settlement: Settlement, registry: GameDataRegistry, continuousTick: Double = 0,
-             replay: SettlementBattle.Replay? = nil) {
+             replay: SettlementBattle.Replay? = nil,
+             /// The age the town is in, so a room is furnished for *now*
+             /// (`FittingDefinition`). Defaults to the first age, which is what
+             /// a settlement with no world around it — a preview, a test — is.
+             era: Era = .earlySettlement) {
             self.colony = settlement.colony
             self.worn = settlement.paths.lookup()
             self.water = PathEngine.waterDepth(settlement)
@@ -381,10 +388,10 @@ enum AgentMotion {
             var bedsByHome: [UUID: [LocalPoint]] = [:]
             for building in layout {
                 if building.underConstruction {
-                    sites.append(WorkSite(building))
+                    sites.append(WorkSite(building, era: era, registry: registry))
                     continue
                 }
-                let site = WorkSite(building)
+                let site = WorkSite(building, era: era, registry: registry)
                 let def = registry.building(building.definitionID)
                 if (def?.housing ?? 0) > 0 {
                     homes.append(building.center)

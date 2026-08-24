@@ -70,7 +70,28 @@ enum SettlementInterior {
     struct Slot: Equatable, Sendable {
         let dx: Double
         let dy: Double
+        /// Which of the drawings stands here.
         let fitting: Fitting
+        /// …and **which piece of furniture it is**, when the content named one.
+        /// A plank cot and a sprung bed are both `bed`; this is what makes them
+        /// look and read unlike each other (`FittingDefinition`).
+        var piece: FittingDefinition?
+
+        init(dx: Double, dy: Double, fitting: Fitting, piece: FittingDefinition? = nil) {
+            self.dx = dx
+            self.dy = dy
+            self.fitting = fitting
+            self.piece = piece
+        }
+
+        /// A slot furnished from the book. Falls back to a crate when the
+        /// content names a shape the canvas cannot draw — loudly wrong in the
+        /// content test rather than quietly missing on screen.
+        init(dx: Double, dy: Double, piece: FittingDefinition) {
+            self.init(dx: dx, dy: dy,
+                      fitting: Fitting(rawValue: piece.shape) ?? .crate,
+                      piece: piece)
+        }
     }
 
     /// The room's furniture, in a stable order. Deterministic in `seed`, so a
@@ -80,8 +101,15 @@ enum SettlementInterior {
     /// clear in the middle — the shape almost every real workroom has, and the
     /// one that keeps people from being drawn on top of each other.
     static func slots(for glyph: SettlementRenderer.BuildingGlyph,
-                      seed: UInt64, stations: Int) -> [Slot] {
-        let plan = furnishing(glyph)
+                      seed: UInt64, stations: Int,
+                      era: Era, registry: GameDataRegistry) -> [Slot] {
+        let plan = furnishing(glyph, era: era, registry: registry)
+        guard !plan.stations.isEmpty else {
+            // A room the book furnishes with nothing to stand at is still a
+            // room: it gets its corners and no ring. Better than seating people
+            // at furniture that does not exist.
+            return clutterSlots(for: glyph, seed: seed, era: era, registry: registry)
+        }
         // Enough seats for everyone the engine posted here, within reason: a
         // room is a room, not a stadium.
         //
@@ -112,7 +140,7 @@ enum SettlementInterior {
         }
         for (i, point) in ring.enumerated() {
             slots.append(Slot(dx: point.dx, dy: point.dy,
-                              fitting: plan.stations[i % plan.stations.count]))
+                              piece: plan.stations[i % plan.stations.count]))
         }
         // Then the clutter that makes it a room rather than a diagram, tucked
         // into the corners the stations left alone.
@@ -123,7 +151,7 @@ enum SettlementInterior {
         // hut with the furniture jittered a few pixels. A household keeps some
         // of what it could keep: the seed picks which corners are used and what
         // stands in them, so two houses on one street are two houses.
-        slots += clutterSlots(for: glyph, seed: h)
+        slots += clutterSlots(for: glyph, seed: h, era: era, registry: registry)
         return slots
     }
 
@@ -133,9 +161,10 @@ enum SettlementInterior {
     /// different route through `draw` — beds first — and used to arrive with no
     /// corners furnished at all.
     static func clutterSlots(
-        for glyph: SettlementRenderer.BuildingGlyph, seed: UInt64
+        for glyph: SettlementRenderer.BuildingGlyph, seed: UInt64,
+        era: Era, registry: GameDataRegistry
     ) -> [Slot] {
-        let plan = furnishing(glyph)
+        let plan = furnishing(glyph, era: era, registry: registry)
         guard !plan.clutter.isEmpty else { return [] }
         var h = seed | 1
         func roll() -> Double {
@@ -148,11 +177,11 @@ enum SettlementInterior {
         // somebody lives in is a couple of objects.
         let kept = max(min(2, plan.clutter.count),
                        min(plan.clutter.count, 1 + Int(roll() * Double(plan.clutter.count))))
-        return shuffled(plan.clutter, roll: { roll() }).prefix(kept).enumerated().map { i, fitting in
+        return shuffled(plan.clutter, roll: { roll() }).prefix(kept).enumerated().map { i, piece in
             let nook = nooks[i % nooks.count]
             return Slot(dx: nook.dx * (0.80 + roll() * 0.14),
                         dy: nook.dy * (0.80 + roll() * 0.14),
-                        fitting: fitting)
+                        piece: piece)
         }
     }
 
@@ -171,8 +200,10 @@ enum SettlementInterior {
 
     /// The stations alone, in the order colonists take them.
     static func stationSlots(for glyph: SettlementRenderer.BuildingGlyph,
-                             seed: UInt64, stations: Int) -> [Slot] {
-        slots(for: glyph, seed: seed, stations: stations).filter { $0.fitting.isStation }
+                             seed: UInt64, stations: Int,
+                             era: Era, registry: GameDataRegistry) -> [Slot] {
+        slots(for: glyph, seed: seed, stations: stations, era: era, registry: registry)
+            .filter { $0.fitting.isStation }
     }
 
     /// Where a dwelling's beds stand.
@@ -297,80 +328,38 @@ enum SettlementInterior {
     }
 
     /// What a room of this kind is furnished with, and how many can work in it.
-    private static func furnishing(
-        _ glyph: SettlementRenderer.BuildingGlyph
-    ) -> (stations: [Fitting], clutter: [Fitting], minimum: Int, maximum: Int) {
-        switch glyph {
-        case .house:
-            // A home keeps more kinds of thing than a workroom does, and no two
-            // keep the same ones — which is what the seeded pick above is for.
-            return ([.bed, .table], [.hearth, .crate, .barrel, .shelf, .rack], 2, 4)
-        case .hall:
-            return ([.desk], [.shelf, .shelf, .crate], 1, 5)
-        case .market:
-            return ([.counter], [.crate, .barrel, .sack], 1, 4)
-        case .granary:
-            return ([.table], [.sack, .sack, .barrel, .crate], 1, 3)
-        case .cookhouse:
-            return ([.hearth, .table], [.sack, .barrel, .shelf], 2, 4)
-        case .workshop:
-            return ([.bench, .anvil], [.rack, .crate], 1, 5)
-        case .plant:
-            return ([.machine, .bench], [.barrel, .crate], 2, 6)
-        case .tower:
-            return ([.watchpost], [.weapons, .rack], 1, 4)
-        case .temple:
-            return ([.altar], [.pew, .pew, .hearth], 1, 3)
-        case .mine:
-            return ([.cart, .bench], [.crate, .rack], 1, 4)
-        case .mill:
-            return ([.millstone], [.sack, .sack], 1, 3)
-        case .generator:
-            return ([.machine], [.barrel, .rack], 1, 3)
-        case .array:
-            return ([.panel], [.crate], 1, 4)
-        case .pad:
-            return ([.console, .panel], [.crate, .rack], 1, 5)
-
-        // The trades. Every one of these used to fall through to whatever glyph
-        // its numbers implied, so a farm, a well and a granary were the same
-        // room of sacks. What a place is furnished with is most of what tells
-        // you what happens in it.
-        case .tenement:
-            return ([.bed, .table], [.bed, .crate, .hearth], 3, 8)
-        case .farm:
-            return ([.table, .cart], [.sack, .sack, .barrel], 1, 4)
-        case .lodge:
-            return ([.bench, .rack], [.hearth, .weapons, .crate], 1, 3)
-        case .sawmill:
-            return ([.bench, .millstone], [.rack, .rack, .crate], 1, 4)
-        case .well:
-            return ([.barrel], [.crate], 1, 1)
-        case .forge:
-            return ([.anvil, .bench], [.hearth, .rack, .crate], 1, 4)
-        case .tanks:
-            return ([.machine, .console], [.barrel, .barrel, .crate], 1, 4)
-        case .rail:
-            return ([.cart, .bench], [.crate, .crate, .rack], 1, 5)
-        case .lab:
-            return ([.console, .desk], [.shelf, .panel, .crate], 2, 6)
-        case .dish:
-            return ([.console], [.panel, .desk], 1, 3)
-        case .vault:
-            return ([.counter, .desk], [.crate, .crate], 1, 3)
-        case .clinic:
-            return ([.bed, .desk], [.bed, .shelf, .crate], 2, 5)
-        case .aqueduct:
-            return ([.barrel], [.crate], 1, 2)
-        case .wall:
-            return ([.watchpost], [.weapons], 1, 2)
-        case .barracks:
-            return ([.bed, .table], [.bed, .weapons, .rack], 2, 6)
-        case .turbine:
-            return ([.machine], [.crate], 1, 2)
-        case .dam:
-            return ([.machine, .console], [.rack, .crate], 1, 3)
-        }
+    /// **What furnishes this kind of room, in this age.**
+    ///
+    /// This was a `switch` over the building shapes with no notion of *when*,
+    /// so a medieval workshop and a near-future assembly plant were furnished
+    /// from the same two lines and shared their crates. Keks, twice: *"budovy
+    /// mají nudné interiéry, pořád stejné … vesnice je moderní až v
+    /// budoucnosti, canvas vypadá stejně."*
+    ///
+    /// It reads `fittings.json` now (`FittingDefinition`). An entry names the
+    /// rooms it belongs in and the ages it belongs to, so furnishing a room is
+    /// a query rather than a case — and a fitting written for one age
+    /// *replaces* the timeless one rather than being added to a list nobody
+    /// can reach.
+    ///
+    /// The floor and ceiling on how many places a room lays out stay here:
+    /// they are about the room's geometry, not about its furniture.
+    static func furnishing(
+        _ glyph: SettlementRenderer.BuildingGlyph, era: Era, registry: GameDataRegistry
+    ) -> (stations: [FittingDefinition], clutter: [FittingDefinition],
+          minimum: Int, maximum: Int) {
+        let all = registry.fittings(inRoom: glyph.rawValue, era: era)
+        // An age's own furniture wins outright. A room with a `machine` written
+        // for the industrial age should show that machine, not that machine
+        // *and* the timeless one — otherwise every age adds clutter and a
+        // far-future workshop is a museum of its own history.
+        let dated = Set(all.filter { !$0.eras.isEmpty }.map(\.shape))
+        let kept = all.filter { !$0.eras.isEmpty || !dated.contains($0.shape) }
+        let stations = kept.filter { $0.role == .station }
+        let clutter = kept.filter { $0.role == .clutter }
+        return (stations, clutter,
+                stations.isEmpty ? 0 : 1,
+                max(1, stations.count + clutter.count))
     }
 
     // MARK: - When the roof comes off
@@ -406,7 +395,9 @@ enum SettlementInterior {
         /// cut stone, hides. Answers *what of*, where `stock` answers *how
         /// full*, and it is what stops a warehouse of timber and a warehouse of
         /// hides being the same drawing.
-        goods: [(kind: Goods, count: Int)] = []
+        goods: [(kind: Goods, count: Int)] = [],
+        /// The book the room is furnished out of (`FittingDefinition`).
+        registry: GameDataRegistry
     ) {
         guard isLegible(footprint: footprint) else { return }
         // **Inside the walls that are actually drawn**, not inside the lot.
@@ -441,9 +432,11 @@ enum SettlementInterior {
             // than an empty one.
             plan = bedSlots(seed: seed, sleepers: residents)
                 + [Slot(dx: 0, dy: 0.12, fitting: .hearth)]
-                + clutterSlots(for: glyph, seed: seed &* 0x9E37_79B9)
+                + clutterSlots(for: glyph, seed: seed &* 0x9E37_79B9,
+                               era: era, registry: registry)
         } else {
-            plan = slots(for: glyph, seed: seed, stations: workers)
+            plan = slots(for: glyph, seed: seed, stations: workers,
+                         era: era, registry: registry)
         }
         // …and the goods, over the furniture rather than instead of it: a
         // granary still has its scales and its shelf, it just also has the
@@ -464,8 +457,14 @@ enum SettlementInterior {
         for slot in plan + stocked {
             let p = CGPoint(x: c.x + CGFloat(slot.dx) * footprint.width,
                             y: c.y + CGFloat(slot.dy) * footprint.height)
-            fitting(&context, slot.fitting, at: p, scale: min(room.width, room.height),
-                    palette: palette, night: night, time: time, seed: seed)
+            // **The piece, not just the shape.** Two entries can share one
+            // drawing — a plank cot and a sprung bed are both `bed` — and what
+            // keeps them from being the same object on screen is the size the
+            // content gave it and what it says the thing is made of.
+            fitting(&context, slot.fitting, at: p,
+                    scale: min(room.width, room.height) * CGFloat(slot.piece?.scale ?? 1),
+                    palette: palette.tinted(slot.piece?.tint),
+                    night: night, time: time, seed: seed)
         }
         walls(&context, room: room, palette: palette, seed: seed)
     }
@@ -474,7 +473,8 @@ enum SettlementInterior {
     /// fittings were drawn at.
     static func stationPoints(
         glyph: SettlementRenderer.BuildingGlyph, at c: CGPoint,
-        footprint: CGSize, size: CGFloat, seed: UInt64, workers: Int
+        footprint: CGSize, size: CGFloat, seed: UInt64, workers: Int,
+        era: Era, registry: GameDataRegistry
     ) -> [CGPoint] {
         // The same room the fittings were drawn in — a worker standing at a
         // bench that is inside the walls must be inside them too.
@@ -482,7 +482,8 @@ enum SettlementInterior {
                                                    seed: seed, footprint: footprint)
         let room = shell.insetBy(dx: shell.width * wallInset,
                                  dy: shell.height * wallInset)
-        return stationSlots(for: glyph, seed: seed, stations: workers).map {
+        return stationSlots(for: glyph, seed: seed, stations: workers,
+                            era: era, registry: registry).map {
             CGPoint(x: room.midX + CGFloat($0.dx) * room.width,
                     y: room.midY + CGFloat($0.dy) * room.height)
         }
@@ -497,6 +498,37 @@ enum SettlementInterior {
         let wood: Color
         let metal: Color
         let cloth: Color
+
+        /// The same room, seen through what one piece of furniture is made of.
+        ///
+        /// A fitting states its `tint` and the drawings reach for
+        /// `palette.wood` / `.metal` / `.cloth` by name, so the cheapest honest
+        /// way to make a *metal* bench out of the wooden-bench drawing is to
+        /// hand it a palette whose wood **is** the metal. The room's own
+        /// materials still set the actual colours, so a smithy's iron and a
+        /// hut's iron are the same iron — a fitting picks which of them it is,
+        /// not what they look like.
+        func tinted(_ tint: FittingDefinition.Tint?) -> Palette {
+            guard let tint else { return self }
+            switch tint {
+            case .wood: return self
+            case .metal:
+                return Palette(floor: floor, plank: plank, wall: wall,
+                               wood: metal, metal: metal, cloth: cloth)
+            case .cloth:
+                return Palette(floor: floor, plank: plank, wall: wall,
+                               wood: cloth, metal: metal, cloth: cloth)
+            case .stone:
+                return Palette(floor: floor, plank: plank, wall: wall,
+                               wood: wall, metal: metal, cloth: cloth)
+            case .glow:
+                // Lit from inside: the accent is the colony's own firelight, so
+                // a furnace mouth and a screen are the same warm as the hearth.
+                return Palette(floor: floor, plank: plank, wall: wall,
+                               wood: Theme.accent.opacity(0.75), metal: metal,
+                               cloth: Theme.accent.opacity(0.55))
+            }
+        }
     }
 
     private static func palette(era: Era, seed: UInt64) -> Palette {

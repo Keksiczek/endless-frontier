@@ -16,6 +16,10 @@ import EndlessFrontierCore
 /// woodcutter will get to it, not that somebody is walking there now.
 struct WorkOrderCard: View {
     let label: String
+    /// What the thing **is**, in the content's own words — one line out of
+    /// `flora.json` or `animals.json`. Optional because a heap of timber is a
+    /// heap of timber and there is nothing to say about it.
+    var detail: String? = nil
     let kind: Designation.Kind
     let marked: Bool
     /// How many colonists hold the trade that would do it. Nobody in the trade
@@ -43,6 +47,14 @@ struct WorkOrderCard: View {
                         .foregroundStyle(Theme.textDim)
                 }
                 .buttonStyle(.plain)
+            }
+            // What it is, before what you may do to it. A tapped oak should say
+            // it is an oak and what an oak is, not only "fell it".
+            if let detail, !detail.isEmpty {
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(Theme.textDim)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if marked {
                 Text(kind.standing.resolve(AppStrings.language))
