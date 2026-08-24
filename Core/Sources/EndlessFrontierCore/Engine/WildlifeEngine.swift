@@ -183,6 +183,15 @@ public enum WildlifeEngine {
             // make it possible.
             if tick % (LaborEngine.staffingInterval * 5) == 0 {
                 map = FloraEngine.reseeded(map, mapSeed: mapSeed, tick: tick)
+                // And the **rock** opens, which had no equivalent at all: an
+                // outcrop is broken up and gone, so a valley's stone, clay and
+                // ore were laid down once and could only run down. Keks's save
+                // after 113 years: nine outcrops, every one at zero, three
+                // deposits reading 0 of 222, 181 and 135, and no massif under a
+                // plains valley to fall back on. See `MineralEngine`.
+                map = MineralEngine.surfaced(
+                    map, biome: registry.biome(map.biomeID),
+                    mapSeed: mapSeed, tick: tick)
             }
         }
 

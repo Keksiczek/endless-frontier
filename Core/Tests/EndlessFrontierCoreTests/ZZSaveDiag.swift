@@ -79,6 +79,20 @@ struct ZZSaveDiag {
                        "clay", "brick", "rough_stone"]
             print("shelf: " + raw.map { "\($0) \(s.stockpile[$0, default: 0])" }
                     .joined(separator: "  "))
+            // The rock, per deposit: what the ground has open right now against
+            // what this particular valley is supposed to hold. Biome-specific
+            // by construction — the nodes are what the generator laid down.
+            let rocks = s.localMap?.rocks ?? []
+            let live = rocks.filter { !$0.isSpent }
+            let byKind = (s.localMap?.nodes ?? [])
+                .filter { MineralEngine.isMineral($0.kind) }
+                .map { node -> String in
+                    let open = live.filter { $0.kind.deposit == node.kind }.count
+                    return String(format: "%@ %.0f/%.0f(%d)",
+                                  node.kind.rawValue, node.amount, node.capacity, open)
+                }
+                .joined(separator: "  ")
+            print("rock: \(live.count) live of \(rocks.count) outcrops | \(byKind)")
             let trees = s.localMap?.trees ?? []
             let workable = trees.filter { $0.growth >= FloraEngine.minimumWorkableGrowth }.count
             let bearing = trees.filter { $0.growth >= FloraEngine.bearingGrowth }.count

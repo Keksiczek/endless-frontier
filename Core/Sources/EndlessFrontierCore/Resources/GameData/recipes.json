@@ -501,7 +501,7 @@
     "materials": {
       "wood": 4
     },
-    "requiresBuilding": "lumberyard",
+    "requiresBuilding": "charcoal_kiln",
     "description": {
       "en": "A slow, smothered burn. Wood becomes the only fuel hot enough to work iron.",
       "cs": "Pomalý, dušený oheň. Dřevo se mění v jediné palivo dost horké na železo."
