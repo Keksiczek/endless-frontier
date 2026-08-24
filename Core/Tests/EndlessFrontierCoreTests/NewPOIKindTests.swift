@@ -9,6 +9,8 @@ import Foundation
 /// it from any biome on the map.
 @Suite("The places worth walking to")
 struct NewPOIKindTests {
+    static let book = try! GameDataRegistry.bundled()
+
     private let seat = UUID(uuidString: "00000000-0000-0000-0000-0000000000C1")!
 
     private var registry: GameDataRegistry { Fixtures.registry(buildings: []) }
@@ -28,7 +30,7 @@ struct NewPOIKindTests {
             return p
         }
         var map = LocalMapGenerator.generate(mapSeed: 21, regionID: seat,
-                                             biome: Fixtures.defaultBiomes[0])
+                                             biome: Fixtures.defaultBiomes[0], registry: Self.book)
         map.pois = []
         settlement.localMap = map
         return settlement
@@ -157,13 +159,13 @@ struct NewPOIKindTests {
         // Straight through the engine, expedition and all — the path the bug
         // lived in.
         var world = WorldState(tick: 0, settlements: [s])
-        world = GameEngine.dispatchToPOI(world, settlementID: seat, poiID: 7, registry: registry)
+        world = GameEngine.dispatchToPOI(world, settlementID: seat, poiID: 7, registry: Self.book)
         let travel = LocalPOIEngine.travelTicks(to: poi.position)
         for _ in 0..<(travel * 2 + LocalPOIKind.watchtower.workTicks + 4) {
             world.tick += 1
             world.settlements[0] = LocalPOIEngine.advanceOneTick(
                 world.settlements[0], tick: world.tick, mapSeed: world.mapSeed,
-                registry: registry)
+                registry: Self.book)
         }
         let after = world.settlements[0]
         #expect(after.expeditions.isEmpty, "the party never came home")
@@ -235,7 +237,7 @@ struct NewPOIKindTests {
 
     @Test("The loot pool is deep enough that a run of finds is not the same find")
     func lootPoolIsDeep() throws {
-        #expect(try SiteEngine.lootPool(registry: GameDataRegistry.bundled()).count >= 40)
+        #expect(try SiteEngine.lootPool(registry: try GameDataRegistry.bundled()).count >= 40)
     }
 
     /// `GameDataRegistry.bundled()` loads items with `try?`, so **one** malformed
@@ -630,7 +632,7 @@ struct SceneryBankTests {
     func everythingOnTheGroundIsDescribed() throws {
         let registry = try GameDataRegistry.bundled()
         for id in CropSpecies.allCases.map(\.rawValue)
-            + TreeSpecies.allCases.map(\.rawValue)
+            + registry.flora.keys.sorted()
             + RockKind.allCases.map(\.rawValue)
             + LandformKind.allCases.map(\.rawValue) {
             #expect(registry.scenery[id] != nil,
@@ -1502,6 +1504,8 @@ struct ResearchStatTests {
 /// horse. Each of these runs the seam and checks the number moved.
 @Suite("The yard is felt")
 struct ConveyanceSeamTests {
+    static let book = try! GameDataRegistry.bundled()
+
 
     private func yard(_ reg: GameDataRegistry, _ ids: [String]) -> Settlement {
         var s = Settlement(id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-00000000000F")!,
@@ -1543,7 +1547,7 @@ struct ConveyanceSeamTests {
                            name: "Heaps", regionID: UUID())
         s.pawns = Fixtures.pawns(1, work: .logging)
         var map = LocalMapGenerator.generate(
-            mapSeed: 7, regionID: s.id, biome: Fixtures.defaultBiomes[0])
+            mapSeed: 7, regionID: s.id, biome: Fixtures.defaultBiomes[0], registry: Self.book)
         var dropRNG = SeededRNG(seed: 7)
         map = HaulEngine.drop(map, itemID: "wood",
                               amount: HaulEngine.armfuls * 5,
@@ -1660,11 +1664,13 @@ struct BearingTests {
 /// worth doing.
 @Suite("The ground decides what can travel")
 struct ConveyanceTerrainTests {
+    static let book = try! GameDataRegistry.bundled()
+
 
     @Test("A route knows what it crosses")
     func aRouteKnowsItsGround() throws {
         let map = LocalMapGenerator.generate(
-            mapSeed: 21, regionID: UUID(), biome: Fixtures.defaultBiomes[0])
+            mapSeed: 21, regionID: UUID(), biome: Fixtures.defaultBiomes[0], registry: Self.book)
         let crossed = map.covers(from: LocalPoint(x: 0.05, y: 0.5),
                                  to: LocalPoint(x: 0.95, y: 0.5))
         #expect(!crossed.isEmpty, "a walk across the whole valley crossed nothing")
@@ -1713,7 +1719,7 @@ struct ConveyanceTerrainTests {
         var s = Settlement(id: UUID(uuidString: "0C0FFEE0-0000-0000-0000-00000000005F")!,
                            name: "Boggy", regionID: UUID())
         s.localMap = LocalMapGenerator.generate(
-            mapSeed: 5, regionID: s.id, biome: Fixtures.defaultBiomes[0])
+            mapSeed: 5, regionID: s.id, biome: Fixtures.defaultBiomes[0], registry: Self.book)
         let pace = StableEngine.bestPace(s, from: LocalPoint(x: 0.1, y: 0.1),
                                          to: LocalPoint(x: 0.9, y: 0.9), registry: reg)
         #expect(pace == 1, "an empty yard is walking, and walking is never slower than walking")

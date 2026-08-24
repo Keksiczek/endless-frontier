@@ -22,8 +22,8 @@ private func wooded(trees: Int = 3, rocks: Int = 2) -> LocalMap {
                        exploredCells: Set(0..<(LocalMap.gridColumns * LocalMap.gridRows)),
                        terrainSeed: mapSeed, usesEntityLand: true)
     map.trees = (0..<trees).map {
-        Tree(id: $0, species: .oak, position: LocalPoint(x: 0.2 + Double($0) * 0.1, y: 0.3),
-             age: TreeSpecies.oak.maturityTicks)
+        Tree(id: $0, species: "oak", position: LocalPoint(x: 0.2 + Double($0) * 0.1, y: 0.3),
+             age: LegacyTreeSpecies.oak.maturityTicks)
     }
     map.rocks = (0..<rocks).map {
         Rock(id: $0, kind: .granite, position: LocalPoint(x: 0.7, y: 0.2 + Double($0) * 0.1),

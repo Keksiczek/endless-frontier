@@ -17,7 +17,7 @@ struct POIDiscoveryTests {
             let map = LocalMapGenerator.generate(
                 mapSeed: UInt64(seed),
                 regionID: UUID(uuidString: "CCCCCCCC-0000-0000-0000-000000000001")!,
-                biome: nil)
+                biome: nil, registry: registry)
             seen.formUnion(map.pois.map(\.kind))
         }
         #expect(seen == Set(LocalPOIKind.allCases))
@@ -61,7 +61,7 @@ struct POIDiscoveryTests {
     @Test("Scouts who walk into a POI trigger the find exactly once")
     func scoutingDiscovers() {
         var map = LocalMapGenerator.generate(mapSeed: 7, regionID: UUID(
-            uuidString: "CCCCCCCC-0000-0000-0000-000000000003")!, biome: nil)
+            uuidString: "CCCCCCCC-0000-0000-0000-000000000003")!, biome: nil, registry: registry)
         // Nothing found yet at the start of the test.
         for i in map.pois.indices { map.pois[i].discovered = false }
         var s = Settlement(id: UUID(uuidString: "CCCCCCCC-0000-0000-0000-000000000004")!,

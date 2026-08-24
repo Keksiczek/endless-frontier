@@ -257,6 +257,27 @@ def strange_values(node, allowed: dict[str, set[str]], out: list[str]) -> None:
             strange_values(item, allowed, out)
 
 
+def load_drafted_items() -> list:
+    """Items sitting in `Tools/drafts` that are not merged yet.
+
+    A batch usually drafts items and the recipes that use them together, so a
+    recipe naming an item from its own batch is a good draft, not a fault —
+    the same reasoning `references.py` already applies to ids.
+    """
+    out: list = []
+    drafts = ROOT / "Tools" / "drafts"
+    if not drafts.is_dir():
+        return out
+    for path in sorted(drafts.glob("items-*.json")):
+        try:
+            loaded = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(loaded, list):
+            out += [e for e in loaded if isinstance(e, dict)]
+    return out
+
+
 def check(kind: str, draft: list) -> list[str]:
     """Everything wrong with a draft, in one list. Empty means it may be merged."""
     existing = load(path_for(kind))
@@ -299,6 +320,31 @@ def check(kind: str, draft: list) -> list[str]:
         known_keys |= set(KINDS[kind].get("new_fields", ()))
         for key in sorted(set(entry) - known_keys):
             faults.append(f"{entry_id}: field {key!r} exists nowhere in {KINDS[kind]['file']}")
+
+    # **A recipe is made of stuff, not of finished things.**
+    #
+    # `references.py` checks that every material a recipe names *exists*, and it
+    # passed a hundred drafted recipes whose ingredients were a hardwood cudgel,
+    # a woollen cloak and a brass blunderbuss — all real items, none of them a
+    # material. `CraftingTests` refuses them, so the merge gate caught it after
+    # a nine-minute test run; the checker had nothing to say. The same shape as
+    # the vocabulary gap one gate up: the name pointed at something real and the
+    # *kind* of thing was never asked about.
+    if kind == "recipes":
+        items = {e["id"]: e for e in load(path_for("items"))}
+        drafted_items = {e.get("id"): e for e in load_drafted_items()}
+        for entry in draft:
+            if not isinstance(entry, dict):
+                continue
+            for material in sorted((entry.get("materials") or {})):
+                found = items.get(material) or drafted_items.get(material)
+                if found is None:
+                    continue          # `references.py` says this one properly
+                if found.get("slot") != "material":
+                    faults.append(
+                        f"{entry.get('id')}: {material} is a "
+                        f"{found.get('slot')}, not a material — a bench takes "
+                        f"stuff apart, it does not eat finished gear")
 
     english: list[str] = []
     untranslated(draft, kind, english)

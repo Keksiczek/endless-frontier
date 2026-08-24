@@ -1,0 +1,173 @@
+[
+  {
+    "id": "oak",
+    "name": {
+      "en": "Oak",
+      "cs": "Dub"
+    },
+    "crown": "broadleaf",
+    "timber": 32.0,
+    "maturityTicks": 4200,
+    "hardiness": -18.0,
+    "biomes": [
+      "forest",
+      "plains",
+      "temperate_forest"
+    ],
+    "description": {
+      "en": "A slow broadleaf worth the wait. A felled oak wood is a loss a colony feels for two lifetimes.",
+      "cs": "Pomalý listnáč, na který se vyplatí čekat. Vykácený dubový les osada oplakává dvě generace."
+    }
+  },
+  {
+    "id": "beech",
+    "name": {
+      "en": "Beech",
+      "cs": "Buk"
+    },
+    "crown": "broadleaf",
+    "timber": 30.0,
+    "maturityTicks": 3800,
+    "hardiness": -20.0,
+    "biomes": [
+      "forest",
+      "temperate_forest"
+    ],
+    "description": {
+      "en": "Grey-barked and slow, and it holds its dead leaves through the winter.",
+      "cs": "Šedá kůra, pomalý růst — a suché listí si drží celou zimu."
+    }
+  },
+  {
+    "id": "pine",
+    "name": {
+      "en": "Pine",
+      "cs": "Borovice"
+    },
+    "crown": "conifer",
+    "timber": 24.0,
+    "maturityTicks": 2400,
+    "hardiness": -32.0,
+    "biomes": [
+      "alpine",
+      "desert",
+      "forest",
+      "mountains",
+      "plains",
+      "savanna",
+      "taiga",
+      "temperate_forest",
+      "tundra"
+    ],
+    "description": {
+      "en": "Straight, resinous and quick enough to be worth planting.",
+      "cs": "Rovná, pryskyřičná a dost rychlá, aby stálo za to ji sázet."
+    }
+  },
+  {
+    "id": "spruce",
+    "name": {
+      "en": "Spruce",
+      "cs": "Smrk"
+    },
+    "crown": "conifer",
+    "timber": 24.0,
+    "maturityTicks": 2600,
+    "hardiness": -40.0,
+    "biomes": [
+      "alpine",
+      "mountains",
+      "taiga",
+      "tundra"
+    ],
+    "description": {
+      "en": "Deep shade and dark needles; it takes cold nothing else will.",
+      "cs": "Hluboký stín a tmavé jehličí; snese mráz, který nic jiného nepřežije."
+    }
+  },
+  {
+    "id": "birch",
+    "name": {
+      "en": "Birch",
+      "cs": "Bříza"
+    },
+    "crown": "broadleaf",
+    "timber": 16.0,
+    "maturityTicks": 1400,
+    "hardiness": -28.0,
+    "biomes": [
+      "coast",
+      "forest",
+      "plains",
+      "temperate_forest",
+      "wetlands"
+    ],
+    "description": {
+      "en": "White bark and a short life. A birch stand comes back inside a generation.",
+      "cs": "Bílá kůra a krátký věk. Březina se vrátí za jedinou generaci."
+    }
+  },
+  {
+    "id": "poplar",
+    "name": {
+      "en": "Poplar",
+      "cs": "Topol"
+    },
+    "crown": "column",
+    "timber": 18.0,
+    "maturityTicks": 1300,
+    "hardiness": -26.0,
+    "biomes": [
+      "coast",
+      "plains",
+      "wetlands"
+    ],
+    "description": {
+      "en": "A column by the water. A line of them reads as a road from a valley away.",
+      "cs": "Sloup u vody. Řada topolů se z druhého konce údolí čte jako cesta."
+    }
+  },
+  {
+    "id": "willow",
+    "name": {
+      "en": "Willow",
+      "cs": "Vrba"
+    },
+    "crown": "weeping",
+    "timber": 14.0,
+    "maturityTicks": 1100,
+    "hardiness": -24.0,
+    "biomes": [
+      "coast",
+      "plains",
+      "wetlands"
+    ],
+    "description": {
+      "en": "Wet feet and a falling crown. Nothing else leans over water like it.",
+      "cs": "Mokré nohy a splývavá koruna. Nad vodou se takhle nesklání nic jiného."
+    }
+  },
+  {
+    "id": "juniper",
+    "name": {
+      "en": "Juniper",
+      "cs": "Jalovec"
+    },
+    "crown": "scrub",
+    "timber": 7.0,
+    "maturityTicks": 1900,
+    "hardiness": -46.0,
+    "biomes": [
+      "alpine",
+      "desert",
+      "mountains",
+      "savanna",
+      "taiga",
+      "tundra"
+    ],
+    "description": {
+      "en": "Scrub, not timber. Worth the axe only where nothing else stands.",
+      "cs": "Kleč, ne dřevo. Za sekeru stojí jen tam, kde nic jiného neroste."
+    }
+  }
+]

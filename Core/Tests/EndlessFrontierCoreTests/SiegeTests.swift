@@ -521,7 +521,7 @@ struct SiegeTests {
         let reg = try registry()
         var s = colony(pawns: 10, defense: 5)
         var map = LocalMapGenerator.generate(
-            mapSeed: 21, regionID: s.id, biome: reg.biome("forest"))
+            mapSeed: 21, regionID: s.id, biome: reg.biome("forest"), registry: reg)
         // A bad year: pressure high enough that the roll lands.
         map.wildlife.predatorPressure = 100
         s.localMap = map
@@ -545,7 +545,7 @@ struct SiegeTests {
         let reg = try registry()
         var s = try besieged(colony(), strength: 40)
         var map = LocalMapGenerator.generate(
-            mapSeed: 22, regionID: s.id, biome: reg.biome("forest"))
+            mapSeed: 22, regionID: s.id, biome: reg.biome("forest"), registry: reg)
         map.wildlife.predatorPressure = 100
         s.localMap = map
         let id = try #require(s.siege).id

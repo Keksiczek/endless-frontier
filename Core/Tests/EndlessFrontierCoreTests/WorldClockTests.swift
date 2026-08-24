@@ -136,7 +136,7 @@ struct ActionLoopTests {
             return p
         }
         var map = LocalMapGenerator.generate(mapSeed: 11, regionID: seat,
-                                             biome: Fixtures.defaultBiomes[0])
+                                             biome: Fixtures.defaultBiomes[0], registry: registry)
         map.pois = [LocalPOI(id: 1, kind: .ruins,
                              position: LocalPoint(x: 0.75, y: 0.5), discovered: true)]
         s.localMap = map

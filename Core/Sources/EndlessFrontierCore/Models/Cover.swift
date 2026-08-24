@@ -232,9 +232,11 @@ public extension LandformKind {
     }
 }
 
-public extension TreeSpecies {
-    /// A juniper is scrub; everything else in the wood is a trunk.
+public extension Tree {
+    /// Scrub is scrub; everything else in the wood is a trunk you can get
+    /// behind. Read off the **crown** rather than off one species by name, so a
+    /// new low-growing kind gives the cover it looks like it gives.
     var body: Cover.Body {
-        self == .juniper ? (.waist, .foliage) : (.overhead, .wood)
+        crown == .scrub ? (.waist, .foliage) : (.overhead, .wood)
     }
 }

@@ -13,15 +13,76 @@ import Foundation
 ///
 /// These pin the two halves of the floor that stops it: a stand that is never
 /// felled, and seed that is set fast enough to matter.
+/// **The book of trees, held against the game that plants them.**
+@Suite("Every kind of tree is a real tree")
+struct FloraContentTests {
+
+    @Test("Every species names a crown the canvas can draw")
+    func crownsAreDrawable() throws {
+        let registry = try GameDataRegistry.bundled()
+        #expect(!registry.flora.isEmpty, "flora.json loaded nothing")
+        // `Crown` is a closed set because each case is a piece of drawing that
+        // exists; decoding an unknown one would silently fall back to a
+        // broadleaf and a conifer would come out as a bush.
+        for (id, def) in registry.flora {
+            #expect(FloraDefinition.Crown.allCases.contains(def.crown),
+                    "\(id) wears a crown nobody draws")
+        }
+    }
+
+    @Test("Every species grows somewhere, and every biome grows something")
+    func nothingIsStranded() throws {
+        let registry = try GameDataRegistry.bundled()
+        for (id, def) in registry.flora {
+            #expect(!def.biomes.isEmpty, "\(id) is named by no biome, so it grows nowhere")
+        }
+        for biome in registry.biomes.keys {
+            #expect(!registry.flora(inBiome: biome).isEmpty,
+                    "\(biome) has no tree in the book")
+        }
+    }
+
+    @Test("Every species has a colour to be drawn in")
+    func everySpeciesIsPainted() throws {
+        let registry = try GameDataRegistry.bundled()
+        // `scenery.json` holds the seasonal palette, keyed by the same id. A
+        // species with no entry falls back to `SceneryDefinition.plain`, which
+        // is a grey tree — the sort of silent default that ships broken content.
+        for id in registry.flora.keys {
+            #expect(registry.scenery[id] != nil,
+                    "\(id) has no seasonal colour in scenery.json")
+        }
+    }
+
+    @Test("The frozen table agrees with the book it was frozen from")
+    func legacyAgreesWithContent() throws {
+        let registry = try GameDataRegistry.bundled()
+        for legacy in LegacyTreeSpecies.allCases {
+            guard let def = registry.tree(legacy.rawValue) else {
+                Issue.record("\(legacy.rawValue) is in the frozen table and not in flora.json")
+                continue
+            }
+            #expect(def.maturityTicks == legacy.maturityTicks,
+                    "\(legacy.rawValue) matures differently in the two")
+            #expect(def.timber == legacy.timber,
+                    "\(legacy.rawValue) yields differently in the two")
+            #expect(def.crown == legacy.crown,
+                    "\(legacy.rawValue) is drawn differently in the two")
+        }
+    }
+}
+
 @Suite("A wood the colony cannot fell to nothing")
 struct WoodChainTests {
 
-    static func wood(_ count: Int, growth: Double, species: TreeSpecies = .birch) -> [Tree] {
+    static let registry = try! GameDataRegistry.bundled()
+
+    static func wood(_ count: Int, growth: Double, species: String = "birch") -> [Tree] {
         (0..<count).map { i in
             Tree(id: i, species: species,
                  position: LocalPoint(x: 0.1 + Double(i % 20) * 0.04,
                                       y: 0.1 + Double(i / 20) * 0.04),
-                 age: Int(Double(species.maturityTicks) * growth))
+                 age: Int(Double(LegacyTreeSpecies(rawValue: species)?.maturityTicks ?? 2000) * growth))
         }
     }
 
@@ -69,7 +130,7 @@ struct WoodChainTests {
         let pass = LaborEngine.staffingInterval * 5
         for tick in stride(from: 0, to: 3000, by: pass) {
             m = FloraEngine.advanceOneTick(m, by: pass)
-            m = FloraEngine.reseeded(m, mapSeed: 4242, tick: tick)
+            m = FloraEngine.reseeded(m, mapSeed: 4242, tick: tick, registry: Self.registry)
         }
         let bearing = m.trees.filter { $0.growth >= FloraEngine.bearingGrowth }.count
         #expect(m.trees.count > 30, "only \(m.trees.count) trees after fifty years")

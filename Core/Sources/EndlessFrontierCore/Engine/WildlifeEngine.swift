@@ -182,7 +182,7 @@ public enum WildlifeEngine {
             // half of that fix; the seed stand is what keeps parents alive to
             // make it possible.
             if tick % (LaborEngine.staffingInterval * 5) == 0 {
-                map = FloraEngine.reseeded(map, mapSeed: mapSeed, tick: tick)
+                map = FloraEngine.reseeded(map, mapSeed: mapSeed, tick: tick, registry: registry)
                 // And the **rock** opens, which had no equivalent at all: an
                 // outcrop is broken up and gone, so a valley's stone, clay and
                 // ore were laid down once and could only run down. Keks's save

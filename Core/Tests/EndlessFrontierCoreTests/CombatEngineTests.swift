@@ -115,7 +115,7 @@ struct CombatEngineTests {
                 storage: [.food: 400], storageCapacity: .uniform(999))
             s.localMap = LocalMapGenerator.generate(
                 mapSeed: 3, regionID: UUID(uuidString: "EEEEEEEE-3333-0000-0000-000000000002")!,
-                biome: nil)
+                biome: nil, registry: reg)
             for tick in 0..<600 {
                 s = WildlifeEngine.advanceOneTick(s, registry: reg, tick: tick,
                                                   era: .earlySettlement, mapSeed: 3)

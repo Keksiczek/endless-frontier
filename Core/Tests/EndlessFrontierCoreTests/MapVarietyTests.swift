@@ -30,7 +30,7 @@ struct MapVarietyTests {
         // The whole *composition*, not just where things landed.
         let shapes = Set((0..<25).map { seed -> String in
             let map = LocalMapGenerator.generate(
-                mapSeed: UInt64(seed) &* 0x9E37_79B9, regionID: region, biome: biome)
+                mapSeed: UInt64(seed) &* 0x9E37_79B9, regionID: region, biome: biome, registry: reg)
             let counts = LocalResourceKind.allCases.map { kind in
                 "\(kind.rawValue):\(map.nodes.count { $0.kind == kind })"
             }
@@ -46,7 +46,7 @@ struct MapVarietyTests {
         for seed in 0..<20 {
             let map = LocalMapGenerator.generate(
                 mapSeed: UInt64(seed) &* 0x2545_F491, regionID: region,
-                biome: reg.biome("forest"))
+                biome: reg.biome("forest"), registry: reg)
             #expect(map.nodes.contains { $0.kind == .forest },
                     "forest map \(seed) has no wood at all")
         }
@@ -55,8 +55,8 @@ struct MapVarietyTests {
     @Test("The same seed still grows the same valley")
     func varietyStaysDeterministic() throws {
         let reg = try registry()
-        let a = LocalMapGenerator.generate(mapSeed: 777, regionID: region, biome: reg.biome("forest"))
-        let b = LocalMapGenerator.generate(mapSeed: 777, regionID: region, biome: reg.biome("forest"))
+        let a = LocalMapGenerator.generate(mapSeed: 777, regionID: region, biome: reg.biome("forest"), registry: reg)
+        let b = LocalMapGenerator.generate(mapSeed: 777, regionID: region, biome: reg.biome("forest"), registry: reg)
         #expect(a.nodes.map(\.kind) == b.nodes.map(\.kind))
         #expect(a.trees == b.trees)
         #expect(a.rocks == b.rocks)
@@ -71,7 +71,7 @@ struct MapVarietyTests {
         let reg = try registry()
         for seed in 0..<10 {
             let map = LocalMapGenerator.generate(
-                mapSeed: UInt64(seed) &* 0x9E37, regionID: region, biome: reg.biome("coast"))
+                mapSeed: UInt64(seed) &* 0x9E37, regionID: region, biome: reg.biome("coast"), registry: reg)
             #expect(map.shore != nil, "coast map \(seed) has no shore")
         }
     }
@@ -81,7 +81,7 @@ struct MapVarietyTests {
         let reg = try registry()
         for id in ["forest", "mountains", "desert", "tundra", "plains"] {
             let map = LocalMapGenerator.generate(
-                mapSeed: 4242, regionID: region, biome: reg.biome(id))
+                mapSeed: 4242, regionID: region, biome: reg.biome(id), registry: reg)
             #expect(map.shore == nil, "\(id) grew a coastline")
         }
     }
@@ -91,7 +91,7 @@ struct MapVarietyTests {
         let reg = try registry()
         let sides = Set((0..<30).compactMap { seed in
             LocalMapGenerator.generate(mapSeed: UInt64(seed) &* 0x2545_F491,
-                                       regionID: region, biome: reg.biome("coast")).shore?.side
+                                       regionID: region, biome: reg.biome("coast"), registry: reg).shore?.side
         })
         #expect(sides.count > 1, "every coast faces the same way")
     }
@@ -103,7 +103,7 @@ struct MapVarietyTests {
         let reg = try registry()
         for seed in 0..<12 {
             let map = LocalMapGenerator.generate(
-                mapSeed: UInt64(seed) &* 0x85EB_CA6B, regionID: region, biome: reg.biome("coast"))
+                mapSeed: UInt64(seed) &* 0x85EB_CA6B, regionID: region, biome: reg.biome("coast"), registry: reg)
             guard let shore = map.shore else { continue }
             for node in map.nodes {
                 #expect(!shore.isWater(node.position), "a \(node.kind) is in the sea")
@@ -184,9 +184,9 @@ struct MapVarietyTests {
     func hazardReachesTheWildlife() throws {
         let reg = try registry()
         let calm = LocalMapGenerator.generate(mapSeed: 3, regionID: region,
-                                              biome: reg.biome("plains"), hazard: 0)
+                                              biome: reg.biome("plains"), hazard: 0, registry: reg)
         let wild = LocalMapGenerator.generate(mapSeed: 3, regionID: region,
-                                              biome: reg.biome("plains"), hazard: 8)
+                                              biome: reg.biome("plains"), hazard: 8, registry: reg)
         #expect(wild.wildlife.predatorPressure > calm.wildlife.predatorPressure,
                 "a frontier valley was exactly as safe as the homeland")
     }
@@ -198,7 +198,7 @@ struct MapVarietyTests {
         let reg = try registry()
         func stone(_ biomeID: String) -> Double {
             let map = LocalMapGenerator.generate(mapSeed: 21, regionID: region,
-                                                 biome: reg.biome(biomeID))
+                                                 biome: reg.biome(biomeID), registry: reg)
             let nodes = map.nodes.filter { $0.kind == .stone }
             return nodes.isEmpty ? 0 : nodes.reduce(0) { $0 + $1.capacity } / Double(nodes.count)
         }
@@ -211,7 +211,7 @@ struct MapVarietyTests {
         let reg = try registry()
         func field(_ biomeID: String) -> Double {
             let map = LocalMapGenerator.generate(mapSeed: 21, regionID: region,
-                                                 biome: reg.biome(biomeID))
+                                                 biome: reg.biome(biomeID), registry: reg)
             let nodes = map.nodes.filter { $0.kind == .field }
             return nodes.isEmpty ? 0 : nodes.reduce(0) { $0 + $1.capacity } / Double(nodes.count)
         }
@@ -221,7 +221,7 @@ struct MapVarietyTests {
     @Test("Poor country is poor, never barren", arguments: ["desert", "tundra", "mountains"])
     func affinityIsClamped(biomeID: String) throws {
         let reg = try registry()
-        let map = LocalMapGenerator.generate(mapSeed: 8, regionID: region, biome: reg.biome(biomeID))
+        let map = LocalMapGenerator.generate(mapSeed: 8, regionID: region, biome: reg.biome(biomeID), registry: reg)
         for node in map.nodes {
             #expect(node.capacity > 0, "a hostile biome must not put a hole in the map")
             #expect(node.amount == node.capacity)
@@ -245,7 +245,7 @@ struct MapVarietyTests {
         // Same seed, same region — only the country differs.
         func cast(_ biomeID: String) -> Set<LocalPOIKind> {
             Set(LocalMapGenerator.generate(mapSeed: 4, regionID: region,
-                                           biome: reg.biome(biomeID)).pois.map(\.kind))
+                                           biome: reg.biome(biomeID), registry: reg).pois.map(\.kind))
         }
         let casts = ["mountains", "desert", "coast", "forest"].map(cast)
         #expect(Set(casts).count > 1, "every map used to hold the identical six")
@@ -256,7 +256,7 @@ struct MapVarietyTests {
         let reg = try registry()
         let casts = (0..<12).map { seed in
             Set(LocalMapGenerator.generate(mapSeed: UInt64(seed), regionID: region,
-                                           biome: reg.biome("plains")).pois.map(\.kind))
+                                           biome: reg.biome("plains"), registry: reg).pois.map(\.kind))
         }
         #expect(Set(casts).count > 1)
     }
@@ -269,7 +269,7 @@ struct MapVarietyTests {
         func springs(_ biomeID: String) -> Int {
             (0..<80).count { seed in
                 LocalMapGenerator.generate(mapSeed: UInt64(seed) &* 0x2545,
-                                           regionID: region, biome: reg.biome(biomeID))
+                                           regionID: region, biome: reg.biome(biomeID), registry: reg)
                     .pois.contains { $0.kind == .spring }
             }
         }
@@ -282,7 +282,7 @@ struct MapVarietyTests {
         func caves(_ biomeID: String) -> Int {
             (0..<80).count { seed in
                 LocalMapGenerator.generate(mapSeed: UInt64(seed) &* 0x2545,
-                                           regionID: region, biome: reg.biome(biomeID))
+                                           regionID: region, biome: reg.biome(biomeID), registry: reg)
                     .pois.contains { $0.kind == .cave }
             }
         }
@@ -294,9 +294,9 @@ struct MapVarietyTests {
     func generationIsDeterministic() throws {
         let reg = try registry()
         let a = LocalMapGenerator.generate(mapSeed: 77, regionID: region,
-                                           biome: reg.biome("tundra"), hazard: 4)
+                                           biome: reg.biome("tundra"), hazard: 4, registry: reg)
         let b = LocalMapGenerator.generate(mapSeed: 77, regionID: region,
-                                           biome: reg.biome("tundra"), hazard: 4)
+                                           biome: reg.biome("tundra"), hazard: 4, registry: reg)
         #expect(a == b)
     }
 }

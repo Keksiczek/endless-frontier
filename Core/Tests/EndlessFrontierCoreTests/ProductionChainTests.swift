@@ -128,7 +128,7 @@ struct ProductionChainTests {
                 index += 1
             }
         }
-        s.localMap = LocalMapGenerator.generate(mapSeed: 5, regionID: s.id, biome: reg.biome(biome))
+        s.localMap = LocalMapGenerator.generate(mapSeed: 5, regionID: s.id, biome: reg.biome(biome), registry: reg)
         return s
     }
 

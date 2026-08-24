@@ -4,6 +4,8 @@ import Testing
 
 @Suite("Local terrain & scenery")
 struct LocalTerrainTests {
+    static let registry = try! GameDataRegistry.bundled()
+
     private let region = UUID(uuidString: "00000000-0000-0000-0F0F-000000000001")!
     private func biome(_ id: String) -> BiomeDefinition {
         BiomeDefinition(id: id, name: LocalizedText(id.capitalized))
@@ -49,8 +51,8 @@ struct LocalTerrainTests {
 
     @Test("Biomes grow different landscapes")
     func biomesDiffer() {
-        let forest = LocalMapGenerator.generate(mapSeed: 5, regionID: region, biome: biome("forest"))
-        let desert = LocalMapGenerator.generate(mapSeed: 5, regionID: region, biome: biome("desert"))
+        let forest = LocalMapGenerator.generate(mapSeed: 5, regionID: region, biome: biome("forest"), registry: Self.registry)
+        let desert = LocalMapGenerator.generate(mapSeed: 5, regionID: region, biome: biome("desert"), registry: Self.registry)
 
         // Forest is thick with trees; desert is not.
         let forestPines = forest.scenery.filter { $0.kind == .pine || $0.kind == .tree }.count
@@ -70,7 +72,7 @@ struct LocalTerrainTests {
 
     @Test("Scenery is seeded, bounded and on the map")
     func sceneryWellFormed() {
-        let map = LocalMapGenerator.generate(mapSeed: 11, regionID: region, biome: biome("plains"))
+        let map = LocalMapGenerator.generate(mapSeed: 11, regionID: region, biome: biome("plains"), registry: Self.registry)
         #expect(!map.scenery.isEmpty)
         #expect(map.scenery.count <= 80)
         for prop in map.scenery {
@@ -78,13 +80,13 @@ struct LocalTerrainTests {
             #expect((0...1).contains(prop.position.y))
             #expect(prop.scale >= 0.7 && prop.scale <= 1.3)
         }
-        let again = LocalMapGenerator.generate(mapSeed: 11, regionID: region, biome: biome("plains"))
+        let again = LocalMapGenerator.generate(mapSeed: 11, regionID: region, biome: biome("plains"), registry: Self.registry)
         #expect(again == map)
     }
 
     @Test("The map carries its biome and a terrain seed, and survives a save")
     func mapCarriesTerrain() throws {
-        let map = LocalMapGenerator.generate(mapSeed: 8, regionID: region, biome: biome("coast"))
+        let map = LocalMapGenerator.generate(mapSeed: 8, regionID: region, biome: biome("coast"), registry: Self.registry)
         #expect(map.biomeID == "coast")
         #expect(map.terrainSeed != 0)
         let restored = try JSONDecoder().decode(
@@ -108,6 +110,8 @@ struct LocalTerrainTests {
 /// that agrees on all of them has not really been added.
 @Suite("Every country the game ships is its own country")
 struct BiomeCoverageTests {
+    static let registry = try! GameDataRegistry.bundled()
+
     /// A biome id nothing knows, so `default:` is what answers for it.
     private static let unknown = "no_such_biome"
 
@@ -119,7 +123,7 @@ struct BiomeCoverageTests {
             LocalTerrain.weights(for: id).map { "\($0.0)\($0.1)" }.joined(),
             "\(LocalTerrain.sceneryMix(for: id).count)",
             "\(FloraFactory.wildTreeCount(for: id))",
-            FloraFactory.species(for: id).map(\.rawValue).joined(),
+            FloraFactory.species(for: id, registry: Self.registry).map { $0.id }.joined(),
             "\(StoneEngine.massifWeight(for: id))",
             "\(stone.iron)/\(stone.clay)",
             "\(RiverShape.chance(biomeID: id))",

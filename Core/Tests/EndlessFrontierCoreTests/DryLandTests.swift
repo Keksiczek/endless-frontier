@@ -25,7 +25,7 @@ struct DryLandTests {
             LocalMapGenerator.generate(
                 mapSeed: 4242,
                 regionID: UUID(uuidString: String(format: "00000000-0000-0000-C0A5-%012d", i))!,
-                biome: coast)
+                biome: coast, registry: registry)
         }
     }
 

@@ -41,6 +41,8 @@ public struct GameDataRegistry: Sendable {
     /// The colour of everything standing on the ground — crops, trees, rock,
     /// landforms. Presentation only, like the two banks beside it.
     public let scenery: [String: SceneryDefinition]
+    /// What kinds of tree there are. See `FloraDefinition`.
+    public let flora: [String: FloraDefinition]
 
     /// What the colony can move a body or a load with — mounts and vehicles,
     /// which are one thing. See `docs/MOUNTS_AND_VEHICLES.md`.
@@ -103,6 +105,7 @@ public struct GameDataRegistry: Sendable {
         motions: [MotionDefinition] = [],
         ground: [GroundDefinition] = [],
         scenery: [SceneryDefinition] = [],
+        flora: [FloraDefinition] = [],
         conveyances: [ConveyanceDefinition] = [],
         config: WorldConfig = .default,
         mapGen: MapGenConfig = .default
@@ -115,6 +118,7 @@ public struct GameDataRegistry: Sendable {
         self.motions = Dictionary(uniqueKeysWithValues: motions.map { ($0.id, $0) })
         self.ground = Dictionary(uniqueKeysWithValues: ground.map { ($0.id, $0) })
         self.scenery = Dictionary(uniqueKeysWithValues: scenery.map { ($0.id, $0) })
+        self.flora = Dictionary(uniqueKeysWithValues: flora.map { ($0.id, $0) })
         self.conveyances = Dictionary(uniqueKeysWithValues: conveyances.map { ($0.id, $0) })
         self.cookableMeals = cookable
         self.foodstuffs = Set(cookable.flatMap(\.ingredients.keys))
@@ -156,6 +160,18 @@ public struct GameDataRegistry: Sendable {
     /// Never nil: an unlisted thing is drawn a plain green rather than not at all.
     public func scenery(_ id: String) -> SceneryDefinition {
         scenery[id] ?? .plain
+    }
+
+    /// One kind of tree, by id.
+    public func tree(_ id: String) -> FloraDefinition? { flora[id] }
+
+    /// The species that grow in a given country, in a stable order.
+    ///
+    /// Empty when the content names none for that biome — the caller decides
+    /// what a valley with nothing in the book should do, rather than being
+    /// handed a silent default that hides a hole in the content.
+    public func flora(inBiome biomeID: String) -> [FloraDefinition] {
+        flora.values.filter { $0.biomes.contains(biomeID) }.sorted { $0.id < $1.id }
     }
 
     public func conveyance(_ id: String) -> ConveyanceDefinition? { conveyances[id] }
@@ -364,6 +380,7 @@ public struct GameDataRegistry: Sendable {
         let motions = try optional([MotionDefinition].self, "motions", else: [])
         let ground = try optional([GroundDefinition].self, "ground", else: [])
         let scenery = try optional([SceneryDefinition].self, "scenery", else: [])
+        let flora = try optional([FloraDefinition].self, "flora", else: [])
         let conveyances = try optional([ConveyanceDefinition].self, "conveyances", else: [])
         return GameDataRegistry(
             buildings: try load([BuildingDefinition].self, "buildings"),
@@ -381,6 +398,7 @@ public struct GameDataRegistry: Sendable {
             motions: motions,
             ground: ground,
             scenery: scenery,
+            flora: flora,
             conveyances: conveyances,
             config: try load(WorldConfig.self, "world-config"),
             mapGen: mapGen

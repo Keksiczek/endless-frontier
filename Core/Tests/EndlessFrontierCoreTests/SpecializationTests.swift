@@ -36,7 +36,7 @@ struct SpecializationTests {
         w.settlements[0].colony = ColonyBuilder.seededLayout(
             for: w.settlements[0].buildings, registry: registry)
         w.settlements[0].localMap = LocalMapGenerator.generate(
-            mapSeed: 11, regionID: w.settlements[0].id, biome: registry.biome("plains"))
+            mapSeed: 11, regionID: w.settlements[0].id, biome: registry.biome("plains"), registry: registry)
         w.settlements[0] = FarmEngine.reconcile(w.settlements[0], registry: registry)
         #expect(!w.settlements[0].localMap!.crops.isEmpty, "two farms have to have fields")
         for _ in 0..<ticks { w = ResourceLoop.advanceOneTick(w, registry: registry) }

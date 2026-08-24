@@ -32,7 +32,7 @@ struct ScoutingTests {
                 return p
             }
         settlement.localMap = LocalMapGenerator.generate(
-            mapSeed: 7, regionID: settlement.id, biome: Fixtures.defaultBiomes[0])
+            mapSeed: 7, regionID: settlement.id, biome: Fixtures.defaultBiomes[0], registry: registry)
         return WorldState(tick: 0, settlements: [settlement])
     }
 

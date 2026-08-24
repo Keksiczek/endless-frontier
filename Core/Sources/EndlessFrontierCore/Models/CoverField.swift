@@ -67,7 +67,7 @@ public struct CoverField: Sendable, Equatable {
         // the wood — which is the sort of thing that has to fall out of the
         // model rather than being written down twice.
         for tree in map.trees {
-            stamp(tree.position, tree.isMature ? tree.species.body : (.knee, .foliage))
+            stamp(tree.position, tree.isMature ? tree.body : (.knee, .foliage))
         }
         for rock in map.rocks { stamp(rock.position, (.waist, .stone)) }
         for prop in map.scenery { stamp(prop.position, prop.kind.body) }

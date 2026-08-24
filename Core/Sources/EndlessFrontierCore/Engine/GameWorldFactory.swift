@@ -54,7 +54,8 @@ public enum GameWorldFactory {
             localMap: LocalMapGenerator.generate(mapSeed: seed, regionID: homeland.id,
                                                  biome: registry.biome(homeland.biomeID),
                                                  flavor: homeland.kind,
-                                                 hazard: homeland.hazardLevel)
+                                                 hazard: homeland.hazardLevel,
+                                                 registry: registry)
         )
 
         // Put the founding colonists to work on the buildings that suit them.

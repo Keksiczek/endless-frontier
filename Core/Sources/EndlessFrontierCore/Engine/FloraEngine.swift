@@ -321,7 +321,7 @@ public enum FloraEngine {
     /// edges and a genuinely cleared corner stays cleared. Deterministic from
     /// `(mapSeed, tick)` per rule 3.
     public static func reseeded(
-        _ map: LocalMap, mapSeed: UInt64, tick: Int
+        _ map: LocalMap, mapSeed: UInt64, tick: Int, registry: GameDataRegistry
     ) -> LocalMap {
         guard map.usesEntityLand, map.trees.count < woodCeiling else { return map }
         var rng = SeededRNG(seed: mapSeed &* 0x9E37_79B9 &+ UInt64(bitPattern: Int64(tick)) &* 0x85EB_CA6B)
@@ -345,8 +345,14 @@ public enum FloraEngine {
         if windBorne, Double(updatedCount) >= Double(woodCeiling) * windBorneBelow {
             return map
         }
-        let palette = FloraFactory.species(for: map.biomeID)
-        if windBorne, palette.isEmpty { return map }
+        // **What this valley grows.** Empty means the book has no tree for this
+        // country *and* no tree at all — a registry built without `flora.json`,
+        // which every hand-made test registry is. Nothing can be seeded out of
+        // an empty book, and picking a species out of it by remainder is a
+        // divide by zero rather than a silent wrong answer, so this leaves
+        // rather than guessing.
+        let palette = FloraFactory.species(for: map.biomeID, registry: registry)
+        guard !palette.isEmpty else { return map }
         // A thin wood is mostly open ground, and open ground takes seed — from
         // its own few bearers and from over the valley wall alike.
         let thin = Double(updatedCount) < Double(woodCeiling) * windBorneBelow
@@ -358,14 +364,18 @@ public enum FloraEngine {
         for _ in 0..<wanted {
             guard updated.trees.count < woodCeiling else { break }
             let origin: LocalPoint
-            let species: TreeSpecies
+            let species: FloraDefinition
             if windBorne {
                 species = palette[Int(rng.nextUnit() * Double(palette.count)) % palette.count]
                 origin = LocalPoint(x: rng.nextUnit(), y: rng.nextUnit())
             } else {
                 let parent = bearers[Int(rng.nextUnit() * Double(bearers.count)) % bearers.count]
                 origin = parent.position
-                species = parent.species
+                // A seed falls from *this* tree, so it is this tree's kind —
+                // and if the content has since dropped that kind, the wood
+                // seeds from whatever the valley still grows.
+                species = registry.tree(parent.species)
+                    ?? palette[Int(rng.nextUnit() * Double(palette.count)) % palette.count]
             }
             // Close to the parent — a wood thickens at its edge rather than
             // teleporting a sapling across the valley.
@@ -396,11 +406,11 @@ public enum FloraEngine {
     /// Plants a sapling — the other half of felling, and the only way a wood
     /// that has been cleared ever comes back inside a colony's lifetime.
     public static func plant(
-        _ map: LocalMap, species: TreeSpecies, at position: LocalPoint
+        _ map: LocalMap, species: FloraDefinition, at position: LocalPoint
     ) -> LocalMap {
         var updated = map
         let nextID = (updated.trees.map(\.id).max() ?? -1) + 1
-        updated.trees.append(Tree(id: nextID, species: species, position: position, age: 0))
+        updated.trees.append(Tree(id: nextID, definition: species, position: position, age: 0))
         return updated
     }
 }

@@ -13,7 +13,13 @@ public enum LocalMapGenerator {
         regionID: UUID,
         biome: BiomeDefinition?,
         flavor: RegionKind = .wilderness,
-        hazard: Int = 0
+        hazard: Int = 0,
+        /// What kinds of tree exist. Required rather than optional: a valley
+        /// generated without the book would come up bare, and a map with no
+        /// wood on it is the one failure this whole file exists to avoid
+        /// (`FloraEngine.seedStand`). A silent default here would be a treeless
+        /// world that looks like a design choice.
+        registry: GameDataRegistry
     ) -> LocalMap {
         var rng = SeededRNG(seed: seed(mapSeed: mapSeed, regionID: regionID))
         let biomeID = biome?.id ?? "plains"
@@ -190,7 +196,8 @@ public enum LocalMapGenerator {
         // the exact valley they had.
         let woodCentres = nodes.filter { $0.kind == .forest }.map(\.position)
         let trees = FloraFactory.woods(around: woodCentres, biomeID: biomeID,
-                                       shore: shore, river: river, rng: &rng)
+                                       shore: shore, river: river,
+                                       registry: registry, rng: &rng)
         let outcropSites = nodes
             .filter { $0.kind == .stone || $0.kind == .ironOre || $0.kind == .clay
                        || $0.kind == .coal || $0.kind == .oilSeep }

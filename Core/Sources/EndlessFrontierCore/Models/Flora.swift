@@ -14,18 +14,24 @@ import Foundation
 /// A kind of tree. Traits live on the species — a Flyweight, the role
 /// `ThingDef` plays in RimWorld — so a `Tree` instance stays small enough to
 /// have thousands of.
-public enum TreeSpecies: String, Codable, Sendable, CaseIterable {
-    case pine, oak, birch, spruce
-    // Four species meant every wood in the world was drawn from the same short
-    // hand, and three of the four are conifers or near enough to read alike at
-    // canvas size. These four are chosen for *contrast*, not for count: a beech
-    // is a slow broadleaf worth felling, a willow is fast and belongs to wet
-    // ground, a juniper is scrub that survives where nothing else does, and a
-    // poplar is a quick column by the water.
-    case beech, willow, juniper, poplar
+/// **What saves written before flora was data are carrying.**
+///
+/// Species used to be this enum with five hand-written tables hanging off it,
+/// and a `Tree` stored the case. They are `flora.json` now (`FloraDefinition`),
+/// so a ninth kind of tree is a JSON entry rather than Swift in six files —
+/// but every colony already on disk has `"species": "oak"` and no numbers
+/// beside it, and `Tree.init(from:)` has no registry to look them up in.
+///
+/// So these eight are **frozen**. Nothing is ever added here: no save can
+/// contain a species that did not exist when it was written, so a new one has
+/// nothing to migrate. This is a snapshot of history, not a second source of
+/// truth — `flora.json` is the authority for every tree the game plants from
+/// now on, and `ContentTests` holds the two in agreement for the eight that
+/// appear in both.
+enum LegacyTreeSpecies: String, CaseIterable {
+    case pine, oak, birch, spruce, beech, willow, juniper, poplar
 
-    /// Timber a full-grown one yields when felled.
-    public var timber: Double {
+    var timber: Double {
         switch self {
         case .oak: return 32
         case .beech: return 30
@@ -33,16 +39,11 @@ public enum TreeSpecies: String, Codable, Sendable, CaseIterable {
         case .poplar: return 18
         case .birch: return 16
         case .willow: return 14
-        // Scrub, not timber. A juniper is worth the axe only if there is
-        // nothing else standing, which is exactly the tundra's problem.
         case .juniper: return 7
         }
     }
 
-    /// In-game ticks from sapling to full grown. An oak is a lifetime; a birch
-    /// is a decade — so a felled oak forest is a real loss and a birch stand
-    /// comes back.
-    public var maturityTicks: Int {
+    var maturityTicks: Int {
         switch self {
         case .oak: return 4200
         case .beech: return 3800
@@ -55,31 +56,13 @@ public enum TreeSpecies: String, Codable, Sendable, CaseIterable {
         }
     }
 
-    /// How much cold it will take before it stops growing, in °C.
-    public var hardiness: Double {
+    var crown: FloraDefinition.Crown {
         switch self {
-        // Nothing else stands this high or this far north.
-        case .juniper: return -46
-        case .spruce: return -40
-        case .pine: return -32
-        case .birch: return -28
-        case .poplar: return -26
-        case .willow: return -24
-        case .beech: return -20
-        case .oak: return -18
-        }
-    }
-
-    public var displayName: LocalizedText {
-        switch self {
-        case .pine: return LocalizedText(values: [.en: "Pine", .cs: "Borovice"])
-        case .oak: return LocalizedText(values: [.en: "Oak", .cs: "Dub"])
-        case .birch: return LocalizedText(values: [.en: "Birch", .cs: "Bříza"])
-        case .spruce: return LocalizedText(values: [.en: "Spruce", .cs: "Smrk"])
-        case .beech: return LocalizedText(values: [.en: "Beech", .cs: "Buk"])
-        case .willow: return LocalizedText(values: [.en: "Willow", .cs: "Vrba"])
-        case .juniper: return LocalizedText(values: [.en: "Juniper", .cs: "Jalovec"])
-        case .poplar: return LocalizedText(values: [.en: "Poplar", .cs: "Topol"])
+        case .pine, .spruce: return .conifer
+        case .juniper: return .scrub
+        case .poplar: return .column
+        case .willow: return .weeping
+        case .oak, .birch, .beech: return .broadleaf
         }
     }
 }
@@ -87,7 +70,8 @@ public enum TreeSpecies: String, Codable, Sendable, CaseIterable {
 /// One tree standing on the local map.
 public struct Tree: Codable, Sendable, Equatable, Identifiable {
     public let id: Int
-    public let species: TreeSpecies
+    /// Which kind of tree this is — a `FloraDefinition` id.
+    public let species: String
     public let position: LocalPoint
     /// Age in world ticks.
     public var age: Int
@@ -95,25 +79,87 @@ public struct Tree: Codable, Sendable, Equatable, Identifiable {
     /// work is banked in the tree, not in whoever swung the axe.
     public var chopped: Double
 
-    public init(id: Int, species: TreeSpecies, position: LocalPoint,
-                age: Int = 0, chopped: Double = 0) {
+    // MARK: - What this tree is, carried on the tree
+
+    /// Ticks from sapling to full grown, and timber a full-grown one yields.
+    ///
+    /// **Copied onto the tree when it is planted**, rather than looked up.
+    /// `growth` and `timberYield` are read in the middle of felling, sorting
+    /// and drawing — dozens of times a tick and thousands of times a frame —
+    /// and they have always been pure functions of the tree. Handing them a
+    /// registry would mean threading one through `FloraEngine.fell`, every
+    /// test that stands a tree up, and the canvas. A tree knows how big it
+    /// gets, the way an animal knows how big it gets.
+    public let maturityTicks: Int
+    public let timber: Double
+    /// The silhouette it is drawn with, so the canvas needs no registry either.
+    public let crown: FloraDefinition.Crown
+
+    /// A tree named rather than described.
+    ///
+    /// The numbers fall back to the **frozen** table (`LegacyTreeSpecies`) for
+    /// the eight kinds that predate `flora.json`, so a call site that names one
+    /// of them gets exactly what it always got. Everything the game plants goes
+    /// through `init(id:definition:position:)` and reads the book — a species
+    /// the content added has no entry here and could not be named this way
+    /// without silently coming out twenty timber and two thousand ticks.
+    public init(id: Int, species: String, position: LocalPoint,
+                age: Int = 0, chopped: Double = 0,
+                maturityTicks: Int? = nil, timber: Double? = nil,
+                crown: FloraDefinition.Crown? = nil) {
+        let legacy = LegacyTreeSpecies(rawValue: species)
         self.id = id
         self.species = species
         self.position = position
         self.age = age
         self.chopped = chopped
+        self.maturityTicks = max(1, maturityTicks ?? legacy?.maturityTicks ?? 2000)
+        self.timber = timber ?? legacy?.timber ?? 20
+        self.crown = crown ?? legacy?.crown ?? .broadleaf
+    }
+
+    /// One of a kind the content describes.
+    public init(id: Int, definition: FloraDefinition, position: LocalPoint,
+                age: Int = 0, chopped: Double = 0) {
+        self.init(id: id, species: definition.id, position: position,
+                  age: age, chopped: chopped,
+                  maturityTicks: definition.maturityTicks,
+                  timber: definition.timber, crown: definition.crown)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, species, position, age, chopped, maturityTicks, timber, crown
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(Int.self, forKey: .id)
+        species = try c.decode(String.self, forKey: .species)
+        position = try c.decode(LocalPoint.self, forKey: .position)
+        age = try c.decodeIfPresent(Int.self, forKey: .age) ?? 0
+        chopped = try c.decodeIfPresent(Double.self, forKey: .chopped) ?? 0
+        // A tree planted before species were data carries only its name. The
+        // frozen table is what it meant when it was written — see
+        // `LegacyTreeSpecies`.
+        let legacy = LegacyTreeSpecies(rawValue: species)
+        maturityTicks = max(1, try c.decodeIfPresent(Int.self, forKey: .maturityTicks)
+                            ?? legacy?.maturityTicks ?? 2000)
+        timber = try c.decodeIfPresent(Double.self, forKey: .timber)
+            ?? legacy?.timber ?? 20
+        crown = try c.decodeIfPresent(FloraDefinition.Crown.self, forKey: .crown)
+            ?? legacy?.crown ?? .broadleaf
     }
 
     /// 0…1, sapling to full grown.
     public var growth: Double {
-        let span = Double(max(1, species.maturityTicks))
+        let span = Double(max(1, maturityTicks))
         return min(1, Double(max(0, age)) / span)
     }
 
     public var isMature: Bool { growth >= 1 }
 
     /// What felling it right now would yield — a sapling is barely worth the axe.
-    public var timberYield: Double { species.timber * growth }
+    public var timberYield: Double { timber * growth }
 }
 
 /// What a rock is made of, and therefore what breaking it gives up.
@@ -194,7 +240,7 @@ public enum FloraFactory {
     /// A stand of trees around a point, thinning towards its edge so a wood has
     /// a dense heart and a ragged fringe rather than a hard circle.
     public static func stand(
-        _ species: TreeSpecies, count: Int, around centre: LocalPoint,
+        _ species: FloraDefinition, count: Int, around centre: LocalPoint,
         spread: Double, rng: inout SeededRNG
     ) -> [Tree] {
         (0..<max(0, count)).map { _ in
@@ -207,7 +253,7 @@ public enum FloraFactory {
             // A wood is not all one age: mostly grown, with saplings coming on.
             let maturity = 0.25 + rng.nextUnit() * 0.9
             let age = Int(Double(species.maturityTicks) * min(1.2, maturity))
-            return Tree(id: 0, species: species, position: p, age: age)
+            return Tree(id: 0, definition: species, position: p, age: age)
         }
     }
 
@@ -218,9 +264,16 @@ public enum FloraFactory {
     public static func woods(
         around forests: [LocalPoint], biomeID: String,
         shore: ShoreShape? = nil, river: RiverShape? = nil,
+        registry: GameDataRegistry,
         rng: inout SeededRNG
     ) -> [Tree] {
-        let palette = species(for: biomeID)
+        let palette = species(for: biomeID, registry: registry)
+        // A book with no trees in it stands up a bare valley rather than
+        // crashing on a remainder. Loud in the one place it matters — the
+        // content test holds `flora.json` and the biome list together — and
+        // silent here, where the only caller with an empty book is a test
+        // registry built by hand.
+        guard !palette.isEmpty else { return [] }
         var trees: [Tree] = []
 
         /// Nothing grows in the sea, and nothing grows in the channel.
@@ -281,19 +334,19 @@ public enum FloraFactory {
         }
     }
 
-    /// Which trees this country grows. Deliberately coarse — the biome ids the
-    /// content ships are few, and an unknown one gets the mixed default.
-    public static func species(for biomeID: String) -> [TreeSpecies] {
-        switch biomeID {
-        case "tundra", "taiga", "alpine": return [.spruce, .pine, .juniper]
-        case "mountains": return [.spruce, .juniper, .pine]
-        case "desert", "savanna": return [.juniper, .pine]
-        case "temperate_forest", "forest": return [.oak, .beech, .birch, .pine]
-        // Wet ground and a shoreline grow what likes its feet wet.
-        case "coast": return [.willow, .poplar, .birch]
-        case "wetlands": return [.willow, .birch, .poplar]
-        default: return [.oak, .birch, .poplar, .willow, .pine]
-        }
+    /// Which trees this country grows.
+    ///
+    /// Read off `flora.json` rather than a `switch`, so a species added to the
+    /// content grows somewhere on the day it ships. A biome the content names
+    /// no tree for falls back to everything that will stand the cold: an empty
+    /// palette is a valley with no wood in it, which is a content hole and not
+    /// a design.
+    public static func species(
+        for biomeID: String, registry: GameDataRegistry
+    ) -> [FloraDefinition] {
+        let named = registry.flora(inBiome: biomeID)
+        guard named.isEmpty else { return named }
+        return registry.flora.values.sorted { $0.id < $1.id }
     }
 
     /// The outcrops a fresh map stands up, on the ground the stone, iron and

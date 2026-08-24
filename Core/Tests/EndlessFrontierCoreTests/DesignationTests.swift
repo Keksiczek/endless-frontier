@@ -21,9 +21,9 @@ struct DesignationTests {
                            exploredCells: Set(0..<(LocalMap.gridColumns * LocalMap.gridRows)),
                            terrainSeed: 7, usesEntityLand: true)
         map.trees = (0..<trees).map { i in
-            Tree(id: i, species: .oak,
+            Tree(id: i, species: "oak",
                  position: LocalPoint(x: 0.2 + Double(i) * 0.1, y: 0.3),
-                 age: TreeSpecies.oak.maturityTicks)
+                 age: LegacyTreeSpecies.oak.maturityTicks)
         }
         map.rocks = (0..<rocks).map { i in
             Rock(id: i, kind: .granite,
@@ -81,9 +81,13 @@ struct DesignationTests {
     /// nothing.
     @Test("The axe goes into the tree that was marked, not the biggest one")
     func fellingFollowsTheMark() {
-        var map = valley(trees: 5)
-        // Make the last tree the runt, and mark it.
-        map.trees[4].age = TreeSpecies.oak.maturityTicks / 3
+        // A wood with something to spare. `FloraEngine.seedStand` keeps a stand
+        // of bearing trees back whatever the colony wants, so a valley of five
+        // has *no* unmarked tree the axes may touch — and the unmarked half of
+        // this test would be measuring the floor rather than the mark.
+        var map = valley(trees: FloraEngine.seedStand + 5)
+        // Make the fifth tree the runt, and mark it.
+        map.trees[4].age = LegacyTreeSpecies.oak.maturityTicks / 3
         let biggest = map.trees.max { $0.timberYield < $1.timberYield }?.id
         #expect(biggest != 4)
         let unmarked = FloraEngine.fell(map, loggers: 1)

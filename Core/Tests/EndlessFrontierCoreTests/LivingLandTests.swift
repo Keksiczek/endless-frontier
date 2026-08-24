@@ -25,12 +25,14 @@ private func animal(_ species: AnimalSpecies, id: Int, age: Int = 100,
 
 @Suite("A forest is trees, and a rock is a body with ore in it")
 struct FloraTests {
+    static let registry = try! GameDataRegistry.bundled()
+
 
     @Test("A tree grows from sapling to full over its species' lifetime")
     func treesGrow() {
-        let sapling = Tree(id: 0, species: .oak, position: LocalPoint(x: 0.5, y: 0.5), age: 0)
-        let grown = Tree(id: 1, species: .oak, position: LocalPoint(x: 0.5, y: 0.5),
-                         age: TreeSpecies.oak.maturityTicks)
+        let sapling = Tree(id: 0, species: "oak", position: LocalPoint(x: 0.5, y: 0.5), age: 0)
+        let grown = Tree(id: 1, species: "oak", position: LocalPoint(x: 0.5, y: 0.5),
+                         age: LegacyTreeSpecies.oak.maturityTicks)
         #expect(sapling.growth == 0)
         #expect(grown.isMature)
         #expect(grown.timberYield > sapling.timberYield)
@@ -38,13 +40,13 @@ struct FloraTests {
 
     @Test("A birch comes back inside a lifetime; an oak does not")
     func speciesDifferInPatience() {
-        #expect(TreeSpecies.birch.maturityTicks < TreeSpecies.oak.maturityTicks)
-        #expect(TreeSpecies.oak.timber > TreeSpecies.birch.timber)
+        #expect(LegacyTreeSpecies.birch.maturityTicks < LegacyTreeSpecies.oak.maturityTicks)
+        #expect(LegacyTreeSpecies.oak.timber > LegacyTreeSpecies.birch.timber)
     }
 
     @Test("Ageing the wood is the only thing a quiet tick does to it")
     func ticksAgeTheWood() {
-        let map = mapWith(trees: [Tree(id: 0, species: .pine,
+        let map = mapWith(trees: [Tree(id: 0, species: "pine",
                                        position: LocalPoint(x: 0.4, y: 0.4), age: 10)])
         let after = FloraEngine.advanceOneTick(map)
         #expect(after.trees[0].age == 11)
@@ -61,9 +63,9 @@ struct FloraTests {
     /// that counts, so whatever the test is really about still sorts first.
     static func stand(_ count: Int = FloraEngine.seedStand + 1) -> [Tree] {
         (0..<count).map { i in
-            Tree(id: 900 + i, species: .willow,
+            Tree(id: 900 + i, species: "willow",
                  position: LocalPoint(x: 0.05 + Double(i) * 0.002, y: 0.95),
-                 age: Int(Double(TreeSpecies.willow.maturityTicks) * FloraEngine.bearingGrowth) + 1)
+                 age: Int(Double(LegacyTreeSpecies.willow.maturityTicks) * FloraEngine.bearingGrowth) + 1)
         }
     }
 
@@ -71,9 +73,9 @@ struct FloraTests {
     /// is an object.
     @Test("Axe-work stays in the tree between shifts")
     func choppingIsBanked() {
-        var map = mapWith(trees: [Tree(id: 0, species: .pine,
+        var map = mapWith(trees: [Tree(id: 0, species: "pine",
                                        position: LocalPoint(x: 0.4, y: 0.4),
-                                       age: TreeSpecies.pine.maturityTicks)] + Self.stand())
+                                       age: LegacyTreeSpecies.pine.maturityTicks)] + Self.stand())
         map = FloraEngine.fell(map, loggers: 1).map
         let first = map.trees[0].chopped
         #expect(first > 0)
@@ -83,9 +85,9 @@ struct FloraTests {
 
     @Test("A tree that comes down is gone, and gives up its timber")
     func fellingRemovesTheTree() {
-        var map = mapWith(trees: [Tree(id: 0, species: .oak,
+        var map = mapWith(trees: [Tree(id: 0, species: "oak",
                                        position: LocalPoint(x: 0.4, y: 0.4),
-                                       age: TreeSpecies.oak.maturityTicks,
+                                       age: LegacyTreeSpecies.oak.maturityTicks,
                                        chopped: 0.99)] + Self.stand())
         let result = FloraEngine.fell(map, loggers: 1)
         map = result.map
@@ -97,9 +99,9 @@ struct FloraTests {
     @Test("Nobody fells a sapling while grown wood is standing")
     func saplingsAreLeftAlone() {
         let map = mapWith(trees: [
-            Tree(id: 0, species: .oak, position: LocalPoint(x: 0.4, y: 0.4), age: 0),
-            Tree(id: 1, species: .oak, position: LocalPoint(x: 0.5, y: 0.5),
-                 age: TreeSpecies.oak.maturityTicks)
+            Tree(id: 0, species: "oak", position: LocalPoint(x: 0.4, y: 0.4), age: 0),
+            Tree(id: 1, species: "oak", position: LocalPoint(x: 0.5, y: 0.5),
+                 age: LegacyTreeSpecies.oak.maturityTicks)
         ] + Self.stand())
         let after = FloraEngine.fell(map, loggers: 1).map
         #expect(after.trees.first { $0.id == 0 }?.chopped == 0)
@@ -135,8 +137,10 @@ struct FloraTests {
         var a = SeededRNG(seed: 4242)
         var b = SeededRNG(seed: 4242)
         let centres = [LocalPoint(x: 0.3, y: 0.3), LocalPoint(x: 0.7, y: 0.6)]
-        let first = FloraFactory.woods(around: centres, biomeID: "temperate_forest", rng: &a)
-        let second = FloraFactory.woods(around: centres, biomeID: "temperate_forest", rng: &b)
+        let first = FloraFactory.woods(around: centres, biomeID: "temperate_forest",
+                                        registry: Self.registry, rng: &a)
+        let second = FloraFactory.woods(around: centres, biomeID: "temperate_forest",
+                                         registry: Self.registry, rng: &b)
         #expect(!first.isEmpty)
         #expect(first == second)
     }
@@ -146,8 +150,8 @@ struct FloraTests {
         var rng = SeededRNG(seed: 7)
         let trees = FloraFactory.woods(
             around: [LocalPoint(x: 0.3, y: 0.3), LocalPoint(x: 0.6, y: 0.6)],
-            biomeID: "forest", rng: &rng)
-        #expect(Set(trees.map(\.id)).count == trees.count)
+            biomeID: "forest", registry: Self.registry, rng: &rng)
+        #expect(Set(trees.map { $0.id }).count == trees.count)
     }
 }
 

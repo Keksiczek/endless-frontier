@@ -61,7 +61,8 @@ public enum ExpansionEngine {
             localMap: LocalMapGenerator.generate(mapSeed: s.mapSeed, regionID: regionID,
                                                  biome: registry.biome(state.regions[regionIndex].biomeID),
                                                  flavor: state.regions[regionIndex].kind,
-                                                 hazard: state.regions[regionIndex].hazardLevel)
+                                                 hazard: state.regions[regionIndex].hazardLevel,
+                                                 registry: registry)
         )
         for pawn in outpost.pawns {
             outpost = ColonyBuilder.autoAssign(outpost, pawnID: pawn.id, registry: registry)

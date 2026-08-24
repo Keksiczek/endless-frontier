@@ -302,11 +302,32 @@ public enum AnimalEngine {
             // one is gone. Stretching it over the whole think was what made the
             // wild a still life.
             let leftAt = WorldClock(tick: tick, step: 0).absoluteStep
-            let speed = animal.activity == .fleeing ? flight : amble
-            animal.walk = WalkPath(
-                from: from, to: animal.position, leftAt: leftAt,
-                arrivesAt: leftAt + WalkPace.steps(
-                    for: SiegeField.distance(from, animal.position), pace: speed))
+            // **How long the stride takes is the whole question.**
+            //
+            // Keks, watching the valley: *"zvířata se teď po mapě nepohybují."*
+            // They did — for about a second and a half out of every twenty real
+            // minutes. A think is `thinkInterval` ticks and a tick is two real
+            // minutes, so there are eighty action steps between decisions; an
+            // ambling beast covered its `amble` in **one** of them and stood
+            // perfectly still for the other seventy-nine. Rule 34 in its usual
+            // shape: the distance was right, the unit the eye judges it in was
+            // not.
+            //
+            // So a grazing beast spends its whole think walking, which is what
+            // grazing *is* — a head down and a slow drift across the grass. A
+            // frightened one keeps the burst: a bolt that took twenty minutes
+            // would not be a bolt, and that is the fault the burst was written
+            // to fix in the first place.
+            let stepsToNextThink = thinkInterval * WorldClock.actionStepsPerTick
+            let crossing = SiegeField.distance(from, animal.position)
+            let arrivesAt: Int
+            if animal.activity == .fleeing {
+                arrivesAt = leftAt + WalkPace.steps(for: crossing, pace: flight)
+            } else {
+                arrivesAt = leftAt + stepsToNextThink
+            }
+            animal.walk = WalkPath(from: from, to: animal.position,
+                                   leftAt: leftAt, arrivesAt: arrivesAt)
             moved.append(animal)
         }
 

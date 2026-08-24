@@ -310,6 +310,30 @@ gives as its `work` — or the ask the canvas makes will never carry it.""",
         # …and `AgentMotion.Activity` learned `riding` the same way.
         "new_values": {"serves_activities": ("riding",)},
     },
+    "flora": {
+        "file": "flora.json",
+        "brief": """One **kind of tree**. Everything about a species that is not its colour —
+the colour lives in `scenery.json` under the same id, and both are needed
+before a tree can be drawn.
+
+`crown` is the silhouette the canvas draws it with and it is a **closed set**:
+`conifer` (stacked skirts, keeps its needles), `broadleaf` (lobed crown, bare in
+winter), `scrub` (wider than tall, evergreen), `column` (tall and narrow),
+`weeping` (a crown that falls, for wet ground). A species asking for anything
+else is a tree that is not there.
+
+`maturityTicks` is sapling to full grown — an oak is 4200 and a willow 1100, so
+a felled oak wood is a real loss and a willow stand comes back. `timber` is what
+a full-grown one yields felled; scrub is single digits and the best broadleaves
+are around thirty. `hardiness` is how much cold it takes in °C, negative:
+a juniper survives −46 and an oak stops at −18.
+
+`biomes` must name at least one, and it decides where the species actually
+grows. Look at what the existing eight cover before adding another — a ninth
+conifer for the taiga is less use than the first thing that will grow in a
+desert.""",
+        "new_fields": (),
+    },
     "scenery": {
         "file": "scenery.json",
         "brief": """The colour of one thing standing on the ground — a crop, a tree, a

@@ -44,16 +44,25 @@ struct HuntTests {
             Issue.record("a beast moved without leaving a leg behind")
             return
         }
-        // **A beast walks its stride and then stops.** It used to be stretched
-        // over the whole think — ten world ticks, twenty real minutes — which
-        // made a grazing deer a statue and, worse, made a *bolting* one flee
-        // for twenty minutes. How far a think moves an animal and how fast it
-        // moves are two different questions (`WalkPace`, rule 34), and this is
-        // the second one: the crossing takes as long as walking that far takes.
+        // **How far a think moves a beast and how fast it moves are two
+        // different questions** (`WalkPace`, rule 34) — and the answer is not
+        // the same for a graze and a bolt.
+        //
+        // This used to demand that *every* stride be shorter than the think,
+        // which fixed a bolt that fled for twenty minutes and broke the other
+        // ninety-nine per cent of the wild: a grazing beast covered its amble
+        // in **one** of the eighty action steps between decisions and stood
+        // still for the rest. Keks, looking at a valley: *"zvířata se teď po
+        // mapě nepohybují."* They were moving for a second and a half in every
+        // twenty real minutes, which is a still life with a technicality.
+        //
+        // So a graze fills its think — a head down and a slow drift is what
+        // grazing *is* — and the burst is what this test is really about. The
+        // bolt is pinned separately, in `WildMotionTests`.
         let legSteps = walk.arrivesAt - walk.leftAt
         #expect(legSteps >= 1)
-        #expect(legSteps < AnimalEngine.thinkInterval * WorldClock.actionStepsPerTick,
-                "the beast is still smearing one stride over the whole think")
+        #expect(legSteps <= AnimalEngine.thinkInterval * WorldClock.actionStepsPerTick,
+                "a stride outlasts the think that started it")
         let start = Double(walk.leftAt)
         #expect(walk.position(at: start + Double(legSteps) * 0.25) != walk.from,
                 "a quarter of the way in, still on the spot")

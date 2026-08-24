@@ -4,21 +4,25 @@ import Testing
 
 @Suite("Local map generation")
 struct LocalMapTests {
+    /// The book the generator plants out of. A valley cannot be stood up
+    /// without it — see `LocalMapGenerator.generate`.
+    static let registry = try! GameDataRegistry.bundled()
+
     private let region = UUID(uuidString: "00000000-0000-0000-0A0A-000000000001")!
 
     @Test("Generation is deterministic for the same seed and region")
     func deterministic() {
-        let a = LocalMapGenerator.generate(mapSeed: 99, regionID: region, biome: nil)
-        let b = LocalMapGenerator.generate(mapSeed: 99, regionID: region, biome: nil)
+        let a = LocalMapGenerator.generate(mapSeed: 99, regionID: region, biome: nil, registry: Self.registry)
+        let b = LocalMapGenerator.generate(mapSeed: 99, regionID: region, biome: nil, registry: Self.registry)
         #expect(a == b)
     }
 
     @Test("Different seeds or regions produce different maps")
     func varies() {
-        let base = LocalMapGenerator.generate(mapSeed: 1, regionID: region, biome: nil)
-        let otherSeed = LocalMapGenerator.generate(mapSeed: 2, regionID: region, biome: nil)
+        let base = LocalMapGenerator.generate(mapSeed: 1, regionID: region, biome: nil, registry: Self.registry)
+        let otherSeed = LocalMapGenerator.generate(mapSeed: 2, regionID: region, biome: nil, registry: Self.registry)
         let otherRegion = LocalMapGenerator.generate(
-            mapSeed: 1, regionID: UUID(uuidString: "00000000-0000-0000-0B0B-000000000002")!, biome: nil)
+            mapSeed: 1, regionID: UUID(uuidString: "00000000-0000-0000-0B0B-000000000002")!, biome: nil, registry: Self.registry)
         #expect(base != otherSeed)
         #expect(base != otherRegion)
     }
@@ -33,7 +37,7 @@ struct LocalMapTests {
     /// everywhere" and "nowhere" being one typo apart.
     @Test("A generated map has the deposits its country holds, full and on dry land")
     func depositsWellFormed() {
-        let map = LocalMapGenerator.generate(mapSeed: 7, regionID: region, biome: nil)
+        let map = LocalMapGenerator.generate(mapSeed: 7, regionID: region, biome: nil, registry: Self.registry)
         let mix = LocalMapGenerator.depositMix(for: "plains")
         let expected: [LocalResourceKind: Int] = [
             .field: mix.fields, .forest: mix.forests, .stone: mix.stone,
@@ -75,7 +79,7 @@ struct LocalMapTests {
     /// the country plausibly holds.
     @Test("Landmarks are a handful, all different, and on dry land")
     func pois() {
-        let map = LocalMapGenerator.generate(mapSeed: 7, regionID: region, biome: nil)
+        let map = LocalMapGenerator.generate(mapSeed: 7, regionID: region, biome: nil, registry: Self.registry)
         #expect(LocalMapGenerator.poiCountRange.contains(map.pois.count))
         #expect(Set(map.pois.map(\.kind)).count == map.pois.count, "no map holds the same place twice")
         #expect(Set(map.pois.map(\.id)).count == map.pois.count, "ids must be unique — they key the UI")
@@ -86,7 +90,7 @@ struct LocalMapTests {
 
     @Test("The settlement centre starts revealed, the far edges do not")
     func fogOfWar() {
-        let map = LocalMapGenerator.generate(mapSeed: 7, regionID: region, biome: nil)
+        let map = LocalMapGenerator.generate(mapSeed: 7, regionID: region, biome: nil, registry: Self.registry)
         #expect(map.isExplored(LocalPoint(x: 0.5, y: 0.5)))
         #expect(!map.isExplored(LocalPoint(x: 0.02, y: 0.02)))
         #expect(map.exploredFraction > 0 && map.exploredFraction < 1)
@@ -94,7 +98,7 @@ struct LocalMapTests {
 
     @Test("Revealing around a point uncovers cells and discovers a hidden POI")
     func revealDiscoversPOIs() {
-        var map = LocalMapGenerator.generate(mapSeed: 7, regionID: region, biome: nil)
+        var map = LocalMapGenerator.generate(mapSeed: 7, regionID: region, biome: nil, registry: Self.registry)
         // POIs near the centre are already revealed at founding; take one that
         // still lies out in the fog.
         guard let index = map.pois.firstIndex(where: { !$0.discovered }) else {
@@ -112,8 +116,8 @@ struct LocalMapTests {
     func biomeShapesDeposits() {
         let mountains = BiomeDefinition(id: "mountains", name: "Mountains")
         let plains = BiomeDefinition(id: "plains", name: "Plains")
-        let rocky = LocalMapGenerator.generate(mapSeed: 5, regionID: region, biome: mountains)
-        let fertile = LocalMapGenerator.generate(mapSeed: 5, regionID: region, biome: plains)
+        let rocky = LocalMapGenerator.generate(mapSeed: 5, regionID: region, biome: mountains, registry: Self.registry)
+        let fertile = LocalMapGenerator.generate(mapSeed: 5, regionID: region, biome: plains, registry: Self.registry)
 
         #expect(rocky.nodes.filter { $0.kind == .stone }.count
                 > fertile.nodes.filter { $0.kind == .stone }.count)
@@ -131,7 +135,7 @@ struct LocalMapTests {
 
     @Test("Local map survives a save round-trip")
     func codableRoundTrip() throws {
-        let map = LocalMapGenerator.generate(mapSeed: 7, regionID: region, biome: nil)
+        let map = LocalMapGenerator.generate(mapSeed: 7, regionID: region, biome: nil, registry: Self.registry)
         let data = try JSONEncoder().encode(map)
         let restored = try JSONDecoder().decode(LocalMap.self, from: data)
         #expect(restored == map)

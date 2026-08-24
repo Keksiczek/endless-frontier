@@ -396,7 +396,7 @@ struct CraftOrderTests {
         s = ColonyBuilder.place(s, definitionID: "workshop",
                                 at: TileCoord(4, 4), registry: reg) ?? s
         s.localMap = LocalMapGenerator.generate(
-            mapSeed: 3, regionID: s.id, biome: reg.biome("plains"))
+            mapSeed: 3, regionID: s.id, biome: reg.biome("plains"), registry: reg)
 
         let idle = JobBoard.post(for: s, registry: reg)
         #expect(!idle.contains { $0.kind == .craftItem },

@@ -34,7 +34,7 @@ struct LocalPOIInteractionTests {
             return p
         }
         var map = LocalMapGenerator.generate(mapSeed: 11, regionID: seat,
-                                             biome: Fixtures.defaultBiomes[0])
+                                             biome: Fixtures.defaultBiomes[0], registry: registry)
         map.pois = [LocalPOI(id: 1, kind: kind, position: position, discovered: discovered)]
         settlement.localMap = map
         return WorldState(tick: tick, settlements: [settlement])

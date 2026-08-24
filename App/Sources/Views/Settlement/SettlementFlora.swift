@@ -74,12 +74,14 @@ enum SettlementFlora {
         let growth = CGFloat(tree.growth)
         let s = unit * 0.013 * (0.35 + growth * 0.95)
         // Evergreens keep their leaves; everything else stands bare in winter.
-        // Listing what *stays* rather than what drops means a species added
-        // later is opaque by default, which is the safer way round: a new
-        // conifer drawn bare is a bug you have to notice, a new broadleaf drawn
-        // bare is simply right.
-        let evergreen: Set<TreeSpecies> = [.pine, .spruce, .juniper]
-        let bare = season == .winter && !evergreen.contains(tree.species)
+        //
+        // Read off the **crown** rather than a list of species names, which is
+        // the same fix as the silhouette below it: a needle-bearing shape keeps
+        // its needles, whatever the species is called. A new conifer added to
+        // `flora.json` is green in January without anybody remembering to add
+        // it to a set here.
+        let evergreen: Set<FloraDefinition.Crown> = [.conifer, .scrub]
+        let bare = season == .winter && !evergreen.contains(tree.crown)
         let wood = Color(red: 0.34, green: 0.26, blue: 0.19)
         let leaf = canopyColour(tree.species, season: season, registry: registry)
 
@@ -97,8 +99,16 @@ enum SettlementFlora {
             p.addQuadCurve(to: trunkTop, control: CGPoint(x: c.x, y: c.y - s * 0.5))
         }, with: .color(wood), style: StrokeStyle(lineWidth: max(0.8, s * 0.22), lineCap: .round))
 
-        switch tree.species {
-        case .pine, .spruce:
+        // **The crown, not the species.**
+        //
+        // This switched on the eight species by name, so the five silhouettes
+        // the canvas can draw were reachable only by being one of eight enum
+        // cases — a ninth kind of tree would have come out as whatever the
+        // `default` was. Species are `flora.json` now and each one names the
+        // crown it wears, so a generated tree has a real shape on the day it
+        // ships (`FloraDefinition.Crown`).
+        switch tree.crown {
+        case .conifer:
             // A conifer: stacked skirts, narrowing to a point.
             let tiers = tree.growth < saplingGrowth ? 2 : 3
             for tier in 0..<tiers {
@@ -114,7 +124,7 @@ enum SettlementFlora {
                 context.fill(skirt, with: .color(leaf))
                 context.stroke(skirt, with: .color(Theme.bone.opacity(0.30)), lineWidth: 0.5)
             }
-        case .oak, .birch, .beech:
+        case .broadleaf:
             if bare {
                 // Winter: a bare crown of branches, which is why a birch wood
                 // reads as winter at a glance.
@@ -145,7 +155,7 @@ enum SettlementFlora {
                     with: .color(Theme.bone.opacity(0.26)), lineWidth: 0.5)
             }
 
-        case .juniper:
+        case .scrub:
             // Scrub: wider than it is tall, and it keeps its needles. Drawn low
             // so a tundra reads as a place where nothing grows *up*.
             for tier in 0..<2 {
@@ -161,7 +171,7 @@ enum SettlementFlora {
                 context.stroke(skirt, with: .color(Theme.bone.opacity(0.24)), lineWidth: 0.45)
             }
 
-        case .poplar:
+        case .column:
             // A column. The whole point of a poplar on a canvas this size is
             // the silhouette — tall and narrow, so a line of them along a river
             // reads as a line of them and not as a hedge.
@@ -187,7 +197,7 @@ enum SettlementFlora {
                 context.stroke(crown, with: .color(Theme.bone.opacity(0.24)), lineWidth: 0.5)
             }
 
-        case .willow:
+        case .weeping:
             // Weeping: a low round crown with strands hanging out of it. Belongs
             // to wet ground, and says so without a label.
             if !bare {
@@ -229,9 +239,9 @@ enum SettlementFlora {
     /// in autumn and an evergreen states nothing, so the wood changes *around*
     /// the conifers instead of all at once. Adding a species is an entry and a
     /// drawing routine, not a third place to remember.
-    private static func canopyColour(_ species: TreeSpecies, season: Season,
+    private static func canopyColour(_ species: String, season: Season,
                                      registry: GameDataRegistry) -> Color {
-        let (r, g, b) = registry.scenery(species.rawValue).colour(in: season)
+        let (r, g, b) = registry.scenery(species).colour(in: season)
         return Color(red: r, green: g, blue: b)
     }
 

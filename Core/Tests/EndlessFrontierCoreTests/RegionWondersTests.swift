@@ -6,6 +6,8 @@ import Testing
 /// generator, interacted with as sites, and flavouring their local chunk.
 @Suite("Region wonders")
 struct RegionWondersTests {
+    static let book = try! GameDataRegistry.bundled()
+
     private func registry() throws -> GameDataRegistry { try GameDataRegistry.bundled() }
 
     @Test("The generator can roll both wonders")
@@ -35,7 +37,7 @@ struct RegionWondersTests {
             biomeID: "plains", explorationState: .fullyExplored))
 
         guard let (after, outcome) = SiteEngine.interact(
-            world, regionID: world.regions.last!.id, registry: reg) else {
+            world, regionID: world.regions.last!.id, registry: Self.book) else {
             Issue.record("sanctuary site refused interaction")
             return
         }
@@ -57,7 +59,7 @@ struct RegionWondersTests {
         let before = world.settlements[0].storage
 
         guard let (after, outcome) = SiteEngine.interact(
-            world, regionID: world.regions.last!.id, registry: reg) else {
+            world, regionID: world.regions.last!.id, registry: Self.book) else {
             Issue.record("lost city refused interaction")
             return
         }
@@ -70,9 +72,9 @@ struct RegionWondersTests {
     @Test("A region's character flavours its local chunk — deterministically")
     func chunkFlavour() {
         let id = UUID(uuidString: "FFFFFFFF-0000-0000-0000-000000000003")!
-        let plain = LocalMapGenerator.generate(mapSeed: 9, regionID: id, biome: nil)
-        let city = LocalMapGenerator.generate(mapSeed: 9, regionID: id, biome: nil, flavor: .lostCity)
-        let holy = LocalMapGenerator.generate(mapSeed: 9, regionID: id, biome: nil, flavor: .sanctuary)
+        let plain = LocalMapGenerator.generate(mapSeed: 9, regionID: id, biome: nil, registry: Self.book)
+        let city = LocalMapGenerator.generate(mapSeed: 9, regionID: id, biome: nil, flavor: .lostCity, registry: Self.book)
+        let holy = LocalMapGenerator.generate(mapSeed: 9, regionID: id, biome: nil, flavor: .sanctuary, registry: Self.book)
 
         // A dead city stands in fallen pillars and hides more to find.
         let pillars = city.scenery.filter { $0.kind == .ruinPillar }.count
@@ -81,7 +83,7 @@ struct RegionWondersTests {
         // A sanctuary holds a second shrine.
         #expect(holy.pois.filter { $0.kind == .shrine }.count == 2)
         // Same seed, same flavour → same chunk. Surveying then settling agree.
-        let again = LocalMapGenerator.generate(mapSeed: 9, regionID: id, biome: nil, flavor: .lostCity)
+        let again = LocalMapGenerator.generate(mapSeed: 9, regionID: id, biome: nil, flavor: .lostCity, registry: Self.book)
         #expect(again == city)
     }
 
@@ -98,7 +100,7 @@ struct RegionWondersTests {
         var hauls: [Double] = []
         for run in 0..<SiteEngine.lostCityVisits {
             let before = world.settlements[0].storage[.materials]
-            guard let (after, _) = SiteEngine.interact(world, regionID: cityID, registry: reg) else {
+            guard let (after, _) = SiteEngine.interact(world, regionID: cityID, registry: Self.book) else {
                 Issue.record("run \(run + 1) refused — city closed too early")
                 return
             }
@@ -109,7 +111,7 @@ struct RegionWondersTests {
         }
         // Diminishing returns, and afterwards the site refuses a fourth run.
         #expect(hauls[0] > hauls[1] && hauls[1] > hauls[2])
-        #expect(SiteEngine.interact(world, regionID: cityID, registry: reg) == nil)
+        #expect(SiteEngine.interact(world, regionID: cityID, registry: Self.book) == nil)
     }
 
     @Test("Old map-gen JSON without wonder chances still decodes")

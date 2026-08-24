@@ -588,7 +588,10 @@ struct SettlementCanvasView: View {
 
     private func treeLabel(_ tree: Tree) -> String {
         let cs = AppStrings.language == .cs
-        let name = tree.species.displayName.resolve(AppStrings.language)
+        // The content's name for this kind of tree, and its own id if the
+        // book has since dropped it — a tapped tree always says something.
+        let name = registry.tree(tree.species)?.name.resolve(AppStrings.language)
+            ?? tree.species
         if tree.growth < SettlementFlora.saplingGrowth {
             return "\(name) · \(cs ? "semenáček" : "sapling")"
         }

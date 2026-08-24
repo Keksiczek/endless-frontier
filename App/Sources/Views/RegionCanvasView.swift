@@ -31,7 +31,8 @@ struct RegionCanvasView: View {
             regionID: region.id,
             biome: game.registry.biome(region.biomeID),
             flavor: region.kind,
-            hazard: region.hazardLevel)
+            hazard: region.hazardLevel,
+            registry: game.registry)
         m.reveal(around: LocalPoint(x: 0.5, y: 0.5), radius: 1.2)
         return m
     }
