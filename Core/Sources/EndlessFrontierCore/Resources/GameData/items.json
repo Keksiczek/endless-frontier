@@ -147,6 +147,10 @@
     "description": {
       "en": "Tough hides that turn the worst of the weather and the work.",
       "cs": "Vydělaný a sešitý. Vydrží víc než jednu zimu."
+    },
+    "armour": {
+      "material": "leather",
+      "coverage": "torso_arms"
     }
   },
   {
@@ -167,6 +171,11 @@
     "description": {
       "en": "Interlocking rings that keep a colonist whole through danger.",
       "cs": "Tisíce oček, každé zaklepané zvlášť."
+    },
+    "armour": {
+      "material": "mail",
+      "coverage": "torso_arms",
+      "helm": true
     }
   },
   {
@@ -187,6 +196,11 @@
     "description": {
       "en": "Heavy and protective — little gets through tempered steel.",
       "cs": "Tíha, kterou si člověk zvykne nosit, protože ho přežije."
+    },
+    "armour": {
+      "material": "plate",
+      "coverage": "full",
+      "helm": true
     }
   },
   {
@@ -211,6 +225,12 @@
     "description": {
       "en": "Armor of the old wardens — its bearer feels invincible.",
       "cs": "Plát z kovu, který nikdo v osadě neumí vyrobit."
+    },
+    "armour": {
+      "material": "plate",
+      "coverage": "full",
+      "helm": true,
+      "tint": 0.58
     }
   },
   {
@@ -636,6 +656,11 @@
     "description": {
       "en": "Woven fibre that stops what steel never could.",
       "cs": "Lehká tak, že se na ni zapomene — dokud není potřeba."
+    },
+    "armour": {
+      "material": "composite",
+      "coverage": "torso",
+      "tint": 0.28
     }
   },
   {
@@ -660,6 +685,12 @@
     "description": {
       "en": "Hydraulic muscle and armour plate — its wearer shrugs off the impossible.",
       "cs": "Nese břemeno za člověka a nechá mu záda."
+    },
+    "armour": {
+      "material": "powered",
+      "coverage": "full",
+      "helm": true,
+      "tint": 0.55
     }
   },
   {
@@ -684,6 +715,12 @@
     "description": {
       "en": "A walking fortress. Few threats in any era can touch its bearer.",
       "cs": "Chodí se v ní jako v domě, který se hýbe s vámi."
+    },
+    "armour": {
+      "material": "powered",
+      "coverage": "full",
+      "helm": true,
+      "tint": 0.05
     }
   },
   {
@@ -1550,6 +1587,11 @@
     "description": {
       "en": "Thick wool and wax keep the worst of the valley downpours at bay. A dry colonist is a happy colonist.",
       "cs": "Silná vlna a vosk odrazí ty nejhorší lijáky. Suchý osadník je šťastný osadník."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "mantle",
+      "tint": 0.11
     }
   },
   {
@@ -1885,6 +1927,11 @@
     "description": {
       "en": "Thick, hand-spun wool, dyed with local berries. Keeps the cold at bay during long nights.",
       "cs": "Tlustá, ručně spředená vlna, obarvená místními bobulemi. Chrání před chladem během dlouhých nocí."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "mantle",
+      "tint": 0.07
     }
   },
   {
@@ -2472,6 +2519,10 @@
     "description": {
       "en": "Roughly stitched leather strips, offering some protection against thorns and scrapes. Better than bare legs in the wilderness.",
       "cs": "Hrubě sešité kožené pásy, poskytující ochranu proti trnům a odřeninám. Lepší než holé nohy v divočině."
+    },
+    "armour": {
+      "material": "leather",
+      "coverage": "full"
     }
   },
   {
@@ -2837,6 +2888,10 @@
     "description": {
       "en": "Treated hide, sheds water surprisingly well. Keeps the chill out on long watches.",
       "cs": "Ošetřená kůže, překvapivě dobře odpuzuje vodu. Chrání před chladem během dlouhých hlídek."
+    },
+    "armour": {
+      "material": "hide",
+      "coverage": "mantle"
     }
   },
   {
@@ -3157,6 +3212,11 @@
     "description": {
       "en": "Thick leather mittens, lined with soft rabbit fur. Old Man Jorik swore by them during the harsh winters.",
       "cs": "Tlusté kožené palčáky, vyložené měkkou králičí kožešinou. Starý Jorik na ně nedal dopustit během krutých zim."
+    },
+    "armour": {
+      "material": "hide",
+      "coverage": "torso",
+      "tint": 0.06
     }
   },
   {
@@ -3241,6 +3301,11 @@
     "description": {
       "en": "Hand-knitted socks made from thick, unprocessed wool. Keep the feet warm even in the dampest conditions. A small comfort, but a welcome one for anyone tending fields like Old Man Grigor.",
       "cs": "Ručně pletené ponožky z hrubé, nezpracované vlny. Udrží nohy v teple i v nejvlhčích podmínkách. Malá útěcha, ale vítaná pro každého, kdo pracuje na polích jako stařec Grigor."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "torso",
+      "tint": 0.13
     }
   },
   {
@@ -3340,6 +3405,10 @@
     "description": {
       "en": "Simple footwear woven from tree bark. Keeps feet cool, but offers little protection from thorns or sharp stones.",
       "cs": "Jednoduchá obuv upletená z kůry. Udrží nohy v chladu, ale nabízí malou ochranu před trny nebo ostrými kameny."
+    },
+    "armour": {
+      "material": "wood",
+      "coverage": "torso"
     }
   },
   {
@@ -3413,6 +3482,11 @@
     "description": {
       "en": "A simple cap made from cured animal fur, offering decent warmth against the valley's chill winds. Elara says it keeps her ears from freezing during morning patrols.",
       "cs": "Jednoduchá čepice vyrobená z vydělané zvířecí kožešiny, poskytuje slušné teplo proti chladným větrům údolí. Elara říká, že jí to chrání uši před zmrznutím během ranních hlídek."
+    },
+    "armour": {
+      "material": "hide",
+      "coverage": "head",
+      "helm": true
     }
   },
   {
@@ -3552,6 +3626,12 @@
     "description": {
       "en": "Keeps the sun off your brow during long days in the fields.",
       "cs": "Chrání čelo před sluncem během dlouhých dnů na poli."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "head",
+      "helm": true,
+      "tint": 0.2
     }
   },
   {
@@ -3587,6 +3667,10 @@
     "description": {
       "en": "Protects hands from splinters and rough work. Favored by carpenters like Elias.",
       "cs": "Chrání ruce před třískami a hrubou prací. Oblíbené mezi tesaři, jako je Eliáš."
+    },
+    "armour": {
+      "material": "leather",
+      "coverage": "torso"
     }
   },
   {
@@ -3726,6 +3810,12 @@
     "description": {
       "en": "A wide-brimmed hat woven from river reeds, offering decent protection from the rain. Keeps one's spirits up even on a gloomy day.",
       "cs": "Klobouk s širokou krempou, upletený z říčního rákosu, poskytuje slušnou ochranu před deštěm. Udrží dobrou náladu i v pošmourný den."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "head",
+      "helm": true,
+      "tint": 0.22
     }
   },
   {
@@ -3747,6 +3837,10 @@
     "description": {
       "en": "A thick leather apron, scorched in places, offering protection from sparks and stray tools. Theron wears his every day.",
       "cs": "Zástěra z tlusté kůže, místy ožehnutá, chrání před jiskrami a zatoulanými nástroji. Theron ji nosí každý den."
+    },
+    "armour": {
+      "material": "leather",
+      "coverage": "torso"
     }
   },
   {
@@ -3917,6 +4011,10 @@
     "description": {
       "en": "Heavy gauntlets offering protection for the hands. Useful for handling hot metal or rough materials, cherished by the blacksmith.",
       "cs": "Těžké rukavice chrání ruce. Hodí se při práci s horkým kovem nebo drsnými materiály, kovář si jich váží."
+    },
+    "armour": {
+      "material": "leather",
+      "coverage": "torso_arms"
     }
   },
   {
@@ -4003,6 +4101,11 @@
     "description": {
       "en": "Roughly shaped bark, crudely stitched together to form a wide-brimmed hat. Keeps the rain out of one's eyes during a storm.",
       "cs": "Nahrubo tvarovaná kůra, sešitá do klobouku se širokou krempou. Chrání oči před deštěm během bouře."
+    },
+    "armour": {
+      "material": "wood",
+      "coverage": "head",
+      "helm": true
     }
   },
   {
@@ -4121,6 +4224,11 @@
     "description": {
       "en": "Knitted from rough valley wool, it offers decent protection from the cold winds. Keeps you warm.",
       "cs": "Upletená z hrubé údolní vlny, nabízí slušnou ochranu před studenými větry. Udrží tě v teple."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "torso",
+      "tint": 0.02
     }
   },
   {
@@ -4223,6 +4331,12 @@
     "description": {
       "en": "Woven from dried grasses, this hat protects against the harsh midday sun, making field work more bearable.",
       "cs": "Upletený ze sušených travin, tento klobouk chrání před ostrým poledním sluncem a usnadňuje práci na poli."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "head",
+      "helm": true,
+      "tint": 0.17
     }
   },
   {
@@ -4317,6 +4431,11 @@
     "description": {
       "en": "Soft rabbit fur sewn into warm mittens, perfect for cold valley mornings. Keeps hands nimble for work outside.",
       "cs": "Měkká králičí kožešina sešitá do teplých palčáků, ideální pro chladná údolní rána. Udrží ruce obratné pro práci venku."
+    },
+    "armour": {
+      "material": "hide",
+      "coverage": "torso",
+      "tint": 0.09
     }
   },
   {
@@ -4517,6 +4636,11 @@
     "description": {
       "en": "Rough fibers of nettle, woven into a simple tunic. Keeps the chill at bay, if a bit scratchy, especially during a cold night watch.",
       "cs": "Hrubá vlákna kopřivy, utkaná do jednoduché tuniky. Zahřeje, i když trochu škrábe, zvláště během chladné noční hlídky."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "torso_arms",
+      "tint": 0.3
     }
   },
   {
@@ -4609,6 +4733,10 @@
     "description": {
       "en": "Strips of raw hide wrapped around the lower legs. Offers basic protection from thorns and cold during long treks, especially for scout Elara.",
       "cs": "Pásy surové kůže omotané kolem lýtek. Nabízí základní ochranu před trním a chladem během dlouhých pochodů, zejména pro průzkumnici Elaru."
+    },
+    "armour": {
+      "material": "hide",
+      "coverage": "full"
     }
   },
   {
@@ -4747,6 +4875,11 @@
     "description": {
       "en": "Coarsely woven reeds layered to shed water. Not stylish, but it keeps you dry in a downpour.",
       "cs": "Nahrubo spletený rákos vrstvený tak, aby odváděl vodu. Není stylový, ale udrží vás v suchu za lijáku."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "mantle",
+      "tint": 0.24
     }
   },
   {
@@ -4861,6 +4994,10 @@
     "description": {
       "en": "Soft, well-worn hide sewn into simple footwear. Better than bare feet for long treks.",
       "cs": "Měkká, dobře nošená kůže sešitá do jednoduché obuvi. Lepší než bosé nohy na dlouhé cesty."
+    },
+    "armour": {
+      "material": "hide",
+      "coverage": "torso"
     }
   },
   {
@@ -4976,6 +5113,10 @@
     "description": {
       "en": "Simple strips of cured hide wrapped around the forearms, offering basic protection against scrapes and impacts during foraging or light combat. Gives a colonist peace of mind.",
       "cs": "Jednoduché pásy vyčiněné kůže omotané kolem předloktí, poskytující základní ochranu proti oděrkám a nárazům při sběru potravy nebo lehkém boji. Dává osadníkovi klid v duši."
+    },
+    "armour": {
+      "material": "leather",
+      "coverage": "torso_arms"
     }
   },
   {
@@ -5106,6 +5247,11 @@
     "description": {
       "en": "Carefully woven reeds and tough grasses shed water surprisingly well. Offers decent protection from light rain.",
       "cs": "Pečlivě utkané rákosí a odolné trávy překvapivě dobře odvádí vodu. Poskytuje slušnou ochranu před slabým deštěm."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "mantle",
+      "tint": 0.26
     }
   },
   {
@@ -5221,6 +5367,10 @@
     "description": {
       "en": "Roughly stitched pieces of cured hide, offering basic protection and warmth for hands in chilly weather.",
       "cs": "Nahrubo sešité kusy zpracované kůže, poskytující základní ochranu a teplo rukou v chladném počasí."
+    },
+    "armour": {
+      "material": "hide",
+      "coverage": "torso"
     }
   },
   {
@@ -5312,6 +5462,11 @@
     "description": {
       "en": "Made from the thickest parts of a winter bear hide, this hood offers excellent protection against the biting valley winds. Keeps one warm and focused.",
       "cs": "Ušitá z nejhuňatějších částí kůže zimního medvěda, tato kukla nabízí vynikající ochranu před kousavými větry údolí. Udrží člověka v teple a soustředěného."
+    },
+    "armour": {
+      "material": "hide",
+      "coverage": "head",
+      "helm": true
     }
   },
   {
@@ -5424,6 +5579,10 @@
     "description": {
       "en": "Bracers fashioned from several layers of tough animal hide, providing decent protection to the forearms during skirmishes or heavy work.",
       "cs": "Nátepníky zhotovené z několika vrstev tuhé zvířecí kůže, poskytující slušnou ochranu předloktí při šarvátkách nebo těžké práci."
+    },
+    "armour": {
+      "material": "hide",
+      "coverage": "torso_arms"
     }
   },
   {
@@ -5544,6 +5703,11 @@
     "description": {
       "en": "Coarsely spun wool, woven into a thick blanket. Provides warmth and comfort on cold nights.",
       "cs": "Hrubě spředená vlna utkaná do tlusté deky. Poskytuje teplo a pohodlí v chladných nocích."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "mantle",
+      "tint": 0.15
     }
   },
   {
@@ -5698,6 +5862,10 @@
     "description": {
       "en": "Rugged boots made from treated hide, keeping feet dry and warm through the valley's frequent downpours and marshy terrain.",
       "cs": "Robusní boty z upravené kůže, které udrží nohy v suchu a teple i v častých lijácích a v bažinatém terénu údolí."
+    },
+    "armour": {
+      "material": "hide",
+      "coverage": "torso"
     }
   },
   {
@@ -5837,6 +6005,12 @@
     "description": {
       "en": "A wide-brimmed hat woven from reeds, providing shade from the sun and light protection from brush. Eva wears hers on every trip into the woods.",
       "cs": "Klobouk s širokou krempou upletený z rákosu, poskytující stín před sluncem a lehkou ochranu před křovím. Eva ho nosí při každé výpravě do lesa."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "head",
+      "helm": true,
+      "tint": 0.21
     }
   },
   {
@@ -5898,6 +6072,11 @@
     "description": {
       "en": "Coarsely woven reeds provide some protection against light drizzle, keeping the chill away. Better than nothing, as old Jaromír always says.",
       "cs": "Nahrubo propletené rákosy poskytují ochranu před lehkým mrholením a brání prochladnutí. Lepší než nic, jak vždycky říká starý Jaromír."
+    },
+    "armour": {
+      "material": "cloth",
+      "coverage": "mantle",
+      "tint": 0.23
     }
   },
   {
@@ -6018,6 +6197,10 @@
     "description": {
       "en": "A heavy apron made from cured animal hide, providing good protection against sparks, spills, or accidental cuts in the workshop.",
       "cs": "Těžká zástěra vyrobená z vyčiněné zvířecí kůže, poskytující dobrou ochranu před jiskrami, rozlitými tekutinami nebo náhodnými řezy v dílně."
+    },
+    "armour": {
+      "material": "hide",
+      "coverage": "torso"
     }
   },
   {

@@ -2540,7 +2540,7 @@ enum SettlementRenderer {
                                             map: map, at: pose.position),
                                         variant: AgentMotion.motionVariant(for: pawn),
                                         building: AgentMotion.workBuilding(for: pawn, scene: scene)),
-                            context: &context)
+                            registry: registry, context: &context)
                     }
                     continue
                 }
@@ -2600,7 +2600,7 @@ enum SettlementRenderer {
                                         variant: AgentMotion.motionVariant(for: pawn),
                                         building: AgentMotion.workBuilding(for: pawn, scene: scene),
                                         conveyance: carriage),
-                context: &context)
+                registry: registry, context: &context)
         }
     }
 

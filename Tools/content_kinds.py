@@ -139,15 +139,44 @@ and the canvas drew all of them as the same six arrows.
   spread:     optional, how wide it throws, fraction of the map at the far end.
   blast:      only for `shell`, `grenade`, `rocket` — how far the burst reaches.
 
-A melee weapon states `projectile: none` and none of the rest.""",
+A melee weapon states `projectile: none` and none of the rest.
+
+**A worn thing is what it is made of.** Anything with `equipSlot: armor` states
+an `armour` block, for exactly the reason a weapon states `combat`: thirty-eight
+coats shipped with a name, a rarity and an effect and *nothing a drawing could
+read*, so a hide jerkin and a powered harness were the same figure in the same
+tunic. Three fields, because three is what a line-art person fourteen points
+tall can actually show.
+
+  material: cloth | hide | leather | wood | bone | bronze | mail | plate |
+            composite | powered
+            Decides how it is stroked: cloth is a soft fill, hide and leather
+            get a stitched seam, mail a mesh of rings, plate hard segments with
+            a highlight, powered a lit seam. It must match what the name and the
+            description say the thing is — a straw hat is `cloth`, not `plate`.
+  coverage: torso | torso_arms | full | head | mantle
+            How much of a person is inside it. A cuirass is `torso`, a mail
+            shirt `torso_arms`, a harness `full`, a hood or a hat `head`, a
+            cloak or a cape `mantle`. Gloves, boots, socks and scarves are
+            `torso` — they are worn, and there is no room to draw a mitten.
+  helm:     optional, true when something sits on the head over and above
+            `coverage`. Anything with `coverage: head` must set it.
+  tint:     optional, 0…1 round the colour wheel, for pieces whose material
+            does not already say their colour — dyed cloth, painted plate. Two
+            reed capes with different tints are two capes; two with none are one
+            cape drawn twice.""",
         "wants": "weapons that are not each other — a pistol, a rifle and a "
                  "shotgun differ in range, caliber and shots before they differ "
-                 "in damage; and the tools, clothing and trade goods an era is "
-                 "short of",
-        "new_fields": ("combat",),
+                 "in damage; worn things whose `armour` block says what they "
+                 "actually are; and the tools, clothing and trade goods an era "
+                 "is short of",
+        "new_fields": ("combat", "armour"),
         "new_values": {
             "projectile": ("none", "arrow", "bolt", "stone", "dart", "ball",
                            "bullet", "shot", "shell", "grenade", "rocket", "beam"),
+            "material": ("cloth", "hide", "leather", "wood", "bone", "bronze",
+                         "mail", "plate", "composite", "powered"),
+            "coverage": ("torso", "torso_arms", "full", "head", "mantle"),
         },
     },
     "recipes": {

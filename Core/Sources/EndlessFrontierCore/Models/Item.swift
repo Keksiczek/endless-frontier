@@ -257,6 +257,78 @@ public enum ItemEffect: Codable, Sendable, Equatable {
 }
 
 /// A data-defined item. Loaded from `items.json`.
+/// **What a piece of armour is made of, and how much of a person it covers.**
+///
+/// The mirror of `CombatProfile`, and it exists for the same reason. Keks,
+/// looking at his colonists: *"brnění taky, itemy taky… vše musí být i grafické
+/// a unikátní a vypadat tak co to je."* He is right, and the data was the
+/// reason: an armour item carried a name, a rarity, an effect and a
+/// description, and **nothing a drawing could read** — so thirty-nine
+/// different coats, from a hide jerkin to a powered harness, were all the same
+/// figure with the same tunic. Rule 47: nothing can be drawn out of a field
+/// that does not exist.
+///
+/// Three things, because three is what a line-art figure at fourteen points
+/// tall can actually show: what it is made of (which decides how it is
+/// stroked), how much of the body it wraps, and whether there is something on
+/// the head. Everything else — the segment count, the sheen, the collar — is
+/// derived from those in `SettlementFigures`, exactly as a building's whole
+/// look is derived in `StructureVariant`.
+///
+/// Absent on a piece nobody has described yet: the drawing falls back to what
+/// the item's rarity and its effects imply, so a new coat looks like *something*
+/// the day it is authored and like *itself* the day somebody says what it is.
+public struct ArmourProfile: Codable, Sendable, Equatable {
+
+    /// What it is made of. Decides the stroke: cloth drapes, mail is a mesh of
+    /// dots, plate is two or three hard segments with a highlight.
+    public enum Material: String, Codable, Sendable, CaseIterable {
+        case cloth, hide, leather, wood, bone, bronze, mail, plate, composite, powered
+    }
+
+    /// How much of a person is inside it.
+    public enum Coverage: String, Codable, Sendable, CaseIterable {
+        /// A jerkin, a cuirass — the trunk only.
+        case torso
+        /// …and sleeves down the arms.
+        case torsoArms = "torso_arms"
+        /// …and the legs: a full harness.
+        case full
+        /// A helm, a hood, a mask, and nothing else.
+        case head
+        /// A cloak or a mantle over the shoulders.
+        case mantle
+    }
+
+    public let material: Material
+    public let coverage: Coverage
+    /// Whether it comes with something on the head, over and above `coverage`.
+    public let helm: Bool
+    /// A tint, 0…1 round the colour wheel, for the pieces whose material does
+    /// not already say their colour (dyed cloth, painted plate). Nil takes the
+    /// material's own.
+    public let tint: Double?
+
+    public init(material: Material, coverage: Coverage = .torso,
+                helm: Bool = false, tint: Double? = nil) {
+        self.material = material
+        self.coverage = coverage
+        self.helm = helm
+        self.tint = tint
+    }
+
+    private enum CodingKeys: String, CodingKey { case material, coverage, helm, tint }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            material: try c.decode(Material.self, forKey: .material),
+            coverage: try c.decodeIfPresent(Coverage.self, forKey: .coverage) ?? .torso,
+            helm: try c.decodeIfPresent(Bool.self, forKey: .helm) ?? false,
+            tint: try c.decodeIfPresent(Double.self, forKey: .tint))
+    }
+}
+
 public struct ItemDefinition: Codable, Sendable, Identifiable, Equatable {
     public let id: String
     public let name: LocalizedText
@@ -273,12 +345,16 @@ public struct ItemDefinition: Codable, Sendable, Identifiable, Equatable {
     public let effects: [ItemEffect]
     /// How the item fights, when it can (weapons and weapon-slot tools).
     public let combat: CombatProfile?
+    /// What the item **looks like on a body**, when it is worn. See
+    /// `ArmourProfile`.
+    public let armour: ArmourProfile?
     public let description: LocalizedText
 
     public init(id: String, name: LocalizedText, rarity: ItemRarity, slot: ItemSlot,
                 substance: Cover.Substance? = nil,
                 equipSlot: EquipmentSlot? = nil, effects: [ItemEffect] = [],
-                combat: CombatProfile? = nil, description: LocalizedText = "") {
+                combat: CombatProfile? = nil, armour: ArmourProfile? = nil,
+                description: LocalizedText = "") {
         self.id = id
         self.name = name
         self.rarity = rarity
@@ -287,11 +363,13 @@ public struct ItemDefinition: Codable, Sendable, Identifiable, Equatable {
         self.equipSlot = equipSlot
         self.effects = effects
         self.combat = combat
+        self.armour = armour
         self.description = description
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, rarity, slot, substance, equipSlot, effects, combat, description
+        case id, name, rarity, slot, substance, equipSlot, effects, combat, armour
+        case description
     }
 
     public init(from decoder: Decoder) throws {
@@ -304,6 +382,7 @@ public struct ItemDefinition: Codable, Sendable, Identifiable, Equatable {
         equipSlot = try c.decodeIfPresent(EquipmentSlot.self, forKey: .equipSlot)
         effects = try c.decodeIfPresent([ItemEffect].self, forKey: .effects) ?? []
         combat = try c.decodeIfPresent(CombatProfile.self, forKey: .combat)
+        armour = try c.decodeIfPresent(ArmourProfile.self, forKey: .armour)
         description = try c.decodeIfPresent(LocalizedText.self, forKey: .description) ?? ""
     }
 }

@@ -329,6 +329,28 @@ def check(kind: str, draft: list) -> list[str]:
             for problem in effect_shape_problems(entry):
                 faults.append(f"{entry.get('id', '?')}: {problem}")
 
+    # A worn thing with nothing said about how it looks is content that loads
+    # and is then drawn as a guess — the same fault as a motion clip nothing
+    # selects, one layer up. The Swift falls back to rarity so a bare entry is
+    # not a crash, and that is exactly why it has to be caught here: it would
+    # never announce itself.
+    if kind == "items":
+        for entry in draft:
+            if not isinstance(entry, dict) or entry.get("equipSlot") != "armor":
+                continue
+            worn = entry.get("armour")
+            name = entry.get("id", "?")
+            if not isinstance(worn, dict):
+                faults.append(f"{name}: worn, and no `armour` block to draw it from")
+                continue
+            if "material" not in worn:
+                faults.append(f"{name}: `armour` with no material")
+            if worn.get("coverage") == "head" and not worn.get("helm"):
+                faults.append(f"{name}: covers the head and draws nothing on it")
+            tint = worn.get("tint")
+            if tint is not None and not (isinstance(tint, (int, float)) and 0 <= tint <= 1):
+                faults.append(f"{name}: tint {tint!r} is not a hue in 0…1")
+
     faults += malformed(draft)
     return faults
 

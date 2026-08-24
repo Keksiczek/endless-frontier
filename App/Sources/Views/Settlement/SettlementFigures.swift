@@ -35,6 +35,10 @@ enum SettlementFigures {
         // without the registry still draws a person; `.standing` is a body at
         // rest rather than a body that failed.
         motion: MotionDefinition = .standing,
+        /// What the content says. Needed only to look up what this colonist is
+        /// *wearing and carrying* — a body draws fine without it, which is why
+        /// it is optional rather than a new requirement on every call site.
+        registry: GameDataRegistry? = nil,
         context: inout GraphicsContext
     ) {
         var p = anchor
@@ -200,14 +204,29 @@ enum SettlementFigures {
             }
         }
 
-        // A blade at the hip — equipment you can *see*, on the hip away from
-        // the tool hand.
-        if pawn.equipment[.weapon] != nil {
-            context.stroke(Path { path in
-                path.move(to: CGPoint(x: p.x - 1.2 * scale * mirror, y: hipY + 0.2))
-                path.addLine(to: CGPoint(x: p.x - 2.6 * scale * mirror, y: hipY + 2.2 * scale))
-            }, with: .color(Color(red: 0.78, green: 0.80, blue: 0.86).opacity(alpha)),
-            lineWidth: 0.9 * scale)
+        // **What they are wearing**, over the tunic and under everything else.
+        //
+        // Drawn from the piece's own `ArmourProfile` — what it is made of, how
+        // much of them it wraps, whether there is anything on their head. Every
+        // coat in the game used to be this same figure in this same tunic, with
+        // one steel line at the hip standing in for the whole of a person's
+        // equipment.
+        if let worn = pawn.equipment[.armor], !worn.isBroken,
+           let def = registry?.item(worn.definitionID) {
+            armour(ArmourLook(def, quality: worn.quality),
+                   at: p, shoulderY: shoulderY, hipY: hipY, headY: headY,
+                   shoulder: shoulder, lean: lean, scale: scale, alpha: alpha,
+                   context: &context)
+        }
+
+        // A weapon at the hip — equipment you can *see*, on the side away from
+        // the tool hand, and **shaped like the weapon it is**: a knife rides
+        // short and steep, a longsword hangs the length of a thigh, a slung
+        // firearm crosses the back. One steel line stood for all eighty-two.
+        if let held = pawn.equipment[.weapon], !held.isBroken {
+            sheathed(registry?.item(held.definitionID)?.combat,
+                     at: p, hipY: hipY, shoulderY: shoulderY,
+                     mirror: mirror, scale: scale, alpha: alpha, context: &context)
         }
 
         // An elder's walking stick, planted ahead of them.
@@ -920,6 +939,320 @@ enum SettlementFigures {
                 p.addLine(to: CGPoint(x: bx, y: by))
                 p.addLine(to: CGPoint(x: bx + 2.4 * zoom, y: by - flap))
             }, with: .color(Theme.boneDim.opacity(0.55)), lineWidth: 0.8)
+        }
+    }
+
+    // MARK: - What they are wearing
+
+    /// **What a coat looks like, worked out from what it is.**
+    ///
+    /// The same move `WeaponLook` makes above: the difference between
+    /// thirty-eight coats falls out of their own fields rather than out of a
+    /// drawing apiece. `ArmourProfile.material` decides how it is stroked,
+    /// `coverage` decides how much of the body it wraps, and the *piece's*
+    /// quality decides how well it sits — a masterwork harness is trim where a
+    /// shoddy one is lumpy, which is the one thing a player can read at this
+    /// size that says somebody good made it.
+    ///
+    /// A piece with nothing authored still gets a look: its rarity stands in
+    /// for its material and it covers the trunk. So a coat added tomorrow is
+    /// drawn as *something* the day it exists and as *itself* the day somebody
+    /// says what it is.
+    struct ArmourLook {
+        let material: ArmourProfile.Material
+        let coverage: ArmourProfile.Coverage
+        let helm: Bool
+        let tint: Double?
+        /// How trim it sits, 0…1.
+        let fit: Double
+
+        init(_ def: ItemDefinition, quality: ItemQuality) {
+            if let stated = def.armour {
+                material = stated.material
+                coverage = stated.coverage
+                helm = stated.helm
+                tint = stated.tint
+            } else {
+                // Nothing authored. Rarity is the only honest signal of what a
+                // thing is likely made of, and it is better than drawing every
+                // undescribed coat as the same hide jerkin.
+                switch def.rarity {
+                case .common:    material = .cloth
+                case .uncommon:  material = .leather
+                case .rare:      material = .mail
+                case .epic:      material = .plate
+                case .legendary: material = .powered
+                }
+                coverage = .torso
+                helm = false
+                tint = nil
+            }
+            fit = min(1, max(0, Double(quality.index) / 3))
+        }
+
+        /// The colour the material is, before any tint.
+        var colour: Color {
+            switch material {
+            case .cloth:     return Color(red: 0.72, green: 0.68, blue: 0.58)
+            case .hide:      return Color(red: 0.55, green: 0.42, blue: 0.30)
+            case .leather:   return Color(red: 0.45, green: 0.31, blue: 0.20)
+            case .wood:      return Color(red: 0.60, green: 0.48, blue: 0.34)
+            case .bone:      return Color(red: 0.86, green: 0.84, blue: 0.76)
+            case .bronze:    return Color(red: 0.72, green: 0.53, blue: 0.28)
+            case .mail:      return Color(red: 0.68, green: 0.71, blue: 0.76)
+            case .plate:     return Color(red: 0.82, green: 0.85, blue: 0.90)
+            case .composite: return Color(red: 0.30, green: 0.33, blue: 0.36)
+            case .powered:   return Color(red: 0.52, green: 0.72, blue: 0.82)
+            }
+        }
+
+        /// How hard the material reads. Cloth is drawn soft and wide, plate
+        /// narrow and bright.
+        var weight: CGFloat {
+            switch material {
+            case .cloth:                     return 0.5
+            case .hide, .leather, .wood:     return 0.8
+            case .bone, .bronze:             return 1.0
+            case .mail:                      return 1.1
+            case .plate, .composite:         return 1.4
+            case .powered:                   return 1.6
+            }
+        }
+    }
+
+    /// Draws the coat over the tunic already painted underneath.
+    private static func armour(
+        _ look: ArmourLook, at p: CGPoint, shoulderY: CGFloat, hipY: CGFloat,
+        headY: CGFloat, shoulder: CGFloat, lean: CGFloat, scale: CGFloat,
+        alpha: Double, context: inout GraphicsContext
+    ) {
+        var body = look.colour
+        if let tint = look.tint {
+            // A dyed or painted piece keeps its material's weight and takes its
+            // own hue, so two reed capes of different tints are two capes.
+            body = Color(hue: tint, saturation: 0.34, brightness: 0.74)
+        }
+        let ink = body.opacity(alpha)
+        // A well-made piece sits close; a shoddy one stands off the body.
+        let slack = (1 - CGFloat(look.fit)) * 0.35 * scale
+
+        func trunk(_ topWidth: CGFloat, _ bottom: CGFloat) -> Path {
+            var path = Path()
+            path.move(to: CGPoint(x: p.x - topWidth + lean, y: shoulderY - slack))
+            path.addLine(to: CGPoint(x: p.x + topWidth + lean, y: shoulderY - slack))
+            path.addLine(to: CGPoint(x: p.x + 1.1 * scale + slack, y: bottom))
+            path.addLine(to: CGPoint(x: p.x - 1.1 * scale - slack, y: bottom))
+            path.closeSubpath()
+            return path
+        }
+
+        switch look.coverage {
+        case .mantle:
+            // A cloak hangs off the shoulders and falls clear of the body.
+            var cape = Path()
+            cape.move(to: CGPoint(x: p.x - shoulder - slack + lean, y: shoulderY - slack))
+            cape.addLine(to: CGPoint(x: p.x + shoulder + slack + lean, y: shoulderY - slack))
+            cape.addLine(to: CGPoint(x: p.x + 1.7 * scale, y: hipY + 1.1 * scale))
+            cape.addLine(to: CGPoint(x: p.x - 1.7 * scale, y: hipY + 1.1 * scale))
+            cape.closeSubpath()
+            context.fill(cape, with: .color(ink.opacity(alpha * 0.78)))
+        case .head:
+            break                                   // the helm below is the whole of it
+        case .torso:
+            context.fill(trunk(shoulder * 0.94, hipY), with: .color(ink))
+        case .torsoArms:
+            context.fill(trunk(shoulder * 0.94, hipY), with: .color(ink))
+            // Sleeves: a short stroke down each upper arm, so the coat reads as
+            // having arms in it rather than as a painted chest.
+            context.stroke(Path { path in
+                path.move(to: CGPoint(x: p.x - 1.3 * scale + lean * 0.6, y: shoulderY + 0.3))
+                path.addLine(to: CGPoint(x: p.x - 1.9 * scale, y: p.y - 0.2 * scale))
+                path.move(to: CGPoint(x: p.x + 1.3 * scale + lean * 0.6, y: shoulderY + 0.3))
+                path.addLine(to: CGPoint(x: p.x + 1.9 * scale, y: p.y - 0.2 * scale))
+            }, with: .color(ink), style: StrokeStyle(lineWidth: look.weight * 0.8 * scale,
+                                                     lineCap: .round))
+        case .full:
+            context.fill(trunk(shoulder * 0.94, hipY), with: .color(ink))
+            context.stroke(Path { path in
+                path.move(to: CGPoint(x: p.x - 1.3 * scale + lean * 0.6, y: shoulderY + 0.3))
+                path.addLine(to: CGPoint(x: p.x - 1.9 * scale, y: p.y - 0.2 * scale))
+                path.move(to: CGPoint(x: p.x + 1.3 * scale + lean * 0.6, y: shoulderY + 0.3))
+                path.addLine(to: CGPoint(x: p.x + 1.9 * scale, y: p.y - 0.2 * scale))
+                // Greaves, down to the shin.
+                path.move(to: CGPoint(x: p.x - 0.7 * scale, y: hipY))
+                path.addLine(to: CGPoint(x: p.x - 1.2 * scale, y: p.y + 3.4 * scale))
+                path.move(to: CGPoint(x: p.x + 0.7 * scale, y: hipY))
+                path.addLine(to: CGPoint(x: p.x + 1.2 * scale, y: p.y + 3.4 * scale))
+            }, with: .color(ink), style: StrokeStyle(lineWidth: look.weight * 0.8 * scale,
+                                                     lineCap: .round))
+        }
+
+        // What the material does on top of the shape. This is most of what
+        // tells a mail shirt from a plate cuirass at this size.
+        switch look.material {
+        case .mail:
+            // A mesh: three short rows of dots across the chest.
+            for row in 0..<3 {
+                let y = shoulderY + (hipY - shoulderY) * (0.25 + Double(row) * 0.25)
+                for column in -1...1 {
+                    let x = p.x + CGFloat(column) * 0.62 * scale
+                        + (row.isMultiple(of: 2) ? 0 : 0.3 * scale) + lean
+                    context.fill(Path(ellipseIn: CGRect(x: x - 0.16 * scale, y: y - 0.16 * scale,
+                                                        width: 0.32 * scale, height: 0.32 * scale)),
+                                 with: .color(Theme.ink.opacity(alpha * 0.4)))
+                }
+            }
+        case .plate, .bronze:
+            // Hard segments, and a highlight down one side of the breastplate.
+            context.stroke(Path { path in
+                for band in 1...2 {
+                    let y = shoulderY + (hipY - shoulderY) * Double(band) / 3
+                    path.move(to: CGPoint(x: p.x - 1.0 * scale + lean, y: y))
+                    path.addLine(to: CGPoint(x: p.x + 1.0 * scale + lean, y: y))
+                }
+            }, with: .color(Theme.ink.opacity(alpha * 0.35)), lineWidth: 0.3 * scale)
+            context.stroke(Path { path in
+                path.move(to: CGPoint(x: p.x - 0.5 * scale + lean, y: shoulderY + 0.3 * scale))
+                path.addLine(to: CGPoint(x: p.x - 0.5 * scale + lean, y: hipY - 0.3 * scale))
+            }, with: .color(.white.opacity(alpha * 0.5)), lineWidth: 0.32 * scale)
+        case .composite, .powered:
+            // Panels, and for a powered harness a lit seam — the one thing on a
+            // colonist that says *this age is not the last one*.
+            context.stroke(Path { path in
+                path.move(to: CGPoint(x: p.x - 0.9 * scale + lean, y: shoulderY + 0.8 * scale))
+                path.addLine(to: CGPoint(x: p.x + 0.9 * scale + lean, y: shoulderY + 0.8 * scale))
+            }, with: .color(Theme.ink.opacity(alpha * 0.45)), lineWidth: 0.34 * scale)
+            if look.material == .powered {
+                context.stroke(Path { path in
+                    path.move(to: CGPoint(x: p.x + 0.7 * scale + lean, y: shoulderY + 0.5 * scale))
+                    path.addLine(to: CGPoint(x: p.x + 0.7 * scale + lean, y: hipY - 0.4 * scale))
+                }, with: .color(Color(red: 0.55, green: 0.90, blue: 1.0).opacity(alpha * 0.85)),
+                lineWidth: 0.36 * scale)
+            }
+        case .hide, .leather, .wood, .bone:
+            // Stitching, or lashings: a seam down the middle that says somebody
+            // sewed this rather than forged it.
+            context.stroke(Path { path in
+                path.move(to: CGPoint(x: p.x + lean, y: shoulderY + 0.4 * scale))
+                path.addLine(to: CGPoint(x: p.x + lean, y: hipY - 0.3 * scale))
+            }, with: .color(Theme.ink.opacity(alpha * 0.32)),
+            style: StrokeStyle(lineWidth: 0.26 * scale, dash: [0.5 * scale, 0.5 * scale]))
+        case .cloth:
+            break                                   // a soft fill is the whole of it
+        }
+
+        // And whatever is on their head, over the hair.
+        if look.helm || look.coverage == .head {
+            let brim = look.material == .cloth ? 1.5 : 1.05
+            context.fill(Path(ellipseIn: CGRect(
+                x: p.x - brim * scale + lean, y: headY - 1.5 * scale,
+                width: brim * 2 * scale, height: 1.7 * scale)),
+                         with: .color(ink))
+            if look.material == .plate || look.material == .powered {
+                // A visor slit, which is what makes a helm read as a helm.
+                context.stroke(Path { path in
+                    path.move(to: CGPoint(x: p.x - 0.6 * scale + lean, y: headY - 0.5 * scale))
+                    path.addLine(to: CGPoint(x: p.x + 0.6 * scale + lean, y: headY - 0.5 * scale))
+                }, with: .color(Theme.ink.opacity(alpha * 0.7)), lineWidth: 0.3 * scale)
+            }
+        }
+    }
+
+    /// **The weapon at rest**, shaped like the weapon it is.
+    ///
+    /// A knife rides short and steep on the belt, a sword hangs the length of a
+    /// thigh, a polearm stands past the shoulder, and anything with a barrel is
+    /// slung across the back. Derived from the same `CombatProfile` the drawn
+    /// fighting arms read, so what a colonist carries at rest and what they
+    /// raise in a fight are the same weapon.
+    private static func sheathed(
+        _ profile: CombatProfile?, at p: CGPoint, hipY: CGFloat, shoulderY: CGFloat,
+        mirror: CGFloat, scale: CGFloat, alpha: Double, context: inout GraphicsContext
+    ) {
+        let iron = Color(red: 0.78, green: 0.80, blue: 0.86).opacity(alpha)
+        let wood = Color(red: 0.55, green: 0.44, blue: 0.31).opacity(alpha)
+        guard let profile else {
+            // Nothing said about it: the old single line, which is the right
+            // answer for "they have something and we do not know what".
+            context.stroke(Path { path in
+                path.move(to: CGPoint(x: p.x - 1.2 * scale * mirror, y: hipY + 0.2))
+                path.addLine(to: CGPoint(x: p.x - 2.6 * scale * mirror, y: hipY + 2.2 * scale))
+            }, with: .color(iron), lineWidth: 0.9 * scale)
+            return
+        }
+        let look = WeaponLook(profile)
+        let hip = CGPoint(x: p.x - 1.2 * scale * mirror, y: hipY + 0.2)
+
+        switch look.projectile {
+        case .ball, .bullet, .shot, .shell, .grenade, .rocket, .beam:
+            // Slung: a barrel across the back, from the off shoulder to the
+            // near hip, which is how a long arm is carried when it is not up.
+            let muzzle = CGPoint(x: p.x + 1.9 * scale * mirror, y: shoulderY - 0.6 * scale)
+            let butt = CGPoint(x: p.x - 1.6 * scale * mirror, y: hipY + 1.9 * scale)
+            context.stroke(Path { path in path.move(to: butt); path.addLine(to: muzzle) },
+                           with: .color(look.projectile == .beam ? iron : wood),
+                           style: StrokeStyle(lineWidth: (0.8 + 0.5 * CGFloat(look.heft)) * scale,
+                                              lineCap: .round))
+            // The strap it hangs on.
+            context.stroke(Path { path in
+                path.move(to: CGPoint(x: p.x + 1.1 * scale * mirror, y: shoulderY + 0.1))
+                path.addLine(to: CGPoint(x: p.x - 0.9 * scale * mirror, y: hipY + 0.4 * scale))
+            }, with: .color(wood.opacity(alpha * 0.6)), lineWidth: 0.3 * scale)
+        case .arrow, .bolt:
+            // A bow over the shoulder is a curve, not a line, and a quiver
+            // stands up behind it.
+            context.stroke(Path { path in
+                path.move(to: CGPoint(x: p.x - 0.4 * scale * mirror, y: shoulderY - 0.9 * scale))
+                path.addQuadCurve(
+                    to: CGPoint(x: p.x - 1.5 * scale * mirror, y: hipY + 1.8 * scale),
+                    control: CGPoint(x: p.x - 2.6 * scale * mirror, y: p.y - 0.2 * scale))
+            }, with: .color(wood), style: StrokeStyle(lineWidth: 0.6 * scale, lineCap: .round))
+            context.stroke(Path { path in
+                path.move(to: CGPoint(x: p.x + 0.9 * scale * mirror, y: shoulderY - 1.2 * scale))
+                path.addLine(to: CGPoint(x: p.x + 1.3 * scale * mirror, y: hipY + 0.2 * scale))
+            }, with: .color(iron), style: StrokeStyle(lineWidth: 0.7 * scale, lineCap: .round))
+        case .stone, .dart:
+            // Coiled or tucked at the belt — barely anything, and that is the
+            // point of it.
+            context.stroke(Path { path in
+                path.addArc(center: CGPoint(x: hip.x - 0.4 * scale * mirror,
+                                            y: hip.y + 0.9 * scale),
+                            radius: 0.7 * scale, startAngle: .radians(0),
+                            endAngle: .radians(.pi * 1.6), clockwise: false)
+            }, with: .color(wood), lineWidth: 0.4 * scale)
+        case .none:
+            // Hung at the belt, as long as the blade is long. A haft past
+            // `heft` 0.7 is a polearm and stands up behind the shoulder.
+            if look.heft > 0.7 {
+                context.stroke(Path { path in
+                    path.move(to: CGPoint(x: p.x - 1.0 * scale * mirror, y: hipY + 2.4 * scale))
+                    path.addLine(to: CGPoint(x: p.x - 1.7 * scale * mirror,
+                                             y: shoulderY - 2.4 * scale))
+                }, with: .color(wood),
+                style: StrokeStyle(lineWidth: 0.7 * scale, lineCap: .round))
+                context.stroke(Path { path in
+                    path.move(to: CGPoint(x: p.x - 1.55 * scale * mirror,
+                                          y: shoulderY - 1.4 * scale))
+                    path.addLine(to: CGPoint(x: p.x - 1.7 * scale * mirror,
+                                             y: shoulderY - 2.4 * scale))
+                }, with: .color(iron),
+                style: StrokeStyle(lineWidth: 1.1 * scale, lineCap: .round))
+                return
+            }
+            let drop = (1.0 + 2.2 * CGFloat(look.heft)) * scale
+            context.stroke(Path { path in
+                path.move(to: hip)
+                path.addLine(to: CGPoint(x: hip.x - 0.9 * scale * mirror, y: hip.y + drop))
+            }, with: .color(iron),
+            style: StrokeStyle(lineWidth: (0.7 + 0.5 * CGFloat(look.heft)) * scale,
+                               lineCap: .round))
+            // A crossguard, on anything long enough to have one.
+            if look.heft > 0.3 {
+                context.stroke(Path { path in
+                    path.move(to: CGPoint(x: hip.x - 0.5 * scale, y: hip.y + 0.2 * scale))
+                    path.addLine(to: CGPoint(x: hip.x + 0.5 * scale, y: hip.y + 0.2 * scale))
+                }, with: .color(iron), lineWidth: 0.34 * scale)
+            }
         }
     }
 }
