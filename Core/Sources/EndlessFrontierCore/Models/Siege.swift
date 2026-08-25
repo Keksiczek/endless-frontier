@@ -300,6 +300,15 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
     /// The bearing they came in on, so the canvas draws the same fight the
     /// simulation is running.
     public let approach: Double
+    /// **How far the built town reached on that bearing when they arrived.**
+    ///
+    /// The fight's whole geometry hangs off this — where the line forms, where
+    /// the wall is worth something, where the warband starts. It is stamped
+    /// once, when the raid opens, for the same reason `steps` is: a town that
+    /// finishes a barn mid-siege must not move the line the fight is already
+    /// being fought on. Zero means "no grid" and the field falls back to the
+    /// old constants (`SiegeField.edge`).
+    public var edge: Double = 0
     /// How many figures the raid puts on the field.
     public let attackers: Int
     /// What the attack was worth when it arrived, and what is left of it.
@@ -366,6 +375,9 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         attackerTribeID: UUID? = nil,
         attackerCampID: UUID? = nil,
         approach: Double, attackers: Int,
+        /// How far the built town reaches on that bearing. Zero for a colony
+        /// with no grid — the field falls back to its constants.
+        edge: Double = 0,
         openingStrength: Double, fortification: Double, seed: UInt64,
         line: [UUID], posture: Posture = .hold, carriesOff: Double = 1,
         steps: Int? = nil,
@@ -380,6 +392,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         self.attackerTribeID = attackerTribeID
         self.attackerCampID = attackerCampID
         self.approach = approach
+        self.edge = edge
         self.attackers = attackers
         self.openingStrength = max(0, openingStrength)
         self.strength = max(0, openingStrength)
@@ -500,7 +513,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         case attackerTribeID, attackerCampID
         case approach, attackers, openingStrength, strength, fortification, seed
         case line, withdrawn, posture, damage, moments, plundered, carriesOff
-        case steps, era
+        case steps, era, edge
         case fighters, orders
     }
 
@@ -515,6 +528,9 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         attackerTribeID = try c.decodeIfPresent(UUID.self, forKey: .attackerTribeID)
         attackerCampID = try c.decodeIfPresent(UUID.self, forKey: .attackerCampID)
         approach = try c.decodeIfPresent(Double.self, forKey: .approach) ?? 0
+        // A fight saved before the town's own edge decided where the line
+        // forms is finished on the constants it started on (rule 3).
+        edge = try c.decodeIfPresent(Double.self, forKey: .edge) ?? 0
         attackers = try c.decodeIfPresent(Int.self, forKey: .attackers) ?? 1
         openingStrength = try c.decodeIfPresent(Double.self, forKey: .openingStrength) ?? 0
         strength = try c.decodeIfPresent(Double.self, forKey: .strength) ?? 0

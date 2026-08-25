@@ -128,6 +128,18 @@ public struct CoverField: Sendable, Equatable {
 
     public var isEmpty: Bool { value.isEmpty }
 
+    /// **Which building somebody standing here is standing in**, if any.
+    ///
+    /// The one question a fight has to be able to ask of the ground and could
+    /// not: a warband marched to its goal in a straight line, through walls,
+    /// through the granary, through the temple. Cover was already stamped per
+    /// cell with the building that put it there — this only exposes it, so
+    /// people can walk *round* the town they are fighting over.
+    public func building(at point: LocalPoint) -> UUID? {
+        guard columns > 0, rows > 0 else { return nil }
+        return owner[cell(of: point)]
+    }
+
     /// What stands on the cell this point falls in.
     public func at(_ point: LocalPoint) -> Double {
         guard columns > 0, rows > 0 else { return 0 }

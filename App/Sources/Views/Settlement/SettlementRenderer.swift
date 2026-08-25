@@ -190,6 +190,11 @@ enum SettlementRenderer {
                                                        approaches: approaches),
                               registry: registry)
         zones(&context, rect: rect, settlement: settlement, season: season)
+        // The square in the middle of it all. Reserved in the Core since
+        // districts went in and never drawn, so a town's one open place read as
+        // the gap the houses had not filled yet (`SettlementGreen`).
+        SettlementGreen.draw(&context, rect: rect, settlement: settlement,
+                             season: season, era: era, time: time, zoom: zoom)
         // Stone and iron. Earth roads are already in the ground's own colour
         // (`SettlementTracks`); what is left is the ways that are *made* of
         // something, which no amount of packed earth can say.
@@ -2332,7 +2337,7 @@ enum SettlementRenderer {
         // knit into one cleared, built-up ground the town sits on.
         for building in placed {
             floorPlot(&context, at: building.center, footprint: building.footprint,
-                      underConstruction: building.underConstruction,
+                      underConstruction: building.underConstruction, seed: building.seed,
                       // **A farm's ground is its field.** Cleared earth was
                       // laid over the whole lot and the plots drawn on top of
                       // it, so the one building that is mostly *ground under
@@ -2470,9 +2475,25 @@ enum SettlementRenderer {
     /// only from the layout; nothing here touches the simulation.
     private static func floorPlot(
         _ context: inout GraphicsContext, at c: CGPoint, footprint: CGSize,
-        underConstruction: Bool, yardOnly: Bool = false
+        underConstruction: Bool, seed: UInt64 = 0, yardOnly: Bool = false
     ) {
         guard footprint.width > 2, footprint.height > 2 else { return }
+        // **The ground a building has worn round itself.**
+        //
+        // Keks: *"budovy jen levitují nad zemí a pod nimi vše normálně roste."*
+        // The lot itself was there — packed earth, opaque, the size of the
+        // footprint — and it stopped dead at the wall, with wild grass running
+        // up to a hard rounded rectangle. A building on a rectangle of dirt on
+        // a field is a sticker, not a place: what a house actually has round it
+        // is a scuffed apron where the ground has been walked bare, fading into
+        // the grass rather than ending at a line.
+        //
+        // Opaque, and ragged, and both for the same reason. Opaque because the
+        // ground tiles overlap by a hair and any translucent fill over them
+        // blends the overlap twice and rules a bright grid across every yard
+        // in the town (rule 9). Ragged because a straight edge is what made it
+        // read as pasted on.
+        apron(&context, at: c, footprint: footprint, seed: seed)
         // A hair of margin so neighbouring lots still read as separate parcels.
         let w = footprint.width * 0.92
         // A farm keeps only the strip its shed stands on; the rest of the lot
@@ -2497,7 +2518,40 @@ enum SettlementRenderer {
             // black slab — the thing that read as a hole in the map.
             context.fill(shape, with: .color(Color(red: 0.27, green: 0.23, blue: 0.18)))
             context.stroke(shape, with: .color(Theme.boneFaint.opacity(0.4)), lineWidth: 0.8)
+            // And the ground darkening where the wall meets it. Over the earth
+            // rather than over the world, so rule 9 is untouched: this is a
+            // shadow on a lot, not a wash on the map.
+            let footing = CGRect(x: rect.minX, y: rect.maxY - max(1.2, rect.height * 0.10),
+                                 width: rect.width, height: max(1.2, rect.height * 0.10))
+            context.fill(Path(roundedRect: footing, cornerRadius: radius * 0.5),
+                         with: .color(Color(red: 0.17, green: 0.14, blue: 0.11)))
         }
+    }
+
+    /// The scuffed ground round a lot: wider than the building, ragged at the
+    /// edge, half way in colour between the packed yard and the country it is
+    /// standing in. See `floorPlot`.
+    private static func apron(
+        _ context: inout GraphicsContext, at c: CGPoint, footprint: CGSize, seed: UInt64
+    ) {
+        let w = footprint.width * 1.16, h = footprint.height * 1.16
+        guard w > 3, h > 3 else { return }
+        // Eight points round the lot, each pushed out by a little, so no two
+        // buildings wear their ground the same way. Fixed per building: an
+        // apron that changed shape between frames would shimmer.
+        var path = Path()
+        let steps = 10
+        for i in 0..<steps {
+            let angle = Double(i) / Double(steps) * 2 * .pi
+            var hash = (seed &+ UInt64(i) &* 0x9E37_79B9_7F4A_7C15) &* 0xBF58_476D_1CE4_E5B9
+            hash ^= hash >> 31
+            let wobble = 0.88 + Double(hash >> 40) / Double(1 << 24) * 0.24
+            let p = CGPoint(x: c.x + CGFloat(cos(angle) * wobble) * w / 2,
+                            y: c.y + CGFloat(sin(angle) * wobble) * h / 2)
+            if i == 0 { path.move(to: p) } else { path.addLine(to: p) }
+        }
+        path.closeSubpath()
+        context.fill(path, with: .color(Color(red: 0.33, green: 0.30, blue: 0.22)))
     }
 
     // MARK: - Colonists

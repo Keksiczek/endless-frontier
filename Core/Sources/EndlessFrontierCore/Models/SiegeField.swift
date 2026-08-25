@@ -93,20 +93,73 @@ public struct SiegeField: Sendable, Equatable {
     public let axisX: Double
     public let axisY: Double
 
-    public init(approach: Double, heart: LocalPoint = SettlementGeometry.heart) {
+    /// **How far the built town actually reaches on this bearing.**
+    ///
+    /// The reaches above were written down when the colony was a ring of huts,
+    /// and then the town grew and they did not. `SettlementGeometry.span` is
+    /// 0.70, so the build grid's edge stands **0.35** from the heart on an
+    /// axis — while the line formed up at a flat `musterReach` of 0.30, which
+    /// is *inside the town*. Every raid in the game was therefore fought in
+    /// among the houses, with the defenders running inward from their work to
+    /// a crescent in the middle of their own settlement. Keks: *"všichni tam
+    /// naběhnou v takovém umělém archu … taky se to kreslí přes aktuální
+    /// mapu."* It was not being drawn over the map: it was being fought on top
+    /// of it.
+    ///
+    /// So the fight's geometry is derived from the ground it is fought over.
+    /// `edge` is the reach of the furthest thing the colony has built along
+    /// this bearing (`ColonyMap.builtReach(along:)`), and the line, the wall
+    /// and the muster all hang off it — rule 35: a number that must agree with
+    /// another number should *be* it. A colony with no grid yet falls back to
+    /// the old constant, which is what it was measured for.
+    public let edge: Double
+
+    /// The field a **siege** is being fought on: the same bearing and the same
+    /// town edge the simulation stamped when the warband arrived, so the canvas
+    /// and the engine cannot draw two different battles (rule 8).
+    public init(_ siege: Siege, heart: LocalPoint = SettlementGeometry.heart) {
+        self.init(approach: siege.approach, heart: heart,
+                  edge: siege.edge > 0 ? siege.edge : SiegeField.wallReach)
+    }
+
+    public init(approach: Double,
+                heart: LocalPoint = SettlementGeometry.heart,
+                edge: Double = SiegeField.wallReach) {
         self.heart = heart
+        self.edge = max(0.08, edge)
         axisX = cos(approach)
         axisY = sin(approach)
     }
+
+    /// The palisade line on this bearing: the edge of the built town.
+    public var wallAt: Double { edge }
+    /// Where the line forms — a stride outside the last roof, on open ground.
+    public var musterAt: Double { edge + Self.musterMargin }
+    /// Past this the wall is behind you and counts for nothing.
+    public var openAt: Double { edge + Self.openMargin }
+    /// Where the watch turns out from: in among the houses.
+    public var formUpAt: Double { max(0.04, edge - Self.formUpInset) }
+    /// …and where the warband first sets foot on the map — always outside the
+    /// line it is coming for, however far the town has spread.
+    public var originAt: Double { max(Self.originReach, musterAt + Self.approachRun) }
+
+    /// How far outside the last roof the line forms.
+    public static let musterMargin = 0.05
+    /// …how far out the wall stops being worth anything…
+    public static let openMargin = 0.15
+    /// …and how far inside it the watch turns out from.
+    public static let formUpInset = 0.10
+    /// The shortest ground a warband may have to cross to reach the line.
+    public static let approachRun = 0.12
 
     /// A point `reach` out from the heart along the line of the attack.
     public func out(_ reach: Double) -> LocalPoint {
         LocalPoint(x: heart.x + axisX * reach, y: heart.y + axisY * reach)
     }
 
-    public var origin: LocalPoint { out(Self.originReach) }
-    public var muster: LocalPoint { out(Self.musterReach) }
-    public var wall: LocalPoint { out(Self.wallReach) }
+    public var origin: LocalPoint { out(originAt) }
+    public var muster: LocalPoint { out(musterAt) }
+    public var wall: LocalPoint { out(wallAt) }
 
     /// A place in a **body** of `count` bodies, `reach` out from the heart.
     ///
@@ -142,25 +195,54 @@ public struct SiegeField: Sendable, Equatable {
         let half = max(1, Double(inRank - 1) / 2)
         let sag = abs(offset) / half * 0.010
         let px = -axisY, py = axisX
-        let along = reach - sag + behind * Double(rank) * Self.rankDepth
-        return LocalPoint(x: heart.x + px * offset * Self.rankSpacing + axisX * along,
-                          y: heart.y + py * offset * Self.rankSpacing + axisY * along)
+        // **A line of people is not a curve.** The crescent was exact —
+        // everybody on one arc, spaced to the millimetre — which reads as
+        // geometry rather than as a body of frightened people finding a place
+        // to stand. A hash of the place scatters each of them by up to half a
+        // body, deterministically (no RNG, no state: the same fight forms up
+        // the same way every replay), which is the whole difference between an
+        // arc and a line.
+        let scatter = Self.scatter(index: index, of: count)
+        let along = reach - sag + behind * Double(rank) * Self.rankDepth + scatter.along
+        let across = offset * Self.rankSpacing + scatter.across
+        return LocalPoint(x: heart.x + px * across + axisX * along,
+                          y: heart.y + py * across + axisY * along)
+    }
+
+    /// How far off their exact place in the rank one body stands, in map units.
+    static func scatter(index: Int, of count: Int) -> (along: Double, across: Double) {
+        func hash(_ salt: UInt64) -> Double {
+            var h = (UInt64(bitPattern: Int64(index)) &+ salt) &* 0x9E37_79B9_7F4A_7C15
+            h ^= h >> 29
+            h = h &* 0xBF58_476D_1CE4_E5B9
+            return Double(h >> 40) / Double(1 << 24)
+        }
+        // **Bounded by the press, not by taste.** Two neighbours are
+        // `rankSpacing` apart and a body keeps `bodySpace` to itself, so a
+        // scatter wider than the difference puts people inside each other
+        // faster than `shoulder` parts them — which the press test catches:
+        // 0.8 of a rank's depth had two fighters 0.0078 apart against a bar of
+        // 0.008. Half a rank deep and just under half a place across leaves
+        // the worst pair 0.010 apart and still reads as a line of people
+        // rather than a curve.
+        return ((hash(11) - 0.5) * rankDepth * 0.5,
+                (hash(29) - 0.5) * rankSpacing * 0.45)
     }
 
     /// Where a defender holds the line…
     public func defenderPost(index: Int, of count: Int) -> LocalPoint {
-        post(index: index, of: count, reach: Self.musterReach)
+        post(index: index, of: count, reach: musterAt)
     }
 
     /// …where the watch turns out from…
     public func musterPost(index: Int, of count: Int) -> LocalPoint {
-        post(index: index, of: count, reach: Self.formUpReach)
+        post(index: index, of: count, reach: formUpAt)
     }
 
     /// …and where a raider first sets foot on the map. Their rear is out toward
     /// the country they came from, so the depth runs the other way.
     public func attackerPost(index: Int, of count: Int) -> LocalPoint {
-        post(index: index, of: count, reach: Self.originReach, behind: 1)
+        post(index: index, of: count, reach: originAt, behind: 1)
     }
 
     /// How far out the post at `index` stands.
@@ -190,16 +272,16 @@ public struct SiegeField: Sendable, Equatable {
     /// function.
     public func cover(at p: LocalPoint) -> Double {
         let d = Self.distance(heart, p)
-        guard d > Self.wallReach else { return 1 }
-        let span = Self.openReach - Self.wallReach
+        guard d > wallAt else { return 1 }
+        let span = openAt - wallAt
         guard span > 0 else { return 0 }
-        return max(0, min(1, 1 - (d - Self.wallReach) / span))
+        return max(0, min(1, 1 - (d - wallAt) / span))
     }
 
     /// Whether somebody at `p` is in among the buildings — for a raider, that
     /// is standing in the stores; for a colonist, it is being indoors.
     public func isInside(_ p: LocalPoint) -> Bool {
-        Self.distance(heart, p) <= Self.wallReach
+        Self.distance(heart, p) <= wallAt
     }
 
     public func reachFromHeart(_ p: LocalPoint) -> Double { Self.distance(heart, p) }

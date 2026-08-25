@@ -201,7 +201,8 @@ enum SettlementBattle {
     /// simulation's own geometry now (rule 8: one number, one place), and a
     /// live fight is *read* off real positions rather than choreographed.
     static func ground(_ log: BattleLog) -> SiegeField {
-        SiegeField(approach: log.approach, heart: SettlementRenderer.colonyHeart)
+        SiegeField(approach: log.approach, heart: SettlementRenderer.colonyHeart,
+                   edge: log.edge > 0 ? log.edge : SiegeField.wallReach)
     }
 
     /// Where a raider stands in a **replay**. A finished record has no
@@ -211,7 +212,7 @@ enum SettlementBattle {
     static func stagedAttackerPost(
         _ field: SiegeField, index: Int, of count: Int, closed: Double
     ) -> LocalPoint {
-        let reach = SiegeField.musterReach + 0.040 - 0.018 * min(1, max(0, closed))
+        let reach = field.musterAt + 0.040 - 0.018 * min(1, max(0, closed))
         return field.post(index: index, of: count, reach: reach)
     }
 
@@ -285,7 +286,7 @@ enum SettlementBattle {
             attackerName: siege.attackerName, defenderName: defender,
             moments: siege.moments, repelled: siege.repelled,
             attackerLabel: siege.attackerLabel, approach: siege.approach,
-            attackers: siege.attackers,
+            edge: siege.edge, attackers: siege.attackers,
             // Anyone the player pulled out has left the wall, so the line the
             // canvas draws is the line that is actually standing in it.
             line: siege.standing)
@@ -324,7 +325,7 @@ enum SettlementBattle {
         else { return nil }
         // Facing whoever they are on, and out along the attack if nobody.
         guard let mark = me.target.flatMap({ siege.place(of: $0) }) else {
-            return (me.at, SiegeField(approach: siege.approach).axisX)
+            return (me.at, SiegeField(siege).axisX)
         }
         return (me.at, toward(me.at, mark).x)
     }

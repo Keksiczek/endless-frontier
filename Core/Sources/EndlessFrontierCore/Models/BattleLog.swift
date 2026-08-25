@@ -144,6 +144,13 @@ public struct BattleLog: Codable, Sendable, Equatable, Identifiable {
     /// while it is being watched, and *stored* rather than derived from a hash
     /// so the same fight always comes from the same side of the valley.
     public let approach: Double
+    /// **How far the town reached on that bearing when it happened.**
+    ///
+    /// A replay has no siege behind it, so without this a fight played back
+    /// would be staged on the constants while the fight itself was fought at
+    /// the town's edge — the same battle, in two different places. Zero means
+    /// a record written before the town's own edge decided anything.
+    public var edge: Double = 0
     /// How many steps the fight it records ran for, so a replay beats at the
     /// same rate the live fight did.
     public let steps: Int
@@ -169,6 +176,7 @@ public struct BattleLog: Codable, Sendable, Equatable, Identifiable {
     public init(id: UUID, tick: Int, attackerName: String, defenderName: String,
                 moments: [BattleMoment], repelled: Bool,
                 attackerLabel: LocalizedText? = nil, approach: Double = 0,
+                edge: Double = 0,
                 steps: Int = Siege.stepsTotal,
                 attackers: Int = 0, line: [UUID] = [],
                 attackerCampID: UUID? = nil) {
@@ -180,6 +188,7 @@ public struct BattleLog: Codable, Sendable, Equatable, Identifiable {
         self.moments = moments.sorted { $0.at == $1.at ? $0.id < $1.id : $0.at < $1.at }
         self.repelled = repelled
         self.approach = approach
+        self.edge = edge
         self.steps = max(1, steps)
         self.attackers = attackers
         self.line = line
@@ -190,7 +199,7 @@ public struct BattleLog: Codable, Sendable, Equatable, Identifiable {
 
     private enum CodingKeys: String, CodingKey {
         case id, tick, attackerName, attackerLabel, defenderName, moments, repelled
-        case approach, attackers, line, steps, attackerCampID
+        case approach, attackers, line, steps, attackerCampID, edge
     }
 
     public init(from decoder: Decoder) throws {
@@ -203,6 +212,7 @@ public struct BattleLog: Codable, Sendable, Equatable, Identifiable {
         moments = try c.decode([BattleMoment].self, forKey: .moments)
         repelled = try c.decode(Bool.self, forKey: .repelled)
         approach = try c.decodeIfPresent(Double.self, forKey: .approach) ?? 0
+        edge = try c.decodeIfPresent(Double.self, forKey: .edge) ?? 0
         steps = try c.decodeIfPresent(Int.self, forKey: .steps) ?? Siege.stepsTotal
         attackers = try c.decodeIfPresent(Int.self, forKey: .attackers) ?? 0
         line = try c.decodeIfPresent([UUID].self, forKey: .line) ?? []

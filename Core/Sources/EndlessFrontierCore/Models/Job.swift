@@ -442,6 +442,34 @@ public enum SettlementGeometry {
         Double(max(1, colony.width)) / span
     }
 
+    /// **How far the town actually reaches on a bearing**, in map units.
+    ///
+    /// The furthest thing the colony has built in that direction, measured from
+    /// the heart — which is what a fight needs to know and what nothing could
+    /// previously answer. `SiegeField`'s reaches were written down when a
+    /// colony was a ring of huts; the grid has since grown to cover 0.70 of the
+    /// valley, so a line formed at a constant 0.30 stands *among the houses*.
+    ///
+    /// Only what is standing counts: a construction site is stakes in the
+    /// ground and a warband walks straight over it.
+    public static func builtReach(
+        in colony: ColonyMap, axisX: Double, axisY: Double
+    ) -> Double {
+        var furthest = 0.0
+        for placement in colony.placements where !placement.underConstruction {
+            let middle = canvasPoint(for: placement, in: colony)
+            let along = (middle.x - heart.x) * axisX + (middle.y - heart.y) * axisY
+            guard along > furthest else { continue }
+            furthest = along
+        }
+        guard furthest > 0 else { return 0 }
+        // Out to the far wall of that building rather than to its pin: half a
+        // lot, in map units, on the longer side so no roof is left outside the
+        // line drawn to protect it.
+        let lot = Double(max(1, max(colony.width, colony.height)))
+        return furthest + span / lot * 0.75
+    }
+
     /// The ring of tiles standing `reach` map units out from the heart.
     public static func ringRadiusInTiles(atReach reach: Double, in colony: ColonyMap) -> Double {
         reach * tilesPerMapUnit(in: colony)
@@ -509,7 +537,7 @@ public enum SettlementGeometry {
     public static let greenTiles = 4
 
     /// The first tile of the green along one axis of a grid of `extent` tiles.
-    static func greenOrigin(_ extent: Int) -> Int { max(0, (extent - greenTiles) / 2) }
+    public static func greenOrigin(_ extent: Int) -> Int { max(0, (extent - greenTiles) / 2) }
 
     /// Whether a build-grid tile is part of the green, and so unbuildable.
     public static func isGreen(_ coord: TileCoord, in colony: ColonyMap) -> Bool {

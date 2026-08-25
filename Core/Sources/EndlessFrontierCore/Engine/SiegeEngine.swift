@@ -93,7 +93,7 @@ public enum SiegeEngine {
     /// emergent — but `meleePerStep` needs a divisor and this is where it
     /// honestly comes from.
     static var typicalApproachSteps: Int {
-        max(1, Int(((SiegeField.originReach - SiegeField.musterReach) / pace).rounded(.up)))
+        max(1, Int((SiegeField.approachRun / pace).rounded(.up)))
     }
     /// The share of their weight a fighter lands in one step of contact.
     ///
@@ -249,6 +249,14 @@ public enum SiegeEngine {
         // **where** it built it now decides how much of that counts (§11.27).
         let facing = fortification * facingShare(
             s, registry: registry, approach: approach)
+        // **Where the town ends on that bearing**, stamped once. Everything
+        // about the fight's shape hangs off it: the line forms outside the last
+        // roof rather than on a constant written down when a colony was eight
+        // huts, so a raid on a town of eighty is fought at its edge instead of
+        // in its market place.
+        let edge = s.colony.map {
+            SettlementGeometry.builtReach(in: $0, axisX: cos(approach), axisY: sin(approach))
+        } ?? 0
         var siege = Siege(
             id: id, startTick: tick,
             openedAt: WorldClock(tick: tick, step: 0).absoluteStep,
@@ -256,6 +264,7 @@ public enum SiegeEngine {
             attackerTribeID: attackerTribeID, attackerCampID: attackerCampID,
             approach: approach,
             attackers: drawn ?? BattleResolver.drawnStrength(attackerStrength),
+            edge: edge,
             openingStrength: attackerStrength, fortification: facing,
             seed: rng.next(), line: Array(line), carriesOff: carriesOff,
             era: era)
@@ -275,7 +284,7 @@ public enum SiegeEngine {
         _ siege: inout Siege, in settlement: Settlement, registry: GameDataRegistry
     ) {
         guard siege.fighters.isEmpty else { return }
-        let field = SiegeField(approach: siege.approach)
+        let field = SiegeField(siege)
         var out: [Siege.Combatant] = []
         for (index, id) in siege.line.enumerated() {
             out.append(Siege.Combatant(
@@ -410,7 +419,7 @@ public enum SiegeEngine {
         // A step's rolls depend on where it sits in the fight and nothing else.
         var rng = SeededRNG(seed: siege.seed
                             &+ UInt64(bitPattern: Int64(step)) &* 0x9E37_79B9_7F4A_7C15)
-        let field = SiegeField(approach: siege.approach)
+        let field = SiegeField(siege)
 
         stageIfNeeded(&siege, in: s, registry: registry)
         // What the colony's towers are worth **right now** — read once and used
@@ -592,14 +601,126 @@ public enum SiegeEngine {
         let places = Dictionary(siege.fighters.map { ($0.id, $0.at) },
                                 uniquingKeysWith: { first, _ in first })
         let posts = defenderPosts(siege, field: field, cover: cover)
+        // Who each side is afraid of, so a stride can be taken with something
+        // between you and them. Gathered once for the step rather than per
+        // fighter (rule 4: this is the per-tick path).
+        let standing = siege.fighters.filter { !$0.down && $0.kind == .person }
+        let theirs = standing.filter { $0.side == .raider }.map(\.at)
+        let ours = standing.filter { $0.side == .colony }.map(\.at)
         for index in siege.fighters.indices {
             let me = siege.fighters[index]
             guard let goal = destination(me, siege: siege, field: field,
                                          places: places, posts: posts) else { continue }
-            siege.fighters[index].at = SiegeField.stride(from: me.at, toward: goal, pace: pace)
+            let threat = nearest(to: me.at, in: me.side == .colony ? theirs : ours)
+            // Somebody standing shoulder to shoulder with their own rank does
+            // not go looking for a boulder: there is nowhere to go, and the
+            // press is what a line *is*. Also what keeps the cover search from
+            // shoving two people onto one spot faster than `shoulder` can part
+            // them.
+            let elbow = elbowRoom(of: me, among: me.side == .colony ? ours : theirs)
+            siege.fighters[index].at = groundStride(
+                me, toward: goal, threat: threat,
+                cover: cover, crowded: elbow < SiegeField.bodySpace * 1.4)
         }
         shoulder(&siege, field: field)
     }
+
+    /// How much room somebody has on their own side — the gap to the nearest
+    /// of their own, ignoring themselves.
+    static func elbowRoom(of me: Siege.Combatant, among friends: [LocalPoint]) -> Double {
+        var best = Double.infinity
+        for friend in friends {
+            let gap = SiegeField.distance(me.at, friend)
+            guard gap > 1e-9, gap < best else { continue }
+            best = gap
+        }
+        return best
+    }
+
+    /// The nearest of a set of places, or nil when there are none.
+    static func nearest(to point: LocalPoint, in places: [LocalPoint]) -> LocalPoint? {
+        var best: LocalPoint?
+        var bestGap = Double.infinity
+        for place in places {
+            let gap = SiegeField.distance(point, place)
+            guard gap < bestGap else { continue }
+            bestGap = gap
+            best = place
+        }
+        return best
+    }
+
+    /// **One stride, taken over the ground it is actually crossing.**
+    ///
+    /// Everybody used to walk to their goal in a straight line — through walls,
+    /// through the granary, through the temple — and the only use the fight
+    /// made of what was standing on the field was a passive roll against arrows
+    /// already in flight. Keks: *"ať je souboj dynamický dle prostředí, kde
+    /// bojují — stačí vědět, co je okolo, za co se skrýt."* Everything needed
+    /// was already there: `CoverField` stamps every tree, rock, landform, cliff
+    /// and building on the map into one grid, once per call.
+    ///
+    /// Two rules, in this order:
+    ///
+    /// 1. **A wall is a wall.** A step that would end inside a building slides
+    ///    round the face instead. Somebody *already* inside may leave — the
+    ///    rule that keeps you out must not trap the raider who is in the
+    ///    stores — and so may somebody whose goal is that very building, which
+    ///    is what `Intent.plunder` and `Intent.burn` are for.
+    /// 2. **Ground is worth something.** Of the places one stride can reach
+    ///    without giving up ground toward the goal, take the one with most
+    ///    between you and whoever is nearest on the other side. Only while
+    ///    closing: once blades are within reach, hiding behind a bush is not a
+    ///    thing that happens, and a search that ran there would shuffle the
+    ///    melee sideways for ever.
+    static func groundStride(
+        _ me: Siege.Combatant, toward goal: LocalPoint, threat: LocalPoint?,
+        cover: CoverField, crowded: Bool = false
+    ) -> LocalPoint {
+        let plain = SiegeField.stride(from: me.at, toward: goal, pace: pace)
+        guard !cover.isEmpty, me.kind == .person else { return plain }
+        let inside = cover.building(at: me.at)
+        let wanted = cover.building(at: goal)
+        func blocked(_ p: LocalPoint) -> Bool {
+            guard let there = cover.building(at: p) else { return false }
+            return there != inside && there != wanted
+        }
+        func shelter(_ p: LocalPoint) -> Double {
+            guard let threat else { return 0 }
+            return cover.shelter(at: p, from: threat).fraction
+        }
+        // In contact: the only thing the ground decides is that you cannot walk
+        // through the smithy.
+        let contact = crowded
+            || (threat.map { SiegeField.distance(me.at, $0) <= reach * 2 } ?? false)
+        let ahead = SiegeField.distance(plain, goal)
+        var best: LocalPoint? = blocked(plain) ? nil : plain
+        var bestCover = best.map(shelter) ?? -1
+        let steps = 8
+        for i in 0..<steps {
+            let angle = Double(i) / Double(steps) * 2 * .pi
+            let here = LocalPoint(x: plain.x + cos(angle) * pace * 0.75,
+                                  y: plain.y + sin(angle) * pace * 0.75)
+            guard !blocked(here) else { continue }
+            // Round a wall, a step may lose ground; to get behind a boulder it
+            // may not — otherwise a warband edges sideways along the hedgerow
+            // instead of arriving.
+            let slack = best == nil ? pace : (contact ? 0 : coverSlip)
+            guard SiegeField.distance(here, goal) <= ahead + slack else { continue }
+            guard !contact || best == nil else { continue }
+            let sheltered = shelter(here)
+            guard best == nil || sheltered > bestCover else { continue }
+            best = here
+            bestCover = sheltered
+        }
+        return best ?? me.at
+    }
+
+    /// How much ground somebody will give up to put something between
+    /// themselves and the people shooting at them. A third of a stride: enough
+    /// to step behind the boulder they are passing, not enough to go looking
+    /// for one.
+    static let coverSlip = pace / 3
 
     /// **A line that is holding does not leak.**
     ///
@@ -1317,8 +1438,8 @@ public enum SiegeEngine {
         // would ever move. What a defender is doing is putting something on the
         // side they are coming from.
         func shelter(at point: LocalPoint) -> Double {
-            let probe = LocalPoint(x: point.x + field.axisX * SiegeField.musterReach,
-                                   y: point.y + field.axisY * SiegeField.musterReach)
+            let probe = LocalPoint(x: point.x + field.axisX * field.musterAt,
+                                   y: point.y + field.axisY * field.musterAt)
             return cover.shelter(at: point, from: probe).fraction
         }
         let from = field.origin
@@ -1586,7 +1707,7 @@ public enum SiegeEngine {
             attackerName: siege.attackerName, defenderName: s.name,
             moments: moments, repelled: siege.repelled,
             attackerLabel: siege.attackerLabel, approach: siege.approach,
-            steps: siege.steps,
+            edge: siege.edge, steps: siege.steps,
             attackers: siege.attackers, line: siege.line,
             // Carried into the record, because the siege is gone the moment it
             // ends and "who has been robbing us" is a question about the past.
@@ -1638,7 +1759,7 @@ public enum SiegeEngine {
         // the ground the two lines met on — the heart of the colony is where
         // they were headed, and pointing there says nothing about the fight.
         s.journal.append(tick: siege.startTick, kind: .danger, text: entry,
-                         subject: .place(SiegeField(approach: siege.approach).muster))
+                         subject: .place(SiegeField(siege).muster))
         s.stats.morale = max(0, s.stats.morale - (siege.repelled ? 0 : 8))
         return s
     }
