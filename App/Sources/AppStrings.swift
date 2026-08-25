@@ -66,6 +66,12 @@ enum AppStrings {
     /// Buying peace: a yearly payment, and the cost of stopping it.
     static var offerTribute: String { s("Offer tribute", "Nabídnout tribut") }
     static var declareWar: String { s("Declare war", "Vyhlásit válku") }
+    /// Why a study whose prerequisites are all met is still shut: the colony
+    /// does not live in a century that could attempt it yet.
+    static func notThisAge(_ era: String) -> String {
+        s("Not in this age — belongs to the \(era)",
+          "Ne v této době — patří do doby: \(era)")
+    }
     static var stopTribute: String { s("Stop paying", "Přestat platit") }
     static var demandTribute: String { s("Demand tribute", "Žádat tribut") }
     static var proposePact: String { s("Propose a pact", "Nabídnout spojenectví") }

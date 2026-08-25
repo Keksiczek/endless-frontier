@@ -53,6 +53,14 @@ struct TechTreeView: View {
                 Text(AppStrings.needsPrefix + " " + tech.requires.map(game.techName).joined(separator: ", "))
                     .font(.caption2).foregroundStyle(Theme.textDim)
             }
+            // A study whose prerequisites are all met and which is still shut
+            // is shut for a reason the row has to give: the colony does not
+            // live in a century that could attempt it (`TechEngine.eraReach`).
+            if status == .locked,
+               tech.requires.allSatisfy(game.world.researchedTechs.contains) {
+                Text(AppStrings.notThisAge(AppStrings.eraTitle(tech.era)))
+                    .font(.caption2).foregroundStyle(Theme.accent.opacity(0.8))
+            }
             if let progress = game.researchProgressFraction(tech) {
                 ProgressView(value: progress).tint(Theme.accent)
             }

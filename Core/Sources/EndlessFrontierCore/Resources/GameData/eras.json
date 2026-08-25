@@ -67,7 +67,7 @@
       },
       {
         "type": "population_total",
-        "min": 260
+        "min": 200
       }
     ]
   },
@@ -85,7 +85,7 @@
       },
       {
         "type": "population_total",
-        "min": 600
+        "min": 300
       }
     ]
   }

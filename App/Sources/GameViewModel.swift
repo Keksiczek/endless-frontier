@@ -1235,7 +1235,14 @@ final class GameViewModel {
         if world.researchedTechs.contains(tech.id) {
             return tech.repeatable ? .available : .researched
         }
-        if tech.requires.allSatisfy(world.researchedTechs.contains) { return .available }
+        // **And whether the colony is old enough to study it.**
+        //
+        // The tree used to call a tech available on its prerequisites alone,
+        // which is what let a medieval colony study `computing`. The Core
+        // refuses that now (`TechEngine.isStudiable`), so without this the
+        // screen would offer a study and the tap would do nothing — a button
+        // that does nothing is worse than a locked one.
+        if TechEngine.isStudiable(tech, in: world) { return .available }
         return .locked
     }
 

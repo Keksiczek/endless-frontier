@@ -41,6 +41,37 @@ public enum TechEngine {
         return applyEffects(of: tech, to: s)
     }
 
+    // MARK: - What may be studied
+
+    /// **How far ahead of the age it lives in a colony may study.**
+    ///
+    /// One age, and the reason is in `eras.json`: every era's milestone tech
+    /// belongs either to the age before it or to the age itself — `electricity`
+    /// is a modern tech and unlocks the modern era — so a colony must be able
+    /// to reach exactly one age forward or the ladder has a rung missing
+    /// (rule 66). Two would put the gate back where it was.
+    public static let eraReach = 1
+
+    /// Whether a colony could start this study today.
+    ///
+    /// The DAG was the only gate: `requires` met and not already done. So a
+    /// colony picked the **cheapest** tech anywhere on the board, hoovered up
+    /// the cheap ones across every century, and finished all sixty by year 130
+    /// of a two-hundred-year game — while its own era lagged three ages behind
+    /// what it had supposedly learned. An age is a thing you live in, and you
+    /// cannot study the steam engine in the year you invent the plough.
+    ///
+    /// A colony that has run out of things it may study **banks** its knowledge
+    /// instead, which is what the medieval repeatables are for and what makes
+    /// growing into the next age worth doing.
+    public static func isStudiable(
+        _ tech: TechDefinition, in state: WorldState
+    ) -> Bool {
+        guard tech.repeatable || !state.researchedTechs.contains(tech.id) else { return false }
+        guard tech.requires.allSatisfy(state.researchedTechs.contains) else { return false }
+        return tech.era.index <= state.era.index + eraReach
+    }
+
     /// What a tech costs to research right now.
     ///
     /// A finite tech costs what its data says. A repeatable one grows by
@@ -83,9 +114,7 @@ public enum TechEngine {
     /// isn't already researched. Resets progress. Returns unchanged state for
     /// an invalid selection.
     public static func setResearch(_ state: WorldState, techID: String, registry: GameDataRegistry) -> WorldState {
-        guard let tech = registry.tech(techID),
-              !state.researchedTechs.contains(techID) || tech.repeatable,
-              tech.requires.allSatisfy(state.researchedTechs.contains) else {
+        guard let tech = registry.tech(techID), isStudiable(tech, in: state) else {
             return state
         }
         var s = state

@@ -849,3 +849,38 @@ fires, do the arithmetic before you rewrite the mechanic.
    (`widestDoubt / 2 > widestLivelihood × greenShare`) and guard it with a test
    that reads the data, so the next law that stakes 0.9 on a trade fails in
    the suite rather than in a colony that votes as one body.
+88. **A dependency graph orders things; it does not pace them.** Research was
+   gated on `requires` alone, so the council took the **cheapest tech anywhere
+   on the board** and a colony still living in the medieval era studied
+   `computing` at year 110 and `space_program` at year 120 — and had all sixty
+   techs finished by year 160 of a two-hundred-year game while three of its six
+   ages were still ahead of it. A DAG says *what may follow what*; it says
+   nothing about *when*, and a tree with no clock in it empties at whatever
+   rate the colony banks knowledge. The pacing gate has to be a fact about the
+   world — here `TechEngine.eraReach`, one age of reach, which is exactly the
+   ladder `eras.json` needs because every era's key tech belongs either to the
+   age before it or to the age itself (rule 66). What used to be "the tree ran
+   out" becomes "the colony banks knowledge until it grows into the next age",
+   which is a reason to grow.
+89. **A fixture that omits the data the feature reads is a fixture for the
+   fallback.** Every app test built its own two-building `GameDataRegistry`,
+   and the day rooms started being furnished out of `fittings.json` those
+   registries began laying out **empty rooms** — no bench, no bed, no station.
+   The tests did not fail loudly: `stationSlots` returned zero places, a
+   colonist posted to a bench fell back to a seeded spot on the floor, and
+   "a posted colonist keeps their own station" failed as *non-determinism*
+   rather than as missing content. The suite spent a day looking like a
+   geometry bug. When a system starts reading a new bank, every fixture that
+   builds a registry by hand is now testing the fallback path — give them the
+   bundled bank (`TestBook.fittings`) or assert on the fallback deliberately.
+90. **Measure the multiplier, not just the outcome.** Outlaw raids came out at
+   eight in two centuries against sixty-three from peoples, and the obvious
+   read is "the base chance is too small". It was not: `temptation` read
+   **3.000 at the tenth, fiftieth and ninetieth percentiles** for two hundred
+   years, because its haul term was capped at three and a colony passes that at
+   about two thousand sacks. Doubling the base would have made a poor hamlet
+   twice as likely to be robbed and left a rich city exactly as likely as a
+   modest one — the same fault in a new place. Print the *inputs'* distribution
+   before touching the rate: a rate that never fires is either a small chance
+   or a chance multiplied by something that is always the same, and those want
+   opposite fixes (rules 23, 54, 72).

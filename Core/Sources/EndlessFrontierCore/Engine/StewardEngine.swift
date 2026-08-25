@@ -269,10 +269,7 @@ public enum StewardEngine {
         for state: WorldState, registry: GameDataRegistry
     ) -> String? {
         registry.techs.values
-            .filter { tech in
-                guard tech.requires.allSatisfy(state.researchedTechs.contains) else { return false }
-                return tech.repeatable || !state.researchedTechs.contains(tech.id)
-            }
+            .filter { TechEngine.isStudiable($0, in: state) }
             .min { a, b in
                 let ca = TechEngine.cost(of: a, in: state, config: registry.config)
                 let cb = TechEngine.cost(of: b, in: state, config: registry.config)

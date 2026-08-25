@@ -3032,3 +3032,43 @@ colony cannot grow past what its social life can pair off. Whether to raise
 `maxRelationsPerPawn`, prune bonds by usefulness rather than by weakness, or
 leave it, is a decision nobody has taken. **Do not tune it without re-running
 the probe either side.**
+
+
+## 14. 2026-08-25 — played it, and said what was wrong
+
+Ten complaints in one evening, each of which turned out to name a **system that
+was in the simulation and not on the screen**, or a constant written when the
+thing it measured was a different size. Shipped in five commits; the full write
+-up is `docs/HANDOFF-2026-08-25-evening.md`.
+
+### 14.1 — what was actually wrong
+
+| said | was |
+|---|---|
+| "války jen v diplomacii" | war was a counter, not a state — nothing could be asked whether one was on |
+| "nejsou všechny národy" | seceding peoples were given the colony's own hex to live on |
+| "umělý arch, kreslí se přes mapu" | the line formed at 0.30 while the town's edge stands at 0.35 — every raid was fought inside the town |
+| "ať je souboj dle prostředí" | `CoverField` existed and the fight used it only for arrows in flight |
+| "budovy levitují" | the lot stopped dead at the wall, with wild grass to a hard edge |
+| "náves namačkaná mezi domy" | the green was reserved in the Core and never drawn |
+| "v pozdějších érách nic okolo" | the grid grows to 90 tiles, `span` stayed at 0.70 |
+| "co je na mapě světa není v osadě" | `RegionFeature` never reached `LocalMapGenerator` |
+| "zranění neodpovídají plátnu" | `PawnLook` drew hair and age; `Body` had missing limbs nobody drew |
+
+### 14.2 — and the three the handoff had already listed
+
+- **Expeditions walked on water.** Fixing it needed rivers to have **fords**,
+  because a channel that is deep for its whole length is a wall.
+- **Outlaw cadence 8 raids in 200 years.** A saturated multiplier, not a small
+  chance — `temptation` read 3.000 at every percentile (rule 90). Now 31.
+- **Research ran out at 130, eras lagged.** A DAG paces nothing (rule 88):
+  one age of reach, and the last two era milestones rescaled to a population
+  the game actually produces.
+
+### 14.3 — still open
+
+1. `roofEnough` is still a guess.
+2. Outlaw camps are never burned out — three of three stand after two centuries.
+3. The melee reads as a swing and a blood mark; impacts and recoil are next.
+4. Knowledge income swings ±7 000 a year in lumps; nobody has checked whether
+   that stalls a study.
