@@ -118,12 +118,27 @@ enum SettlementRenderer {
         /// one line of algebra, and the clamp is the same one the pan gesture
         /// uses — otherwise being taken to a raid on the southern edge would
         /// show you half a screen of nothing.
+        /// **Where in the view the thing being looked at should sit**, as a
+        /// fraction down the screen.
+        ///
+        /// Half is the middle, which is right for almost everything and wrong
+        /// for a fight: the card carrying the orders covers the bottom two
+        /// thirds of the screen, so a raid framed in the centre is a raid drawn
+        /// behind its own controls. Keks, watching one: *"chci vidět bitvu na
+        /// plátně."*
+        static let heldHigh: CGFloat = 0.30
+
         static func framing(_ point: LocalPoint, in size: CGSize,
-                            scale: CGFloat = closeUp) -> Camera {
+                            scale: CGFloat = closeUp,
+                            at height: CGFloat = 0.5) -> Camera {
             let s = min(maxScale, max(minScale, scale))
+            // The world is the view scaled about its centre and then dragged,
+            // so putting `point` at `height` down the screen is the centring
+            // offset plus however far `height` is from the middle.
             var camera = Camera(scale: s, offset: CGSize(
                 width: size.width * s * (0.5 - point.x),
-                height: size.height * s * (0.5 - point.y)))
+                height: size.height * s * (0.5 - point.y)
+                    + size.height * (height - 0.5)))
             let slackX = max(0, size.width * (s - 1) / 2)
             let slackY = max(0, size.height * (s - 1) / 2)
             camera.offset.width = min(slackX, max(-slackX, camera.offset.width))
@@ -307,8 +322,15 @@ enum SettlementRenderer {
         nightWash(&context, rect: viewRect, night: night, moonlight: moonlight)
         // And then the lamps, **over** the wash — the one layer night is not
         // allowed to grey out, because at night the lights are the picture.
-        SettlementLight.lamps(&context, nightLamps(placed: placed),
-                              night: night, moonlight: moonlight, time: time)
+        // …and whatever a fight is carrying, so a raid at midnight is something
+        // you can see rather than a rumour in the dark.
+        SettlementLight.lamps(
+            &context,
+            nightLamps(placed: placed) + SettlementBattle.torchlight(
+                settlement, rect: rect, continuousTick: continuousTick,
+                secondsPerTick: registry.config.realSecondsPerTick,
+                replay: battleReplay, zoom: zoom),
+            night: night, moonlight: moonlight, time: time)
     }
 
     // MARK: - Day & night

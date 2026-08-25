@@ -400,6 +400,64 @@ enum SettlementBattle {
              zoom: zoom, siege: siege, selectedPawnID: selectedPawnID, within: within)
     }
 
+    /// **The torches a warband carries**, as lamps for the night wash.
+    ///
+    /// A raid that arrives at half past ten at night was a crowd of dark shapes
+    /// in a dark field: the night wash goes over the fight, and the only layer
+    /// drawn over the wash is the lamps. So the fight brings its own light —
+    /// people crossing open country at night are carrying some. One pool on the
+    /// muster line and one at the warband's own middle, which is what makes the
+    /// two ranks legible without lighting the whole valley.
+    ///
+    /// Empty by day and empty with no fight on, so it costs one branch.
+    static func torchlight(
+        _ settlement: Settlement, rect: CGRect, continuousTick: Double,
+        secondsPerTick: Double = 60, replay: Replay? = nil, zoom: CGFloat
+    ) -> [SettlementLight.Lamp] {
+        guard let (log, progress) = live(settlement, continuousTick: continuousTick,
+                                         secondsPerTick: secondsPerTick,
+                                         replay: replay) else { return [] }
+        let siege = settlement.siege.flatMap { $0.id == log.id ? $0 : nil }
+        let field = ground(log)
+        // Guttering out as the fight ends, so a field does not stay lit after
+        // everybody has gone home.
+        let left = max(0, 1 - max(0, progress - 1) / max(0.001, lingerFraction))
+        // **One wide, weak wash over the ground the fight is on**, and a small
+        // flame in some of the warband's hands.
+        //
+        // Two bright pools were tried first and are wrong: at a lamp's ordinary
+        // radius they came out as two suns with the fighting invisible
+        // underneath them. What a night battle wants is enough light to read
+        // the shapes by — the wash lifts the whole field a little, and the
+        // hand torches say who is carrying it.
+        var lamps: [SettlementLight.Lamp] = []
+        let standing = siege.map { $0.raiders.filter { !$0.down } } ?? []
+        let middle: LocalPoint
+        if standing.isEmpty {
+            middle = field.out(SiegeField.musterReach + 0.03)
+        } else {
+            let sum = standing.reduce(into: (x: 0.0, y: 0.0)) {
+                $0.x += $1.at.x / Double(standing.count)
+                $0.y += $1.at.y / Double(standing.count)
+            }
+            middle = LocalPoint(x: (sum.x + field.muster.x) / 2,
+                                y: (sum.y + field.muster.y) / 2)
+        }
+        lamps.append(SettlementLight.Lamp(
+            at: SettlementRenderer.point(middle, in: rect),
+            radius: 190 * zoom, strength: 0.20 * left,
+            colour: SettlementLight.hearth, phase: 0))
+        // A torch every few hands, so the light has people in it.
+        for (index, raider) in standing.enumerated() where index % 4 == 0 {
+            guard lamps.count < 8 else { break }
+            lamps.append(SettlementLight.Lamp(
+                at: SettlementRenderer.point(raider.at, in: rect),
+                radius: 26 * zoom, strength: 0.16 * left,
+                colour: SettlementLight.hearth, phase: Double(index) * 0.7))
+        }
+        return lamps
+    }
+
     /// The blood on the ground, drawn **before** the colonists.
     ///
     /// A pass of its own because of where it belongs in the stack: people stand

@@ -78,20 +78,21 @@ struct SettlementScreen: View {
             // warband came from, which at the opening zoom is usually not on
             // the screen at all.
             if let siege = game.siege {
-                game.lookAtTheField(approach: siege.approach, id: siege.id)
+                game.lookAtTheField(approach: siege.approach, id: siege.id,
+                                    edge: siege.edge)
             }
         }
         .onAppear {
             guard let siege = game.siege else { return }
             game.startSiegeLoop()
-            game.lookAtTheField(approach: siege.approach, id: siege.id)
+            game.lookAtTheField(approach: siege.approach, id: siege.id, edge: siege.edge)
         }
         // A raid the storyteller resolved never had a live siege to announce
         // it — the report card is the first anybody hears of it, and the fight
         // it is describing is playing out on the canvas *now*.
         .onChange(of: game.battleReport?.id) { _, id in
             guard let id, let battle = game.battleReport else { return }
-            game.lookAtTheField(approach: battle.approach, id: id)
+            game.lookAtTheField(approach: battle.approach, id: id, edge: battle.edge)
         }
         // Somebody asked to be shown a thing — from the chronicle, the colonist
         // list, a journal line. This screen owns the canvas, so it adopts the
@@ -229,13 +230,30 @@ struct SettlementScreen: View {
             } else if let battle = game.battleReport {
                 // A fight just happened here — show what it cost before idle
                 // curiosity about the scene.
+                let origin = game.raidOrigin(of: battle)
                 BattleReportCard(
                     battle: battle,
+                    origin: origin.map { found in
+                        BattleReportCard.Origin(
+                            camp: found.camp.name.resolve(AppStrings.language),
+                            place: found.region.explorationState == .unknown
+                                ? (AppStrings.language == .cs
+                                   ? "kdesi v neprochozené zemi" : "somewhere nobody has walked")
+                                : found.region.name,
+                            reachable: game.canStrike(found.region))
+                    },
+                    onStrike: origin.map { found in
+                        {
+                            game.sendToSite(found.region.id)
+                            withAnimation(.easeOut(duration: 0.15)) { game.dismissBattleReport() }
+                        }
+                    },
                     onReplay: {
                         battleReplay = SettlementBattle.Replay(log: battle)
                         // Watching it again from wherever the camera happens to
                         // be sitting is how you miss it the second time too.
-                        game.lookAtTheField(approach: battle.approach, id: UUID())
+                        game.lookAtTheField(approach: battle.approach, id: UUID(),
+                                            edge: battle.edge)
                     },
                     onClose: {
                         withAnimation(.easeOut(duration: 0.15)) { game.dismissBattleReport() }

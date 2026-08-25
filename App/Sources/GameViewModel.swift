@@ -221,9 +221,23 @@ final class GameViewModel {
     /// Pulled *back* rather than in: a fight is two lines of people and you want
     /// to see both of them and the wall they are pushing towards.
     func lookAtTheField(approach: Double, id: UUID) {
+        lookAtTheField(approach: approach, id: id, edge: 0)
+    }
+
+    /// …and the same for a fight whose ground the town's own size decides.
+    ///
+    /// `edge` is `Siege.edge` — how far the built town reaches on the bearing
+    /// the attack came in on — so the camera frames the line where it actually
+    /// forms rather than at a constant that stopped being true when the span
+    /// started following the grid.
+    func lookAtTheField(approach: Double, id: UUID, edge: Double) {
+        let field = SiegeField(approach: approach, edge: edge > 0 ? edge : SiegeField.wallReach)
         spotlight = CanvasFocus(
-            id: id, target: .place(SiegeField(approach: approach).muster),
-            scale: SettlementRenderer.Camera.opening)
+            id: id, target: .place(field.muster),
+            scale: SettlementRenderer.Camera.opening,
+            // Held high, so the line is in the strip of canvas the battle card
+            // leaves visible rather than behind it.
+            height: SettlementRenderer.Camera.heldHigh)
         lastGrab = Date()
     }
 
@@ -401,8 +415,15 @@ final class GameViewModel {
     /// settlement, plus any storyteller events that fired.
     private func surfaceToasts(fired: [HistoricalEvent], journalMark: Int) {
         var fresh: [LiveToast] = []
+        // **Nobody swaps stories by the well while the wall is being stormed.**
+        // A siege writes a wound a step and the colony goes on chatting: the
+        // canvas filled up with "shared stories over the evening fire" laid
+        // over the fight the player was trying to watch. During a raid only
+        // what the raid is doing gets a toast.
+        let fighting = selectedSettlement?.siege != nil
         if let journal = selectedSettlement?.journal {
             for entry in journal.entries(after: journalMark - 1) where entry.id >= journalMark {
+                if fighting, ![.danger, .death].contains(entry.kind) { continue }
                 fresh.append(LiveToast(
                     id: UUID(), icon: Self.icon(for: entry.kind),
                     text: entry.text.resolve(AppStrings.language),
@@ -530,6 +551,33 @@ final class GameViewModel {
         apply(PlannerResult(state: stamped, fired: result.fired), before: before)
     }
 
+    /// **Stage a raid, now**, so a fight can be watched rather than waited for.
+    ///
+    /// A raid is a once-a-few-years roll that plays out over half a minute of
+    /// colony time. Tuning how a battle *looks* — where the line forms, whether
+    /// a blow lands on a body that feels it — meant sitting on a save for an
+    /// hour hoping one arrived. This is the same `SiegeEngine.begin` the
+    /// simulation uses, with a warband sized against the colony so the fight is
+    /// worth watching, opened on a seed derived from the tick rather than from
+    /// the clock (rule 2 — a debug door is still a door into a deterministic
+    /// world).
+    func stageRaid() {
+        guard let index = world.settlements.indices.first else { return }
+        let town = world.settlements[index]
+        guard town.siege == nil else { return }
+        let strength = 30 + Double(town.pawns.count) * 2.2
+        world.settlements[index] = SiegeEngine.begin(
+            town,
+            attackerStrength: strength,
+            attackerName: AppStrings.language == .cs ? "Nájezdníci" : "Raiders",
+            fortification: town.stats.defense,
+            tick: world.tick,
+            registry: registry,
+            seed: UInt64(bitPattern: Int64(world.tick &* 2_654_435_761)),
+            era: world.era)
+        persist()
+    }
+
     // MARK: - Player actions
 
     func setResearch(_ techID: String) {
@@ -581,6 +629,29 @@ final class GameViewModel {
                 registry: registry) else { return }
         world = sent
         persist()
+    }
+
+    /// **Where a warband came from**, when the record knows.
+    ///
+    /// `BattleLog.attackerCampID` has been carried since camps went in — the
+    /// siege is gone the moment it ends, so the record is the only thing left
+    /// that can answer "who has been robbing us" — and nothing ever asked it.
+    /// A raid you cannot trace is weather; a raid with a place on the map
+    /// behind it is a reason to go there.
+    func raidOrigin(of battle: BattleLog) -> (camp: OutlawCamp, region: Region)? {
+        guard let campID = battle.attackerCampID,
+              let camp = world.camps.first(where: { $0.id == campID }),
+              let region = world.regions.first(where: { $0.id == camp.regionID })
+        else { return nil }
+        return (camp, region)
+    }
+
+    /// Whether a party could be sent against that camp right now — the hex has
+    /// been walked, nobody is on that road already, and the stores will bear it.
+    func canStrike(_ region: Region) -> Bool {
+        siteActionLabel(for: region) != nil
+            && partyOut(toRegion: region.id) == nil
+            && canAffordExpedition(to: region)
     }
 
     /// The party on the road to this region, if one is out.

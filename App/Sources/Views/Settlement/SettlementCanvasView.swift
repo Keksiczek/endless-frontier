@@ -72,12 +72,16 @@ struct CanvasFocus: Equatable {
     let id: UUID
     let target: Target
     var scale: CGFloat = SettlementRenderer.Camera.closeUp
+    /// How far down the view the target should sit. See `Camera.heldHigh`.
+    var height: CGFloat = 0.5
 
     init(id: UUID = UUID(), target: Target,
-         scale: CGFloat = SettlementRenderer.Camera.closeUp) {
+         scale: CGFloat = SettlementRenderer.Camera.closeUp,
+         height: CGFloat = 0.5) {
         self.id = id
         self.target = target
         self.scale = scale
+        self.height = height
     }
 
     /// The focus a journal entry asks for, if it happened to anything.
@@ -232,7 +236,8 @@ struct SettlementCanvasView: View {
               size.width > 0, size.height > 0,
               let point = place(of: focus.target) else { return }
         answered = focus.id
-        let aimed = SettlementRenderer.Camera.framing(point, in: size, scale: focus.scale)
+        let aimed = SettlementRenderer.Camera.framing(point, in: size, scale: focus.scale,
+                                                      at: focus.height)
         withAnimation(.easeInOut(duration: 0.55)) { camera = aimed }
         // The next gesture composes from where the flight put us, not from
         // where the camera was before it.

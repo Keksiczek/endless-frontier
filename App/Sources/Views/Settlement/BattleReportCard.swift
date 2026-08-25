@@ -10,7 +10,23 @@ import EndlessFrontierCore
 /// battle leaves a record you can actually read: who came, how it broke, who
 /// fell. Strictly a view of `settlement.lastBattle`; it writes nothing back.
 struct BattleReportCard: View {
+    /// **Where the warband came from**, when it came from a place.
+    ///
+    /// A raid by a people has a hex you already know about; a raid by outlaws
+    /// has a camp, and the camp was invisible — the record carried
+    /// `attackerCampID` from the day camps went in and no surface asked it. A
+    /// raid you cannot trace is weather. Nil for the wild and for peoples.
+    struct Origin {
+        let camp: String
+        let place: String
+        /// Whether a party could be sent against it right now.
+        let reachable: Bool
+    }
+
     let battle: BattleLog
+    var origin: Origin?
+    /// Send a party to the camp they came from.
+    var onStrike: (() -> Void)?
     /// Play the fight again, from the top, on a clock of its own.
     ///
     /// A raid takes half a minute out of an hour of colony time, and looking
@@ -28,6 +44,7 @@ struct BattleReportCard: View {
             engagementLine
             if !beats.isEmpty { beatStrip }
             if !fallen.isEmpty { fallenLine }
+            if let origin { originLine(origin) }
             HStack(spacing: 8) {
                 if let onReplay {
                     Button(action: onReplay) {
@@ -62,6 +79,35 @@ struct BattleReportCard: View {
                 .strokeBorder(tint.opacity(0.5), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.45), radius: 20, y: 8)
+    }
+
+    /// Who they were and where they live — and the one thing to be done about
+    /// it. The camp is a place on the world map with strength that grows and
+    /// loot that fattens it; going there is how a raid gets undone.
+    @ViewBuilder
+    private func originLine(_ origin: Origin) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Image(systemName: "tent.2.fill").font(.caption2)
+                Text(cs ? "Přišli z: \(origin.camp) · \(origin.place)"
+                        : "They came from \(origin.camp) · \(origin.place)")
+                    .font(.caption)
+            }
+            .foregroundStyle(Theme.textDim)
+            if let onStrike, origin.reachable {
+                Button(action: onStrike) {
+                    Label(cs ? "Vypravit se na tábor" : "Go for the camp",
+                          systemImage: "figure.walk.departure")
+                        .font(.caption.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 7)
+                        .background(Theme.danger.opacity(0.16),
+                                    in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .foregroundStyle(Theme.danger)
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 
     private var header: some View {

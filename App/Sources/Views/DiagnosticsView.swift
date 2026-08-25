@@ -133,6 +133,20 @@ struct DiagnosticsView: View {
                 stepButton(cs ? "+10 let" : "+10 yr", years: 10)
                 stepButton(cs ? "+50 let" : "+50 yr", years: 50)
             }
+            // A fight to watch, on demand. Otherwise a raid is a roll every few
+            // years and half a minute long — see `GameViewModel.stageRaid`.
+            Button {
+                game.stageRaid()
+                dismiss()
+            } label: {
+                Label(cs ? "Vyvolat nájezd" : "Stage a raid", systemImage: "flame.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .tint(Theme.danger)
+            .disabled(game.selectedSettlement?.siege != nil)
+
             if game.pendingProposal != nil {
                 Label(cs ? "Čeká návrh zákona — vyřeš ho na tabu Sněm."
                          : "A law motion is waiting — resolve it on the Council tab.",
