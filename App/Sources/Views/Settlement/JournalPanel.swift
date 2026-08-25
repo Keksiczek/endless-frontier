@@ -81,6 +81,9 @@ struct JournalPanel: View {
         case .discovery: return Theme.accent
         case .construction, .work: return Theme.textDim
         case .arrival, .departure, .faith: return Theme.accent.opacity(0.8)
+        // A declaration and a treaty are both the colour of the thing they
+        // decide, which is a war.
+        case .diplomacy: return Theme.danger.opacity(0.85)
         }
     }
 }

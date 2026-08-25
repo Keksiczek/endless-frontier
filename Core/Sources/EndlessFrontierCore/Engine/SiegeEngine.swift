@@ -1658,6 +1658,14 @@ public enum SiegeEngine {
         s.tribes[index].population = max(4, s.tribes[index].population - spent * 0.12)
         // What they got past the door with goes into their own stores.
         s.tribes[index].stores += siege.plundered
+        // …and the war remembers it. This is the whole difference between a
+        // war and a run of unrelated bad years: by the tenth raid the colony
+        // can be told what the ten have cost, on both sides, without anybody
+        // keeping a second ledger (rule 8).
+        s.tribes[index].war?.strengthSpent += spent
+        s.tribes[index].war?.lootLost += siege.plundered
+        if siege.repelled { s.tribes[index].war?.repelled += 1 }
+        s.tribes[index].war?.colonistsLost += siege.moments.count { $0.kind == .death }
         return s
     }
 

@@ -67,6 +67,7 @@ struct StatusStrip: View {
                 tensionPip
             }
             resourcePills
+            warBanner
         }
         .sheet(item: $sheet) { which in
             switch which {
@@ -88,6 +89,61 @@ struct StatusStrip: View {
         .overlay(alignment: .bottom) {
             Rectangle().fill(Theme.boneFaint.opacity(0.3)).frame(height: 1)
         }
+    }
+
+    /// **A war, on the screen the player actually lives on.**
+    ///
+    /// A war used to be readable in exactly one place — the diplomacy list, six
+    /// taps away — while the colony it was being fought against showed nothing
+    /// at all. Keks: *"války mi neprojdou propojené nikde, je nevidím, jen v
+    /// diplomacii."* This is the line that connects them: who, since when, how
+    /// many times they have come, and how many of those the wall turned back.
+    @ViewBuilder
+    private var warBanner: some View {
+        let wars = game.warringTribes
+        if !wars.isEmpty {
+            HStack(spacing: 8) {
+                Image(systemName: "flag.2.crossed.fill")
+                    .font(.caption)
+                    .foregroundStyle(Theme.danger)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(wars.map(\.name).joined(separator: " · "))
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Theme.danger)
+                    if let war = wars.first?.war {
+                        Text(warLine(war))
+                            .font(.caption2)
+                            .foregroundStyle(Theme.textDim)
+                    }
+                }
+                Spacer()
+                Text(AppStrings.language == .cs ? "VÁLKA" : "AT WAR")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(Theme.ink)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Theme.danger, in: Capsule())
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Theme.danger.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+            .accessibilityElement(children: .combine)
+        }
+    }
+
+    private func warLine(_ war: WarState) -> String {
+        let cs = AppStrings.language == .cs
+        let years = war.years(now: game.world.tick, ticksPerYear: game.ticksPerYear)
+        var parts: [String] = []
+        parts.append(cs ? "\(years). rok" : "year \(years + 1)")
+        if war.raids > 0 {
+            parts.append(cs ? "\(war.raids) nájezdů" : "\(war.raids) raids")
+            parts.append(cs ? "\(war.repelled) odraženo" : "\(war.repelled) turned back")
+        }
+        if war.colonistsLost > 0 {
+            parts.append(cs ? "\(war.colonistsLost) padlých" : "\(war.colonistsLost) fallen")
+        }
+        return parts.joined(separator: " · ")
     }
 
     /// The chain behind one store, asked of the Core so the card and the

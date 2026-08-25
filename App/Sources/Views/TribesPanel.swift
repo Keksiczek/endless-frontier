@@ -38,6 +38,11 @@ struct TribesPanel: View {
             Text(tribe.originStory.resolve(AppStrings.language))
                 .font(.caption).italic().foregroundStyle(Theme.textDim)
 
+            // What the war has cost, while there is one. A tally in the place
+            // the war is declared: the panel used to say WAR and then nothing —
+            // no beginning, no length, no butcher's bill.
+            if let war = tribe.war { warLine(war) }
+
             let history = historyLine(tribe)
             if !history.isEmpty {
                 Text(history)
@@ -112,9 +117,44 @@ struct TribesPanel: View {
                     game.offerTribute(to: tribe.id)
                 }
             }
+            // The verb the screen never had. A neighbour dispute that can only
+            // ever be waited out is a dispute with one party in it.
+            if tribe.war == nil, tribe.standing < 0 {
+                action(AppStrings.declareWar, icon: "flag.2.crossed.fill", cost: 0,
+                       enabled: true, tint: Theme.danger) {
+                    game.declareWar(on: tribe.id)
+                }
+            }
             Spacer(minLength: 0)
         }
         .padding(.top, 2)
+    }
+
+    /// The war's own line: since when, how often they have come, and what it
+    /// has cost both sides.
+    private func warLine(_ war: WarState) -> some View {
+        let years = war.years(now: game.world.tick, ticksPerYear: game.ticksPerYear)
+        var parts: [String] = []
+        parts.append(cs ? "válka \(years). rokem" : "at war, year \(years + 1)")
+        if war.raids > 0 {
+            parts.append(cs ? "\(war.raids) nájezdů, \(war.repelled) odraženo"
+                            : "\(war.raids) raids, \(war.repelled) turned back")
+        }
+        if war.colonistsLost > 0 {
+            parts.append(cs ? "\(war.colonistsLost) padlých" : "\(war.colonistsLost) fallen")
+        }
+        if war.lootLost > 1 {
+            parts.append(cs ? "\(Int(war.lootLost)) jídla odneseno"
+                            : "\(Int(war.lootLost)) food carried off")
+        }
+        return HStack(spacing: 6) {
+            Image(systemName: "flag.2.crossed.fill").font(.caption2)
+            Text(parts.joined(separator: " · ")).font(.caption2)
+        }
+        .foregroundStyle(Theme.danger)
+        .padding(.horizontal, 8).padding(.vertical, 4)
+        .background(Theme.danger.opacity(0.12),
+                    in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private func action(

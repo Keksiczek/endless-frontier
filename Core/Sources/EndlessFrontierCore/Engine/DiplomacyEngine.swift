@@ -25,6 +25,8 @@ public enum DiplomacyEngine {
     static let overcrowdingChance = 0.25
     /// At most this many neighbouring peoples — the map stays legible.
     static let maxTribes = 3
+    /// How far out from the colony a seceding people looks for a home, in hexes.
+    static let tribeHomeReach = 3
 
     // Yearly life of a tribe
     static let tribeGrowthPerYear = 0.03
@@ -35,8 +37,24 @@ public enum DiplomacyEngine {
     static let exchangeChance = 0.25
     static let marriageChance = 0.12
     static let disputeChance = 0.30
+    /// The roll that turns a grievance into a **declaration**, once a year.
     static let warChance = 0.45
+    /// …and the roll that sends a warband over the ground in a year the war is
+    /// already on. Higher than the declaration, because a war nobody fights is
+    /// a line in a panel: this is the number that makes the state mean
+    /// something on the ground the player is standing on.
+    static let raidChance = 0.62
     static let peaceChance = 0.18
+    /// How much more likely peace gets for each year the war has already run.
+    ///
+    /// A flat roll gives a war a geometric length with no memory — the tenth
+    /// year is as likely to end it as the first, so a war can run for ever
+    /// while the colony has nothing left to lose. Weariness gives it an arc.
+    static let peaceWearinessPerYear = 0.04
+    /// …and the most weariness can ever add.
+    static let peaceWearinessCap = 0.34
+    /// The most a full year's tribute can add to the odds of terms.
+    static let tributePeaceMost = 0.22
     static let defectionChance = 0.30
 
     // How well two peoples can *possibly* get on, and the thresholds that live
@@ -303,7 +321,16 @@ public enum DiplomacyEngine {
         s.tribes.append(Tribe(
             id: rng.nextUUID(),
             name: NameForge.tribeName(founder: founder, language: s.language),
-            regionID: s.settlements[capitalIndex].regionID,
+            // **Their own hex, not yours.**
+            //
+            // This used to be the capital's region — the one they walked out
+            // of — which is a sentence that reads fine and puts a people
+            // nowhere: the world map draws a house for a settled hex and a tent
+            // for a tribe's, and the house wins. Every people the colony ever
+            // bred was therefore invisible on the map, and Keks: *"na mapě
+            // nejsou všechny národy."* They left; they live somewhere else now.
+            regionID: newHome(for: capitalIndex, in: s, rng: &rng)
+                ?? s.settlements[capitalIndex].regionID,
             foundedTick: s.tick,
             originStory: story,
             population: n,
@@ -440,8 +467,15 @@ public enum DiplomacyEngine {
         guard let capitalIndex = s.settlements.indices.first else { return s }
         let standing = s.tribes[tribeIndex].standing
 
+        // Nobody trades with, teaches or marries into a people they are at war
+        // with. The standing gates below would mostly refuse anyway — a war is
+        // declared far under any of them — but "mostly" is how a caravan came
+        // to arrive in the middle of a siege. War is the guard, and it is
+        // stated rather than implied.
+        let atWar = s.tribes[tribeIndex].war != nil
+
         // Trade: grain moves to whoever needs it, and both get richer for it.
-        if standing > 30, rng.nextUnit() < tradeChance, s.tribes[tribeIndex].stores > 30 {
+        if !atWar, standing > 30, rng.nextUnit() < tradeChance, s.tribes[tribeIndex].stores > 30 {
             let traded = 20.0
             s.tribes[tribeIndex].stores -= traded
             deposit(&s, capitalIndex, .food, traded)
@@ -453,13 +487,13 @@ public enum DiplomacyEngine {
         }
 
         // Scholars trade what they know.
-        if standing > exchangeStanding, rng.nextUnit() < exchangeChance {
+        if !atWar, standing > exchangeStanding, rng.nextUnit() < exchangeChance {
             deposit(&s, capitalIndex, .knowledge, 12)
             s.tribes[tribeIndex].standing = clamp(s.tribes[tribeIndex].standing + 2)
         }
 
         // A marriage of the two leading houses seals the peace.
-        if standing > marriageStanding, !s.tribes[tribeIndex].married,
+        if !atWar, standing > marriageStanding, !s.tribes[tribeIndex].married,
            s.settlements[capitalIndex].leaderID != nil, rng.nextUnit() < marriageChance {
             s.tribes[tribeIndex].married = true
             s.tribes[tribeIndex].standing = clamp(standing + 15)
@@ -478,19 +512,122 @@ public enum DiplomacyEngine {
                 0, s.settlements[capitalIndex].stats.morale - 2)
         }
 
-        // War: they fall on the granaries. Walls and militia blunt the blow.
-        if standing < warStanding, rng.nextUnit() < warChance,
-           s.tribes[tribeIndex].population > 6, s.settlements[capitalIndex].pawns.count > 6 {
-            s = raid(s, tribeIndex: tribeIndex, capitalIndex: capitalIndex,
-                     registry: registry, rng: &rng)
+        // **War.** One roll, read two ways — deliberately, so that adding a
+        // declaration does not shift the random stream of every save that
+        // already exists (rule 2: new draws go at the end of a sequence, and
+        // the cheapest new draw is the one you don't take).
+        //
+        // At peace, the roll *declares*: a grievance that has been sitting
+        // under `warStanding` finally becomes a war, with a date on it. At war,
+        // the same roll sends the warband — more often, because a war is a
+        // thing that happens rather than a thing that is announced.
+        let canFight = s.tribes[tribeIndex].population > 6
+            && s.settlements[capitalIndex].pawns.count > 6
+        if canFight {
+            if s.tribes[tribeIndex].war == nil {
+                if standing < warStanding, rng.nextUnit() < warChance {
+                    s = declare(s, tribeIndex: tribeIndex, capitalIndex: capitalIndex,
+                                byColony: false)
+                }
+            } else if rng.nextUnit() < raidChance {
+                s = raid(s, tribeIndex: tribeIndex, capitalIndex: capitalIndex,
+                         registry: registry, rng: &rng)
+            }
         }
 
-        // Or the leaders find a fragile peace.
-        if s.tribes[tribeIndex].standing < warStanding, rng.nextUnit() < peaceChance {
-            s.tribes[tribeIndex].standing = -5
-            s.tribes[tribeIndex].grudge *= 0.5
+        // Or the leaders find a fragile peace — and only ever *out of a war*.
+        // It used to fire on standing alone, which meant the number that had
+        // just sent a warband over the hill could be wiped to −5 in the same
+        // year by a clause nobody could see. Now peace ends something, and
+        // ending it is written down.
+        if s.tribes[tribeIndex].war != nil,
+           rng.nextUnit() < peaceOdds(of: s.tribes[tribeIndex], now: s.tick,
+                                      ticksPerYear: registry.config.ticksPerYear) {
+            s = makePeace(s, tribeIndex: tribeIndex, capitalIndex: capitalIndex,
+                          ticksPerYear: registry.config.ticksPerYear)
         }
 
+        return s
+    }
+
+    /// How likely the leaders are to end it this year: the flat roll, plus what
+    /// the years have worn off both sides.
+    static func peaceOdds(of tribe: Tribe, now tick: Int, ticksPerYear: Int) -> Double {
+        guard let war = tribe.war else { return 0 }
+        let years = Double(war.years(now: tick, ticksPerYear: ticksPerYear))
+        // A colony that is paying them is a colony asking for terms, and the
+        // asking should count for something. This is the verb `tributePerYear`
+        // has been waiting for: before it, tribute worked off a grievance and
+        // could not end the thing the grievance had already become.
+        let bought = min(tributePeaceMost,
+                         tribe.tributePerYear / tributeMostPerYear * tributePeaceMost)
+        return min(1, peaceChance + min(peaceWearinessCap, years * peaceWearinessPerYear) + bought)
+    }
+
+    /// **A war begins**, and the colony is told so.
+    ///
+    /// Public because the player has to be able to do this too: a diplomacy
+    /// screen that can only wait to be attacked is a screen with one verb.
+    @discardableResult
+    public static func declare(
+        _ state: WorldState, tribeIndex: Int, capitalIndex: Int, byColony: Bool
+    ) -> WorldState {
+        var s = state
+        guard s.tribes.indices.contains(tribeIndex),
+              s.settlements.indices.contains(capitalIndex),
+              s.tribes[tribeIndex].war == nil else { return s }
+        let name = s.tribes[tribeIndex].name
+        s.tribes[tribeIndex].war = WarState(declaredTick: s.tick, declaredByColony: byColony)
+        s.tribes[tribeIndex].wars += 1
+        // Declaring it yourself is not free: a people you have just declared on
+        // is not going to forget it, whatever the provocation was.
+        if byColony {
+            s.tribes[tribeIndex].standing = clamp(s.tribes[tribeIndex].standing - 25)
+            resent(&s.tribes[tribeIndex], by: 10)
+        }
+        s.settlements[capitalIndex].journal.append(
+            tick: s.tick, kind: .danger,
+            text: byColony
+                ? LocalizedText(values: [
+                    .en: "War is declared on \(name).",
+                    .cs: "Vyhlášena válka \(name)."])
+                : LocalizedText(values: [
+                    .en: "\(name) have declared war on the colony.",
+                    .cs: "\(name) vyhlásili osadě válku."]))
+        s.settlements[capitalIndex].stats.morale = max(
+            0, s.settlements[capitalIndex].stats.morale - 5)
+        // The world can feel it. A war that does not move the threat level is a
+        // war the storyteller has never heard of.
+        s.globalStats = s.globalStats.applying(delta: 10, to: "threatLevel")
+        return s
+    }
+
+    /// **…and a war ends**, with what it cost written down.
+    @discardableResult
+    public static func makePeace(
+        _ state: WorldState, tribeIndex: Int, capitalIndex: Int, ticksPerYear: Int
+    ) -> WorldState {
+        var s = state
+        guard s.tribes.indices.contains(tribeIndex),
+              s.settlements.indices.contains(capitalIndex),
+              let war = s.tribes[tribeIndex].war else { return s }
+        let name = s.tribes[tribeIndex].name
+        let years = war.years(now: s.tick, ticksPerYear: ticksPerYear)
+        s.tribes[tribeIndex].war = nil
+        s.tribes[tribeIndex].standing = -5
+        s.tribes[tribeIndex].grudge *= 0.5
+        s.settlements[capitalIndex].journal.append(
+            tick: s.tick, kind: .diplomacy,
+            text: years > 0
+                ? LocalizedText(values: [
+                    .en: "Peace with \(name), after \(years) years of war.",
+                    .cs: "Mír s \(name) po \(years) letech války."])
+                : LocalizedText(values: [
+                    .en: "Peace with \(name) before the first blow fell.",
+                    .cs: "Mír s \(name) dřív, než padla první rána."]))
+        s.settlements[capitalIndex].stats.morale = min(
+            100, s.settlements[capitalIndex].stats.morale + 4)
+        s.globalStats = s.globalStats.applying(delta: -8, to: "threatLevel")
         return s
     }
 
@@ -562,6 +699,14 @@ public enum DiplomacyEngine {
         registry: GameDataRegistry, rng: inout SeededRNG
     ) -> WorldState {
         var s = state
+        // A warband on the ground means there is a war on, whoever called for
+        // it. An event or a test that reaches straight for `raid` gets the
+        // declaration too, rather than a raid with no war behind it — which is
+        // exactly the hole the old code left: raids happened and nothing in the
+        // world said the two peoples were at war.
+        if s.tribes[tribeIndex].war == nil {
+            s = declare(s, tribeIndex: tribeIndex, capitalIndex: capitalIndex, byColony: false)
+        }
         let raiderName = s.tribes[tribeIndex].name
         let strength = s.tribes[tribeIndex].population * 0.5
             + s.tribes[tribeIndex].genes.courage * 20
@@ -605,7 +750,9 @@ public enum DiplomacyEngine {
         s.settlements[capitalIndex].stats.stability = max(
             0, s.settlements[capitalIndex].stats.stability - 5)
         s.globalStats = s.globalStats.applying(delta: 6, to: "threatLevel")
-        s.tribes[tribeIndex].wars += 1
+        // Counted on the war, not on the people: `wars` is how many wars they
+        // have ever fought with you and goes up once, when one is declared.
+        s.tribes[tribeIndex].war?.raids += 1
         resent(&s.tribes[tribeIndex], by: 6)
         s.tribes[tribeIndex].standing = clamp(s.tribes[tribeIndex].standing - 8)
         // …and they wreck the road on their way in. A chokepoint is only worth
@@ -614,6 +761,37 @@ public enum DiplomacyEngine {
         s = RoadEngine.cut(s, from: s.tribes[tribeIndex].regionID,
                            to: s.settlements[capitalIndex].id)
         return s
+    }
+
+    // MARK: - Where a people lives
+
+    /// Somewhere for a new people to settle: near enough to matter, far enough
+    /// to be theirs.
+    ///
+    /// Deterministic — the shuffle is the seeded RNG the secession is already
+    /// holding, and every tie breaks on the region's name rather than on the
+    /// array's order, which reorders as regions are charted.
+    static func newHome(
+        for capitalIndex: Int, in s: WorldState, rng: inout SeededRNG
+    ) -> UUID? {
+        guard let home = s.regions.first(where: { $0.id == s.settlements[capitalIndex].regionID })
+        else { return nil }
+        let settled = Set(s.settlements.compactMap(\.regionID))
+        let taken = Set(s.tribes.compactMap(\.regionID))
+        let free = s.regions.filter {
+            !settled.contains($0.id) && !taken.contains($0.id) && $0.kind != .homeland
+        }
+        guard !free.isEmpty else { return nil }
+        // A day's walk out: close enough that raids, caravans and quarrels are
+        // about *this* colony, not a rumour from the far edge of the world.
+        let near = free.filter { $0.coord.distance(to: home.coord) <= tribeHomeReach }
+        let pool = near.isEmpty ? free : near
+        let sorted = pool.sorted {
+            $0.coord.distance(to: home.coord) != $1.coord.distance(to: home.coord)
+                ? $0.coord.distance(to: home.coord) < $1.coord.distance(to: home.coord)
+                : $0.name < $1.name
+        }
+        return sorted[min(sorted.count - 1, Int(rng.nextUnit() * Double(sorted.count)))].id
     }
 
     // MARK: - Helpers

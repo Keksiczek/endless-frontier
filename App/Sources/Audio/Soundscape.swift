@@ -124,6 +124,8 @@ enum Sting: String, CaseIterable {
         case .birth, .arrival, .discovery: return .chime
         case .death: return .knell
         case .faith: return .bell
+        // A declaration and a peace are both worth looking up for.
+        case .diplomacy: return .chime
         case .social, .work, .departure, .none: return nil
         }
     }

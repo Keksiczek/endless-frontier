@@ -431,6 +431,49 @@ struct WorldMapView: View {
                 .padding(6)
                 .background(Color.black.opacity(0.35), in: Circle())
                 .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
+                // Who lives here, said out loud. A tent is a tent; a tent with
+                // a name on it is the Askarel, and the difference is whether
+                // the map is a board or a world.
+                .overlay(alignment: .bottom) { peopleLabel(region) }
+                // …and whether there is a war on with them. The one thing the
+                // world map never said, and the first thing a player needs to
+                // know when they open it.
+                .overlay(alignment: .topTrailing) { warBadge(region) }
+        }
+    }
+
+    /// The name of the people whose hex this is, under their tent.
+    @ViewBuilder
+    private func peopleLabel(_ region: Region) -> some View {
+        if let tribe = tribes(in: region).first {
+            Text(tribe.name)
+                .font(.system(size: 8, weight: .semibold))
+                .lineLimit(1)
+                .foregroundStyle(markerTint(region))
+                .padding(.horizontal, 4)
+                .padding(.vertical, 1)
+                .background(Color.black.opacity(0.45), in: Capsule())
+                .fixedSize()
+                .offset(y: 15)
+        }
+    }
+
+    /// Crossed swords on the hex of a people the colony is at war with, beating
+    /// slowly so the eye finds it on a map full of tents.
+    @ViewBuilder
+    private func warBadge(_ region: Region) -> some View {
+        if tribes(in: region).contains(where: \.atWar) {
+            TimelineView(.animation(minimumInterval: 0.25)) { timeline in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                Image(systemName: "flag.2.crossed.fill")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.white)
+                    .padding(3)
+                    .background(Theme.danger, in: Circle())
+                    .scaleEffect(1 + 0.10 * sin(t * 3))
+                    .offset(x: 8, y: -8)
+            }
+            .accessibilityLabel(AppStrings.language == .cs ? "Válka" : "At war")
         }
     }
 
@@ -464,14 +507,18 @@ struct WorldMapView: View {
     private func markerSymbol(_ region: Region) -> String? {
         if game.settlement(in: region) != nil { return "house.fill" }
         // A met people's home hex carries their tent.
-        if tribe(in: region) != nil { return "tent.fill" }
+        if !tribes(in: region).isEmpty { return "tent.fill" }
         return region.kind.mapSymbol
     }
 
     /// A neighbouring people's marker takes the colour of your standing with
     /// them — the map tells you at a glance who is a friend.
     private func markerTint(_ region: Region) -> Color {
-        guard let tribe = tribe(in: region), game.settlement(in: region) == nil else { return .white }
+        // The worst standing on the hex decides its colour: if one of the
+        // peoples living here is at war with you, that is what the map is for.
+        guard let tribe = tribes(in: region)
+            .min(by: { $0.standing < $1.standing }),
+              game.settlement(in: region) == nil else { return .white }
         switch tribe.status {
         case .allied, .friendly: return Theme.good
         case .neutral: return .white
@@ -480,8 +527,15 @@ struct WorldMapView: View {
         }
     }
 
-    private func tribe(in region: Region) -> Tribe? {
-        game.tribes.first { $0.regionID == region.id }
+    /// **Every** people whose home this hex is.
+    ///
+    /// It used to be `first`, which was right when a hex could only hold one
+    /// people and wrong the moment two could — and two could, because a
+    /// seceding people was given the *colony's* hex to live on. Plural here,
+    /// re-homed in `DiplomacyEngine.newHome` and migrated for old saves; the
+    /// three together are why a map that had one tent on it now has all of them.
+    private func tribes(in region: Region) -> [Tribe] {
+        game.tribes.filter { $0.regionID == region.id }
     }
 
     private func strokeColor(isSelected: Bool, isFrontier: Bool) -> Color {

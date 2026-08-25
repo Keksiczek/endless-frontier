@@ -56,6 +56,51 @@ public enum SaveMigrator {
             s.regions = founded.regions
             s.camps = founded.camps
             return s
+        },
+        // **4 → 5: every people gets a hex of its own.**
+        //
+        // A seceding people was given `regionID` of the settlement it walked
+        // out of, so it lived on the colony's own hex — where the world map
+        // draws a house, not a tent. Every emergent people in every save is
+        // therefore invisible on the map it is supposed to live on, and no
+        // amount of drawing fixes a tribe that is standing on your roof.
+        //
+        // Re-homed rather than re-rolled: the people keeps its name, its
+        // history and its standing, and only moves house. Deterministic from
+        // `(mapSeed, tribe.id)`, and skipped for anyone already somewhere
+        // sensible, so running the chain twice cannot shuffle a settled world.
+        4: { state in
+            var s = state
+            let settled = Set(s.settlements.compactMap(\.regionID))
+            var taken = Set(s.tribes.compactMap(\.regionID).filter { !settled.contains($0) })
+            for index in s.tribes.indices {
+                let here = s.tribes[index].regionID
+                let homeless = here == nil || settled.contains(here!)
+                    || s.tribes.prefix(index).contains { $0.regionID == here }
+                guard homeless else { continue }
+                var rng = SeededRNG(seed: DiplomacyEngine.tribeSeed(
+                    mapSeed: s.mapSeed, tribeID: s.tribes[index].id, year: 0))
+                let free = s.regions.filter {
+                    !settled.contains($0.id) && !taken.contains($0.id) && $0.kind != .homeland
+                }
+                guard !free.isEmpty else { continue }
+                // Nearest to the colony first, ties on the name — the same
+                // ordering `DiplomacyEngine.newHome` uses, so a migrated world
+                // and a fresh one put peoples in the same kind of place.
+                let originCoord = s.settlements.first
+                    .flatMap { home in s.regions.first { $0.id == home.regionID }?.coord }
+                    ?? .origin
+                let sorted = free.sorted {
+                    $0.coord.distance(to: originCoord) != $1.coord.distance(to: originCoord)
+                        ? $0.coord.distance(to: originCoord) < $1.coord.distance(to: originCoord)
+                        : $0.name < $1.name
+                }
+                let pick = sorted[min(sorted.count - 1,
+                                      Int(rng.nextUnit() * Double(sorted.count)))]
+                s.tribes[index].regionID = pick.id
+                taken.insert(pick.id)
+            }
+            return s
         }
     ]
 

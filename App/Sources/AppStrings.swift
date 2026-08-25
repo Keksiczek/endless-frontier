@@ -65,6 +65,7 @@ enum AppStrings {
     static var recallEnvoy: String { s("Call them home", "Povolat zpět") }
     /// Buying peace: a yearly payment, and the cost of stopping it.
     static var offerTribute: String { s("Offer tribute", "Nabídnout tribut") }
+    static var declareWar: String { s("Declare war", "Vyhlásit válku") }
     static var stopTribute: String { s("Stop paying", "Přestat platit") }
     static var demandTribute: String { s("Demand tribute", "Žádat tribut") }
     static var proposePact: String { s("Propose a pact", "Nabídnout spojenectví") }

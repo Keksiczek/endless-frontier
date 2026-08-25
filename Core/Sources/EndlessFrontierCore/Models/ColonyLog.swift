@@ -16,6 +16,10 @@ public struct ColonyLogEntry: Codable, Sendable, Equatable, Identifiable {
         case discovery     // POIs, first contact
         case danger        // raids, beasts, disasters
         case faith
+        /// Wars declared and ended, envoys, tribute — what happens between
+        /// peoples. It used to be filed under `danger`, which made a peace
+        /// treaty ring the alarm horn.
+        case diplomacy
     }
 
     /// What this moment happened *to*, when the engine knows.

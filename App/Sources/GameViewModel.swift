@@ -506,6 +506,7 @@ final class GameViewModel {
         case .discovery: return "binoculars.fill"
         case .danger: return "exclamationmark.triangle.fill"
         case .faith: return "flame.fill"
+        case .diplomacy: return "flag.2.crossed.fill"
         }
     }
 
@@ -918,6 +919,25 @@ final class GameViewModel {
     /// The peoples you have actually met. Natives beyond the fog stay off the
     /// panels until an expedition makes first contact.
     var tribes: [Tribe] { world.tribes.filter(\.discovered) }
+
+    /// **The peoples the colony is at war with right now.**
+    ///
+    /// The one question every surface wanted to ask and none could: a war lived
+    /// as `standing < −30` inside one engine, so the map, the strip and the
+    /// chronicle had no way to know there was one on.
+    var warringTribes: [Tribe] { world.tribes.filter { $0.discovered && $0.atWar } }
+
+    /// Declares war on a people. The player's own verb — the diplomacy screen
+    /// could demand tribute, post an envoy and lay a road, and had no way to
+    /// say the one thing a neighbour dispute eventually comes to.
+    func declareWar(on tribeID: UUID) {
+        guard let index = world.tribes.firstIndex(where: { $0.id == tribeID }),
+              let capital = world.settlements.indices.first,
+              world.tribes[index].war == nil else { return }
+        world = DiplomacyEngine.declare(world, tribeIndex: index,
+                                        capitalIndex: capital, byColony: true)
+        persist()
+    }
 
     /// How many native peoples are still out there, unmet — the world tab can
     /// hint that the map is not empty.
