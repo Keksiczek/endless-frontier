@@ -693,6 +693,16 @@ public enum SiegeEngine {
         // through the smithy.
         let contact = crowded
             || (threat.map { SiegeField.distance(me.at, $0) <= reach * 2 } ?? false)
+        // **The common case pays two lookups.**
+        //
+        // This runs for every fighter on every step of every siege, and raids
+        // got four times as common the day `temptation` stopped saturating —
+        // the suite went from sixteen minutes to twenty-five. Nobody takes
+        // cover from somebody who cannot reach them: past a bowshot the ring
+        // of candidates is eight cover lookups to arrive at the plain stride
+        // (rule 4).
+        let underFire = threat.map { SiegeField.distance(me.at, $0) <= bowRange } ?? false
+        if !blocked(plain), contact || !underFire { return plain }
         let ahead = SiegeField.distance(plain, goal)
         var best: LocalPoint? = blocked(plain) ? nil : plain
         var bestCover = best.map(shelter) ?? -1

@@ -557,10 +557,22 @@ public struct RiverShape: Codable, Sendable, Equatable {
     }
 
     /// Whether a point stands on gravel rather than in the channel.
+    ///
+    /// **Allocation-free, and it has to be.** `PathEngine.waterDepth` asks this
+    /// per point, and per point means per build tile per placement check, per
+    /// stride of every fighter in a siege, per beast that moves. Asking it
+    /// through `fords` built a three-element array on every call and put a
+    /// malloc in the middle of the per-tick path (rule 4) — the suite went from
+    /// sixteen minutes to nearly thirty.
+    ///
+    /// The crossings are evenly spaced, so the distance to the nearest one is
+    /// arithmetic: scale `x` into ford-spacings, take the distance to the
+    /// nearest whole one, and scale back. Wrapping falls out of it, which the
+    /// array version needed two extra comparisons for.
     public func isFord(_ x: Double) -> Bool {
-        fords.contains { abs(x - $0) <= Self.fordHalfWidth
-            || abs(x - $0 + 1) <= Self.fordHalfWidth
-            || abs(x - $0 - 1) <= Self.fordHalfWidth }
+        let spacings = (x - phase / 6.283185) * Double(Self.fordCount)
+        let toNearest = abs(spacings - spacings.rounded())
+        return toNearest / Double(Self.fordCount) <= Self.fordHalfWidth
     }
 
     private enum CodingKeys: String, CodingKey { case baseY, amplitude, phase, flows }

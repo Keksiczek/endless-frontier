@@ -6,7 +6,7 @@
 | | |
 |---|---|
 | Last pushed | this batch |
-| Core | 1541 tests, green (see §4 for the run) |
+| Core | **1548 tests in 218 suites, green** |
 | App | 173 tests green, iOS build green |
 
 ## 1. What this batch was
@@ -119,7 +119,23 @@ and the last two era milestones asked for 260 and 600 souls against a measured
 peak of 322. Re-measured: medieval studies stay medieval, early industrial at
 140, modern at 170, **near future at 190** (never reached before).
 
-## 3. Open
+## 3. The suite got slower, on purpose
+
+The full Core run was sixteen minutes and is now **thirty-nine**. Two thirds of
+that is the outlaw fix doing what it was asked to: raids went from eight in two
+centuries to thirty-one, and every one of them is a siege simulated a step at a
+time in whatever long-running test it lands in. The remaining third was two
+real faults in the per-tick path, both found by the clock and both fixed:
+
+- `groundStride` searched a ring of eight cover candidates for **every fighter
+  on every step**, including the overwhelmingly common case of open ground with
+  nobody in bowshot. It now pays two lookups there and searches only under fire.
+- `RiverShape.isFord` was asked through `fords`, which **builds an array on
+  every call** — and `PathEngine.waterDepth` asks it per point, which means per
+  build tile per placement check and per stride of every fighter. The crossings
+  are evenly spaced, so the distance to the nearest one is arithmetic.
+
+## 4. Open
 
 1. **`roofEnough` was guessed, not measured** (`StewardEngine`). Untouched.
 2. **The camps are never cleared** — three of three still standing after two
@@ -133,10 +149,10 @@ peak of 322. Re-measured: medieval studies stay medieval, early industrial at
    swing and a blood mark. Impacts, recoil and a weapon that meets a body are
    the next pass.
 
-## 4. How to measure
+## 5. How to measure
 
 ```bash
-swift test --package-path Core                       # ~16 min
+swift test --package-path Core                       # ~39 min — see below
 EF_PROBE=1 swift test --package-path Core --filter "raidCadence"
 EF_PROBE=1 swift test --package-path Core --filter "ResearchProbe"
 xcodebuild -project App/EndlessFrontier.xcodeproj -scheme EndlessFrontier \
