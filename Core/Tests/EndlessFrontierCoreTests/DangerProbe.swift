@@ -63,6 +63,73 @@ struct DangerProbe {
         """)
     }
 
+    /// **Where the danger actually comes from**, and what the odds are that
+    /// bring it.
+    ///
+    /// Measured 2026-08-25: seven outlaw raids in two centuries against
+    /// sixty-three from peoples and fifty-seven from the wild. A camp is a
+    /// place on the map with strength that grows and loot that fattens it, and
+    /// it visited a colony once every thirty years — which makes it scenery
+    /// (rule 12). This prints the two numbers the odds are built from, because
+    /// a rate that never fires is either a small chance or a chance multiplied
+    /// by something that is always zero, and those want opposite fixes
+    /// (rule 23: read the field's own distribution before setting a threshold).
+    @Test("Who comes over the hill, and how often")
+    func raidCadence() throws {
+        let registry = try GameDataRegistry.bundled()
+        var state = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        var lures: [Double] = []
+        var watches: [Double] = []
+        var odds: [Double] = []
+        var fromCamps = Set<UUID>()
+        var fromPeoples = Set<UUID>()
+        var fromWild = Set<UUID>()
+
+        for _ in 0..<240 {
+            state = BalanceHarness.autoPlay(state, registry: registry)
+            state = TickEngine.advance(state, ticks: 50, registry: registry).state
+            guard let capital = state.settlements.first else { continue }
+            let lure = BanditEngine.temptation(capital)
+            let watch = BanditEngine.watchfulness(capital, registry: registry)
+            lures.append(lure)
+            watches.append(watch)
+            // Three checks a year, one roll each.
+            let perCheck = min(0.4, BanditEngine.baseChance * lure * (1 - watch))
+            odds.append(1 - pow(1 - perCheck,
+                                Double(registry.config.ticksPerYear / OutlawCampEngine.interval)))
+            for log in capital.battleHistory {
+                if log.attackerCampID != nil { fromCamps.insert(log.id) }
+                else if state.tribes.contains(where: { $0.name == log.attackerName }) {
+                    fromPeoples.insert(log.id)
+                } else { fromWild.insert(log.id) }
+            }
+        }
+
+        func percentiles(_ values: [Double]) -> String {
+            let sorted = values.sorted()
+            guard !sorted.isEmpty else { return "—" }
+            func at(_ q: Double) -> String {
+                String(format: "%.3f", sorted[min(sorted.count - 1, Int(Double(sorted.count) * q))])
+            }
+            return "p10 \(at(0.1))  p50 \(at(0.5))  p90 \(at(0.9))"
+        }
+        let meanOdds = odds.isEmpty ? 0 : odds.reduce(0, +) / Double(odds.count)
+        print("""
+
+        ── who comes over the hill, 200 years ────────────────────────
+        outlaw camps  \(fromCamps.count)
+        peoples       \(fromPeoples.count)
+        the wild      \(fromWild.count)
+        temptation    \(percentiles(lures))
+        watchfulness  \(percentiles(watches))
+        raid odds/yr  \(percentiles(odds))   mean \(String(format: "%.3f", meanOdds))
+        one raid every \(meanOdds > 0 ? String(format: "%.0f", 1 / meanOdds) : "∞") years
+        camps left    \(state.camps.count { $0.isActive(at: state.tick) }) of \(state.camps.count)
+        ──────────────────────────────────────────────────────────────
+
+        """)
+    }
+
     /// The part anybody actually plays. A colony of four hundred shrugging off
     /// a warband of a hundred and forty is *correct*; the question is whether
     /// the first thirty years have any teeth.

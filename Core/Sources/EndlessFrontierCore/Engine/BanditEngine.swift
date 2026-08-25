@@ -19,7 +19,20 @@ public enum BanditEngine {
     /// Checked on this cadence, in ticks (rule 4).
     public static let interval = 20
 
-    /// The base odds per check. Everything else multiplies it.
+    /// **The base odds per check.** Everything else multiplies it.
+    ///
+    /// Measured 2026-08-25 over two centuries: eight raids from the camps
+    /// against thirty-three from peoples and forty-three from the wild — a
+    /// place on the map with strength that grows and loot that fattens it
+    /// visited a colony **once every twenty-one years**. Doubled, with the
+    /// ceiling on `temptation` lifted below, which together bring a rich,
+    /// poorly watched colony to a raid every four or five years and leave a
+    /// well-guarded one at one every twenty (`DangerProbe.raidCadence`).
+    ///
+    /// **Left where it was**, in the end. The measurement named a saturated
+    /// multiplier, not a small chance, and the two want opposite fixes — doubling
+    /// this as well would have been two changes against one measurement
+    /// (rule 72), and it is the ceiling below that was doing the damage.
     static let baseChance = 0.010
     /// A colony smaller than this is not worth the walk.
     static let minimumPopulation = 12
@@ -35,11 +48,28 @@ public enum BanditEngine {
     /// did see were tribes and wolves. A warband does not count your shelves.
     /// Below this a colony genuinely has nothing worth carrying home.
     static let worthTheWalk = 400.0
-    /// …and how much *above* that is worth every man the camp has. A colony
-    /// holding this much on top of `worthTheWalk` is as tempting as outlaws
-    /// ever get (`wealthCeiling`).
+    /// …and how much *above* that doubles the interest.
+    ///
+    /// Widening this was tried and reverted: it is calibrated against the small
+    /// full shed — nine hundred sacks behind a thousand of shelf — and a wider
+    /// divisor quietly told the outlaws to ignore a hamlet's whole winter
+    /// store. The number that was wrong is the ceiling below.
     static let hardToRefuse = 800.0
-    /// The most the stores may multiply the odds by.
+    /// The most the *fullness* reading may multiply the odds by.
+    ///
+    /// **Kept for the share, dropped for the haul**, and the difference is the
+    /// whole fix. `share` asks "how full is it for its size", which is a ratio
+    /// and wants a ceiling. `haul` asks "how much is actually in there", which
+    /// is the thing that grows all game — and capping it at three meant a
+    /// colony was maximally tempting from about two thousand sacks onward.
+    /// Measured: temptation sat at 3.000 at the tenth percentile, the fiftieth
+    /// and the ninetieth, over two hundred years. A threat that does not scale
+    /// with what it threatens is scenery (rule 12), and a number that reads the
+    /// same at every percentile is not measuring anything (rule 54).
+    ///
+    /// The haul is bounded where it belongs instead — at the odds, which are
+    /// capped per check in `OutlawCampEngine.advanceOneTick`, so a fabulously
+    /// rich colony is raided often and never continuously.
     static let wealthCeiling = 3.0
     /// A watched colony is a colony they go around: at this many spears per
     /// hundred people, the odds are roughly halved.
@@ -126,7 +156,7 @@ public enum BanditEngine {
         let share = full > noticedAtShare
             ? min(wealthCeiling, (full - noticedAtShare) / (1 - noticedAtShare) * wealthCeiling)
             : 0
-        let haul = min(wealthCeiling, max(0, (stores - worthTheWalk) / hardToRefuse))
+        let haul = max(0, (stores - worthTheWalk) / hardToRefuse)
         return max(share, haul)
     }
 
