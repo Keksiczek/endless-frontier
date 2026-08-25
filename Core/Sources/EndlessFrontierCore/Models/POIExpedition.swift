@@ -41,11 +41,19 @@ public struct POIExpedition: Codable, Sendable, Equatable, Identifiable {
     /// be dealt with. Optional on decode like every new field (rule 3), so a
     /// save written mid-journey still loads and simply finds an empty room.
     public var site: SiteEncounter?
+    /// **The point the party bends its walk through**, when the straight line
+    /// would have taken it through deep water (`PathEngine.dryWay`).
+    ///
+    /// Stamped when they set out, like `Siege.edge`, so the canvas draws the
+    /// journey the simulation charged for rather than a second guess at it —
+    /// and so a river that moves under an old save does not re-route a party
+    /// that is already half way home. Nil is the ordinary case: dry ground.
+    public var via: LocalPoint?
 
     public init(id: UUID, poiID: Int, memberIDs: [UUID], departedTick: Int,
                 travelTicks: Int, workTicks: Int,
                 casualtyID: UUID? = nil, casualtyDied: Bool = false,
-                site: SiteEncounter? = nil) {
+                site: SiteEncounter? = nil, via: LocalPoint? = nil) {
         self.id = id
         self.poiID = poiID
         self.memberIDs = memberIDs
@@ -55,6 +63,7 @@ public struct POIExpedition: Codable, Sendable, Equatable, Identifiable {
         self.casualtyID = casualtyID
         self.casualtyDied = casualtyDied
         self.site = site
+        self.via = via
     }
 
     // MARK: - Where the party is

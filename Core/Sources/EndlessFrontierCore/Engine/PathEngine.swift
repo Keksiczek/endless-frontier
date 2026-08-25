@@ -146,6 +146,84 @@ public enum PathEngine {
     /// The river is only water where it **flows**: a dry wash on a desert map
     /// is a line on the ground people cross, and charging anything to walk over
     /// it would send the whole colony the long way round a ditch.
+    /// **A way round the water**, when the straight line goes through it.
+    ///
+    /// Building asks `drowned(in:)` and the wild asks `AnimalEngine.step(deep:)`
+    /// — and the one journey that crosses the whole valley did not ask
+    /// anything. An expedition walked from the gate to the ruins in a straight
+    /// bowed line, over the river, over the sea, and the canvas drew it doing
+    /// so. Open since the water went in.
+    ///
+    /// Returns the point to bend the walk through, or nil when the way is
+    /// already dry — a river has fords and a coast has a head, so a detour is
+    /// almost always available and the answer is a **way**, not a refusal.
+    /// Deterministic: candidates are tried in a fixed order and the first that
+    /// keeps the party out of its depth wins.
+    public static func dryWay(
+        from: LocalPoint, to: LocalPoint, in settlement: Settlement
+    ) -> LocalPoint? {
+        guard let depth = waterDepth(settlement) else { return nil }
+        guard drowns(from: from, to: to, depth: depth) else { return nil }
+        // **The crossings first.** A river runs the width of the valley, so
+        // there is no walking round it: a party goes to where it can be waded.
+        // Nearest crossing first, measured by the walk it actually costs.
+        var candidates: [LocalPoint] = []
+        if let river = settlement.localMap?.river, river.flows {
+            candidates += river.fords.map { LocalPoint(x: $0, y: river.y(atX: $0)) }
+        }
+        // …and then sideways off the straight line, which is what gets a party
+        // round a bay or the head of a lake — water that *has* an end.
+        let dx = to.x - from.x, dy = to.y - from.y
+        let length = (dx * dx + dy * dy).squareRoot()
+        if length > 1e-6 {
+            let px = -dy / length, py = dx / length
+            let middle = LocalPoint(x: (from.x + to.x) / 2, y: (from.y + to.y) / 2)
+            for reach in stride(from: 0.06, through: 0.34, by: 0.04) {
+                for side in [1.0, -1.0] {
+                    candidates.append(LocalPoint(
+                        x: min(0.97, max(0.03, middle.x + px * reach * side)),
+                        y: min(0.97, max(0.03, middle.y + py * reach * side))))
+                }
+            }
+        }
+        let sorted = candidates.sorted {
+            detourLength(from: from, via: $0, to: to)
+                < detourLength(from: from, via: $1, to: to)
+        }
+        for via in sorted where !drowns(from: from, to: via, depth: depth)
+            && !drowns(from: via, to: to, depth: depth) {
+            return via
+        }
+        return nil
+    }
+
+    /// How far a walk bent through `via` actually is.
+    static func detourLength(from: LocalPoint, via: LocalPoint, to: LocalPoint) -> Double {
+        func gap(_ a: LocalPoint, _ b: LocalPoint) -> Double {
+            let dx = b.x - a.x, dy = b.y - a.y
+            return (dx * dx + dy * dy).squareRoot()
+        }
+        return gap(from, via) + gap(via, to)
+    }
+
+    /// Whether a straight walk between two points ever puts somebody out of
+    /// their depth. The shallows are a ford: people wade them.
+    static func drowns(
+        from: LocalPoint, to: LocalPoint, depth: (LocalPoint) -> WaterDepth
+    ) -> Bool {
+        // The ends are where they are: a party standing in a fen, or a landmark
+        // out on a spit, is not a reason to refuse the walk between them. What
+        // is asked here is whether the **way** puts anybody out of their depth.
+        let steps = 24
+        for i in 1..<steps {
+            let t = Double(i) / Double(steps)
+            let here = LocalPoint(x: from.x + (to.x - from.x) * t,
+                                  y: from.y + (to.y - from.y) * t)
+            if depth(here) == .deep { return true }
+        }
+        return false
+    }
+
     public static func waterDepth(
         _ settlement: Settlement
     ) -> ((LocalPoint) -> WaterDepth)? {
@@ -163,7 +241,13 @@ public enum PathEngine {
             // which is what makes a ford a place rather than a rule.
             if let river {
                 let across = abs(p.y - river.y(atX: p.x))
-                if across <= riverHalfWidth * 0.55 { return .deep }
+                // At a crossing the channel spreads over gravel and a person
+                // wades it. Everywhere else it is deep down the middle — which
+                // is what makes a ford a place people go to rather than a rule
+                // (`RiverShape.fords`).
+                if across <= riverHalfWidth * 0.55 {
+                    return river.isFord(p.x) ? .shallow : .deep
+                }
                 if across <= riverHalfWidth { return .shallow }
             }
             return .dry

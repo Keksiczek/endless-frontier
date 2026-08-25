@@ -932,6 +932,46 @@ enum SettlementRenderer {
             context.stroke(path, with: .color(Color(red: 0.38, green: 0.52, blue: 0.64).opacity(0.75)),
                            style: StrokeStyle(lineWidth: sheen, lineCap: .round))
         }
+        fords(&context, rect: rect, river: river, season: season, zoom: zoom)
+    }
+
+    /// **The crossings**, drawn over the water they break.
+    ///
+    /// A ford is a place: `RiverShape.fords` is where the channel spreads over
+    /// gravel, `PathEngine.waterDepth` calls it wadeable, and every party that
+    /// has to reach the far side of the valley walks to one. Rule 18 — what is
+    /// in the simulation is on the canvas, and until this the crossings were
+    /// somewhere people mysteriously converged on.
+    private static func fords(
+        _ context: inout GraphicsContext, rect: CGRect, river: RiverShape,
+        season: Season, zoom: CGFloat
+    ) {
+        let gravel = season == .winter
+            ? Color(red: 0.68, green: 0.70, blue: 0.72)
+            : Color(red: 0.55, green: 0.51, blue: 0.42)
+        for x in river.fords {
+            let half = RiverShape.fordHalfWidth
+            var bed = Path()
+            let steps = 8
+            for i in 0...steps {
+                let nx = x - half + (half * 2) * Double(i) / Double(steps)
+                let p = point(LocalPoint(x: nx, y: river.y(atX: nx)), in: rect)
+                if i == 0 { bed.move(to: p) } else { bed.addLine(to: p) }
+            }
+            // Shallow water over stones: the band narrows and pales.
+            context.stroke(bed, with: .color(gravel.opacity(0.85)),
+                           style: StrokeStyle(lineWidth: 11 * zoom, lineCap: .round))
+            // …and the stones themselves, so it reads as something underfoot.
+            for i in 0..<5 {
+                let nx = x - half * 0.7 + half * 1.4 * Double(i) / 4
+                let p = point(LocalPoint(x: nx, y: river.y(atX: nx)), in: rect)
+                let r = 1.1 * zoom
+                let lift = CGFloat(i.isMultiple(of: 2) ? -1.6 : 1.8) * zoom
+                context.fill(Path(ellipseIn: CGRect(x: p.x - r, y: p.y - r + lift,
+                                                    width: r * 2, height: r * 1.5)),
+                             with: .color(gravel))
+            }
+        }
     }
 
     // MARK: - Scenery

@@ -524,6 +524,45 @@ public struct RiverShape: Codable, Sendable, Equatable {
         baseY + sin(x * 6.283185 + phase) * amplitude
     }
 
+    // MARK: - Fords
+
+    /// **Where the river can be crossed.**
+    ///
+    /// A channel that is deep down its middle everywhere is a wall, not a
+    /// river: it cuts the valley in half, and everything that has to get to the
+    /// other side either walks on the water — which is what expeditions did —
+    /// or cannot go at all. A real river has places where it spreads and
+    /// shallows, and those places are why villages are where they are.
+    ///
+    /// Derived from the river's own shape, so it costs nothing to store and
+    /// cannot drift from the water it belongs to: three crossings spread along
+    /// the reach, set from the river's `phase`, so no two valleys are forded in
+    /// the same places and one valley is forded in the same places for ever.
+    ///
+    /// The meander's own inflections were tried first and are wrong: they
+    /// repeat every half period, so a river had two crossings and one of them
+    /// landed on the middle of the map — which is where everything that crosses
+    /// a valley is walking anyway, and a ford you cannot miss is not a place.
+    public static let fordCount = 3
+    /// How wide the gravel is, in map units either side of the crossing.
+    public static let fordHalfWidth = 0.035
+
+    /// The x of each crossing, left to right.
+    public var fords: [Double] {
+        let offset = phase / 6.283185
+        return (0..<Self.fordCount).map { i in
+            let x = offset + Double(i) / Double(Self.fordCount)
+            return x - x.rounded(.down)
+        }.sorted()
+    }
+
+    /// Whether a point stands on gravel rather than in the channel.
+    public func isFord(_ x: Double) -> Bool {
+        fords.contains { abs(x - $0) <= Self.fordHalfWidth
+            || abs(x - $0 + 1) <= Self.fordHalfWidth
+            || abs(x - $0 - 1) <= Self.fordHalfWidth }
+    }
+
     private enum CodingKeys: String, CodingKey { case baseY, amplitude, phase, flows }
 
     public init(from decoder: Decoder) throws {

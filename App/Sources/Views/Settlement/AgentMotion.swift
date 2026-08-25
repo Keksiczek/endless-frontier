@@ -698,9 +698,16 @@ enum AgentMotion {
         switch expedition.phase(atStep: step) {
         case .outbound, .returning:
             let outbound = expedition.phase(atStep: step) == .outbound
-            let from = outbound ? gate : target
-            let to = outbound ? target : gate
-            let u = smoothstep(progress)
+            // **The way they actually walked.** A party whose straight line
+            // crossed deep water bends through a ford, and the Core settled
+            // where that is when they set out (`POIExpedition.via`) — so this
+            // draws the journey the colony is paying for rather than a second
+            // guess at it. Before this, expeditions walked over the river.
+            let legs: [LocalPoint] = outbound
+                ? [gate] + (expedition.via.map { [$0] } ?? []) + [target]
+                : [target] + (expedition.via.map { [$0] } ?? []) + [gate]
+            let (from, to, legProgress) = leg(of: legs, at: progress)
+            let u = smoothstep(legProgress)
             // A gentle bow off the straight line, so the road looks walked
             // rather than ruled.
             let bow = sin(u * .pi) * 0.02
@@ -719,6 +726,31 @@ enum AgentMotion {
             return Pose(position: clampPoint(LocalPoint(x: gate.x + lane, y: gate.y + laneCross)),
                         activity: .travelling, stride: 0.2)
         }
+    }
+
+    /// Which leg of a walk the party is on, and how far along it — measured by
+    /// **length**, so a short dog-leg to a ford does not take as long as the
+    /// long haul out to the ruins.
+    static func leg(of points: [LocalPoint], at progress: Double)
+        -> (from: LocalPoint, to: LocalPoint, progress: Double) {
+        guard points.count > 2 else {
+            return (points.first ?? LocalPoint(x: 0.5, y: 0.5),
+                    points.last ?? LocalPoint(x: 0.5, y: 0.5), progress)
+        }
+        var lengths: [Double] = []
+        for i in 1..<points.count {
+            let dx = points[i].x - points[i - 1].x, dy = points[i].y - points[i - 1].y
+            lengths.append((dx * dx + dy * dy).squareRoot())
+        }
+        let total = max(1e-9, lengths.reduce(0, +))
+        var walked = progress * total
+        for (i, length) in lengths.enumerated() {
+            if walked <= length || i == lengths.count - 1 {
+                return (points[i], points[i + 1], min(1, max(0, walked / max(1e-9, length))))
+            }
+            walked -= length
+        }
+        return (points[0], points[1], progress)
     }
 
     /// The shape of one day, as fractions of it.

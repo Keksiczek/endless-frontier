@@ -97,6 +97,11 @@ public enum LocalPOIEngine {
         var s = state
         var rng = SeededRNG(seed: poiSeed(mapSeed: s.mapSeed, settlementID: settlementID,
                                           poiID: poiID, tick: s.tick))
+        // Where they cross, when the straight line would drown them. Settled
+        // once, when they set out, so the walk the canvas draws is the walk the
+        // colony is paying for (`PathEngine.dryWay`).
+        let via = PathEngine.dryWay(from: heart, to: poi.position,
+                                    in: state.settlements[seat])
         let expedition = POIExpedition(
             id: rng.nextUUID(),
             poiID: poiID,
@@ -111,8 +116,10 @@ public enum LocalPOIEngine {
                 to: poi.position,
                 pace: StableEngine.bestPace(state.settlements[seat],
                                             from: heart, to: poi.position,
-                                            registry: registry)),
-            workTicks: poi.kind.workTicks)
+                                            registry: registry),
+                via: via),
+            workTicks: poi.kind.workTicks,
+            via: via)
 
         for i in s.settlements[seat].pawns.indices where party.contains(s.settlements[seat].pawns[i].id) {
             s.settlements[seat].pawns[i].expeditionID = expedition.id
@@ -142,9 +149,18 @@ public enum LocalPOIEngine {
     /// ticks rather than multiplying them, and the one number in
     /// `conveyances.json` means the same thing at both seams because each seam
     /// converts it rather than copying it.
-    public static func travelTicks(to position: LocalPoint, pace: Double = 1) -> Int {
-        let dx = position.x - heart.x, dy = position.y - heart.y
-        let distance = (dx * dx + dy * dy).squareRoot()
+    public static func travelTicks(to position: LocalPoint, pace: Double = 1,
+                                   via: LocalPoint? = nil) -> Int {
+        // The ground they actually cover. A party that has to walk up the
+        // valley to a ford is out for longer than one that walks straight
+        // there, and charging for the straight line would make the water free
+        // — which is what it was.
+        let legs: [(LocalPoint, LocalPoint)] = via.map { [(heart, $0), ($0, position)] }
+            ?? [(heart, position)]
+        let distance = legs.reduce(0.0) { total, leg in
+            let dx = leg.1.x - leg.0.x, dy = leg.1.y - leg.0.y
+            return total + (dx * dx + dy * dy).squareRoot()
+        }
         return max(1, Int((distance * travelTicksPerDistance / max(0.1, pace)).rounded()))
     }
 

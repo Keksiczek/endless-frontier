@@ -46,8 +46,18 @@ struct FightGroundTests {
     func theLineFormsAtTheEdge() {
         let town = colony(reachTiles: 8)
         let edge = SettlementGeometry.builtReach(in: town, axisX: 1, axisY: 0)
-        #expect(edge > SiegeField.wallReach,
-                "a town spread over eight tiles reaches \(edge) — less than the old constant")
+        // Measured against **this town**, not against a constant. The reach is
+        // whatever ground the colony has actually covered, so the bar is that
+        // it covers the furthest roof and stops inside its own grid — the old
+        // version compared it with `SiegeField.wallReach`, which stopped being
+        // a fact about anything the moment the span started following the grid.
+        let furthest = town.placements
+            .map { SiegeField.distance(SettlementGeometry.heart,
+                                       SettlementGeometry.canvasPoint(for: $0, in: town)) }
+            .max() ?? 0
+        #expect(edge > furthest, "the line forms inside the last roof")
+        #expect(edge < SettlementGeometry.span(of: town),
+                "the line formed off the far side of the valley")
         let field = SiegeField(approach: 0, edge: edge)
         // Every defender's post stands beyond the furthest roof on that side.
         for index in 0..<20 {
