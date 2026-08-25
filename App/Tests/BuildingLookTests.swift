@@ -198,7 +198,8 @@ struct InteriorFitTests {
             buildings: [BuildingDefinition(id: "b", era: .earlySettlement, name: "B",
                                            cost: [.materials: 10], housing: housing,
                                            footprint: TileSize(width: w, height: h))],
-            techs: [], eras: [], biomes: [], events: [], config: .default)
+            techs: [], eras: [], biomes: [], events: [],
+            fittings: TestBook.fittings, config: .default)
     }
 
     private func colony(w: Int, h: Int) -> Settlement {
@@ -221,7 +222,7 @@ struct InteriorFitTests {
         let reg = registry(w: w, h: h)
         let b = SettlementRenderer.normalizedLayout(settlement: colony(w: w, h: h),
                                                     registry: reg)[0]
-        let site = AgentMotion.WorkSite(b)
+        let site = AgentMotion.WorkSite(b, era: .earlySettlement, registry: reg)
         let walls = SettlementStructures.bodySize(
             b.glyph, s: b.size, seed: b.seed,
             aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1)
@@ -241,7 +242,7 @@ struct InteriorFitTests {
         let reg = registry(w: 3, h: 3)
         let b = SettlementRenderer.normalizedLayout(settlement: colony(w: 3, h: 3),
                                                     registry: reg)[0]
-        let site = AgentMotion.WorkSite(b)
+        let site = AgentMotion.WorkSite(b, era: .earlySettlement, registry: reg)
         let walls = SettlementStructures.bodySize(
             b.glyph, s: b.size, seed: b.seed,
             aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1)
@@ -257,7 +258,8 @@ struct InteriorFitTests {
     func nobodyShareAStool() {
         for crowd in [2, 5, 8, 11] {
             let places = SettlementInterior.stationSlots(
-                for: .workshop, seed: 0x51F0_1234, stations: crowd)
+                for: .workshop, seed: 0x51F0_1234, stations: crowd,
+                era: .earlySettlement, registry: registry(w: 3, h: 3))
             #expect(places.count >= crowd,
                     "fewer places than colonists — the rest stand on each other")
             // …and no two of those places are the same point.

@@ -162,9 +162,40 @@ public enum LandformFactory {
     /// So the order is shuffled from the map's own seed, and a form picks a
     /// *shape* as well as a place. Deterministic throughout: the shuffle is a
     /// seeded sort, so one seed is one valley for ever (rule 3).
-    public static func forMap(biomeID: String, rng: inout SeededRNG) -> [Landform] {
+    /// **The shape of country the world map has already named.**
+    ///
+    /// `RegionFeature` is read off the same elevation and moisture fields the
+    /// biomes come from, and the world map draws it — "The Pass", "The Gorge",
+    /// "The Fen" — while the valley underneath knew nothing about it. Keks:
+    /// *"když je něco nebo POI na mapě světa, tak to není na mapě osady."* A
+    /// hex called the Peak that is a flat field when you stand on it is the
+    /// two maps disagreeing about the same place.
+    ///
+    /// Only five kinds of country exist, so several features share one — a
+    /// plateau, a peak and a headland are all high ground you walk round. What
+    /// matters is that the named thing is *there*.
+    public static func kind(for feature: RegionFeature) -> LandformKind {
+        switch feature {
+        case .gorge, .pass:            return .ravine
+        case .craterLake, .oasis:      return .oasis
+        case .plateau, .peak, .headland: return .mesa
+        case .fen:                     return .hollow
+        }
+    }
+
+    public static func forMap(biomeID: String, feature: RegionFeature? = nil,
+                              rng: inout SeededRNG) -> [Landform] {
         var forms: [Landform] = []
         var taken: Set<Int> = []
+        // What the world map already says is here, before anything is rolled:
+        // a named feature is a promise about the ground, not a chance of one.
+        if let feature {
+            let form = blob(kind: kind(for: feature), id: 0, avoiding: taken, rng: &rng)
+            if !form.isEmpty {
+                taken.formUnion(form.cells)
+                forms.append(form)
+            }
+        }
         // A shuffle, not source order — but a *seeded* one, so the sequence is
         // fixed for a given world and varies between worlds.
         var rolled: [(kind: LandformKind, roll: Double)] = []
@@ -173,7 +204,9 @@ public enum LandformFactory {
             a.roll == b.roll ? a.kind.rawValue < b.kind.rawValue : a.roll < b.roll
         }
         let order: [LandformKind] = rolled.map(\.kind)
+        let already = Set(forms.map(\.kind))
         for kind in order where forms.count < mostForms {
+            guard !already.contains(kind) else { continue }
             guard rng.nextUnit() < kind.chance(in: biomeID) else { continue }
             let form = blob(kind: kind, id: forms.count, avoiding: taken, rng: &rng)
             guard !form.isEmpty else { continue }
@@ -224,7 +257,7 @@ public enum LandformFactory {
     static func blob(kind: LandformKind, id: Int, avoiding taken: Set<Int>,
                      rng: inout SeededRNG) -> Landform {
         let angle = rng.nextUnit() * 2 * .pi
-        let clear = SettlementGeometry.span / 2 + 0.04
+        let clear = SettlementGeometry.plannedSpan / 2 + 0.04
         let radius = clear + rng.nextUnit() * (0.60 - clear)
         let centre = LocalPoint(
             x: min(0.94, max(0.06, 0.5 + cos(angle) * radius)),

@@ -13,6 +13,11 @@ public enum LocalMapGenerator {
         regionID: UUID,
         biome: BiomeDefinition?,
         flavor: RegionKind = .wilderness,
+        /// **What the world map says the land here is** — the pass, the fen,
+        /// the peak. Read off the same elevation and moisture fields the biome
+        /// is, so the two maps cannot disagree about the same hex; before this
+        /// it reached the road cost and the region panel and never the ground.
+        feature: RegionFeature? = nil,
         hazard: Int = 0,
         /// What kinds of tree exist. Required rather than optional: a valley
         /// generated without the book would come up bare, and a map with no
@@ -147,7 +152,19 @@ public enum LocalMapGenerator {
             addProps(.flowers, 6, around: hallow, spread: 0.10)
             pois.append(LocalPOI(id: poiID, kind: .shrine, position: hallow)); poiID += 1
         case .ruins:
-            addProps(.ruinPillar, 4, around: landPoint(river: river, shore: shore, rng: &rng), spread: 0.2)
+            let fallen = landPoint(river: river, shore: shore, rng: &rng)
+            addProps(.ruinPillar, 4, around: fallen, spread: 0.2)
+            // …and something to actually walk to. A hex the world map calls
+            // ruins used to grow four decorative pillars and no place: the
+            // parity complaint in one case — it is on one map and not the
+            // other.
+            pois.append(LocalPOI(id: poiID, kind: .ruins, position: fallen)); poiID += 1
+        case .anomaly:
+            // Whatever it is, it came down here. `starfall` is the POI kind
+            // the game already has for exactly that.
+            pois.append(LocalPOI(id: poiID, kind: .starfall,
+                                 position: frontierPoint(river: river, shore: shore, rng: &rng)))
+            poiID += 1
         case .dungeon:
             pois.append(LocalPOI(id: poiID, kind: .cave,
                                  position: frontierPoint(river: river, shore: shore, rng: &rng))); poiID += 1
@@ -210,7 +227,7 @@ public enum LocalMapGenerator {
         // …and the country's own shapes after it, for the same reason: drawn
         // last so inserting them shifts no roll that came before, and every
         // valley generated up to now keeps the land it had.
-        let landforms = LandformFactory.forMap(biomeID: biomeID, rng: &rng)
+        let landforms = LandformFactory.forMap(biomeID: biomeID, feature: feature, rng: &rng)
 
         var map = LocalMap(
             river: river, nodes: nodes, pois: pois, wildlife: wildlife,

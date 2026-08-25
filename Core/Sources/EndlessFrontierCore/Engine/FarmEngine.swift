@@ -344,8 +344,10 @@ public enum FarmEngine {
             // shed rather than as one field the shed stands at the top of.
             // Half a tile is edge-to-edge; a hair under it keeps the furrow
             // between two plots visible, which is what a field looks like.
-            let halfWidth = SettlementGeometry.span * tileW / Double(max(1, colony.width)) * 0.485
-            let halfHeight = SettlementGeometry.span / Double(max(1, colony.height)) * 0.475
+            let halfWidth = SettlementGeometry.span(of: colony) * tileW
+                / Double(max(1, colony.width)) * 0.485
+            let halfHeight = SettlementGeometry.span(of: colony)
+                / Double(max(1, colony.height)) * 0.475
             for index in 0..<def.plots {
                 let column = Double(index % columns)
                 let row = Double(min(rows - 1, index / columns))

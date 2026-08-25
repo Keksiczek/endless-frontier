@@ -19,6 +19,10 @@ struct SettlementTracks {
     private let wear: [TileCoord: Double]
     private let width: Int
     private let height: Int
+    /// The ground this colony's grid covers. Held rather than looked up,
+    /// because `worn` is asked per ground tile per frame and the span now
+    /// depends on the town's own size (`SettlementGeometry.span(of:)`).
+    private let span: Double
 
     /// How many steps a track's darkness is quantised into.
     ///
@@ -46,6 +50,7 @@ struct SettlementTracks {
         wear = settlement.paths.lookup()
         width = max(1, colony.width)
         height = max(1, colony.height)
+        span = SettlementGeometry.span(of: colony)
         let heart = SettlementGeometry.heart
         highways = approaches.map { approach in
             (from: approach.edgePoint, to: heart,
@@ -95,7 +100,7 @@ struct SettlementTracks {
 
     private func worn(atU u: Double, v: Double) -> Double {
         guard !wear.isEmpty else { return 0 }
-        let heart = SettlementGeometry.heart, span = SettlementGeometry.span
+        let heart = SettlementGeometry.heart
         // Fractional build-grid coordinates, measured from tile *centres* so
         // the interpolation is symmetric about a tile rather than about its
         // top-left corner.

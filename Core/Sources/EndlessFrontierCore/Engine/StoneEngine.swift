@@ -116,7 +116,13 @@ public enum StoneEngine {
     /// Derived from the build grid's own reach rather than written down again:
     /// the town got wider twice, and a clearance left behind would have grown a
     /// massif straight over the new outer quarters.
-    static var colonyClearance: Double { SettlementGeometry.cornerReach + 0.02 }
+    static var colonyClearance: Double {
+        // The town the valley is *planned* around, not the one founded on day
+        // one: the grid grows outward and a mountain dropped where a colony of
+        // fifty tiles will stand is a colony that cannot grow into its own room
+        // (`SettlementGeometry.plannedSpan`).
+        SettlementGeometry.plannedCornerReach + 0.02
+    }
 
     /// Raises a massif against one edge of the map.
     ///

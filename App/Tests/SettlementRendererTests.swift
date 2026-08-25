@@ -31,7 +31,8 @@ private func registry() -> GameDataRegistry {
                                cost: [.materials: 60], production: [.influence: 2],
                                footprint: TileSize(width: 2, height: 2))
         ],
-        techs: [], eras: [], biomes: [], events: [], config: .default)
+        techs: [], eras: [], biomes: [], events: [],
+        fittings: TestBook.fittings, config: .default)
 }
 
 private let rect = CGRect(x: 0, y: 0, width: 400, height: 400)
@@ -153,7 +154,8 @@ struct StoreContentsTests {
                 BuildingDefinition(id: "hut", era: .earlySettlement, name: "Hut",
                                    cost: [.materials: 10], housing: 30)
             ],
-            techs: [], eras: [], biomes: [], events: [], config: .default)
+            techs: [], eras: [], biomes: [], events: [],
+            fittings: TestBook.fittings, config: .default)
     }
 
     private func town(food: Double, capacity: Double) -> Settlement {
@@ -504,9 +506,21 @@ struct RenderBudgetTests {
 
     @Test("Nothing off screen is drawn")
     func offScreenIsCulled() {
+        // Aimed at the **middle** of the valley, where the town stands. It used
+        // to be the top-left corner of the view, which only held buildings
+        // because a colony covered 0.70 of the map; a town that covers less of
+        // its valley (`SettlementGeometry.baseSpan`) leaves that corner empty,
+        // and an empty corner tests nothing about culling.
+        // On the town's **western edge**, so half the colony falls outside the
+        // window and its 80pt margin. Centred on the valley it caught the whole
+        // town (a colony covers `SettlementGeometry.baseSpan` of the map, and
+        // the margin reaches the rest); in the top-left corner, where this used
+        // to look, it caught none of it.
+        let edge = rect.midX - CGFloat(SettlementGeometry.baseSpan) * rect.width / 2
+        let window = CGRect(x: edge - 20, y: rect.midY - 20, width: 40, height: 40)
         let placed = SettlementRenderer.layout(
             settlement: settlement(colony: town(of: 79)), registry: registry(), rect: rect,
-            viewport: CGRect(x: 0, y: 0, width: 40, height: 40))
+            viewport: window)
         let full = SettlementRenderer.layout(
             settlement: settlement(colony: town(of: 79)), registry: registry(), rect: rect)
         #expect(placed.count < full.count, "a corner of the view must not pay for the whole town")

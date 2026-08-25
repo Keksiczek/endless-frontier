@@ -56,6 +56,9 @@ enum SettlementFigures {
         // Who this particular person is: hair, beard, build, height, skin —
         // derived from their id and their age, never stored (§11.20, `PawnLook`).
         let look = PawnLook.of(pawn, ageYears: years)
+        // …and what has happened to them since. `PawnLook` says who somebody
+        // is; this says what the world has done to them (`PawnHarm`).
+        let harm = PawnHarm.of(pawn)
         let scale: CGFloat = (child ? 0.7 : (elder ? 0.94 : 1.0))
             * CGFloat(look.height) * zoom * bodyScale
 
@@ -109,14 +112,33 @@ enum SettlementFigures {
         torso.closeSubpath()
         context.fill(torso, with: .color(tunic.opacity(alpha * 0.9)))
 
-        // Legs.
+        // Legs — and what is left of them.
+        //
+        // A leg that is gone ends at the knee and the body leans on a stick; a
+        // hurt one barely swings, which is what a limp *is* at this size. The
+        // whole of "the wounds match what we see" starts here: the engine has
+        // known about missing legs since the medical model went in, and the
+        // figure walked on two good ones regardless.
+        let leftDrop: CGFloat = harm.leftLeg.isGone ? 3.1 : 6
+        let rightDrop: CGFloat = harm.rightLeg.isGone ? 3.1 : 6
+        let leftSwing = harm.leftLeg == .whole ? swing : swing * 0.25
+        let rightSwing = harm.rightLeg == .whole ? swing : swing * 0.25
         var legs = Path()
         legs.move(to: CGPoint(x: p.x - 0.7 * scale, y: hipY))
-        legs.addLine(to: CGPoint(x: p.x - 1.5 * scale + swing, y: p.y + 6 * scale))
+        legs.addLine(to: CGPoint(x: p.x - 1.5 * scale + leftSwing, y: p.y + leftDrop * scale))
         legs.move(to: CGPoint(x: p.x + 0.7 * scale, y: hipY))
-        legs.addLine(to: CGPoint(x: p.x + 1.5 * scale - swing, y: p.y + 6 * scale))
+        legs.addLine(to: CGPoint(x: p.x + 1.5 * scale - rightSwing, y: p.y + rightDrop * scale))
         context.stroke(legs, with: .color(tunic.opacity(alpha)),
                        style: StrokeStyle(lineWidth: 1.1 * scale, lineCap: .round))
+        if harm.leftLeg.isGone || harm.rightLeg.isGone {
+            // The crutch, on the side that still works.
+            let side: CGFloat = harm.leftLeg.isGone ? 1 : -1
+            context.stroke(Path { stick in
+                stick.move(to: CGPoint(x: p.x + side * 2.0 * scale, y: shoulderY + 0.6 * scale))
+                stick.addLine(to: CGPoint(x: p.x + side * 2.6 * scale, y: p.y + 6 * scale))
+            }, with: .color(Color(red: 0.44, green: 0.35, blue: 0.24).opacity(alpha)),
+            style: StrokeStyle(lineWidth: 0.7 * scale, lineCap: .round))
+        }
 
         // Arms: the tool arm works, and while walking both arms counter-swing
         // against the legs. Stiff arms on a moving body is the tell that a
@@ -128,12 +150,22 @@ enum SettlementFigures {
             at: time + Double(AgentMotion.hash(pawn.id) % 7))
         let armSwing = travelling ? -swing * CGFloat(motion.freeArmCounterSwing) : 0
         var arms = Path()
-        arms.move(to: CGPoint(x: p.x - 1.3 * scale + lean * 0.6, y: shoulderY + 0.3))
-        arms.addLine(to: CGPoint(x: p.x - 2.0 * scale - armSwing, y: p.y + 0.8 * scale))
+        // The free arm. Gone, it ends above the elbow — a stump, drawn short
+        // rather than not drawn at all, because an arm that is simply absent
+        // reads as a rendering fault instead of as an injury.
+        let freeShoulder = CGPoint(x: p.x - 1.3 * scale + lean * 0.6, y: shoulderY + 0.3)
+        let freeReach: CGFloat = harm.leftArm.isGone ? 0.35 : 1
+        arms.move(to: freeShoulder)
+        arms.addLine(to: CGPoint(
+            x: freeShoulder.x + (-0.7 * scale - armSwing) * freeReach,
+            y: freeShoulder.y + (p.y + 0.8 * scale - freeShoulder.y) * freeReach))
         let handX = p.x + (CGFloat(motion.reach) + CGFloat(toolSwing)) * scale * mirror + armSwing
         let handY = p.y + CGFloat(motion.handHeight) * scale
-        arms.move(to: CGPoint(x: p.x + 1.3 * scale + lean * 0.6, y: shoulderY + 0.3))
-        arms.addLine(to: CGPoint(x: handX, y: handY))
+        let toolShoulder = CGPoint(x: p.x + 1.3 * scale + lean * 0.6, y: shoulderY + 0.3)
+        let toolReach: CGFloat = harm.rightArm.isGone ? 0.35 : 1
+        arms.move(to: toolShoulder)
+        arms.addLine(to: CGPoint(x: toolShoulder.x + (handX - toolShoulder.x) * toolReach,
+                                 y: toolShoulder.y + (handY - toolShoulder.y) * toolReach))
         context.stroke(arms, with: .color(tunic.opacity(alpha)),
                        style: StrokeStyle(lineWidth: 1.0 * scale, lineCap: .round))
 
@@ -153,6 +185,14 @@ enum SettlementFigures {
         }
         beard(look, at: CGPoint(x: headX, y: headY), scale: scale,
               alpha: alpha, context: &context)
+
+        // The dressings and the open wounds, on the body that took them. Drawn
+        // over the tunic and under the gear, so a bandaged arm shows and a
+        // bracer over it hides it — which is the right way round.
+        if harm.isHurt {
+            marks(harm, at: p, headY: headY, shoulderY: shoulderY, hipY: hipY,
+                  scale: scale, alpha: alpha, lean: lean, context: &context)
+        }
 
         // A helmet if they wear armor into the day.
         if pawn.equipment[.armor] != nil {
@@ -1255,4 +1295,58 @@ enum SettlementFigures {
             }
         }
     }
+
+    /// **Linen and blood, on the parts that have them.**
+    ///
+    /// A band of clean cloth where somebody has been tended, a dark mark where
+    /// nobody has. Two strokes apiece, and only for a body that has any: the
+    /// ordinary case is a whole colonist and costs one branch (rule 4 — this
+    /// runs per figure per frame).
+    private static func marks(
+        _ harm: PawnHarm, at p: CGPoint, headY: CGFloat, shoulderY: CGFloat,
+        hipY: CGFloat, scale: CGFloat, alpha: Double, lean: CGFloat,
+        context: inout GraphicsContext
+    ) {
+        let linen = Color(red: 0.90, green: 0.88, blue: 0.82)
+        let blood = Color(red: 0.55, green: 0.11, blue: 0.10)
+        func spot(_ at: CGPoint, tended: Bool, wide: CGFloat) {
+            if tended {
+                context.stroke(Path { band in
+                    band.move(to: CGPoint(x: at.x - wide, y: at.y))
+                    band.addLine(to: CGPoint(x: at.x + wide, y: at.y))
+                }, with: .color(linen.opacity(alpha)),
+                style: StrokeStyle(lineWidth: 0.9 * scale, lineCap: .round))
+            } else {
+                context.fill(
+                    Path(ellipseIn: CGRect(x: at.x - wide * 0.5, y: at.y - 0.4 * scale,
+                                           width: wide, height: 0.9 * scale)),
+                    with: .color(blood.opacity(alpha * 0.9)))
+            }
+        }
+        for part in BodyPartKind.allCases {
+            let tended = harm.bandaged.contains(part)
+            guard tended || harm.open.contains(part) else { continue }
+            switch part {
+            case .head:
+                spot(CGPoint(x: p.x + lean, y: headY - 0.2 * scale),
+                     tended: tended, wide: 1.7 * scale)
+            case .torso:
+                spot(CGPoint(x: p.x + lean * 0.6, y: (shoulderY + hipY) / 2),
+                     tended: tended, wide: 1.6 * scale)
+            case .leftArm:
+                spot(CGPoint(x: p.x - 1.7 * scale, y: shoulderY + 1.1 * scale),
+                     tended: tended, wide: 1.0 * scale)
+            case .rightArm:
+                spot(CGPoint(x: p.x + 1.7 * scale, y: shoulderY + 1.1 * scale),
+                     tended: tended, wide: 1.0 * scale)
+            case .leftLeg:
+                spot(CGPoint(x: p.x - 1.1 * scale, y: hipY + 1.8 * scale),
+                     tended: tended, wide: 1.0 * scale)
+            case .rightLeg:
+                spot(CGPoint(x: p.x + 1.1 * scale, y: hipY + 1.8 * scale),
+                     tended: tended, wide: 1.0 * scale)
+            }
+        }
+    }
+
 }

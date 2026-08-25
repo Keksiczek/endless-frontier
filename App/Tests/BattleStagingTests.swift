@@ -223,11 +223,21 @@ struct BattleStagingTests {
 @Suite("Building interiors")
 struct InteriorTests {
 
+    /// A room is furnished out of `fittings.json` for the century the town is
+    /// living in, so laying one out now needs the book and the era. An empty
+    /// registry furnishes the fallback room, which is exactly what these tests
+    /// are asking about: where the fittings *land*, not which ones they are.
+    private func book() -> GameDataRegistry {
+        GameDataRegistry(buildings: [], techs: [], eras: [], biomes: [], events: [],
+                         fittings: TestBook.fittings, config: .default)
+    }
+
     @Test("Every worker gets a station of their own")
     func workersGetStations() {
         for workers in 1...5 {
             let stations = SettlementInterior.stationSlots(
-                for: .workshop, seed: 42, stations: workers)
+                for: .workshop, seed: 42, stations: workers,
+                era: .earlySettlement, registry: book())
             #expect(stations.count >= min(workers, 5))
         }
     }
@@ -236,7 +246,8 @@ struct InteriorTests {
     func stationsAreIndoors() {
         for glyph in [SettlementRenderer.BuildingGlyph.house, .hall, .granary,
                       .temple, .plant, .pad] {
-            for slot in SettlementInterior.slots(for: glyph, seed: 7, stations: 4) {
+            for slot in SettlementInterior.slots(for: glyph, seed: 7, stations: 4,
+                                                 era: .earlySettlement, registry: book()) {
                 let limit = 0.5 - SettlementInterior.wallInset
                 #expect(abs(slot.dx) <= limit, "\(glyph) \(slot.fitting) escaped sideways")
                 #expect(abs(slot.dy) <= limit, "\(glyph) \(slot.fitting) escaped downwards")
@@ -246,7 +257,8 @@ struct InteriorTests {
 
     @Test("Two stations are never the same spot")
     func stationsDoNotOverlap() {
-        let slots = SettlementInterior.stationSlots(for: .plant, seed: 9, stations: 6)
+        let slots = SettlementInterior.stationSlots(
+            for: .plant, seed: 9, stations: 6, era: .earlySettlement, registry: book())
         for i in slots.indices {
             for j in slots.indices where j > i {
                 let dx = slots[i].dx - slots[j].dx, dy = slots[i].dy - slots[j].dy
@@ -257,7 +269,8 @@ struct InteriorTests {
 
     @Test("An empty building is still a furnished room")
     func emptyRoomsAreFurnished() {
-        #expect(!SettlementInterior.slots(for: .granary, seed: 1, stations: 0).isEmpty)
+        #expect(!SettlementInterior.slots(for: .granary, seed: 1, stations: 0,
+                                          era: .earlySettlement, registry: book()).isEmpty)
     }
 
     @Test("The roof is solid from far off and gone up close")

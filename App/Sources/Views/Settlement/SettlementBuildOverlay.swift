@@ -59,8 +59,8 @@ enum SettlementBuildOverlay {
         _ coord: TileCoord, size: TileSize, colony: ColonyMap, rect: CGRect
     ) -> CGRect {
         let origin = SettlementRenderer.canvasPoint(for: coord, in: colony)
-        let tw = SettlementRenderer.colonySpan / Double(max(1, colony.width))
-        let th = SettlementRenderer.colonySpan / Double(max(1, colony.height))
+        let tw = SettlementRenderer.colonySpan(colony) / Double(max(1, colony.width))
+        let th = SettlementRenderer.colonySpan(colony) / Double(max(1, colony.height))
         // `canvasPoint` answers the tile's centre, so step back half a tile to
         // get its corner before growing to the footprint.
         let topLeft = LocalPoint(x: origin.x - tw / 2, y: origin.y - th / 2)
@@ -73,7 +73,7 @@ enum SettlementBuildOverlay {
     private static func grid(
         _ context: inout GraphicsContext, rect: CGRect, colony: ColonyMap
     ) {
-        let span = SettlementRenderer.colonySpan
+        let span = SettlementRenderer.colonySpan(colony)
         let heart = SettlementRenderer.colonyHeart
         let x0 = heart.x - span / 2, y0 = heart.y - span / 2
         let area = CGRect(

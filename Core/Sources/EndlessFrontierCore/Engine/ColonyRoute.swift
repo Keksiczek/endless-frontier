@@ -179,7 +179,7 @@ public enum ColonyRoute {
     ) -> Bool {
         let standing = standing ?? Occupancy(colony)
         let span = SiegeField.distance(a, b)
-        let tileSpan = SettlementGeometry.span / Double(max(colony.width, colony.height))
+        let tileSpan = SettlementGeometry.span(of: colony) / Double(max(colony.width, colony.height))
         let steps = max(2, Int((span / (tileSpan * 0.5)).rounded(.up)))
         for i in 0...steps {
             let t = Double(i) / Double(steps)
@@ -292,7 +292,7 @@ public enum ColonyRoute {
     /// The tile a canvas point falls on, or nil if it is off the colony grid.
     static func tile(_ p: LocalPoint, in colony: ColonyMap) -> TileCoord? {
         guard colony.width > 0, colony.height > 0 else { return nil }
-        let span = SettlementGeometry.span
+        let span = SettlementGeometry.span(of: colony)
         let fx = (p.x - SettlementGeometry.heart.x) / span + 0.5
         let fy = (p.y - SettlementGeometry.heart.y) / span + 0.5
         guard fx >= 0, fy >= 0, fx < 1, fy < 1 else { return nil }

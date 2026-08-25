@@ -54,6 +54,7 @@ public enum GameWorldFactory {
             localMap: LocalMapGenerator.generate(mapSeed: seed, regionID: homeland.id,
                                                  biome: registry.biome(homeland.biomeID),
                                                  flavor: homeland.kind,
+                                                 feature: homeland.feature,
                                                  hazard: homeland.hazardLevel,
                                                  registry: registry)
         )

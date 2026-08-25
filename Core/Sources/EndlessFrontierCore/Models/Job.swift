@@ -423,7 +423,57 @@ public enum SettlementGeometry {
     /// the *valley*: 0.70 leaves a charted circle of about 0.72 of the map with
     /// a real dark ring outside it. A tile comes out about a sixth smaller than
     /// it was, which the camera carries.
-    public static let span: Double = 0.70
+    public static let span: Double = baseSpan
+
+    // MARK: - A valley bigger than the town in it
+
+    /// The grid a colony is founded on (`ColonyBuilder.defaultWidth`).
+    public static let baseGrid = 34
+    /// **How much of the valley a *newly founded* town covers.**
+    ///
+    /// Was 0.70 for every town that ever existed, at any size, which is the
+    /// fault: `ColonyBuilder.grownOutward` adds four tiles a side whenever a
+    /// building will not fit, up to `maxSide` = 90, and the span did not follow
+    /// it. So a grown town packed ninety tiles into the same 0.70 — each tile a
+    /// third the size it started at — while the ring of country round it stayed
+    /// exactly as wide as it was on day one. Keks: *"v pozdějších érách se to
+    /// dost zaplní a okolo nic moc není."*
+    ///
+    /// Two changes, and they only work together. The town's ground now grows
+    /// with its grid (`span(of:)`), so a tile is the same size in a city as in
+    /// a camp; and a founding town is given a **smaller share of the valley**,
+    /// so there is country for it to grow into and country left over when it
+    /// has. What that costs on screen is paid by `Camera.opening`, which is
+    /// widened by exactly the same ratio — a building is the size it always
+    /// was, with more valley behind it.
+    public static let baseSpan: Double = 0.46
+    /// …and the most of it a town may ever cover. Even a city leaves a rim of
+    /// country: the fog, the wood, the quarry and the hunting all live out
+    /// there, and a town that reached the edges would leave nowhere to go.
+    public static let maxSpan: Double = 0.90
+
+    /// **The ground this colony's grid actually covers.**
+    ///
+    /// Proportional to the grid, so one build tile is one size for ever. A
+    /// colony with no map yet is a colony about to be founded on `baseGrid`.
+    public static func span(of colony: ColonyMap) -> Double {
+        min(maxSpan, baseSpan * Double(max(1, colony.width)) / Double(baseGrid))
+    }
+
+    /// The size of a town the country is *planned* around — what the valley
+    /// keeps clear of rock and ravines, so a colony that grows into its own
+    /// room does not find a mountain in the middle of it.
+    ///
+    /// Deliberately larger than the founding grid and smaller than `maxSide`:
+    /// nothing is kept clear for a town that may never exist, and the ground a
+    /// town of fifty tiles will stand on is ground it must be able to build on.
+    public static let plannedGrid = 50
+    public static var plannedSpan: Double {
+        min(maxSpan, baseSpan * Double(plannedGrid) / Double(baseGrid))
+    }
+    /// How far the *planned* town's corner reaches — what the mountain and the
+    /// country's own shapes are kept outside of.
+    public static var plannedCornerReach: Double { plannedSpan * 0.70710678 }
 
     /// How far the grid's furthest corner lies from the heart. The one number
     /// the reveal radius and the rock clearance are both derived from, so
@@ -439,7 +489,7 @@ public enum SettlementGeometry {
     /// are. Rule 35 — the ring is not a tile count somebody wrote down next to
     /// a comment, it **is** the reach the fight is fought at.
     public static func tilesPerMapUnit(in colony: ColonyMap) -> Double {
-        Double(max(1, colony.width)) / span
+        Double(max(1, colony.width)) / span(of: colony)
     }
 
     /// **How far the town actually reaches on a bearing**, in map units.
@@ -467,7 +517,7 @@ public enum SettlementGeometry {
         // lot, in map units, on the longer side so no roof is left outside the
         // line drawn to protect it.
         let lot = Double(max(1, max(colony.width, colony.height)))
-        return furthest + span / lot * 0.75
+        return furthest + span(of: colony) / lot * 0.75
     }
 
     /// The ring of tiles standing `reach` map units out from the heart.
@@ -483,6 +533,7 @@ public enum SettlementGeometry {
     /// standing on — a raider in the stores, for one.
     public static func tile(at point: LocalPoint, in colony: ColonyMap) -> TileCoord? {
         let w = Double(max(1, colony.width)), h = Double(max(1, colony.height))
+        let span = span(of: colony)
         let x = Int(((point.x - heart.x) / span + 0.5) * w)
         let y = Int(((point.y - heart.y) / span + 0.5) * h)
         guard x >= 0, y >= 0, x < colony.width, y < colony.height else { return nil }
@@ -494,6 +545,7 @@ public enum SettlementGeometry {
         // The footprint's middle, not its top-left corner.
         let fx = (Double(placement.coord.x) + Double(placement.width) / 2) / w - 0.5
         let fy = (Double(placement.coord.y) + Double(placement.height) / 2) / h - 0.5
+        let span = span(of: colony)
         return LocalPoint(x: heart.x + fx * span, y: heart.y + fy * span)
     }
 
@@ -512,6 +564,7 @@ public enum SettlementGeometry {
     /// third tiles apart, and rounding that to whole tiles stacks two of them.
     public static func canvasPoint(tileX: Double, tileY: Double, in colony: ColonyMap) -> LocalPoint {
         let w = Double(max(1, colony.width)), h = Double(max(1, colony.height))
+        let span = span(of: colony)
         return LocalPoint(x: heart.x + (tileX / w - 0.5) * span,
                           y: heart.y + (tileY / h - 0.5) * span)
     }

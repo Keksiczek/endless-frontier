@@ -61,6 +61,7 @@ public enum ExpansionEngine {
             localMap: LocalMapGenerator.generate(mapSeed: s.mapSeed, regionID: regionID,
                                                  biome: registry.biome(state.regions[regionIndex].biomeID),
                                                  flavor: state.regions[regionIndex].kind,
+                                                 feature: state.regions[regionIndex].feature,
                                                  hazard: state.regions[regionIndex].hazardLevel,
                                                  registry: registry)
         )

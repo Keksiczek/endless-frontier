@@ -109,7 +109,8 @@ struct WorkplacePostTests {
                                    production: [.knowledge: 5],
                                    footprint: TileSize(width: 2, height: 2))
             ],
-            techs: [], eras: [], biomes: [], events: [], config: .default)
+            techs: [], eras: [], biomes: [], events: [],
+            fittings: TestBook.fittings, config: .default)
     }
 
     /// A town whose library sits far off-centre, so "at the library" and

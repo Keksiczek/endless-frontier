@@ -73,13 +73,31 @@ struct StructureVariant: Equatable, Hashable {
     /// drawing. **An axis the drawing reads belongs in here**, which is the
     /// whole contract `signature` is for.
     let storeys: Int
+    /// **The century it belongs to.**
+    ///
+    /// `SettlementStructures.building` has taken `era:` and chosen its whole
+    /// palette from it — timber and thatch, then brick, then panel and glass —
+    /// since the fabric model went in, and the signature did not know. So an
+    /// ancient windmill and a medieval horse mill came out with the same
+    /// signature while the canvas drew them in different materials: the guard
+    /// was weaker than the drawing, which is the exact fault the `storeys`
+    /// note above describes.
+    let era: Era
+    /// …and how the lot is shaped, in thirds.
+    ///
+    /// The body is stretched to the aspect of the ground it stands on
+    /// (`SettlementStructures.bodySize`), so a 3×3 mill is a visibly different
+    /// building from a 3×2 one. Another axis the drawing reads and the
+    /// signature did not.
+    let lot: Int
 
     /// The fallback for a building the registry does not know — a definition
     /// that has been deleted from under a save, or a test with a bare registry.
     static let plain = StructureVariant(
         kindSeed: 0, bays: 3, stacks: 0, wideDoor: false,
         roofline: .gable, rooftop: .none, nightShift: false,
-        tier: 0, heft: 0, stores: nil, storeys: 1)
+        tier: 0, heft: 0, stores: nil, storeys: 1,
+        era: .earlySettlement, lot: 3)
 
     // MARK: - Derivation
 
@@ -98,7 +116,17 @@ struct StructureVariant: Equatable, Hashable {
             tier: bucket(price(def), [40, 120, 320]),
             heft: bucket(def.defense, [1, 20, 60]),
             stores: mostOf(def.storage),
-            storeys: max(1, def.floors))
+            storeys: max(1, def.floors),
+            era: def.era,
+            lot: lotShape(def))
+    }
+
+    /// How the ground a building owns is shaped, in thirds of its width — the
+    /// same quantity `bodySize` clamps its stretch to, so two lots that draw
+    /// the same building read as the same shape and no others do.
+    private static func lotShape(_ def: BuildingDefinition) -> Int {
+        let w = Double(max(1, def.footprint.width)), h = Double(max(1, def.footprint.height))
+        return Int((min(1.7, max(0.6, w / h)) * 3).rounded())
     }
 
     /// The most of what a store holds. `Resources` is a bag keyed by kind, not
@@ -191,7 +219,7 @@ struct StructureVariant: Equatable, Hashable {
         [String(bays), String(stacks), wideDoor ? "1" : "0",
          roofline.rawValue, rooftop.rawValue, nightShift ? "1" : "0",
          "t\(tier)", "h\(heft)", stores?.rawValue ?? "-",
-         "f\(storeys)"].joined(separator: "/")
+         "f\(storeys)", era.rawValue, "l\(lot)"].joined(separator: "/")
     }
 }
 

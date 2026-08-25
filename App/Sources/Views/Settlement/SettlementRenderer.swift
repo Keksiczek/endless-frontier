@@ -81,7 +81,14 @@ enum SettlementRenderer {
         /// rock kept off the grid (`StoneEngine.colonyClearance`) are both
         /// derived from the span and would have to grow with it, or a colony
         /// would grow into its own fog.
-        static let opening: CGFloat = 2.8
+        /// **How far in the camera opens.**
+        ///
+        /// Moves with `SettlementGeometry.baseSpan`, and has to: a town given a
+        /// smaller share of the valley is drawn smaller by exactly that ratio,
+        /// and the point of the change was more country around the town, not
+        /// smaller houses. 2.8 was right when a founding town took 0.70 of the
+        /// map; at 0.46 the same building wants 2.8 × 0.70 / 0.46.
+        static let opening: CGFloat = 2.8 * 0.70 / CGFloat(SettlementGeometry.baseSpan)
         static let minScale: CGFloat = 1
         /// How far in the camera will go.
         ///
@@ -1950,16 +1957,30 @@ enum SettlementRenderer {
     /// draws every building in a different place from where colonists are sent
     /// to work in it. A number that must equal another number should *be* that
     /// number.
-    static let colonySpan: Double = SettlementGeometry.span
+    /// **The ground *this* colony's grid covers**, asked of the Core.
+    ///
+    /// Was a constant — one slice of the valley for a camp of twelve and for a
+    /// city of two hundred alike — which is why a grown town's tiles shrank
+    /// until it was a knot with the same thin rim of country round it. The span
+    /// follows the grid now (`SettlementGeometry.span(of:)`), and this is the
+    /// same number rather than a copy of it (rule 35).
+    static func colonySpan(_ colony: ColonyMap) -> Double {
+        SettlementGeometry.span(of: colony)
+    }
+
+    /// The founding valley, for the handful of places that have no colony in
+    /// hand — a preview of a region nobody has settled yet.
+    static let colonySpan: Double = SettlementGeometry.baseSpan
 
     /// Maps a grid tile to the point on the canvas it sits at, centred on the
     /// heart so the built colony always lands inside the cleared ground.
     static func canvasPoint(for coord: TileCoord, in colony: ColonyMap) -> LocalPoint {
         let fx = (Double(coord.x) + 0.5) / Double(max(1, colony.width)) - 0.5
         let fy = (Double(coord.y) + 0.5) / Double(max(1, colony.height)) - 0.5
+        let span = colonySpan(colony)
         return LocalPoint(
-            x: colonyHeart.x + fx * colonySpan,
-            y: colonyHeart.y + fy * colonySpan)
+            x: colonyHeart.x + fx * span,
+            y: colonyHeart.y + fy * span)
     }
 
     /// The inverse of `canvasPoint`: which build tile a point on the canvas
@@ -1967,9 +1988,10 @@ enum SettlementRenderer {
     /// the player place a building by pointing at the settlement itself rather
     /// than at an abstract grid on another screen.
     static func tile(at p: LocalPoint, in colony: ColonyMap) -> TileCoord? {
-        guard colony.width > 0, colony.height > 0, colonySpan > 0 else { return nil }
-        let fx = (p.x - colonyHeart.x) / colonySpan + 0.5
-        let fy = (p.y - colonyHeart.y) / colonySpan + 0.5
+        let span = colonySpan(colony)
+        guard colony.width > 0, colony.height > 0, span > 0 else { return nil }
+        let fx = (p.x - colonyHeart.x) / span + 0.5
+        let fy = (p.y - colonyHeart.y) / span + 0.5
         guard fx >= 0, fx < 1, fy >= 0, fy < 1 else { return nil }
         return TileCoord(min(colony.width - 1, Int(fx * Double(colony.width))),
                          min(colony.height - 1, Int(fy * Double(colony.height))))
@@ -2122,9 +2144,10 @@ enum SettlementRenderer {
             // building is nudged to the middle of what it covers — and drawn
             // larger for covering it.
             let origin = canvasPoint(for: placement.coord, in: colony)
+            let span = colonySpan(colony)
             let p = LocalPoint(
-                x: origin.x + Double(placement.width - 1) * 0.5 / Double(max(1, colony.width)) * colonySpan,
-                y: origin.y + Double(placement.height - 1) * 0.5 / Double(max(1, colony.height)) * colonySpan)
+                x: origin.x + Double(placement.width - 1) * 0.5 / Double(max(1, colony.width)) * span,
+                y: origin.y + Double(placement.height - 1) * 0.5 / Double(max(1, colony.height)) * span)
             let def = registry.building(placement.definitionID)
             let glyph = def.map(glyph(for:)) ?? .house
             let progress = settlement.constructions
@@ -2133,8 +2156,13 @@ enum SettlementRenderer {
             // The footprint in canvas fractions: one tile is this slice of the
             // built span, and the plot is as many tiles wide and tall as the
             // building covers.
-            let tileW = colonySpan / Double(max(1, colony.width))
-            let tileH = colonySpan / Double(max(1, colony.height))
+            // This colony's own ground, not the founding constant: a building's
+            // *size* has to be measured off the same span its *place* is, or a
+            // grown town draws every roof at the founding scale on tiles that
+            // are no longer that size — neighbours overlap and the lots stop
+            // meaning anything (rule 35).
+            let tileW = span / Double(max(1, colony.width))
+            let tileH = span / Double(max(1, colony.height))
             return NormalizedBuilding(
                 id: index,
                 definitionID: placement.definitionID,
