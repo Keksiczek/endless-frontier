@@ -167,11 +167,23 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         /// `nil` for everybody whose business is with people rather than with
         /// a piece of ground.
         public var goal: LocalPoint?
+        /// **The step this body last took a blow on, and where it came from.**
+        ///
+        /// The fight had swings and it had blood on the ground, and nothing in
+        /// between: a blade passed through a body that went on walking exactly
+        /// as before, and the only sign a blow had landed was a stain
+        /// appearing. Keks: *"radoby se mydlí."* A hit is a thing that happens
+        /// **to** somebody, so the body has to know it was hit — the canvas
+        /// reads these two and jolts the figure away from the blow for the
+        /// step it lands in (rule 5: it reads, it never writes).
+        public var struckAtStep: Int?
+        public var struckFrom: LocalPoint?
 
         public init(id: UUID, side: Side, at: LocalPoint, strength: Double,
                     target: UUID? = nil, down: Bool = false,
                     kind: Kind = .person, intent: Intent = .fight,
-                    goal: LocalPoint? = nil) {
+                    goal: LocalPoint? = nil,
+                    struckAtStep: Int? = nil, struckFrom: LocalPoint? = nil) {
             self.id = id
             self.side = side
             self.kind = kind
@@ -181,10 +193,13 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
             self.down = down
             self.intent = intent
             self.goal = goal
+            self.struckAtStep = struckAtStep
+            self.struckFrom = struckFrom
         }
 
         private enum CodingKeys: String, CodingKey {
             case id, side, kind, at, strength, target, down, intent, goal
+            case struckAtStep, struckFrom
         }
 
         /// Written by hand because a synthesised decoder does **not** fall back
@@ -204,6 +219,10 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
             // who all came to fight, which is what it was.
             intent = try c.decodeIfPresent(Intent.self, forKey: .intent) ?? .fight
             goal = try c.decodeIfPresent(LocalPoint.self, forKey: .goal)
+            // A fight saved before bodies reacted to blows simply has nobody
+            // flinching until the next one lands (rule 3).
+            struckAtStep = try c.decodeIfPresent(Int.self, forKey: .struckAtStep)
+            struckFrom = try c.decodeIfPresent(LocalPoint.self, forKey: .struckFrom)
         }
     }
 

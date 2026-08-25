@@ -185,6 +185,41 @@ struct FightGroundTests {
                 <= SiegeField.distance(plain, goal) + SiegeEngine.coverSlip + 1e-9)
     }
 
+    // MARK: - A blow that lands on somebody
+
+    /// A hit is a thing that happens **to** a body, and until this the body had
+    /// no way of knowing: a blade passed through somebody who walked on exactly
+    /// as before, and the only sign was a stain appearing on the ground. Keks:
+    /// *"radoby se mydlí."*
+    @Test("A body remembers the blow it just took, and which way it came from")
+    func blowsAreRecordedOnTheBody() throws {
+        let registry = try registry()
+        var settlement = Settlement(
+            id: UUID(uuidString: "F16C0000-0000-0000-0000-000000000001")!,
+            name: "Contact", storage: [.food: 400], storageCapacity: .uniform(2000))
+        settlement.pawns = (0..<14).map {
+            Pawn(id: UUID(uuidString: String(format: "F16C0000-0000-0000-0000-%012d", $0))!,
+                 name: "Hand \($0)")
+        }
+        settlement.siege = Siege(
+            id: UUID(uuidString: "F16C0000-0000-0000-0000-0000000000FF")!,
+            startTick: 0, openedAt: 0, attackerName: "Kamenní",
+            approach: 0, attackers: 18, openingStrength: 50,
+            fortification: 6, seed: 0xF16C, line: settlement.pawns.map(\.id))
+        // Far enough in that the ranks have met.
+        for step in 1...10 {
+            settlement = SiegeEngine.advance(settlement, to: step, registry: registry)
+        }
+        let siege = try #require(settlement.siege)
+        let struck = siege.fighters.filter { $0.struckAtStep != nil }
+        #expect(!struck.isEmpty, "ten steps of a raid and nobody was ever hit")
+        #expect(struck.contains { $0.struckFrom != nil },
+                "a blow landed from nowhere")
+        // Both sides take them: a fight where only one side is hit is the
+        // one-sided raid this project has fixed once already.
+        #expect(struck.contains { $0.side == .raider })
+    }
+
     @Test("In contact, nobody wanders off to hide")
     func theMeleeIsNotAGameOfHideAndSeek() throws {
         let (cover, _) = try walledGround()

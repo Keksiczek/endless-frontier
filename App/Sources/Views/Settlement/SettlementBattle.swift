@@ -266,6 +266,42 @@ enum SettlementBattle {
     /// the share of the current step that has elapsed is a division. Nothing
     /// here changes what happens — the simulation still resolves a step at a
     /// time — it only draws the time *between* two of them.
+    /// **How far a body is thrown by the blow it has just taken**, in map units.
+    ///
+    /// The fight had swings and it had blood on the ground and nothing in
+    /// between: a blade went through somebody who walked on exactly as before,
+    /// and the only sign of a hit was a stain appearing. Keks: *"radoby se
+    /// mydlí."* The Core stamps the step a body was struck on and where the
+    /// blow came from (`Siege.Combatant.struckAtStep`); this turns that into a
+    /// jolt away from it that decays across the step, so a hit **lands**.
+    ///
+    /// Strictly presentational: it is an offset applied while drawing, and
+    /// nothing here writes a position back (rule 1).
+    static func flinch(
+        _ who: Siege.Combatant, siege: Siege, within: Double
+    ) -> (dx: Double, dy: Double) {
+        guard who.struckAtStep == siege.step, let from = who.struckFrom else { return (0, 0) }
+        let dx = who.at.x - from.x, dy = who.at.y - from.y
+        let d = (dx * dx + dy * dy).squareRoot()
+        guard d > 1e-6 else { return (0, 0) }
+        // Hardest on the beat, gone by the end of the step.
+        let fade = 1 - min(1, max(0, within))
+        let throwBack = flinchReach * fade * fade
+        return (dx / d * throwBack, dy / d * throwBack)
+    }
+
+    /// How far a body is knocked back on the beat, in map units. A third of an
+    /// arm's length: enough to read as a body taking a blow, not so much that
+    /// the line comes apart every time somebody swings.
+    static let flinchReach = SiegeEngine.reach / 3
+
+    /// How much of the current simulation step has elapsed, 0…1.
+    static func withinStep(of siege: Siege, continuousTick: Double) -> Double {
+        let perTick = Double(WorldClock.actionStepsPerTick)
+        let resolvedAt = Double(siege.advancedTo) / perTick
+        return min(1, max(0, (continuousTick - resolvedAt) * perTick))
+    }
+
     static func liveProgress(of siege: Siege, continuousTick: Double) -> Double {
         let perTick = Double(WorldClock.actionStepsPerTick)
         // The tick the last resolved step sat in, as a fraction.
@@ -320,14 +356,19 @@ enum SettlementBattle {
     /// guessing. Rule 5 holds either way — nothing here writes anything.
     /// `facing` is the x-component of the way they are looking, which is the
     /// unit `AgentMotion.Pose` speaks: −1 is left, +1 is right.
-    static func post(for pawnID: UUID, siege: Siege) -> (position: LocalPoint, facing: Double)? {
+    static func post(for pawnID: UUID, siege: Siege,
+                     within: Double = 1) -> (position: LocalPoint, facing: Double)? {
         guard let me = siege.fighters.first(where: { $0.id == pawnID && $0.side == .colony })
         else { return nil }
+        // …thrown by whatever just hit them, so a colonist in the line reacts
+        // to a blow the same way a raider does.
+        let jolt = flinch(me, siege: siege, within: within)
+        let at = LocalPoint(x: me.at.x + jolt.dx, y: me.at.y + jolt.dy)
         // Facing whoever they are on, and out along the attack if nobody.
         guard let mark = me.target.flatMap({ siege.place(of: $0) }) else {
-            return (me.at, SiegeField(siege).axisX)
+            return (at, SiegeField(siege).axisX)
         }
-        return (me.at, toward(me.at, mark).x)
+        return (at, toward(me.at, mark).x)
     }
 
     private static func toward(_ a: LocalPoint, _ b: LocalPoint) -> (x: Double, y: Double) {
@@ -351,8 +392,12 @@ enum SettlementBattle {
         // A fight that is happening has real people standing in real places. A
         // record being played back has neither, and has to be staged.
         let siege = settlement.siege.flatMap { $0.id == log.id ? $0 : nil }
+        // How far through the simulation's current step the drawing is, so a
+        // body that was struck on this step is thrown by it and settles before
+        // the next one. A replay has no step to be inside of.
+        let within = siege.map { withinStep(of: $0, continuousTick: continuousTick) } ?? 1
         draw(&context, rect: rect, log: log, progress: progress, time: time,
-             zoom: zoom, siege: siege, selectedPawnID: selectedPawnID)
+             zoom: zoom, siege: siege, selectedPawnID: selectedPawnID, within: within)
     }
 
     /// The blood on the ground, drawn **before** the colonists.
@@ -379,7 +424,7 @@ enum SettlementBattle {
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, log: BattleLog,
         progress: Double, time: Double, zoom: CGFloat, siege: Siege? = nil,
-        selectedPawnID: UUID? = nil
+        selectedPawnID: UUID? = nil, within: Double = 1
     ) {
         let field = ground(log)
         let unit = min(rect.width, rect.height)
@@ -387,7 +432,7 @@ enum SettlementBattle {
 
         if let siege {
             drawLive(&context, rect: rect, siege: siege, field: field,
-                     time: time, zoom: zoom, strike: strike, unit: unit)
+                     time: time, zoom: zoom, strike: strike, unit: unit, within: within)
         } else {
             drawStaged(&context, rect: rect, log: log, field: field, progress: progress,
                        time: time, zoom: zoom, strike: strike, unit: unit)
@@ -483,13 +528,17 @@ enum SettlementBattle {
     /// What this adds is the warband, who is on whom, and the dead.
     private static func drawLive(
         _ context: inout GraphicsContext, rect: CGRect, siege: Siege, field: SiegeField,
-        time: Double, zoom: CGFloat, strike: Double, unit: CGFloat
+        time: Double, zoom: CGFloat, strike: Double, unit: CGFloat, within: Double
     ) {
         // What one of them was worth when they arrived, so how badly a raider is
         // cut up can be read off what is left of them.
         let share = max(1, siege.openingStrength / Double(max(1, siege.attackers)))
         for (index, raider) in siege.raiders.enumerated() {
-            let screen = SettlementRenderer.point(raider.at, in: rect)
+            // Where the blow they just took has thrown them. Zero for anybody
+            // nobody has hit this step, which is nearly everybody.
+            let jolt = flinch(raider, siege: siege, within: within)
+            let screen = SettlementRenderer.point(
+                LocalPoint(x: raider.at.x + jolt.dx, y: raider.at.y + jolt.dy), in: rect)
             guard !raider.down else {
                 body(&context, at: screen, zoom: zoom, seed: UInt64(index &* 31))
                 SettlementBlood.onBody(&context, at: screen, harm: 1, zoom: zoom,

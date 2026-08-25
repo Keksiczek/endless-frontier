@@ -548,7 +548,10 @@ enum AgentMotion {
         // Core walked them there, one action step at a time. Nothing is
         // interpolated and nothing is guessed.
         if let siege = scene.siege,
-           let there = SettlementBattle.post(for: pawn.id, siege: siege) {
+           let there = SettlementBattle.post(
+               for: pawn.id, siege: siege,
+               within: SettlementBattle.withinStep(of: siege,
+                                                   continuousTick: scene.continuousTick)) {
             let moving = SiegeField.distance(there.position, base.position) > SiegeEngine.pace
             return Pose(position: there.position, activity: .fighting,
                         stride: moving ? 1 : 0.3, facing: there.facing)

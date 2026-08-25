@@ -1144,7 +1144,8 @@ public enum SiegeEngine {
         for pair in met.colony {
             let swing = (power[pair.colonist]?.melee ?? 0) * siege.posture.bite
                 * (0.85 + rng.nextUnit() * 0.3) * meleePerStep(steps: siege.steps)
-            total += wound(raider: pair.on, by: swing, siege: &siege)
+            total += wound(raider: pair.on, by: swing, siege: &siege,
+                           from: siege.fighters.first { $0.id == pair.colonist }?.at)
         }
         // The wall itself, while somebody is holding it: stakes, a ditch, and
         // stones off the parapet — worth something beyond soaking blows.
@@ -1203,6 +1204,13 @@ public enum SiegeEngine {
                 chips[struck, default: 0] += incoming * turned * chipPerBlowTurned
             }
             guard past > 0 else { continue }
+
+            // …and the colonist knows it too, so the figure jolts rather than
+            // walking on through the blade.
+            if let hit = siege.fighters.firstIndex(where: { $0.id == pair.on }) {
+                siege.fighters[hit].struckAtStep = siege.step
+                siege.fighters[hit].struckFrom = attacker.at
+            }
 
             // Between the two of them, which is where a blow actually lands and
             // where the blood goes. Half an arm's length from the man taking it.
@@ -1491,11 +1499,15 @@ public enum SiegeEngine {
     /// breath. The aggregate decides whether the raid broke and the figures are
     /// what it is made of, so the two must never be allowed to drift apart.
     @discardableResult
-    private static func wound(raider id: UUID, by amount: Double, siege: inout Siege) -> Double {
+    private static func wound(raider id: UUID, by amount: Double, siege: inout Siege,
+                              from: LocalPoint? = nil) -> Double {
         guard amount > 0,
               let index = siege.fighters.firstIndex(where: { $0.id == id }),
               siege.fighters[index].side == .raider,
               siege.fighters[index].strength > 0 else { return 0 }
+        // The body knows it was hit, and which way. See `Combatant.struckAtStep`.
+        siege.fighters[index].struckAtStep = siege.step
+        siege.fighters[index].struckFrom = from
         let taken = min(siege.fighters[index].strength, amount)
         siege.fighters[index].strength -= taken
         if siege.fighters[index].strength <= 0 {

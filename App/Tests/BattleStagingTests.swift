@@ -220,6 +220,65 @@ struct BattleStagingTests {
 
 /// Rooms are furnished by a pure function of `(glyph, seed, workers)`, and the
 /// colonists posted to a building stand at the fittings that function drew.
+/// **A blow that lands.** The Core stamps the step a body was struck on and
+/// where the blow came from; the canvas turns that into a jolt away from it.
+@Suite("A hit that reads as a hit")
+struct FlinchTests {
+
+    private func siege(step: Int) -> Siege {
+        var siege = Siege(
+            id: UUID(uuidString: "F11C0000-0000-0000-0000-0000000000FF")!,
+            startTick: 0, openedAt: 0, attackerName: "Kamenní",
+            approach: 0, attackers: 4, openingStrength: 30,
+            fortification: 4, seed: 7, line: [])
+        siege.advancedTo = step
+        return siege
+    }
+
+    private func hit(at step: Int?, from: LocalPoint?) -> Siege.Combatant {
+        Siege.Combatant(
+            id: UUID(uuidString: "F11C0000-0000-0000-0000-000000000001")!,
+            side: .raider, at: LocalPoint(x: 0.5, y: 0.5), strength: 10,
+            struckAtStep: step, struckFrom: from)
+    }
+
+    @Test("Nobody who was not hit moves at all")
+    func theUnhurtStandStill() {
+        let quiet = SettlementBattle.flinch(hit(at: nil, from: nil),
+                                            siege: siege(step: 3), within: 0)
+        #expect(quiet.dx == 0 && quiet.dy == 0)
+    }
+
+    @Test("A body is thrown away from the blow, not toward it")
+    func theJoltRunsWithTheBlow() {
+        let struck = hit(at: 3, from: LocalPoint(x: 0.4, y: 0.5))   // hit from the west
+        let jolt = SettlementBattle.flinch(struck, siege: siege(step: 3), within: 0)
+        #expect(jolt.dx > 0, "the blow came from the west and threw them west")
+        #expect(abs(jolt.dy) < 1e-9)
+    }
+
+    @Test("It is hardest on the beat and gone by the end of the step")
+    func theJoltDecays() {
+        let struck = hit(at: 3, from: LocalPoint(x: 0.4, y: 0.5))
+        let onTheBeat = SettlementBattle.flinch(struck, siege: siege(step: 3), within: 0)
+        let halfWay = SettlementBattle.flinch(struck, siege: siege(step: 3), within: 0.5)
+        let over = SettlementBattle.flinch(struck, siege: siege(step: 3), within: 1)
+        #expect(onTheBeat.dx > halfWay.dx)
+        #expect(halfWay.dx > over.dx)
+        #expect(over.dx == 0)
+        // And never further than the reach a blow is struck at, or the line
+        // comes apart every time somebody swings.
+        #expect(onTheBeat.dx <= SiegeEngine.reach)
+    }
+
+    @Test("A blow from a step ago is over")
+    func theBodySettles() {
+        let struck = hit(at: 2, from: LocalPoint(x: 0.4, y: 0.5))
+        let jolt = SettlementBattle.flinch(struck, siege: siege(step: 3), within: 0)
+        #expect(jolt.dx == 0 && jolt.dy == 0)
+    }
+}
+
 @Suite("Building interiors")
 struct InteriorTests {
 
