@@ -943,3 +943,14 @@ fires, do the arithmetic before you rewrite the mechanic.
    constant, and a constant against a growing town is rule 16. The fix is not a
    bigger number — it is a lever the player owns (here: a logger with nothing
    to fell plants instead, so supply scales with loggers).
+96. **A fallback that catches everything hides everything it catches.**
+   `SiteEngine.lootPool` returns every material no recipe makes and no ground
+   gives — so an item with no source is never *missing*, it is **treasure**, and
+   the content looks complete from every angle except the bench. 104 of 411
+   recipes needed an input obtainable only as loot, and `strong_plant_fibers`
+   ("essential for many early crafts") gated fifty of them, so weaving a fishing
+   net waited on excavating a barrow. Nothing errored, nothing was empty, and
+   the only visible symptom was a standing order that had made zero in two
+   centuries. When a lookup has a catch-all arm, write the test that asks *how
+   many things land in it* — a fallback is a measurement, not a safety net
+   (rules 87, 94).

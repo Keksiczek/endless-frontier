@@ -8390,5 +8390,159 @@
       "en": "A simple satchel made from dried hide and woven plant fibers, useful for carrying gathered goods.",
       "cs": "Jednoduchá brašna vyrobená ze sušené kůže a pletených rostlinných vláken, užitečná pro nošení nasbíraných věcí."
     }
+  },
+  {
+    "id": "gather_plant_fibers",
+    "name": {
+      "en": "Ret plant fibers",
+      "cs": "Vymáčet rostlinná vlákna"
+    },
+    "outputItemID": "strong_plant_fibers",
+    "materials": {
+      "greens": 3
+    },
+    "resourceCost": {},
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Green stalks retted and dried until only the tough fibre is left.",
+      "cs": "Zelené stonky se máčí a suší, až zbude jen pevné vlákno."
+    }
+  },
+  {
+    "id": "cut_timber_log",
+    "name": {
+      "en": "Cut a timber log",
+      "cs": "Nařezat kmen"
+    },
+    "outputItemID": "straight_timber_log",
+    "materials": {
+      "wood": 4
+    },
+    "resourceCost": {},
+    "requiresBuilding": "lumberyard",
+    "description": {
+      "en": "A trunk squared and debarked — one straight length instead of four armfuls.",
+      "cs": "Kmen otesaný a zbavený kůry — jedna rovná délka místo čtyř náručí."
+    }
+  },
+  {
+    "id": "knap_bone_spearhead",
+    "name": {
+      "en": "Knap a bone spearhead",
+      "cs": "Otesat kostěný hrot"
+    },
+    "outputItemID": "bone_spearhead",
+    "materials": {
+      "meat": 2
+    },
+    "resourceCost": {},
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "The long bones out of the day's kill, notched down to a point.",
+      "cs": "Dlouhé kosti z denního úlovku, zaříznuté do hrotu."
+    }
+  },
+  {
+    "id": "render_animal_fat",
+    "name": {
+      "en": "Render animal fat",
+      "cs": "Vyškvařit sádlo"
+    },
+    "outputItemID": "rendered_animal_fat",
+    "materials": {
+      "meat": 3
+    },
+    "resourceCost": {},
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Trimmings held over a low fire until the fat runs clear.",
+      "cs": "Ořezy nad mírným ohněm, dokud sádlo nevyběhne čisté."
+    }
+  },
+  {
+    "id": "cure_rabbit_pelt",
+    "name": {
+      "en": "Cure a rabbit pelt",
+      "cs": "Vydělat králičí kožku"
+    },
+    "outputItemID": "cured_rabbit_pelt",
+    "materials": {
+      "hide": 1
+    },
+    "resourceCost": {},
+    "requiresBuilding": "hunters_lodge",
+    "description": {
+      "en": "Scraped, stretched and dried before the rot can start.",
+      "cs": "Oškrábaná, napnutá a usušená dřív, než se do ní dá hniloba."
+    }
+  },
+  {
+    "id": "take_beeswax",
+    "name": {
+      "en": "Take the beeswax",
+      "cs": "Vybrat vosk"
+    },
+    "outputItemID": "raw_beeswax_lump",
+    "materials": {
+      "wild_honeycomb": 1
+    },
+    "resourceCost": {},
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "The comb warmed through and the wax lifted off the honey.",
+      "cs": "Plást se prohřeje a vosk se sebere z medu."
+    }
+  },
+  {
+    "id": "pack_river_clay",
+    "name": {
+      "en": "Pack river clay",
+      "cs": "Naplavit říční hlínu"
+    },
+    "outputItemID": "pack_of_river_clay",
+    "materials": {
+      "clay": 3
+    },
+    "resourceCost": {},
+    "requiresBuilding": "hut",
+    "description": {
+      "en": "Clay off the bank, kneaded clean of grit and dried into a block.",
+      "cs": "Hlína z břehu, prohnětená od písku a usušená v hroudu."
+    }
+  },
+  {
+    "id": "dry_wild_mushrooms",
+    "name": {
+      "en": "Dry wild mushrooms",
+      "cs": "Usušit houby"
+    },
+    "outputItemID": "dried_wild_mushrooms",
+    "materials": {
+      "greens": 2
+    },
+    "resourceCost": {},
+    "requiresBuilding": "cookhouse",
+    "description": {
+      "en": "Picked off the forest floor and strung up over the hearth.",
+      "cs": "Sebrané z lesní půdy a navlečené nad ohništěm."
+    }
+  },
+  {
+    "id": "cast_machine_parts",
+    "name": {
+      "en": "Cast machine parts",
+      "cs": "Odlít strojní díly"
+    },
+    "outputItemID": "basic_machine_parts",
+    "materials": {
+      "iron_ingot": 2
+    },
+    "resourceCost": {},
+    "requiresBuilding": "workshop",
+    "requiresTech": "machining",
+    "description": {
+      "en": "Gears, levers and fasteners, crudely cast and filed to fit.",
+      "cs": "Ozubená kola, páky a spojky, hrubě odlité a zapilované."
+    }
   }
 ]

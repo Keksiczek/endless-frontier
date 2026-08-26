@@ -922,10 +922,12 @@ public enum ResourceLoop {
             // up, found `spare` at zero, and the colony's wood supply was
             // whatever nature reseeded on its own. A woodsman with nothing to
             // fell plants; see `FloraEngine.tended`.
-            let spare = FloraEngine.spareToFell(map, marked: marked)
-            let cutting = min(loggers, spare)
+            // One walk of the wood, used for both questions: how many axes are
+            // worth sending, and how many unmarked trees they may take.
+            let spare = FloraEngine.spareToFell(map)
+            let cutting = min(loggers, spare + marked.count)
             if cutting > 0, !map.trees.isEmpty {
-                let cut = FloraEngine.fell(map, loggers: cutting, marked: marked)
+                let cut = FloraEngine.fell(map, loggers: cutting, marked: marked, spare: spare)
                 map = cut.map
                 let perTrunk = timberYield(of: settlement, registry: registry)
                 for stump in cut.stumps {

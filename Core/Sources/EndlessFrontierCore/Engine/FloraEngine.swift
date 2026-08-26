@@ -79,7 +79,9 @@ public enum FloraEngine {
     /// fells a sapling while an oak is standing — and a tree that comes down is
     /// removed from the map.
     public static func fell(
-        _ map: LocalMap, loggers: Int, marked: Set<Int> = []
+        _ map: LocalMap, loggers: Int, marked: Set<Int> = [],
+        /// What `spareToFell` already answered, when the caller asked first.
+        spare: Int? = nil
     ) -> (map: LocalMap, timber: Double, felled: Int, stumps: [LocalPoint]) {
         guard loggers > 0, !map.trees.isEmpty else { return (map, 0, 0, []) }
 
@@ -94,9 +96,11 @@ public enum FloraEngine {
         // colony fell the last four trees that were holding it up. Marked trees
         // are outside the reckoning entirely — the player pointing at a thicket
         // is a decision, not an appetite.
-        var bearing = 0
-        for tree in map.trees where tree.growth >= bearingGrowth { bearing += 1 }
-        let spare = max(0, bearing - seedStand)
+        // Counted by the caller when it has already had to ask — `fell` and
+        // `spareToFell` were walking the whole wood one after the other every
+        // tick, which on a valley that can now reach `woodCeiling` is twice the
+        // work on three times the trees.
+        let spare = spare ?? spareToFell(map)
         var takenFromTheStand = 0
         let workable = map.trees.indices
             // A sapling is not worth an axe — **unless somebody pointed at it.**
@@ -462,17 +466,30 @@ public enum FloraEngine {
         return updated
     }
 
-    /// How much of the wood the axes may take: bearing trees over the stand
-    /// kept back to seed the next one.
+    /// **How many unmarked trees the axes may take**: bearing trees over the
+    /// stand kept back to seed the next one.
     ///
     /// Public because the caller has to know whether there is anything to fell
     /// *before* it decides between the axe and the seedling bag, and reading
     /// `fell`'s empty result afterwards cannot tell "nothing spare" from
-    /// "nobody sent".
-    public static func spareToFell(_ map: LocalMap, marked: Set<Int> = []) -> Int {
+    /// "nobody sent". Passing the answer back into `fell` is what stops the two
+    /// of them walking the whole wood one after the other every tick.
+    ///
+    /// Marked trees are **not** in this number: a mark is a decision and is
+    /// felled at the floor (`Designation`), so it is outside the reckoning
+    /// exactly as it is inside `fell`. What the caller wants when deciding how
+    /// many axes are worth sending is `worthFelling`.
+    public static func spareToFell(_ map: LocalMap) -> Int {
         var bearing = 0
         for tree in map.trees where tree.growth >= bearingGrowth { bearing += 1 }
-        return max(0, bearing - seedStand) + marked.count
+        return max(0, bearing - seedStand)
+    }
+
+    /// How many trees are worth sending somebody to at all — the spare stand
+    /// plus anything the player pointed at, which is felled whatever the floor
+    /// says.
+    public static func worthFelling(_ map: LocalMap, marked: Set<Int>) -> Int {
+        spareToFell(map) + marked.count
     }
 
     /// Whether a sapling may take root here — nothing standing on it, and not
@@ -491,7 +508,13 @@ public enum FloraEngine {
         _ map: LocalMap, species: FloraDefinition, at position: LocalPoint
     ) -> LocalMap {
         var updated = map
-        let nextID = (updated.trees.map(\.id).max() ?? -1) + 1
+        // **The last id, not the largest of all of them.** This was
+        // `trees.map(\.id).max()` — an array of every id in the wood, allocated
+        // and scanned, for *each* sapling set. `trees` is append-only with
+        // increasing ids and `fell` removes in place without reordering, so the
+        // last one is the largest by construction. The same allocation-per-pass
+        // shape `reseeded` was already fixed for, one function further down.
+        let nextID = (updated.trees.last?.id ?? -1) + 1
         updated.trees.append(Tree(id: nextID, definition: species, position: position, age: 0))
         return updated
     }

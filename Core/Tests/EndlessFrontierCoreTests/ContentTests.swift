@@ -183,6 +183,58 @@ struct ContentIntegrityTests {
                 "these say they are equipment and name no slot, so equipping them silently does nothing: \(homeless)")
     }
 
+    /// **Everything a recipe needs can be got, and not only by digging it up.**
+    ///
+    /// `SiteEngine.lootPool` hands back every material *no recipe makes and no
+    /// ground gives* — so an item with no source is not unreachable, it is
+    /// **treasure**, and the game looks correct from every angle except the
+    /// bench. Measured: 104 of 411 recipes needed at least one input that only
+    /// an expedition could ever supply. `strong_plant_fibers` alone gated
+    /// **fifty** of them — "bundles of tough, dried plant fibers… essential for
+    /// many early crafts" — so weaving a fishing net waited on excavating a
+    /// barrow, and `WoodProbe` duly showed `Weave Fiber Rope` on a standing
+    /// order having made **zero** in two centuries.
+    ///
+    /// Three are treasure on purpose and their own names say so. Everything
+    /// else must be makeable out of what the valley gives. The list is the
+    /// design statement: add a fourth and this test will name it.
+    @Test("Every material a recipe needs can be got without digging up a barrow")
+    func noEverydayMaterialIsTreasureOnly() throws {
+        let reg = try registry()
+        var made: Set<String> = []
+        for recipe in reg.recipes.values { made.insert(recipe.outputItemID) }
+
+        var gathered: Set<String> = ["meat", "berries", "greens", "roots", "grain"]
+        gathered.insert(ResourceLoop.hideItemID)
+        for kind in LocalResourceKind.allCases {
+            if let id = kind.rawMaterialID { gathered.insert(id) }
+        }
+        // A cache on the colony's *own* local map is a source, not treasure:
+        // `star_iron` sits in a starfall crater somebody can walk to. This
+        // clause is the one the first cut of this test missed, and the test
+        // itself is what found it.
+        for kind in LocalPOIKind.allCases {
+            if let id = kind.cacheItemID { gathered.insert(id) }
+        }
+        // Found, never made — and meant to be. Their own names say so.
+        let treasures: Set<String> = ["ancient_alloy", "crater_glass", "spirit_essence"]
+
+        var blocked: [String: Int] = [:]
+        for recipe in reg.recipes.values {
+            for material in recipe.materials.keys {
+                if made.contains(material) { continue }
+                if gathered.contains(material) { continue }
+                if treasures.contains(material) { continue }
+                blocked[material, default: 0] += 1
+            }
+        }
+        let named = blocked.sorted { $0.value > $1.value }
+            .map { "\($0.key) x\($0.value)" }
+            .joined(separator: ", ")
+        #expect(blocked.isEmpty,
+                "needed by recipes, obtainable only as loot: \(named)")
+    }
+
     /// …and nothing the colony can make produces one of them.
     ///
     /// The slot check above is about the item; this is about the *cost*. A

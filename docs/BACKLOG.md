@@ -3383,3 +3383,52 @@ Everything in §15.6 except the crafting gate's worst half, plus:
 2. `woodCeiling` is 160 and a valley now sits *at* it for most of a run. Pinned
    at the ceiling is better than pinned at the floor, but it is still pinned —
    worth a look once something else competes for the ground.
+
+## 17. 2026-08-26 (evening) — a quarter of the recipe book needed treasure
+
+Found by reading `WoodProbe`'s own output rather than by looking for it:
+`Weave Fiber Rope` sat on a standing order and had made **zero** in two
+centuries, short of `strong_plant_fibers`.
+
+### 17.1 — what it was
+
+`SiteEngine.lootPool` hands back every material *no recipe makes and no ground
+gives*. That is a nice piece of design and it hides a whole class of bug: an
+item with no source is not unreachable, it is **treasure** — so the data looks
+complete from every angle except the bench.
+
+Counted: **104 of 411 recipes needed at least one input obtainable only as
+loot.** `strong_plant_fibers` alone gated **fifty** of them — *"bundles of
+tough, dried plant fibers… essential for many early crafts, like fishing nets
+or baskets"* — so weaving a net waited on excavating a barrow.
+
+| orphan | recipes blocked | what its own description says it is |
+|---|---|---|
+| `strong_plant_fibers` | 50 | dried plant fibre, retted |
+| `ancient_alloy` | 20 | **treasure on purpose** |
+| `bone_spearhead` | 10 | sharpened animal bone |
+| `straight_timber_log` | 6 | a trunk, cut and debarked |
+| `rendered_animal_fat` | 5 | clarified fat |
+| `raw_beeswax_lump` | 4 | wax off the comb |
+| `pack_of_river_clay` | 4 | clay off the bank |
+| `cured_rabbit_pelt` | 4 | a scraped hide |
+| `basic_machine_parts` | 4 | cast gears and levers |
+| `crater_glass` | 3 | **treasure on purpose** |
+| `spirit_essence` | 2 | **treasure on purpose** |
+| `dried_wild_mushrooms` | 1 | picked and dried |
+
+### 17.2 — the fix
+
+Nine recipes, each derived from what its own item description already says it
+is made of and who would make it — nothing invented. `greens → fibers` at the
+hut, `wood → log` at the lumberyard, `meat → fat` at the cookhouse, and so on.
+**104 → 24**, and the 24 that remain all want one of the three things whose
+names say they are found rather than made.
+
+### 17.3 — the guard, and what the guard found
+
+`ContentTests` now asserts no material is loot-only outside a named list of
+three. Writing it turned up a fourth source the analysis had missed:
+`star_iron` comes from a **starfall POI cache** on the colony's own local map —
+`LocalPOIKind.cacheItemID`, a real and quite reachable source that is neither a
+recipe nor a `LocalResourceKind`. The test found it; the spreadsheet did not.
