@@ -66,6 +66,15 @@ enum AppStrings {
     /// Buying peace: a yearly payment, and the cost of stopping it.
     static var offerTribute: String { s("Offer tribute", "Nabídnout tribut") }
     static var declareWar: String { s("Declare war", "Vyhlásit válku") }
+    /// **The other half of a war.** Declaring one used to be the end of the
+    /// player's involvement — the flag went up and then they waited to be
+    /// raided. This sends a party over the ground at them.
+    static var marchOnThem: String { s("March on them", "Táhnout na ně") }
+    /// The road out, so four hands gone for a season is a decision.
+    static func marchDistance(_ ticks: Int) -> String {
+        s("\(ticks) ticks out, and the same back",
+          "\(ticks) taktů tam, tolikéž zpět")
+    }
     /// Why a study whose prerequisites are all met is still shut: the colony
     /// does not live in a century that could attempt it yet.
     static func notThisAge(_ era: String) -> String {

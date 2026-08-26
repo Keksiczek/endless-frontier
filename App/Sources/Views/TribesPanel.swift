@@ -50,6 +50,7 @@ struct TribesPanel: View {
             }
 
             actions(tribe)
+            marchLine(tribe)
         }
         .padding(.vertical, 10).padding(.horizontal, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -136,8 +137,36 @@ struct TribesPanel: View {
                     game.declareWar(on: tribe.id)
                 }
             }
+            // …and the other half of it, which did not exist at all: a war
+            // party sent over the ground at them. Shown for the whole of a war
+            // rather than only when it can go, because an absent button
+            // teaches nothing — a disabled one with a reason under it is how
+            // somebody learns that a march waits on an expedition coming home.
+            if tribe.war != nil {
+                action(AppStrings.marchOnThem, icon: "figure.walk.motion",
+                       cost: 0, enabled: game.canMarch(on: tribe), tint: Theme.danger) {
+                    game.march(on: tribe)
+                }
+            }
         }
         .padding(.top, 2)
+    }
+
+    /// The march, said in full: how far it is, or why it cannot go.
+    ///
+    /// The chip itself has room for a verb and nothing else, and "why is that
+    /// button grey" is the question that sends somebody looking through menus.
+    @ViewBuilder
+    private func marchLine(_ tribe: Tribe) -> some View {
+        if tribe.war != nil {
+            if let reason = game.marchBlockedReason(tribe) {
+                Label(reason, systemImage: "info.circle")
+                    .font(.caption2).foregroundStyle(Theme.textDim)
+            } else if let ticks = game.marchDistance(to: tribe) {
+                Label(AppStrings.marchDistance(ticks), systemImage: "figure.walk")
+                    .font(.caption2).foregroundStyle(Theme.textDim)
+            }
+        }
     }
 
     /// The war's own line: since when, how often they have come, and what it
@@ -156,6 +185,15 @@ struct TribesPanel: View {
         if war.lootLost > 1 {
             parts.append(cs ? "\(Int(war.lootLost)) jídla odneseno"
                             : "\(Int(war.lootLost)) food carried off")
+        }
+        // …and our own side of it. Every figure above counts a raid *they*
+        // made; a war with only their column filled in reads as a siege.
+        if war.sorties > 0 {
+            parts.append(cs ? "\(war.sorties) výprav, \(war.sortiesWon) prorazilo"
+                            : "\(war.sorties) marches, \(war.sortiesWon) broke through")
+        }
+        if war.plunder > 1 {
+            parts.append(cs ? "\(Int(war.plunder)) uloupeno" : "\(Int(war.plunder)) plundered")
         }
         return HStack(spacing: 6) {
             Image(systemName: "flag.2.crossed.fill").font(.caption2)

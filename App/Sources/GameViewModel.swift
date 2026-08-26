@@ -1013,6 +1013,56 @@ final class GameViewModel {
     /// hint that the map is not empty.
     var unmetTribeCount: Int { world.tribes.filter { !$0.discovered }.count }
 
+    // MARK: - Marching on them
+
+    /// Whether a war party can go over the ground at this people right now.
+    ///
+    /// Declaring war used to buy the player nothing they could act on: the flag
+    /// went up and then they waited to be raided. This is the other half of it.
+    func canMarch(on tribe: Tribe) -> Bool {
+        guard let regionID = tribe.regionID,
+              TribeWarEngine.target(in: world, regionID: regionID) != nil,
+              !world.regionExpeditions.contains(where: { $0.regionID == regionID })
+        else { return false }
+        return true
+    }
+
+    /// Why not, when not — so the absent verb explains itself instead of just
+    /// being absent.
+    func marchBlockedReason(_ tribe: Tribe) -> String? {
+        let cs = AppStrings.language == .cs
+        guard tribe.war != nil else {
+            return cs ? "Nejdřív jim vyhlas válku." : "Declare war on them first."
+        }
+        guard let regionID = tribe.regionID else {
+            return cs ? "Nevíme, kde sídlí." : "Nobody knows where they live."
+        }
+        if world.regions.first(where: { $0.id == regionID })?.explorationState == .unknown {
+            return cs ? "Do té země jsme ještě nedošli." : "Nobody has walked that country yet."
+        }
+        if world.regionExpeditions.contains(where: { $0.regionID == regionID }) {
+            return cs ? "Výprava už je na cestě." : "A party is already on that road."
+        }
+        return nil
+    }
+
+    /// Sends the war party. The journey is a `RegionExpedition` like any other —
+    /// they walk, they are gone, and what happens at the far end happens
+    /// whether or not anybody is watching.
+    func march(on tribe: Tribe) {
+        guard let regionID = tribe.regionID, canMarch(on: tribe) else { return }
+        sendToSite(regionID)
+    }
+
+    /// How far away they are, in ticks one way — a war you cannot reach is a
+    /// war of letters, and the player should know before they commit anybody.
+    func marchDistance(to tribe: Tribe) -> Int? {
+        guard let regionID = tribe.regionID,
+              let target = world.regions.first(where: { $0.id == regionID }),
+              let home = selectedSettlement else { return nil }
+        return RegionExpeditionEngine.travelTicks(from: home, to: target, in: world)
+    }
+
     func canAfford(influence amount: Double) -> Bool {
         GameEngine.canAfford(influence: amount, in: world)
     }

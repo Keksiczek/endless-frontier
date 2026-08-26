@@ -41,7 +41,10 @@ public enum RegionExpeditionEngine {
     ) -> WorldState? {
         guard let seat = state.settlements.firstIndex(where: { $0.id == settlementID }),
               let target = state.regions.first(where: { $0.id == regionID }),
-              target.hasActiveSite,
+              // Somewhere worth walking to: a site standing open, or a people
+              // we have declared a war on. The second is the march
+              // (`TribeWarEngine`) — the same journey, a different reason.
+              target.hasActiveSite || TribeWarEngine.target(in: state, regionID: regionID) != nil,
               !state.regionExpeditions.contains(where: { $0.regionID == regionID })
         else { return nil }
 
@@ -78,7 +81,12 @@ public enum RegionExpeditionEngine {
 
     /// How far it is, in ticks one way. Distance is the whole point: a ruin you
     /// can see from the walls and one across the map were the same button.
-    static func travelTicks(
+    ///
+    /// Public because the player is owed the number *before* they commit four
+    /// people to it — a war party sent at a people on the far side of the map
+    /// is four hands gone for a season, and that should be a decision rather
+    /// than a discovery.
+    public static func travelTicks(
         from settlement: Settlement, to target: Region, in state: WorldState
     ) -> Int {
         guard let home = settlement.regionID,
@@ -168,6 +176,15 @@ public enum RegionExpeditionEngine {
     ) -> SiteEncounter? {
         guard let region = state.regions.first(where: { $0.id == expedition.regionID })
         else { return nil }
+        // A people is not a find either, and it is the only one that fights
+        // back because it was asked to. Ahead of the camp branch because a
+        // tribe can be living in a hex that also holds a site.
+        if let tribe = TribeWarEngine.target(in: state, regionID: region.id) {
+            return TribeWarEngine.encounter(
+                for: tribe, party: expedition.memberIDs,
+                seed: self.seed(mapSeed: state.mapSeed, regionID: region.id,
+                                tick: expedition.departedTick) ^ 0x77A3)
+        }
         // An outlaw camp is not a *find*: what is in it is the camp, and the
         // camp is a thing the world keeps. Laid out from its own strength,
         // its own kind and its own hoard — see `OutlawCampEngine.encounter`.
@@ -236,6 +253,20 @@ public enum RegionExpeditionEngine {
             }
         }
 
+        // A march home. Same order as `lay(out:)`: a people first, because a
+        // people can be living on a hex that also holds a site, and what the
+        // party went for was the people.
+        if let tribe = TribeWarEngine.target(in: s, regionID: expedition.regionID) {
+            let (after, march) = TribeWarEngine.sacked(
+                s, tribeID: tribe.id, settlementIndex: seat, share: cleared)
+            s = after
+            if let march {
+                s.settlements[seat].journal.append(
+                    tick: s.tick, kind: .diplomacy, text: line(for: march))
+            }
+            return s
+        }
+
         // A camp pays in what it *took*, and the payment is the point: a raid
         // that emptied your granary is a raid you can go and undo. Kept off
         // the site table entirely — there is no loot table for a camp, only
@@ -279,6 +310,28 @@ public enum RegionExpeditionEngine {
                 text: LocalizedText(outcome.narrative))
         }
         return s
+    }
+
+    /// What the colony is told about a march that has come home.
+    ///
+    /// Three outcomes and three sentences, because "the party returned" over a
+    /// people you have just wiped out and over a fence you bounced off is the
+    /// journal refusing to say what happened.
+    static func line(for march: TribeWarEngine.March) -> LocalizedText {
+        let carried = Int(march.plunder.rounded())
+        if march.scattered {
+            return LocalizedText(values: [
+                .en: "\(march.tribeName) are scattered. Nobody is left there to come back at us.",
+                .cs: "\(march.tribeName) jsou rozprášeni. Nezůstal tam nikdo, kdo by se vracel."])
+        }
+        if march.brokeIn {
+            return LocalizedText(values: [
+                .en: "The war party broke into \(march.tribeName) and came home with \(carried).",
+                .cs: "Válečná výprava se probila k \(march.tribeName) a přinesla \(carried)."])
+        }
+        return LocalizedText(values: [
+            .en: "The war party was held at \(march.tribeName) and came away with little.",
+            .cs: "Válečnou výpravu u \(march.tribeName) zastavili; přinesla málo."])
     }
 
     static func seed(mapSeed: UInt64, regionID: UUID, tick: Int) -> UInt64 {

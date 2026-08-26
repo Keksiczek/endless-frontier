@@ -51,6 +51,25 @@ public struct WarState: Codable, Sendable, Equatable {
     /// Food carried out of the granary by raiders who got through.
     public var lootLost: Double
 
+    // MARK: - What we did to them
+    //
+    // **A war used to be a thing that happened to you.** Every field above
+    // counts a raid *they* made: how many came, how many the wall turned back,
+    // what it cost us. There was no counterpart, because there was no verb —
+    // `declareWar` set a flag and then the player waited to be attacked, which
+    // is a war with one party in it. Keks: *"nevím, jak udělat nájezd na
+    // město."* He could not, and it was not hidden. See `TribeWarEngine`.
+
+    /// Parties we have sent over the ground at them.
+    public var sorties: Int = 0
+    /// …and how many of those broke into the place rather than being turned
+    /// back at its edge.
+    public var sortiesWon: Int = 0
+    /// What our marches have cost *them*, in the strength we put down.
+    public var theirStrengthSpent: Double = 0
+    /// What we carried home out of their stores.
+    public var plunder: Double = 0
+
     public init(
         declaredTick: Int,
         declaredByColony: Bool = false,
@@ -58,7 +77,11 @@ public struct WarState: Codable, Sendable, Equatable {
         repelled: Int = 0,
         colonistsLost: Int = 0,
         strengthSpent: Double = 0,
-        lootLost: Double = 0
+        lootLost: Double = 0,
+        sorties: Int = 0,
+        sortiesWon: Int = 0,
+        theirStrengthSpent: Double = 0,
+        plunder: Double = 0
     ) {
         self.declaredTick = declaredTick
         self.declaredByColony = declaredByColony
@@ -67,6 +90,36 @@ public struct WarState: Codable, Sendable, Equatable {
         self.colonistsLost = colonistsLost
         self.strengthSpent = strengthSpent
         self.lootLost = lootLost
+        self.sorties = sorties
+        self.sortiesWon = sortiesWon
+        self.theirStrengthSpent = theirStrengthSpent
+        self.plunder = plunder
+    }
+
+    // MARK: - Codable
+    //
+    // Hand-written so a war saved before the colony could march decodes to one
+    // it has not marched in, rather than failing the whole save (rule 3).
+
+    private enum CodingKeys: String, CodingKey {
+        case declaredTick, declaredByColony, raids, repelled, colonistsLost
+        case strengthSpent, lootLost
+        case sorties, sortiesWon, theirStrengthSpent, plunder
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        declaredTick = try c.decode(Int.self, forKey: .declaredTick)
+        declaredByColony = try c.decodeIfPresent(Bool.self, forKey: .declaredByColony) ?? false
+        raids = try c.decodeIfPresent(Int.self, forKey: .raids) ?? 0
+        repelled = try c.decodeIfPresent(Int.self, forKey: .repelled) ?? 0
+        colonistsLost = try c.decodeIfPresent(Int.self, forKey: .colonistsLost) ?? 0
+        strengthSpent = try c.decodeIfPresent(Double.self, forKey: .strengthSpent) ?? 0
+        lootLost = try c.decodeIfPresent(Double.self, forKey: .lootLost) ?? 0
+        sorties = try c.decodeIfPresent(Int.self, forKey: .sorties) ?? 0
+        sortiesWon = try c.decodeIfPresent(Int.self, forKey: .sortiesWon) ?? 0
+        theirStrengthSpent = try c.decodeIfPresent(Double.self, forKey: .theirStrengthSpent) ?? 0
+        plunder = try c.decodeIfPresent(Double.self, forKey: .plunder) ?? 0
     }
 
     /// How long it has been going, in whole years.
