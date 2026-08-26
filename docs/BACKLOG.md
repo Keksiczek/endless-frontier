@@ -3301,14 +3301,14 @@ Still open on accessibility: the canvas is unlabelled to VoiceOver, Dynamic Type
 is ignored by 33 fixed `.font(.system(size:))` calls, and
 `preferredColorScheme(.dark)` is hard-wired.
 
-## 16. 2026-08-26 (evening) — the wood, measured
+## 17. 2026-08-26 (evening) — the wood, measured
 
 `WoodProbe` was written to test a hypothesis and disproved it, which is the
 only reason the real cause was found. Suspicion: the council's two standing
 orders eat every scrap of wood and `CraftingEngine.yieldsTheBench` cannot stop
 them. Measurement said otherwise.
 
-### 16.1 — what the probe found
+### 17.1 — what the probe found
 
 Seed 4242, two centuries, before the fix:
 
@@ -3338,7 +3338,7 @@ The cost: 123 of 411 recipes consume raw `wood` — thirty per cent of the book 
 and all of them, plus `Saw Timber`, `Burn Charcoal` and everything downstream
 of charcoal (the whole iron half), were permanently unmakeable.
 
-### 16.2 — the fix, and why not a bigger number
+### 17.2 — the fix, and why not a bigger number
 
 Nature's rate cannot answer a colony, and raising it would only move the year
 the curve crosses. **The colony gets a lever instead**: a logger sent to a wood
@@ -3365,7 +3365,7 @@ Wood 1 → **1912**, timber 100 → 312, blocked orders 6 → 2, and `Saw Timber
 decline, 2971 → 1912: demand is catching up again as the town grows, which is
 the shape this should have — a resource to manage, not a cliff.
 
-### 16.3 — and what it cost the canvas
+### 17.3 — and what it cost the canvas
 
 `SettlementFlora.draw` sorted and drew **every** tree on the map every frame,
 with no camera cull — survivable at forty-odd trees, which is what a wood was
@@ -3373,7 +3373,7 @@ pinned at. A valley now sits at `woodCeiling`, so the per-frame cost roughly
 quadrupled on the day the wood was fixed. It culls to the viewport before the
 sort now, the same discipline the buildings got in §2.1.
 
-### 16.4 — still open
+### 17.4 — still open
 
 Everything in §15.6 except the crafting gate's worst half, plus:
 
@@ -3384,13 +3384,13 @@ Everything in §15.6 except the crafting gate's worst half, plus:
    at the ceiling is better than pinned at the floor, but it is still pinned —
    worth a look once something else competes for the ground.
 
-## 17. 2026-08-26 (evening) — a quarter of the recipe book needed treasure
+## 18. 2026-08-26 (evening) — a quarter of the recipe book needed treasure
 
 Found by reading `WoodProbe`'s own output rather than by looking for it:
 `Weave Fiber Rope` sat on a standing order and had made **zero** in two
 centuries, short of `strong_plant_fibers`.
 
-### 17.1 — what it was
+### 18.1 — what it was
 
 `SiteEngine.lootPool` hands back every material *no recipe makes and no ground
 gives*. That is a nice piece of design and it hides a whole class of bug: an
@@ -3417,7 +3417,7 @@ or baskets"* — so weaving a net waited on excavating a barrow.
 | `spirit_essence` | 2 | **treasure on purpose** |
 | `dried_wild_mushrooms` | 1 | picked and dried |
 
-### 17.2 — the fix
+### 18.2 — the fix
 
 Nine recipes, each derived from what its own item description already says it
 is made of and who would make it — nothing invented. `greens → fibers` at the
@@ -3425,7 +3425,7 @@ hut, `wood → log` at the lumberyard, `meat → fat` at the cookhouse, and so o
 **104 → 24**, and the 24 that remain all want one of the three things whose
 names say they are found rather than made.
 
-### 17.3 — the guard, and what the guard found
+### 18.3 — the guard, and what the guard found
 
 `ContentTests` now asserts no material is loot-only outside a named list of
 three. Writing it turned up a fourth source the analysis had missed:

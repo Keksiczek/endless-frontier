@@ -1,12 +1,15 @@
 # Docs — what is where
 
 > **Start here if you are picking this up cold:**
-> [`BACKLOG.md` §15–16](BACKLOG.md) (2026-08-26) — the app audit: diplomacy's
-> verbs were off the edge of an iPhone, there were two build flows and one of
-> them omitted every early building, the objectives panel was in English,
-> marching on a neighbour did not exist, and **73 items could never be equipped
-> while 89 recipes went on making them**. §16.3 is measured and deliberately
-> unfixed; §16.4 is two things seen in a real save.
+> [`BACKLOG.md` §17–18](BACKLOG.md) (2026-08-26 evening) — why a long game ran
+> out of wood, and why **a quarter of the recipe book needed treasure**. Both
+> were found by measuring; the first disproved the hypothesis that started it.
+> Open list: §15.6, §16.3–16.4 and §17.4.
+> Before them, [`§15–16`](BACKLOG.md) — the app audit: diplomacy's verbs were
+> off the edge of an iPhone, there were two build flows and one of them omitted
+> every early building, the objectives panel was in English, marching on a
+> neighbour did not exist, and **73 items could never be equipped while 89
+> recipes went on making them**.
 > Before it: [`HANDOFF-2026-08-22.md`](HANDOFF-2026-08-22.md) — combat measured
 > apart into three faults, the council that could build one building, and the
 > six things Keks asked for next in his own order.
@@ -24,7 +27,7 @@ Read in this order when picking work up cold:
 |---|---|---|
 | 1 | [NEXT.md](NEXT.md) | **Start here.** Where the game stands and what to work on next, with the evidence for each |
 | 2 | [CODEMAPS/architecture.md](CODEMAPS/architecture.md) | The three layers, the tick order, where a decision flows |
-| 3 | [RULES.md](RULES.md) | **94 rules, each of which cost a session.** Read before writing a threshold |
+| 3 | [RULES.md](RULES.md) | **96 rules, each of which cost a session.** Read before writing a threshold |
 | 4 | [BACKLOG.md](BACKLOG.md) | **The living record.** What was measured, what was built, what Keks asked for |
 
 ## Reference, by question
@@ -57,12 +60,14 @@ overtaken without being updated, which is exactly how a stale doc does damage.
 | [NEXT_STEPS.md](NEXT_STEPS.md) | 2026-06-06 | "179 tests" |
 | [NEXT_PHASE.md](NEXT_PHASE.md) | ~2026-07-28 | The entity-conversion brief. Two of its three unconverted rows still stand; **the buildings row is out of date** — see [CODEMAPS/models.md](CODEMAPS/models.md) |
 | [HANDOFF.md](HANDOFF.md) | 2026-08-13 | A state report, not a plan — but the newest one, and worth reading |
-| [NEXT.md](NEXT.md) | 2026-08-17 | Still the best short answer to "what next", but **its counts are stale**: it says 37 techs / 306 recipes / 38 rules against 60 / 411 / 93 today |
+| [NEXT.md](NEXT.md) | 2026-08-17 | Still the best short answer to "what next", but **its counts are stale**: it says 37 techs / 306 recipes / 38 rules against 60 / 420 / 96 today |
 
-Reality as of **2026-08-26**: **1572 Core tests in 219 suites** and 177 App
-tests, all green; iOS build green. Content: 56 buildings, **60 techs**, 182
-events, 7 biomes, **477 items**, **411 recipes**. History lives in `BACKLOG.md`;
-the newest section is **§15** and its §15.6 is the open list.
+Reality as of **2026-08-26 (evening)**: **1581 Core tests in 220 suites** and
+182 App tests, all green; iOS build green. The Core suite runs in ~13 minutes,
+down from ~32 — an allocation per sapling, see §18.
+Content: 56 buildings, **60 techs**, 182 events, 7 biomes, **477 items**,
+**420 recipes**. History lives in `BACKLOG.md`; the newest sections are §17 and
+§18. The open list is §15.6, §16.3–16.4 and §17.4.
 
 ## The one rule about these docs
 
