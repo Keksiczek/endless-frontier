@@ -159,6 +159,46 @@ struct ContentIntegrityTests {
         #expect(eras.contains(.medieval))
         #expect(eras.contains(.earlyIndustrial))
     }
+
+    /// **Everything a colonist can be handed goes into a slot.**
+    ///
+    /// `GameEngine.equipItem` requires `slot == .equipment` *and* a non-nil
+    /// `equipSlot`, and returns the world unchanged when either is missing.
+    /// `ItemsPanel` switches on `slot` alone and offers an Equip menu for
+    /// anything marked equipment. **Seventy-three items had the first and not
+    /// the second**, so the player picked a colonist and nothing happened — no
+    /// error, no message, the item still on the shelf.
+    ///
+    /// They were not obscure: eighty-nine recipes made them, a fifth of the
+    /// whole book, and because `ItemEngine.equippedEffects` only reads what is
+    /// *worn*, every skill bonus, mood bonus and health regen on all
+    /// seventy-three was dead the entire time.
+    @Test("Every item a colonist can be handed has somewhere to put it")
+    func everyEquipmentHasASlot() throws {
+        let reg = try registry()
+        let homeless = reg.items.values
+            .filter { $0.slot == .equipment && $0.equipSlot == nil }
+            .map(\.id).sorted()
+        #expect(homeless.isEmpty,
+                "these say they are equipment and name no slot, so equipping them silently does nothing: \(homeless)")
+    }
+
+    /// …and nothing the colony can make produces one of them.
+    ///
+    /// The slot check above is about the item; this is about the *cost*. A
+    /// recipe whose output cannot be used is materials and worker-ticks spent
+    /// on nothing, and the bench will happily take the order.
+    @Test("No recipe makes a thing that cannot be used")
+    func noRecipeMakesADeadThing() throws {
+        let reg = try registry()
+        let wasted = reg.recipes.values.compactMap { recipe -> String? in
+            guard let item = reg.item(recipe.outputItemID) else { return recipe.id }
+            guard item.slot == .equipment, item.equipSlot == nil else { return nil }
+            return recipe.id
+        }.sorted()
+        #expect(wasted.isEmpty,
+                "these recipes cost materials and produce something nobody can equip: \(wasted)")
+    }
 }
 
 @Suite("Pollution")

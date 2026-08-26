@@ -155,6 +155,18 @@ struct SettlementCanvasView: View {
     /// already picked out, rather than another inspection.
     var onSiegeOrder: ((SiegeCommand) -> Void)?
 
+    /// **Whether this person has asked the system for less movement.**
+    ///
+    /// What that means here needs saying, because a colony sim is *made* of
+    /// motion and switching it off would leave a still photograph. Reduce
+    /// Motion is about the incidental kind — the flying, sliding, springing
+    /// that the interface does *around* the content — so it quiets the camera
+    /// flight and the card and toast transitions, and leaves the colonists
+    /// walking. A person who turned it on because pans make them ill is
+    /// helped; a person who turned it on and still wants to watch their
+    /// village still has a village.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     /// A fixed, *absolute* epoch so the animation clock is stable across
     /// redraws — and so anyone else (the pawn inspector's "right now" line)
     /// can derive the same clock without holding a reference to this view.
@@ -238,7 +250,15 @@ struct SettlementCanvasView: View {
         answered = focus.id
         let aimed = SettlementRenderer.Camera.framing(point, in: size, scale: focus.scale,
                                                       at: focus.height)
-        withAnimation(.easeInOut(duration: 0.55)) { camera = aimed }
+        // A half-second pan across a valley, at a zoom that changes under you,
+        // is the single most motion-sick-making thing the app does. With Reduce
+        // Motion on it becomes a cut: the player still ends up looking at the
+        // thing, which is the entire point of the flight.
+        if reduceMotion {
+            camera = aimed
+        } else {
+            withAnimation(.easeInOut(duration: 0.55)) { camera = aimed }
+        }
         // The next gesture composes from where the flight put us, not from
         // where the camera was before it.
         gestureBase = aimed

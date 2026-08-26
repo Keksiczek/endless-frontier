@@ -332,7 +332,18 @@ public enum QuartermasterEngine {
         return worth(of: item)
     }
 
-    static func worth(of item: ItemDefinition) -> Double {
+    /// **How good a thing is, on the one scale the game already uses.**
+    ///
+    /// Public because the crafting panel needs exactly this answer and there
+    /// must not be a second one. Four hundred and eleven recipes were listed
+    /// alphabetically with a rarity dot and an ingredient list, and a hundred
+    /// and sixteen of them were weapons whose damage runs 1 to 42 — none of it
+    /// shown. A player choosing between a bone spear and a steel halberd had
+    /// the same information about both, which is why the list read as enormous
+    /// rather than merely long. The quartermaster has ranked gear on this scale
+    /// since it was written; the panel says the same thing out loud now
+    /// (rule 35).
+    public static func worth(of item: ItemDefinition) -> Double {
         var out = (item.combat?.damage ?? 0)
         for effect in item.effects {
             switch effect {

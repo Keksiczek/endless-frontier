@@ -3192,3 +3192,111 @@ Dead and deleted: `GameEngine.interactWithSite` (a pass-through superseded by
    calls it the least-reached of the four.
 5. Doc drift, again: `NEXT.md` says 37 techs / 306 recipes / 38 rules; the files
    say **60 techs, 411 recipes, 477 items**, and `BACKLOG` is past rule 90.
+
+## 16. 2026-08-26 (later) — the crafting panel, and 73 items that did nothing
+
+Continuing §15.6. The plan said "gate the recipes"; measuring first said the
+gate was the wrong fix and found something larger.
+
+### 16.1 — why the list felt enormous
+
+It is 411 recipes, but that is not the complaint. **A hundred and sixteen of
+them are weapons whose damage runs 1 to 42, and the row showed the name, a
+rarity dot and an ingredient list** — the same information about a bone spear
+and a steel halberd. A list you cannot compare is unnavigable at any length,
+and no amount of scrolling helps. Gating would have moved the wall to year 60
+(`EraProbe`: the tree finishes there) rather than removing it.
+
+So: the row says what the thing *is* — damage and class for arms, material and
+coverage for armour, and the effects, bilingual at last. The order is
+`QuartermasterEngine.worth`, the game's own ranking, best first among what can
+be made. And one chip, **"beats what we carry"**, against the best of that kind
+anybody in the colony is already carrying — which is the only question a player
+is really asking of a weapon list. In a real save at year 155 exactly one of
+the fifty-one arms rows wore it.
+
+The effects line matters more than it looks: `worth` counts a skill bonus at
+three damage apiece, so a hunting bow at 5 outranks a bronze spear at 6, and
+without the bonus on the line that order reads as arbitrary. A number shown
+beside an order it does not explain is worse than neither.
+
+Groups fold, with counts. A real colony at year 155: **ARMS 51 · ARMOUR 34 ·
+GOODS 71 · MATERIALS 70** — four lines instead of two hundred and twenty-six.
+
+### 16.2 — 73 items that could never be used
+
+Found while measuring the groups. `GameEngine.equipItem` requires
+`slot == .equipment` **and** a non-nil `equipSlot`, and returns the world
+unchanged when either is missing. `ItemsPanel` switches on `slot` alone and
+offers an Equip menu for anything marked equipment.
+
+**Seventy-three items had the first and not the second.** The player picked a
+colonist and nothing happened — no error, no message, the item still on the
+shelf. **Eighty-nine recipes made them**, a fifth of the whole book, and since
+`ItemEngine.equippedEffects` reads only what is *worn*, every skill bonus, mood
+bonus and health regen on all seventy-three was dead the entire time.
+
+Fixed by derivation, not by guess:
+
+- **11** carried only `colony_*` effects, and `ItemEngine.artifactEffects`
+  reads those from `slot: artifact` alone → artifact. (A woven clan banner is a
+  thing the colony has, not a thing somebody wears.)
+- **62** carried personal effects → `equipSlot: trinket`, which is where their
+  shipped siblings already sit: `crude_harness` and `leather_packsaddle` are
+  trinkets, and `simple_harness` was one of the dead ones.
+
+Two guards in `ContentTests`: *"Every item a colonist can be handed has
+somewhere to put it"* and *"No recipe makes a thing that cannot be used"* — the
+second because the cost is the other half of the fault. A recipe whose output
+cannot be used is materials and worker-ticks spent on nothing, and the bench
+takes the order happily.
+
+**Rule 94.**
+
+### 16.3 — measured, deliberately not fixed
+
+**64 items carry `colony_*` effects from a slot that never reads them.**
+`artifactEffects` filters `slot == .artifact`; `barrow_blade` has
+`colony_defense +6`, `leather_leggings` has `colony_defense`, `grave_torc` has
+`colony_morale` — all inert, all properly-equipped gear. The panel now prints
+them ("colony +6 defence"), so the claim is at least visible.
+
+Whether a worn thing's colony effect *should* count is a design question with a
+balance answer behind it — a colony where everyone wears leather leggings
+plausibly is better defended — and changing `artifactEffects` to include
+equipped items moves defence, morale and production at once, across every save.
+**Do not do it blind.** Measure with `DangerProbe` either side.
+
+### 16.4 — two things seen in a real save at year 155
+
+- **All eight bench orders read "Short of materials"**, including Saw Timber
+  (made 222) and Tan Leather (made 415). Every arms recipe past the stone age
+  wants `Wood 0/1`, `Wood 0/2`, `Wood 0/3`. This is `ef-wood-chain-broken`
+  still standing, in a colony holding 9,000 materials.
+- **Catch-up sits at "0 years · 0%" for about forty seconds** before the first
+  slice lands. `sliceTicks` is 240 and was chosen without measuring against a
+  colony of 160. §2.2 declared the "looks like a hang" problem solved; at real
+  colony size the bar is at zero for long enough that it is not. Slice by
+  *time* rather than by a fixed tick count, or report inside the slice.
+
+### 16.5 — reduce motion, and what it must not switch off
+
+`accessibilityReduceMotion` appeared **zero times** in a continuously animating
+app. The interesting part is deciding what it means here, because a colony sim
+is *made* of motion and honouring it naïvely leaves a still photograph.
+
+The line drawn: Reduce Motion is about the movement the interface does *around*
+the content. So the camera flight becomes a cut (a half-second pan across a
+valley at a changing zoom is the most nauseating thing the app does, and the
+player still ends up looking at the thing — which was the whole point of the
+flight); the fifteen bottom cards fade instead of sliding; the toast spring,
+which overshoots on purpose, becomes an ease. **The colonists keep walking.**
+Somebody who turned Reduce Motion on because pans make them ill is helped;
+somebody who turned it on and still wants to watch their village still has one.
+
+Routing the fifteen identical card transitions through one `cardEntrance`
+property was the difference between one conditional and fifteen (rule 35).
+
+Still open on accessibility: the canvas is unlabelled to VoiceOver, Dynamic Type
+is ignored by 33 fixed `.font(.system(size:))` calls, and
+`preferredColorScheme(.dark)` is hard-wired.

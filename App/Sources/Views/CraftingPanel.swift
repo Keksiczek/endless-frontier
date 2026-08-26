@@ -335,6 +335,23 @@ struct CraftingPanel: View {
                 Text(recipe.name.resolve(AppStrings.language))
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(ready ? Theme.text : Theme.textDim)
+                // On its own line rather than beside the name: a chip in the
+                // title row squeezes it, and "Forge Hand Mortar" came out over
+                // two lines to make room for the thing telling you it was worth
+                // making. Same squeeze this session already fixed in
+                // `TribesPanel` — a row that reflows to fit an ornament has the
+                // ornament in the wrong place.
+                upgradeChip(recipe)
+                // **What the thing actually is.** A hundred and sixteen weapons
+                // whose damage runs 1 to 42, and the row said the name, a
+                // rarity dot and what it was made of — the same information
+                // about a bone spear and a steel halberd. That is why the list
+                // read as enormous rather than merely long.
+                if let gear = game.gearLine(recipe) {
+                    Label(gear, systemImage: gearIcon(recipe))
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(ready ? Theme.accent : Theme.textDim)
+                }
                 ingredients(recipe)
                 Label(game.craftTimeLabel(recipe), systemImage: "hourglass")
                     .font(.caption2).foregroundStyle(Theme.textDim)
@@ -352,6 +369,34 @@ struct CraftingPanel: View {
         .padding(.vertical, 8).padding(.horizontal, 10)
         .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .opacity(ready ? 1 : 0.75)
+    }
+
+    /// **The one mark that collapses a long list into a short decision.**
+    ///
+    /// Better than the best of its kind anybody here is carrying — which is the
+    /// only question a player is really asking of a weapon list. Everything
+    /// below it is a thing the colony would make and put straight in a
+    /// cupboard, and there is no need to say so about two hundred rows: the
+    /// absence of the chip is the answer.
+    @ViewBuilder
+    private func upgradeChip(_ recipe: RecipeDefinition) -> some View {
+        if game.isUpgrade(recipe) == true {
+            Text(cs ? "lepší než co nosíme" : "beats what we carry")
+                .font(.caption2.weight(.bold))
+                .padding(.horizontal, 6).padding(.vertical, 2)
+                .background(Theme.good.opacity(0.18), in: Capsule())
+                .foregroundStyle(Theme.good)
+        }
+    }
+
+    /// A weapon, a coat, or something that simply does a thing — a good with a
+    /// mood bonus is not armour and should not wear a shield.
+    private func gearIcon(_ recipe: RecipeDefinition) -> String {
+        switch game.recipeWears(recipe) {
+        case .weapon: return "burst.fill"
+        case .armor:  return "shield.lefthalf.filled"
+        default:      return "sparkles"
+        }
     }
 
     private func orderButton(_ recipe: RecipeDefinition, count: Int?, label: String) -> some View {

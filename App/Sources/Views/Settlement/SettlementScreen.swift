@@ -6,6 +6,20 @@ import EndlessFrontierCore
 /// a swipe-up detail drawer, so the scene stays calm and legible.
 struct SettlementScreen: View {
     @Bindable var game: GameViewModel
+    /// See `SettlementCanvasView.reduceMotion` for what this does and does not
+    /// switch off. In short: the cards stop sliding, the colonists keep living.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// How a card at the foot of the screen arrives.
+    ///
+    /// Fifteen of them used the same `.move(.bottom) + .opacity`, written out
+    /// fifteen times — so honouring Reduce Motion meant either fifteen
+    /// conditionals or one property. One property (rule 35: a thing that must
+    /// be the same in fifteen places should *be* one thing).
+    private var cardEntrance: AnyTransition {
+        reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity)
+    }
+
     @State private var selection: CanvasSelection = .none
     /// What the player is placing, if anything. Set from the picker; the canvas
     /// turns into the build surface while it holds a value.
@@ -186,13 +200,18 @@ struct SettlementScreen: View {
                 .accessibilityHint(leads ? (AppStrings.language == .cs
                                             ? "Ukázat, kde se to stalo"
                                             : "Show where this happened") : "")
-                .transition(.move(edge: .top).combined(with: .opacity))
+                .transition(reduceMotion ? .opacity
+                                         : .move(edge: .top).combined(with: .opacity))
             }
         }
         .padding(.top, 10)
         .padding(.horizontal, 60)   // clear of the minimap
         .frame(maxWidth: .infinity)
-        .animation(.spring(duration: 0.35), value: game.toasts)
+        // A spring overshoots on purpose, and overshoot is the thing Reduce
+        // Motion is asking about. The notes still come and go; they just stop
+        // bouncing on the way.
+        .animation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.35),
+                   value: game.toasts)
     }
 
     private func toastTint(_ toast: GameViewModel.LiveToast) -> Color {
@@ -217,7 +236,7 @@ struct SettlementScreen: View {
                     siege: siege, defenders: siegeDefenders(siege),
                     onPosture: { game.order(posture: $0) },
                     onToggle: { game.setInLine($0, holding: $1) })
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(cardEntrance)
             } else if let outbreak = game.outbreak, let plague = game.outbreakPlague {
                 // Second only to a raid: it is happening now, it has a clock on
                 // it, and laying out a granary can wait.
@@ -226,19 +245,19 @@ struct SettlementScreen: View {
                     population: game.viewedPawns.count,
                     worst: game.worstAfflicted,
                     onQuarantine: { game.setQuarantine($0) })
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(cardEntrance)
             } else if buildPlan != nil {
                 BuildPlacementBar(game: game, plan: $buildPlan)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .transition(cardEntrance)
             } else if picking {
                 BuildPickerBar(game: game, plan: $buildPlan) {
                     withAnimation(.easeOut(duration: 0.15)) { picking = false }
                 }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(cardEntrance)
             } else if let decision = game.currentDecision {
                 EventDecisionCard(game: game, template: decision,
                                   queued: max(0, game.pendingEvents.count - 1))
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .transition(cardEntrance)
             } else if let battle = game.battleReport {
                 // A fight just happened here — show what it cost before idle
                 // curiosity about the scene.
@@ -270,7 +289,7 @@ struct SettlementScreen: View {
                     onClose: {
                         withAnimation(.easeOut(duration: 0.15)) { game.dismissBattleReport() }
                     })
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(cardEntrance)
             } else if let pawn = selectedPawn {
                 PawnInspectorCard(pawn: pawn, ticksPerYear: game.ticksPerYear,
                                   activity: { activityLine(for: pawn) },
@@ -285,7 +304,7 @@ struct SettlementScreen: View {
                                   onUnequip: { game.unequip(pawn.id, slot: $0) }) {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(cardEntrance)
             } else if case let .poi(id) = selection, let poi = game.poi(id) {
                 let party = game.expedition(forPOI: id)
                 POIInspectorCard(
@@ -297,7 +316,7 @@ struct SettlementScreen: View {
                     onClose: {
                         withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                     })
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(cardEntrance)
             } else if case let .raider(id) = selection,
                       let siege = game.selectedSettlement?.siege,
                       let raider = siege.raiders.first(where: { $0.id == id }) {
@@ -307,7 +326,7 @@ struct SettlementScreen: View {
                 ) {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(cardEntrance)
             } else if case let .captive(id) = selection, let held = game.captive(id) {
                 CaptiveCard(
                     captive: held, ticksPerYear: game.ticksPerYear,
@@ -315,7 +334,7 @@ struct SettlementScreen: View {
                 ) {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(cardEntrance)
             } else if case let .animal(id) = selection, let found = game.animal(id) {
                 AnimalInspectorCard(
                     animal: found.animal, registry: game.registry, kept: found.kept,
@@ -324,7 +343,7 @@ struct SettlementScreen: View {
                 ) {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(cardEntrance)
             } else if case let .fog(point) = selection {
                 ScoutOrderCard(scouts: game.scoutCount) {
                     game.sendScouts(to: point)
@@ -332,7 +351,7 @@ struct SettlementScreen: View {
                 } onClose: {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(cardEntrance)
             } else if case let .thing(target, label, detail) = selection {
                 // A tree, a seam, a heap: the things the colony works. The card
                 // marks them (`Designation`) rather than ordering anybody.
@@ -345,7 +364,7 @@ struct SettlementScreen: View {
                     onClose: {
                         withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                     })
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(cardEntrance)
             } else if case let .landmark(text) = selection {
                 HStack(spacing: 8) {
                     Image(systemName: "mappin.circle.fill")
@@ -365,7 +384,7 @@ struct SettlementScreen: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(.ultraThinMaterial, in: Capsule())
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(cardEntrance)
             } else if let building = selectedBuilding {
                 BuildingInspectorCard(
                     definition: building.definition, standing: building.standing,
@@ -375,7 +394,7 @@ struct SettlementScreen: View {
                 ) {
                     withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                 }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(cardEntrance)
             }
             controlBar
         }

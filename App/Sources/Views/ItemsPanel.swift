@@ -14,19 +14,33 @@ extension ItemRarity {
 }
 
 /// Summarises an item's effects as a short readable line.
+///
+/// **Every line of this was English**, on every item in the game and every row
+/// of the crafting panel — `work.rawValue.capitalized` puts an enum case, in
+/// English, in the middle of a Czech sentence. The bilingual guard walks
+/// `GameData` and this is Swift in a view (rule 91).
 enum ItemFormatting {
     static func summary(_ def: ItemDefinition) -> String {
         def.effects.map(line).joined(separator: ", ")
     }
 
+    private static var cs: Bool { AppStrings.language == .cs }
+
     private static func line(_ effect: ItemEffect) -> String {
         switch effect {
-        case let .skillBonus(work, amount): return "+\(amount) \(work.rawValue.capitalized)"
-        case let .moodBonus(amount): return "+\(Int(amount)) Mood"
-        case let .healthRegen(amount): return "+\(amount.formatted()) Health/tick"
-        case let .colonyProduction(resource, perTick): return "Colony +\(perTick.formatted()) \(resource.displayName)/tick"
-        case let .colonyDefense(amount): return "Colony +\(Int(amount)) Defense"
-        case let .colonyMorale(amount): return "Colony +\(Int(amount)) Morale"
+        case let .skillBonus(work, amount):
+            return "+\(amount) \(AppStrings.workName(work))"
+        case let .moodBonus(amount):
+            return "+\(Int(amount)) \(cs ? "nálada" : "mood")"
+        case let .healthRegen(amount):
+            return "+\(amount.formatted()) \(cs ? "zdraví za takt" : "health a tick")"
+        case let .colonyProduction(resource, perTick):
+            return cs ? "osadě +\(perTick.formatted()) \(resource.displayName) za takt"
+                      : "colony +\(perTick.formatted()) \(resource.displayName) a tick"
+        case let .colonyDefense(amount):
+            return cs ? "osadě +\(Int(amount)) obrany" : "colony +\(Int(amount)) defence"
+        case let .colonyMorale(amount):
+            return cs ? "osadě +\(Int(amount)) morálky" : "colony +\(Int(amount)) morale"
         }
     }
 }

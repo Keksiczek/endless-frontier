@@ -122,16 +122,46 @@ final class GameViewModel {
         // The slices report from the detached task, so the main actor is only
         // ever handed a pair of numbers — the world itself never crosses back
         // until it is finished.
+        let slice = Self.sliceTicks(forPawns: snapshot.settlements.reduce(0) { $0 + $1.pawns.count })
         let progress = AsyncStream<(Int, Int)> { continuation in
             Task.detached(priority: .userInitiated) {
                 let result = GameEngine.openSession(
-                    snapshot, now: now, registry: registry,
+                    snapshot, now: now, registry: registry, sliceTicks: slice,
                     onProgress: { done, total in continuation.yield((done, total)) })
                 continuation.finish()
                 await MainActor.run { self.finishCatchUp(result, before: snapshot) }
             }
         }
         for await step in progress { catchUpProgress = step }
+    }
+
+    /// **How much world to run between one reading of the bar and the next.**
+    ///
+    /// The slice was a flat 240 ticks. A tick costs roughly what the colony
+    /// costs to walk, so at the twenty-odd colonists the default was written
+    /// against that is a fraction of a second — and at a hundred and sixty it
+    /// is most of a minute. Watched on a real save at year 155: **the bar read
+    /// "0 years · 0%" for about forty seconds** before the first slice landed,
+    /// which is exactly the "cannot tell it from a hang" that the progress bar
+    /// was added to cure (§2.2).
+    ///
+    /// So the slice is sized by the thing that drives its cost. The budget is
+    /// the old default at the colony size it was written for — 240 × 40 —
+    /// which keeps small colonies behaving exactly as they did and gives a
+    /// large one a bar that moves. Clamped below so a vast colony still makes
+    /// progress per slice, and above so a small one does not pay per-slice
+    /// overhead for nothing.
+    ///
+    /// **Safe to vary at runtime**, and this is not a matter of opinion:
+    /// `TickEngine.advance` is a plain loop over a pure step, and
+    /// `CatchUpSliceTests` runs the same absence at 1, 13, 240 and 10,000 ticks
+    /// a slice and requires the identical `WorldState`. It also stays out of
+    /// the engine — no wall clock anywhere near the simulation (rule 3).
+    /// `nonisolated` because it is arithmetic on an `Int` and touches nothing:
+    /// the view model is main-actor bound and this has no business being.
+    nonisolated static func sliceTicks(forPawns pawns: Int) -> Int {
+        let budget = 240 * 40      // the old default, at the size it suited
+        return max(16, min(240, budget / max(1, pawns)))
     }
 
     private func finishCatchUp(_ result: PlannerResult, before: WorldState) {
@@ -1729,11 +1759,112 @@ final class GameViewModel {
 
     /// Affordable first, then alphabetically. Stable, so the list does not
     /// reshuffle under a thumb every time a hauler drops off an ingot.
+    /// Affordable first, then **best first** — not alphabetical.
+    ///
+    /// Alphabetical order is the right answer for a list you are scanning for a
+    /// name you already know, and the wrong one for a hundred and sixteen
+    /// weapons whose damage runs 1 to 42. Nobody hunts for "Bone Spear"; they
+    /// want the best thing they can make right now, and sorted by worth that is
+    /// the first row. `QuartermasterEngine.worth` is the game's own ranking —
+    /// the same one the quartermaster hands gear out by — so the panel and the
+    /// colony agree about what is good.
+    ///
+    /// Ties fall back to the name, so the order is still stable and still
+    /// readable for the goods and materials that have no worth to speak of.
     private func byAffordability(_ recipes: [RecipeDefinition]) -> [RecipeDefinition] {
         recipes.sorted { a, b in
             let (ca, cb) = (canCraft(a), canCraft(b))
             if ca != cb { return ca }
+            let (wa, wb) = (worth(of: a), worth(of: b))
+            if wa != wb { return wa > wb }
             return a.name.resolve(AppStrings.language) < b.name.resolve(AppStrings.language)
+        }
+    }
+
+    /// What the game reckons a recipe's output is worth.
+    func worth(of recipe: RecipeDefinition) -> Double {
+        guard let item = registry.item(recipe.outputItemID) else { return 0 }
+        return QuartermasterEngine.worth(of: item)
+    }
+
+    /// **The best of this kind anybody here is already carrying.**
+    ///
+    /// The one fact that collapses a hundred and sixteen weapons into the three
+    /// that matter: a recipe worth less than this is a thing the colony would
+    /// make and immediately put in a cupboard.
+    func bestCarriedWorth(_ slot: EquipmentSlot) -> Double {
+        guard let settlement = selectedSettlement else { return 0 }
+        return settlement.pawns.reduce(0.0) { best, pawn in
+            guard let piece = pawn.equipment[slot],
+                  let item = registry.item(piece.definitionID) else { return best }
+            return max(best, QuartermasterEngine.worth(of: item))
+        }
+    }
+
+    /// Which slot the recipe's output goes into, if any.
+    func recipeWears(_ recipe: RecipeDefinition) -> EquipmentSlot? {
+        registry.item(recipe.outputItemID)?.equipSlot
+    }
+
+    /// Whether making this would actually arm somebody better than they are
+    /// armed now. Nil when the recipe makes something nobody wears.
+    func isUpgrade(_ recipe: RecipeDefinition) -> Bool? {
+        guard let item = registry.item(recipe.outputItemID),
+              let slot = item.equipSlot else { return nil }
+        return QuartermasterEngine.worth(of: item) > bestCarriedWorth(slot)
+    }
+
+    /// What a piece of gear actually does, in one short line — damage and class
+    /// for arms, what it is made of and how much of a person is inside it for
+    /// armour. The row showed a name, a rarity dot and an ingredient list, and
+    /// none of the three says whether the thing is any good.
+    /// …**and why it sorts where it does.** The list is ordered by
+    /// `QuartermasterEngine.worth`, which counts a skill bonus at three damage
+    /// apiece — so a hunting bow at 5 outranks a bronze spear at 6, and without
+    /// the bonus on the line that order looks arbitrary. A number the player
+    /// can see beside an order they cannot explain is worse than neither.
+    func gearLine(_ recipe: RecipeDefinition) -> String? {
+        guard let item = registry.item(recipe.outputItemID) else { return nil }
+        let cs = AppStrings.language == .cs
+        var parts: [String] = []
+        if let combat = item.combat, item.equipSlot == .weapon {
+            let kind = combat.kind == .ranged ? (cs ? "střelná" : "ranged")
+                                              : (cs ? "na blízko" : "melee")
+            parts.append("\(Int(combat.damage)) \(cs ? "zranění" : "damage") · \(kind)")
+        } else if let armour = item.armour {
+            parts.append(armourMaterialName(armour.material))
+            parts.append(coverageName(armour.coverage))
+            if armour.helm { parts.append(cs ? "s přilbou" : "with a helm") }
+        }
+        let effects = ItemFormatting.summary(item)
+        if !effects.isEmpty { parts.append(effects) }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+
+    private func armourMaterialName(_ material: ArmourProfile.Material) -> String {
+        let cs = AppStrings.language == .cs
+        switch material {
+        case .cloth:     return cs ? "látka" : "cloth"
+        case .hide:      return cs ? "kůže" : "hide"
+        case .leather:   return cs ? "vydělaná kůže" : "leather"
+        case .wood:      return cs ? "dřevo" : "wood"
+        case .bone:      return cs ? "kost" : "bone"
+        case .bronze:    return cs ? "bronz" : "bronze"
+        case .mail:      return cs ? "kroužky" : "mail"
+        case .plate:     return cs ? "plát" : "plate"
+        case .composite: return cs ? "kompozit" : "composite"
+        case .powered:   return cs ? "poháněná" : "powered"
+        }
+    }
+
+    private func coverageName(_ coverage: ArmourProfile.Coverage) -> String {
+        let cs = AppStrings.language == .cs
+        switch coverage {
+        case .torso:     return cs ? "trup" : "torso"
+        case .torsoArms: return cs ? "trup a paže" : "torso and arms"
+        case .full:      return cs ? "celé tělo" : "head to foot"
+        case .head:      return cs ? "hlava" : "head"
+        case .mantle:    return cs ? "plášť" : "a mantle"
         }
     }
 

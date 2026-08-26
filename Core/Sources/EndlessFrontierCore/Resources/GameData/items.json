@@ -1710,6 +1710,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -1730,6 +1731,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "mood_bonus",
@@ -1834,7 +1836,7 @@
       "cs": "Tkaný klanový prapor"
     },
     "rarity": "uncommon",
-    "slot": "equipment",
+    "slot": "artifact",
     "effects": [
       {
         "type": "colony_morale",
@@ -1893,6 +1895,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -2035,6 +2038,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -2075,6 +2079,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -2095,6 +2100,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -2129,6 +2135,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -2292,7 +2299,7 @@
       "cs": "Vesta z vyčiněné kůže"
     },
     "rarity": "uncommon",
-    "slot": "equipment",
+    "slot": "artifact",
     "effects": [
       {
         "type": "colony_defense",
@@ -2354,6 +2361,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -2395,6 +2403,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "mood_bonus",
@@ -2469,7 +2478,7 @@
       "cs": "Pletený rákosový koš"
     },
     "rarity": "common",
-    "slot": "equipment",
+    "slot": "artifact",
     "effects": [
       {
         "type": "colony_production",
@@ -2532,7 +2541,7 @@
       "cs": "Pletený kožený postroj"
     },
     "rarity": "common",
-    "slot": "equipment",
+    "slot": "artifact",
     "effects": [
       {
         "type": "colony_production",
@@ -2553,6 +2562,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -2573,6 +2583,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "mood_bonus",
@@ -2670,7 +2681,7 @@
       "cs": "Past s kůly"
     },
     "rarity": "uncommon",
-    "slot": "equipment",
+    "slot": "artifact",
     "effects": [
       {
         "type": "colony_defense",
@@ -2690,6 +2701,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -2710,6 +2722,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "mood_bonus",
@@ -2732,7 +2745,7 @@
       "cs": "Sada kostěných jehel"
     },
     "rarity": "common",
-    "slot": "equipment",
+    "slot": "artifact",
     "effects": [
       {
         "type": "colony_production",
@@ -2779,6 +2792,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "mood_bonus",
@@ -2798,6 +2812,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -2818,6 +2833,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -2837,7 +2853,7 @@
       "cs": "Hliněná zavařovací nádoba"
     },
     "rarity": "common",
-    "slot": "equipment",
+    "slot": "artifact",
     "effects": [
       {
         "type": "colony_production",
@@ -2858,6 +2874,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -2902,6 +2919,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -2936,6 +2954,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -3015,6 +3034,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -3035,6 +3055,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "mood_bonus",
@@ -3058,7 +3079,7 @@
       "cs": "Proutěná past na ryby"
     },
     "rarity": "common",
-    "slot": "equipment",
+    "slot": "artifact",
     "effects": [
       {
         "type": "colony_production",
@@ -3079,6 +3100,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -3118,6 +3140,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -3138,6 +3161,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -3163,6 +3187,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "mood_bonus",
@@ -3182,6 +3207,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -3278,6 +3304,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "description": {
       "en": "Woven from sturdy plant fibers and rough leather scraps, this halter allows for basic control of a pack animal. Essential for Master Borin's expeditions.",
       "cs": "Upletená z pevných rostlinných vláken a hrubých kožených zbytků. Tato ohlávka umožňuje základní kontrolu nad soumarem. Nezbytná pro expedice mistra Borina."
@@ -3316,6 +3343,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -3497,6 +3525,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -3596,6 +3625,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -3713,7 +3743,7 @@
       "cs": "Jednoduché travois"
     },
     "rarity": "uncommon",
-    "slot": "equipment",
+    "slot": "artifact",
     "effects": [
       {
         "type": "colony_production",
@@ -3734,6 +3764,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -3780,6 +3811,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -3898,6 +3930,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -3976,6 +4009,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -4047,6 +4081,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -4071,6 +4106,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -4148,7 +4184,7 @@
       "cs": "Jednoduchá past na ptáky"
     },
     "rarity": "common",
-    "slot": "equipment",
+    "slot": "artifact",
     "effects": [
       {
         "type": "colony_production",
@@ -4301,6 +4337,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -4347,6 +4384,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -4527,6 +4565,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "description": {
       "en": "A basic bridle made from strips of cured leather, suitable for guiding docile pack animals like those used by the Miller family for hauling timber.",
       "cs": "Základní uzda z pásků vyčiněné kůže, vhodná pro vedení poslušných tažných zvířat, jaká používá rodina Millerů k tahání dřeva."
@@ -4702,7 +4741,7 @@
       "cs": "Pletený rákosový náhubek"
     },
     "rarity": "common",
-    "slot": "equipment",
+    "slot": "artifact",
     "effects": [
       {
         "type": "colony_production",
@@ -4747,6 +4786,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -4890,6 +4930,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -5147,6 +5188,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "mood_bonus",
@@ -5317,6 +5359,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -5337,6 +5380,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -5536,6 +5580,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "description": {
       "en": "A basic halter crafted from cured hide, used to guide and tether smaller pack animals. Essential for tasks like gathering wood with a donkey.",
       "cs": "Základní ohlávka vyrobená z upravené kůže, používaná k vedení a uvazování menších soumarů. Nezbytná pro úkoly jako sběr dřeva s oslem."
@@ -5549,6 +5594,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -5593,6 +5639,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -5753,6 +5800,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -5792,6 +5840,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -5812,6 +5861,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -5832,6 +5882,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -5876,6 +5927,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -5917,6 +5969,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -6146,6 +6199,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -6166,6 +6220,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -7882,6 +7937,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -8072,6 +8128,7 @@
     },
     "rarity": "epic",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -8608,6 +8665,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -8628,6 +8686,7 @@
     },
     "rarity": "epic",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -9367,6 +9426,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -9615,6 +9675,7 @@
     },
     "rarity": "common",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",
@@ -10052,6 +10113,7 @@
     },
     "rarity": "uncommon",
     "slot": "equipment",
+    "equipSlot": "trinket",
     "effects": [
       {
         "type": "skill_bonus",

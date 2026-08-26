@@ -210,6 +210,32 @@ enum AppStrings {
         }
     }
 
+    /// **The work itself, not the person who does it.**
+    ///
+    /// `roleName` answers "who is this" — Farmer, Woodcutter — and a skill
+    /// bonus is about the doing: "+4 farming", not "+4 Farmer". `ItemFormatting`
+    /// printed `work.rawValue.capitalized`, which is an enum case in English in
+    /// the middle of a Czech sentence, on every item in the game.
+    static func workName(_ work: WorkKind) -> String {
+        switch work {
+        case .farming:  return s("farming", "zemědělství")
+        case .logging:  return s("logging", "těžbu dřeva")
+        case .mining:   return s("mining", "hornictví")
+        case .foraging: return s("foraging", "sběr")
+        case .hunting:  return s("hunting", "lov")
+        case .research: return s("study", "bádání")
+        case .healing:  return s("healing", "léčení")
+        case .trade:    return s("trade", "obchod")
+        case .priest:   return s("ministry", "duchovní službu")
+        case .building: return s("building", "stavění")
+        case .scouting: return s("scouting", "průzkum")
+        case .idle:     return s("idling", "zahálku")
+        case .garrison: return s("garrison duty", "službu v posádce")
+        case .crafting: return s("crafting", "řemeslo")
+        case .cooking:  return s("cooking", "vaření")
+        }
+    }
+
     /// How relations with a neighbouring people read on a pill or map card.
     static func standingName(_ status: DiplomaticStanding) -> String {
         switch status {

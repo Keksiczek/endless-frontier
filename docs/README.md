@@ -1,11 +1,12 @@
 # Docs — what is where
 
 > **Start here if you are picking this up cold:**
-> [`BACKLOG.md` §15](BACKLOG.md) (2026-08-26) — the app audit: diplomacy's verbs
-> were off the edge of an iPhone, there were two build flows and one of them
-> omitted every early building, the objectives panel was in English, and
-> marching on a neighbour did not exist. **§15.6 is what is still open**, and
-> the crafting gate is the first of it.
+> [`BACKLOG.md` §15–16](BACKLOG.md) (2026-08-26) — the app audit: diplomacy's
+> verbs were off the edge of an iPhone, there were two build flows and one of
+> them omitted every early building, the objectives panel was in English,
+> marching on a neighbour did not exist, and **73 items could never be equipped
+> while 89 recipes went on making them**. §16.3 is measured and deliberately
+> unfixed; §16.4 is two things seen in a real save.
 > Before it: [`HANDOFF-2026-08-22.md`](HANDOFF-2026-08-22.md) — combat measured
 > apart into three faults, the council that could build one building, and the
 > six things Keks asked for next in his own order.
@@ -23,7 +24,7 @@ Read in this order when picking work up cold:
 |---|---|---|
 | 1 | [NEXT.md](NEXT.md) | **Start here.** Where the game stands and what to work on next, with the evidence for each |
 | 2 | [CODEMAPS/architecture.md](CODEMAPS/architecture.md) | The three layers, the tick order, where a decision flows |
-| 3 | [RULES.md](RULES.md) | **93 rules, each of which cost a session.** Read before writing a threshold |
+| 3 | [RULES.md](RULES.md) | **94 rules, each of which cost a session.** Read before writing a threshold |
 | 4 | [BACKLOG.md](BACKLOG.md) | **The living record.** What was measured, what was built, what Keks asked for |
 
 ## Reference, by question

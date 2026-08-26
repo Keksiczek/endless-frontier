@@ -915,3 +915,15 @@ fires, do the arithmetic before you rewrite the mechanic.
    anything new — half of what they turn up is not dead code, it is **a feature
    the simulation already has and the player cannot see**, which is this
    project's single most repeated bug.
+94. **A guard on the writer is not a guard on the reader.** `items.json` had
+   seventy-three entries saying `slot: equipment` and naming no `equipSlot`.
+   Every schema check passed: the field is optional, the file parses, the
+   registry loads them, the crafting panel lists them and the bench makes them.
+   But `GameEngine.equipItem` requires *both* and silently returns the world
+   unchanged, so eighty-nine recipes produced things that could never be
+   equipped and whose every effect was therefore dead — for months, invisibly,
+   with the player tapping Equip and watching nothing happen. Optionality in a
+   model is a promise that **something** handles the nil; find the reader and
+   check what it does when the field is absent. The guard belongs where the
+   value is *consumed*, and the cheapest form of it is a content test that
+   walks the bank asking "could this ever be used?" (rules 43, 91, 93).
