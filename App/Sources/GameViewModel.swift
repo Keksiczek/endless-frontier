@@ -114,6 +114,7 @@ final class GameViewModel {
         // A short absence is cheap; don't pay for a thread hop.
         if ticks <= shortCatchUpTicks {
             apply(GameEngine.openSession(snapshot, now: now, registry: registry), before: snapshot)
+            stopForAnythingImportant(now: now)
             return
         }
 
@@ -168,6 +169,10 @@ final class GameViewModel {
         isCatchingUp = false
         catchUpProgress = (0, 0)
         apply(result, before: before)
+        // A raid or a decision that landed while the years were being replayed
+        // is exactly the kind the player never got to answer — most of them
+        // arrive this way rather than on a live tick.
+        stopForAnythingImportant()
     }
 
     /// Ticks we're happy to simulate inline rather than hopping off the actor.
@@ -415,8 +420,82 @@ final class GameViewModel {
 
     /// Advances any ticks that have come due while the app sits open, and
     /// turns what happened into toasts.
+    // MARK: - Standing the world still
+
+    /// Why the world is not moving, when it is not.
+    ///
+    /// **The game had no pause at all.** Keks: *"věci se dějí ale ty si řekneš
+    /// u těch eventů ok stalo se, nijak neovlivním"* — a decision card arrives
+    /// while the colony carries on around it, so by the time you have read the
+    /// three choices the moment it was about has moved on, and answering feels
+    /// like filing a report rather than deciding anything. The same complaint
+    /// from the other end: *"souboje stále jdou přes běžící simulaci"*.
+    enum PauseReason: String, Sendable {
+        /// The player asked.
+        case player
+        /// A warband is at the edge of the field.
+        case siege
+        /// Something is waiting on an answer.
+        case decision
+
+        var isAutomatic: Bool { self != .player }
+    }
+
+    private(set) var pause: PauseReason?
+    /// When it stopped, so the world can be told to skip the time it stood
+    /// still rather than swallowing it whole on resume.
+    private var pausedSince: Date?
+
+    var isPaused: Bool { pause != nil }
+
+    /// Whether the world stops itself for a raid or a decision. On by default —
+    /// a moment you were not there for is a moment you did not have.
+    var pausesForImportantThings: Bool {
+        get { UserDefaults.standard.object(forKey: "pause.auto") as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: "pause.auto") }
+    }
+
+    func setPaused(_ on: Bool, reason: PauseReason = .player, now: Date = Date()) {
+        if on {
+            guard pause == nil else { return }
+            pause = reason
+            pausedSince = now
+        } else {
+            guard let since = pausedSince else { pause = nil; return }
+            // **The clock is not rewound, it is carried forward.** Ticks are
+            // derived from `lastRealTimestamp` against the wall clock, so
+            // simply resuming would hand `advanceLive` the whole paused
+            // duration at once — a pause would *cause* the catch-up it exists
+            // to prevent.
+            world.lastRealTimestamp = world.lastRealTimestamp
+                .addingTimeInterval(max(0, now.timeIntervalSince(since)))
+            pause = nil
+            pausedSince = nil
+            persist()
+        }
+    }
+
+    /// Stops the world for something that has just happened, if the player
+    /// wants that and it is not already stopped.
+    private func pauseFor(_ reason: PauseReason, now: Date) {
+        guard pausesForImportantThings, pause == nil else { return }
+        setPaused(true, reason: reason, now: now)
+    }
+
+    /// What a pause is waiting on, in the player's language.
+    var pauseHeadline: String? {
+        let cs = AppStrings.language == .cs
+        switch pause {
+        case .siege:    return cs ? "Útok — hra stojí" : "Under attack — the world is stopped"
+        case .decision: return cs ? "Čeká se na tvé slovo" : "Waiting on your word"
+        case .player:   return cs ? "Pozastaveno" : "Paused"
+        case nil:       return nil
+        }
+    }
+
     func advanceLive(now: Date = Date()) {
         guard !isCatchingUp else { return }
+        guard pause == nil else { return }
         let config = registry.config
         let ticks = TickEngine.ticksElapsed(
             since: world.lastRealTimestamp, until: now, config: config)
@@ -439,6 +518,36 @@ final class GameViewModel {
         persist()
 
         surfaceToasts(fired: result.fired, journalMark: journalMark)
+        stopForAnythingImportant(now: now)
+    }
+
+    /// The last thing the world stopped itself for, so it stops **once**.
+    ///
+    /// Edge-detection across one `advanceLive` was the obvious way and the
+    /// wrong one: most decisions arrive during a *catch-up*, not during a live
+    /// tick, so the player comes back to a card that has been waiting and the
+    /// colony carrying on around it — which is the exact complaint. Keyed on
+    /// the thing itself instead, so it fires however the thing got here and
+    /// never fires twice for the same one.
+    private var pausedForID: String?
+
+    /// Stops the world for a raid or a decision, wherever they came from.
+    func stopForAnythingImportant(now: Date = Date()) {
+        // A raid outranks a decision: it is the one with a clock on it.
+        if let siege = world.settlements.compactMap(\.siege).first {
+            guard pausedForID != siege.id.uuidString else { return }
+            pausedForID = siege.id.uuidString
+            pauseFor(.siege, now: now)
+            return
+        }
+        if let pending = world.pendingEvents.first {
+            guard pausedForID != pending.id else { return }
+            pausedForID = pending.id
+            pauseFor(.decision, now: now)
+            return
+        }
+        // Nothing waiting: the next thing that arrives is news again.
+        pausedForID = nil
     }
 
     /// What just happened, as passing notes: fresh journal lines of the viewed

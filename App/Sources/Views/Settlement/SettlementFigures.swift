@@ -16,7 +16,23 @@ enum SettlementFigures {
     // MARK: - One colonist
 
     /// How big a grown colonist is drawn, against the buildings they live in.
-    static let bodyScale: CGFloat = 0.82
+    ///
+    /// **Measured, because the eye was right and the number was worse than it
+    /// looked.** A build tile is `SettlementGeometry.baseSpan / baseGrid` of
+    /// the valley — 0.46/24 — which on a 402pt screen is about **7.7pt at zoom
+    /// 1**. At 0.82 a grown colonist stood `10.9 * 0.82 ≈ 8.9pt`: *taller than
+    /// the one-tile building they live in*, and better than half the height of
+    /// a two-by-two hut. Keks: *"pawni jsou fakt větší než okolní budovy i
+    /// stromy."*
+    ///
+    /// True scale would be nearer 0.3 and would turn people into dots — they
+    /// carry a face, a tunic in their trade's colour and the tool of their work,
+    /// and none of that survives at three points. This is the compromise the
+    /// eye asked for: about seven eighths of a build tile, and just under half
+    /// a mature tree (`SettlementFlora.trunk` puts one at ~14pt at the same
+    /// zoom). Everything drawn beside a person reads `bodyHeight`, so carts,
+    /// mounts and riders come with it.
+    static let bodyScale: CGFloat = 0.62
 
     /// How tall a grown colonist stands, in points, at a given zoom.
     ///

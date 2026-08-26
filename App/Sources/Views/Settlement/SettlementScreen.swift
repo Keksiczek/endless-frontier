@@ -231,7 +231,26 @@ struct SettlementScreen: View {
             // A raid outranks everything. It is happening now, it is happening
             // to you, and it is the one thing on this screen with a clock on
             // it — laying out a granary can wait.
-            if let siege = game.siege {
+            // **A tapped raider outranks the command card.** `RaiderCard` was
+            // written, wired into the canvas hit-test, and unreachable: the
+            // branch below it asked for `game.siege` to be non-nil, and
+            // `game.siege` *is* `selectedSettlement?.siege` — so the siege arm
+            // above had already caught every case it could ever match. Tapping
+            // a raider selected them and showed the command card, every time.
+            // Keks: *"raideři … nejde je vybrat."*
+            //
+            // Asking about them is a thing you do *during* a siege, so it goes
+            // first and hands the command card back the moment you close it.
+            if case let .raider(id) = selection, let siege = game.siege,
+               let raider = siege.raiders.first(where: { $0.id == id }) {
+                RaiderCard(
+                    raider: raider, siege: siege,
+                    band: siege.attackerLabel?.resolve(AppStrings.language) ?? siege.attackerName
+                ) {
+                    withAnimation(.easeOut(duration: 0.15)) { selection = .none }
+                }
+                .transition(cardEntrance)
+            } else if let siege = game.siege {
                 SiegeCommandCard(
                     siege: siege, defenders: siegeDefenders(siege),
                     onPosture: { game.order(posture: $0) },
@@ -316,16 +335,6 @@ struct SettlementScreen: View {
                     onClose: {
                         withAnimation(.easeOut(duration: 0.15)) { selection = .none }
                     })
-                .transition(cardEntrance)
-            } else if case let .raider(id) = selection,
-                      let siege = game.selectedSettlement?.siege,
-                      let raider = siege.raiders.first(where: { $0.id == id }) {
-                RaiderCard(
-                    raider: raider, siege: siege,
-                    band: siege.attackerLabel?.resolve(AppStrings.language) ?? siege.attackerName
-                ) {
-                    withAnimation(.easeOut(duration: 0.15)) { selection = .none }
-                }
                 .transition(cardEntrance)
             } else if case let .captive(id) = selection, let held = game.captive(id) {
                 CaptiveCard(

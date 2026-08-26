@@ -64,9 +64,11 @@ struct StatusStrip: View {
                         .foregroundStyle(Theme.textDim)
                 }
                 .accessibilityLabel(AppStrings.settings)
+                pauseButton
                 tensionPip
             }
             resourcePills
+            pauseBanner
             warBanner
         }
         .sheet(item: $sheet) { which in
@@ -278,6 +280,56 @@ struct StatusStrip: View {
         .padding(.horizontal, 9)
         .background(tint.opacity(0.12), in: Capsule())
         .accessibilityLabel("\(AppStrings.tension) \(Int(t.rounded()))")
+    }
+
+    /// **Stopping the world.** The game had no pause at all: a decision card
+    /// arrived and the colony carried on around it, so reading the three
+    /// choices meant the moment had already moved on. Keks: *"věci se dějí ale
+    /// ty si řekneš u těch eventů ok stalo se, nijak neovlivním."*
+    private var pauseButton: some View {
+        Button {
+            game.setPaused(!game.isPaused)
+        } label: {
+            Image(systemName: game.isPaused ? "play.fill" : "pause.fill")
+                .font(.callout)
+                .foregroundStyle(game.isPaused ? Theme.accent : Theme.textDim)
+        }
+        .accessibilityLabel(game.isPaused
+                            ? (AppStrings.language == .cs ? "Pokračovat" : "Resume")
+                            : (AppStrings.language == .cs ? "Pozastavit" : "Pause"))
+    }
+
+    /// Why the world is standing still, and the way out of it.
+    ///
+    /// A pause the player did not ask for has to say what it is waiting on, or
+    /// it reads as the game having frozen — which is the complaint this whole
+    /// feature came from, pointing the other way.
+    @ViewBuilder
+    private var pauseBanner: some View {
+        if let headline = game.pauseHeadline {
+            HStack(spacing: 8) {
+                Image(systemName: "pause.circle.fill")
+                    .font(.caption)
+                    .foregroundStyle(Theme.accent)
+                Text(headline)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Theme.text)
+                Spacer(minLength: 0)
+                Button {
+                    game.setPaused(false)
+                } label: {
+                    Text(AppStrings.language == .cs ? "Pokračovat" : "Resume")
+                        .font(.caption.weight(.bold))
+                        .padding(.horizontal, 10).padding(.vertical, 4)
+                        .background(Theme.accent.opacity(0.2), in: Capsule())
+                        .foregroundStyle(Theme.accent)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            .background(Theme.accent.opacity(0.10),
+                        in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
     }
 
     private var resourcePills: some View {

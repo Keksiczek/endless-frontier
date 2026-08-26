@@ -126,6 +126,30 @@ struct SettingsView: View {
     /// refusal — which it does silently and for ever — nothing would arrive and
     /// there was no way to find that out from inside the game. A permission you
     /// cannot see the state of is a permission you cannot debug.
+    /// **Whether the world stops itself.** On by default: a moment you were not
+    /// there for is a moment you did not have, and the whole complaint this came
+    /// from is decisions that had already gone stale by the time they were read.
+    /// Off for anybody who would rather the colony never waits on them.
+    private var pauseCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: cs ? "Když se něco děje" : "When something happens")
+            Toggle(isOn: Binding(
+                get: { game.pausesForImportantThings },
+                set: { game.pausesForImportantThings = $0 }
+            )) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(cs ? "Zastavit svět" : "Stop the world")
+                        .font(.callout).foregroundStyle(Theme.text)
+                    Text(cs ? "Při nájezdu a když se čeká na tvé rozhodnutí."
+                            : "For a raid, and when something is waiting on your word.")
+                        .font(.caption).foregroundStyle(Theme.textDim)
+                }
+            }
+            .tint(Theme.accent)
+        }
+        .frontierCard()
+    }
+
     private var notificationCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(title: cs ? "Zprávy z osady" : "Word from the colony")
@@ -220,6 +244,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     soundCard
                     languageCard
+                    pauseCard
                     notificationCard
                     thisWorld
                     newGameCard
