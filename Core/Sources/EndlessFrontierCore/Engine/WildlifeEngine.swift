@@ -262,13 +262,19 @@ public enum WildlifeEngine {
             if s.pawns[i].health <= 0 {
                 s.pawns.remove(at: i)
                 s.deathTallies[PawnDeathCause.beast.rawValue, default: 0] += 1
-                s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
+                // `.death`, not `.danger`. It reads the same on the page and
+                // sorts differently everywhere that asks the journal what kind
+                // of thing happened — which is how a mauling stopped being
+                // findable among two hundred lines of colony chatter.
+                s.journal.append(tick: tick, kind: .death, text: LocalizedText(values: [
                     .en: "\(wound.hunterName) closed with a \(beast.resolve(.en).lowercased()) and did not come back.",
-                    .cs: "\(wound.hunterName) šel na \(beast.resolve(.cs).lowercased())ho zblízka a už se nevrátil."]))
+                    .cs: "\(wound.hunterName) šel na \(beast.resolve(.cs).lowercased())ho zblízka a už se nevrátil."]),
+                    subject: .pawn(wound.hunterID))
             } else {
                 s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
                     .en: "\(wound.hunterName) was gored bringing down a \(beast.resolve(.en).lowercased()).",
-                    .cs: "\(wound.hunterName) to schytal při lovu — \(beast.resolve(.cs).lowercased()) se bránil."]))
+                    .cs: "\(wound.hunterName) to schytal při lovu — \(beast.resolve(.cs).lowercased()) se bránil."]),
+                    subject: .pawn(wound.hunterID))
             }
         }
         return bag.map

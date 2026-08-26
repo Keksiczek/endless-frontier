@@ -131,7 +131,8 @@ public enum PlagueEngine {
         s.outbreak = outbreak
         s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
             .en: "\(plague.name.resolve(.en)) has started in the colony — \(first.name) first.",
-            .cs: "V osadě se objevila nemoc: \(plague.name.resolve(.cs)) — první je \(first.name)."]))
+            .cs: "V osadě se objevila nemoc: \(plague.name.resolve(.cs)) — první je \(first.name)."]),
+                         subject: .pawn(first.id))
         return s
     }
 

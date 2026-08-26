@@ -10,6 +10,28 @@ import EndlessFrontierCore
 /// the two things that had never been on screen at all: the bed they sleep in
 /// and the piece of work they are on.
 struct PawnInspectorCard: View {
+    /// One thing that happened to this colonist.
+    struct Moment: Identifiable {
+        public let id: Int
+        public let year: Int
+        public let text: String
+        public let icon: String
+        /// The kind, not a `Color`: `GameViewModel` imports Foundation and
+        /// Observation and no SwiftUI, which is the line that keeps the view
+        /// model from quietly becoming a view.
+        public let kind: ColonyLogEntry.Kind
+
+        var tint: Color {
+            switch kind {
+            case .death, .danger: return Theme.danger
+            case .birth, .social: return Theme.good
+            case .discovery, .arrival, .departure, .faith: return Theme.accent
+            case .diplomacy: return Theme.danger.opacity(0.85)
+            case .construction, .work: return Theme.textDim
+            }
+        }
+    }
+
     /// One bond, resolved to a living name for display.
     struct BondLine: Identifiable {
         let id: UUID
@@ -35,6 +57,14 @@ struct PawnInspectorCard: View {
     /// arrives through `@Observable` on its own.
     var activity: () -> String? = { nil }
     var bonds: [BondLine] = []
+    /// **What has happened to this person**, newest first.
+    ///
+    /// The card said what a colonist *is* — health, mood, skills, genes, who
+    /// they know — and nothing about what they had been through. Keks: *"nějaký
+    /// poslední log když kliknu na pawn?"* The diary held it the whole time and
+    /// nothing joined the two up: `ColonyLogEntry` carries a `subject`, and
+    /// only six of seventy-five appends were setting one.
+    var history: [PawnInspectorCard.Moment] = []
     /// Why their mood is what it is, from `MoodLedger`.
     var moodFactors: [MoodFactor] = []
     /// Whether the engine has given them a roof.
@@ -135,6 +165,7 @@ struct PawnInspectorCard: View {
                 bodyParts
                 if !moodFactors.isEmpty { moodBreakdown }
                 if !bonds.isEmpty { bondRows }
+                if !history.isEmpty { historyRows }
                 skills
                 genes
             }
@@ -143,6 +174,29 @@ struct PawnInspectorCard: View {
         .frame(maxHeight: Self.detailMaxHeight)
         .scrollBounceBehavior(.basedOnSize)
         .transition(.opacity)
+    }
+
+    /// Their own diary — the lines the colony wrote about *them*.
+    private var historyRows: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            sectionTitle(cs ? "Co se jim stalo" : "What happened to them")
+            ForEach(history) { moment in
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Image(systemName: moment.icon)
+                        .font(.caption2)
+                        .foregroundStyle(moment.tint)
+                        .frame(width: 14)
+                    Text(moment.text)
+                        .font(.caption)
+                        .foregroundStyle(Theme.text)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 4)
+                    Text("\(cs ? "r." : "yr") \(moment.year)")
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(Theme.textDim)
+                }
+            }
+        }
     }
 
     private var moreToggle: some View {

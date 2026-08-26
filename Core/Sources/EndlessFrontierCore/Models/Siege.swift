@@ -167,6 +167,20 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         /// `nil` for everybody whose business is with people rather than with
         /// a piece of ground.
         public var goal: LocalPoint?
+        /// **Who this one is.**
+        ///
+        /// Every colonist has a name, a face, a trade and a history, and the
+        /// people who come to kill them were `Combatant(strength:intent:)` —
+        /// interchangeable tokens with no way to tell one from the next. Keks:
+        /// *"raideři nemají žádné vlastní features."* A raid you can name is a
+        /// raid you remember, and it is what lets the diary say who broke the
+        /// line rather than that somebody did.
+        ///
+        /// Optional because a colonist fighting on the wall is already named on
+        /// their own `Pawn`, and a turret is not a person. Nil on a save
+        /// written before this, which is a warband of strangers and reads
+        /// exactly as it used to (rule 3).
+        public var name: String?
         /// **The step this body last took a blow on, and where it came from.**
         ///
         /// The fight had swings and it had blood on the ground, and nothing in
@@ -182,7 +196,7 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         public init(id: UUID, side: Side, at: LocalPoint, strength: Double,
                     target: UUID? = nil, down: Bool = false,
                     kind: Kind = .person, intent: Intent = .fight,
-                    goal: LocalPoint? = nil,
+                    goal: LocalPoint? = nil, name: String? = nil,
                     struckAtStep: Int? = nil, struckFrom: LocalPoint? = nil) {
             self.id = id
             self.side = side
@@ -193,12 +207,13 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
             self.down = down
             self.intent = intent
             self.goal = goal
+            self.name = name
             self.struckAtStep = struckAtStep
             self.struckFrom = struckFrom
         }
 
         private enum CodingKeys: String, CodingKey {
-            case id, side, kind, at, strength, target, down, intent, goal
+            case id, side, kind, at, strength, target, down, intent, goal, name
             case struckAtStep, struckFrom
         }
 
@@ -214,6 +229,9 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
             at = try c.decode(LocalPoint.self, forKey: .at)
             strength = try c.decode(Double.self, forKey: .strength)
             target = try c.decodeIfPresent(UUID.self, forKey: .target)
+            // A warband saved before anybody had a name is a warband of
+            // strangers, and reads exactly as it used to.
+            name = try c.decodeIfPresent(String.self, forKey: .name)
             down = try c.decodeIfPresent(Bool.self, forKey: .down) ?? false
             // A raid saved before anybody had a purpose is a field of people
             // who all came to fight, which is what it was.

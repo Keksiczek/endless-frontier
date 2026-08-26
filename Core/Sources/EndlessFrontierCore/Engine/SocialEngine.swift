@@ -185,7 +185,7 @@ public enum SocialEngine {
                     s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
                         .en: "\(first.name) and \(second.name) have become fast friends.",
                         .cs: "\(first.name) a \(second.name) se skamarádili."
-                    ]))
+                    ]), subject: .pawn(first.id))
                 }
                 // …and old friends may become something more.
                 if s.relationships[e].kind == .friend {
@@ -206,7 +206,7 @@ public enum SocialEngine {
             s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
                 .en: "\(first.name) and \(second.name) shared stories \(spot.resolve(.en)).",
                 .cs: "\(first.name) a \(second.name) si povídali \(spot.resolve(.cs))."
-            ]))
+            ]), subject: .pawn(first.id))
         }
         return s
     }
@@ -260,12 +260,12 @@ public enum SocialEngine {
             s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
                 .en: "\(first.name) and \(second.name) fell out — a friendship soured into a grudge.",
                 .cs: "\(first.name) a \(second.name) se rozkmotřili — z přátelství se stala zášť."
-            ]))
+            ]), subject: .pawn(first.id))
         } else if rng.nextUnit() < quarrelJournalChance {
             s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
                 .en: "\(first.name) and \(second.name) quarrelled — hard words carried across the green.",
                 .cs: "\(first.name) a \(second.name) se pohádali — ostrá slova bylo slyšet přes náves."
-            ]))
+            ]), subject: .pawn(first.id))
         }
         return s
     }
@@ -294,7 +294,7 @@ public enum SocialEngine {
         s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
             .en: "\(first.name) and \(second.name) were wed — the whole settlement celebrated into the night.",
             .cs: "\(first.name) a \(second.name) měli svatbu — celá osada slavila dlouho do noci."
-        ]))
+        ]), subject: .pawn(first.id))
         return s
     }
 

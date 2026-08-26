@@ -10,19 +10,93 @@ struct JournalPanel: View {
     /// How much history the panel shows before it stops scrolling the past.
     private let visibleEntries = 40
 
+    /// **What the player is looking for, out of everything that happened.**
+    ///
+    /// Forty lines of a living colony is mostly chatter — friendships, stories
+    /// by the well, a roof going on — and a death scrolls past inside a minute.
+    /// Keks: *"lidé umřeli na zvěř ale nevím o tom."* They were in the diary the
+    /// whole time; there was no way to ask for them.
+    private enum Lens: String, CaseIterable, Identifiable {
+        case all, deaths, danger, people, work
+        var id: String { rawValue }
+
+        func title(_ cs: Bool) -> String {
+            switch self {
+            case .all:    return cs ? "Vše" : "All"
+            case .deaths: return cs ? "Úmrtí" : "Deaths"
+            case .danger: return cs ? "Nebezpečí" : "Danger"
+            case .people: return cs ? "Lidé" : "People"
+            case .work:   return cs ? "Práce" : "Work"
+            }
+        }
+
+        /// Nil means everything. Grouped the way a player asks the question,
+        /// not the way `ColonyLogEntry.Kind` happens to be spelled.
+        var kinds: Set<ColonyLogEntry.Kind>? {
+            switch self {
+            case .all:    return nil
+            case .deaths: return [.death]
+            case .danger: return [.danger, .death]
+            case .people: return [.social, .birth, .arrival, .departure, .faith]
+            case .work:   return [.work, .construction, .discovery]
+            }
+        }
+    }
+    @State private var lens: Lens = .all
+
     private var cs: Bool { AppStrings.language == .cs }
 
     private var entries: [ColonyLogEntry] {
-        Array((game.selectedSettlement?.journal.entries ?? []).suffix(visibleEntries).reversed())
+        let all = game.selectedSettlement?.journal.entries ?? []
+        // Filtered *before* the tail is taken, or asking for deaths shows the
+        // deaths out of the last forty lines rather than the last forty deaths.
+        let kept = lens.kinds.map { kinds in all.filter { kinds.contains($0.kind) } } ?? all
+        return Array(kept.suffix(visibleEntries).reversed())
+    }
+
+    /// How many lines each lens would show, so an empty one reads as "none of
+    /// those happened" rather than as a broken filter.
+    private func count(_ lens: Lens) -> Int {
+        let all = game.selectedSettlement?.journal.entries ?? []
+        guard let kinds = lens.kinds else { return all.count }
+        return all.count { kinds.contains($0.kind) }
+    }
+
+    private var lensPicker: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(Lens.allCases) { option in
+                    let on = option == lens
+                    Button {
+                        withAnimation(.snappy(duration: 0.18)) { lens = option }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(option.title(cs)).font(.caption2.weight(.semibold))
+                            Text("\(count(option))")
+                                .font(.caption2.monospacedDigit())
+                                .foregroundStyle(Theme.textDim)
+                        }
+                        .padding(.horizontal, 9).padding(.vertical, 5)
+                        .background(on ? Theme.accent.opacity(0.18) : Theme.surfaceInset,
+                                    in: Capsule())
+                        .foregroundStyle(on ? Theme.accent : Theme.textDim)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: cs ? "Deník osady" : "Colony journal")
+            lensPicker
             if entries.isEmpty {
-                Text(cs
-                     ? "Zatím ticho — deník se začne plnit, jak osada žije."
-                     : "Quiet so far — the diary fills as the settlement lives.")
+                Text(lens == .all
+                     ? (cs ? "Zatím ticho — deník se začne plnit, jak osada žije."
+                           : "Quiet so far — the diary fills as the settlement lives.")
+                     : (cs ? "Nic takového se zatím nestalo."
+                           : "Nothing of that kind has happened yet."))
                     .font(.caption)
                     .foregroundStyle(Theme.textDim)
             } else {

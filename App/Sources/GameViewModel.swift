@@ -1478,6 +1478,32 @@ final class GameViewModel {
         buildRequest = true
     }
 
+    /// **What the colony wrote about one colonist**, newest first.
+    ///
+    /// `ColonyLogEntry` has carried a `subject` since it was written and almost
+    /// nothing set one — six of seventy-five appends — so the diary knew a
+    /// great deal about everybody and could not be asked about anybody. Keks:
+    /// *"nějaký poslední log když kliknu na pawn?"*
+    ///
+    /// Capped, because this sits inside a card: a colonist of a hundred and
+    /// sixty years has a lot of history and the last handful is the part that
+    /// answers "what is going on with them".
+    func history(of pawnID: UUID, limit: Int = 6) -> [PawnInspectorCard.Moment] {
+        guard let journal = selectedSettlement?.journal else { return [] }
+        return journal.entries
+            .filter { $0.subject == .pawn(pawnID) }
+            .suffix(limit)
+            .reversed()
+            .map { entry in
+                PawnInspectorCard.Moment(
+                    id: entry.id,
+                    year: Season.year(tick: entry.tick, ticksPerYear: ticksPerYear),
+                    text: entry.text.resolve(AppStrings.language),
+                    icon: Self.icon(for: entry.kind),
+                    kind: entry.kind)
+            }
+    }
+
     /// The screen an objective is really about.
     ///
     /// **Keyed on the objective, not on its category.** The category is a

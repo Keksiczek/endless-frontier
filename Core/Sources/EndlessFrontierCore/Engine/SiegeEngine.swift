@@ -225,6 +225,8 @@ public enum SiegeEngine {
         /// The age the fight happens in. A warband carries the arms of its own
         /// century — see `Siege.era` and `raiderArms`.
         era: Era = .earlySettlement,
+        /// What tongue to name the warband in.
+        language: GameLanguage = .cs,
         /// How many of them are on the field, when the caller knows better
         /// than the ordinary reckoning. A starving band is a crowd of people
         /// who cannot fight and a handful of deserters is not — same strength,
@@ -268,7 +270,7 @@ public enum SiegeEngine {
             openingStrength: attackerStrength, fortification: facing,
             seed: rng.next(), line: Array(line), carriesOff: carriesOff,
             era: era)
-        stageIfNeeded(&siege, in: s, registry: registry)
+        stageIfNeeded(&siege, in: s, registry: registry, language: language)
         s.siege = siege
         return s
     }
@@ -281,7 +283,10 @@ public enum SiegeEngine {
     /// so a raid saved before combatants had positions is staged the first time
     /// anybody carries it forward instead of fighting an empty field.
     static func stageIfNeeded(
-        _ siege: inout Siege, in settlement: Settlement, registry: GameDataRegistry
+        _ siege: inout Siege, in settlement: Settlement, registry: GameDataRegistry,
+        /// What tongue to name the warband in. Defaulted so the fighting path
+        /// can stage a raid saved before anybody had a name without knowing.
+        language: GameLanguage = .cs
     ) {
         guard siege.fighters.isEmpty else { return }
         let field = SiegeField(siege)
@@ -318,10 +323,17 @@ public enum SiegeEngine {
             } else if roll < burnShare + plunderShare {
                 intent = .plunder
             }
+            // **They have names.** A colonist has a name, a face, a trade and
+            // a history; the people who came to kill them were interchangeable
+            // tokens. Named off the siege's own seed and the raider's index, so
+            // the same warband is the same people every time the save is
+            // reopened (rule 3) — and so the diary can say who broke the line.
+            var naming = SeededRNG(seed: siege.seed &+ UInt64(index) &* 0x9E37_79B9)
+            let name = NameForge.colonistName(language: language, using: &naming)
             out.append(Siege.Combatant(
                 id: raiderID(seed: siege.seed, index: index), side: .raider,
                 at: field.attackerPost(index: index, of: count), strength: share,
-                intent: intent, goal: goal))
+                intent: intent, goal: goal, name: name))
         }
         siege.fighters = out
     }
@@ -388,7 +400,8 @@ public enum SiegeEngine {
         while reached < absoluteStep, !siege.isFinished {
             reached += 1
             siege.advancedTo = reached
-            s = fightOneStep(s, siege: &siege, registry: registry, cover: cover)
+            s = fightOneStep(s, siege: &siege, registry: registry, cover: cover,
+                             language: language)
         }
         siege.advancedTo = max(siege.advancedTo, min(absoluteStep, reached))
         s.siege = siege
@@ -412,7 +425,9 @@ public enum SiegeEngine {
     /// with a ground to stand on.
     private static func fightOneStep(
         _ settlement: Settlement, siege: inout Siege, registry: GameDataRegistry,
-        cover: CoverField = CoverField()
+        cover: CoverField = CoverField(),
+        /// Only used to name a warband that was saved before it had names.
+        language: GameLanguage = .cs
     ) -> Settlement {
         var s = settlement
         let step = siege.step
@@ -421,7 +436,7 @@ public enum SiegeEngine {
                             &+ UInt64(bitPattern: Int64(step)) &* 0x9E37_79B9_7F4A_7C15)
         let field = SiegeField(siege)
 
-        stageIfNeeded(&siege, in: s, registry: registry)
+        stageIfNeeded(&siege, in: s, registry: registry, language: language)
         // What the colony's towers are worth **right now** — read once and used
         // twice, by what is left standing and by what shoots.
         let towers = Dictionary(
@@ -1768,10 +1783,23 @@ public enum SiegeEngine {
         }
 
         // The dead leave the roster once the fighting is over, not during it.
-        let deaths = s.pawns.filter { $0.health <= 0 }.count
-        if deaths > 0 {
+        //
+        // **And they are named.** This counted them into `deathTallies` and
+        // removed them, and wrote nothing: a raid could take four colonists and
+        // the diary recorded a number. Keks: *"lidé umřeli … ale nevím o tom."*
+        // A tally is what the chronicle reads at the end of a year; a name is
+        // what the player needs on the day.
+        let fallen = s.pawns.filter { $0.health <= 0 }
+        if !fallen.isEmpty {
             s.pawns.removeAll { $0.health <= 0 }
-            s.deathTallies[PawnDeathCause.battle.rawValue, default: 0] += deaths
+            s.deathTallies[PawnDeathCause.battle.rawValue, default: 0] += fallen.count
+            for pawn in fallen {
+                s.journal.append(
+                    tick: siege.startTick, kind: .death,
+                    text: LocalizedText(values: [
+                        .en: "\(pawn.name) fell defending the settlement.",
+                        .cs: "\(pawn.name) padl(a) při obraně osady."]))
+            }
         }
 
         // A raid turned back carries nothing home; one that got through takes
@@ -1792,10 +1820,10 @@ public enum SiegeEngine {
             entry = LocalizedText(values: [
                 .en: "\(siege.attackerName) came for the walls and were turned back.",
                 .cs: "\(siege.attackerName) přišli na hradby a byli odraženi."])
-        } else if deaths > 0 {
+        } else if !fallen.isEmpty {
             entry = LocalizedText(values: [
-                .en: "\(siege.attackerName) broke the line — \(deaths) did not get up.",
-                .cs: "\(siege.attackerName) prolomili řadu — \(deaths) už nevstali."])
+                .en: "\(siege.attackerName) broke the line — \(fallen.count) did not get up.",
+                .cs: "\(siege.attackerName) prolomili řadu — \(fallen.count) už nevstali."])
         } else {
             entry = LocalizedText(values: [
                 .en: "\(siege.attackerName) took what they came for and left.",

@@ -54,10 +54,17 @@ struct RaiderCard: View {
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(band)
+                // **Their name, when they have one.** A warband was a set of
+                // interchangeable tokens; the card led with the band because
+                // there was nothing else to lead with. A raid you can name is
+                // a raid you remember. Older saves have no names and fall back
+                // to the band exactly as before.
+                Text(raider.name ?? band)
                     .font(.system(.title3, design: .serif).weight(.semibold))
                     .foregroundStyle(Theme.text)
-                Text(cs ? "na tvé půdě" : "on your ground")
+                Text(raider.name == nil
+                     ? (cs ? "na tvé půdě" : "on your ground")
+                     : (cs ? "\(band) — na tvé půdě" : "\(band) — on your ground"))
                     .font(.caption)
                     .foregroundStyle(Theme.textDim)
             }

@@ -313,6 +313,7 @@ struct SettlementScreen: View {
                 PawnInspectorCard(pawn: pawn, ticksPerYear: game.ticksPerYear,
                                   activity: { activityLine(for: pawn) },
                                   bonds: bondLines(for: pawn),
+                                  history: game.history(of: pawn.id),
                                   moodFactors: MoodLedger.factors(for: pawn,
                                                                   registry: game.registry),
                                   housed: pawn.homeID != nil,
