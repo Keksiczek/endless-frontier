@@ -884,3 +884,34 @@ fires, do the arithmetic before you rewrite the mechanic.
    before touching the rate: a rate that never fires is either a small chance
    or a chance multiplied by something that is always the same, and those want
    opposite fixes (rules 23, 54, 72).
+91. **A content guard that walks the content directory cannot see text written
+   in Swift.** `ObjectivesEngine` composed the player's whole *what should I do
+   next* panel out of English string literals, and `ObjectivesPanel` printed
+   them straight — for months, in a game with a test named "Every line of
+   content reads in Czech as well as English". That test walks `GameData`, and
+   an engine is not `GameData`. Every engine that composes a sentence is
+   outside every content guard in the project: `ObjectivesEngine`,
+   `StewardEngine.counsel`, `SiteOutcome.narrative`, each journal line written
+   inline. The guard has to be a *test of the engine's output* — call it, sweep
+   what it returns, and require `resolve(.cs) != resolve(.en)`. And assert the
+   **coverage**, or a guard that quietly stops reaching half the sources reads
+   exactly like a clean bill of health (rules 43, 78).
+92. **Two lists of the same thing differ by the clause somebody forgot.**
+   `placeableBuildings` and `buildableBuildings` sat eleven lines apart and
+   were the same filter except for `|| $0.era == .earlySettlement` — so the
+   canvas offered the hut and the farm and the drawer did not, and nobody
+   noticed because each screen looked complete on its own. The fix is never to
+   reconcile them; it is to delete one. If two surfaces answer the same
+   question they must call the same function, and a second copy is a bug with a
+   delay on it (rule 35's shape, applied to a list rather than a number).
+93. **A doc comment that names a caller is a claim, and it is often false.**
+   `ComfortEngine.isFreezing` — *"what the inspector shows and what the journal
+   would report"* — was called by neither. `HaulEngine.waiting` — *"for the
+   objective and the ledger to read"* — had no objective and no ledger. Both
+   were written at the moment the surface was imagined and shipped before it
+   was built, and both then read as finished work for months. Two greps find
+   the whole class in a minute: view-model methods no view calls, and engine
+   functions nothing outside their own file calls. Run them before writing
+   anything new — half of what they turn up is not dead code, it is **a feature
+   the simulation already has and the player cannot see**, which is this
+   project's single most repeated bug.

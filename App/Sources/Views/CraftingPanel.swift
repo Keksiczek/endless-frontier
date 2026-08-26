@@ -33,6 +33,7 @@ struct CraftingPanel: View {
                 if !pile.isEmpty {
                     SectionHeader(title: storesTitle)
                     stores(pile)
+                    lyingOut
                 }
                 // What is on the bench comes before what could be: an order in
                 // progress is the thing the player is waiting on.
@@ -209,6 +210,31 @@ struct CraftingPanel: View {
             return (cs ? "Sklad — " : "Stores — ") + settlement.name
         }
         return cs ? "Sklad" : "Stores"
+    }
+
+    /// **What is felled and cut and still lying where it fell.**
+    ///
+    /// `HaulEngine.waiting` counts it and its doc comment says it is "for the
+    /// objective and the ledger to read" — no objective read it and there was
+    /// no ledger. A player looking at a store that will not grow has no way to
+    /// tell a colony that is producing nothing from one that is producing
+    /// plenty and carrying none of it in, and those want opposite answers.
+    ///
+    /// No threshold on it: the number is shown when it is not zero, because
+    /// what counts as too much depends on the size of the colony and nobody
+    /// has measured that (rule 23).
+    @ViewBuilder
+    private var lyingOut: some View {
+        if let settlement = game.selectedSettlement {
+            let out = HaulEngine.waiting(settlement)
+            if out > 0 {
+                Label(cs ? "\(out) leží venku, čeká na odnesení"
+                         : "\(out) lying out, waiting to be carried in",
+                      systemImage: "shippingbox")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.textDim)
+            }
+        }
     }
 
     // MARK: - The bench

@@ -234,13 +234,25 @@ private struct MotionCard: View {
 
     /// Spending standing only means anything when you're going against the
     /// council — agreeing with them costs nothing either way.
+    ///
+    /// The comment above has been true and unimplemented since it was written.
+    /// The toggle said "Spend standing · 40" with no hint of *when*, so half of
+    /// every motion the player armed it, pressed the button they agreed with,
+    /// and watched nothing happen — the Core is right and spends only on an
+    /// overrule, which from the outside is indistinguishable from a broken
+    /// switch. It now names the one button it applies to.
     @ViewBuilder
     private var standingToggle: some View {
         let affordable = game.canAfford(influence: game.overruleCost)
+        // Exactly one of the two choices goes against the room.
+        let verb = game.wouldOverrule(approve: false)
+            ? AppStrings.verbVeto : AppStrings.verbRatify
         Toggle(isOn: $spendStanding) {
             VStack(alignment: .leading, spacing: 1) {
                 Text("\(AppStrings.spendStanding) · \(Int(game.overruleCost))")
                     .font(.caption.weight(.semibold))
+                Text(AppStrings.spendStandingOn(verb))
+                    .font(.caption2).foregroundStyle(Theme.accent.opacity(0.9))
                 Text(AppStrings.spendStandingBlurb)
                     .font(.caption2).foregroundStyle(Theme.textDim)
             }

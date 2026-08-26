@@ -673,18 +673,11 @@ public enum GameEngine {
         return s
     }
 
-    /// Interacts with the special site (ruins/dungeon/anomaly) in a region.
-    /// Returns the new state and the outcome, or unchanged state + `nil`.
-    public static func interactWithSite(
-        _ state: WorldState,
-        regionID: UUID,
-        registry: GameDataRegistry
-    ) -> (WorldState, SiteOutcome?) {
-        if let (newState, outcome) = SiteEngine.interact(state, regionID: regionID, registry: registry) {
-            return (newState, outcome)
-        }
-        return (state, nil)
-    }
+    // `interactWithSite` stood here: a pass-through to `SiteEngine.interact`
+    // that turned its optional into a tuple, called by nothing and covered by
+    // nothing. It is what the app used before going to a site became a journey
+    // — `RegionExpeditionEngine` is the way there now, and it calls
+    // `SiteEngine.interact` itself.
 
     /// Sends a party out to work a discovered point of interest. The haul
     /// lands when they walk back in, not now. Returns the world unchanged when

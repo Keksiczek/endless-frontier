@@ -92,6 +92,19 @@ enum AppStrings {
         s("Overrule the assembly quietly, at the price of political capital rather than morale.",
           "Přehlasuj sněm potichu — zaplatíš politickým kapitálem místo morálky.")
     }
+    /// **Which of the two buttons this switch is actually about.**
+    ///
+    /// Standing is only spent when the Leader goes against the assembly, and
+    /// exactly one of Ratify and Veto does that — but the toggle sat there
+    /// unqualified, so half the time the player armed it and pressed the
+    /// agreeing button and nothing happened. `GameViewModel.wouldOverrule`
+    /// answered this and had been written and never called.
+    static func spendStandingOn(_ verb: String) -> String {
+        s("Only if you \(verb.lowercased()) — agreeing with them is free",
+          "Jen když \(verb.lowercased()) — souhlasit s nimi nic nestojí")
+    }
+    static var verbVeto: String { s("veto", "vetuješ") }
+    static var verbRatify: String { s("ratify", "schválíš") }
     static var decisionDeadline: String { s("The moment passes in", "Okamžik pomine za") }
     static var years: String { s("yrs", "let") }
     static var child: String { s("Child", "Dítě") }

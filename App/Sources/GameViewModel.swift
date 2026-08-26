@@ -1391,10 +1391,11 @@ final class GameViewModel {
         tab = destination(for: objective)
     }
 
-    /// True when following this objective means going somewhere else.
-    func isActionable(_ objective: Objective) -> Bool {
-        destination(for: objective) != .settlement || objective.category == .colonists
-    }
+    // `isActionable` lived here — "true when following this objective means
+    // going somewhere else", written to grey out the rows that led nowhere and
+    // never called by anything. It has no answer to give now: `follow` takes
+    // the player to something for every objective the engine raises, so every
+    // row leads somewhere and the chevron on all of them is honest.
 
     var activeQuests: [(definition: QuestDefinition, progress: QuestProgress)] {
         world.activeQuests.compactMap { progress in
@@ -1621,9 +1622,6 @@ final class GameViewModel {
         CraftingEngine.availableRecipes(world, settlementID: selectedSettlement?.id, registry: registry)
     }
 
-    func recipeOutputName(_ recipe: RecipeDefinition) -> String {
-        registry.item(recipe.outputItemID)?.name.resolve(AppStrings.language) ?? recipe.outputItemID
-    }
 
     func recipeOutputRarity(_ recipe: RecipeDefinition) -> ItemRarity? {
         registry.item(recipe.outputItemID)?.rarity

@@ -175,6 +175,21 @@ struct PawnInspectorCard: View {
             NeedBar(label: cs ? "Odpočinek" : "Leisure", value: pawn.needs.recreation,
                     icon: "leaf.fill", tint: Color(red: 0.60, green: 0.80, blue: 0.62))
             warmthReckoning
+            // **They are losing health to it, right now.** A warmth bar at
+            // twelve is a low bar; below `ComfortEngine.freezingBelow` the
+            // engine takes `exposureDamage` off their health every tick, and
+            // nothing on this card said which side of that line they were on.
+            // `ComfortEngine.isFreezing` was written for exactly this — its own
+            // doc comment says "what the inspector shows" — and the inspector
+            // never called it.
+            if ComfortEngine.isFreezing(pawn) {
+                HStack(spacing: 5) {
+                    Image(systemName: "thermometer.snowflake").font(.caption2)
+                    Text(cs ? "Mrzne — ubývá mu zdraví" : "Freezing — losing health")
+                        .font(.caption.weight(.semibold))
+                }
+                .foregroundStyle(Theme.danger)
+            }
             if !housed {
                 HStack(spacing: 5) {
                     Image(systemName: "house.slash").font(.caption2)

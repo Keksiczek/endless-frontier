@@ -1,9 +1,14 @@
 # Docs — what is where
 
 > **Start here if you are picking this up cold:**
-> [`HANDOFF-2026-08-22.md`](HANDOFF-2026-08-22.md) — combat measured apart into
-> three faults, the council that could build one building, and the six things
-> Keks asked for next in his own order.
+> [`BACKLOG.md` §15](BACKLOG.md) (2026-08-26) — the app audit: diplomacy's verbs
+> were off the edge of an iPhone, there were two build flows and one of them
+> omitted every early building, the objectives panel was in English, and
+> marching on a neighbour did not exist. **§15.6 is what is still open**, and
+> the crafting gate is the first of it.
+> Before it: [`HANDOFF-2026-08-22.md`](HANDOFF-2026-08-22.md) — combat measured
+> apart into three faults, the council that could build one building, and the
+> six things Keks asked for next in his own order.
 > Before it: [`HANDOFF-2026-08-21-evening.md`](HANDOFF-2026-08-21-evening.md) — the
 > narrator, the chronicle's names, what `GeneProbe` measured twice, roads over
 > water, and a save bug that had been throwing away every road since it shipped.
@@ -18,7 +23,7 @@ Read in this order when picking work up cold:
 |---|---|---|
 | 1 | [NEXT.md](NEXT.md) | **Start here.** Where the game stands and what to work on next, with the evidence for each |
 | 2 | [CODEMAPS/architecture.md](CODEMAPS/architecture.md) | The three layers, the tick order, where a decision flows |
-| 3 | [RULES.md](RULES.md) | **87 rules, each of which cost a session.** Read before writing a threshold |
+| 3 | [RULES.md](RULES.md) | **93 rules, each of which cost a session.** Read before writing a threshold |
 | 4 | [BACKLOG.md](BACKLOG.md) | **The living record.** What was measured, what was built, what Keks asked for |
 
 ## Reference, by question
@@ -51,10 +56,12 @@ overtaken without being updated, which is exactly how a stale doc does damage.
 | [NEXT_STEPS.md](NEXT_STEPS.md) | 2026-06-06 | "179 tests" |
 | [NEXT_PHASE.md](NEXT_PHASE.md) | ~2026-07-28 | The entity-conversion brief. Two of its three unconverted rows still stand; **the buildings row is out of date** — see [CODEMAPS/models.md](CODEMAPS/models.md) |
 | [HANDOFF.md](HANDOFF.md) | 2026-08-13 | A state report, not a plan — but the newest one, and worth reading |
+| [NEXT.md](NEXT.md) | 2026-08-17 | Still the best short answer to "what next", but **its counts are stale**: it says 37 techs / 306 recipes / 38 rules against 60 / 411 / 93 today |
 
-Reality as of 2026-08-17: **1145 Core tests in 146 suites**, App tests green,
-V2 phases A–F complete. History lives in `BACKLOG.md` §11; the plan lives in
-[NEXT.md](NEXT.md).
+Reality as of **2026-08-26**: **1572 Core tests in 219 suites** and 177 App
+tests, all green; iOS build green. Content: 56 buildings, **60 techs**, 182
+events, 7 biomes, **477 items**, **411 recipes**. History lives in `BACKLOG.md`;
+the newest section is **§15** and its §15.6 is the open list.
 
 ## The one rule about these docs
 

@@ -89,35 +89,10 @@ struct StatBar: View {
     }
 }
 
-/// A compact resource chip with icon, amount and capacity hint.
-struct ResourceChip: View {
-    let type: ResourceType
-    let amount: Double
-    let capacity: Double
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: type.symbolName)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Theme.accent)
-                .frame(width: 22)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(type.displayName)
-                    .font(.caption2)
-                    .foregroundStyle(Theme.textDim)
-                Text("\(Int(amount.rounded()))")
-                    .font(.subheadline.monospacedDigit().weight(.semibold))
-                    .foregroundStyle(Theme.text)
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 10)
-        .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(type.displayName): \(Int(amount.rounded()))")
-    }
-}
+// `ResourceChip` stood here: an icon, an amount, and a `capacity` it took as a
+// parameter and never drew — a "capacity hint" that was never written. Nothing
+// in the app ever constructed one. `StatusStrip` and `StoreBreakdownCard` do
+// this job and do it against real storage caps.
 
 /// Section header with editorial scale contrast.
 struct SectionHeader: View {

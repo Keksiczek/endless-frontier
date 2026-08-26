@@ -3072,3 +3072,123 @@ thing it measured was a different size. Shipped in five commits; the full write
 3. The melee reads as a swing and a blood mark; impacts and recoil are next.
 4. Knowledge income swings ±7 000 a year in lumps; nobody has checked whether
    that stalls a study.
+
+## 15. 2026-08-26 — the audit, and a war with two sides
+
+Keks asked for an audit of the app rather than a feature: *"jake funkce ui atd
+jsou spravne, je vse spravne napojene? nektere odkazy mezi strankami nedavaji
+smysl, crafteni je moc velke."* Then, having gone looking: *"třeba diplomacie,
+nebo nevím jak udělat nájezd na město — prostě je těžké tam něco vydolovat, i
+když je to docela důležité."*
+
+Everything below came out of that one sentence. Two commits: `72afa54`,
+`99252e4`.
+
+### 15.1 — what the audit found
+
+| said | was |
+|---|---|
+| "diplomacie … těžké tam něco vydolovat" | 8 verbs at 56pt in a plain `HStack` — **504pt of buttons in 346pt of iPhone.** The last ones were off the edge, and *which* ones depended on the standing |
+| "nevím jak udělat nájezd na město" | **it did not exist.** `WarState` counted only raids *they* made; `declareWar` set a flag and left you to be attacked |
+| "odkazy mezi stránkami nedávají smysl" | two build flows, and the drawer's list omitted every early-settlement building; Construction could not start one; 3 of 4 `.expand` objectives routed to the wrong screen |
+| "crafteni je moc velké" | 411 recipes in 4 flat groups. Now folded, with counts |
+| — (found while looking) | **every objective was in English**, including `"Raise threatLevel to 60"` |
+
+### 15.2 — the two build flows
+
+`BuildPickerBar` on the canvas: filtered by purpose, priced, you place the
+footprint. The drawer's list: called `GameEngine.build` straight, so the engine
+sited it and you never saw where. And they were **not the same buildings** —
+`buildableBuildings` read `unlockedBuildings` alone, without
+`|| $0.era == .earlySettlement`, so the hut, the farm and everything the first
+hour is made of were missing from it. Deleted; `buildRequest` carries the ask to
+the canvas, same shape as `focusRequest`.
+
+### 15.3 — objectives were never translated, and the guard could not see it
+
+`ObjectivesEngine` was Swift string literals; `ObjectivesPanel` printed them
+straight. The bilingual test walks `GameData`, and **none of this is in
+`GameData`** — it is Swift in an engine. Months of a Czech player being told
+what to do in English, on the one surface whose whole job is that.
+
+`Objective.title/detail` are `LocalizedText` now, `Era.displayName` names the
+age instead of `rawValue` with the underscores taken out, and `ResourceType`
+learned its five words in the Core so the app and the engines stop keeping
+separate copies (rule 35). `ObjectivesTests` builds three worlds — a new game, a
+colony in trouble, one lone threatened settlement — and asserts **every source
+fires** as well as that no Czech line is the English one falling through. The
+coverage half is the part that matters: without it the test passes as happily
+over three objectives as over eleven.
+
+**Rule 91.** A bilingual guard that walks the content directory cannot see
+player-facing text written in Swift. Every engine that composes a sentence —
+`ObjectivesEngine`, `StewardEngine`, `SiteEngine.narrative` — is outside it.
+
+### 15.4 — the march
+
+A war had one direction. `TribeWarEngine` is the other, and it is deliberately
+**not** a new system: a march is a `RegionExpedition` (same walk out, same days
+there, same walk home) and what waits is a `SiteEncounter`, so the fight is the
+one the player has already learned. `OutlawCampEngine` is the template.
+
+What the file owns: a people as a place — `defense` divided among a share of
+their grown population, their granary as the cache, a ditch and stake line if
+`grudge > 30` — and what it costs, all scaled by share cleared, capped at
+`maxPlunderShare` 0.35 and `maxPopulationShare` 0.18 so a war of extermination
+takes summers rather than an afternoon. The difference from a camp is on
+purpose: outlaws re-form, a people does not.
+
+**Both ends of rule 6 are pinned**, through the real journey rather than the
+arithmetic: a full party *can* clear `brokeInAtShare` against a middling people
+(or the verb is decoration), and four people *cannot* break a people of four
+hundred (or it is a free harvest).
+
+### 15.5 — the sweep, and what it found
+
+Two greps worth keeping, because this codebase's recurring bug is *built and
+never surfaced*:
+
+```bash
+# view-model verbs no view calls
+# engine functions nothing outside their own file calls
+```
+
+Dead and deleted: `GameEngine.interactWithSite` (a pass-through superseded by
+`RegionExpeditionEngine`), `recipeOutputName`, `isActionable`, `ResourceChip`
+(which took a `capacity` it never drew).
+
+**Written for a surface that was never built** — the interesting half:
+
+- `ComfortEngine.isFreezing`, whose own doc comment says *"what the inspector
+  shows"*. The inspector never called it, so a colonist losing health to the
+  cold looked like a low bar. Now a line on the card.
+- `HaulEngine.waiting`, *"for the objective and the ledger to read"*. Neither
+  existed, so a store that would not grow gave no way to tell a colony
+  producing nothing from one producing plenty and carrying none of it in. Now
+  on the stores line, with **no threshold** — what counts as too much depends
+  on the size of the colony and nobody has measured it (rule 23).
+- `GameViewModel.wouldOverrule`, which is the predicate for the sentence already
+  written above `standingToggle`: *"spending standing only means anything when
+  you're going against the council."* True and unimplemented, so half of every
+  motion the player armed the switch, pressed the button they agreed with, and
+  watched nothing happen.
+
+### 15.6 — still open
+
+1. **The crafting gate is still data.** Folding the groups hid the wall; it did
+   not move it. 237 of 411 recipes carry no `requiresTech`, and building a
+   `workshop` unlocks **122 at once** (`hut` 74, `hunters_lodge` 54). Depth 5–6
+   recipes are 100% tech-gated and depth 1 is 73% ungated, so the generation got
+   steadily lazier the earlier it went. The early ladder is sitting there unused
+   — `snares` gates one recipe, `pit_props` and `yokes` gate none. Do not gate
+   by guess: derive from material chain depth, and never push a recipe later
+   than the era its inputs come from.
+2. `SettlementRenderer.swift` is **2822 lines** against a stated max of 800 (the
+   codemap says 1969 — stale). `GameViewModel.swift` is ~2000.
+3. `preferredColorScheme(.dark)` is hard-wired in `EndlessFrontierApp`;
+   `colorScheme` appears nowhere in the renderer, and `reduceMotion` nowhere in
+   a continuously animating canvas.
+4. The "Layout" button carries the same weight as "Build" while its own comment
+   calls it the least-reached of the four.
+5. Doc drift, again: `NEXT.md` says 37 techs / 306 recipes / 38 rules; the files
+   say **60 techs, 411 recipes, 477 items**, and `BACKLOG` is past rule 90.
