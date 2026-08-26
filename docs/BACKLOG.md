@@ -3300,3 +3300,86 @@ property was the difference between one conditional and fifteen (rule 35).
 Still open on accessibility: the canvas is unlabelled to VoiceOver, Dynamic Type
 is ignored by 33 fixed `.font(.system(size:))` calls, and
 `preferredColorScheme(.dark)` is hard-wired.
+
+## 16. 2026-08-26 (evening) — the wood, measured
+
+`WoodProbe` was written to test a hypothesis and disproved it, which is the
+only reason the real cause was found. Suspicion: the council's two standing
+orders eat every scrap of wood and `CraftingEngine.yieldsTheBench` cannot stop
+them. Measurement said otherwise.
+
+### 16.1 — what the probe found
+
+Seed 4242, two centuries, before the fix:
+
+```
+year   pop  loggers  trees  bear  sap  spare   wood  timber  blocked
+  30    39        4     51    16   35      0    202       1        1
+ 100    69        6     46    16   30      0    226      15        2
+ 140   109       10     44    16   28      0     39      58        1
+ 200   298       28     47    16   31      0      1     100        6
+```
+
+**`bear` is 16 at every reading from year 30 to year 200** — exactly
+`FloraEngine.seedStand` — and `spare` is therefore 0 for a hundred and seventy
+years. Two guards, each correct on its own:
+
+- `fell` keeps `seedStand` bearing trees back, so a valley can never be cleared.
+- `reseeded` scales seed by `bearers / bearersPerSapling`.
+
+Together the axes take every tree the moment it bears, so the second guard's
+input is a constant: 16/6 = **2**, for ever, permanently under its own
+`thinWoodSaplings` floor of 4. The term meant to make wood supply respond to
+the wood was dead code that compiled. Supply was a flat four saplings a pass
+while the colony quadrupled; demand crossed it about year 135 and never came
+back. Rule 95.
+
+The cost: 123 of 411 recipes consume raw `wood` — thirty per cent of the book —
+and all of them, plus `Saw Timber`, `Burn Charcoal` and everything downstream
+of charcoal (the whole iron half), were permanently unmakeable.
+
+### 16.2 — the fix, and why not a bigger number
+
+Nature's rate cannot answer a colony, and raising it would only move the year
+the curve crosses. **The colony gets a lever instead**: a logger sent to a wood
+that is down to its seed stand has nothing to cut, and a woodsman standing at a
+floor-bound wood plants (`FloraEngine.tended`). Supply now scales with loggers
+— the number the player controls — and self-balances at both ends: plant while
+`spare` is zero, fell once the stand bears again, stop at `woodCeiling`.
+
+No new magnitude: a logger sets one sapling in the pass they would otherwise
+have spent felling.
+
+After, same seed:
+
+```
+year   pop  loggers  trees  bear  sap  spare   wood  timber  blocked
+  30    39        4    160    16  144      0    202       1        1
+ 100    58        5    160    17  143      1   2209      49        1
+ 140   105        9    160    16  144      0   2971      97        3
+ 200   282       28    160    17  143      1   1912     312        2
+```
+
+Wood 1 → **1912**, timber 100 → 312, blocked orders 6 → 2, and `Saw Timber`,
+`Burn Charcoal` and `Tan Leather` all read "short of []". Note the late
+decline, 2971 → 1912: demand is catching up again as the town grows, which is
+the shape this should have — a resource to manage, not a cliff.
+
+### 16.3 — and what it cost the canvas
+
+`SettlementFlora.draw` sorted and drew **every** tree on the map every frame,
+with no camera cull — survivable at forty-odd trees, which is what a wood was
+pinned at. A valley now sits at `woodCeiling`, so the per-frame cost roughly
+quadrupled on the day the wood was fixed. It culls to the viewport before the
+sort now, the same discipline the buildings got in §2.1.
+
+### 16.4 — still open
+
+Everything in §15.6 except the crafting gate's worst half, plus:
+
+1. `charcoal` still reads 2 at year 200 and `Smelt Iron` is still short of it —
+   made and consumed in the same breath. That is a real economy rather than a
+   dead chain now, but nobody has checked whether the iron half keeps up.
+2. `woodCeiling` is 160 and a valley now sits *at* it for most of a run. Pinned
+   at the ceiling is better than pinned at the floor, but it is still pinned —
+   worth a look once something else competes for the ground.

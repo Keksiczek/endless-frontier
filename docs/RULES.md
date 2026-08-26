@@ -927,3 +927,19 @@ fires, do the arithmetic before you rewrite the mechanic.
    check what it does when the field is absent. The guard belongs where the
    value is *consumed*, and the cheapest form of it is a content test that
    walks the bank asking "could this ever be used?" (rules 43, 91, 93).
+95. **A rule that pins a quantity kills every rate computed from it.** The wood
+   ran out on every long game, and the cause was two guards that each read
+   correctly. `FloraEngine.fell` keeps `seedStand` bearing trees back so the
+   valley can never be cleared; `reseeded` sets saplings in proportion to
+   bearing trees, `bearers / bearersPerSapling`. Together: the axes take every
+   tree the moment it bears, so bearing sits at **exactly 16 for a hundred and
+   seventy years** (`WoodProbe`, seed 4242), so the seed term is 16/6 = 2 for
+   ever — permanently under its own floor of 4. **The scaling term was dead
+   code that compiled.** Wood supply was therefore a constant while the colony
+   went 39 → 298 people; the shelf went 276 → 39 → 3 → 1, eight standing orders
+   read "short of materials" for the rest of the run, and 123 of 411 recipes —
+   thirty per cent of the book — were unmakeable. When something conserves a
+   quantity, grep every rate derived from that quantity: each one is now a
+   constant, and a constant against a growing town is rule 16. The fix is not a
+   bigger number — it is a lever the player owns (here: a logger with nothing
+   to fell plants instead, so supply scales with loggers).

@@ -913,13 +913,28 @@ public enum ResourceLoop {
         // Where the work leaves goods on the ground for somebody to carry in.
         var dropped: [(itemID: String, amount: Int, at: LocalPoint)] = []
         let timberDemand = demand[.forest, default: 0]
-        if timberDemand > 0, !map.trees.isEmpty {
-            let cut = FloraEngine.fell(map, loggers: max(1, Int(timberDemand / harvestPerWorker)),
-                                       marked: DesignationEngine.trees(settlement))
-            map = cut.map
-            let perTrunk = timberYield(of: settlement, registry: registry)
-            for stump in cut.stumps {
-                dropped.append((itemID: "wood", amount: perTrunk, at: stump))
+        if timberDemand > 0 {
+            let loggers = max(1, Int(timberDemand / harvestPerWorker))
+            let marked = DesignationEngine.trees(settlement)
+            // **Axe or seedling bag.** A wood down to its seed stand has
+            // nothing a logger may cut, and for a hundred and seventy years of
+            // a measured run that was the state it sat in — the loggers turned
+            // up, found `spare` at zero, and the colony's wood supply was
+            // whatever nature reseeded on its own. A woodsman with nothing to
+            // fell plants; see `FloraEngine.tended`.
+            let spare = FloraEngine.spareToFell(map, marked: marked)
+            let cutting = min(loggers, spare)
+            if cutting > 0, !map.trees.isEmpty {
+                let cut = FloraEngine.fell(map, loggers: cutting, marked: marked)
+                map = cut.map
+                let perTrunk = timberYield(of: settlement, registry: registry)
+                for stump in cut.stumps {
+                    dropped.append((itemID: "wood", amount: perTrunk, at: stump))
+                }
+            }
+            if loggers > cutting {
+                map = FloraEngine.tended(map, foresters: loggers - cutting,
+                                         mapSeed: mapSeed, tick: tick, registry: registry)
             }
         }
         let stoneDemand = demand[.stone, default: 0]

@@ -393,6 +393,88 @@ public enum FloraEngine {
         return updated
     }
 
+    /// **A woodsman at a wood with nothing to fell plants instead.**
+    ///
+    /// The reseeding above is nature's, and nature's rate cannot answer a
+    /// colony. Measured over two centuries by `WoodProbe`, seed 4242: the
+    /// bearing count pinned at **exactly `seedStand`, 16, from year thirty to
+    /// year two hundred** — the axes take every tree the moment it bears, so
+    /// `spare` is zero for a hundred and seventy years and the stand never
+    /// thickens. Which kills the one term that was supposed to make seed scale:
+    /// `fromBearers` is `bearers / bearersPerSapling` = 16/6 = **2**, for ever,
+    /// always under the `thinWoodSaplings` floor of 4. Two guards that each
+    /// read correctly — keep sixteen parents; seed in proportion to parents —
+    /// and between them a rate that can never move.
+    ///
+    /// So wood supply was a **constant** of four saplings a pass while the
+    /// colony went from thirty-nine people to two hundred and ninety-eight.
+    /// Rule 16 in a new place. Demand crossed supply around year 135 and the
+    /// shelf went 276 → 39 → 3 → 1 and stayed there: eight standing orders all
+    /// reading "short of materials", and a hundred and twenty-three of the four
+    /// hundred and eleven recipes — thirty per cent of the book — permanently
+    /// unmakeable.
+    ///
+    /// The fix is not a bigger constant. It is that **the colony gets a lever**:
+    /// a logger sent to a wood that is down to its seed stand has nothing to
+    /// cut, and a woodsman standing at a floor-bound wood plants. The rate
+    /// therefore scales with loggers — the one number the player actually
+    /// controls — and it is self-balancing at both ends: plant while `spare` is
+    /// zero, fell once the stand bears again, and stop at `woodCeiling`.
+    ///
+    /// No new magnitude: a logger sets one sapling in the pass they would
+    /// otherwise have spent felling.
+    public static func tended(
+        _ map: LocalMap, foresters: Int, mapSeed: UInt64, tick: Int,
+        registry: GameDataRegistry
+    ) -> LocalMap {
+        guard map.usesEntityLand, foresters > 0, map.trees.count < woodCeiling else { return map }
+        let palette = FloraFactory.species(for: map.biomeID, registry: registry)
+        guard !palette.isEmpty else { return map }
+
+        var rng = SeededRNG(
+            seed: mapSeed &* 0xC2B2_AE35 &+ UInt64(bitPattern: Int64(tick)) &* 0x27D4_EB2F)
+        var updated = map
+        for _ in 0..<foresters {
+            guard updated.trees.count < woodCeiling else { break }
+            // Beside what is already standing where there is anything standing,
+            // and out on the open ground when the valley has been stripped —
+            // a planted wood spreads from its own edge exactly as a seeded one
+            // does, and a bare valley has no edge to spread from.
+            let origin: LocalPoint
+            let species: FloraDefinition
+            if updated.trees.isEmpty {
+                species = palette[Int(rng.nextUnit() * Double(palette.count)) % palette.count]
+                origin = LocalPoint(x: rng.nextUnit(), y: rng.nextUnit())
+            } else {
+                let parent = updated.trees[Int(rng.nextUnit() * Double(updated.trees.count))
+                                           % updated.trees.count]
+                origin = parent.position
+                species = registry.tree(parent.species)
+                    ?? palette[Int(rng.nextUnit() * Double(palette.count)) % palette.count]
+            }
+            let spread = 0.06
+            let at = LocalPoint(
+                x: min(0.98, max(0.02, origin.x + (rng.nextUnit() - 0.5) * spread * 2)),
+                y: min(0.98, max(0.02, origin.y + (rng.nextUnit() - 0.5) * spread * 2)))
+            guard isClearGround(updated, at) else { continue }
+            updated = plant(updated, species: species, at: at)
+        }
+        return updated
+    }
+
+    /// How much of the wood the axes may take: bearing trees over the stand
+    /// kept back to seed the next one.
+    ///
+    /// Public because the caller has to know whether there is anything to fell
+    /// *before* it decides between the axe and the seedling bag, and reading
+    /// `fell`'s empty result afterwards cannot tell "nothing spare" from
+    /// "nobody sent".
+    public static func spareToFell(_ map: LocalMap, marked: Set<Int> = []) -> Int {
+        var bearing = 0
+        for tree in map.trees where tree.growth >= bearingGrowth { bearing += 1 }
+        return max(0, bearing - seedStand) + marked.count
+    }
+
     /// Whether a sapling may take root here — nothing standing on it, and not
     /// tilled.
     static func isClearGround(_ map: LocalMap, _ p: LocalPoint) -> Bool {

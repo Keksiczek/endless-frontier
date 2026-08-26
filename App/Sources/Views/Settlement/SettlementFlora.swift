@@ -17,16 +17,46 @@ enum SettlementFlora {
     /// Trees below this growth are drawn as saplings rather than trunks.
     static let saplingGrowth = 0.35
 
+    /// How far outside the view a tree is still drawn — a crown and a shadow
+    /// reach back in after the trunk has gone. The same margin the buildings
+    /// use, for the same reason.
+    static let offscreenMargin: CGFloat = 80
+
+    /// **What one frame draws, out of every tree the valley holds.**
+    ///
+    /// The same discipline the buildings got in §2.1, and now for the same
+    /// reason: this sorted and drew *every* tree on the map, every frame, at
+    /// thirty frames a second. That was survivable while a wood sat at
+    /// forty-odd trees for ever — and it did, pinned at `seedStand` by a
+    /// felling rule nothing could outgrow. Now that a colony can plant, a
+    /// valley reaches `FloraEngine.woodCeiling` and stays there, so the
+    /// per-frame cost roughly quadrupled on the day the wood was fixed.
+    ///
+    /// Culling before the sort is the point: the sort is `n log n` over
+    /// whatever survives.
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap,
         season: Season, time: Double,
         sun: SettlementLight.Sun = SettlementLight.sun(time: 0),
+        /// The screen, when the caller knows it. Nil draws the whole wood —
+        /// which is what the tests want and what a thumbnail wants.
+        viewport: CGRect? = nil,
         registry: GameDataRegistry
     ) {
         let unit = min(rect.width, rect.height)
-        let standing = map.trees.sorted(by: { $0.position.y < $1.position.y })
-            .filter { map.isExplored($0.position) }
-        let outcrops = map.rocks.filter { map.isExplored($0.position) }
+        // A tree whose trunk has just left the screen still throws a crown and
+        // a shadow back into it, so the frame is grown before anything is cut.
+        let frame = viewport?.insetBy(dx: -offscreenMargin, dy: -offscreenMargin)
+        func onScreen(_ p: LocalPoint) -> Bool {
+            guard let frame else { return true }
+            return frame.contains(SettlementRenderer.point(p, in: rect))
+        }
+        let standing = map.trees
+            .filter { map.isExplored($0.position) && onScreen($0.position) }
+            .sorted(by: { $0.position.y < $1.position.y })
+        let outcrops = map.rocks.filter {
+            map.isExplored($0.position) && onScreen($0.position)
+        }
 
         // Every shadow the wood throws, in one path filled once — before any
         // trunk is drawn, so a tree's shadow lies on the ground rather than

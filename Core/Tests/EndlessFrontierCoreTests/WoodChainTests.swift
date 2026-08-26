@@ -204,6 +204,85 @@ struct WoodChainTests {
         #expect(bearing >= FloraEngine.seedStand,
                 "only \(bearing) of them bearing — the wood has no future")
     }
+
+    // MARK: - A wood the colony can grow
+
+    /// **The trap this closes**, measured by `WoodProbe` over two centuries,
+    /// seed 4242: the bearing count pinned at *exactly* `seedStand` from year
+    /// thirty to year two hundred, because the axes take every tree the moment
+    /// it bears. So `spare` was zero for a hundred and seventy years, and the
+    /// term that makes seed scale — `bearers / bearersPerSapling`, 16/6 = 2 —
+    /// sat under the `thinWoodSaplings` floor of four for ever. Wood supply was
+    /// a **constant** while the colony went from 39 people to 298; the shelf
+    /// went 276 → 39 → 3 → 1 and eight standing orders read "short of
+    /// materials" for the rest of the run.
+    @Test("A wood held at its seed stand still grows when somebody plants")
+    func aFloorBoundWoodStillGrows() {
+        // Exactly the state the probe found: at the floor, nothing spare.
+        var m = Self.map(Self.wood(FloraEngine.seedStand, growth: 1))
+        #expect(FloraEngine.spareToFell(m) == 0, "the fixture is not at the floor")
+        let before = m.trees.count
+        for tick in stride(from: 0, to: 2000, by: LaborEngine.staffingInterval) {
+            m = FloraEngine.tended(m, foresters: 4, mapSeed: 4242, tick: tick,
+                                   registry: Self.registry)
+        }
+        #expect(m.trees.count > before,
+                "loggers at a floor-bound wood planted nothing — \(m.trees.count) trees")
+    }
+
+    /// The rate answers the colony, which is the whole point: a constant cannot
+    /// feed a town that quadruples.
+    @Test("More foresters plant more wood")
+    func plantingScalesWithLoggers() {
+        func grown(foresters: Int) -> Int {
+            var m = Self.map(Self.wood(FloraEngine.seedStand, growth: 1))
+            for tick in stride(from: 0, to: 600, by: LaborEngine.staffingInterval) {
+                m = FloraEngine.tended(m, foresters: foresters, mapSeed: 4242, tick: tick,
+                                       registry: Self.registry)
+            }
+            return m.trees.count
+        }
+        #expect(grown(foresters: 12) > grown(foresters: 2))
+    }
+
+    /// …and stops. A valley is not a jungle, and a planting rate with no top to
+    /// it is the same bug pointing the other way.
+    @Test("Planting stops at the ceiling")
+    func plantingHasATop() {
+        var m = Self.map(Self.wood(FloraEngine.woodCeiling, growth: 1))
+        for tick in stride(from: 0, to: 2000, by: LaborEngine.staffingInterval) {
+            m = FloraEngine.tended(m, foresters: 40, mapSeed: 4242, tick: tick,
+                                   registry: Self.registry)
+        }
+        #expect(m.trees.count <= FloraEngine.woodCeiling,
+                "the valley grew past its ceiling to \(m.trees.count)")
+    }
+
+    /// Determinism, because planting rolls dice (CLAUDE.md rule 3).
+    @Test("The same valley plants the same wood twice")
+    func plantingIsDeterministic() {
+        func run() -> [LocalPoint] {
+            var m = Self.map(Self.wood(FloraEngine.seedStand, growth: 1))
+            for tick in stride(from: 0, to: 400, by: LaborEngine.staffingInterval) {
+                m = FloraEngine.tended(m, foresters: 3, mapSeed: 4242, tick: tick,
+                                       registry: Self.registry)
+            }
+            return m.trees.map(\.position)
+        }
+        let a = run(), b = run()
+        #expect(a.count == b.count)
+        #expect(zip(a, b).allSatisfy { $0.x == $1.x && $0.y == $1.y })
+    }
+
+    /// The other half of the same switch: while there *is* something spare, the
+    /// axes still go to it. A colony that plants instead of felling a standing
+    /// crop has swapped one starvation for another.
+    @Test("A wood above its seed stand is still felled")
+    func aThickWoodIsStillCut() {
+        let m = Self.map(Self.wood(FloraEngine.seedStand + 9, growth: 1))
+        #expect(FloraEngine.spareToFell(m) == 9,
+                "the axes were told there was nothing to cut in a wood with nine to spare")
+    }
 }
 
 /// **Crafting from the list, in parallel.**

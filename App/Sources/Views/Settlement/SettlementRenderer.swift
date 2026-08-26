@@ -244,7 +244,7 @@ enum SettlementRenderer {
         SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
                              registry: registry)
         SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time,
-                             sun: sun, registry: registry)
+                             sun: sun, viewport: viewRect, registry: registry)
         // The fields, over the ground and under everything standing on it —
         // a plot is worked earth, so a figure reaping it stands in front.
         SettlementCrops.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
@@ -620,7 +620,7 @@ enum SettlementRenderer {
         SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
                              registry: registry)
         SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time,
-                             sun: sun, registry: registry)
+                             sun: sun, viewport: viewRect, registry: registry)
         // The fields, over the ground and under everything standing on it —
         // a plot is worked earth, so a figure reaping it stands in front.
         SettlementCrops.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
