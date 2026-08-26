@@ -61,8 +61,19 @@ struct TribesPanel: View {
     /// The peoples traded, married, raided and took in defectors entirely on
     /// their own, and you could only read about it afterwards. These are the
     /// acts that spend the standing administration charges you for.
+    ///
+    /// **They wrap, and they carry their words.** This was an `HStack` of
+    /// icon-and-number tiles at `minWidth: 40` plus 16pt of padding — 56pt
+    /// apiece, and a people you are at odds with offers eight of them. That is
+    /// 504pt of buttons in the ~346pt an iPhone leaves inside the card, so the
+    /// row did not merely look cramped: **the last verbs were off the edge of
+    /// the screen**, and which ones depended on the standing. Keks: *"je těžké
+    /// tam něco vydolovat i když je to docela důležité."* A `FlowRow` wraps
+    /// instead of clipping, and once a verb has room it may as well say what it
+    /// is — a gift and a demand for tribute were previously two grey glyphs
+    /// with a number under each.
     private func actions(_ tribe: Tribe) -> some View {
-        HStack(spacing: 8) {
+        FlowRow(spacing: 8) {
             action(AppStrings.sendGift, icon: "gift.fill", cost: game.giftCost,
                    enabled: game.canAfford(influence: game.giftCost)) {
                 game.sendGift(to: tribe.id)
@@ -125,7 +136,6 @@ struct TribesPanel: View {
                     game.declareWar(on: tribe.id)
                 }
             }
-            Spacer(minLength: 0)
         }
         .padding(.top, 2)
     }
@@ -157,25 +167,38 @@ struct TribesPanel: View {
                     in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
+    /// One act, as a chip that says what it is and what it costs.
+    ///
+    /// A free act shows no price at all — a `0` beside "Call them home" reads
+    /// as a cost that has not been worked out yet rather than as no cost.
     private func action(
         _ label: String, icon: String, cost: Double, enabled: Bool,
         tint: Color = Theme.accent, action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            VStack(spacing: 2) {
-                Image(systemName: icon).font(.caption)
-                Text("\(Int(cost))")
-                    .font(.caption2.monospacedDigit().weight(.semibold))
+            HStack(spacing: 5) {
+                Image(systemName: icon).font(.caption2)
+                Text(label)
+                    .font(.caption.weight(.medium))
+                    .lineLimit(1)
+                if cost > 0 {
+                    Text("\(Int(cost))")
+                        .font(.caption2.monospacedDigit().weight(.bold))
+                        .padding(.horizontal, 5).padding(.vertical, 1)
+                        .background(Theme.ink.opacity(0.35), in: Capsule())
+                }
             }
-            .frame(minWidth: 40)
-            .padding(.vertical, 6).padding(.horizontal, 8)
+            .fixedSize()
+            .padding(.vertical, 7).padding(.horizontal, 10)
             .background((enabled ? tint : Theme.textDim).opacity(0.14),
                         in: RoundedRectangle(cornerRadius: 9, style: .continuous))
             .foregroundStyle(enabled ? tint : Theme.textDim)
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
-        .accessibilityLabel("\(label), \(Int(cost)) \(cs ? "vlivu" : "influence")")
+        .accessibilityLabel(cost > 0
+                            ? "\(label), \(Int(cost)) \(cs ? "vlivu" : "influence")"
+                            : label)
     }
 
     /// Relations run −100…100; the bar fills from the middle so hostility reads

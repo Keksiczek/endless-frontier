@@ -11,6 +11,23 @@ public enum ResourceType: String, Codable, Sendable, CaseIterable, Hashable {
     case energy
     case knowledge
     case influence
+
+    /// What to call it in the player's language.
+    ///
+    /// In the Core for the same reason `Era.displayName` is: the engines write
+    /// player-facing sentences now — an objective, a chapter heading, a line of
+    /// counsel — and a sentence that has to name a resource cannot reach into
+    /// the app for the word. The app's own `displayName` reads this, so the
+    /// five most-repeated words in the game are spelled in one place.
+    public var displayNameLocalized: LocalizedText {
+        switch self {
+        case .food:      return LocalizedText(values: [.en: "food", .cs: "jídlo"])
+        case .materials: return LocalizedText(values: [.en: "materials", .cs: "materiál"])
+        case .energy:    return LocalizedText(values: [.en: "energy", .cs: "energie"])
+        case .knowledge: return LocalizedText(values: [.en: "knowledge", .cs: "vědění"])
+        case .influence: return LocalizedText(values: [.en: "influence", .cs: "vliv"])
+        }
+    }
 }
 
 /// A bag of resource amounts. Used both for mutable storage (settlements)

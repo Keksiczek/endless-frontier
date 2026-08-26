@@ -11,6 +11,15 @@ import EndlessFrontierCore
 /// ingredient is short.
 struct CraftingPanel: View {
     @Bindable var game: GameViewModel
+    /// Which recipe groups the player has opened.
+    ///
+    /// Empty to start, so four hundred recipes arrive as **four lines with
+    /// counts on them** rather than as four hundred rows. Keks: *"ten crafting
+    /// třeba rozbalovací."* The search and the affordability filter were both
+    /// added to make this list survivable and neither of them helps somebody
+    /// who does not yet know what they are looking for — a closed group does,
+    /// because it says how much is behind it before you commit to scrolling it.
+    @State private var openGroups: Set<String> = []
 
     private var cs: Bool { AppStrings.language == .cs }
 
@@ -50,10 +59,26 @@ struct CraftingPanel: View {
                             .font(.caption)
                             .foregroundStyle(Theme.textDim)
                     }
+                    // A search has already narrowed things to what was asked
+                    // for; making somebody open the answer to their own
+                    // question is one tap of pure ceremony.
+                    let searching = !game.recipeSearch.trimmingCharacters(in: .whitespaces).isEmpty
                     ForEach(groups, id: \.title) { group in
-                        GroupHeader(title: group.title, count: group.recipes.count)
-                        ForEach(group.recipes) { recipe in
-                            row(recipe)
+                        let open = searching || openGroups.contains(group.title)
+                        GroupHeader(title: group.title, count: group.recipes.count,
+                                    open: open, locked: searching) {
+                            withAnimation(.snappy(duration: 0.22)) {
+                                if openGroups.contains(group.title) {
+                                    openGroups.remove(group.title)
+                                } else {
+                                    openGroups.insert(group.title)
+                                }
+                            }
+                        }
+                        if open {
+                            ForEach(group.recipes) { recipe in
+                                row(recipe)
+                            }
                         }
                     }
                 }
@@ -117,24 +142,43 @@ struct CraftingPanel: View {
 
     /// Quieter than a `SectionHeader` — these sit *inside* Crafting rather
     /// than beside it, and a second full-weight header would read as a peer.
+    ///
+    /// It is the fold, so the whole line is the target rather than the chevron:
+    /// a 10pt glyph is not something to ask a thumb for. `locked` is a search
+    /// holding the group open — the chevron goes quiet rather than lying about
+    /// being tappable.
     private struct GroupHeader: View {
         let title: String
         let count: Int
+        let open: Bool
+        var locked: Bool = false
+        let toggle: () -> Void
 
         var body: some View {
-            HStack(spacing: 6) {
-                Text(title.uppercased())
-                    .font(.caption2.weight(.semibold))
-                    .kerning(0.8)
-                    .foregroundStyle(Theme.textDim)
-                Text("\(count)")
-                    .font(.caption2.monospacedDigit())
-                    .foregroundStyle(Theme.textDim.opacity(0.7))
-                Rectangle()
-                    .fill(Theme.textDim.opacity(0.18))
-                    .frame(height: 1)
+            Button(action: toggle) {
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 9, weight: .bold))
+                        .rotationEffect(.degrees(open ? 0 : -90))
+                        .foregroundStyle(locked ? Theme.textDim.opacity(0.35) : Theme.accent)
+                        .frame(width: 10)
+                    Text(title.uppercased())
+                        .font(.caption2.weight(.semibold))
+                        .kerning(0.8)
+                        .foregroundStyle(Theme.textDim)
+                    Text("\(count)")
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(Theme.textDim.opacity(0.7))
+                    Rectangle()
+                        .fill(Theme.textDim.opacity(0.18))
+                        .frame(height: 1)
+                }
+                .padding(.top, 2)
+                .padding(.vertical, 4)
+                .contentShape(Rectangle())
             }
-            .padding(.top, 2)
+            .buttonStyle(.plain)
+            .disabled(locked)
         }
     }
 
@@ -331,40 +375,7 @@ struct CraftingPanel: View {
     }
 }
 
-/// A wrapping row — SwiftUI has no flow layout before iOS 16's `Layout`, and
-/// the material lists here are exactly the case an `HStack` handles badly.
-struct FlowRow: Layout {
-    var spacing: CGFloat = 6
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let maxWidth = proposal.width ?? .infinity
-        var x: CGFloat = 0, y: CGFloat = 0, lineHeight: CGFloat = 0
-        for view in subviews {
-            let size = view.sizeThatFits(.unspecified)
-            if x + size.width > maxWidth, x > 0 {
-                x = 0
-                y += lineHeight + spacing
-                lineHeight = 0
-            }
-            x += size.width + spacing
-            lineHeight = max(lineHeight, size.height)
-        }
-        return CGSize(width: proposal.width ?? x, height: y + lineHeight)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize,
-                       subviews: Subviews, cache: inout ()) {
-        var x = bounds.minX, y = bounds.minY, lineHeight: CGFloat = 0
-        for view in subviews {
-            let size = view.sizeThatFits(.unspecified)
-            if x + size.width > bounds.maxX, x > bounds.minX {
-                x = bounds.minX
-                y += lineHeight + spacing
-                lineHeight = 0
-            }
-            view.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
-            x += size.width + spacing
-            lineHeight = max(lineHeight, size.height)
-        }
-    }
-}
+// `FlowRow` used to live here, because the material lists were the only thing
+// that needed to wrap. It is in `Components.swift` now: the diplomacy verbs
+// need it too, and a shared layout owned by whichever panel happened to want
+// it first is how a second panel ends up with its own copy.

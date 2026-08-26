@@ -105,6 +105,18 @@ struct SettlementScreen: View {
             if case .pawn(let id) = requested { game.lookAt(.pawn(id)) }
             game.focusRequest = nil
         }
+        // Somebody asked to build from outside the canvas — the drawer's
+        // Building section. Same contract as `focusRequest`: this screen owns
+        // the canvas, so it adopts the request and clears it.
+        .onChange(of: game.buildRequest) { _, asked in
+            guard asked else { return }
+            drawer = nil
+            withAnimation(.easeOut(duration: 0.15)) {
+                buildPlan = nil
+                picking = true
+            }
+            game.buildRequest = false
+        }
         .onDisappear { game.stopSiegeLoop() }
     }
 

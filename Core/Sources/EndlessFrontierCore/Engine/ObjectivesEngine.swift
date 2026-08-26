@@ -2,6 +2,13 @@ import Foundation
 
 /// Derives the player's current objectives from world state. Pure and
 /// deterministic; recomputed whenever the UI needs it.
+///
+/// **Every line here ships in both languages.** It did not: the whole file was
+/// English string literals, printed straight by `ObjectivesPanel` — so the one
+/// surface in the game that answers *"what should I do next"* answered a Czech
+/// player in English. The bilingual guard walks `GameData`, and none of this is
+/// in `GameData`; it is Swift in an engine, which is exactly the blind spot.
+/// `ObjectivesLanguageTests` closes it.
 public enum ObjectivesEngine {
     /// Returns up to `limit` prioritised objectives.
     public static func current(_ state: WorldState, registry: GameDataRegistry, limit: Int = 6) -> [Objective] {
@@ -20,14 +27,22 @@ public enum ObjectivesEngine {
         return Array(objectives.sorted { $0.priority < $1.priority }.prefix(limit))
     }
 
+    /// One line, said twice. Short enough to keep each objective readable as a
+    /// pair rather than as two paragraphs of ceremony.
+    private static func t(_ en: String, _ cs: String) -> LocalizedText {
+        LocalizedText(values: [.en: en, .cs: cs])
+    }
+
     private static func housingObjectives(_ state: WorldState, registry: GameDataRegistry) -> [Objective] {
         for settlement in state.settlements {
             let capacity = ResourceLoop.housingCapacity(settlement, registry: registry)
             if capacity > 0, settlement.population >= capacity * 0.85 {
+                let now = Int(settlement.population), room = Int(capacity)
                 return [Objective(
                     id: "build_housing",
-                    title: "Build more housing",
-                    detail: "\(settlement.name) is filling up (\(Int(settlement.population))/\(Int(capacity))). Crowding stalls growth and dents morale.",
+                    title: t("Build more housing", "Postavit další bydlení"),
+                    detail: t("\(settlement.name) is filling up (\(now)/\(room)). Crowding stalls growth and dents morale.",
+                              "\(settlement.name) se plní (\(now)/\(room)). V těsnu se přestává rodit a klesá morálka."),
                     progress: min(1, settlement.population / capacity),
                     category: .expand, priority: 4
                 )]
@@ -44,8 +59,9 @@ public enum ObjectivesEngine {
         guard effectiveDefense < 25 else { return [] }
         return [Objective(
             id: "prepare_defense",
-            title: "Prepare your defenses",
-            detail: "Threat is rising and \(capital.name) is poorly defended. Build walls, arm colonists with weapons, or raise the threat away.",
+            title: t("Prepare your defenses", "Připravit obranu"),
+            detail: t("Threat is rising and \(capital.name) is poorly defended. Build walls, arm colonists with weapons, or raise the threat away.",
+                      "Hrozba roste a \(capital.name) je špatně bráněná. Postav hradby, dej lidem do rukou zbraně, nebo hrozbu odvrať."),
             progress: min(1, effectiveDefense / 25),
             category: .colonists, priority: 2
         )]
@@ -55,10 +71,12 @@ public enum ObjectivesEngine {
         var result: [Objective] = []
         let allPawns = state.settlements.flatMap(\.pawns)
         if let hurt = allPawns.filter({ $0.health < 40 }).min(by: { $0.health < $1.health }) {
+            let health = Int(hurt.health)
             result.append(Objective(
                 id: "tend_\(hurt.id)",
-                title: "Tend to \(hurt.name)",
-                detail: "A colonist is badly hurt (health \(Int(hurt.health))). Find care before it's too late.",
+                title: t("Tend to \(hurt.name)", "Ošetřit \(hurt.name)"),
+                detail: t("A colonist is badly hurt (health \(health)). Find care before it's too late.",
+                          "Osadník je těžce zraněný (zdraví \(health)). Sežeň pomoc, než bude pozdě."),
                 progress: hurt.health / 100,
                 category: .colonists, priority: 0
             ))
@@ -66,8 +84,9 @@ public enum ObjectivesEngine {
         if allPawns.contains(where: { $0.isBroken }) {
             result.append(Objective(
                 id: "morale_break",
-                title: "Lift the colony's spirits",
-                detail: "A colonist has broken under the strain. Improve food, rest and morale.",
+                title: t("Lift the colony's spirits", "Zvednout náladu v osadě"),
+                detail: t("A colonist has broken under the strain. Improve food, rest and morale.",
+                          "Někomu to přerostlo přes hlavu. Přidej jídlo, odpočinek a důvod k radosti."),
                 category: .colonists, priority: 1
             ))
         }
@@ -82,43 +101,72 @@ public enum ObjectivesEngine {
             .map { milestone in objective(for: milestone, nextEra: nextEra, state: state, registry: registry) }
     }
 
+    /// What a global stat is called to somebody who does not read the engine.
+    ///
+    /// The era objectives printed the raw key — *"Raise threatLevel to 60"* —
+    /// which is a field name, in English, in a sentence.
+    private static func statName(_ stat: String) -> LocalizedText {
+        switch stat {
+        case "prosperity":       return t("prosperity", "prosperitu")
+        case "stability":        return t("stability", "stabilitu")
+        case "threatLevel":      return t("the threat level", "úroveň hrozby")
+        case "knowledgeOutput":  return t("knowledge output", "přísun vědění")
+        case "influenceOutput":  return t("influence", "vliv")
+        case "population":       return t("population", "počet obyvatel")
+        default:
+            if let resource = ResourceType(rawValue: stat) { return resource.displayNameLocalized }
+            return LocalizedText(stat)
+        }
+    }
+
     private static func objective(
         for milestone: EraMilestone,
         nextEra: Era,
         state: WorldState,
         registry: GameDataRegistry
     ) -> Objective {
-        let eraName = nextEra.rawValue.replacingOccurrences(of: "_", with: " ").capitalized
+        // The age's own name, in the player's language — this used to be the
+        // enum's raw value with the underscores taken out.
+        let eraEN = nextEra.displayName.resolve(.en)
+        let eraCS = nextEra.displayName.resolve(.cs)
         switch milestone {
         case let .techResearched(id):
+            let tech = registry.tech(id)
             return Objective(
                 id: "era_tech_\(id)",
-                title: "Research \(registry.tech(id)?.name.resolve(.en) ?? id)",
-                detail: "A key advance toward the \(eraName) era.",
+                title: t("Research \(tech?.name.resolve(.en) ?? id)",
+                         "Vyzkoumat \(tech?.name.resolve(.cs) ?? id)"),
+                detail: t("A key advance toward the \(eraEN) era.",
+                          "Klíčový krok k éře \(eraCS)."),
                 category: .era, priority: 10
             )
         case let .globalStat(stat, min):
             let current = WorldQuery.globalValue(stat, in: state)
+            let name = statName(stat)
             return Objective(
                 id: "era_stat_\(stat)",
-                title: "Raise \(stat) to \(Int(min))",
-                detail: "Now \(Int(current)). Needed for the \(eraName) era.",
+                title: t("Raise \(name.resolve(.en)) to \(Int(min))",
+                         "Zvednout \(name.resolve(.cs)) na \(Int(min))"),
+                detail: t("Now \(Int(current)). Needed for the \(eraEN) era.",
+                          "Teď \(Int(current)). Bez toho éra \(eraCS) nepřijde."),
                 progress: min > 0 ? current / min : nil,
                 category: .era, priority: 11
             )
         case let .settlementCount(min):
             return Objective(
                 id: "era_settlements",
-                title: "Hold \(min) settlements",
-                detail: "Now \(state.settlements.count). Expand toward the \(eraName) era.",
+                title: t("Hold \(min) settlements", "Držet \(min) osad"),
+                detail: t("Now \(state.settlements.count). Expand toward the \(eraEN) era.",
+                          "Teď \(state.settlements.count). Rozšiř se k éře \(eraCS)."),
                 progress: Double(state.settlements.count) / Double(min),
                 category: .era, priority: 12
             )
         case let .populationTotal(min):
             return Objective(
                 id: "era_population",
-                title: "Grow to \(Int(min)) population",
-                detail: "Now \(Int(state.totalPopulation)). Needed for the \(eraName) era.",
+                title: t("Grow to \(Int(min)) population", "Dorůst na \(Int(min)) duší"),
+                detail: t("Now \(Int(state.totalPopulation)). Needed for the \(eraEN) era.",
+                          "Teď \(Int(state.totalPopulation)). Bez toho éra \(eraCS) nepřijde."),
                 progress: state.totalPopulation / min,
                 category: .era, priority: 12
             )
@@ -130,25 +178,27 @@ public enum ObjectivesEngine {
               !registry.availableTechs(researched: state.researchedTechs).isEmpty else { return [] }
         return [Objective(
             id: "pick_research",
-            title: "Choose a research project",
-            detail: "Your scholars are idle. Pick the next technology to pursue.",
+            title: t("Choose a research project", "Vybrat, co zkoumat"),
+            detail: t("Your scholars are idle. Pick the next technology to pursue.",
+                      "Učenci zahálejí. Vyber jim další věc, po které mají jít."),
             category: .research, priority: 5
         )]
     }
 
     private static func siteObjectives(_ state: WorldState) -> [Objective] {
         guard let site = state.regions.first(where: { $0.hasActiveSite }) else { return [] }
-        let verb: String
+        let verb: LocalizedText
         switch site.kind {
-        case .ruins: verb = "Excavate the ruins"
-        case .dungeon: verb = "Delve the dungeon"
-        case .anomaly: verb = "Probe the anomaly"
-        default: verb = "Investigate"
+        case .ruins:   verb = t("Excavate the ruins", "Prokopat zříceniny")
+        case .dungeon: verb = t("Delve the dungeon", "Sestoupit do podzemí")
+        case .anomaly: verb = t("Probe the anomaly", "Prozkoumat anomálii")
+        default:       verb = t("Investigate", "Podívat se na to")
         }
         return [Objective(
             id: "site_\(site.id)",
-            title: "\(verb) at \(site.name)",
-            detail: "An uncovered site awaits — risk and reward both grow with distance.",
+            title: t("\(verb.resolve(.en)) at \(site.name)", "\(verb.resolve(.cs)) — \(site.name)"),
+            detail: t("An uncovered site awaits — risk and reward both grow with distance.",
+                      "Odkryté místo čeká — čím dál, tím větší riziko i kořist."),
             category: .sites, priority: 20
         )]
     }
@@ -158,8 +208,9 @@ public enum ObjectivesEngine {
               !ExplorationEngine.exploreableRegions(state).isEmpty else { return [] }
         return [Objective(
             id: "explore",
-            title: "Push the frontier",
-            detail: "Unknown land lies just beyond your borders. Send an expedition.",
+            title: t("Push the frontier", "Posunout hranici"),
+            detail: t("Unknown land lies just beyond your borders. Send an expedition.",
+                      "Hned za hranicí leží neprochozená země. Vyprav výpravu."),
             category: .explore, priority: 25
         )]
     }
@@ -168,8 +219,9 @@ public enum ObjectivesEngine {
         guard !ExpansionEngine.foundableRegions(state).isEmpty else { return [] }
         return [Objective(
             id: "found_outpost",
-            title: "Found a new outpost",
-            detail: "Charted land is ready to settle. Expand your reach.",
+            title: t("Found a new outpost", "Založit novou osadu"),
+            detail: t("Charted land is ready to settle. Expand your reach.",
+                      "Zmapovaná země je připravená k osídlení. Rozšiř svůj dosah."),
             category: .expand, priority: 30
         )]
     }
@@ -187,8 +239,9 @@ public enum ObjectivesEngine {
         }) else { return [] }
         return [Objective(
             id: "supply_\(stranded.id)",
-            title: "Supply \(stranded.name)",
-            detail: "\(stranded.name) is cut off from the capital and bleeding stability. Run a trade route or send a caravan.",
+            title: t("Supply \(stranded.name)", "Zásobit \(stranded.name)"),
+            detail: t("\(stranded.name) is cut off from the capital and bleeding stability. Run a trade route or send a caravan.",
+                      "\(stranded.name) je odříznutá od hlavního města a ztrácí stabilitu. Zaveď obchodní cestu nebo pošli karavanu."),
             category: .expand, priority: 27
         )]
     }
@@ -201,8 +254,9 @@ public enum ObjectivesEngine {
         }) else { return [] }
         return [Objective(
             id: "specialise_\(target.id)",
-            title: "Specialise \(target.name)",
-            detail: "Give \(target.name) an economic focus — farming, industry, scholarship, defense or trade — to sharpen its output.",
+            title: t("Specialise \(target.name)", "Zaměřit \(target.name)"),
+            detail: t("Give \(target.name) an economic focus — farming, industry, scholarship, defense or trade — to sharpen its output.",
+                      "Dej osadě \(target.name) zaměření — hospodářství, průmysl, učení, obrana nebo obchod — ať v něčem vyniká."),
             category: .expand, priority: 34
         )]
     }

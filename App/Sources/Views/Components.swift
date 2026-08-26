@@ -42,15 +42,12 @@ extension ResourceType {
     /// "Materials", "Knowledge" in the middle of otherwise Czech sentences, in
     /// every panel that named a resource. The five most-repeated words in the
     /// game were the five that were never translated.
+    ///
+    /// The words themselves live on `ResourceType.displayNameLocalized` in the
+    /// Core, because the engines write sentences that have to name a resource
+    /// too. Two copies of five words is two copies too many (rule 35).
     var displayName: String {
-        let cs = AppStrings.language == .cs
-        switch self {
-        case .food:      return cs ? "jídlo" : "food"
-        case .materials: return cs ? "materiál" : "materials"
-        case .energy:    return cs ? "energie" : "energy"
-        case .knowledge: return cs ? "vědění" : "knowledge"
-        case .influence: return cs ? "vliv" : "influence"
-        }
+        displayNameLocalized.resolve(AppStrings.language)
     }
 
     /// The same, capitalised for the head of a line or a column.
@@ -130,5 +127,49 @@ struct SectionHeader: View {
             .font(.caption.weight(.bold))
             .tracking(1.5)
             .foregroundStyle(Theme.textDim)
+    }
+}
+
+/// A wrapping row: lays its children left to right and drops to a new line
+/// rather than squeezing or running off the edge.
+///
+/// Two places need this and both learned it the hard way. Ingredient lists are
+/// a handful of short chips of unknowable total width; the diplomacy verbs are
+/// up to eight buttons that could not shrink below 56pt and so simply left the
+/// screen. An `HStack` handles neither — it compresses what it can and clips
+/// what it cannot, and a clipped button is a feature the player never finds.
+struct FlowRow: Layout {
+    var spacing: CGFloat = 6
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let maxWidth = proposal.width ?? .infinity
+        var x: CGFloat = 0, y: CGFloat = 0, lineHeight: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
+            if x + size.width > maxWidth, x > 0 {
+                x = 0
+                y += lineHeight + spacing
+                lineHeight = 0
+            }
+            x += size.width + spacing
+            lineHeight = max(lineHeight, size.height)
+        }
+        return CGSize(width: proposal.width ?? x, height: y + lineHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize,
+                       subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX, y = bounds.minY, lineHeight: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
+            if x + size.width > bounds.maxX, x > bounds.minX {
+                x = bounds.minX
+                y += lineHeight + spacing
+                lineHeight = 0
+            }
+            view.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+            x += size.width + spacing
+            lineHeight = max(lineHeight, size.height)
+        }
     }
 }

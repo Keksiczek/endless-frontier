@@ -585,11 +585,10 @@ final class GameViewModel {
         persist()
     }
 
-    func build(_ buildingID: String) {
-        guard let settlement = selectedSettlement else { return }
-        world = GameEngine.build(world, settlementID: settlement.id, buildingID: buildingID, registry: registry)
-        persist()
-    }
+    // `build(_:)` — the drawer's siting-free shortcut into `GameEngine.build`,
+    // which picks the ground itself. `placeBuilding(_:at:)` is the one way in
+    // now: the player says where. The council still uses the engine call
+    // directly, which is right — nobody is watching it choose.
 
     func startNewGame() {
         // A fresh random seed per playthrough → a different procedural world,
@@ -1267,14 +1266,79 @@ final class GameViewModel {
     func focus(pawn id: UUID) { focus(.pawn(id)) }
     func focus(animal id: UUID) { focus(.animal(id)) }
 
+    /// Somebody asked to build, from somewhere that is not the canvas.
+    ///
+    /// **There were two ways to raise a building and they were different
+    /// games.** The canvas has `BuildPickerBar`: filtered by purpose, priced,
+    /// and you choose the ground with a full-size ghost of the footprint on the
+    /// colony you are looking at. The drawer had a second list that called
+    /// `GameEngine.build` directly, so the engine chose the ground at first fit
+    /// and the player never saw where their granary went. The two lists were
+    /// not even the same buildings: the drawer's read `unlockedBuildings`
+    /// alone, so **every early-settlement building — the hut, the farm, the
+    /// things you raise in the first hour — was missing from it.**
+    ///
+    /// One flow now, and it is the good one. This is the same shape as
+    /// `focusRequest`: a request the screen that owns the canvas adopts and
+    /// clears, so one place still decides what the canvas is doing.
+    var buildRequest: Bool = false
+
+    /// Take the player to the build picker on the living canvas.
+    func askToBuild() {
+        tab = .settlement
+        buildRequest = true
+    }
+
     /// The screen an objective is really about.
+    ///
+    /// **Keyed on the objective, not on its category.** The category is a
+    /// grouping for the icon and the colour, and it is far too coarse to
+    /// navigate by: `.expand` covers founding an outpost (the world map),
+    /// building a house (the settlement), supplying a cut-off town (trade) and
+    /// giving a town a focus (the stats card) — and all four went to the world
+    /// map. Three of the four `.expand` objectives sent the player to the wrong
+    /// screen, which is worse than not being a link at all, because the row
+    /// promises to take you there.
+    ///
+    /// Ids are stable and say what the objective *is*, so they are what this
+    /// reads. An id nobody has taught it still falls back to the category.
     func destination(for objective: Objective) -> Tab {
+        switch objective.id {
+        case "build_housing", "prepare_defense", "morale_break":
+            return .settlement
+        case let id where id.hasPrefix("tend_")
+                       || id.hasPrefix("supply_")
+                       || id.hasPrefix("specialise_"):
+            return .settlement
+        default: break
+        }
         switch objective.category {
         case .research: return .science
         case .explore, .expand, .sites: return .world
         case .colonists: return .settlement
         case .era: return .science   // era gates are almost always a tech
         }
+    }
+
+    /// Following an objective, all the way to the thing it is about.
+    ///
+    /// A tab was never the whole answer: "Build more housing" landing on the
+    /// canvas with every drawer shut is the player standing exactly where they
+    /// were, having been told again to build a house. Where an objective names
+    /// a verb the game has a door for, take them through it.
+    func follow(_ objective: Objective) {
+        // The colonist the objective is worried about, selected on the canvas —
+        // "Tend to Wren" is about Wren, and a list of eighty names is not.
+        if objective.id.hasPrefix("tend_"),
+           let id = UUID(uuidString: String(objective.id.dropFirst("tend_".count))) {
+            focus(pawn: id)
+            return
+        }
+        if objective.id == "build_housing" {
+            askToBuild()
+            return
+        }
+        tab = destination(for: objective)
     }
 
     /// True when following this objective means going somewhere else.
@@ -1955,11 +2019,11 @@ final class GameViewModel {
         world.regions.first { $0.id == id }?.name ?? "Unknown"
     }
 
-    var buildableBuildings: [BuildingDefinition] {
-        registry.buildings.values
-            .filter { world.unlockedBuildings.contains($0.id) }
-            .sorted { $0.name.resolve(AppStrings.language) < $1.name.resolve(AppStrings.language) }
-    }
+    // `buildableBuildings` lived here, beside `placeableBuildings`, differing
+    // from it by the missing `|| $0.era == .earlySettlement` — which is to say
+    // it silently dropped the hut, the farm and everything else the first hour
+    // is made of. It fed the drawer's second build list; there is one build
+    // list now. See `buildRequest`.
 
     func techName(_ id: String) -> String {
         registry.tech(id)?.name.resolve(AppStrings.language) ?? id

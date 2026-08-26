@@ -14,8 +14,14 @@ public struct Objective: Sendable, Equatable, Identifiable {
     }
 
     public let id: String
-    public let title: String
-    public let detail: String
+    /// **Both languages.** These were plain `String`s written in English in
+    /// `ObjectivesEngine`, and `ObjectivesPanel` printed them straight — so the
+    /// one panel in the game whose entire job is *"what should I do next"* met
+    /// a Czech player in English. It shipped that way for months because the
+    /// bilingual guard walks `GameData`, and none of this is content: it is
+    /// Swift string literals in an engine, which no test was looking at.
+    public let title: LocalizedText
+    public let detail: LocalizedText
     /// Completion in `0...1` when measurable, else `nil`.
     public let progress: Double?
     public let category: Category
@@ -24,8 +30,8 @@ public struct Objective: Sendable, Equatable, Identifiable {
 
     public init(
         id: String,
-        title: String,
-        detail: String,
+        title: LocalizedText,
+        detail: LocalizedText,
         progress: Double? = nil,
         category: Category,
         priority: Int

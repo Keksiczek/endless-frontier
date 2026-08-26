@@ -20,8 +20,13 @@ struct SettlementDetailSheet: View {
                 if let settlement = game.selectedSettlement {
                     statsCard(settlement)
                 }
-                DrawerSection(label("Construction", "Stavba"), systemImage: "hammer.fill") {
-                    ConstructionPanel(game: game)
+                // Building comes first and is open on arrival. It is the verb
+                // the player reaches for most and it used to be the one buried
+                // deepest — four collapsed sections down, inside a heading
+                // about research.
+                DrawerSection(label("Building", "Stavba"), systemImage: "hammer.fill",
+                              open: true) {
+                    ConstructionPanel(game: game) { dismiss() }
                 }
                 DrawerSection(label("Colonists", "Osadníci"), systemImage: "person.2.fill") {
                     ColonistsPanel(game: game)
@@ -45,17 +50,28 @@ struct SettlementDetailSheet: View {
                 }
                 DrawerSection(label("Objectives", "Cíle"), systemImage: "target") {
                     // Following an objective leaves this sheet behind — it's
-                    // covering the tab the player is being sent to.
-                    ObjectivesPanel(game: game) { destination in
-                        game.tab = destination
-                        dismiss()
-                    }
+                    // covering whatever the player is being sent to.
+                    ObjectivesPanel(game: game) { dismiss() }
                 }
                 DrawerSection(label("Journal", "Deník"), systemImage: "book.fill") {
                     JournalPanel(game: game)
                 }
-                DrawerSection(label("Research & building", "Věda a stavby"), systemImage: "lightbulb.fill") {
-                    TechBuildPanel(game: game)
+                DrawerSection(label("Research", "Věda"), systemImage: "lightbulb.fill") {
+                    ResearchStatusPanel(game: game) { dismiss() }
+                }
+                // **The neighbours, from where the player lives.** Every act of
+                // diplomacy — a gift, a pact, tribute, an envoy, a war — was
+                // reachable only from the World tab, and on a phone only from
+                // an unlabelled tent button in the corner of the map that is
+                // absent until you have met somebody. Keks: *"třeba diplomacie
+                // … je těžké tam něco vydolovat."* The map is still where they
+                // live; this is the second door, in the drawer with the rest of
+                // what the Leader does. Absent when there is nobody to talk to,
+                // rather than an empty heading.
+                if !game.world.tribes.isEmpty {
+                    DrawerSection(label("Neighbours", "Sousedé"), systemImage: "tent.2.fill") {
+                        TribesPanel(game: game)
+                    }
                 }
             }
             .padding(20)
