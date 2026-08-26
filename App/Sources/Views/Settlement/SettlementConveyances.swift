@@ -88,13 +88,23 @@ enum SettlementConveyances {
         let pace = CGFloat(max(0.2, def.pace))
         // A bed grows with what it holds, and stops growing: a lifter that
         // carries forty is not forty times a handcart on the screen.
-        let bed = 0.7 + sqrt(cargo) * 0.42 + jitter(1, 0.14)
-        let depth = 0.34 + sqrt(cargo) * 0.07 + jitter(2, 0.05)
+        //
+        // **In body heights**, which is the unit everything else here is in —
+        // `wheel` is written against "a dray rolls on something the height of a
+        // person" and `s` is the figure's height. The bed was not: at
+        // `0.7 + √cargo × 0.42` a three-sack travois came out **1.4 times a
+        // person's height wide**, which against a body about a quarter of its
+        // height across is a cart five times wider than the man pulling it.
+        // Keks, with a screenshot: *"nese dost velký náklad, zda ok."* It was
+        // not. A handcart is about half a person's height across; a great
+        // wagon is wider than a person is tall, and nothing is wider than that.
+        let bed = 0.30 + sqrt(cargo) * 0.13 + jitter(1, 0.05)
+        let depth = 0.16 + sqrt(cargo) * 0.035 + jitter(2, 0.02)
 
         switch def.kind {
         case .mount:
             return Build(undercarriage: .none, cover: .open, draught: .beast,
-                         bed: 0.9, depth: 0.3, wheel: 0, lift: 0.55 + jitter(3, 0.08))
+                         bed: 0.55, depth: 0.18, wheel: 0, lift: 0.55 + jitter(3, 0.08))
         case .cart:
             // The one real fork inside a class: something with no wheel at all
             // is dragged, and that is the whole of what a travois is. Wheels

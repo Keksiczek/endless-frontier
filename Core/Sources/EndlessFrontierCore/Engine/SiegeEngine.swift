@@ -453,7 +453,7 @@ public enum SiegeEngine {
         // own volley, so the approach is a exchange of fire rather than a walk.
         s = returnFire(s, siege: &siege, field: field, cover: cover,
                        chips: &chips, rng: &rng)
-        strike(&siege, power: power, met: met, rng: &rng)
+        strike(&siege, power: power, met: met, field: field, rng: &rng)
         s = answer(s, siege: &siege, met: met, field: field, cover: cover,
                    chips: &chips, rng: &rng)
         // What the fighting did to what people were holding. A blade that has
@@ -935,14 +935,17 @@ public enum SiegeEngine {
             $0.side == .colony && !$0.down && (power[$0.id]?.ranged ?? 0) > 0
         }
         var total = 0.0
-        // Where the last shaft of this volley struck — the volley is drawn
-        // there rather than at a fixed point on an imaginary wall.
-        var landed: LocalPoint?
-        // …and one beat per *kind* of shot, so a fight in which both bows and
-        // rifles are firing is drawn as both, rather than as whichever archer
-        // happened to be last in the list.
-        var fired: [ProjectileKind: (from: LocalPoint, to: LocalPoint,
-                                     amount: Double, caliber: Double, shots: Int)] = [:]
+        // **One beat per archer**, not one per kind of weapon.
+        //
+        // A step's shooting used to be folded into a single moment per
+        // projectile kind — one from-and-to pair, with a `shots` count on it —
+        // so the canvas drew six arrows along one line at one instant, from a
+        // place chosen as "whoever dealt the most". That is a volley fired by a
+        // machine. Every archer has their own place, their own mark and their
+        // own moment inside the step now, which is the same volley made of
+        // people (rule 18: what is in the simulation is on the canvas).
+        var shots: [(from: LocalPoint, to: LocalPoint, amount: Double,
+                     caliber: Double, shots: Int, sort: ProjectileKind)] = []
         for archer in archers {
             guard let mark = nearest(to: archer.at, among: raiders) else { continue }
             let gap = SiegeField.distance(archer.at, mark.at)
@@ -976,36 +979,35 @@ public enum SiegeEngine {
                 chips[struck, default: 0] += (loosed - shot) * chipPerShotStopped
             }
             guard shot > 0 else { continue }
-            landed = mark.at
-            let dealt = wound(raider: mark.id, by: shot, siege: &siege)
+            // …and the shaft is seen to land: the body it hits knows which way
+            // it came from, so it is thrown by it like any other blow
+            // (`Combatant.struckAtStep`). An arrow that wounds somebody who
+            // then walks on unchanged is the whole of *"měl bys vidět, že šíp
+            // někoho zasáhl."*
+            let dealt = wound(raider: mark.id, by: shot, siege: &siege, from: archer.at)
             total += dealt
-            let sort = arm?.projectile ?? .arrow
-            var seen = fired[sort] ?? (from: archer.at, to: mark.at, amount: 0,
-                                       caliber: arm?.caliber ?? 1, shots: 0)
-            // One beat covers everybody who fired that kind this step, so what
-            // is drawn is how many shots there were: six archers put six
-            // shafts in the air, and one of them puts up one.
-            seen.shots += max(1, arm?.shots ?? 1)
-            // The heaviest exchange of each kind is the one drawn: a volley is
-            // one beat, and the beat should be the part of it worth watching.
-            if dealt >= seen.amount {
-                seen.from = archer.at
-                seen.to = mark.at
-            }
-            seen.amount += dealt
-            fired[sort] = seen
+            shots.append((from: archer.at, to: mark.at, amount: dealt,
+                          caliber: arm?.caliber ?? 1,
+                          shots: max(1, arm?.shots ?? 1),
+                          sort: arm?.projectile ?? .arrow))
         }
-        guard total > 0, landed != nil else { return }
-        // **Where the arrows went.** A volley used to be a bare tally, so the
-        // canvas drew it as arrows off an abstract wall — an effect at a place
-        // nobody was standing. It lands on whoever was shot at, and now leaves
-        // from whoever fired it, which are both positions the fight knows.
-        for sort in ProjectileKind.allCases {
-            guard let shot = fired[sort] else { continue }
+        guard total > 0, !shots.isEmpty else { return }
+        // Spread across a **window** of the step, not across the whole of it.
+        //
+        // A step is fifteen real seconds, so archers spread over all of it read
+        // as somebody shooting continuously — which is the opposite complaint,
+        // and one this project has already answered once. A tenth of a step is
+        // about a second and a half: long enough that no two shafts leave on
+        // the same frame, short enough that the twelve of them are one volley.
+        // Deterministic — the order is the archers' own.
+        for (index, fired) in shots.enumerated() {
+            let within = shots.count == 1
+                ? volleyOpens
+                : volleyOpens + volleyWindow * Double(index) / Double(shots.count - 1)
             siege.moments.append(moment(
-                siege, .volley, amount: shot.amount, spot: shot.to,
-                from: shot.from, projectile: sort,
-                caliber: shot.caliber, shots: shot.shots))
+                siege, .volley, amount: fired.amount, spot: fired.to,
+                from: fired.from, projectile: fired.sort,
+                caliber: fired.caliber, shots: fired.shots, within: within))
         }
     }
 
@@ -1138,7 +1140,7 @@ public enum SiegeEngine {
     /// The line, where it is in contact.
     private static func strike(
         _ siege: inout Siege, power: [UUID: (melee: Double, ranged: Double)],
-        met: Melee, rng: inout SeededRNG
+        met: Melee, field: SiegeField, rng: inout SeededRNG
     ) {
         var total = 0.0
         for pair in met.colony {
@@ -1150,9 +1152,11 @@ public enum SiegeEngine {
         // The wall itself, while somebody is holding it: stakes, a ditch, and
         // stones off the parapet — worth something beyond soaking blows.
         if let first = met.colony.first {
+            // From the wall itself, which is a place: a raider shoved off a
+            // parapet is thrown back from it, not from nowhere.
             total += wound(raider: first.on,
                            by: siege.fortification * fortificationBite * meleePerStep(steps: siege.steps),
-                           siege: &siege)
+                           siege: &siege, from: field.wall)
         }
         guard total > 0 else { return }
         siege.moments.append(moment(siege, .clash, amount: total))
@@ -1669,15 +1673,35 @@ public enum SiegeEngine {
         min(0.995, max(0.005, (Double(step) + 0.5) / Double(max(1, steps))))
     }
 
+    /// When in its step a volley starts, and how long the loosing takes.
+    /// See the note where they are used.
+    static let volleyOpens = 0.30
+    static let volleyWindow = 0.10
+
+    /// Where inside its own step a beat sits, `0…1` across the step.
+    ///
+    /// Everything used to land on the step's midpoint, which is right for a
+    /// tally — one clash a step — and wrong for anything there are *many* of.
+    /// Twelve archers loosing at the same instant is a volley fired by a
+    /// machine; twelve archers loosing across the step is a volley fired by
+    /// twelve people. Keks: *"střely působí jako neživé salvy než výstřely
+    /// jednotlivců, co dohromady salvu udělají."*
+    static func momentPosition(step: Int, of steps: Int, within: Double) -> Double {
+        let span = 1 / Double(max(1, steps))
+        let start = Double(step) * span
+        return min(0.995, max(0.005, start + span * min(1, max(0, within))))
+    }
+
     private static func moment(
         _ siege: Siege, _ kind: BattleMoment.Kind, pawnID: UUID? = nil,
         pawnName: String? = nil, amount: Double = 0, spot: LocalPoint? = nil,
         from: LocalPoint? = nil, projectile: ProjectileKind? = nil,
         caliber: Double? = nil, shots: Int? = nil,
-        part: BodyPartKind? = nil, wound: WoundKind? = nil
+        part: BodyPartKind? = nil, wound: WoundKind? = nil,
+        within: Double = 0.5
     ) -> BattleMoment {
         BattleMoment(id: siege.moments.count,
-                     at: momentPosition(step: siege.step, of: siege.steps),
+                     at: momentPosition(step: siege.step, of: siege.steps, within: within),
                      kind: kind, pawnID: pawnID, pawnName: pawnName, amount: amount,
                      spot: spot, from: from, projectile: projectile,
                      caliber: caliber, shots: shots, part: part, wound: wound)

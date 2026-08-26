@@ -77,4 +77,33 @@ struct WildMotionTests {
                     "a bolt took the whole think, which is not a bolt")
         }
     }
+
+    /// **A beast that "flees" for twenty minutes is a statue in a sprint.**
+    ///
+    /// The think was ten ticks — twenty real minutes — so a bolt was five
+    /// seconds of running followed by nineteen and a half minutes standing
+    /// still in the running pose, and a grazing deer drifted twelve thousandths
+    /// of a valley in that same twenty minutes: about a pixel a minute. Keks:
+    /// *"zvířata prchají, i když okolo nic není, a skoro se nehýbou."*
+    @Test("The wild is asked what it wants often enough for the answer to hold")
+    func thinkingIsOftenEnoughToBeTrue() {
+        // Four real minutes, at two real minutes to the tick.
+        #expect(AnimalEngine.thinkInterval <= 3,
+                "a beast decides once every \(AnimalEngine.thinkInterval * 2) real minutes")
+        // And a grazing beast covers ground the eye can follow: a whole think
+        // spent walking has to add up to more than a pixel a minute on a map a
+        // few hundred pixels across.
+        let perTick = AnimalEngine.stride / Double(AnimalEngine.thinkInterval)
+        #expect(perTick >= 0.004,
+                "a grazing beast drifts \(perTick) of the valley a tick — a statue")
+    }
+
+    @Test("A bolt is over long before the next decision")
+    func aBoltIsShorterThanAThink() {
+        let think = AnimalEngine.thinkInterval * WorldClock.actionStepsPerTick
+        let running = WalkPace.steps(for: AnimalEngine.bolt, pace: AnimalEngine.flight)
+        #expect(running < think,
+                "the run fills the whole think — nothing ever stops running")
+    }
+
 }

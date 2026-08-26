@@ -220,6 +220,87 @@ struct FightGroundTests {
         #expect(struck.contains { $0.side == .raider })
     }
 
+    // MARK: - A volley made of people
+
+    /// A step's shooting used to be folded into **one moment per weapon kind**,
+    /// carrying a shot count and a single from-and-to pair chosen as "whoever
+    /// dealt the most" — so the canvas drew six arrows along one line at one
+    /// instant. Keks: *"střely působí jako neživé salvy než výstřely
+    /// jednotlivců, co dohromady salvu udělají."*
+    @Test("Every archer looses their own shaft, from where they stand")
+    func aVolleyIsMadeOfShots() throws {
+        let registry = try registry()
+        var settlement = Settlement(
+            id: UUID(uuidString: "F16C0000-0000-0000-0000-000000000002")!,
+            name: "Wallside", storage: [.food: 400], storageCapacity: .uniform(2000))
+        settlement.pawns = (0..<16).map {
+            Pawn(id: UUID(uuidString: String(format: "F16C0000-0000-0000-0000-1%011d", $0))!,
+                 name: "Bow \($0)")
+        }
+        settlement.siege = Siege(
+            id: UUID(uuidString: "F16C0000-0000-0000-0000-0000000000FE")!,
+            startTick: 0, openedAt: 0, attackerName: "Kamenní",
+            approach: 0, attackers: 20, openingStrength: 60,
+            fortification: 6, seed: 0xB0F, line: settlement.pawns.map(\.id))
+        for step in 1...6 {
+            settlement = SiegeEngine.advance(settlement, to: step, registry: registry)
+        }
+        let siege = try #require(settlement.siege)
+        let volleys = siege.moments.filter { $0.kind == .volley }
+        #expect(volleys.count > 1, "a whole fight produced \(volleys.count) shots")
+        // Every shaft knows where it came from and where it went, and no two
+        // of them left from the same place at the same instant.
+        #expect(volleys.allSatisfy { $0.from != nil && $0.spot != nil })
+        let stamps = Set(volleys.map { Int($0.at * 10_000) })
+        #expect(stamps.count > 1, "every shot left on the same instant")
+        // …and a volley is still a volley: the shots of one step sit inside a
+        // window of it, not spread across the whole fifteen seconds.
+        let byStep = Dictionary(grouping: volleys) {
+            Int($0.at * Double(siege.steps))
+        }
+        for (_, shots) in byStep where shots.count > 1 {
+            let span = (shots.map(\.at).max() ?? 0) - (shots.map(\.at).min() ?? 0)
+            #expect(span <= (SiegeEngine.volleyWindow + 0.001) / Double(siege.steps),
+                    "one step's shooting is smeared over \(span) of the fight")
+        }
+    }
+
+    @Test("A shaft that wounds is felt where it came from")
+    func arrowsLandOnBodies() throws {
+        let registry = try registry()
+        var settlement = Settlement(
+            id: UUID(uuidString: "F16C0000-0000-0000-0000-000000000003")!,
+            name: "Wallside", storage: [.food: 400], storageCapacity: .uniform(2000))
+        settlement.pawns = (0..<16).map {
+            Pawn(id: UUID(uuidString: String(format: "F16C0000-0000-0000-0000-2%011d", $0))!,
+                 name: "Bow \($0)")
+        }
+        settlement.siege = Siege(
+            id: UUID(uuidString: "F16C0000-0000-0000-0000-0000000000FD")!,
+            startTick: 0, openedAt: 0, attackerName: "Kamenní",
+            approach: 0, attackers: 20, openingStrength: 60,
+            fortification: 6, seed: 0xB0E, line: settlement.pawns.map(\.id))
+        // Far enough in that the bows have opened up, and the check below is
+        // on the **distance** a blow came from rather than on the phase: a
+        // shaft and the wall reach across open ground, an arm does not.
+        for step in 1...5 {
+            settlement = SiegeEngine.advance(settlement, to: step, registry: registry)
+        }
+        let siege = try #require(settlement.siege)
+        let struck = siege.fighters.filter { $0.side == .raider && $0.struckAtStep != nil }
+        #expect(!struck.isEmpty, "nobody in the warband was hit by anything")
+        #expect(struck.allSatisfy { $0.struckFrom != nil },
+                "somebody was wounded from nowhere")
+        // At least one of those blows was struck from further than an arm's
+        // length — which is a shot, and the thing that used to leave no mark on
+        // the body at all.
+        let fromAfar = struck.contains { fighter in
+            guard let from = fighter.struckFrom else { return false }
+            return SiegeField.distance(fighter.at, from) > SiegeEngine.reach * 2
+        }
+        #expect(fromAfar, "every blow landed at arm's length — nothing was shot")
+    }
+
     @Test("In contact, nobody wanders off to hide")
     func theMeleeIsNotAGameOfHideAndSeek() throws {
         let (cover, _) = try walledGround()

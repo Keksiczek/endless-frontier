@@ -1047,10 +1047,23 @@ enum AgentMotion {
     /// "je uvnitř, píše to venku" Keks reported. A job says what is being done
     /// and where; when there is one, it is the answer, and the figure standing
     /// there is standing on it.
+    /// - Parameter housed: whether the colony actually keeps a building for
+    ///   this trade. **The card used to assert one either way**: a craftsman in
+    ///   a colony with no workshop read "Vyrábí u ponku" and a scholar with no
+    ///   library read "Bádá nad svitky", while the figure stood in a field near
+    ///   the middle of town, because that is where `workplace(for:)` puts a
+    ///   worker with nowhere to go. Keks, with two screenshots: *"lidé vyrábí
+    ///   tak, že mávají motykou … bádání nad svitky taky."* The trade was true
+    ///   and the place was a fiction, and a card that names a place the colony
+    ///   has not built is worse than one that says nothing.
     static func activityLabel(_ activity: Activity, work: WorkKind, cs: Bool,
-                              job: Job? = nil, crop: Crop? = nil) -> String {
+                              job: Job? = nil, crop: Crop? = nil,
+                              housed: Bool = true) -> String {
         if activity == .working, let job {
             return jobLabel(job, crop: crop, cs: cs)
+        }
+        if activity == .working, !housed, let open = openAirLabel(work, cs: cs) {
+            return open
         }
         switch activity {
         case .sleeping: return cs ? "Spí doma" : "Asleep at home"
@@ -1082,6 +1095,35 @@ enum AgentMotion {
             case .garrison: return cs ? "Drží hlídku" : "Standing watch"
             case .idle: return cs ? "Postává na návsi" : "Idling on the green"
             }
+        }
+    }
+
+    /// **What a trade looks like with nowhere to do it.**
+    ///
+    /// Only for the trades that need a roof and a bench: a logger and a farmer
+    /// work out of doors by nature and their ordinary line is already true.
+    /// Nil means "the usual line is honest", which is most of them.
+    static func openAirLabel(_ work: WorkKind, cs: Bool) -> String? {
+        switch work {
+        case .crafting:
+            return cs ? "Kutí pod širým nebem — není ponk"
+                      : "Working in the open — there is no bench"
+        case .research:
+            return cs ? "Přemítá — nejsou svitky ani stůl"
+                      : "Thinking it over — no scrolls, no desk"
+        case .cooking:
+            return cs ? "Vaří na ohni pod nebem" : "Cooking over an open fire"
+        case .healing:
+            return cs ? "Obchází nemocné po chalupách"
+                      : "Doing the rounds of the houses"
+        case .priest:
+            return cs ? "Modlí se pod nebem — chrám nestojí"
+                      : "At prayer in the open — no temple stands"
+        case .trade:
+            return cs ? "Smlouvá na návsi — není tržnice"
+                      : "Dealing on the green — there is no market"
+        default:
+            return nil
         }
     }
 

@@ -97,6 +97,10 @@ enum SettlementBattle {
     /// them. A beat is one step, whatever the fight.
     static func momentLife(steps: Int) -> Double { 1 / Double(max(1, steps)) }
 
+    /// How much of a step a shot spends in the air. A step is fifteen real
+    /// seconds and an arrow crosses a field in about one.
+    static let arrowFlight = 0.07
+
     /// The default beat, for a picture with no siege behind it.
     static var momentLife: Double { momentLife(steps: Siege.stepsTotal) }
     static let meleeAt = 0.40
@@ -523,8 +527,16 @@ enum SettlementBattle {
         let beat = momentLife(steps: siege?.steps ?? log.steps)
         for moment in log.moments(upTo: progress) {
             let age = progress - moment.at
-            guard age >= 0, age < beat else { continue }
-            let fade = 1 - age / beat
+            // **A shaft is in the air for about a second, not for a step.**
+            //
+            // A step is fifteen real seconds. One volley beat a step could be
+            // stretched over all of it and read as an arrow crossing the field;
+            // now that every archer has a beat of their own, the same stretch
+            // would hang a dozen shafts in the sky at once. `arrowFlight` is
+            // the share of a step a shot takes to arrive.
+            let life = moment.kind == .volley ? beat * arrowFlight : beat
+            guard age >= 0, age < life else { continue }
+            let fade = 1 - age / life
             switch moment.kind {
             case .volley:
                 // What was actually fired, when the record says. A fight

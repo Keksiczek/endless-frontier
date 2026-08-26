@@ -489,9 +489,14 @@ struct SettlementScreen: View {
         let crop = pawn.currentJob?.cropID.flatMap { id in
             map.crops.first { $0.id == id }
         }
+        // Whether the colony keeps anywhere for this trade at all — a bench, a
+        // library, a kitchen. See `activityLabel(housed:)`.
+        let housed = scene.posts[pawn.id] != nil
+            || !(scene.byTrade[pawn.assignedWork]?.isEmpty ?? true)
         return AgentMotion.activityLabel(pose.activity, work: pawn.assignedWork,
                                          cs: AppStrings.language == .cs,
-                                         job: pawn.currentJob, crop: crop)
+                                         job: pawn.currentJob, crop: crop,
+                                         housed: housed)
     }
 
     /// The colonist's bonds, resolved to living names — spouse first, then the

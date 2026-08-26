@@ -197,6 +197,18 @@ enum SettlementWildlife {
             let at = SettlementRenderer.point(where_, in: rect)
             let ailing = !animal.conditions.isEmpty
                 || animal.health < animal.baseHealth * 0.55
+            // …with one thing the clock **is** allowed to settle: whether the
+            // running is over.
+            //
+            // A think lasts four real minutes and a bolt is over in seconds, so
+            // a beast that fled kept the running pose long after it had stopped
+            // moving — a deer standing perfectly still in a flat sprint with
+            // nothing anywhere near it. Keks: *"zvířata prchají, i když okolo
+            // nic není, a skoro se nehýbou."* The walk knows when it arrived;
+            // a beast that has arrived is watching, not running.
+            let stillRunning = animal.walk.map { continuousStep < Double($0.arrivesAt) } ?? false
+            let doing: AnimalActivity = animal.activity == .fleeing && !stillRunning
+                ? .wary : animal.activity
             // A running beast is drawn running — but *not* by speeding the
             // clock up. `time * urgency` looks right until the activity
             // changes, at which point the phase jumps by (urgency − 1) × time,
@@ -205,8 +217,8 @@ enum SettlementWildlife {
             // or calms down. That snap is the stutter. The clock runs at one
             // rate for everybody and *how far* the legs swing carries the
             // urgency instead.
-            let urgency = animal.activity == .fleeing ? 3.4
-                : (animal.activity == .stalking ? 1.8 : 1.0)
+            let urgency = doing == .fleeing ? 3.4
+                : (doing == .stalking ? 1.8 : 1.0)
             let beat = time
             let s = size(animal) * zoom * (1 + (urgency - 1) * 0.06)
 
@@ -218,7 +230,6 @@ enum SettlementWildlife {
             // flight from a wolf; a hare bolted on a timer with nothing chasing
             // it. The clock's job is *when, within* a pose — a grazing deer
             // still lifts its head now and then — never *which* pose.
-            let doing = animal.activity
             // **The build, not the species.** Eleven names, eight bodies —
             // and a twelfth beast could only ever have come out as the
             // fallback. A species names its build in `animals.json` and is

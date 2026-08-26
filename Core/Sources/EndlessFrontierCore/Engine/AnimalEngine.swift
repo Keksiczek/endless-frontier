@@ -189,9 +189,23 @@ public enum AnimalEngine {
     /// How often the wild thinks, in ticks. A beast does not need a decision
     /// every minute of the year, and offline catch-up replays tens of thousands
     /// of ticks through here.
-    public static let thinkInterval = 10
+    /// **Every two ticks — four real minutes.**
+    ///
+    /// Was ten, which is twenty real minutes, and that one number produced both
+    /// halves of *"zvířata prchají, i když okolo nic není, a skoro se
+    /// nehýbou"*: a beast that bolted spent five seconds running and then stood
+    /// in the `fleeing` pose for the rest of the twenty minutes with nothing
+    /// anywhere near it, and a grazing one drifted twelve thousandths of a
+    /// valley over the same twenty minutes — about a pixel a minute, which is a
+    /// statue. A shorter think is not "more animation": it is the wild being
+    /// asked what it wants often enough for the answer to still be true.
+    public static let thinkInterval = 2
     /// How far a beast covers in one think, at a walk.
-    static let stride = 0.012
+    ///
+    /// Raised with the cadence rather than in spite of it. Twelve thousandths
+    /// over twenty minutes was invisible; twenty thousandths over four is a
+    /// herd you can watch cross a meadow in an afternoon.
+    static let stride = 0.020
     /// A frightened one covers this much instead.
     static let bolt = 0.055
 
