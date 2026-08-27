@@ -3432,3 +3432,53 @@ three. Writing it turned up a fourth source the analysis had missed:
 `star_iron` comes from a **starfall POI cache** on the colony's own local map —
 `LocalPOIKind.cacheItemID`, a real and quite reachable source that is neither a
 recipe nor a `LocalResourceKind`. The test found it; the spreadsheet did not.
+
+## 19. 2026-08-26/27 — played it again: pause, deaths, and people with names
+
+Six complaints in one sitting. Every one named a thing the simulation was
+already doing that the player had no way to reach, stop, or find out about.
+
+### 19.1 — what was said, and what it was
+
+| said | was |
+|---|---|
+| *"věci se dějí ale ty si řekneš: ok, stalo se, nijak neovlivním"* | **the game had no pause.** A card arrived and the colony carried on around it |
+| *"souboje stále jdou přes běžící simulaci"* | same missing thing from the other end |
+| *"raideři nejde je vybrat"* | `RaiderCard` was unreachable — an arm above it in the same chain caught every case it could match (rule 97) |
+| *"raideři nemají žádné vlastní features"* | a `Combatant` had strength and intent and **no name** |
+| *"lidé umřeli na zvěř ale nevím o tom"* | a raid removed the fallen and wrote **nothing**; a mauling was filed `.danger`; the diary had no filter |
+| *"pawni jsou fakt větší než okolní budovy i stromy"* | a colonist stood 8.9pt against a 7.7pt build tile — taller than the hut they live in |
+| *"mělo by to poslat notifikaci"* | `pendingDecisionLine` read one of the two decision queues (rule 98) |
+
+### 19.2 — the pause, and the two traps in it
+
+Ticks come from `lastRealTimestamp` against the wall clock, so a pause that
+merely stops calling `advanceLive` hands the whole paused duration over on
+resume — **a pause would cause the catch-up it exists to prevent.** Resuming
+carries the stamp forward instead.
+
+And the obvious trigger was wrong. Edge-detection across one live tick misses
+the case that matters: most decisions arrive during a *catch-up*, which is
+exactly the state a returning player finds. Keyed on the thing itself, so it
+fires however the thing got here and cannot re-fire the moment you press Resume.
+
+A siege keeps stepping on its own clock while the world is held — the fight is
+the thing you stopped everything else to watch.
+
+### 19.3 — measured, not guessed
+
+`bodyScale` was 0.82 and the eye was right but kinder than the arithmetic: a
+build tile is `baseSpan / baseGrid` = 0.46/24, about **7.7pt at zoom 1**, and a
+grown colonist stood at `10.9 × 0.82 ≈ 8.9pt`. True scale would be near 0.3 and
+would turn people into dots — they carry a face, a tunic in their trade's
+colour and the tool of their work. 0.62 lands a person at seven eighths of a
+tile and just under half a mature tree.
+
+### 19.4 — still open
+
+1. **`ColonyLogEntry.subject` is still mostly unset** — 6 of 75 appends before
+   this, about 14 after. The per-colonist log is only as good as the subjects,
+   and births, comings-of-age and most work lines still set none.
+2. The header wraps on an iPhone once a year carries an annotation
+   (*"a year to remember"*) — cosmetic, visible, unfixed.
+3. Everything in §15.6, §16.3–16.4 and §17.4 still stands.

@@ -954,3 +954,22 @@ fires, do the arithmetic before you rewrite the mechanic.
    centuries. When a lookup has a catch-all arm, write the test that asks *how
    many things land in it* — a fallback is a measurement, not a safety net
    (rules 87, 94).
+97. **A branch under an earlier branch that subsumes it is dead code that
+   compiles.** `RaiderCard` was written, wired into the canvas hit-test and
+   unreachable: its arm asked for `game.siege` to be non-nil, and an arm *above*
+   it in the same `if/else if` chain already caught every case where
+   `game.siege` was non-nil. Tapping a raider selected them and showed the siege
+   command card, every time, for as long as the feature had existed. A long
+   `else if` chain over overlapping conditions is a precedence table nobody
+   wrote down — when adding an arm, check what the arms above it already
+   consume, and prefer ordering by *what the player just did* over ordering by
+   what the world is doing (rules 63, 93).
+98. **Two queues for the same idea, and only one of them wired.** Things waiting
+   on the player's word live in `pendingLawProposal` *and* in `pendingEvents`;
+   `NotificationScheduler.pendingDecisionLine` asked the first and never the
+   second, so the assembly's rare law vote sent a notification and the
+   storyteller's decision cards — the ones a player actually meets — sent
+   nothing. The pause added the same day had the identical bug from the other
+   end: edge-detection across one live tick, when most cards arrive during a
+   catch-up. Whenever a concept has two stores, grep for *both* every time you
+   read either (rules 35, 92).
