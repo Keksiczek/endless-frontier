@@ -131,6 +131,23 @@ translated at some point without the note being updated — do not trust a
 
 ## Running tests
 
+There is a `Makefile` at the root — `make help` lists everything. Two commands
+carry most of the work:
+
+```bash
+make verify-docs
+```
+
+Six mechanical documentation checks (~2 s, no Xcode, no network): FMEA targets,
+links, rule numbering, the engine index, the content tables, and CZ beside EN in
+every line of content. **Run it before every commit** — a stale `Where` cell or
+a content count that has drifted is a failure, not a cosmetic issue.
+
+```bash
+make test          # = cd Core && swift test  (~18 min)
+make test-filter F=Siege
+```
+
 The core is tested without a simulator:
 
 ```bash
@@ -199,8 +216,14 @@ Read these three, in order, when picking work up cold:
    writing a threshold, not after
 3. `docs/BACKLOG.md` — the living plan
 
+**When something is broken, start at `docs/FMEA.md` instead** — the same
+knowledge as `RULES.md`, indexed by the symptom you are staring at rather than
+by the lesson. Its `Where` cells are checked by `make verify-docs`, so they
+point at code that still exists.
+
 | Question | Where |
 |---|---|
+| Something is broken — where has it been before? | **`docs/FMEA.md`** |
 | What does this engine own? | `docs/CODEMAPS/engines.md` |
 | Entity or still a number? | `docs/CODEMAPS/models.md` |
 | Content files and tuning constants | `docs/CODEMAPS/data.md` |

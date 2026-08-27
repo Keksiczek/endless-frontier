@@ -41,7 +41,9 @@ CookingEngine  a cook turns raw → storage[.food]  ( = MEALS, nothing else)
    ↓
 PawnEngine   colonists eat
 ```
-`HuntEngine` yields meat, foraging yields berries — both enter the same chain.
+`FarmEngine` owns the plots and the ripening, `CookingEngine` the pots and the
+bank of effort behind them (rule 21). `HuntEngine` yields meat, foraging yields
+berries — both enter the same chain.
 Two valves: no cookhouse = cooking over the fire at half rate; no cook = eating
 raw off the shelf badly.
 
@@ -100,6 +102,17 @@ shoots** — the first building in the game that acts.
 
 `SeededRNG` (the only randomness), `NameForge`, `GameWorldFactory`,
 `GameDataRegistry` (all JSON loading), `BalanceHarness`, `WorldReport`.
+
+## Ways, ground and orders
+
+| Engine | Owns |
+|---|---|
+| `RoadEngine` | Roads as **per-edge** links. Traffic wears a track in; the council pays to metal the worst country. Saved on `Settlement` — check the `CodingKeys` when adding a field (rule 73). |
+| `PathEngine` | The hex world's walking cost — relief, water, and what a road takes off it. |
+| `MineralEngine` | Ore and stone underfoot: what a deposit holds, and what is left after it is worked. |
+| `StableEngine` | Mounts and draught beasts kept by the colony — the conveyance layer's live half. |
+| `DesignationEngine` | **What the player marked.** A designated tree, rock or lot is worked first; marking never moves a person. |
+| `TribeWarEngine` | A declared war as a *state* — the warband, the raids it sends, the tally, and how it ends. |
 
 ## Cadences (rule 4)
 

@@ -37,6 +37,36 @@ Read in this order when picking work up cold:
 | 3 | [RULES.md](RULES.md) | **102 rules, each of which cost a session.** Read before writing a threshold |
 | 4 | [BACKLOG.md](BACKLOG.md) | **The living record.** What was measured, what was built, what Keks asked for |
 
+## Routing table — by what you are about to do
+
+Not "what is in this directory". **What you are doing → the one file to open.**
+
+| I am about to… | Open | Then |
+|---|---|---|
+| **start cold** | [`../CLAUDE.md`](../CLAUDE.md) | then the newest `HANDOFF-*.md`, and stop — that is enough to talk |
+| **stare at a failure** | [`FMEA.md`](FMEA.md), by symptom | build → §A · a mechanic that never fires → §B · the colony died → §C · content silently missing → §D · the canvas is wrong → §E |
+| **write a threshold** | [`RULES.md`](RULES.md) rules 6, 23, 24, 30 | then §F of `FMEA.md` — the situations, not the symptoms |
+| **add a mechanic and expect it to fire** | [`RULES.md`](RULES.md) rule 6 | write the test named for its *reachability* |
+| **add content** | [`CODEMAPS/data.md`](CODEMAPS/data.md) | CZ + EN in the same change (rule 7); `make verify-docs` checks it without building |
+| **change what the canvas draws** | [`CODEMAPS/app.md`](CODEMAPS/app.md) | rule 18 — ask what in the Core it is a picture *of* |
+| **know a number** | nothing — **run a probe** | [`CODEMAPS/probes.md`](CODEMAPS/probes.md) |
+| **decide what to work on** | [`BACKLOG.md`](BACKLOG.md), newest section | the open list at the end of it |
+| **trust a document** | [`FMEA.md`](FMEA.md) §G | what each doc is good for, and what it is not |
+
+### The command that keeps this honest
+
+```bash
+make verify-docs
+```
+
+Six mechanical checks, no Xcode and no network, about two seconds:
+`FMEA.md`'s `path` · `symbol` cells resolve · every relative link resolves ·
+`RULES.md` is numbered contiguously and its header count is true · every engine
+is named in `CODEMAPS/engines.md` · every `GameData/*.json` parses, is listed in
+`CODEMAPS/data.md` and its entry count there is true · every line of content
+carries `cs` beside `en`. Run it before every commit — it is part of
+`make check`.
+
 ## Reference, by question
 
 | Question | Doc |
@@ -45,6 +75,7 @@ Read in this order when picking work up cold:
 | Why the council built *that* | [COUNCIL.md](COUNCIL.md) |
 | Weapons, volleys, and what a fight is made of | [ARMS_AND_PROJECTILES.md](ARMS_AND_PROJECTILES.md) |
 | Roads, water, bridges, ruins and what rail costs | [ROADS.md](ROADS.md) |
+| A symptom, and where its cause has been before | [FMEA.md](FMEA.md) |
 | What does this engine own? | [CODEMAPS/engines.md](CODEMAPS/engines.md) |
 | Is this an entity or still a number? | [CODEMAPS/models.md](CODEMAPS/models.md) |
 | Where does content live? | [CODEMAPS/data.md](CODEMAPS/data.md) |
@@ -72,7 +103,7 @@ overtaken without being updated, which is exactly how a stale doc does damage.
 Reality as of **2026-08-26 (evening)**: **1581 Core tests in 220 suites** and
 182 App tests, all green; iOS build green. The Core suite runs in ~13 minutes,
 down from ~32 — an allocation per sapling, see §18.
-Content: 56 buildings, **60 techs**, 182 events, 7 biomes, **477 items**,
+Content: **62 buildings**, **60 techs**, 182 events, 7 biomes, **477 items**,
 **420 recipes**. History lives in `BACKLOG.md`; the newest sections are §17 and
 §18. The open list is §15.6, §16.3–16.4 and §17.4.
 

@@ -1,6 +1,6 @@
 # Content — the data files
 
-<!-- Generated 2026-08-13 | 14 files | ~600 tokens -->
+<!-- Generated 2026-08-13 | counts re-verified 2026-08-28 | 21 files | ~700 tokens -->
 
 **All game content is data.** Adding content = adding JSON, not Swift. Everything
 loads through `GameDataRegistry.bundled()`; views never read JSON directly.
@@ -9,19 +9,25 @@ loads through `GameDataRegistry.bundled()`; views never read JSON directly.
 
 | File | Entries | What it defines |
 |---|---|---|
-| `buildings.json` | 56 | Cost, production, footprint, `storage` (typed per resource), `sleepers`/`floors`, `work`, `look`, adjacency |
-| `techs.json` | 37 | The tech DAG. `knowledgeCost`, `requires`, `repeatable` |
+| `buildings.json` | 62 | Cost, production, footprint, `storage` (typed per resource), `sleepers`/`floors`, `work`, `look`, adjacency |
+| `techs.json` | 60 | The tech DAG. `knowledgeCost`, `requires`, `repeatable` |
 | `eras.json` | 5 | Milestones gating each age (tech / stat / population / settlements) |
 | `biomes.json` | 7 | plains, forest, desert, tundra, mountains, coast, wetlands |
 | `events.json` | 182 | Storyteller templates — conditions, weights, effects, choices |
-| `items.json` | 337 | Equipment, materials, artifacts. Rarity, slots, combat profile |
-| `recipes.json` | 311 | `outputItemID` ← `materials` + `requiresBuilding` |
+| `items.json` | 477 | Equipment, materials, artifacts. Rarity, slots, combat profile |
+| `recipes.json` | 420 | `outputItemID` ← `materials` + `requiresBuilding` |
 | `meals.json` | 47 | What a cook can make out of the harvest |
 | `laws.json` | 30 | What the assembly votes on. `modifiers`, and `vote_bias`: the four genes, `poor_favour`, and `trade_favour` — what the law is worth to each trade's living |
 | `cults.json` | 21 | Faiths a temple can seed |
 | `plagues.json` | 17 | Illnesses |
 | `quests.json` | 7 | Multi-stage chains |
 | `motions.json` | 129 | **How a body moves.** Each part of the figure as a wave (`amplitude`/`frequency`/`phase`), plus `lean`, `bob`, `slouch`, `reach`. `serves_activities` + `serves_work` say which colonists it may be chosen for — without those a clip loads and is never seen |
+| `animals.json` | 11 | The wild and the tamed as **kinds**: `build`, diet, size, `baseHealth`, comfort band, biomes, `tameability` |
+| `flora.json` | 8 | Trees as data (rule 95): `crown`, `timber`, `maturityTicks`, `hardiness`, biomes |
+| `conveyances.json` | 46 | Mounts and vehicles in one bank — `riders`, `cargo`, `pace`, `region_pace`, `terrain` |
+| `fittings.json` | 117 | What stands **inside** a building: `shape`, `role`, `tint`, which `rooms` and which `eras` |
+| `ground.json` | 20 | The ground's own colours and textures, read by the canvas (rule 9 — opaque) |
+| `scenery.json` | 23 | The colours of everything scattered over the ground |
 | `map-gen.json` | 11 keys | Hex world generation tuning |
 | `world-config.json` | 8 groups | **Every tuning constant** — see below |
 
