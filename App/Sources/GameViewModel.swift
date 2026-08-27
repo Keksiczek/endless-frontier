@@ -1892,9 +1892,66 @@ final class GameViewModel {
         for group in RecipeGroup.allCases {
             let members = all.filter { group.contains($0, registry: registry) }
             guard !members.isEmpty else { continue }
-            buckets.append((group.title, byAffordability(members)))
+            buckets.append((group.title, byAffordability(oneRoutePerThing(members))))
         }
         return buckets
+    }
+
+    /// **One row per thing you can make**, not one per way of making it.
+    ///
+    /// Measured over the shipped book: 240 of the 420 recipes make something
+    /// another recipe already makes — 107 items have two or more routes, and 79
+    /// of those have them in the *same age*, so the panel showed "Sew Hide
+    /// Vest" directly above "Stitch Hide Vest" and left the player to work out
+    /// they were the same garment. Folding on the output takes the first age's
+    /// list from 212 rows to 151 and the whole book from 420 to 287, and it
+    /// throws no content away: the route shown is simply the one the colony
+    /// would actually take.
+    ///
+    /// Deliberately not applied to a search. Somebody typing a recipe's name
+    /// is asking for that recipe, and a fold that answers with its sibling is
+    /// a search that lies.
+    private func oneRoutePerThing(_ recipes: [RecipeDefinition]) -> [RecipeDefinition] {
+        var best: [String: RecipeDefinition] = [:]
+        for recipe in recipes {
+            guard let standing = best[recipe.outputItemID] else {
+                best[recipe.outputItemID] = recipe
+                continue
+            }
+            if prefer(recipe, over: standing) { best[recipe.outputItemID] = recipe }
+        }
+        return Array(best.values)
+    }
+
+    /// Which of two ways to the same thing the bench should be offered.
+    ///
+    /// What the colony can do now beats what it cannot; after that the cheaper
+    /// one, counted in everything it spends. The id breaks the tie so the row
+    /// does not swap under a thumb when a hauler drops off an ingot.
+    private func prefer(_ a: RecipeDefinition, over b: RecipeDefinition) -> Bool {
+        let (ca, cb) = (canCraft(a), canCraft(b))
+        if ca != cb { return ca }
+        let (pa, pb) = (price(of: a), price(of: b))
+        if pa != pb { return pa < pb }
+        return a.id < b.id
+    }
+
+    /// Everything a recipe spends, in one number — materials off the shelf
+    /// count for more than the generic cost, because they are the half a colony
+    /// actually runs out of.
+    private func price(of recipe: RecipeDefinition) -> Double {
+        // `allCases` rather than the dictionary's own order: a sum walked in a
+        // hash order rounds differently on a replay, and a row that swaps for
+        // that reason is rule 85 in a list (`AssemblyEngine` paid for it once).
+        let spent = ResourceType.allCases.reduce(0.0) { $0 + recipe.resourceCost[$1] }
+        return spent + 5 * Double(recipe.materials.values.reduce(0, +))
+    }
+
+    /// How many ways the colony knows to make this thing right now. One is the
+    /// ordinary answer and the row says nothing; more, and the row says so, or
+    /// the fold above would look like missing content.
+    func waysToMake(_ recipe: RecipeDefinition) -> Int {
+        recipesHere.count { $0.outputItemID == recipe.outputItemID }
     }
 
     private var searchTitle: String {

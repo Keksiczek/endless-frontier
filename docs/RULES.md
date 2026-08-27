@@ -1,6 +1,6 @@
 # Rules — what has already gone wrong, and must not again
 
-<!-- Extracted from BACKLOG.md 2026-08-13 | 39 rules -->
+<!-- Extracted from BACKLOG.md 2026-08-13 | 101 rules -->
 
 **Every one of these cost a session at least once.** They are the project's
 troubleshooting guide and its lessons learned in one list: when something in the
@@ -973,3 +973,40 @@ fires, do the arithmetic before you rewrite the mechanic.
    end: edge-detection across one live tick, when most cards arrive during a
    catch-up. Whenever a concept has two stores, grep for *both* every time you
    read either (rules 35, 92).
+99. **A count of call sites is not a measurement of coverage.** The plan was to
+   set `ColonyLogEntry.subject` on the sixty appends that had none, on the
+   strength of *15 of 76*. Measured, the sites that fire most already set one:
+   **113–125 of the 140 entries a journal holds name a person**, and half the
+   colony has a non-empty history at any moment. What was missing was not
+   subjects but *keeping* — `ColonyLog` is one 140-entry ring for the whole
+   town, so it spans 8.5 in-game years at year 10 and **1.0 at year 200**, with
+   118 of the 140 taken up by chatter. Of any "N of M are set" argument, ask how
+   often each of the M actually runs: a static count over call sites weights a
+   line that fires twice a century the same as one that fires twice a day. The
+   fix belonged one layer down — a moment that is a person's life is filed on
+   the person (`Pawn.keepsakes`) and leaves the ring behind.
+100. **Content that looks lazily gated may simply be early.** 245 of 420 recipes
+   carried no `requiresTech` and the shallow end was the least gated — which
+   reads as a generator that got sloppier the earlier it went, and is not.
+   Ungated arms run damage 1–14 with a p75 of **4**; the tier bands read off the
+   recipes that *do* carry a tech (damage p50 3 / 4 / 14 / 18 / 16 / 36 across
+   the six ages) put nearly every ungated recipe exactly where it already sat.
+   Deriving a gate from chain depth would have pushed stone axes and grass hats
+   into the medieval era, which is rule 66's failure in reverse: content nobody
+   ever meets, because by the time it is legal it is worthless. **Learn the
+   ladder from the half of the content that already has one** before writing a
+   formula for the half that does not — and when the measurement says the data
+   is right, the fault is somewhere else. Here it was the *bench*: `workshop` is
+   a medieval building holding 98 first-age recipes, and no general bench exists
+   before it, so crafting arrives as an avalanche no tech gate could smooth.
+101. **A row per way is not a row per thing.** 240 of 420 recipes make something
+   another recipe already makes — 107 items with two or more routes, 79 of them
+   in the same age — so a panel that lists recipes shows "Sew Hide Vest" above
+   "Stitch Hide Vest" and the player is left to work out they are one garment.
+   The list a player scans is a list of *things they can have*; the route is an
+   implementation detail, and the right one to show is the one the colony would
+   actually take. Folding on the output took the first age from 212 rows to 151
+   and the book from 420 to 287 without deleting a line of content. Two riders:
+   say how many ways there are, or a shorter list reads as content gone missing;
+   and never fold a **search**, because somebody typing a name is asking for
+   that row and a fold answers with its sibling.

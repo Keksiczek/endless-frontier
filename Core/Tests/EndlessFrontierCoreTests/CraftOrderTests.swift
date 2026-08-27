@@ -99,7 +99,9 @@ struct CraftOrderTests {
             var s = try workshop(crafters: crafters, skill: skill)
             s = CraftingEngine.place(s, recipeID: "craft_plate_armor", count: 4,
                                      tick: 0, registry: try registry())
-            let after = try work(s, ticks: 40)
+            // Plate is early-industrial work now — it used to be a workshop and
+            // nothing else, which is what made it the cheapest plate in the game.
+            let after = try work(s, ticks: 40, researched: ["machining"])
             let order = after.craftOrders.first
             return Double(order?.made ?? 4) + (order?.progress ?? 0) / 100
         }
@@ -188,18 +190,18 @@ struct CraftOrderTests {
         var s = try workshop()
         s = CraftingEngine.place(s, recipeID: "craft_plate_armor", count: 2,
                                  tick: 0, registry: reg)
-        s = try work(s, ticks: 10)
+        s = try work(s, ticks: 10, researched: ["machining"])
         let banked = try #require(s.craftOrders.first).progress
         #expect(banked > 0)
 
         let id = try #require(s.craftOrders.first).id
         s = CraftingEngine.setPaused(s, orderID: id, paused: true)
-        s = try work(s, ticks: 40)
+        s = try work(s, ticks: 40, researched: ["machining"])
         #expect(abs((s.craftOrders.first?.progress ?? 0) - banked) < 0.001,
                 "a paused order neither advances nor forgets")
 
         s = CraftingEngine.setPaused(s, orderID: id, paused: false)
-        s = try work(s, ticks: 10)
+        s = try work(s, ticks: 10, researched: ["machining"])
         #expect((s.craftOrders.first?.progress ?? 0) > banked
                 || (s.craftOrders.first?.made ?? 0) > 0)
     }
@@ -299,8 +301,10 @@ struct CraftOrderTests {
                                  tick: 0, registry: reg)
         s = CraftingEngine.place(s, recipeID: "craft_plate_armor", count: 4,
                                  tick: 1, registry: reg)
+        // **Both orders have to be workable**, or this passes on the plate
+        // being out of reach rather than on the queue being the shop's (rule 86).
         let benches = CraftingEngine.workableBenches(
-            at: s, researched: [], registry: reg)
+            at: s, researched: ["machining"], registry: reg)
         #expect(benches.count == 1)
     }
 
@@ -430,7 +434,7 @@ struct CraftOrderTests {
         var s = try workshop()
         s = CraftingEngine.place(s, recipeID: "craft_plate_armor", count: 3,
                                  tick: 0, registry: try registry())
-        s = try work(s, ticks: 12)
+        s = try work(s, ticks: 12, researched: ["machining"])
 
         let back = try JSONDecoder().decode(
             Settlement.self, from: try JSONEncoder().encode(s))

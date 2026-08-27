@@ -3482,3 +3482,117 @@ tile and just under half a mature tree.
 2. The header wraps on an iPhone once a year carries an annotation
    (*"a year to remember"*) — cosmetic, visible, unfixed.
 3. Everything in §15.6, §16.3–16.4 and §17.4 still stands.
+
+## 20. 2026-08-27 — the memory, and a recipe book that was already right
+
+Two of the five jobs in `HANDOFF-2026-08-27.md`. Both were written as small
+sure things and both turned out to be aimed at the wrong half, which is now the
+third time in a row a probe has moved the work before it started (rules 23, 90).
+
+### 20.1 — the colonist's own history: subjects were never the shortage
+
+The handoff: *"15 of 76 `journal.append` calls set a subject"*, so set the rest.
+`MemoryProbe` (new, seed 4242, two centuries) says what that would have bought:
+
+```
+year   pop  held  spanY  subj  withHist  p50  p90  max
+  10    15   140    8.5   113  15 (100%)    8   10   11
+ 100    69   140    2.0   111   59 (85%)    2    3    4
+ 200   195   140    1.0   124  101 (51%)    1    2    3
+```
+
+`subj` is how many of the 140 entries the journal holds already name a person:
+**113–125 of 140**, at every reading. The share of living colonists with a
+non-empty history never drops below half. The call-site count was a bad proxy,
+because the sites that fire most already set a subject.
+
+What is actually missing is *keeping*. `ColonyLog.capacity` is 140 entries for
+the whole colony, so the ring spans **8.5 in-game years at year 10 and 1.0 at
+year 200** — and by kind, 118 of those 140 are people chatting by the well. A
+colonist's card was showing last spring's gossip, median one line, and could not
+show their wedding because the wedding had scrolled off.
+
+So a moment that belongs to a person is filed on the person. `Pawn.keepsakes`,
+twelve of them, dies with them (no cleanup to forget — rule 33), decodes empty
+out of an older save (rules 3, 37) and is in the coding keys with a round-trip
+test that carries a value (rule 73). `Settlement.note` is the single door —
+journal always, people when it is theirs — and `ColonyLog.append` is no longer
+public, because two call sites filing one moment by hand is rule 92 waiting.
+
+Kept: birth (the child and both parents), coming of age, the end of an
+apprenticeship, a first friendship, a friendship curdling, a wedding, a
+betrothal at the midsummer fire, the first case of a plague, being gored and
+living, an event that fell on somebody by name, mourning, the day a captive
+stopped being one. **Chatter is not kept** — that is the whole distinction, and
+it is not derivable from `Kind`, which is why `keptBy:` is written at the call
+site rather than inferred.
+
+Two lines that named a person and set no subject now do: the mourner (they are
+the one still standing somewhere) and the settlers who came up the road.
+
+### 20.2 — the crafting gate: the book was already tiered
+
+The handoff: 245 of 420 recipes carry no `requiresTech`, depth 1 is 73%
+ungated, so *"the generation got lazier the earlier it went"* — derive a gate
+from material chain depth. Measured before writing one, and the premise is
+backwards. The ungated recipes are ungated because **they are first-age
+content**: ungated arms run damage 1–14 with p75 = 4, and the tier bands read
+off the recipes that *do* carry a tech (damage p50: 3 in the first age, 4
+ancient, 14 medieval, 18 early industrial, 16 modern, 36 near future) put them
+exactly where they already sit. Gating them by depth would have pushed stone
+axes and grass hats into the medieval era and made them content nobody meets.
+
+Against those bands the whole shipped book has **five** faults, now fixed:
+
+| recipe | makes | was | is |
+|---|---|---|---|
+| `craft_chainmail` | mail | *no bench, no study, 2 iron ingots* | workshop + `masters_and_journeymen` |
+| `craft_plate_armor` | plate | workshop, no study | + `machining` |
+| `craft_warden_plate` | plate | workshop + `scholarship` | + `machining` |
+| `craft_bronze_spear` | 6 damage | no bench, no study, **no materials** | bloomery + `bronze_tools` |
+| `manufacture_service_rifle` | 24 damage | factory + `machining` | + `mass_production` |
+
+Three guards, and the negative check was run on each: `ContentTests` now asserts
+no weapon or armour arrives before the age its damage or its material belongs
+to, and — the one worth keeping longest — **nothing is gated later than
+something that needs it**, which is §18's fault (`strong_plant_fibers`) stated
+as an invariant instead of as a list.
+
+**What the wall actually is**, measured: 212 of the 420 recipes are makeable in
+the first age, and 120 more arrive the day the workshop goes up — because
+`workshop` is a **medieval** building and 98 of its 123 recipes are first-age
+crafts (bone chisels, grass hats, hide caps, stone-tipped spears). There is no
+general crafting bench before the medieval era at all; early crafting happens at
+the `hut`. That is the avalanche, and it is a *building* problem, not a tech
+one: gating a bone chisel on `basic_tools` changes nothing, because by the time
+the workshop exists the early techs are two ages old. **Left for a session of
+its own** (see §20.4).
+
+### 20.3 — one row per thing
+
+The other half of *"crafteni je moc velké"*, and the one that was cheap. 240 of
+the 420 recipes make something another recipe already makes: 107 items have two
+or more routes and 79 of those have them in the same age, so the panel showed
+"Sew Hide Vest" directly above "Stitch Hide Vest". The list folds on the output
+now — first age 212 rows → 151, whole book 420 → 287 — showing the route the
+colony would actually take (what it can do now, then the cheaper), with a
+`2 ways` note so the fold reads as tidying rather than as content gone missing.
+A search is deliberately **not** folded: somebody typing a recipe's name is
+asking for that recipe.
+
+Also counted and left alone: **19 recipes are strictly dominated** — a cheaper
+route to the same item arrives an age earlier — so they can never be chosen.
+The fold makes them harmless; deleting them is a content decision.
+
+### 20.4 — still open
+
+1. **The workshop avalanche** (§20.2). The honest fix is that a recipe sits at
+   the bench its own age has: either an early general bench, or the 98 first-age
+   workshop recipes re-homed to hut / hunters_lodge / cookhouse / lumberyard.
+   Measured and not attempted, because it moves a third of the book and wants a
+   run either side of it (rule 72 — one change per measurement).
+2. `SettlementRenderer.swift` 2822 lines, `GameViewModel.swift` ~2000.
+3. The iron half of the chain has never been measured (`WoodProbe` has no iron
+   columns).
+4. The status header wraps on an iPhone when a year carries an annotation.
+5. Everything in §15.6, §16.3–16.4 and §17.4 that is not listed above.

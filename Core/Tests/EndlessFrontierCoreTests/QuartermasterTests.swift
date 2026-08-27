@@ -16,7 +16,17 @@ struct QuartermasterTests {
 
     private func registry() throws -> GameDataRegistry { try GameDataRegistry.bundled() }
 
-    /// A settlement with hands, a full store and nothing on anybody's back.
+    /// A settlement with hands, a full store, raw stuff on the shelf and
+    /// nothing on anybody's back.
+    ///
+    /// The shelf is the part that used to be missing and did not show: the
+    /// quartermaster's answer for a colony with nothing on it was
+    /// `craft_bronze_spear`, which took **no materials at all** — a bronze
+    /// spear out of fifteen generic materials, no bench, no study. That recipe
+    /// is a bloomery and `bronze_tools` now, so a colony arms itself out of what
+    /// it has gathered, which is what every other early recipe already asked
+    /// for. Rule 89: a fixture that omits what the feature reads tests the
+    /// fallback.
     private func bareColony(
         _ registry: GameDataRegistry, hands: Int = 6,
         work: WorkKind = .farming, materials: Double = 400
@@ -25,6 +35,11 @@ struct QuartermasterTests {
             id: UUID(uuidString: "0A47E12A-0000-0000-0000-000000000001")!,
             name: "Bare",
             storage: [.materials: materials, .food: 400], storageCapacity: .uniform(500))
+        s.stockpile["wood"] = 20
+        s.stockpile["rough_stone"] = 20
+        s.stockpile["hide"] = 20
+        s.stockpile["leather"] = 20
+        s.stockpile["timber_bundle"] = 20
         for i in 0..<hands {
             var p = Pawn(id: UUID(uuidString: String(
                 format: "0A47E12A-1111-0000-0000-%012d", i))!, name: "Hand \(i)")
@@ -77,10 +92,13 @@ struct QuartermasterTests {
     @Test("A thin store buys no weapons")
     func theBuildersKeepTheirMaterials() throws {
         let reg = try registry()
-        let w = world(bareColony(reg, materials: 6), reg)
+        // Under twice the cheapest gear the colony could work — `reserve` is 1,
+        // so the rule is "spend it only if the same again is left behind", and
+        // the cheapest thing on this shelf is three materials.
+        let w = world(bareColony(reg, materials: 2), reg)
         let after = QuartermasterEngine.orderWhatIsBare(w, index: 0, registry: reg)
         #expect(after.settlements[0].craftOrders.isEmpty,
-                "six materials in the store and the colony ordered gear with them")
+                "two materials in the store and the colony ordered gear with them")
     }
 
     @Test("One person short of a coat is not a quartermaster's problem")

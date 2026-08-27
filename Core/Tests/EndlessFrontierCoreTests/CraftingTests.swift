@@ -22,21 +22,24 @@ struct CraftingTests {
     @Test("A no-building recipe crafts when materials and resources suffice")
     func basicCraft() throws {
         let r = try reg()
-        let world = capital(materials: ["iron_ingot", "iron_ingot"])   // chainmail needs 2 iron + 25 materials
-        #expect(CraftingEngine.canCraft(r.recipes["craft_chainmail"]!, in: world, registry: r))
-        let after = BenchTestSupport.craft(world, recipeID: "craft_chainmail", registry: r)
+        // Chainmail used to be the sample here, and it was the sample because
+        // it was the bug: mail out of two ingots with no bench and no study.
+        // A leather garb is what a colony with no workshop can honestly make.
+        let world = capital(materials: ["leather", "leather"])   // 2 leather + 10 materials
+        #expect(CraftingEngine.canCraft(r.recipes["craft_leather_garb"]!, in: world, registry: r))
+        let after = BenchTestSupport.craft(world, recipeID: "craft_leather_garb", registry: r)
         // Materials consumed, output added.
-        #expect(!after.settlements[0].inventory.contains { $0.definitionID == "iron_ingot" })
-        #expect(after.settlements[0].inventory.contains { $0.definitionID == "chainmail" })
-        #expect(after.settlements[0].storage[.materials] == 75)   // 100 - 25
+        #expect(!after.settlements[0].inventory.contains { $0.definitionID == "leather" })
+        #expect(after.settlements[0].inventory.contains { $0.definitionID == "leather_garb" })
+        #expect(after.settlements[0].storage[.materials] == 90)   // 100 - 10
     }
 
     @Test("Crafting fails without the required materials")
     func missingMaterials() throws {
         let r = try reg()
-        let world = capital(materials: ["iron_ingot"])   // only 1, needs 2
-        #expect(!CraftingEngine.canCraft(r.recipes["craft_chainmail"]!, in: world, registry: r))
-        let after = BenchTestSupport.craft(world, recipeID: "craft_chainmail", registry: r)
+        let world = capital(materials: ["leather"])   // only 1, needs 2
+        #expect(!CraftingEngine.canCraft(r.recipes["craft_leather_garb"]!, in: world, registry: r))
+        let after = BenchTestSupport.craft(world, recipeID: "craft_leather_garb", registry: r)
         // Nothing is made, and nothing is spent. The whole state is no longer
         // identical — an order *does* go on the bench, and stays there waiting
         // for the second ingot, which is the point of a queue.
@@ -71,9 +74,9 @@ struct CraftingTests {
     @Test("Crafting is deterministic")
     func deterministic() throws {
         let r = try reg()
-        let world = capital(materials: ["iron_ingot", "iron_ingot"])
-        let a = BenchTestSupport.craft(world, recipeID: "craft_chainmail", registry: r)
-        let b = BenchTestSupport.craft(world, recipeID: "craft_chainmail", registry: r)
+        let world = capital(materials: ["leather", "leather"])
+        let a = BenchTestSupport.craft(world, recipeID: "craft_leather_garb", registry: r)
+        let b = BenchTestSupport.craft(world, recipeID: "craft_leather_garb", registry: r)
         #expect(a == b)
     }
 

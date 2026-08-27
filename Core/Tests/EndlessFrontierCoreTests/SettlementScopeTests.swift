@@ -65,21 +65,21 @@ struct SettlementScopeTests {
     @Test("Crafting consumes the selected settlement's materials, not the capital's")
     func craftConsumesTargetSettlement() throws {
         let r = try reg()
-        // Only the outpost holds the iron; chainmail needs 2 iron + 25 materials.
+        // Only the outpost holds the leather; a garb needs 2 leather + 10 materials.
         let world = twoSettlements(
             capitalMaterials: 0, outpostMaterials: 100,
-            outpostInventory: ["iron_ingot", "iron_ingot"]
+            outpostInventory: ["leather", "leather"]
         )
         let outpostID = world.settlements[1].id
 
-        #expect(CraftingEngine.canCraft(r.recipes["craft_chainmail"]!, in: world,
+        #expect(CraftingEngine.canCraft(r.recipes["craft_leather_garb"]!, in: world,
                                         settlementID: outpostID, registry: r))
-        let after = BenchTestSupport.craft(world, recipeID: "craft_chainmail",
+        let after = BenchTestSupport.craft(world, recipeID: "craft_leather_garb",
                                      settlementID: outpostID, registry: r)
 
-        #expect(after.settlements[1].inventory.contains { $0.definitionID == "chainmail" })
-        #expect(!after.settlements[1].inventory.contains { $0.definitionID == "iron_ingot" })
-        #expect(after.settlements[1].storage[.materials] == 75)   // 100 - 25
+        #expect(after.settlements[1].inventory.contains { $0.definitionID == "leather_garb" })
+        #expect(!after.settlements[1].inventory.contains { $0.definitionID == "leather" })
+        #expect(after.settlements[1].storage[.materials] == 90)   // 100 - 10
         #expect(after.settlements[0].inventory.isEmpty)           // capital untouched
     }
 
@@ -88,7 +88,7 @@ struct SettlementScopeTests {
         let r = try reg()
         let world = twoSettlements(
             capitalMaterials: 100, outpostMaterials: 100,
-            outpostInventory: ["iron_ingot", "iron_ingot"]
+            outpostInventory: ["leather", "leather"]
         )
         let capitalID = world.settlements[0].id
         let outpostID = world.settlements[1].id
@@ -96,8 +96,8 @@ struct SettlementScopeTests {
         let outpostIDs = Set(CraftingEngine.availableRecipes(world, settlementID: outpostID, registry: r).map(\.id))
         let capitalIDs = Set(CraftingEngine.availableRecipes(world, settlementID: capitalID, registry: r).map(\.id))
 
-        #expect(outpostIDs.contains("craft_chainmail"))   // outpost has the iron
-        #expect(!capitalIDs.contains("craft_chainmail"))  // capital has none
+        #expect(outpostIDs.contains("craft_leather_garb"))   // outpost has the leather
+        #expect(!capitalIDs.contains("craft_leather_garb"))  // capital has none
     }
 
     @Test("Crafting at different settlements yields distinct item ids")
@@ -105,16 +105,16 @@ struct SettlementScopeTests {
         let r = try reg()
         let world = twoSettlements(
             capitalMaterials: 100, outpostMaterials: 100,
-            capitalInventory: ["iron_ingot", "iron_ingot"],
-            outpostInventory: ["iron_ingot", "iron_ingot"]
+            capitalInventory: ["leather", "leather"],
+            outpostInventory: ["leather", "leather"]
         )
         let capitalID = world.settlements[0].id
         let outpostID = world.settlements[1].id
 
-        let a = BenchTestSupport.craft(world, recipeID: "craft_chainmail", settlementID: capitalID, registry: r)
-        let b = BenchTestSupport.craft(world, recipeID: "craft_chainmail", settlementID: outpostID, registry: r)
-        let aID = a.settlements[0].inventory.first { $0.definitionID == "chainmail" }?.id
-        let bID = b.settlements[1].inventory.first { $0.definitionID == "chainmail" }?.id
+        let a = BenchTestSupport.craft(world, recipeID: "craft_leather_garb", settlementID: capitalID, registry: r)
+        let b = BenchTestSupport.craft(world, recipeID: "craft_leather_garb", settlementID: outpostID, registry: r)
+        let aID = a.settlements[0].inventory.first { $0.definitionID == "leather_garb" }?.id
+        let bID = b.settlements[1].inventory.first { $0.definitionID == "leather_garb" }?.id
         #expect(aID != nil && bID != nil)
         #expect(aID != bID)   // settlement index folds into the deterministic seed
     }

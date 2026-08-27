@@ -353,8 +353,11 @@ struct CraftingPanel: View {
                         .foregroundStyle(ready ? Theme.accent : Theme.textDim)
                 }
                 ingredients(recipe)
-                Label(game.craftTimeLabel(recipe), systemImage: "hourglass")
-                    .font(.caption2).foregroundStyle(Theme.textDim)
+                HStack(spacing: 8) {
+                    Label(game.craftTimeLabel(recipe), systemImage: "hourglass")
+                        .font(.caption2).foregroundStyle(Theme.textDim)
+                    routesNote(recipe)
+                }
             }
             Spacer(minLength: 0)
             // Ordering, not conjuring. The old button made the thing appear out
@@ -369,6 +372,22 @@ struct CraftingPanel: View {
         .padding(.vertical, 8).padding(.horizontal, 10)
         .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .opacity(ready ? 1 : 0.75)
+    }
+
+    /// **The list is one row per thing, not one per way of making it.**
+    ///
+    /// 240 of the shipped 420 recipes make something another recipe already
+    /// makes, so the panel used to put "Sew Hide Vest" straight above "Stitch
+    /// Hide Vest" and leave the player to notice they were one garment. The row
+    /// shows the route the colony would take; this says how many it knows, so
+    /// the fold reads as tidying rather than as content gone missing.
+    @ViewBuilder
+    private func routesNote(_ recipe: RecipeDefinition) -> some View {
+        let ways = game.waysToMake(recipe)
+        if ways > 1 {
+            Label(cs ? "\(ways) způsoby" : "\(ways) ways", systemImage: "arrow.triangle.branch")
+                .font(.caption2).foregroundStyle(Theme.textDim)
+        }
     }
 
     /// **The one mark that collapses a long list into a short decision.**

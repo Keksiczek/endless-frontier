@@ -12,6 +12,8 @@
     "resourceCost": {
       "materials": 25
     },
+    "requiresBuilding": "workshop",
+    "requiresTech": "masters_and_journeymen",
     "description": {
       "en": "Hammer iron into interlocking rings of protection.",
       "cs": "Železo protlučené v kroužky, které do sebe zapadají."
@@ -90,6 +92,7 @@
       "materials": 50
     },
     "requiresBuilding": "workshop",
+    "requiresTech": "machining",
     "description": {
       "en": "Tempered plates that turn aside the worst blows.",
       "cs": "Plát po plátu, každý tvarovaný na tělo."
@@ -111,7 +114,7 @@
       "knowledge": 30
     },
     "requiresBuilding": "workshop",
-    "requiresTech": "scholarship",
+    "requiresTech": "machining",
     "description": {
       "en": "Lost wardens' craft, recovered for a new age.",
       "cs": "Kov, který osada neumí vytavit, jen zpracovat."
@@ -413,6 +416,8 @@
     "resourceCost": {
       "materials": 15
     },
+    "requiresBuilding": "bloomery",
+    "requiresTech": "bronze_tools",
     "description": {
       "en": "Hammer a leaf-shaped head onto a straight ash haft.",
       "cs": "První zbraň, kterou osada zvládne sama."
@@ -7187,7 +7192,7 @@
       "knowledge": 40
     },
     "requiresBuilding": "factory",
-    "requiresTech": "machining",
+    "requiresTech": "mass_production",
     "description": {
       "en": "A versatile and reliable firearm, standard issue for colony defense and security.",
       "cs": "Všestranná a spolehlivá střelná zbraň, standardní výbava pro obranu a bezpečnost kolonie."

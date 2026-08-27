@@ -251,6 +251,136 @@ struct ContentIntegrityTests {
         #expect(wasted.isEmpty,
                 "these recipes cost materials and produce something nobody can equip: \(wasted)")
     }
+
+    // MARK: - When a recipe arrives
+
+    /// The age a recipe can first be worked in: the later of what its bench and
+    /// its study need, and of everything it consumes.
+    ///
+    /// Written here rather than in the Core because it is a question only the
+    /// content asks — the engine's own gate is `CraftingEngine.canCraft`, which
+    /// asks about *this* colony rather than about the ladder.
+    private func reachableEra(_ recipe: RecipeDefinition, _ reg: GameDataRegistry,
+                              _ cache: inout [String: Int], _ seen: Set<String> = []) -> Int {
+        var era = 0
+        if let id = recipe.requiresBuilding, let b = reg.building(id) {
+            era = max(era, b.era.index)
+        }
+        if let id = recipe.requiresTech, let t = reg.tech(id) {
+            era = max(era, t.era.index)
+        }
+        for material in recipe.materials.keys.sorted() {
+            era = max(era, itemEra(material, reg, &cache, seen))
+        }
+        return era
+    }
+
+    /// The earliest age the colony can hold this thing at all: raw and gathered
+    /// stuff is there from the first day, and anything made comes with the
+    /// cheapest way of making it.
+    private func itemEra(_ id: String, _ reg: GameDataRegistry,
+                         _ cache: inout [String: Int], _ seen: Set<String> = []) -> Int {
+        if let known = cache[id] { return known }
+        if seen.contains(id) { return 0 }
+        let routes = reg.recipes.values.filter { $0.outputItemID == id }
+        guard !routes.isEmpty else { cache[id] = 0; return 0 }
+        var best = Int.max
+        for route in routes {
+            best = min(best, reachableEra(route, reg, &cache, seen.union([id])))
+        }
+        let era = best == Int.max ? 0 : best
+        cache[id] = era
+        return era
+    }
+
+    /// **Rule 6 in the recipe book.** A material gated behind an age its
+    /// consumer does not wait for is a recipe nobody can ever work: the bench
+    /// takes the order, the standing order sits there, and nothing is made —
+    /// which is exactly how `strong_plant_fibers` gated fifty recipes without
+    /// erroring (§18).
+    ///
+    /// Stated as an invariant rather than a list, so the next content pass
+    /// cannot re-introduce it by hand or by generator.
+    @Test("Nothing is gated later than something that needs it")
+    func nothingArrivesAfterItsConsumer() throws {
+        let reg = try registry()
+        var cache: [String: Int] = [:]
+        var stranded: [String] = []
+        for recipe in reg.recipes.values.sorted(by: { $0.id < $1.id }) {
+            let mine = reachableEra(recipe, reg, &cache)
+            for material in recipe.materials.keys.sorted() {
+                let theirs = itemEra(material, reg, &cache)
+                if theirs > mine {
+                    stranded.append("\(recipe.id) wants \(material) an age later than itself")
+                }
+            }
+        }
+        #expect(stranded.isEmpty, "\(stranded.prefix(8).joined(separator: "; "))")
+    }
+
+    /// **A weapon must not arrive before the age its damage belongs to.**
+    ///
+    /// The bands are not a taste: they are read off the recipes that already
+    /// carry a `requiresTech`, whose damage runs p50 3 in the first age, 4 in
+    /// the ancient, 14 medieval, 18 early industrial, 16 modern and 36 in the
+    /// near future. Measured against them, the shipped book was already very
+    /// nearly right — five recipes were not, and chainmail was the worst of
+    /// them: two iron ingots, no bench, no study, from the first day.
+    ///
+    /// The check is one-sided on purpose. An age *later* than the band is a
+    /// content choice (a relic forged out of treasure belongs where its
+    /// treasure does); an age earlier undercuts every properly-gated weapon
+    /// above it and makes them content nobody will ever choose.
+    @Test("No weapon is made before the age its damage belongs to")
+    func armsArriveInTheirOwnAge() throws {
+        let reg = try registry()
+        var cache: [String: Int] = [:]
+        // damage → the earliest era that damage may be reached in
+        func band(_ damage: Double) -> Int {
+            switch damage {
+            case ..<5.5:  return Era.earlySettlement.index
+            case ..<8.5:  return Era.ancient.index
+            case ..<15.5: return Era.medieval.index
+            case ..<23.5: return Era.earlyIndustrial.index
+            case ..<32.5: return Era.modern.index
+            default:      return Era.nearFuture.index
+            }
+        }
+        var early: [String] = []
+        for recipe in reg.recipes.values.sorted(by: { $0.id < $1.id }) {
+            guard let combat = reg.item(recipe.outputItemID)?.combat else { continue }
+            let arrives = reachableEra(recipe, reg, &cache)
+            let belongs = band(combat.damage)
+            if arrives < belongs {
+                early.append("\(recipe.id) (\(Int(combat.damage)) damage) in era \(arrives), band \(belongs)")
+            }
+        }
+        #expect(early.isEmpty, "\(early.joined(separator: "; "))")
+    }
+
+    /// The same, for what a colonist wears: plate is not a thing a village
+    /// hammers out in its first summer.
+    @Test("No armour is made before the age its material belongs to")
+    func armourArrivesInItsOwnAge() throws {
+        let reg = try registry()
+        var cache: [String: Int] = [:]
+        let earliest: [ArmourProfile.Material: Era] = [
+            .cloth: .earlySettlement, .hide: .earlySettlement, .leather: .earlySettlement,
+            .wood: .earlySettlement, .bone: .earlySettlement, .bronze: .ancient,
+            .mail: .medieval, .plate: .earlyIndustrial,
+            .composite: .earlyIndustrial, .powered: .nearFuture
+        ]
+        var early: [String] = []
+        for recipe in reg.recipes.values.sorted(by: { $0.id < $1.id }) {
+            guard let armour = reg.item(recipe.outputItemID)?.armour,
+                  let belongs = earliest[armour.material] else { continue }
+            let arrives = reachableEra(recipe, reg, &cache)
+            if arrives < belongs.index {
+                early.append("\(recipe.id) (\(armour.material.rawValue)) in era \(arrives), band \(belongs.index)")
+            }
+        }
+        #expect(early.isEmpty, "\(early.joined(separator: "; "))")
+    }
 }
 
 @Suite("Pollution")
