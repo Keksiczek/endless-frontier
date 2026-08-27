@@ -28,9 +28,23 @@ public struct CraftOrder: Codable, Sendable, Equatable, Identifiable {
     /// and a queue is a queue rather than a shuffle.
     public let placedTick: Int
 
+    /// **Whose order this is.**
+    ///
+    /// The council keeps one standing order per material it wants, and a
+    /// standing order never finishes — so without a way to tell its own orders
+    /// from the player's it can only ever *add*, and its share of the bench is
+    /// allocated once and held for ever. Measured (`WoodProbe`, seed 4242): the
+    /// share was full from **year 60 to year 200**, so a colony that wanted
+    /// steel from year 130 and could smelt it from year 160 never once put it
+    /// on the bench.
+    ///
+    /// The player's orders are never retired — that is rule 77's other half:
+    /// the half of the queue that is theirs cannot be taken.
+    public var byCouncil: Bool
+
     public init(id: UUID, recipeID: String, wanted: Int? = 1,
                 made: Int = 0, progress: Double = 0, paused: Bool = false,
-                placedTick: Int = 0) {
+                placedTick: Int = 0, byCouncil: Bool = false) {
         self.id = id
         self.recipeID = recipeID
         self.wanted = wanted.map { max(1, $0) }
@@ -38,6 +52,7 @@ public struct CraftOrder: Codable, Sendable, Equatable, Identifiable {
         self.progress = max(0, progress)
         self.paused = paused
         self.placedTick = placedTick
+        self.byCouncil = byCouncil
     }
 
     /// Whether the colony has made everything it was asked for.
@@ -59,9 +74,14 @@ public struct CraftOrder: Codable, Sendable, Equatable, Identifiable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, recipeID, wanted, made, progress, paused, placedTick
+        case id, recipeID, wanted, made, progress, paused, placedTick, byCouncil
     }
 
+    /// Hand-written, and it has to stay that way (rule 37): Swift's synthesised
+    /// decoder calls `decode`, not `decodeIfPresent`, so a default written next
+    /// to a new property silences the compiler and fails every existing save.
+    /// An order from before anybody's name was on it reads as the player's
+    /// here, and `SaveMigrator` decides which of them were really the council's.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(UUID.self, forKey: .id)
@@ -71,5 +91,6 @@ public struct CraftOrder: Codable, Sendable, Equatable, Identifiable {
         progress = try c.decodeIfPresent(Double.self, forKey: .progress) ?? 0
         paused = try c.decodeIfPresent(Bool.self, forKey: .paused) ?? false
         placedTick = try c.decodeIfPresent(Int.self, forKey: .placedTick) ?? 0
+        byCouncil = try c.decodeIfPresent(Bool.self, forKey: .byCouncil) ?? false
     }
 }

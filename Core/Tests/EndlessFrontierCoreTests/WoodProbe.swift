@@ -44,6 +44,10 @@ struct WoodProbe {
         year   pop  loggers  trees  bear  sap  spare  piles   wood  timber  charcoal  orders  blocked  builds
         """)
 
+        // The iron half, collected in the same run and printed underneath —
+        // one two-century walk rather than two.
+        var ironRows: [String] = []
+
         for step in 1...20 {
             state = TickEngine.advance(state, ticks: 600, registry: registry).state
             guard let s = state.settlements.first else { break }
@@ -69,7 +73,58 @@ struct WoodProbe {
                 year, s.pawns.count, loggers, trees, bearing, saplings, spare, piles,
                 counts["wood"] ?? 0, counts["timber_bundle"] ?? 0,
                 counts["charcoal"] ?? 0, orders, blocked, s.buildings.count))
+
+            // ── the iron half ────────────────────────────────────────────
+            // `charcoal` has read 0 at every reading for two centuries, which
+            // says nothing on its own: made-and-spent-in-the-same-breath and
+            // never-made look identical in a stock. So this counts the things
+            // a stock cannot tell apart — who is digging, what the smelters
+            // have actually *made*, and which orders are stopped on which
+            // input (rule 90: measure the multiplier, not the outcome).
+            let miners = s.pawns.count { $0.assignedWork == .mining }
+            let smiths = s.pawns.count { $0.assignedWork == .crafting }
+            func made(_ recipeID: String) -> Int {
+                s.craftOrders.first { $0.recipeID == recipeID }?.made ?? -1
+            }
+            func shortOf(_ material: String) -> Int {
+                s.craftOrders.count { order in
+                    guard let recipe = registry.recipes[order.recipeID],
+                          let want = recipe.materials[material] else { return false }
+                    return (counts[material] ?? 0) < want
+                }
+            }
+            // **Why the steel half is a flat zero**, asked three ways, because
+            // a stock of nothing cannot tell "never wanted" from "wanted and
+            // unmakeable" from "makeable and no slot on the bench".
+            let hasFoundry = s.buildings.contains { $0.definitionID == "foundry" }
+            let wanted = StewardEngine.wantedMaterials(for: s, in: state, registry: registry)
+            let canSmeltSteel = StewardEngine.cheapestRecipe(
+                making: "steel_ingot", at: s, in: state, registry: registry) != nil
+            let standing = s.craftOrders.count { $0.wanted == nil }
+            ironRows.append(String(
+                format: "%4d %5d %6d %6d %6d %8d %6d %7d %8d %8d %9d %8d   %@ %@ %@ %2d/%d",
+                year, s.pawns.count, miners, smiths,
+                counts["iron_ore"] ?? 0, counts["charcoal"] ?? 0,
+                counts["iron_ingot"] ?? 0, counts["steel_ingot"] ?? 0,
+                made("burn_charcoal"), made("smelt_iron"),
+                shortOf("charcoal"), shortOf("iron_ingot"),
+                hasFoundry ? "foundry" : "  ——   ",
+                wanted.contains("steel_ingot") ? "wantsSteel" : "          ",
+                canSmeltSteel ? "canSmelt" : "        ",
+                standing, s.craftOrders.count))
         }
+
+        let onIron = registry.recipes.values.count { $0.materials["iron_ingot"] != nil }
+        let onSteel = registry.recipes.values.count { $0.materials["steel_ingot"] != nil }
+        let onCharcoal = registry.recipes.values.count { $0.materials["charcoal"] != nil }
+        print("""
+
+        ── iron ──────────────────────────────────────────────────────
+        recipes consuming iron \(onIron) · steel \(onSteel) · charcoal \(onCharcoal)
+        `made` is -1 where no such order stands
+        year   pop miners smiths    ore charcoal   iron   steel  burntCh  smeltFe  shortCh   shortFe   bench
+        """)
+        for row in ironRows { print(row) }
 
         // …and what the bench was actually holding at the end, so the shape of
         // the shortage is visible rather than inferred.

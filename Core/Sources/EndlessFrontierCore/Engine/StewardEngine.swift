@@ -315,21 +315,73 @@ public enum StewardEngine {
         let settlement = s.settlements[index]
         // Only what this colony is actually short of, and only what it could
         // plausibly make here — **most useful first**.
-        for materialID in shoppingList(for: settlement, in: s, registry: registry) {
-            guard s.settlements[index].craftOrders.count < councilBenchShare else { break }
-            let held = CraftingEngine.materialCounts(settlement)[materialID] ?? 0
+        let list = shoppingList(for: settlement, in: s, registry: registry)
+        for (rank, materialID) in list.enumerated() {
+            let held = CraftingEngine.materialCounts(s.settlements[index])[materialID] ?? 0
             guard held < materialStock else { continue }
             // One standing order per material is enough — it never finishes.
-            guard !settlement.craftOrders.contains(where: {
+            guard !s.settlements[index].craftOrders.contains(where: {
                 registry.recipes[$0.recipeID]?.outputItemID == materialID
             }) else { continue }
             guard let recipe = cheapestRecipe(making: materialID, at: settlement,
                                               in: s, registry: registry) else { continue }
+            if s.settlements[index].craftOrders.count >= councilBenchShare {
+                guard let spare = orderToRetire(
+                    at: s.settlements[index], below: rank, of: list, registry: registry)
+                else { break }
+                s.settlements[index] = CraftingEngine.cancel(
+                    s.settlements[index], orderID: spare)
+            }
             s.settlements[index] = CraftingEngine.place(
                 s.settlements[index], recipeID: recipe, count: nil,
-                tick: s.tick, registry: registry)
+                tick: s.tick, registry: registry, byCouncil: true)
         }
         return s
+    }
+
+    /// **Which of the council's own standing orders to give up**, so the bench
+    /// can turn over.
+    ///
+    /// A standing order never finishes, so a share allocated once is a share
+    /// held for ever: measured (`WoodProbe`, seed 4242), the council's eight
+    /// slots were full from **year 60 to year 200** with what a village of
+    /// fifty-six had wanted — bone spearheads and retted fibre — while a colony
+    /// of two hundred and twenty-six with a foundry, `machining` and steel on
+    /// its shopping list since year 130 made **no steel at all in two
+    /// centuries**. Rule 83 one level up: the endless thing outranks everything
+    /// because it is never done.
+    ///
+    /// Three conditions, and all three matter:
+    ///
+    /// - **the council's own** (rule 77: the player's half cannot be taken);
+    /// - **standing**, because a finite order is a promise with an end on it and
+    ///   will free its own slot;
+    /// - and **less wanted than the thing waiting** — either off the shopping
+    ///   list altogether or below it, so the swap is always toward what the
+    ///   colony needs now. Where several qualify, the one with most of its
+    ///   material already on the shelf goes.
+    static func orderToRetire(
+        at settlement: Settlement, below rank: Int, of list: [String],
+        registry: GameDataRegistry
+    ) -> UUID? {
+        let counts = CraftingEngine.materialCounts(settlement)
+        // `list` is ordered, so a lookup by material gives each order its rank.
+        var place: [String: Int] = [:]
+        for (index, material) in list.enumerated() { place[material] = index }
+        let candidates = settlement.craftOrders.filter { order in
+            guard order.byCouncil, order.wanted == nil,
+                  let made = registry.recipes[order.recipeID]?.outputItemID
+            else { return false }
+            return (place[made] ?? Int.max) > rank
+        }
+        return candidates.max { a, b in
+            let (ma, mb) = (registry.recipes[a.recipeID]?.outputItemID ?? "",
+                            registry.recipes[b.recipeID]?.outputItemID ?? "")
+            let (ha, hb) = (counts[ma] ?? 0, counts[mb] ?? 0)
+            // Sorted, not hashed: the same colony must retire the same order on
+            // a replay (rule 85).
+            return ha == hb ? ma > mb : ha < hb
+        }?.id
     }
 
     /// The crafted materials the buildings this colony could raise ask for.

@@ -585,4 +585,132 @@ struct CouncilRoomTests {
         #expect(queued < CraftingEngine.maxOrders,
                 "a full bench refuses the player's own orders silently")
     }
+
+    /// **A share allocated once is a share held for ever.**
+    ///
+    /// A standing order never finishes, so the council's eight slots used to be
+    /// claimed by whatever a village wanted first and kept for the rest of the
+    /// colony's history. Measured (`WoodProbe`, seed 4242): full from year 60
+    /// to year 200, and a colony that had wanted steel since year 130 and could
+    /// smelt it since year 160 made **none in two centuries**. Rule 83 one
+    /// level up — the endless thing outranks everything, because it is never
+    /// done.
+    ///
+    /// So the test is a reachability, not a behaviour (rule 6): can something
+    /// the colony wants *now* get onto a bench the council already filled?
+    @Test("A full bench still makes room for what the colony wants now")
+    func theBenchTurnsOver() throws {
+        let registry = try GameDataRegistry.bundled()
+        var state = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        state.era = .medieval
+        state.unlockedBuildings = Set(registry.buildings.keys)
+        // The benches a village has, and the studies behind them — without
+        // these the council can work almost nothing and the bench never fills,
+        // which is not the situation this test is about (rule 67).
+        for id in ["workshop", "cookhouse", "hunters_lodge", "lumberyard",
+                   "quarry", "bloomery", "charcoal_kiln", "wainwright",
+                   "watermill", "horse_mill", "stable", "clinic"] {
+            state.settlements[0].buildings.append(
+                BuildingInstance.founding(id, at: state.settlements[0].id, slot: 0))
+        }
+        state.researchedTechs = Set(
+            registry.techs.values.filter { $0.era.index <= Era.medieval.index }.map(\.id))
+        for _ in 0..<40 {
+            state = StewardEngine.keepMaterialsComing(state, index: 0, registry: registry)
+        }
+        // Seven materials is everything a medieval colony both wants and can
+        // work here, and the question is about a bench with **no** free slot —
+        // which is what the measured colony had from year 60 on. So the eighth
+        // is stood by hand, for something the colony can make and nobody is
+        // asking for. Without it the new order simply takes the free slot and
+        // this passes without the retirement ever running (rule 86).
+        if state.settlements[0].craftOrders.count == StewardEngine.councilBenchShare - 1 {
+            let onBench = Set(state.settlements[0].craftOrders.compactMap {
+                registry.recipes[$0.recipeID]?.outputItemID
+            })
+            let spare = registry.recipes.values
+                .filter { recipe in
+                    guard !onBench.contains(recipe.outputItemID) else { return false }
+                    if let b = recipe.requiresBuilding,
+                       !state.settlements[0].buildings.contains(where: { $0.definitionID == b }) {
+                        return false
+                    }
+                    if let t = recipe.requiresTech, !state.researchedTechs.contains(t) { return false }
+                    return true
+                }
+                .min { $0.id < $1.id }
+            if let spare {
+                state.settlements[0] = CraftingEngine.place(
+                    state.settlements[0], recipeID: spare.id, count: nil,
+                    tick: state.tick, registry: registry, byCouncil: true)
+            }
+        }
+        let filled = state.settlements[0].craftOrders.count
+        #expect(filled == StewardEngine.councilBenchShare,
+                "the bench has to be full before the question means anything")
+
+        // The colony grows into another age: a new bench, new studies, and a
+        // shopping list with things on it the village never wanted.
+        state.era = .earlyIndustrial
+        state.researchedTechs = Set(registry.techs.keys)
+        state.settlements[0].buildings.append(
+            BuildingInstance.founding("foundry", at: state.settlements[0].id, slot: 0))
+        let before = Set(state.settlements[0].craftOrders.map(\.recipeID))
+        for _ in 0..<40 {
+            state = StewardEngine.keepMaterialsComing(state, index: 0, registry: registry)
+        }
+        let after = Set(state.settlements[0].craftOrders.map(\.recipeID))
+        #expect(state.settlements[0].craftOrders.count <= StewardEngine.councilBenchShare,
+                "turning over must not widen the council's share")
+        #expect(!after.subtracting(before).isEmpty,
+                "the bench did not turn over at all")
+        #expect(after.contains("smelt_steel"),
+                "steel is wanted, makeable, and still not on the bench: \(after.sorted())")
+    }
+
+    /// Rule 77's other half: the half of the queue that is the player's cannot
+    /// be taken — not by filling it, and not by retiring it either.
+    @Test("The council never retires an order the player placed")
+    func thePlayersOrdersStand() throws {
+        let registry = try GameDataRegistry.bundled()
+        var state = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        state.era = .medieval
+        state.unlockedBuildings = Set(registry.buildings.keys)
+        state.researchedTechs = Set(registry.techs.keys)
+        // A standing order of the player's own, for something the colony has
+        // plenty of — the very case the council's retirement rule looks for.
+        let mine = "craft_leather_garb"
+        state.settlements[0] = CraftingEngine.place(
+            state.settlements[0], recipeID: mine, count: nil,
+            tick: 0, registry: registry)
+        state.settlements[0].stockpile["leather"] = 500
+
+        for _ in 0..<60 {
+            state = StewardEngine.keepMaterialsComing(state, index: 0, registry: registry)
+        }
+        #expect(state.settlements[0].craftOrders.contains { $0.recipeID == mine },
+                "the council retired the player's own standing order")
+    }
+
+    /// And a save written before anybody's name was on an order still unsticks:
+    /// its standing orders are read as the council's, or the colonies this was
+    /// written for stay frozen (rule 79 — the migration ships with the field).
+    @Test("An older save's standing orders belong to the council")
+    func oldOrdersAreTheCouncils() throws {
+        let registry = try GameDataRegistry.bundled()
+        var state = GameWorldFactory.newGame(registry: registry, seed: 4242)
+        state.settlements[0] = CraftingEngine.place(
+            state.settlements[0], recipeID: "saw_timber", count: nil,
+            tick: 0, registry: registry)
+        state.settlements[0] = CraftingEngine.place(
+            state.settlements[0], recipeID: "craft_leather_garb", count: 3,
+            tick: 0, registry: registry)
+        state.schemaVersion = 5
+
+        let migrated = SaveMigrator.migrate(state)
+        let orders = migrated.settlements[0].craftOrders
+        #expect(orders.first { $0.wanted == nil }?.byCouncil == true)
+        #expect(orders.first { $0.wanted != nil }?.byCouncil == false,
+                "a finite order ends on its own and is nobody's business here")
+    }
 }

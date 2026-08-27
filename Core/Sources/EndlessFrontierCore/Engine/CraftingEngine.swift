@@ -349,7 +349,7 @@ public enum CraftingEngine {
     /// recipe is unknown or the queue is full.
     public static func place(
         _ settlement: Settlement, recipeID: String, count: Int?,
-        tick: Int, registry: GameDataRegistry
+        tick: Int, registry: GameDataRegistry, byCouncil: Bool = false
     ) -> Settlement {
         guard registry.recipes[recipeID] != nil,
               settlement.craftOrders.count < maxOrders else { return settlement }
@@ -358,7 +358,7 @@ public enum CraftingEngine {
                                             tick: tick, made: s.craftOrders.count))
         s.craftOrders.append(CraftOrder(
             id: rng.nextUUID(), recipeID: recipeID, wanted: count,
-            placedTick: tick))
+            placedTick: tick, byCouncil: byCouncil))
         return s
     }
 

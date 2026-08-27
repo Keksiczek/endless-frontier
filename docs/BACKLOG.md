@@ -3584,15 +3584,113 @@ Also counted and left alone: **19 recipes are strictly dominated** — a cheaper
 route to the same item arrives an age earlier — so they can never be chosen.
 The fold makes them harmless; deleting them is a content decision.
 
-### 20.4 — still open
+### 20.4 — the renderer, in eight files
+
+`SettlementRenderer.swift` was 2822 lines against a stated maximum of 800, and
+the seams were the ones its own `// MARK:` lines already drew. Cut into
+extensions on the same enum, so every call site is unchanged and a
+member-by-member check says the same 64 members are there afterwards:
+
+| file | lines | what |
+|---|---|---|
+| `SettlementRenderer.swift` | 402 | the camera, `draw`, fog, season |
+| `SettlementRendererScenery.swift` | 599 | trees, rocks, reeds, the sea |
+| `SettlementRendererLayout.swift` | 598 | glyphs, lots, where a roof stands |
+| `SettlementRendererGround.swift` | 443 | cover, zones, roads, the river |
+| `SettlementRendererLots.swift` | 305 | the buildings, drawn |
+| `SettlementRendererNight.swift` | 228 | darkness and what is lit in it |
+| `SettlementRendererDeposits.swift` | 182 | ore, clay, salt, stone |
+| `SettlementRendererAgents.swift` | 135 | the people on the ground |
+
+The one edit that is not a move: a member that leaves a file cannot stay
+`private`, which in Swift is file scope for a type's members. `drawProp` is 444
+lines on its own and is the next seam if Scenery grows.
+
+**`GameViewModel.swift` (2415 lines) was looked at and deliberately left.**
+Splitting a class across files means its methods live in extensions, and
+`world` is `private(set)` — which in Swift is *file* scope for the setter. Every
+mutating method that moved out would force the setter to become internal, and
+that one modifier is what keeps a view from writing the simulation (rule 1).
+A line count is not worth that. The way through, when it is worth doing, is to
+lift genuinely separate *types* out of it — the recipe list is already a pure
+derivation over `(registry, settlement)` and could be a `CraftingList` the way
+`SettlementRenderer` is an enum of pure functions — rather than to scatter the
+class over five files.
+
+### 20.5 — the header, measured on the phone
+
+Reported as the year's annotation breaking the season line. Screenshotting it
+found two faults: the reported one (*"rok, na který se nezapomíná"* is 27
+characters and shared the season's row), and one that is on screen far more
+often — the clock line wraps at midday on its own account, because
+"11:42 Midday · 107 at work · 83 resting" is wider than a 402pt phone. `at
+work` broke onto a second line and left `· 83 resting` hanging beside it.
+
+The annotation has its own line now, and the clock line is a `ViewThatFits`
+offering itself with two entries, then one, then none — `doing` is ordered
+worst-news-first, so what goes when the row is short is the least important
+thing on it. Verified in the simulator at midday.
+
+### 20.6 — the iron half, measured: the bench had been full since year 60
+
+`WoodProbe` grew iron, steel and charcoal columns, and three columns that a
+stock cannot give you — whether a foundry stands, whether the council *wants*
+steel, and whether it *could* smelt it — because a flat zero cannot tell
+"never wanted" from "wanted and unmakeable" from "makeable and no slot".
+
+Seed 4242, before:
+
+```
+year   pop miners    ore charcoal   iron   steel  smeltFe   bench
+  60    56      5    274        1      0       0        0   ——                           8/8
+ 130   100      7    238        2      1       0       27   ——    wantsSteel             8/8
+ 160   150     11    139        3      0       0       60   foundry wantsSteel canSmelt  8/8
+ 200   226     15      2       16      0       0      122   foundry wantsSteel canSmelt  8/8
+```
+
+Read the last two columns together and the fault is plain: from year 130 the
+colony **wanted** steel, from year 160 it had the foundry and the study to
+**make** it, and it made **none in two centuries**. The bench column says why —
+`8/8` from year 60 to year 200, every one of them a standing order.
+
+A standing order never finishes, so `StewardEngine.councilBenchShare` was not a
+share, it was an allocation: eight slots claimed by what a village of fifty-six
+wanted — bone spearheads, retted fibre — and held for the rest of the colony's
+history. **Rule 83 one level up**: the endless thing outranks everything,
+because it is never done.
+
+So the council can now give up one of its own. `CraftOrder.byCouncil` says whose
+an order is (hand-written decoder, rule 37; `SaveMigrator` 5→6 reads an old
+save's standing orders as the council's, rule 79), and `orderToRetire` gives up
+a **council, standing** order that is *below the thing waiting* on the shopping
+list — never the player's, which is rule 77's other half. Where several
+qualify, the one with most of its material already on the shelf goes.
+
+After, same seed:
+
+```
+ 130   108      8    262        3      1       1       31   foundry wantsSteel canSmelt  8/8
+ 200   241     17      1       23      0       1      143   foundry wantsSteel canSmelt  8/8
+```
+
+and the bench at year 200 holds three orders that could not have existed at all
+before: **Smelt Steel Ingot (9 made), Cast machine parts (18), Process Resin
+(18)** — with `basic_machine_parts` and `processed_resin_block` on the shelf for
+the first time. Wood 882 → 1107, timber 275 → 410, charcoal burnt 382 → 452,
+iron smelted 122 → 143. The industrial half of the item tree is reachable.
+
+**Where the constraint went**, which is the honest next question: steel and
+machine parts are both short of `iron_ingot`, iron is short of `iron_ore`, and
+ore falls from 309 at year 90 to **1 at year 200** against seventeen miners. The
+chain runs now and the shortage has moved to the ground — a thing to manage
+rather than a wall. Nobody has measured whether the mine can be made to keep up.
+
+### 20.7 — still open
 
 1. **The workshop avalanche** (§20.2). The honest fix is that a recipe sits at
    the bench its own age has: either an early general bench, or the 98 first-age
    workshop recipes re-homed to hut / hunters_lodge / cookhouse / lumberyard.
    Measured and not attempted, because it moves a third of the book and wants a
    run either side of it (rule 72 — one change per measurement).
-2. `SettlementRenderer.swift` 2822 lines, `GameViewModel.swift` ~2000.
-3. The iron half of the chain has never been measured (`WoodProbe` has no iron
-   columns).
-4. The status header wraps on an iPhone when a year carries an annotation.
-5. Everything in §15.6, §16.3–16.4 and §17.4 that is not listed above.
+2. `GameViewModel.swift` at 2415 lines, and the reason it was left (§20.4).
+3. Everything in §15.6, §16.3–16.4 and §17.4 that is not listed above.

@@ -101,6 +101,31 @@ public enum SaveMigrator {
                 taken.insert(pick.id)
             }
             return s
+        },
+        // **5 → 6: whose order is on the bench.**
+        //
+        // `CraftOrder.byCouncil` decides what the council may retire when its
+        // share of the bench is full, and a save written before the field
+        // existed says nothing — so every order in it would read as the
+        // player's and the bench would stay frozen for exactly the colonies
+        // this was written to unstick.
+        //
+        // A **standing** order is taken to be the council's, because
+        // `StewardEngine.keepMaterialsComing` is the only thing in the game
+        // that places them automatically and it places one per material it
+        // wants. A player's own "keep making these" in an old save may
+        // therefore be retired once — and only once the colony already holds
+        // twelve of the thing, and only in favour of something it needs more.
+        // A finite order is nobody's business here: it ends on its own.
+        5: { state in
+            var s = state
+            for i in s.settlements.indices {
+                for j in s.settlements[i].craftOrders.indices
+                where s.settlements[i].craftOrders[j].wanted == nil {
+                    s.settlements[i].craftOrders[j].byCouncil = true
+                }
+            }
+            return s
         }
     ]
 

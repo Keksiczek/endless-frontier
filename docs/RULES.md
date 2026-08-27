@@ -1,6 +1,6 @@
 # Rules — what has already gone wrong, and must not again
 
-<!-- Extracted from BACKLOG.md 2026-08-13 | 101 rules -->
+<!-- Extracted from BACKLOG.md 2026-08-13 | 102 rules -->
 
 **Every one of these cost a session at least once.** They are the project's
 troubleshooting guide and its lessons learned in one list: when something in the
@@ -1010,3 +1010,16 @@ fires, do the arithmetic before you rewrite the mechanic.
    say how many ways there are, or a shorter list reads as content gone missing;
    and never fold a **search**, because somebody typing a name is asking for
    that row and a fold answers with its sibling.
+102. **A share of a queue allocated once is a share held for ever.** Rule 83
+   one level up, and it hid behind a number that looked healthy: the council's
+   eight slots were *full* at every reading, which reads as a busy colony and
+   was a frozen one. A standing order never completes, so the eight were
+   claimed by what a village of fifty-six wanted — bone spearheads, retted
+   fibre — and kept for a hundred and forty years, while a colony of two
+   hundred with a foundry, `machining` and steel on its shopping list since year
+   130 made **no steel at all in two centuries**. The give-away was not the
+   count but the *turnover*: measure what leaves a queue, not what is in it. And
+   the fix needs to know whose an order is, because the half of the bench that
+   belongs to the player must survive it (rule 77) — which means a field, a
+   hand-written decoder (rule 37) and a migration in the same change (rule 79),
+   or a save from yesterday stays frozen for ever.

@@ -101,7 +101,8 @@ public enum QuartermasterEngine {
             guard let pick else { continue }
             s.settlements[index] = CraftingEngine.place(
                 s.settlements[index], recipeID: pick,
-                count: min(shortfall, batch), tick: s.tick, registry: registry)
+                count: min(shortfall, batch), tick: s.tick, registry: registry,
+                byCouncil: true)
         }
         return s
     }
