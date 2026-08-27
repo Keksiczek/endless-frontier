@@ -138,10 +138,19 @@ carry most of the work:
 make verify-docs
 ```
 
-Six mechanical documentation checks (~2 s, no Xcode, no network): FMEA targets,
-links, rule numbering, the engine index, the content tables, and CZ beside EN in
-every line of content. **Run it before every commit** — a stale `Where` cell or
-a content count that has drifted is a failure, not a cosmetic issue.
+Ten mechanical documentation checks (~2 s, no Xcode, no network): FMEA targets,
+links, rule numbering, the engine index, the content tables, CZ beside EN in
+every line of content, every document declared living-or-record, every count in
+a living document against the tree, every test count against the newest row of
+`docs/TEST-BASELINE.md`, and the handoff log. **Run it before every commit** — a
+stale `Where` cell or a content count that has drifted is a failure, not a
+cosmetic issue.
+
+Two consequences worth knowing before writing a doc: a **count in a living
+document is enforced**, so quote one only where it is worth keeping true (a
+record — a handoff, the backlog, a rule — may say what it measured on the day),
+and a **test count comes from `docs/TEST-BASELINE.md`**, where you append a row
+after a run rather than editing a number in prose.
 
 ```bash
 make test          # = cd Core && swift test  (~18 min)
@@ -224,6 +233,8 @@ point at code that still exists.
 | Question | Where |
 |---|---|
 | Something is broken — where has it been before? | **`docs/FMEA.md`** |
+| What did the last sessions do? | `docs/handoffs/README.md` |
+| How many tests are there? | `docs/TEST-BASELINE.md`, newest row |
 | What does this engine own? | `docs/CODEMAPS/engines.md` |
 | Entity or still a number? | `docs/CODEMAPS/models.md` |
 | Content files and tuning constants | `docs/CODEMAPS/data.md` |
@@ -236,5 +247,7 @@ point at code that still exists.
 | Roads, chokepoints and what rail costs | `docs/ROADS.md` |
 | Event / tech schemas | `docs/data-schemas/` |
 
-**Historical, do not plan from:** `ROADMAP.md`, `NEXT_STEPS.md`, `HANDOFF.md`.
+**Historical, do not plan from:** `ROADMAP.md`, `NEXT_STEPS.md`, and every
+file in `docs/handoffs/` except the newest — `docs/handoffs/README.md` says
+what each is safe for.
 `NEXT_PHASE.md` is partly live — its three unconverted rows still stand.

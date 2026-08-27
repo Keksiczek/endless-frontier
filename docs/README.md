@@ -1,11 +1,11 @@
 # Docs — what is where
 
 > **Start here if you are picking this up cold:**
-> [`HANDOFF-2026-08-28.md`](HANDOFF-2026-08-28.md) — the newest plan: three
+> [`HANDOFF-2026-08-28.md`](handoffs/HANDOFF-2026-08-28.md) — the newest plan: three
 > faults in raids that were none of them in the fight (the wrong colony, a
 > stopped clock, and a surface only reachable while the app was in front), and
 > the workshop avalanche measured and moved.
-> Before it: [`HANDOFF-2026-08-27-evening.md`](HANDOFF-2026-08-27-evening.md) —
+> Before it: [`HANDOFF-2026-08-27-evening.md`](handoffs/HANDOFF-2026-08-27-evening.md) —
 > what the last five jobs turned into.
 > Then [`BACKLOG.md` §20](BACKLOG.md) (2026-08-27) — a colonist's memory (the
 > subjects were never the shortage, the 140-entry ring was), a recipe book that
@@ -21,13 +21,13 @@
 > every early building, the objectives panel was in English, marching on a
 > neighbour did not exist, and **73 items could never be equipped while 89
 > recipes went on making them**.
-> Before it: [`HANDOFF-2026-08-22.md`](HANDOFF-2026-08-22.md) — combat measured
+> Before it: [`HANDOFF-2026-08-22.md`](handoffs/HANDOFF-2026-08-22.md) — combat measured
 > apart into three faults, the council that could build one building, and the
 > six things Keks asked for next in his own order.
-> Before it: [`HANDOFF-2026-08-21-evening.md`](HANDOFF-2026-08-21-evening.md) — the
+> Before it: [`HANDOFF-2026-08-21-evening.md`](handoffs/HANDOFF-2026-08-21-evening.md) — the
 > narrator, the chronicle's names, what `GeneProbe` measured twice, roads over
 > water, and a save bug that had been throwing away every road since it shipped.
-> [`HANDOFF-2026-08-21.md`](HANDOFF-2026-08-21.md) is the morning before it, and
+> [`HANDOFF-2026-08-21.md`](handoffs/HANDOFF-2026-08-21.md) is the morning before it, and
 > its §4.2 and §4.4 are still open.
 
 <!-- Consolidated 2026-08-13 -->
@@ -47,13 +47,15 @@ Not "what is in this directory". **What you are doing → the one file to open.*
 
 | I am about to… | Open | Then |
 |---|---|---|
-| **start cold** | [`../CLAUDE.md`](../CLAUDE.md) | then the newest `HANDOFF-*.md`, and stop — that is enough to talk |
+| **start cold** | [`../CLAUDE.md`](../CLAUDE.md) | then the newest handoff in [`handoffs/`](handoffs/README.md), and stop — that is enough to talk |
 | **stare at a failure** | [`FMEA.md`](FMEA.md), by symptom | build → §A · a mechanic that never fires → §B · the colony died → §C · content silently missing → §D · the canvas is wrong → §E |
 | **write a threshold** | [`RULES.md`](RULES.md) rules 6, 23, 24, 30 | then §F of `FMEA.md` — the situations, not the symptoms |
 | **add a mechanic and expect it to fire** | [`RULES.md`](RULES.md) rule 6 | write the test named for its *reachability* |
 | **add content** | [`CODEMAPS/data.md`](CODEMAPS/data.md) | CZ + EN in the same change (rule 7); `make verify-docs` checks it without building |
 | **change what the canvas draws** | [`CODEMAPS/app.md`](CODEMAPS/app.md) | rule 18 — ask what in the Core it is a picture *of* |
 | **know a number** | nothing — **run a probe** | [`CODEMAPS/probes.md`](CODEMAPS/probes.md) |
+| **quote a test count** | [`TEST-BASELINE.md`](TEST-BASELINE.md), newest row | append a row after a run; never edit a count in prose |
+| **read what a past session did** | [`handoffs/README.md`](handoffs/README.md) | newest for the state, older ones only for *why* a constant has its value |
 | **decide what to work on** | [`BACKLOG.md`](BACKLOG.md), newest section | the open list at the end of it |
 | **trust a document** | [`FMEA.md`](FMEA.md) §G | what each doc is good for, and what it is not |
 
@@ -63,13 +65,26 @@ Not "what is in this directory". **What you are doing → the one file to open.*
 make verify-docs
 ```
 
-Six mechanical checks, no Xcode and no network, about two seconds:
+Ten mechanical checks, no Xcode and no network, about two seconds:
 `FMEA.md`'s `path` · `symbol` cells resolve · every relative link resolves ·
 `RULES.md` is numbered contiguously and its header count is true · every engine
 is named in `CODEMAPS/engines.md` · every `GameData/*.json` parses, is listed in
 `CODEMAPS/data.md` and its entry count there is true · every line of content
-carries `cs` beside `en`. Run it before every commit — it is part of
+carries `cs` beside `en` · every document is declared a **living document** or a
+**record** · no living document quotes a content or rule count the tree
+disagrees with · no living document quotes a test count that is not the newest
+row of [TEST-BASELINE.md](TEST-BASELINE.md) · every handoff is in the log and
+this file points at the newest. Run it before every commit — it is part of
 `make check`.
+
+**Living document or record.** The two are trusted differently and the checks
+treat them differently: a living document's numbers are claims about today and
+are enforced; a record's numbers were true when it was written and are left
+alone. `CLAUDE.md`, this file, `NEXT.md`, `TEST-BASELINE.md` and the codemaps
+are living. `BACKLOG.md`, `RULES.md`, `FMEA.md` and everything in `handoffs/`
+are records — `RULES.md` and `FMEA.md` because a rule quotes the measurement
+that produced it. A new document has to be declared one or the other in
+`scripts/verify-docs.py`, which is the point: nobody can add an unowned doc.
 
 ## Reference, by question
 
@@ -101,15 +116,18 @@ overtaken without being updated, which is exactly how a stale doc does damage.
 | [ROADMAP.md](ROADMAP.md) | 2026-06-01 | "45 tests, phases 0–2 done, next is Phase 3" |
 | [NEXT_STEPS.md](NEXT_STEPS.md) | 2026-06-06 | "179 tests" |
 | [NEXT_PHASE.md](NEXT_PHASE.md) | ~2026-07-28 | The entity-conversion brief. Two of its three unconverted rows still stand; **the buildings row is out of date** — see [CODEMAPS/models.md](CODEMAPS/models.md) |
-| [HANDOFF.md](HANDOFF.md) | 2026-08-13 | A state report, not a plan — but the newest one, and worth reading |
-| [NEXT.md](NEXT.md) | 2026-08-17 | Still the best short answer to "what next", but **its counts are stale**: it says 37 techs / 306 recipes / 38 rules against 60 / 420 / 96 today |
+| [handoffs/](handoffs/README.md) | — | **The session log.** One file per session, newest first, with what each is safe for |
+| [NEXT.md](NEXT.md) | plan 2026-08-17, counts 2026-08-28 | Still the best short answer to "what next". Its counts are checked by `make verify-docs` now; **its plan is not** — read `BACKLOG.md` and the newest handoff beside it |
 
-Reality as of **2026-08-26 (evening)**: **1581 Core tests in 220 suites** and
-182 App tests, all green; iOS build green. The Core suite runs in ~13 minutes,
-down from ~32 — an allocation per sapling, see §18.
+Reality as of the newest row of [TEST-BASELINE.md](TEST-BASELINE.md)
+(**2026-08-27**): **1604 Core tests** in 224 suites in ~18 minutes, and
+**202 App tests** in 32 suites, all green; iOS build green. The raid commit
+after it is unmeasured — see the note in that file, and append a row rather than
+editing this line.
 Content: **62 buildings**, **60 techs**, 182 events, 7 biomes, **477 items**,
-**420 recipes**. History lives in `BACKLOG.md`; the newest sections are §17 and
-§18. The open list is §15.6, §16.3–16.4 and §17.4.
+**420 recipes** — checked against the tree by `make verify-docs`. History lives
+in `BACKLOG.md`; the newest sections are §17 and §18. The open list is §15.6,
+§16.3–16.4 and §17.4.
 
 ## The one rule about these docs
 

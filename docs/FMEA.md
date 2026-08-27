@@ -21,6 +21,8 @@ not an out-of-date one.
 | A file you added is not in the app target | `EndlessFrontier.xcodeproj` is generated — run `xcodegen generate` in `App/` | `App/project.yml` · `sources` |
 | `xcodebuild` fails naming a destination that does not exist | **only `iPhone 17` is installed on this host**; the name goes stale with Xcode | `Makefile` · `SIM` |
 | The Core suite takes ~18 minutes and you only changed one engine | that is the whole suite; filter with `swift test --filter` | `Makefile` · `test-filter` |
+| `make verify-docs` fails on a document you did not edit | a count in a living document is now false because the *tree* changed — fix the doc, that is the check working | `scripts/verify-docs.py` · `LIVING_DOCS` |
+| A new document fails the class check | every doc is a living document or a record; say which | `scripts/verify-docs.py` · `RECORD_FILES` |
 | A test build fails on a file you did not touch | you edited a source file *while* its build was running (rule 70) | `docs/RULES.md` · `Editing a source file while its test build is running` |
 | A new content file loads in tests and not in the app | resources are declared per target in the package manifest | `Core/Package.swift` · `resources` |
 | Two measurements and you cannot tell which change moved the number | you changed two things between probe runs (rule 72) | `docs/RULES.md` · `Two changes, one measurement` |
@@ -109,7 +111,9 @@ mechanic.
 | `docs/CODEMAPS/` | where a thing lives, and what owns it | counts, timings, state |
 | `docs/DESIGN.md` | what the systems are *for* | whether they exist |
 | `docs/BACKLOG.md` | what was measured, and when | anything above its newest section |
-| the newest `docs/HANDOFF-*.md` | what the last session measured and left open | earlier sessions' numbers |
-| `docs/ROADMAP.md`, `NEXT_STEPS.md`, `HANDOFF.md` | **history only** — do not plan from them | the plan |
+| the newest handoff in `docs/handoffs/` | what the last session measured and left open | earlier sessions' numbers |
+| `docs/handoffs/README.md` | what each past session is safe for | the state — only the newest handoff has that |
+| `docs/TEST-BASELINE.md`, newest row | the test counts | rows below it — suites split and merge |
+| `docs/ROADMAP.md`, `NEXT_STEPS.md` | **history only** — do not plan from them | the plan |
 | any number in prose | the day it was written | today — run a probe |
 | any commit message | intent | the diff — check it |

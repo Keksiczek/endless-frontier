@@ -1,12 +1,14 @@
 # Where the game stands, and what to do next
 
-**Written 2026-08-17, for a chat starting cold.** Read this, then
+**Written 2026-08-17, for a chat starting cold. Its counts were re-verified
+2026-08-28; its plan is still 2026-08-17 vintage** — check `BACKLOG.md` and the
+newest handoff before starting anything from §3 onwards. Read this, then
 [`CODEMAPS/architecture.md`](CODEMAPS/architecture.md) and **[`RULES.md`](RULES.md)**
-(38 rules, each of which cost a session). [`BACKLOG.md`](BACKLOG.md) is the long
+(105 rules, each of which cost a session). [`BACKLOG.md`](BACKLOG.md) is the long
 history; this file is the short answer to *"what should I work on?"*.
 
 ```bash
-cd Core && swift test          # 1145 tests, 146 suites, ~27 min
+cd Core && swift test          # or `make test` — counts in docs/TEST-BASELINE.md
 ```
 
 ```bash
@@ -18,9 +20,9 @@ cd App && xcodegen generate && cd .. && xcodebuild -project App/EndlessFrontier.
 ## 1. What it is now
 
 A deterministic colony simulation with a living top-down canvas. Seven founders,
-a two-minute tick, a five-real-minute drawn day. **67 engines, 50 model types,
-97 view files.** Content: 56 buildings, 37 techs, 182 events, 7 biomes, 46
-conveyances, 306 items, 306 recipes — all bilingual CZ/EN, guarded by a test.
+a two-minute tick, a five-real-minute drawn day. Content, counted 2026-08-28:
+62 buildings, 60 techs, 182 events, 7 biomes, 46 conveyances, 477 items,
+420 recipes — all bilingual CZ/EN, guarded by a test.
 
 What works and is worth protecting:
 
@@ -212,7 +214,7 @@ decode failure.
 Built to answer "is the late game behind glass, and should we stop generating
 content for it?" The answer is **no, generate freely**: a colony left entirely
 alone reaches the last era in year 225 of 250, and *nothing* is unreachable —
-0 of 152 events, 0 of 31 techs, 0 of 49 buildings.
+0 of 152 events, 0 of 31 techs, 0 of 49 buildings — measured 2026-08-17, on the content of that day.
 
 ```
 year   era                 pop   prosp  techs  repeats  towns

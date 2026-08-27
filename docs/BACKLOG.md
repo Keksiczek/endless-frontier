@@ -564,7 +564,7 @@ between frames.
 | 10.5 | **Temperature is cosmetic and does not match** the biome, for people or animals | **done** — `3cb1473` |
 | 10.6 | Maybe **slow the pace**, once the above are in | todo — wants a phone in hand, not a probe |
 
-Each is specified in `docs/HANDOFF.md` §2 with the diagnosis rather than the
+Each is specified in `docs/handoffs/HANDOFF-2026-08-16.md` §2 with the diagnosis rather than the
 wish. The short version of the two that matter most:
 
 - **10.2 is a drawing problem, not a simulation one.** `SiegeEngine` already
@@ -3039,7 +3039,7 @@ the probe either side.**
 Ten complaints in one evening, each of which turned out to name a **system that
 was in the simulation and not on the screen**, or a constant written when the
 thing it measured was a different size. Shipped in five commits; the full write
--up is `docs/HANDOFF-2026-08-25-evening.md`.
+-up is `docs/handoffs/HANDOFF-2026-08-25-evening.md`.
 
 ### 14.1 — what was actually wrong
 
@@ -3485,7 +3485,7 @@ tile and just under half a mature tree.
 
 ## 20. 2026-08-27 — the memory, and a recipe book that was already right
 
-Two of the five jobs in `HANDOFF-2026-08-27.md`. Both were written as small
+Two of the five jobs in `handoffs/HANDOFF-2026-08-27.md`. Both were written as small
 sure things and both turned out to be aimed at the wrong half, which is now the
 third time in a row a probe has moved the work before it started (rules 23, 90).
 

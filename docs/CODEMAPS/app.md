@@ -73,7 +73,7 @@ The device name goes stale with Xcode; check `xcrun simctl list devices availabl
 | Suite | Guards |
 |---|---|
 | `AgentMotionTests` | a colonist's day is one a person could live |
-| `BuildingLookTests` | 49 buildings are not drawn as 8 shapes |
+| `BuildingLookTests` | 62 buildings are not drawn as 8 shapes |
 | `SettlementRendererTests` | the canvas shows the colony actually built |
 | `SettlementLightTests` | hills come out round on a phone, not vertical stripes (rule 10b) |
 | `CrowdTests`, `BattleStagingTests` | crowds at distance, raids play and clear |
