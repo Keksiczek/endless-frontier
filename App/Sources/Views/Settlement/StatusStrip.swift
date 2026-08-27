@@ -44,7 +44,9 @@ struct StatusStrip: View {
                     }
                     .font(.caption)
                     .foregroundStyle(Theme.textDim)
+                    .lineLimit(1)
                     .accessibilityElement(children: .combine)
+                    yearMood
                     clock
                 }
                 Spacer()
@@ -202,13 +204,25 @@ struct StatusStrip: View {
                 .font(.caption2)
                 .foregroundStyle(tint.opacity(0.85))
         }
-        // …and what kind of *year* it is having, which is a different thing and
-        // the one the colony talks about. Read off the year alone, so a cold
-        // fortnight is not announced as a hard year.
+    }
+
+    /// **What kind of *year* it is having** — a different fact from the day's
+    /// weather, and the one the colony talks about.
+    ///
+    /// On its own line because it is the longest thing the header ever says:
+    /// *"rok, na který se nezapomíná"* is twenty-seven characters, and sharing
+    /// the season's row it pushed the whole line over an iPhone's width, broke
+    /// it, and left the clock's "N odpočívá" hanging off the end of a row it
+    /// was never part of. A header that reflows to fit an ornament has the
+    /// ornament in the wrong place — the same lesson `TribesPanel` and the
+    /// crafting row both paid for.
+    @ViewBuilder
+    private var yearMood: some View {
         if let year = game.climate.yearLabel()?.resolve(AppStrings.language) {
             Text(year)
                 .font(.caption2.italic())
                 .foregroundStyle(Theme.accent.opacity(0.9))
+                .lineLimit(1)
         }
     }
 
@@ -237,34 +251,56 @@ struct StatusStrip: View {
                 DayClock.doing($0, at: time, season: game.season,
                                language: AppStrings.language)
             } ?? []
-            HStack(spacing: 4) {
-                // At night the symbol is the **moon it actually is** — the
-                // phase decides how dark the valley goes, so it is worth being
-                // able to read it rather than inferring it from the ground.
-                Image(systemName: phase == .night
-                      ? MoonPhase.phase(at: time).symbol : phase.symbol)
-                    .font(.caption2)
-                Text(DayClock.clockText(at: time))
-                    .font(.caption.monospacedDigit())
-                Text(phase == .night
-                     ? MoonPhase.phase(at: time).name(AppStrings.language)
-                     : (AppStrings.language == .cs ? phase.czech : phase.english))
-                    .font(.caption2)
-                // What the colony is at, worst-news-first as `doing` orders it:
-                // a fight before a shift, a shift before a nap.
-                if let first = doing.first {
-                    Text("· \(first.count) \(first.what)")
-                        .font(.caption2)
-                }
-                if doing.count > 1 {
-                    Text("· \(doing[1].count) \(doing[1].what)")
-                        .font(.caption2)
-                        .foregroundStyle(Theme.textDim.opacity(0.75))
-                }
+            // **Two of them, or one, or neither — whichever fits on the row.**
+            //
+            // At midday the colony is at two things at once ("107 at work · 83
+            // resting"), and on a 402pt phone that line is wider than the
+            // header: `at work` broke onto a second line and left `· 83
+            // resting` hanging beside it, misaligned, on a row it was never
+            // part of. `doing` is ordered worst-news-first, so the thing to
+            // drop when the row is short is the *last* one.
+            ViewThatFits(in: .horizontal) {
+                clockRow(time: time, phase: phase, doing: Array(doing.prefix(2)))
+                clockRow(time: time, phase: phase, doing: Array(doing.prefix(1)))
+                clockRow(time: time, phase: phase, doing: [])
             }
             .foregroundStyle(phase == .night ? Theme.frost.opacity(0.9) : Theme.textDim)
             .accessibilityElement(children: .combine)
         }
+    }
+
+    /// One line of the day: the hour, what part of it this is, and what the
+    /// colony is at. Built as a function so `ViewThatFits` can offer the same
+    /// row with fewer things on it rather than letting SwiftUI wrap it.
+    private func clockRow(time: Double, phase: DayClock.Phase,
+                          doing: [(count: Int, what: String)]) -> some View {
+        HStack(spacing: 4) {
+            // At night the symbol is the **moon it actually is** — the phase
+            // decides how dark the valley goes, so it is worth being able to
+            // read it rather than inferring it from the ground.
+            Image(systemName: phase == .night
+                  ? MoonPhase.phase(at: time).symbol : phase.symbol)
+                .font(.caption2)
+            Text(DayClock.clockText(at: time))
+                .font(.caption.monospacedDigit())
+            Text(phase == .night
+                 ? MoonPhase.phase(at: time).name(AppStrings.language)
+                 : (AppStrings.language == .cs ? phase.czech : phase.english))
+                .font(.caption2)
+            // What the colony is at, worst-news-first as `doing` orders it:
+            // a fight before a shift, a shift before a nap.
+            if let first = doing.first {
+                Text("· \(first.count) \(first.what)")
+                    .font(.caption2)
+            }
+            if doing.count > 1 {
+                Text("· \(doing[1].count) \(doing[1].what)")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.textDim.opacity(0.75))
+            }
+        }
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
     }
 
     private var tensionPip: some View {
