@@ -370,8 +370,13 @@ enum AgentMotion {
         /// own bank instead of strolling out to sea.
         let water: ((LocalPoint) -> PathEngine.WaterDepth)?
 
+        /// The clock a live raid's steps are landing on, so a colonist in the
+        /// line walks between two of them instead of appearing at each.
+        let battleBeat: SettlementBattle.Beat?
+
         init(settlement: Settlement, registry: GameDataRegistry, continuousTick: Double = 0,
              replay: SettlementBattle.Replay? = nil,
+             battleBeat: SettlementBattle.Beat? = nil,
              /// The age the town is in, so a room is furnished for *now*
              /// (`FittingDefinition`). Defaults to the first age, which is what
              /// a settlement with no world around it — a preview, a test — is.
@@ -435,6 +440,7 @@ enum AgentMotion {
             // The same question the canvas asks, so the line the colonists run
             // to is the line the raiders are drawn breaking on — including
             // when the player is watching a replay rather than the live fight.
+            self.battleBeat = battleBeat
             self.battle = SettlementBattle.live(
                 settlement, continuousTick: continuousTick,
                 secondsPerTick: registry.config.realSecondsPerTick, replay: replay)
@@ -546,12 +552,13 @@ enum AgentMotion {
                              time: time, ticksPerYear: ticksPerYear)
         // A fight that is happening knows where this colonist is standing: the
         // Core walked them there, one action step at a time. Nothing is
-        // interpolated and nothing is guessed.
+        // *guessed* — the only thing presentation adds is the walk between two
+        // of those steps, off the clock the steps are landing on.
         if let siege = scene.siege,
            let there = SettlementBattle.post(
                for: pawn.id, siege: siege,
-               within: SettlementBattle.withinStep(of: siege,
-                                                   continuousTick: scene.continuousTick)) {
+               within: SettlementBattle.within(siege, beat: scene.battleBeat, time: time,
+                                               continuousTick: scene.continuousTick)) {
             let moving = SiegeField.distance(there.position, base.position) > SiegeEngine.pace
             return Pose(position: there.position, activity: .fighting,
                         stride: moving ? 1 : 0.3, facing: there.facing)

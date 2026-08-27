@@ -124,16 +124,45 @@ final class GameViewModel {
         // ever handed a pair of numbers — the world itself never crosses back
         // until it is finished.
         let slice = Self.sliceTicks(forPawns: snapshot.settlements.reduce(0) { $0 + $1.pawns.count })
+        let halt = raidHalt()
         let progress = AsyncStream<(Int, Int)> { continuation in
             Task.detached(priority: .userInitiated) {
-                let result = GameEngine.openSession(
+                let caught = GameEngine.openSession(
                     snapshot, now: now, registry: registry, sliceTicks: slice,
+                    stoppingWhen: halt,
                     onProgress: { done, total in continuation.yield((done, total)) })
                 continuation.finish()
-                await MainActor.run { self.finishCatchUp(result, before: snapshot) }
+                await MainActor.run {
+                    self.finishCatchUp(caught.result, before: snapshot,
+                                       stoppedShort: caught.stoppedShort)
+                }
             }
         }
         for await step in progress { catchUpProgress = step }
+    }
+
+    // MARK: - Arriving in the middle of a fight
+
+    /// Whether this return to the game has already been stopped for a raid.
+    ///
+    /// **One is the whole policy.** A colony is raided several times in a day
+    /// of world time, so halting the catch-up at every one of them would turn
+    /// a fortnight away into a queue of fights before the player could look at
+    /// their own town. Stopping at the first makes the surface reachable —
+    /// which is the thing that was wrong — and the rest of the absence then
+    /// runs through as it always did, its raids fought by the world clock and
+    /// reported.
+    private var haltedForRaid = false
+
+    /// The catch-up's stopping rule: the first raid opened by years the player
+    /// was not here for, and only if they asked to be stopped for things
+    /// (`pausesForImportantThings`).
+    ///
+    /// `nonisolated` and captured by value: it is handed to a detached task and
+    /// must not reach back into the view model.
+    private func raidHalt() -> (@Sendable (WorldState) -> Bool)? {
+        guard pausesForImportantThings, !haltedForRaid else { return nil }
+        return { state in state.settlements.contains { $0.siege != nil } }
     }
 
     /// **How much world to run between one reading of the bar and the next.**
@@ -165,9 +194,13 @@ final class GameViewModel {
         return max(16, min(240, budget / max(1, pawns)))
     }
 
-    private func finishCatchUp(_ result: PlannerResult, before: WorldState) {
+    private func finishCatchUp(_ result: PlannerResult, before: WorldState,
+                               stoppedShort: Bool = false) {
         isCatchingUp = false
         catchUpProgress = (0, 0)
+        // Stopped for a fight: the years that are left are still owed, and this
+        // return has had its one raid.
+        if stoppedShort { haltedForRaid = true }
         apply(result, before: before)
         // A raid or a decision that landed while the years were being replayed
         // is exactly the kind the player never got to answer — most of them
@@ -305,12 +338,19 @@ final class GameViewModel {
         liveLoop?.cancel()
         liveLoop = nil
         stopSiegeLoop()
+        // The player has gone. Coming back is a new arrival, and a new arrival
+        // is allowed to be stopped for a fight again.
+        haltedForRaid = false
     }
 
     // MARK: - A raid, while it is happening
 
     /// The fight going on at the settlement you are looking at, if one is.
     var siege: Siege? { selectedSettlement?.siege }
+
+    /// A fight going on **anywhere**. The world pauses for a raid wherever it
+    /// is, so whatever starts the driver has to see it wherever it is too.
+    var runningSiege: Siege? { world.settlements.compactMap(\.siege).first }
 
     /// Real seconds between two exchanges while the player is watching.
     ///
@@ -322,10 +362,40 @@ final class GameViewModel {
     /// not change the fight, only who got to steer it.
     private let siegeStepSeconds: Double = 1.4
 
+    /// **When the last step of the fight landed**, in the canvas's own timebase.
+    ///
+    /// A raid stops the world for the player to answer it — and the world clock
+    /// with it — while the siege loop goes on resolving a step every second and
+    /// a half. So the world clock cannot say how far through a step the drawing
+    /// is: it is not moving. This is the only clock that can, and it is written
+    /// here because this is where the steps are being asked for.
+    private var siegeStepLandedAt: Double?
+
+    /// The heartbeat the canvas draws a live fight between: what step is being
+    /// fought, when it landed, and how long one lasts.
+    var battleBeat: SettlementBattle.Beat? {
+        guard let siege, let at = siegeStepLandedAt else { return nil }
+        return SettlementBattle.Beat(step: siege.step, at: at,
+                                     seconds: siegeStepSeconds)
+    }
+
+    /// Stamps the instant a step landed, in the units `SettlementRenderer.draw`
+    /// measures `time` in.
+    private func markSiegeStep(_ now: Date = Date()) {
+        siegeStepLandedAt = now.timeIntervalSince(DayClock.epoch)
+    }
+
     /// Starts stepping a live raid. Idempotent; stops itself when the fighting
     /// does.
+    ///
+    /// **Any** raid, not only one at the settlement being watched: the world
+    /// pauses for a siege wherever it is (`stopForAnythingImportant`), so a
+    /// loop that only stepped the viewed one left a raid on an outpost pausing
+    /// the world for a fight nothing was carrying forward.
     func startSiegeLoop() {
-        guard siegeLoop == nil, siege != nil else { return }
+        guard siegeLoop == nil, world.settlements.contains(where: { $0.siege != nil })
+        else { return }
+        markSiegeStep()
         siegeLoop = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(self?.siegeStepSeconds ?? 1.4))
@@ -338,24 +408,35 @@ final class GameViewModel {
     func stopSiegeLoop() {
         siegeLoop?.cancel()
         siegeLoop = nil
+        siegeStepLandedAt = nil
     }
 
-    /// Fights one more exchange. Returns whether the raid is still going.
+    /// Fights one more exchange, everywhere one is going on. Returns whether
+    /// any raid is still running.
     @discardableResult
-    func advanceSiegeStep() -> Bool {
-        guard let index = selectedSettlementIndex,
-              let running = world.settlements[index].siege else { return false }
-        let fought = SiegeEngine.fight(
-            world.settlements[index], to: running.advancedTo + 1, registry: registry,
-            language: world.language)
-        world.settlements[index] = fought.settlement
-        if let finished = fought.concluded {
+    func advanceSiegeStep(now: Date = Date()) -> Bool {
+        let besieged = world.settlements.indices.filter { world.settlements[$0].siege != nil }
+        guard !besieged.isEmpty else { return false }
+        var concluded: [Siege] = []
+        for index in besieged {
+            guard let running = world.settlements[index].siege else { continue }
+            let fought = SiegeEngine.fight(
+                world.settlements[index], to: running.advancedTo + 1, registry: registry,
+                language: world.language)
+            world.settlements[index] = fought.settlement
+            if let finished = fought.concluded { concluded.append(finished) }
+        }
+        for finished in concluded {
             // The neighbours are charged for what the attempt actually cost
             // them, exactly as `ActionLoop` would have done it.
             world = SiegeEngine.chargeAttacker(world, for: finished)
-            persist()
+        }
+        guard world.settlements.contains(where: { $0.siege != nil }) else {
+            siegeStepLandedAt = nil
+            if !concluded.isEmpty { persist() }
             return false
         }
+        markSiegeStep(now)
         return true
     }
 
@@ -701,7 +782,12 @@ final class GameViewModel {
     /// the clock (rule 2 — a debug door is still a door into a deterministic
     /// world).
     func stageRaid() {
-        guard let index = world.settlements.indices.first else { return }
+        // **The settlement being watched**, not the first one in the list. A
+        // raid staged on a colony the player is not looking at pauses the world
+        // for a fight that is nowhere on their screen — which is what
+        // *"přehrává jinde"* was.
+        guard let index = selectedSettlementIndex ?? world.settlements.indices.first
+        else { return }
         let town = world.settlements[index]
         guard town.siege == nil else { return }
         let strength = 30 + Double(town.pawns.count) * 2.2

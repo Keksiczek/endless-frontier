@@ -633,4 +633,73 @@ struct SiegeTests {
                     "a broken warband pays its whole strength")
         }
     }
+
+    // MARK: - A body between two steps
+
+    /// **The stride, not its two endpoints.**
+    ///
+    /// A step carries a fighter `SiegeEngine.pace` — three per cent of the map
+    /// — and the app plays one every second and a half. Drawn from `at` alone
+    /// that is a body teleporting, over and over, for the whole of a fight:
+    /// Keks, watching a staged raid, *"boj se seká."* `wasAt` is where the step
+    /// found them, so the drawing has something to walk them from.
+    @Test("A step remembers where it found everybody")
+    func stepRemembersWhereItStarted() throws {
+        let reg = try registry()
+        var s = try besieged(colony(), strength: 60)
+        let siege = try #require(s.siege)
+        // Two steps: the first stages the warband, the second moves what it
+        // staged, so there is a stride to have remembered.
+        s = SiegeEngine.advance(s, to: siege.advancedTo + 2, registry: reg)
+        let fought = try #require(s.siege)
+
+        let moved = fought.fighters.filter {
+            guard let was = $0.wasAt else { return false }
+            return SiegeField.distance(was, $0.at) > 1e-9
+        }
+        #expect(!moved.isEmpty, "a raid whose second step moved nobody is not a raid")
+
+        for who in moved {
+            let was = try #require(who.wasAt)
+            // The ends are the two positions themselves…
+            #expect(SiegeField.distance(who.spot(within: 0), was) < 1e-9)
+            #expect(SiegeField.distance(who.spot(within: 1), who.at) < 1e-9)
+            // …and the middle is genuinely between them, not at either.
+            let half = who.spot(within: 0.5)
+            #expect(SiegeField.distance(half, was) > 1e-9)
+            #expect(SiegeField.distance(half, who.at) > 1e-9)
+            #expect(abs(SiegeField.distance(was, half)
+                        - SiegeField.distance(half, who.at)) < 1e-9)
+        }
+    }
+
+    /// A body drawn walking has to go on walking across a reload — otherwise
+    /// the fight the player left is not the fight they come back to.
+    @Test("Where a step found somebody survives a save")
+    func whereTheyCameFromIsSaved() throws {
+        let reg = try registry()
+        var s = try besieged(colony(), strength: 60)
+        let siege = try #require(s.siege)
+        s = SiegeEngine.advance(s, to: siege.advancedTo + 2, registry: reg)
+
+        let data = try JSONEncoder().encode(s)
+        let back = try JSONDecoder().decode(Settlement.self, from: data)
+        let before = try #require(s.siege).fighters
+        let after = try #require(back.siege).fighters
+        #expect(before.compactMap(\.wasAt).count == after.compactMap(\.wasAt).count)
+        #expect(!after.compactMap(\.wasAt).isEmpty)
+    }
+
+    /// The old saves clause (rule 3): a fight written before anybody had a
+    /// place they came from is drawn a step at a time, exactly as it was.
+    @Test("A fighter with nowhere they came from is drawn where they are")
+    func noOriginMeansNoInterpolation() {
+        let who = Siege.Combatant(
+            id: UUID(uuidString: "5E1E6E00-0000-0000-0000-0000000000AA")!,
+            side: .raider, at: LocalPoint(x: 0.3, y: 0.4), strength: 10)
+        #expect(who.wasAt == nil)
+        #expect(SiegeField.distance(who.spot(within: 0), who.at) < 1e-9)
+        #expect(SiegeField.distance(who.spot(within: 0.5), who.at) < 1e-9)
+    }
 }
+

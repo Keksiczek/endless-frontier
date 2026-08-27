@@ -10,9 +10,37 @@ public enum TickEngine {
         ticks: Int,
         registry: GameDataRegistry
     ) -> PlannerResult {
+        advance(state, ticks: ticks, registry: registry, stoppingWhen: nil).result
+    }
+
+    /// The same, but allowed to **stop early** — and to say how far it got.
+    ///
+    /// One caller needs this and it is the reason a raid was a thing the player
+    /// had never seen. A raid is a fight with its middle left open so somebody
+    /// can stand in it, and it lasts under a minute of the two hours a colony
+    /// year takes. The app is in the foreground for a sliver of that: nearly
+    /// every raid therefore opened *and finished* inside a catch-up, was fought
+    /// out by the world clock with nobody watching, and reached the player as a
+    /// line in the diary. The surface that lets you steer one was reachable
+    /// only by luck. Keks, on finding it behind the debug button: *"vyvolat
+    /// nájezd ukáže GUI, co jsem nikdy neviděl."*
+    ///
+    /// **This changes nothing about the simulation.** The predicate is asked
+    /// between two whole ticks and the only thing it can do is end the loop —
+    /// so a run that stops at tick 300 and is resumed for the remaining 900
+    /// lands on precisely the world a single run of 1,200 would have
+    /// (`catchUpIsTheSameWorldEitherWay` covers the slicing this rides on).
+    /// What is owed is carried by the caller, in `lastRealTimestamp`.
+    public static func advance(
+        _ state: WorldState,
+        ticks: Int,
+        registry: GameDataRegistry,
+        stoppingWhen halt: (@Sendable (WorldState) -> Bool)?
+    ) -> (result: PlannerResult, ticksRun: Int) {
         var s = state
         var fired: [HistoricalEvent] = []
-        guard ticks > 0 else { return PlannerResult(state: s, fired: fired) }
+        var run = 0
+        guard ticks > 0 else { return (PlannerResult(state: s, fired: fired), 0) }
 
         let interval = max(1, registry.config.plannerInterval)
         for _ in 0..<ticks {
@@ -101,8 +129,12 @@ public enum TickEngine {
                 s = result.state
                 fired.append(contentsOf: result.fired)
             }
+            run += 1
+            // Asked between two whole ticks, never inside one: a tick is the
+            // unit the world is consistent at.
+            if let halt, halt(s) { break }
         }
-        return PlannerResult(state: s, fired: fired)
+        return (PlannerResult(state: s, fired: fired), run)
     }
 
     /// Number of ticks that have elapsed in real time, capped at the offline

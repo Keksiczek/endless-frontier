@@ -74,7 +74,7 @@ living-world and social systems of a Czech HTML civilisation sim. All V2 phases
 (`cd Core && swift test`, ~18 min) and **202 App tests in 32 suites**, iOS
 build green.
 
-Content, counted 2026-08-27: **61 buildings, 60 techs**, 182 events, **7
+Content, counted 2026-08-27: **62 buildings, 60 techs**, 182 events, **7
 biomes**, 46 conveyances, **477 items, 420 recipes**, 129 motion clips,
 47 meals, 30 laws, 21 cults, 7 quests. All bilingual CZ/EN, guarded by a test.
 
@@ -212,7 +212,7 @@ to build next".
 Read these three, in order, when picking work up cold:
 
 1. `docs/CODEMAPS/architecture.md` — three layers, tick order, how a decision flows
-2. **`docs/RULES.md`** — 102 rules, each of which cost a session. Read *before*
+2. **`docs/RULES.md`** — 105 rules, each of which cost a session. Read *before*
    writing a threshold, not after
 3. `docs/BACKLOG.md` — the living plan
 

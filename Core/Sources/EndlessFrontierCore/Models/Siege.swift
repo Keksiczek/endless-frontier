@@ -152,6 +152,22 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
         public var kind: Kind = .person
         /// Where they are, in local-map coordinates.
         public var at: LocalPoint
+        /// **Where the current step found them**, before anybody moved.
+        ///
+        /// A step is a stride of `SiegeEngine.pace` — three per cent of the map
+        /// — and the app plays one every second and a half. Drawn from `at`
+        /// alone that is a body teleporting, over and over, for the whole of a
+        /// fight: Keks, watching one, *"boj se seká."* Two positions and a
+        /// share of the step elapsed is a body **walking**.
+        ///
+        /// It belongs here rather than in the canvas for the ordinary reason
+        /// (rule 8): where somebody was is as much the field's business as
+        /// where they are, and `struckFrom` next to it is the same kind of
+        /// fact. Nothing reads it but the drawing, and the drawing only reads.
+        /// Nil before the first step and on any save written before this, and
+        /// then `spot(within:)` is simply `at` — which is exactly what the old
+        /// drawing did.
+        public var wasAt: LocalPoint?
         /// What a raider is still worth — their share of the warband, spent as
         /// the line cuts them down. A colonist's weight is their health, so
         /// this holds their opening power and is only read, never spent.
@@ -197,11 +213,13 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
                     target: UUID? = nil, down: Bool = false,
                     kind: Kind = .person, intent: Intent = .fight,
                     goal: LocalPoint? = nil, name: String? = nil,
-                    struckAtStep: Int? = nil, struckFrom: LocalPoint? = nil) {
+                    struckAtStep: Int? = nil, struckFrom: LocalPoint? = nil,
+                    wasAt: LocalPoint? = nil) {
             self.id = id
             self.side = side
             self.kind = kind
             self.at = at
+            self.wasAt = wasAt
             self.strength = strength
             self.target = target
             self.down = down
@@ -212,9 +230,22 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
             self.struckFrom = struckFrom
         }
 
+        /// **Where to draw this body right now**: between where the step found
+        /// it and where the step left it.
+        ///
+        /// `within` is the share of the current step elapsed, 0…1. Linear,
+        /// because a stride is a stride — easing it would make everybody on the
+        /// field start and stop together, which is a dance rather than a walk.
+        public func spot(within: Double) -> LocalPoint {
+            guard let wasAt, within < 1 else { return at }
+            let t = max(0, within)
+            return LocalPoint(x: wasAt.x + (at.x - wasAt.x) * t,
+                              y: wasAt.y + (at.y - wasAt.y) * t)
+        }
+
         private enum CodingKeys: String, CodingKey {
             case id, side, kind, at, strength, target, down, intent, goal, name
-            case struckAtStep, struckFrom
+            case struckAtStep, struckFrom, wasAt
         }
 
         /// Written by hand because a synthesised decoder does **not** fall back
@@ -241,6 +272,9 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
             // flinching until the next one lands (rule 3).
             struckAtStep = try c.decodeIfPresent(Int.self, forKey: .struckAtStep)
             struckFrom = try c.decodeIfPresent(LocalPoint.self, forKey: .struckFrom)
+            // A fight saved before bodies were drawn walking has nobody with a
+            // place they came from, and is drawn a step at a time as it was.
+            wasAt = try c.decodeIfPresent(LocalPoint.self, forKey: .wasAt)
         }
     }
 
@@ -541,6 +575,15 @@ public struct Siege: Codable, Sendable, Equatable, Identifiable {
     /// Where a given fighter is standing, if they are on this field.
     public func place(of id: UUID) -> LocalPoint? {
         fighters.first { $0.id == id }?.at
+    }
+
+    /// The same, **part-way through the step that is being fought**.
+    ///
+    /// `within` is the share of the current step that has elapsed, 0…1. At 1
+    /// this is `place(of:)` exactly, which is what every caller that has no
+    /// clock of its own gets.
+    public func place(of id: UUID, within: Double) -> LocalPoint? {
+        fighters.first { $0.id == id }?.spot(within: within)
     }
 
     // MARK: - Codable (resilient: sieges postdate the first battles)

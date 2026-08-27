@@ -190,6 +190,11 @@ enum SettlementRenderer {
         /// it runs, so "watch it again" is the same choreography on its own
         /// clock rather than a second, separate picture of a battle.
         battleReplay: SettlementBattle.Replay? = nil,
+        /// **The clock a live raid's steps are actually landing on.** The world
+        /// clock stops for a raid and the siege loop does not, so this is what
+        /// carries a body between two steps of a fight — see
+        /// `SettlementBattle.Beat`.
+        battleBeat: SettlementBattle.Beat? = nil,
         selectedPawnID: UUID?,
         selectedBuildingID: Int?
     ) {
@@ -301,18 +306,19 @@ enum SettlementRenderer {
         SettlementBattle.drawGround(&context, rect: rect, settlement: settlement,
                                     continuousTick: continuousTick, zoom: zoom,
                                     secondsPerTick: registry.config.realSecondsPerTick,
-                                    replay: battleReplay)
+                                    replay: battleReplay, beat: battleBeat, time: time)
 
         agents(&context, rect: rect, settlement: settlement, map: map, continuousTick: continuousTick,
                registry: registry, time: time, zoom: zoom, selectedPawnID: selectedPawnID,
-               battleReplay: battleReplay)
+               battleReplay: battleReplay, battleBeat: battleBeat)
         SettlementFigures.birds(&context, rect: rect, season: season, time: time, zoom: zoom)
         // A raid plays out over the scene it happens to — above the people,
         // under the fog, so the dark still hides what the colony cannot see.
         SettlementBattle.draw(&context, rect: rect, settlement: settlement,
                               continuousTick: continuousTick, time: time, zoom: zoom,
                               secondsPerTick: registry.config.realSecondsPerTick,
-                              replay: battleReplay, selectedPawnID: selectedPawnID)
+                              replay: battleReplay, selectedPawnID: selectedPawnID,
+                              beat: battleBeat)
         fog(&context, rect: rect, map: map, time: time)
         // The seasonal wash is atmosphere over the lens, not part of the world,
         // so it stays in view space and doesn't slide when you pan.
@@ -329,7 +335,7 @@ enum SettlementRenderer {
             nightLamps(placed: placed) + SettlementBattle.torchlight(
                 settlement, rect: rect, continuousTick: continuousTick,
                 secondsPerTick: registry.config.realSecondsPerTick,
-                replay: battleReplay, zoom: zoom),
+                replay: battleReplay, zoom: zoom, beat: battleBeat, time: time),
             night: night, moonlight: moonlight, time: time)
     }
 

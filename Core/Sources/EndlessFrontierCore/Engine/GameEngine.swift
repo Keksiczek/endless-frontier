@@ -39,21 +39,50 @@ public enum GameEngine {
         sliceTicks: Int = 240,
         onProgress: (Int, Int) -> Void
     ) -> PlannerResult {
+        openSession(state, now: now, registry: registry, sliceTicks: sliceTicks,
+                    stoppingWhen: nil, onProgress: onProgress).result
+    }
+
+    /// The same, allowed to stop the moment something happens that the player
+    /// should be **in** rather than told about.
+    ///
+    /// The one thing that uses it is a raid: see
+    /// `TickEngine.advance(_:ticks:registry:stoppingWhen:)` for why a fight
+    /// with a middle left open was a surface nobody had ever reached. When the
+    /// years stop short, the clock stops with them — `lastRealTimestamp` is
+    /// moved on by the ticks actually run, so the rest of the absence is still
+    /// owed and is caught up once the fight is over.
+    public static func openSession(
+        _ state: WorldState,
+        now: Date,
+        registry: GameDataRegistry,
+        sliceTicks: Int = 240,
+        stoppingWhen halt: (@Sendable (WorldState) -> Bool)?,
+        onProgress: (Int, Int) -> Void
+    ) -> (result: PlannerResult, stoppedShort: Bool) {
         let total = TickEngine.ticksElapsed(
             since: state.lastRealTimestamp, until: now, config: registry.config)
         var result = PlannerResult(state: state, fired: [])
         var done = 0
+        var short = false
         onProgress(0, total)
         while done < total {
             let slice = min(max(1, sliceTicks), total - done)
-            let step = TickEngine.advance(result.state, ticks: slice, registry: registry)
-            result.state = step.state
-            result.fired.append(contentsOf: step.fired)
-            done += slice
+            let step = TickEngine.advance(result.state, ticks: slice,
+                                          registry: registry, stoppingWhen: halt)
+            result.state = step.result.state
+            result.fired.append(contentsOf: step.result.fired)
+            done += step.ticksRun
             onProgress(done, total)
+            if step.ticksRun < slice { short = true; break }
         }
-        result.state.lastRealTimestamp = now
-        return result
+        // Stopped short, the remaining absence is still owed: the stamp moves
+        // on by what was actually simulated and no further.
+        result.state.lastRealTimestamp = short
+            ? state.lastRealTimestamp
+                .addingTimeInterval(Double(done) * registry.config.realSecondsPerTick)
+            : now
+        return (result, short)
     }
 
     // MARK: - Player actions

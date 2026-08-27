@@ -85,7 +85,7 @@ struct SettlementScreen: View {
         // A raid runs on its own, much faster clock while somebody is here to
         // answer it. Starting the driver is *all* this does — the fight itself
         // is the simulation's, and it happens whether or not this screen is up.
-        .onChange(of: game.siege?.id) { _, id in
+        .onChange(of: game.runningSiege?.id) { _, id in
             guard id != nil else { game.stopSiegeLoop(); return }
             game.startSiegeLoop()
             // …and take the player to it. A raid arrives at whichever edge the
@@ -97,8 +97,10 @@ struct SettlementScreen: View {
             }
         }
         .onAppear {
-            guard let siege = game.siege else { return }
+            guard game.runningSiege != nil else { return }
             game.startSiegeLoop()
+            // …but the camera only goes to a fight on the ground it is showing.
+            guard let siege = game.siege else { return }
             game.lookAtTheField(approach: siege.approach, id: siege.id, edge: siege.edge)
         }
         // A raid the storyteller resolved never had a live siege to announce
@@ -145,6 +147,7 @@ struct SettlementScreen: View {
                     approaches: game.approaches(to: settlement),
                     clock: game.tickClock, selection: $selection,
                     buildPlan: $buildPlan, battleReplay: battleReplay,
+                    battleBeat: game.battleBeat,
                     focus: game.spotlight,
                     onSiegeOrder: { game.command($0) })
                 .overlay(alignment: .topTrailing) {

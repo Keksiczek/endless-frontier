@@ -26,10 +26,12 @@ extension SettlementRenderer {
         _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement,
         map: LocalMap, continuousTick: Double, registry: GameDataRegistry,
         time: Double, zoom: CGFloat, selectedPawnID: UUID?,
-        battleReplay: SettlementBattle.Replay? = nil
+        battleReplay: SettlementBattle.Replay? = nil,
+        battleBeat: SettlementBattle.Beat? = nil
     ) {
         let scene = AgentMotion.Scene(settlement: settlement, registry: registry,
-                                      continuousTick: continuousTick, replay: battleReplay)
+                                      continuousTick: continuousTick, replay: battleReplay,
+                                      battleBeat: battleBeat)
         let ticksPerYear = registry.config.ticksPerYear
         let close = SettlementCrowd.showsIndividuals(zoom: zoom)
 

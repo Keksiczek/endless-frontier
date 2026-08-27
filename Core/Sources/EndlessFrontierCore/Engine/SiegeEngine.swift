@@ -436,6 +436,14 @@ public enum SiegeEngine {
                             &+ UInt64(bitPattern: Int64(step)) &* 0x9E37_79B9_7F4A_7C15)
         let field = SiegeField(siege)
 
+        // **Where this step found everybody.** Stamped once, before anything on
+        // the field moves, so the canvas can draw the stride rather than its
+        // two endpoints (`Siege.Combatant.spot(within:)`). Costs one pass and
+        // decides nothing — every rule below still reads `at`.
+        for index in siege.fighters.indices {
+            siege.fighters[index].wasAt = siege.fighters[index].at
+        }
+
         stageIfNeeded(&siege, in: s, registry: registry, language: language)
         // What the colony's towers are worth **right now** — read once and used
         // twice, by what is left standing and by what shoots.

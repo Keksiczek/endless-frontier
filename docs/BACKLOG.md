@@ -3687,10 +3687,142 @@ rather than a wall. Nobody has measured whether the mine can be made to keep up.
 
 ### 20.7 — still open
 
-1. **The workshop avalanche** (§20.2). The honest fix is that a recipe sits at
-   the bench its own age has: either an early general bench, or the 98 first-age
-   workshop recipes re-homed to hut / hunters_lodge / cookhouse / lumberyard.
-   Measured and not attempted, because it moves a third of the book and wants a
-   run either side of it (rule 72 — one change per measurement).
+1. ~~**The workshop avalanche** (§20.2).~~ **Done 2026-08-28 — see §21.4.** An
+   early general bench (`work_shelter`), ninety-nine recipes moved to it, and
+   the medieval step down from +119 recipes to +24.
 2. `GameViewModel.swift` at 2415 lines, and the reason it was left (§20.4).
 3. Everything in §15.6, §16.3–16.4 and §17.4 that is not listed above.
+
+## 21. 2026-08-28 — three faults in raids, none of them in the fight
+
+Keks, in one sentence: *"vyvolat nájezd ukáže gui co jsem nikdy neviděl,
+přehrání pak přehrává jinde, boj se seká po několika vteřinách — to chci
+plynule."* Three complaints, three different causes, and the fight itself was
+right in all three.
+
+### 21.1 — the raid landed on a colony nobody was looking at
+
+`GameViewModel.stageRaid` opened the siege on `world.settlements.indices.first`.
+`advanceSiegeStep`, `startSiegeLoop` and the screen's `.onChange` all worked on
+the **selected** settlement. With one colony the two agree and nothing shows;
+with two, a raid on an outpost pauses the world — `stopForAnythingImportant`
+looks at every settlement — for a fight that nothing is stepping. A frozen game
+with a banner saying the world is stopped for an attack.
+
+Fixed at both ends: `stageRaid` opens it where the player is looking, and the
+loop steps **every** besieged settlement, because the pause is world-wide and
+the driver has to match it. The screen watches `runningSiege`, not `siege`; the
+camera still only flies to a fight on ground it is showing.
+
+### 21.2 — the fight was drawn on a clock that had stopped (rule 103)
+
+`SettlementBattle.withinStep` worked out how far into the current simulation
+step the drawing was by subtracting `siege.advancedTo / actionStepsPerTick` from
+`continuousTick`. Both sides of that are wrong at once during a raid:
+
+- the **world clock stops** — a raid pauses it, which is the point of it —
+  so `TickClock.continuous` clamps at `tick + 1` and stays there;
+- the **siege loop does not**, resolving a step every 1.4 real seconds, eight
+  to a tick.
+
+So `advancedTo` passes `continuousTick` after about eleven seconds, the
+subtraction goes negative, `min(1, max(0, …))` pins it at zero, and it never
+moves again. From then on every arrow is stamped at the instant its step began
+(`arrowFlight` is 7% of a step, so it is drawn at flight 0 and gone), every
+flinch is at full throw, and every stride is a teleport. *"Boj se seká po
+několika vteřinách"* — after several seconds, exactly.
+
+`SettlementBattle.Beat` is the fix: the loop stamps each step as it lands, in
+seconds since `DayClock.epoch` — the timebase the renderer's `time` already
+speaks — and the canvas divides. The world-clock reading is kept for the case it
+was written for: a fight in a settlement nobody is watching.
+
+And the drawing needed somewhere to walk **from**. `drawLive` said so in its own
+comment — *"everybody is drawn where the simulation says they are, and nothing
+is interpolated"* — which is a body appearing at eight positions a tick.
+`Siege.Combatant.wasAt` is stamped once at the top of `fightOneStep`, before
+anything moves; `spot(within:)` and `Siege.place(of:within:)` are the lerp.
+Optional and hand-decoded, so an old save draws exactly as it used to (rule 3).
+
+### 21.3 — the siege screen was reachable only by luck (rule 104)
+
+The third complaint was not a bug report, it was the tell: a surface the player
+had never seen. Not rarity — `DangerProbe` measures **127 fights in two
+centuries**. A tick is two real minutes and a raid is under one, so the window
+in which a raid can be *met* is the sliver of the day the app is in front.
+Everything else opened and finished inside a catch-up, fought out by the world
+clock, arriving as a line in the diary and a report card.
+
+`TickEngine.advance(_:ticks:registry:stoppingWhen:)` asks a predicate between
+two whole ticks and reports how far it got; `GameEngine.openSession` carries
+that up and moves `lastRealTimestamp` by the ticks **actually run**, so the rest
+of the absence is still owed. The determinism this rides on is stated as a test:
+stopping halfway and finishing later must land on the world one straight run
+would have.
+
+**Once per return**, and that is the whole policy. A colony is raided several
+times in a day of world time, so halting at every one turns a fortnight away
+into a queue of fights before the player can look at their own town.
+`GameViewModel.haltedForRaid` clears when the app goes to background.
+
+### 21.4 — the workshop avalanche, measured and moved (§20.7.1, rule 105)
+
+Measured across the whole book rather than one building: **101 recipes were
+gated by nothing but a bench from a later age than everything else they
+needed**, 91 of them at `workshop`, which is medieval.
+
+The previous handoff called the choice between "an early general bench" and
+"re-home them to the benches that exist" a design call. It is not, quite: the
+second scatters ninety-nine recipes across four unrelated buildings and makes
+*where do I make a bone chisel* harder than it was. `work_shelter` — a roof on
+four posts, **"Kolna"** — is `early_settlement`, `work: crafting`, 12 materials
+and a timber bundle, and it is now the cheapest bench a colony can raise. The
+council reaches it through the clause that already exists for this
+(`CouncilAppetite.hands` — a crafter with no bench).
+
+**What moved and what stayed needed no taste.** A recipe stays at the workshop
+if it eats something smelted or mined (`iron_ingot`, `ancient_alloy`, ore, coal,
+crude oil) or if what it makes is outside its age's damage or armour band — and
+both bands were **already** in `ContentTests` from §20.2. Ninety-nine moved;
+the twenty-five that stayed read exactly right: chainmail, plate, iron sword,
+crossbow, the three war bows, flintlock, blunderbuss, machine parts.
+
+| | before | after |
+|---|---|---|
+| makeable in the first age | 210 | 298 |
+| arriving at medieval | **+119** | +24 |
+| stranded behind a later bench | 101 | 23 |
+| strictly dominated recipes | 19 | 14 |
+
+Two new guards, stated as invariants so a generator cannot walk it back: *no
+bench is the only thing holding a book of recipes back* (cap 20) and *no single
+age hands over a sixth of the book at once*.
+
+### 21.5 — the fourteen routes nobody would choose
+
+Counted while measuring the above: fourteen recipes are strictly dominated — an
+earlier age reaches the same item for no more cost. All fourteen are one shape,
+a generator writing a second and dearer route to something the book could
+already make.
+
+**Not deleted, deliberately.** The panel folds to one row per thing so the
+player never meets them, and a recipe id can be sitting in a standing order in
+somebody's save, where removing it stops a bench in silence (rule 3). Capped by
+a test instead, so the number cannot grow while the decision is open. The
+decision: cut them, or price each below its earlier rival so it becomes the good
+route at its own age — and that wants a *rule*, not fourteen hand-set numbers.
+
+### 21.6 — still open
+
+1. **The iron half of the same avalanche.** Of the 23 recipes still stranded,
+   almost all are iron at the medieval workshop while `iron_ingot` is reachable
+   in the first age at the bloomery — §21.4 one age up. The bands say a `smithy`
+   at `ancient` is the shape. Measure either side (rule 72).
+2. **The fourteen** (§21.5) — a rule, not a list.
+3. **The mine** (§20.7 carried forward): `iron_ore` 309 at year 90 to 1 at year
+   200 against seventeen miners. Print the distribution first.
+4. `GameViewModel.swift`, and the reason it was left (§20.4).
+5. **A raid that ends while the world is paused for it clears its field at
+   once** — the linger is measured off `continuousTick`, which is not moving.
+   Rule 103's shape a third time, and the same cure.
+6. Everything in §15.6, §16.3–16.4 and §17.4 not listed above.

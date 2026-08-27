@@ -147,6 +147,10 @@ struct SettlementCanvasView: View {
     /// of an hour-long colony year; looking away used to mean missing it for
     /// good.
     var battleReplay: SettlementBattle.Replay?
+    /// **When the fight's last step landed.** A raid stops the world clock and
+    /// runs on a loop of its own, so this is the only clock that can say how
+    /// far through a step the drawing is — see `SettlementBattle.Beat`.
+    var battleBeat: SettlementBattle.Beat?
     /// Somewhere the game is asking the camera to go. Set it and the view pans
     /// and closes in once, then leaves the camera alone — a camera that keeps
     /// correcting the player is worse than one that never moves.
@@ -194,6 +198,7 @@ struct SettlementCanvasView: View {
                         seasonProgress: seasonProgress(at: now),
                         weather: weather,
                         battleReplay: battleReplay,
+                        battleBeat: battleBeat,
                         selectedPawnID: selectedPawnID,
                         selectedBuildingID: selectedBuildingID)
                     if let plan = buildPlan {
@@ -283,7 +288,8 @@ struct SettlementCanvasView: View {
             let now = Date()
             let scene = AgentMotion.Scene(settlement: settlement, registry: registry,
                                           continuousTick: clock.continuous(at: now),
-                                          replay: battleReplay, era: era)
+                                          replay: battleReplay, battleBeat: battleBeat,
+                                          era: era)
             return AgentMotion.pose(for: pawn, map: map, scene: scene,
                                     time: now.timeIntervalSince(start),
                                     ticksPerYear: registry.config.ticksPerYear).position
@@ -453,7 +459,8 @@ struct SettlementCanvasView: View {
         let t = Date().timeIntervalSince(start)
         let scene = AgentMotion.Scene(settlement: settlement, registry: registry,
                                       continuousTick: clock.continuous(at: Date()),
-                                      replay: battleReplay, era: era)
+                                      replay: battleReplay, battleBeat: battleBeat,
+                                      era: era)
         let ticksPerYear = registry.config.ticksPerYear
         var probe = Probe(location: location, limit: touchRadius)
 

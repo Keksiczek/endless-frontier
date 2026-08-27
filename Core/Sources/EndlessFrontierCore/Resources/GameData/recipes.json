@@ -592,7 +592,7 @@
     "resourceCost": {
       "materials": 5
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A reliable way to start a fire. A sharp piece of flint and some dry tinder wrapped in a leather pouch.",
       "cs": "Spolehlivý způsob, jak rozdělat oheň. Ostrý pazourek a suchý troud v koženém váčku."
@@ -737,7 +737,7 @@
     "resourceCost": {
       "materials": 5
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Simple protection from the sun, woven from dried valley grasses.",
       "cs": "Jednoduchá ochrana před sluncem, upletená ze suché údolní trávy."
@@ -776,7 +776,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A simple spear with bone barbs lashed to the tip. It's harder for a fish to wriggle free.",
       "cs": "Jednoduchý oštěp s kostěnými ostny přivázanými na špičku. Rybě se z něj hůř vyvlékne."
@@ -796,7 +796,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Soak tree bark in water to draw out the tannins, a crucial step for turning stiff hides into usable leather.",
       "cs": "Louhováním kůry ve vodě se získá odvar plný tříslovin, který promění zvířecí kůži v pevnou useň."
@@ -816,7 +816,7 @@
     "resourceCost": {
       "materials": 15
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "A thick, sturdy apron for blacksmiths and tanners, protecting them from sparks and splashes.",
@@ -836,7 +836,7 @@
     "resourceCost": {
       "materials": 5
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A simple tool for digging. Better than using your hands.",
       "cs": "Jednoduchý nástroj na kopání. Pořád lepší než holýma rukama."
@@ -856,7 +856,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Scrape, stretch, and treat a raw hide to turn it into a tough, workable material.",
       "cs": "Oškrabat, napnout a ošetřit surovou kůži, aby z ní vznikla pevná, použitelná useň."
@@ -915,7 +915,7 @@
     "resourceCost": {
       "materials": 8
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A simple bag for carrying small items, stitched from cured hide.",
       "cs": "Jednoduchý pytlík na nošení drobností, sešitý z vydělané kůže."
@@ -935,7 +935,7 @@
     "resourceCost": {
       "materials": 40
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "engineering",
     "description": {
       "en": "A pair of wheels on an axle and a simple frame. It can't carry much, but it's a start.",
@@ -975,7 +975,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "Mounting a sharpened stone head on a wooden handle gives much better leverage for chopping.",
@@ -1063,7 +1063,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "agriculture",
     "description": {
       "en": "A heavy wooden collar that allows two draft animals to pull a load together.",
@@ -1104,7 +1104,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "pottery",
     "description": {
       "en": "A large, fired clay jar, perfect for keeping grain dry and safe from pests.",
@@ -1124,7 +1124,7 @@
     "resourceCost": {
       "materials": 15
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Sturdy, comfortable boots that will last for years of walking the valley.",
       "cs": "Pevné, pohodlné boty, které vydrží roky chození po údolí."
@@ -1187,7 +1187,7 @@
     "resourceCost": {
       "materials": 40
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "engineering",
     "description": {
       "en": "A sturdy cart for hauling goods around the valley. It's not fast, but it beats carrying everything on your back.",
@@ -1245,7 +1245,7 @@
     "resourceCost": {
       "materials": 8
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "pottery",
     "description": {
       "en": "A simple clay bowl, fired for hardness. The first step towards proper storage and clean eating.",
@@ -1265,7 +1265,7 @@
     "resourceCost": {
       "materials": 6
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A simple cap stitched from uncured hide. It won't win any awards, but it keeps the ears warm.",
       "cs": "Jednoduchá čepice sešitá z nevyčiněné kůže. Žádná krása, ale uši udrží v teple."
@@ -1286,7 +1286,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A sharpened stone head bound tightly to a balanced haft. More accurate and deadly than a simple rock.",
       "cs": "Naostřená kamenná hlavice pevně svázaná s vyváženým topůrkem. Přesnější a smrtelnější než obyčejný kámen."
@@ -1323,7 +1323,7 @@
     "resourceCost": {
       "materials": 8
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Knotted fibers, woven into a net to bring in a bigger catch from the river.",
       "cs": "Vlákna svázaná do sítě. Z řeky se dá vytáhnout víc než jen jedna ryba najednou."
@@ -1386,7 +1386,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A stitched leather bag, sealed with beeswax. Allows a colonist to carry water far from the well.",
       "cs": "Sešitý kožený vak, utěsněný včelím voskem. Umožňuje kolonistovi nosit vodu daleko od studny."
@@ -1428,7 +1428,7 @@
     "resourceCost": {
       "materials": 8
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Two long poles and some rope. Crude, but lets one person haul more than they can carry.",
       "cs": "Dvě dlouhé tyče a kus provazu. Primitivní, ale člověk s tím odtáhne víc, než unese."
@@ -1464,7 +1464,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "pottery",
     "description": {
       "en": "A large clay pot, perfect for preserving food through a long winter.",
@@ -1482,7 +1482,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A heavy cloak woven from raw wool, providing good insulation against the valley's chill.",
       "cs": "Těžký plášť utkaný z hrubé vlny. Dobře chrání před údolním chladem."
@@ -1499,7 +1499,7 @@
     "resourceCost": {
       "materials": 3
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "A sharp, curved hook carved from animal bone. A simple but effective improvement for any angler.",
@@ -1521,7 +1521,7 @@
     "resourceCost": {
       "materials": 8
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "A sharp piece of flint lashed to a wooden handle. It's crude, but it will fell a tree.",
@@ -1561,7 +1561,7 @@
     "resourceCost": {
       "materials": 5
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A small, sharp flint blade for fine carving work.",
       "cs": "Malá, ostrá pazourková čepel pro jemnou řezbářskou práci."
@@ -1599,7 +1599,7 @@
     "resourceCost": {
       "materials": 8
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A heavy stone bowl and pestle for grinding herbs, grains, and pigments.",
       "cs": "Těžká kamenná miska a tlouk na drcení bylin, zrn a pigmentů."
@@ -1681,7 +1681,7 @@
     "resourceCost": {
       "materials": 20
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A symbol of our people, to be carried into the future.",
       "cs": "Znamení našeho lidu, které poneseme do budoucnosti."
@@ -1701,7 +1701,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A roll of fine, sharp tools for detailed work.",
       "cs": "Kožená rulička s jemnými, ostrými nástroji pro detailní práci."
@@ -1741,7 +1741,7 @@
     "resourceCost": {
       "materials": 8
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "The cured pelt is worked until it is soft and supple, ready for sewing.",
       "cs": "Zpracovaná kožešina se změkčuje, dokud není vláčná a připravená k šití."
@@ -1761,7 +1761,7 @@
     "resourceCost": {
       "materials": 5
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A heavy block of wood lashed to a handle. Crude, but it gets the job done.",
       "cs": "Těžký kus dřeva přivázaný k topůrku. Surové, ale svou práci odvede."
@@ -1781,7 +1781,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A simple shield of woven reeds over a wooden frame. Better than nothing.",
       "cs": "Jednoduchý štít z proutí na dřevěném rámu. Lepší než nic."
@@ -1839,7 +1839,7 @@
     "resourceCost": {
       "materials": 4
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "Carefully strike a piece of volcanic glass to create sharp, usable shards.",
@@ -1861,7 +1861,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "A wickedly sharp knife made from a shard of volcanic glass, hafted to a wooden handle.",
@@ -1920,7 +1920,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A simple sling for hunting small game. A good stone and a strong arm are all it needs.",
       "cs": "Jednoduchý prak k lovu malé zvěře. Stačí dobrý kámen a silná paže."
@@ -1939,7 +1939,7 @@
     "resourceCost": {
       "materials": 18
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A simple vest of cured hide to protect the torso from scrapes and the wind.",
       "cs": "Prostá vesta z vydělané kůže. Ochrání tělo před škrábanci a větrem."
@@ -2035,7 +2035,7 @@
     "resourceCost": {
       "materials": 3
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "Carefully striking a piece of volcanic glass to break off sharp, usable shards.",
@@ -2057,7 +2057,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "A wickedly sharp blade made from a flake of obsidian, fixed to a wooden handle and wrapped with cured hide.",
@@ -2134,7 +2134,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A simple but effective cape made from cured hides, offering protection from wind and rain.",
       "cs": "Jednoduchý, ale účinný plášť z vydělané kůže. Ochrání před větrem i deštěm."
@@ -2174,7 +2174,7 @@
     "resourceCost": {
       "materials": 15
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "Lash a shaped stone head to a wooden handle to create a tool for shaping wood.",
@@ -2235,7 +2235,7 @@
     "resourceCost": {
       "materials": 7
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "A heavy stone bound to a wooden handle with rope. A fundamental tool for building and breaking.",
@@ -2314,7 +2314,7 @@
     "resourceCost": {
       "materials": 8
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "A sharpened stone lashed to a handle with grass rope. The first real tool.",
@@ -2375,7 +2375,7 @@
     "resourceCost": {
       "materials": 15
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Fixing a flint point to a long shaft of wood. A real weapon for a real hunter.",
       "cs": "Připevnění pazourkového hrotu na dlouhou dřevěnou násadu. Zbraň pro skutečného lovce."
@@ -2455,7 +2455,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "A shard of flint, a striking steel, and dry tinder kept safe in a small clay pot. The beginning of every fire.",
@@ -2475,7 +2475,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Stitch together pieces of tough, cured hide to make a simple vest for protection from scrapes and weather.",
       "cs": "Sešitím kusů houževnaté kůže vznikne vesta, co chrání před odřeninami a nepohodou."
@@ -2551,7 +2551,7 @@
     "resourceCost": {
       "materials": 6
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "Carefully knap a hard river stone to give it a sharp, durable edge for working wood and softer stone.",
@@ -2649,7 +2649,7 @@
     "resourceCost": {
       "materials": 15
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "Lash a stone axe head to a wooden handle with strips of hide. A fundamental tool.",
@@ -2690,7 +2690,7 @@
     "resourceCost": {
       "materials": 18
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Stitching together smaller hides to make a simple cape that offers some protection from the wind and rain.",
       "cs": "Sešitím menších kůží vznikne jednoduchá pelerína, která nabízí určitou ochranu před větrem a deštěm."
@@ -2805,7 +2805,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "Shape a heavy fragment of petrified wood into a mortar and pestle for grinding herbs and pigments.",
@@ -2864,7 +2864,7 @@
     "resourceCost": {
       "materials": 7
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "Carefully chip and grind a smooth river stone into a durable axe head.",
@@ -2886,7 +2886,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A long wooden shaft fitted with a sharp stone head, secured with hide lashings. A hunter's best friend.",
       "cs": "Dlouhá dřevěná násada s ostrou kamennou hlavicí, zajištěná koženými řemínky. Nejlepší přítel lovce."
@@ -2944,7 +2944,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "Grind a sharp point onto a splinter of petrified wood and wrap the base in leather to make a serviceable, bone-like awl for punching holes in hide.",
@@ -3005,7 +3005,7 @@
     "resourceCost": {
       "materials": 16
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Stitch together pieces of tough leather and softer rabbit hide to protect the legs from thorns and scrapes.",
       "cs": "Sešít kousky tuhé kůže a měkčí králičiny. Ochrání nohy před trny a škrábanci."
@@ -3025,7 +3025,7 @@
     "resourceCost": {
       "materials": 7
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "Mount a sharpened piece of flint into a wooden handle. It's crude, but it can be used for rough woodworking.",
@@ -3065,7 +3065,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Grind a sturdy animal bone against smooth river stones to create a sharp chisel for fine work.",
       "cs": "Broušením pevné zvířecí kosti o hladké říční kameny vznikne ostré dláto pro jemnou práci."
@@ -3105,7 +3105,7 @@
     "resourceCost": {
       "materials": 15
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Cure thick animal hides with salt to make a durable apron for messy or dangerous work.",
       "cs": "Nasolit tlusté zvířecí kůže a vyrobit z nich trvanlivou zástěru pro špinavou nebo nebezpečnou práci."
@@ -3200,7 +3200,7 @@
     "resourceCost": {
       "materials": 15
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A heavy apron of layered hide, rubbed with beeswax for water resistance.",
       "cs": "Těžká zástěra z vrstvené kůže, napuštěná včelím voskem proti vodě."
@@ -3219,7 +3219,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "pottery",
     "description": {
       "en": "A heavy, porous ceramic crock, perfect for storing dry salt and keeping it from clumping.",
@@ -3240,7 +3240,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "Grind sharp bone splinters into fine needles and keep them in a small leather roll.",
@@ -3316,7 +3316,7 @@
     "resourceCost": {
       "materials": 16
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Heavy leather gloves, with seams sealed with beeswax for durability and water resistance.",
       "cs": "Silné kožené rukavice se švy zalitými včelím voskem pro větší odolnost a nepromokavost."
@@ -3432,7 +3432,7 @@
     "resourceCost": {
       "materials": 9
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Find a promising river stone and polish it against a leather strap until a gleam of pearl emerges.",
       "cs": "Nadějný říční kámen se tře o kus kůže tak dlouho, dokud se neobjeví perleťový lesk."
@@ -3452,7 +3452,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A set of fine bone needles in a leather roll, the tie adorned with a single polished pearl as a mark of its value.",
       "cs": "Sada jemných kostěných jehel v koženém pouzdře. Sponu zdobí jediná leštěná perla na znamení ceny."
@@ -3472,7 +3472,7 @@
     "resourceCost": {
       "materials": 14
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A heavy hide apron, rubbed with tallow to make it resistant to water and workshop stains.",
       "cs": "Těžká kožená zástěra, potřená lojem, aby odolala vodě a dílenským skvrnám."
@@ -3492,7 +3492,7 @@
     "resourceCost": {
       "materials": 15
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A simple woven blanket made from spun fleece, using mushroom powder to dye it a deep, earthy color.",
       "cs": "Prostá tkaná deka z předeného rouna, obarvená houbovým prachem do syté, zemité barvy."
@@ -3703,7 +3703,7 @@
     "resourceCost": {
       "materials": 14
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Stiff leather forearm guards, waterproofed and hardened with a coating of beeswax.",
       "cs": "Tuhé kožené chrániče předloktí, napuštěné a zpevněné vrstvou včelího vosku."
@@ -3828,7 +3828,7 @@
     "resourceCost": {
       "materials": 9
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Stiff pieces of cured leather tied with hide thongs to protect a worker's forearms.",
       "cs": "Tuhé kusy vydělané kůže svázané řemínky. Chrání předloktí při práci."
@@ -3868,7 +3868,7 @@
     "resourceCost": {
       "materials": 20
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A deep hood of heavy fur, lined with leather. It keeps the wind and snow out of the eyes.",
       "cs": "Hluboká kapuce z těžké kožešiny, podšitá kůží. Chrání oči před větrem a sněhem."
@@ -3889,7 +3889,7 @@
     "resourceCost": {
       "materials": 15
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Assemble the pre-made bed, axle and frame into a simple cart for hauling goods.",
       "cs": "Sestavit předem vyrobenou korbu, nápravu a rám do jednoduchého vozíku na přepravu zboží."
@@ -3953,7 +3953,7 @@
       "materials": 25,
       "knowledge": 50
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "scholarship",
     "description": {
       "en": "A symbolic bundle of the village's finest foods, a powerful reminder of past hardships overcome and a focus for future hopes.",
@@ -3998,7 +3998,7 @@
     "resourceCost": {
       "materials": 20
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A heavy hood of layered furs and leather straps, offering excellent protection against biting winds and winter cold.",
       "cs": "Těžká kapuce z několika vrstev kožešin a kožených řemínků. Poskytuje vynikající ochranu před kousavým větrem a zimním chladem."
@@ -4039,7 +4039,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Dried caps ground into clay and worked wet in a fired bowl until the colour holds.",
       "cs": "Sušené klobouky rozetřené do hlíny a za mokra míchané ve vypálené misce, dokud barva nedrží."
@@ -4103,7 +4103,7 @@
       "materials": 18,
       "knowledge": 5
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "writing",
     "description": {
       "en": "Using an obsidian shard to carve a fine point on a wooden pen, and forming a small clay pot to serve as an inkwell.",
@@ -4124,7 +4124,7 @@
     "resourceCost": {
       "materials": 22
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Cloth beaten with rendered fat until the rain runs off it instead of through it.",
       "cs": "Látka vyklepaná se škvařeným lojem, dokud po ní déšť stéká místo aby jí prosákl."
@@ -4211,7 +4211,7 @@
       "materials": 18,
       "knowledge": 5
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "writing",
     "description": {
       "en": "A sharpened bird's feather and a small pot of soot-based ink. For taking careful notes and drafting plans.",
@@ -4233,7 +4233,7 @@
       "materials": 20,
       "knowledge": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "writing",
     "description": {
       "en": "Tanned hide pages bound in a sturdy leather cover, ready to be filled with accounts and contracts.",
@@ -4354,7 +4354,7 @@
     "resourceCost": {
       "materials": 22
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "writing",
     "description": {
       "en": "A small wooden disc is carefully carved with symbols of fortune and set with a polished river pearl.",
@@ -4428,7 +4428,7 @@
     "resourceCost": {
       "materials": 22
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "Tough, tanned hide is stitched into a pair of sturdy boots, reinforced for miles of hard travel.",
@@ -4901,7 +4901,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "pottery",
     "description": {
       "en": "Smooth and shape a piece of hardwood to help form the walls of a new pot, making them stronger and more even.",
@@ -5160,7 +5160,7 @@
     "resourceCost": {
       "materials": 18
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "Stitching together layers of tough leather to protect a smith's hands from sparks and heat.",
@@ -5438,7 +5438,7 @@
     "resourceCost": {
       "materials": 15
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A shard of bone is carefully sharpened with a stone, then wrapped with a leather grip for fine work.",
       "cs": "Úlomek kosti, pečlivě nabroušený kamenem a ovinutý koženou rukojetí pro jemnou práci."
@@ -6045,7 +6045,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "Grinding down knuckle bones into various fine points and edges, useful for detailed carving work.",
       "cs": "Kloubní kosti vybroušené do různých jemných špiček a ostří, vhodné pro detailní řezbu."
@@ -6451,7 +6451,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "husbandry",
     "description": {
       "en": "A basic leather bridle for guiding domesticated animals.",
@@ -6637,7 +6637,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "A basic saw made from sharpened bone, useful for butchering large game or rudimentary surgery.",
@@ -6682,7 +6682,7 @@
     "resourceCost": {
       "materials": 5
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "apprenticeship",
     "description": {
       "en": "Carefully processed plant fibers, ready for spinning into thread or weaving.",
@@ -6787,7 +6787,7 @@
     "resourceCost": {
       "materials": 18
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A sharpened stone blade securely lashed to a sturdy wooden handle, effective for felling small trees.",
       "cs": "Nabroušená kamenná čepel bezpečně upevněná na pevném dřevěném topůrku, účinná pro kácení menších stromů."
@@ -6806,7 +6806,7 @@
     "resourceCost": {
       "materials": 20
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A heavy, warm woolen garment providing basic protection against cold and rain for a colonist.",
       "cs": "Těžký, teplý vlněný oděv poskytující základní ochranu před chladem a deštěm pro kolonistu."
@@ -6923,7 +6923,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "apprenticeship",
     "description": {
       "en": "Reinforce a basic satchel with leather and stronger rope for better durability and carrying capacity, essential for longer expeditions.",
@@ -6944,7 +6944,7 @@
     "resourceCost": {
       "materials": 18
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "Stitch together cured hides to form a protective vest, offering basic defense against the elements and minor impacts during daily tasks.",
@@ -6988,7 +6988,7 @@
     "resourceCost": {
       "materials": 15
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "apprenticeship",
     "description": {
       "en": "A collection of fine bone chisels and tools, carefully arranged in a leather pouch for delicate artistic work or detailed crafting.",
@@ -7122,7 +7122,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "porterage",
     "description": {
       "en": "A basic harness designed to distribute weight for carrying goods, whether by human or beast.",
@@ -7338,7 +7338,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A heavy stone mortar with a matching pestle, used for grinding grains, herbs, and other raw materials.",
       "cs": "Těžký kamenný hmoždíř s odpovídajícím tloukem, používaný k mletí obilí, bylin a dalších surovin."
@@ -7670,7 +7670,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "apprenticeship",
     "description": {
       "en": "Sturdy gloves made from cured leather, offering protection for the hands during strenuous or dangerous work.",
@@ -7690,7 +7690,7 @@
     "resourceCost": {
       "materials": 5
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "A simple melodic instrument carved from a hollowed piece of wood, used for entertainment and signaling.",
@@ -7711,7 +7711,7 @@
     "resourceCost": {
       "materials": 10
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "basic_tools",
     "description": {
       "en": "A light but effective shield woven from dried reeds and reinforced with plant fibers, suitable for quick defense.",
@@ -7941,7 +7941,7 @@
     "resourceCost": {
       "materials": 20
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "husbandry",
     "description": {
       "en": "Strong, braided hide for a comfortable and durable animal harness, improving efficiency in beasts of burden.",
@@ -7983,7 +7983,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A sturdy frame to distribute heavy loads, essential for more efficient carrying or constructing larger packs.",
       "cs": "Pevná konstrukce k rozložení těžkých nákladů, základ pro efektivnější transport nebo stavbu objemnějších zavazadel."
@@ -8027,7 +8027,7 @@
     "resourceCost": {
       "materials": 8
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "pottery",
     "description": {
       "en": "A small pot containing crushed charcoal and ground roots, providing basic pigments for marking or early artistic expression.",
@@ -8066,7 +8066,7 @@
     "resourceCost": {
       "materials": 18
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A densely woven mantle of dried reeds, offering substantial protection against heavy rain and damp conditions.",
       "cs": "Hustě upletený plášť ze sušeného rákosu, poskytující značnou ochranu proti silnému dešti a vlhkosti."
@@ -8199,7 +8199,7 @@
     "resourceCost": {
       "materials": 20
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "requiresTech": "preservation",
     "description": {
       "en": "A sturdy woolen cloak treated with beeswax for superior water resistance and durability in harsh weather.",
@@ -8390,7 +8390,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "work_shelter",
     "description": {
       "en": "A simple satchel made from dried hide and woven plant fibers, useful for carrying gathered goods.",
       "cs": "Jednoduchá brašna vyrobená ze sušené kůže a pletených rostlinných vláken, užitečná pro nošení nasbíraných věcí."

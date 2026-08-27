@@ -193,6 +193,43 @@
     }
   },
   {
+    "id": "work_shelter",
+    "work": "crafting",
+    "look": "workshop",
+    "era": "early_settlement",
+    "name": {
+      "en": "Work Lean-to",
+      "cs": "Kolna"
+    },
+    "cost": {
+      "materials": 12
+    },
+    "material_cost": {
+      "timber_bundle": 1
+    },
+    "workers": 3,
+    "production": {
+      "materials": 3
+    },
+    "consumption": {},
+    "morale_effect": 0,
+    "adjacency": [
+      {
+        "neighbor": "lumberyard",
+        "resource": "materials",
+        "bonus": 1
+      }
+    ],
+    "footprint": {
+      "w": 3,
+      "h": 2
+    },
+    "description": {
+      "en": "A roof on four posts, a block to work on and somewhere dry for the tools. Everything a colony makes before it can raise a proper workshop is made here.",
+      "cs": "Střecha na čtyřech kůlech, špalek na práci a sucho pro nářadí. Než osada zvládne postavit dílnu, vzniká všechno ostatní tady."
+    }
+  },
+  {
     "id": "charcoal_kiln",
     "work": "crafting",
     "look": "forge",

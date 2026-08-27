@@ -318,6 +318,120 @@ struct ContentIntegrityTests {
         #expect(stranded.isEmpty, "\(stranded.prefix(8).joined(separator: "; "))")
     }
 
+    /// **A bench must not be the only thing a recipe is waiting for.**
+    ///
+    /// Measured 2026-08-27, before the fix: **101 recipes in the book were
+    /// gated by nothing but a workbench from a later age than everything else
+    /// they needed** — 91 of them at `workshop`, which is *medieval*, and which
+    /// therefore held ninety-nine first-age crafts: bone chisels, grass hats,
+    /// hide caps, stone-tipped spears. Nothing else about them was medieval.
+    /// The result was an avalanche: 210 recipes makeable in the first age, and
+    /// then **119 more the day the workshop went up** — more than a quarter of
+    /// the whole book arriving in one afternoon.
+    ///
+    /// Gating cannot fix that, and §20.2 says why: by the time the workshop
+    /// exists the early techs are two ages old, so putting `basic_tools` on a
+    /// bone chisel changes nothing. The bench *is* the gate, so the bench has
+    /// to be the one the recipe's own age has — hence `work_shelter`, and the
+    /// ninety-nine that moved to it.
+    ///
+    /// A cap rather than zero, because a handful are honest: iron arrives at
+    /// the bloomery in the first age and the things made *of* iron wait for a
+    /// smithy the book does not have yet. That is a smaller avalanche of its
+    /// own and wants measuring before it is moved (rule 72).
+    @Test("No bench is the only thing holding a book of recipes back")
+    func noBenchStrandsAnAgeOfRecipes() throws {
+        let reg = try registry()
+        var cache: [String: Int] = [:]
+        var stranded: [String: [String]] = [:]
+        for recipe in reg.recipes.values.sorted(by: { $0.id < $1.id }) {
+            guard let benchID = recipe.requiresBuilding,
+                  let bench = reg.building(benchID) else { continue }
+            // Everything the recipe needs *except* the bench.
+            var otherwise = 0
+            if let id = recipe.requiresTech, let t = reg.tech(id) {
+                otherwise = max(otherwise, t.era.index)
+            }
+            for material in recipe.materials.keys.sorted() {
+                otherwise = max(otherwise, itemEra(material, reg, &cache))
+            }
+            guard bench.era.index > otherwise else { continue }
+            stranded[benchID, default: []].append(recipe.id)
+        }
+        let worst = stranded.max { $0.value.count < $1.value.count }
+        let names = worst?.value.prefix(6).joined(separator: ", ") ?? ""
+        let bench = worst?.key ?? "—"
+        let held = worst?.value.count ?? 0
+        #expect(held <= 20,
+                "\(bench) is the only thing \(held) recipes are waiting for: \(names)")
+    }
+
+    /// …and the same thing read from the other side: what the ladder looks like
+    /// to somebody climbing it. No age after the first may hand the player a
+    /// sixth of the book at once.
+    @Test("No single age hands over a sixth of the book at once")
+    func theBookArrivesGradually() throws {
+        let reg = try registry()
+        var cache: [String: Int] = [:]
+        var perAge: [Int: Int] = [:]
+        for recipe in reg.recipes.values {
+            perAge[reachableEra(recipe, reg, &cache), default: 0] += 1
+        }
+        let total = reg.recipes.count
+        // The first age is *meant* to be the widest — a colony has to be able
+        // to make things on its first day. The spikes that read as an avalanche
+        // are the later ones.
+        let later = perAge.filter { $0.key > Era.earlySettlement.index }
+        let worst = later.max { $0.value < $1.value }
+        let age = worst?.key ?? -1
+        let arriving = worst?.value ?? 0
+        #expect(arriving * 6 <= total,
+                "era \(age) makes \(arriving) of \(total) recipes available in one step")
+    }
+
+    /// **A second way of making a thing has to be worth taking.**
+    ///
+    /// A recipe is *strictly dominated* when another route to the same item
+    /// arrives an age earlier and costs no more: there is no colony, at no
+    /// moment of its life, that would choose it. Measured 2026-08-27 the book
+    /// held nineteen; re-homing the workshop's first-age crafts fixed five of
+    /// them by itself and fourteen are left, every one of the same shape — a
+    /// generator writing a second, dearer recipe for something the book could
+    /// already make.
+    ///
+    /// **They are not deleted, and that is deliberate.** The crafting panel
+    /// folds to one row per thing, so the player never meets them unless they
+    /// search; and a recipe id can be sitting in a standing order in somebody's
+    /// save, where removing it would silently stop a bench (rule 3). What is
+    /// wanted is that the number does not *grow*: whether the fourteen are cut
+    /// or made the good route at their own age is a content decision, and this
+    /// holds the line until somebody makes it.
+    @Test("A second way of making a thing is worth taking")
+    func noBookOfRoutesNobodyWouldChoose() throws {
+        let reg = try registry()
+        var cache: [String: Int] = [:]
+        var routes: [String: [RecipeDefinition]] = [:]
+        for recipe in reg.recipes.values { routes[recipe.outputItemID, default: []].append(recipe) }
+        func price(_ r: RecipeDefinition) -> Double {
+            r.materials.values.reduce(0) { $0 + Double($1) }
+                + ResourceType.allCases.reduce(0) { $0 + r.resourceCost[$1] }
+        }
+        var pointless: [String] = []
+        for (_, ways) in routes where ways.count > 1 {
+            for way in ways {
+                let mine = reachableEra(way, reg, &cache)
+                let beaten = ways.contains { other in
+                    other.id != way.id
+                        && reachableEra(other, reg, &cache) < mine
+                        && price(other) <= price(way)
+                }
+                if beaten { pointless.append(way.id) }
+            }
+        }
+        #expect(pointless.count <= 14,
+                "\(pointless.count) recipes nobody would ever choose: \(pointless.sorted().prefix(8))")
+    }
+
     /// **A weapon must not arrive before the age its damage belongs to.**
     ///
     /// The bands are not a taste: they are read off the recipes that already
@@ -519,6 +633,51 @@ struct CatchUpSliceTests {
         let sliced = GameEngine.openSession(world, now: later, registry: registry,
                                             sliceTicks: slice, onProgress: { _, _ in })
         #expect(sliced.state == whole.state)
+    }
+
+    /// **Stopping the years to be shown something does not rewrite them.**
+    ///
+    /// A raid lasts under a minute of the two hours a colony year takes, and
+    /// the app is in the foreground for a sliver of that — so nearly every raid
+    /// in the game opened *and finished* inside a catch-up, was fought by the
+    /// world clock with nobody watching, and reached the player as a line in
+    /// the diary. The surface that lets you stand in one and give orders was
+    /// reachable only by luck. Keks, finding it behind the debug button:
+    /// *"vyvolat nájezd ukáže GUI, co jsem nikdy neviděl."*
+    ///
+    /// So a catch-up may now stop the moment one opens. This is the invariant
+    /// that makes that safe: stopping halfway and finishing later has to land
+    /// on exactly the world one straight run would have, and the time that was
+    /// not simulated has to still be *owed* rather than swallowed.
+    @Test("A catch-up stopped halfway and finished later is the same world")
+    func stoppingTheCatchUpChangesNothing() throws {
+        let registry = try GameDataRegistry.bundled()
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        var world = GameWorldFactory.newGame(registry: registry, seed: 4242, now: start)
+        world.lastRealTimestamp = start
+        let later = start.addingTimeInterval(Double(registry.config.realSecondsPerTick) * 400)
+
+        let whole = GameEngine.openSession(world, now: later, registry: registry)
+
+        // Stop at a tick picked out of the middle by a plain arithmetic rule,
+        // so the halt is real but has nothing to do with what happens in the
+        // world — the same shape a raid's halt has.
+        let halfway = world.tick + 173
+        let first = GameEngine.openSession(
+            world, now: later, registry: registry, sliceTicks: 97,
+            stoppingWhen: { $0.tick >= halfway }, onProgress: { _, _ in })
+        #expect(first.stoppedShort, "the halt must actually have stopped it")
+        #expect(first.result.state.tick == halfway)
+        // The rest is still owed: the clock moved by what was simulated, not to
+        // the moment the player arrived.
+        #expect(first.result.state.lastRealTimestamp < later)
+
+        let finished = GameEngine.openSession(
+            first.result.state, now: later, registry: registry, sliceTicks: 97,
+            stoppingWhen: nil, onProgress: { _, _ in })
+        #expect(finished.result.state == whole.state,
+                "stopping for a fight must not change a single thing about the world")
+        #expect(finished.result.state.lastRealTimestamp == later)
     }
 }
 

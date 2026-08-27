@@ -1,8 +1,12 @@
 # Docs — what is where
 
 > **Start here if you are picking this up cold:**
-> [`HANDOFF-2026-08-27-evening.md`](HANDOFF-2026-08-27-evening.md) — the newest
-> plan, and what the last five jobs turned into.
+> [`HANDOFF-2026-08-28.md`](HANDOFF-2026-08-28.md) — the newest plan: three
+> faults in raids that were none of them in the fight (the wrong colony, a
+> stopped clock, and a surface only reachable while the app was in front), and
+> the workshop avalanche measured and moved.
+> Before it: [`HANDOFF-2026-08-27-evening.md`](HANDOFF-2026-08-27-evening.md) —
+> what the last five jobs turned into.
 > Then [`BACKLOG.md` §20](BACKLOG.md) (2026-08-27) — a colonist's memory (the
 > subjects were never the shortage, the 140-entry ring was), a recipe book that
 > turned out to be correctly tiered, the renderer in eight files, and **a
@@ -34,7 +38,7 @@ Read in this order when picking work up cold:
 |---|---|---|
 | 1 | [NEXT.md](NEXT.md) | **Start here.** Where the game stands and what to work on next, with the evidence for each |
 | 2 | [CODEMAPS/architecture.md](CODEMAPS/architecture.md) | The three layers, the tick order, where a decision flows |
-| 3 | [RULES.md](RULES.md) | **102 rules, each of which cost a session.** Read before writing a threshold |
+| 3 | [RULES.md](RULES.md) | **105 rules, each of which cost a session.** Read before writing a threshold |
 | 4 | [BACKLOG.md](BACKLOG.md) | **The living record.** What was measured, what was built, what Keks asked for |
 
 ## Routing table — by what you are about to do

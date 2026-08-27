@@ -1,6 +1,6 @@
 # Rules — what has already gone wrong, and must not again
 
-<!-- Extracted from BACKLOG.md 2026-08-13 | 102 rules -->
+<!-- Extracted from BACKLOG.md 2026-08-13 | 105 rules -->
 
 **Every one of these cost a session at least once.** They are the project's
 troubleshooting guide and its lessons learned in one list: when something in the
@@ -1023,3 +1023,43 @@ fires, do the arithmetic before you rewrite the mechanic.
    belongs to the player must survive it (rule 77) — which means a field, a
    hand-written decoder (rule 37) and a migration in the same change (rule 79),
    or a save from yesterday stays frozen for ever.
+103. **A clock that is stopped cannot measure anything, least of all itself.**
+   The live fight interpolated between two simulation steps by asking the world
+   clock how far into the current one it was — and a raid *pauses the world*,
+   which is why it was there. Meanwhile the siege loop went on resolving a step
+   every 1.4 real seconds, eight to a tick, so `advancedTo / stepsPerTick` ran
+   past a `continuousTick` pinned at `tick + 1` inside a dozen seconds. The
+   subtraction went negative, clamped to zero, and stayed there: every arrow,
+   jolt and stride stamped at the same instant of its step for the rest of the
+   fight. Keks: *"boj se seká po několika vteřinách."* Rule 34's shape with the
+   twist that makes it hard to see — the unit was right, the **clock** was not
+   running. When two things move at different rates, interpolate against the
+   one whose beats you are drawing, and note that the drawing needs somewhere
+   to walk *from*: positions the simulation replaces wholesale need their
+   previous value kept (`Siege.Combatant.wasAt`) or there is nothing to
+   interpolate.
+104. **A surface only reachable while the app is in the foreground is not
+   reachable.** A tick is two real minutes and a raid is over in under one, so
+   a fight with its middle left open for the player to steer could only be met
+   if it opened during the sliver of the day they happened to be looking. Every
+   other one opened and finished inside a catch-up — fought out by the world
+   clock, arriving as a line in the diary. Two centuries of measurement said
+   **127 fights**, and the player had seen the siege screen zero times. Nothing
+   was rare and nothing was broken: the reachability was a function of *when*
+   the simulation ran, which is the one axis rule 93's greps do not cover. If
+   an interaction is worth building, the catch-up has to be able to stop at it
+   — and stop **once**, because a colony is raided several times in a day of
+   world time and halting at every one turns a fortnight away into a queue.
+105. **A workbench is a gate, and no amount of tech gating fixes the wrong
+   one.** 101 recipes in the book waited on nothing but a bench from a later
+   age than everything else they needed; 91 of those sat at `workshop`, which
+   is *medieval*, and 99 of them were first-age crafts — bone chisels, grass
+   hats, stone-tipped spears. The book therefore arrived as an avalanche: 210
+   recipes in the first age, then **119 more the afternoon the workshop went
+   up**. Rule 100 found the data was right and rule 66 says why a tech gate
+   cannot help — by the time the workshop exists `basic_tools` is two ages old.
+   The fix was a bench the first age actually has (`work_shelter`), and the
+   split between what moved and what stayed needed no taste: a recipe stays if
+   it eats something smelted or mined, or if what it makes is out of its age's
+   damage band — which the suite was **already** checking. When a content
+   decision looks like taste, look for the invariant already in the tests.

@@ -63,6 +63,36 @@ enum SettlementBattle {
         }
     }
 
+    /// **The heartbeat a live raid is actually drawn on.**
+    ///
+    /// A siege is stepped by `GameViewModel.startSiegeLoop` at its own cadence
+    /// — every second and a half — deliberately *ahead* of the world clock,
+    /// because a step carried at the tick's pace is one exchange every fifteen
+    /// real seconds. And the world clock does not merely run slower during a
+    /// raid: it **stops**, because a raid pauses the world for the player to
+    /// answer it.
+    ///
+    /// So `withinStep` was measuring the share of a step elapsed against a
+    /// clock that had halted, on a step counter that ran away from it — the
+    /// subtraction went negative inside the first dozen seconds, clamped to
+    /// zero, and stayed there. Every arrow, every jolt, every stride was then
+    /// stamped at the same instant of its step for ever: Keks, watching a
+    /// staged raid, *"boj se seká po několika vteřinách."*
+    ///
+    /// The fix is not a better formula against the world clock — it is to
+    /// interpolate against **the clock the steps are actually coming on**. The
+    /// loop stamps each one as it lands and the canvas divides.
+    struct Beat: Equatable {
+        /// The step this stamp belongs to (`Siege.step`), so a stale beat is
+        /// ignored rather than believed.
+        let step: Int
+        /// When that step landed, in the canvas's own timebase: seconds since
+        /// `DayClock.epoch`, which is the unit `draw(time:)` speaks.
+        let at: Double
+        /// Real seconds between two steps.
+        let seconds: Double
+    }
+
     // MARK: - The shape of a fight
 
     /// What is happening right now. The whole point of naming these is that
@@ -227,14 +257,17 @@ enum SettlementBattle {
     /// pulled out of their day for exactly as long as the fight is on screen.
     static func live(
         _ settlement: Settlement, continuousTick: Double,
-        secondsPerTick: Double = 60, replay: Replay? = nil, now: Date = Date()
+        secondsPerTick: Double = 60, replay: Replay? = nil, now: Date = Date(),
+        beat: Beat? = nil, time: Double = 0
     ) -> (log: BattleLog, progress: Double)? {
         // A fight that is **still going on** outranks everything: this is not a
         // recording being played back, it is the thing itself, and the record
         // grows a beat at a time as the simulation writes it.
         if let siege = settlement.siege {
+            let part = within(siege, beat: beat, time: time,
+                              continuousTick: continuousTick)
             return (log(of: siege, defender: settlement.name),
-                    liveProgress(of: siege, continuousTick: continuousTick))
+                    liveProgress(of: siege, within: part))
         }
         // A replay outranks the finished fight: the player asked for this one.
         if let replay {
@@ -300,18 +333,37 @@ enum SettlementBattle {
     static let flinchReach = SiegeEngine.reach / 3
 
     /// How much of the current simulation step has elapsed, 0…1.
+    ///
+    /// The world-clock reading, which is right for a siege the *world* is
+    /// carrying — a fight going on in a settlement nobody is watching, caught
+    /// up on later. It is wrong for the one on screen, which runs on the siege
+    /// loop's own faster clock: see `within(_:beat:time:continuousTick:)`.
     static func withinStep(of siege: Siege, continuousTick: Double) -> Double {
         let perTick = Double(WorldClock.actionStepsPerTick)
         let resolvedAt = Double(siege.advancedTo) / perTick
         return min(1, max(0, (continuousTick - resolvedAt) * perTick))
     }
 
+    /// The same question, answered off whichever clock is actually driving this
+    /// fight. A stamped beat for the step being drawn wins; anything else falls
+    /// back to the world clock.
+    static func within(
+        _ siege: Siege, beat: Beat?, time: Double, continuousTick: Double
+    ) -> Double {
+        guard let beat, beat.step == siege.step, beat.seconds > 0 else {
+            return withinStep(of: siege, continuousTick: continuousTick)
+        }
+        return min(1, max(0, (time - beat.at) / beat.seconds))
+    }
+
     static func liveProgress(of siege: Siege, continuousTick: Double) -> Double {
-        let perTick = Double(WorldClock.actionStepsPerTick)
-        // The tick the last resolved step sat in, as a fraction.
-        let resolvedAt = Double(siege.advancedTo) / perTick
-        let within = min(1, max(0, (continuousTick - resolvedAt) * perTick))
-        return min(1, (Double(siege.step) + within) / Double(max(1, siege.steps)))
+        liveProgress(of: siege, within: withinStep(of: siege,
+                                                   continuousTick: continuousTick))
+    }
+
+    /// …and the same from a share of the step already worked out.
+    static func liveProgress(of siege: Siege, within: Double) -> Double {
+        min(1, (Double(siege.step) + within) / Double(max(1, siege.steps)))
     }
 
     /// A live siege, read as the record the drawing already speaks.
@@ -367,12 +419,13 @@ enum SettlementBattle {
         // …thrown by whatever just hit them, so a colonist in the line reacts
         // to a blow the same way a raider does.
         let jolt = flinch(me, siege: siege, within: within)
-        let at = LocalPoint(x: me.at.x + jolt.dx, y: me.at.y + jolt.dy)
+        let walked = me.spot(within: within)
+        let at = LocalPoint(x: walked.x + jolt.dx, y: walked.y + jolt.dy)
         // Facing whoever they are on, and out along the attack if nobody.
-        guard let mark = me.target.flatMap({ siege.place(of: $0) }) else {
+        guard let mark = me.target.flatMap({ siege.place(of: $0, within: within) }) else {
             return (at, SiegeField(siege).axisX)
         }
-        return (at, toward(me.at, mark).x)
+        return (at, toward(walked, mark).x)
     }
 
     private static func toward(_ a: LocalPoint, _ b: LocalPoint) -> (x: Double, y: Double) {
@@ -388,18 +441,22 @@ enum SettlementBattle {
         _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement,
         continuousTick: Double, time: Double, zoom: CGFloat,
         secondsPerTick: Double = 60, replay: Replay? = nil,
-        selectedPawnID: UUID? = nil
+        selectedPawnID: UUID? = nil, beat: Beat? = nil
     ) {
         guard let (log, progress) = live(settlement, continuousTick: continuousTick,
                                          secondsPerTick: secondsPerTick,
-                                         replay: replay) else { return }
+                                         replay: replay, beat: beat,
+                                         time: time) else { return }
         // A fight that is happening has real people standing in real places. A
         // record being played back has neither, and has to be staged.
         let siege = settlement.siege.flatMap { $0.id == log.id ? $0 : nil }
-        // How far through the simulation's current step the drawing is, so a
-        // body that was struck on this step is thrown by it and settles before
-        // the next one. A replay has no step to be inside of.
-        let within = siege.map { withinStep(of: $0, continuousTick: continuousTick) } ?? 1
+        // How far through the simulation's current step the drawing is: what
+        // carries a body from where the step found it to where it left it, and
+        // what throws one that was struck on this step. A replay has no step to
+        // be inside of.
+        let within = siege.map {
+            self.within($0, beat: beat, time: time, continuousTick: continuousTick)
+        } ?? 1
         draw(&context, rect: rect, log: log, progress: progress, time: time,
              zoom: zoom, siege: siege, selectedPawnID: selectedPawnID, within: within)
     }
@@ -416,12 +473,17 @@ enum SettlementBattle {
     /// Empty by day and empty with no fight on, so it costs one branch.
     static func torchlight(
         _ settlement: Settlement, rect: CGRect, continuousTick: Double,
-        secondsPerTick: Double = 60, replay: Replay? = nil, zoom: CGFloat
+        secondsPerTick: Double = 60, replay: Replay? = nil, zoom: CGFloat,
+        beat: Beat? = nil, time: Double = 0
     ) -> [SettlementLight.Lamp] {
         guard let (log, progress) = live(settlement, continuousTick: continuousTick,
                                          secondsPerTick: secondsPerTick,
-                                         replay: replay) else { return [] }
+                                         replay: replay, beat: beat,
+                                         time: time) else { return [] }
         let siege = settlement.siege.flatMap { $0.id == log.id ? $0 : nil }
+        let within = siege.map {
+            self.within($0, beat: beat, time: time, continuousTick: continuousTick)
+        } ?? 1
         let field = ground(log)
         // Guttering out as the fight ends, so a field does not stay lit after
         // everybody has gone home.
@@ -441,8 +503,9 @@ enum SettlementBattle {
             middle = field.out(SiegeField.musterReach + 0.03)
         } else {
             let sum = standing.reduce(into: (x: 0.0, y: 0.0)) {
-                $0.x += $1.at.x / Double(standing.count)
-                $0.y += $1.at.y / Double(standing.count)
+                let walked = $1.spot(within: within)
+                $0.x += walked.x / Double(standing.count)
+                $0.y += walked.y / Double(standing.count)
             }
             middle = LocalPoint(x: (sum.x + field.muster.x) / 2,
                                 y: (sum.y + field.muster.y) / 2)
@@ -455,7 +518,7 @@ enum SettlementBattle {
         for (index, raider) in standing.enumerated() where index % 4 == 0 {
             guard lamps.count < 8 else { break }
             lamps.append(SettlementLight.Lamp(
-                at: SettlementRenderer.point(raider.at, in: rect),
+                at: SettlementRenderer.point(raider.spot(within: within), in: rect),
                 radius: 26 * zoom, strength: 0.16 * left,
                 colour: SettlementLight.hearth, phase: Double(index) * 0.7))
         }
@@ -471,11 +534,13 @@ enum SettlementBattle {
     static func drawGround(
         _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement,
         continuousTick: Double, zoom: CGFloat,
-        secondsPerTick: Double = 60, replay: Replay? = nil
+        secondsPerTick: Double = 60, replay: Replay? = nil,
+        beat: Beat? = nil, time: Double = 0
     ) {
         guard let (log, progress) = live(settlement, continuousTick: continuousTick,
                                          secondsPerTick: secondsPerTick,
-                                         replay: replay) else { return }
+                                         replay: replay, beat: beat,
+                                         time: time) else { return }
         let siege = settlement.siege.flatMap { $0.id == log.id ? $0 : nil }
         SettlementBlood.ground(&context, rect: rect, log: log, progress: progress,
                                siege: siege, field: ground(log), zoom: zoom)
@@ -511,7 +576,7 @@ enum SettlementBattle {
             let hurt = siege.map { min(0.95, ($0.damage[id] ?? 0) / 100) }
                 ?? harm(log, pawn: id, at: progress)
             guard hurt > 0.01 else { continue }
-            let post = siege?.place(of: id)
+            let post = siege?.place(of: id, within: within)
                 ?? field.defenderPost(index: index, of: log.line.count)
             let screen = SettlementRenderer.point(post, in: rect)
             SettlementBlood.onBody(&context, at: screen, harm: hurt, zoom: zoom,
@@ -604,19 +669,21 @@ enum SettlementBattle {
         // cut up can be read off what is left of them.
         let share = max(1, siege.openingStrength / Double(max(1, siege.attackers)))
         for (index, raider) in siege.raiders.enumerated() {
-            // Where the blow they just took has thrown them. Zero for anybody
-            // nobody has hit this step, which is nearly everybody.
+            // Where the step has carried them so far…
+            let walked = raider.spot(within: within)
+            // …and where the blow they just took has thrown them. Zero for
+            // anybody nobody has hit this step, which is nearly everybody.
             let jolt = flinch(raider, siege: siege, within: within)
             let screen = SettlementRenderer.point(
-                LocalPoint(x: raider.at.x + jolt.dx, y: raider.at.y + jolt.dy), in: rect)
+                LocalPoint(x: walked.x + jolt.dx, y: walked.y + jolt.dy), in: rect)
             guard !raider.down else {
                 body(&context, at: screen, zoom: zoom, seed: UInt64(index &* 31))
                 SettlementBlood.onBody(&context, at: screen, harm: 1, zoom: zoom,
                                        seed: seed(of: raider.id))
                 continue
             }
-            let mark = raider.target.flatMap { siege.place(of: $0) }
-            let closed = mark.map { SiegeField.distance(raider.at, $0) <= SiegeEngine.reach }
+            let mark = raider.target.flatMap { siege.place(of: $0, within: within) }
+            let closed = mark.map { SiegeField.distance(walked, $0) <= SiegeEngine.reach }
                 ?? false
             // A little jostle, so a rank of raiders is not a row of stamps.
             let jitter = sin(time * 3.4 + Double(index) * 1.7) * 0.0022
@@ -624,7 +691,7 @@ enum SettlementBattle {
                 &context,
                 at: CGPoint(x: screen.x + CGFloat(jitter) * rect.width,
                             y: screen.y + CGFloat(jitter) * 0.6 * rect.height),
-                heading: mark.map { toward(raider.at, $0) } ?? (-field.axisX, -field.axisY),
+                heading: mark.map { toward(walked, $0) } ?? (-field.axisX, -field.axisY),
                 zoom: zoom, time: time, phase: Double(index) * 0.9,
                 swinging: closed ? strike : 0)
             SettlementBlood.onBody(&context, at: screen,
@@ -654,9 +721,9 @@ enum SettlementBattle {
             let spot: LocalPoint?
             switch order {
             case .moveTo(let point): spot = point
-            case .engage(let mark): spot = siege.place(of: mark)
+            case .engage(let mark): spot = siege.place(of: mark, within: within)
             }
-            guard let spot, let from = siege.place(of: pawn) else { continue }
+            guard let spot, let from = siege.place(of: pawn, within: within) else { continue }
             marker(&context, at: SettlementRenderer.point(spot, in: rect),
                    from: SettlementRenderer.point(from, in: rect),
                    time: time, unit: unit)
