@@ -59,7 +59,15 @@ struct BattleBeatTests {
                                           time: landed + 1.4, continuousTick: stalledTick)
         #expect(start == 0)
         #expect(abs(half - 0.5) < 1e-9)
-        #expect(end == 1)
+        // **Not `== 1`.** Neither 0.7 nor 1.4 is exactly representable, so
+        // `landed + 1.4` is not the number `landed + 1.4` looks like and the
+        // division lands a few parts in 10¹³ short: the first run of this
+        // expected exact equality and got 0.9999999999997402. In the app it is
+        // worse and still harmless — `time` is seconds since `DayClock.epoch`,
+        // about 8.3 × 10⁸ of them, where a double resolves to roughly 10⁻⁷ s.
+        // A share of a step is a measurement, and a measurement is compared
+        // with a tolerance.
+        #expect(abs(end - 1) < 1e-9)
     }
 
     @Test("A step that overruns its beat stops at its end, it does not overshoot")

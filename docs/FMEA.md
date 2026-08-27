@@ -23,6 +23,8 @@ not an out-of-date one.
 | The Core suite takes ~18 minutes and you only changed one engine | that is the whole suite; filter with `swift test --filter` | `Makefile` · `test-filter` |
 | `make verify-docs` fails on a document you did not edit | a count in a living document is now false because the *tree* changed — fix the doc, that is the check working | `scripts/verify-docs.py` · `LIVING_DOCS` |
 | A new document fails the class check | every doc is a living document or a record; say which | `scripts/verify-docs.py` · `RECORD_FILES` |
+| `make test-app` says "none" and the run failed anyway | the failure grep matched XCTest's wording only; a swift-testing failure is `✘ Test` and was invisible | `Makefile` · `test-app` |
+| An App test comparing a share or a fraction fails by 10⁻¹³ | exact `==` on a float that came out of a subtraction — a measurement wants a tolerance | `App/Tests/BattleBeatTests.swift` · `aPausedWorldStillDrawsAWalk` |
 | A test build fails on a file you did not touch | you edited a source file *while* its build was running (rule 70) | `docs/RULES.md` · `Editing a source file while its test build is running` |
 | A new content file loads in tests and not in the app | resources are declared per target in the package manifest | `Core/Package.swift` · `resources` |
 | Two measurements and you cannot tell which change moved the number | you changed two things between probe runs (rule 72) | `docs/RULES.md` · `Two changes, one measurement` |
@@ -74,6 +76,9 @@ mechanic.
 | "It builds and ContentTests pass" and the registry still did not load it | the build proves nothing about the decoder (rule 43) | `Core/Sources/EndlessFrontierCore/Data/GameDataRegistry.swift` · `decode` |
 | A field survives a round-trip test and is empty in the save | the test round-tripped an empty field (rules 37, 73) | `Core/Sources/EndlessFrontierCore/Models/Settlement.swift` · `CodingKeys` |
 
+| A recipe moved to an earlier bench and the chain broke behind it | its **materials** are made at a bench from a later age — an ingredient list is a second gate and a hand-written "later materials" list will miss it (rule 105) | `Core/Tests/EndlessFrontierCoreTests/ProductionChainTests.swift` · `ingredientsArriveInTime` |
+| A test fixture stops filling after content moved between benches | the fixture stands a hand-listed set of buildings, and a recipe's new bench is not in it (rule 67) | `Core/Tests/EndlessFrontierCoreTests/StewardTests.swift` · `theBenchTurnsOver` |
+
 ## §E — the canvas shows the wrong thing
 
 | Symptom | Cause | Where |
@@ -86,6 +91,11 @@ mechanic.
 | A battle reads as nothing happening | playback pace is not simulation pace (rule 11) | `App/Sources/Views/Settlement/SettlementBattle.swift` · `playSeconds` |
 | Walking looks wrong after a "correct" tuning | the rate was per tick and the eye judges per real second (rule 34) | `Core/Sources/EndlessFrontierCore/Data/WorldConfig.swift` · `realSecondsPerTick` |
 | A system exists in the sim and the player can never see it | the recurring shape — grep for it before rebuilding anything | `docs/RULES.md` · `A surface only reachable while the app is in the foreground` |
+
+| A building is on screen and you cannot tell which one it is | 51 of 62 buildings share a `look`; the signature separates them and the drawing does not spend it | `docs/RENDER_25D.md` · `Sixty-two buildings you can name` |
+| The town reads flat — marks lying on the ground, nothing standing up | there is no height axis; a body is drawn inside its own footprint | `docs/RENDER_25D.md` · `The projection` |
+| A shadow points somewhere the light does not | a shadow with its own angle constant instead of `SettlementLight.sun` (rule 35) | `App/Sources/Views/Settlement/SettlementLight.swift` · `sun` |
+| A tall thing covers somebody standing in front of it | buildings and agents drawn as two blocks instead of one depth-sorted pass | `docs/RENDER_25D.md` · `The layers` |
 
 ## §F — you are about to write code
 

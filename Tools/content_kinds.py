@@ -418,6 +418,48 @@ conifer for the taiga is less use than the first thing that will grow in a
 desert.""",
         "new_fields": (),
     },
+    "structures": {
+        "file": "structures.json",
+        "wants": """the buildings that share a `look` with four others and are told apart by a chimney — the five `plant` buildings, the four `lab`s, the four `house`s, the three `mill`s""",
+        "brief": """**How one building is put together**, so a player can name it from
+across the valley without reading a label.
+
+Measured 2026-08-27: 62 buildings share 30 `look` values, and 51 of them share
+theirs with something else. The signature already separates all 62 — era,
+footprint, workers, production, defence — the *drawing* simply does not spend
+the difference. This bank is where the difference goes. See
+`docs/RENDER_25D.md`.
+
+The entry is a **recipe, not a picture**. Every field names a part the renderer
+already knows how to draw; a building that needs something new needs a new
+*part*, and then every building may have it (rule 92 — composition, not more
+shapes).
+
+`standing` is the wall height **in map units**, before the roof — the number the
+plan view could never say. A hut is about 0.9, a longhouse 1.1, a watchtower
+3.4, a cathedral-scale hall 4. It is a drawing number and never reaches the
+simulation: cover has its own model (`Cover.Stature`) and a taller drawing must
+never change a fight.
+
+`roof` is a closed set: `gable`, `sawtooth`, `flat`, `barrel`, `stepped`.
+`fabric` and `trim` are what the wall face and its framing are made of, and the
+age decides them before taste does — thatch and daub, then timber and stone,
+then brick, then panel, glass and sheet.
+
+`attachments` is the field that does the work: what stands *beside* the building
+and says what it is. A charcoal heap, drying racks, a timber stack, an anvil
+under an awning, crates on a loading step, a bell frame, a hitching rail. Two or
+three; a building with six is a junkyard.
+
+`accent` is the one thing allowed to be warm in a bone-on-slate world — a forge
+has an ember, a lab a cold green, a market an awning. **At most one per
+building**, or the town becomes a fairground.
+
+Some buildings are *meant* to match and those are the exceptions: `palisade` and
+`stone_walls` are one thing at two tiers, and so are `farm_basic` and
+`farm_advanced`. Everything else gets a silhouette of its own.""",
+        "new_fields": (),
+    },
     "scenery": {
         "file": "scenery.json",
         "brief": """The colour of one thing standing on the ground — a crop, a tree, a

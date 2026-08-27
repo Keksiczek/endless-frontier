@@ -1,6 +1,6 @@
 # Rules — what has already gone wrong, and must not again
 
-<!-- Extracted from BACKLOG.md 2026-08-13 | 105 rules -->
+<!-- Extracted from BACKLOG.md 2026-08-13 | 107 rules -->
 
 **Every one of these cost a session at least once.** They are the project's
 troubleshooting guide and its lessons learned in one list: when something in the
@@ -1063,3 +1063,29 @@ fires, do the arithmetic before you rewrite the mechanic.
    it eats something smelted or mined, or if what it makes is out of its age's
    damage band — which the suite was **already** checking. When a content
    decision looks like taste, look for the invariant already in the tests.
+106. **An ingredient list is a second gate, and a list of material names is not
+   how you read it.** Moving ninety-nine recipes to a first-age bench was
+   measured against a hand-written set of nine "later" materials — ingots, ore,
+   coal, crude oil. It is the right question badly asked, and three cart recipes
+   went through it: a cart is timber and a wheel, and the *wheel* is carved at
+   the wainwright an age later. The honest question is whether every ingredient
+   is reachable **at the bench's own age**, which is a fixpoint over the whole
+   recipe graph — and `ProductionChainTests.ingredientsArriveInTime` had been
+   computing exactly that since long before the move. **When a content change
+   needs a rule about reachability, look for the fixpoint the suite already
+   runs** before writing a list of names; a list is a snapshot of the graph that
+   stops being true the next time anybody adds a recipe. And run the *whole*
+   suite for a content move, not the suite that owns the content: the readers of
+   a bank are spread across the tests of everything that reads it, and the
+   second failure here was a test fixture standing a village out of a
+   hand-listed set of benches that no longer held the recipes (rule 67).
+107. **A difference the data already has is not a difference the player can
+   see.** 62 buildings share 30 `look` values and 51 of them share theirs with
+   something else — and yet `StructureVariant`'s axes separate all 62 with zero
+   collisions. So "the buildings all look the same" was never a data problem and
+   there was nothing to disambiguate: the signature was complete and the
+   *drawing* spent almost none of it, which is rule 92 left half-finished.
+   Before adding an axis to tell two things apart, check whether the axis exists
+   and is simply not being drawn — the fix is then a composition and a
+   vocabulary, and every other entry gets it too, rather than one more
+   special-cased shape.

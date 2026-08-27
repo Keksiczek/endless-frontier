@@ -1,7 +1,11 @@
 # Docs — what is where
 
 > **Start here if you are picking this up cold:**
-> [`HANDOFF-2026-08-28.md`](handoffs/HANDOFF-2026-08-28.md) — the newest plan: three
+> [`BACKLOG.md` §22](BACKLOG.md) — the newest plan. What the suite said about the
+> workshop move (two failures, both the move's fault), the **2.5D layer
+> specified and not built** ([`RENDER_25D.md`](RENDER_25D.md)), and
+> `Tools/revise.py`. Its §22.4 is the open list.
+> Before it: [`HANDOFF-2026-08-28.md`](handoffs/HANDOFF-2026-08-28.md) — three
 > faults in raids that were none of them in the fight (the wrong colony, a
 > stopped clock, and a surface only reachable while the app was in front), and
 > the workshop avalanche measured and moved.
@@ -38,7 +42,7 @@ Read in this order when picking work up cold:
 |---|---|---|
 | 1 | [NEXT.md](NEXT.md) | **Start here.** Where the game stands and what to work on next, with the evidence for each |
 | 2 | [CODEMAPS/architecture.md](CODEMAPS/architecture.md) | The three layers, the tick order, where a decision flows |
-| 3 | [RULES.md](RULES.md) | **105 rules, each of which cost a session.** Read before writing a threshold |
+| 3 | [RULES.md](RULES.md) | **107 rules, each of which cost a session.** Read before writing a threshold |
 | 4 | [BACKLOG.md](BACKLOG.md) | **The living record.** What was measured, what was built, what Keks asked for |
 
 ## Routing table — by what you are about to do
@@ -120,10 +124,9 @@ overtaken without being updated, which is exactly how a stale doc does damage.
 | [NEXT.md](NEXT.md) | plan 2026-08-17, counts 2026-08-28 | Still the best short answer to "what next". Its counts are checked by `make verify-docs` now; **its plan is not** — read `BACKLOG.md` and the newest handoff beside it |
 
 Reality as of the newest row of [TEST-BASELINE.md](TEST-BASELINE.md)
-(**2026-08-27**): **1604 Core tests** in 224 suites in ~18 minutes, and
-**202 App tests** in 32 suites, all green; iOS build green. The raid commit
-after it is unmeasured — see the note in that file, and append a row rather than
-editing this line.
+(**2026-08-27**): **1611 Core tests** in 224 suites in ~16 minutes, and
+**207 App tests** in 33 suites, all green; iOS build green. Nothing is
+unmeasured — append a row rather than editing this line.
 Content: **62 buildings**, **60 techs**, 182 events, 7 biomes, **477 items**,
 **420 recipes** — checked against the tree by `make verify-docs`. History lives
 in `BACKLOG.md`; the newest sections are §17 and §18. The open list is §15.6,

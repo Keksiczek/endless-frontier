@@ -607,7 +607,7 @@ struct CouncilRoomTests {
         // The benches a village has, and the studies behind them — without
         // these the council can work almost nothing and the bench never fills,
         // which is not the situation this test is about (rule 67).
-        for id in ["workshop", "cookhouse", "hunters_lodge", "lumberyard",
+        for id in ["work_shelter", "workshop", "cookhouse", "hunters_lodge", "lumberyard",
                    "quarry", "bloomery", "charcoal_kiln", "wainwright",
                    "watermill", "horse_mill", "stable", "clinic"] {
             state.settlements[0].buildings.append(

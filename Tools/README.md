@@ -60,6 +60,34 @@ python3 Tools/generate.py batch items:120 meals:40 --model gemini-2.5-flash
 python3 Tools/generate.py batch laws:15 --model gemini-2.5-pro
 ```
 
+## Revising a bank that already exists
+
+`generate.py` adds entries. `revise.py` reads a whole bank at once and corrects
+it **as a set** — which is the only way to notice that four of twenty grounds
+share `stipple`, or that three buildings claim the same accent colour. One entry
+at a time cannot see that, and neither can a sample of eight.
+
+```bash
+python3 Tools/revise.py ground --fields texture,texture_alpha
+python3 Tools/revise.py structures --note "the five plant buildings read alike"
+python3 Tools/revise.py ground --dry-run          # print the prompt, send nothing
+```
+
+Three things make it safe to point at a file the game loads:
+
+- **The roster may not change.** Every id in, every id out, none invented and
+  none dropped — a revision that loses an entry would merge in silence, and it
+  is the one failure a draft cannot have.
+- **`--fields` is a fence, not a hint.** Everything outside it is restored from
+  the original before the draft is written, so a run aimed at textures cannot
+  quietly reword forty descriptions in two languages.
+- **It prints a field-by-field diff** and answers to the same three checks.
+  A revision you have not read is not a revision.
+
+It writes a draft; `generate.py merge` is still the only thing that touches
+`GameData`. Temperature defaults to 0.55 rather than 0.95: a revision is a
+correction, not an invention.
+
 ## Using it
 
 ```bash

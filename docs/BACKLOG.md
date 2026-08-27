@@ -3826,3 +3826,114 @@ route at its own age — and that wants a *rule*, not fourteen hand-set numbers.
    once** — the linger is measured off `continuousTick`, which is not moving.
    Rule 103's shape a third time, and the same cure.
 6. Everything in §15.6, §16.3–16.4 and §17.4 not listed above.
+
+## 22. 2026-08-28 — what the suite said about §21, and the 2.5D groundwork
+
+### 22.1 — two things the move broke, both of them the move's fault
+
+`0c2488f` shipped without a run — `TEST-BASELINE.md` said so in as many words,
+which is the harness earning its keep. The run found five issues in two tests,
+and both were §21.4's ninety-nine recipes landing somewhere they could not work.
+
+**The cart chain.** `assemble_simple_cart`, `build_wooden_cart` and
+`construct_simple_cart` moved to `work_shelter`, which is `early_settlement` —
+and a cart is made of `rough_wooden_wheel` and `wooden_cart_axle`, both of which
+are carved at the **wainwright**, which is `ancient`. So three recipes became
+craftable an age before their own parts existed.
+
+The split rule of §21.4 asked whether a recipe eats something *smelted or mined*
+and that is a hand-written list of nine material ids. It is the right question
+badly asked: the real one is whether every ingredient is **reachable at the
+bench's own age**, which is a fixpoint over the whole recipe graph and which
+`ProductionChainTests.ingredientsArriveInTime` has computed since long before
+this. The check was already there and the move was measured against a weaker
+one. Fixed where it belongs — a cart is a wainwright's work, and the three sit
+at the wainwright now. Zero violations across the book.
+
+**The council's bench.** `StewardTests.theBenchTurnsOver` stands a village out
+of a hand-listed set of benches — `workshop`, `cookhouse`, `hunters_lodge` and
+nine more — precisely so the council has something to work (rule 67). Ninety-six
+recipes had just moved to a bench that list did not name, so the bench filled to
+five of eight and the retirement the test is actually about never ran. One line
+in the fixture.
+
+Neither is a fault in the engines and neither would have shown in `ContentTests`
+alone. **A content move wants the whole suite, not the suite that owns the
+content** — the readers of a bank are spread across the tests of everything that
+reads it.
+
+### 22.2 — the 2.5D layer, specified and not built
+
+Keks: *"chci, ay byly zpracované mapy, osady, budovy — a každá unikátní a
+graficky rozeznatelná, až na nutné výjimky."* Measured before writing anything:
+**62 buildings, 30 `look` values, 51 of them sharing theirs with another.** And
+`StructureVariant`'s axes give **zero** collisions — the signature already
+separates all sixty-two, so there is nothing to disambiguate and the drawing
+simply does not spend the difference it is handed. Rule 92 left half-finished.
+
+`docs/RENDER_25D.md` is the specification: a **lift, not a rotation** (the map
+stays in plan, one `liftPerUnit` constant, and the quad between the footprint
+and its lifted copy is the wall face nothing has ever had), one depth-sorted
+pass across footings, bodies, attachments and agents, and a shadow whose length
+comes off `SettlementLight.sun` rather than a constant of its own (rule 35).
+
+The bank is `structures.json` — a recipe per building, not a picture: `standing`
+in map units, a closed `roof` and `fabric`, and **`attachments`**, which is the
+field that does the work. What stands *beside* a building is what tells you what
+it is across a valley, and it is where the five `plant` buildings stop being one
+building drawn five times. The schema is in `docs/data-schemas/structures.json`
+and eighteen hand-written exemplars are §7 of the specification.
+
+**Nothing is built.** §6 is the order, and the bank deliberately has no reader
+yet: `texture` in `ground.json` was validated, generated and read by nothing for
+weeks (rule 47), and a second one of those is not wanted.
+
+### 22.3 — `Tools/revise.py`
+
+`generate.py` adds entries; nothing could correct a bank **as a set**. Four of
+twenty grounds share `stipple` and no per-entry review will ever see it, because
+the fault is only visible with all twenty on the page at once.
+
+Three things make it safe against a file the game loads: the **roster may not
+change** (an id dropped would merge in silence, and it is the one failure a
+draft cannot have), **`--fields` is a fence** — everything outside it is restored
+from the original, so a run aimed at textures cannot quietly reword forty
+descriptions in two languages — and it prints a field-by-field diff before the
+same three checks anything else answers to. Temperature 0.55, not 0.95: a
+revision is a correction, not an invention.
+
+### 22.3b — `make test-app` said "none" while the run was failing
+
+Worth its own note, because it is the harness lying rather than the code.
+`test-app` greps `/tmp/endless-frontier-test.log` for `' failed (` — XCTest's
+wording — and the App suite is **swift-testing**, which writes `✘ Test`. The
+Core half of the app's tests reported one failure and the target printed
+`none`, then `|| true` handed back exit 0. A run that fails and reports success
+is the same silent-success shape as a decoder that swallows its error, this time
+in the command built to catch those. The grep now matches all three wordings.
+
+The failure it was hiding was mine and it was not a defect: `#expect(end == 1)`
+on a share of a step, where `landed + 1.4` is not the number it looks like and
+the division came out 0.9999999999997402. A share is a measurement and a
+measurement is compared with a tolerance. In the running app the same
+subtraction is over `DayClock.epoch`-sized numbers, where a double resolves to
+about 10⁻⁷ s — still four orders of magnitude finer than anything a 1.4-second
+step is drawn with.
+
+### 22.4 — still open
+
+Unchanged from §21.6, less the two the suite closed. Nearest first:
+
+1. **The iron half** (§21.6.1), now measured: of the 25 recipes left at the
+   workshop, **nine** are held there by nothing — `craft_iron_scythe`,
+   `forge_miners_pick`, `craft_sturdy_axe`, `forge_grafting_knife`,
+   `craft_watchmans_horn`, `consecrate_grave_torc`, `craft_crude_animal_bell`,
+   `forge_sturdy_axe`, `craft_masterwork_pick` — while `iron_ingot` is reachable
+   in the first age at the bloomery. The other four (`craft_iron_sword`,
+   `craft_crossbow`, and the two war bows) are held by the **damage band**,
+   which is correct gating rather than an accident. A `smithy` at `ancient` is
+   the shape, and §22.1 is the warning: measure with the chain fixpoint, not a
+   list of material names.
+2. Steps 1–2 of `docs/RENDER_25D.md` §6 — the lift and the depth sort, no data.
+   Cheap to abandon if it does not look right, which is why they are first.
+3. The rest of §21.6.

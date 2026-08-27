@@ -43,7 +43,8 @@ test-app:
 		| tee /tmp/endless-frontier-test.log \
 		| grep -E "^(Test Suite|Test Case).*(passed|failed)" || true
 	@echo "--- failures ---"
-	@grep "' failed (" /tmp/endless-frontier-test.log || echo "none"
+	@grep -E "' failed \(|✘ Test |Test run with .* failed" /tmp/endless-frontier-test.log \
+		|| echo "none"
 
 verify-docs:
 	@python3 scripts/verify-docs.py

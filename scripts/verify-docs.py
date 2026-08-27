@@ -70,6 +70,7 @@ RECORD_FILES = [
     "docs/ROADMAP.md", "docs/NEXT_STEPS.md", "docs/NEXT_PHASE.md",
     "docs/CHRONICLE.md", "docs/COUNCIL.md", "docs/ROADS.md", "docs/NEIGHBOURS.md",
     "docs/RIMWORLD_LAYER.md", "docs/MOUNTS_AND_VEHICLES.md", "docs/ARMS_AND_PROJECTILES.md",
+    "docs/RENDER_25D.md",
     "docs/ASSET_SPECIFICATION.md", "docs/AI_PROMPT_LIBRARY.md", "docs/AUDIO-LICENCES.md",
     "docs/HANDOFF-GENERATION.md", "docs/ASSET_SPECIFICATION.md",
 ]

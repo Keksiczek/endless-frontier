@@ -935,7 +935,7 @@
     "resourceCost": {
       "materials": 40
     },
-    "requiresBuilding": "work_shelter",
+    "requiresBuilding": "wainwright",
     "requiresTech": "engineering",
     "description": {
       "en": "A pair of wheels on an axle and a simple frame. It can't carry much, but it's a start.",
@@ -1187,7 +1187,7 @@
     "resourceCost": {
       "materials": 40
     },
-    "requiresBuilding": "work_shelter",
+    "requiresBuilding": "wainwright",
     "requiresTech": "engineering",
     "description": {
       "en": "A sturdy cart for hauling goods around the valley. It's not fast, but it beats carrying everything on your back.",
@@ -3889,7 +3889,7 @@
     "resourceCost": {
       "materials": 15
     },
-    "requiresBuilding": "work_shelter",
+    "requiresBuilding": "wainwright",
     "description": {
       "en": "Assemble the pre-made bed, axle and frame into a simple cart for hauling goods.",
       "cs": "Sestavit předem vyrobenou korbu, nápravu a rám do jednoduchého vozíku na přepravu zboží."

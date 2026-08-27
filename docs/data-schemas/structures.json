@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "StructureComposition",
+  "description": "How one building is put together, so a player can name it from across the valley without reading a label. One entry per building id. See docs/RENDER_25D.md. Nothing here reaches the simulation: `standing` is a drawing number and cover has its own model (Cover.Stature) — a taller drawing must never change a fight.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "standing", "roof", "fabric"],
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "The building id this describes. Must name an entry in buildings.json — a composition for a building that does not exist is a drawing nothing will ever ask for."
+      },
+      "standing": {
+        "type": "number",
+        "minimum": 0.3,
+        "maximum": 6.0,
+        "description": "Wall height in map units, before the roof. The number the plan view could never say: a hut is about 0.9, a longhouse 1.1, a granary 1.8, a watchtower 3.4."
+      },
+      "roof": {
+        "type": "string",
+        "enum": ["gable", "sawtooth", "flat", "barrel", "stepped"],
+        "description": "How the top is closed off. The set StructureVariant.Roofline already draws."
+      },
+      "fabric": {
+        "type": "string",
+        "enum": ["open", "thatch", "daub", "timber", "stone", "brick", "panel", "glass", "sheet"],
+        "description": "What the wall face is made of. `open` is a roof on posts with no wall — a work lean-to, a market row. Each maps to a Cover.Substance for the simulation, and that mapping is what keeps cover unchanged: a brick wall stops a shaft exactly as a stone one does."
+      },
+      "trim": {
+        "type": "string",
+        "enum": ["none", "timber", "stone", "brick", "panel", "sheet"],
+        "description": "What frames the face — the timber crucks across daub, the stone quoins at a brick corner."
+      },
+      "rooftop": {
+        "type": "string",
+        "enum": ["none", "vents", "array", "aerial", "tank"],
+        "description": "What stands on the roof. The set StructureVariant.Rooftop already draws."
+      },
+      "attachments": {
+        "type": "array",
+        "maxItems": 4,
+        "items": { "type": "string" },
+        "description": "What stands beside the building and says what it is from across the valley: a charcoal heap, drying racks, an anvil under an awning, crates on a loading step. This is the field that stops five `plant` buildings being one building drawn five times. Two or three; six is a junkyard. Every value must be a part the renderer draws — a new part is a code change, and then every building may have it (rule 92)."
+      },
+      "yard": {
+        "type": "string",
+        "enum": ["none", "beaten_earth", "gravel", "cobbles", "planking"],
+        "description": "What the ground does around it."
+      },
+      "accent": {
+        "type": "string",
+        "enum": ["none", "hearth", "ember", "awning", "cold_green", "lamp"],
+        "description": "The one thing allowed to be warm in a bone-on-slate world. At most one per building, or the town becomes a fairground."
+      }
+    }
+  }
+}
