@@ -95,7 +95,7 @@ public enum StableEngine {
             definitionID: definitionID,
             animalID: beast?.id,
             madeAtTick: state.tick))
-        s.journal.append(tick: state.tick, kind: .construction, text: LocalizedText(values: [
+        s.note(tick: state.tick, kind: .construction, text: LocalizedText(values: [
             .en: "The colony has a \(def.name.resolve(.en).lowercased()).",
             .cs: "Osada má \(def.name.resolve(.cs).lowercased())."]))
         return s
@@ -128,7 +128,7 @@ public enum StableEngine {
             // A mount is its beast. When the beast dies or walks back into the
             // woods, the saddle is not a mount any more.
             if let animalID = thing.animalID, !alive.contains(animalID) {
-                s.journal.append(tick: state.tick, kind: .death, text: LocalizedText(values: [
+                s.note(tick: state.tick, kind: .death, text: LocalizedText(values: [
                     .en: "The colony is without its \(def.name.resolve(.en).lowercased()).",
                     .cs: "Osada přišla o \(def.name.resolve(.cs).lowercased())."]))
                 continue
@@ -166,7 +166,7 @@ public enum StableEngine {
                 thing.condition -= short ? 0 : wearPerTick
             }
             guard thing.condition > scrapBelow else {
-                s.journal.append(tick: state.tick, kind: .work, text: LocalizedText(values: [
+                s.note(tick: state.tick, kind: .work, text: LocalizedText(values: [
                     .en: "The \(def.name.resolve(.en).lowercased()) has been broken up for what was left of it.",
                     .cs: "\(def.name.resolve(.cs)) rozebrali na to, co z něj zbylo."]))
                 continue

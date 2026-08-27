@@ -195,7 +195,7 @@ public enum DiplomacyEngine {
             resent(&s.tribes[tribeIndex], by: tributeBrokenGrudge)
             s.tribes[tribeIndex].standing = clamp(s.tribes[tribeIndex].standing - 10)
             let them = s.tribes[tribeIndex].name
-            s.settlements[capital].journal.append(
+            s.settlements[capital].note(
                 tick: s.tick, kind: .danger,
                 text: LocalizedText(values: [
                     .en: "There was nothing in the store to send \(them). They will have noticed.",
@@ -585,7 +585,7 @@ public enum DiplomacyEngine {
             s.tribes[tribeIndex].standing = clamp(s.tribes[tribeIndex].standing - 25)
             resent(&s.tribes[tribeIndex], by: 10)
         }
-        s.settlements[capitalIndex].journal.append(
+        s.settlements[capitalIndex].note(
             tick: s.tick, kind: .danger,
             text: byColony
                 ? LocalizedText(values: [
@@ -616,7 +616,7 @@ public enum DiplomacyEngine {
         s.tribes[tribeIndex].war = nil
         s.tribes[tribeIndex].standing = -5
         s.tribes[tribeIndex].grudge *= 0.5
-        s.settlements[capitalIndex].journal.append(
+        s.settlements[capitalIndex].note(
             tick: s.tick, kind: .diplomacy,
             text: years > 0
                 ? LocalizedText(values: [
@@ -739,7 +739,7 @@ public enum DiplomacyEngine {
 
         // What the attempt costs the raiders is known when it ends, not now,
         // so only the standing consequences of *declaring* it land here.
-        s.settlements[capitalIndex].journal.append(
+        s.settlements[capitalIndex].note(
             tick: s.tick, kind: .danger,
             text: LocalizedText(values: [
                 .en: "\(raiderName) are coming over the ground — to arms.",

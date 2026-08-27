@@ -256,7 +256,7 @@ public enum OutlawCampEngine {
 
         s.camps[campIndex].strength = max(0, camp.strength - sent)
         s.camps[campIndex].lastRaidTick = tick
-        s.settlements[settlementIndex].journal.append(
+        s.settlements[settlementIndex].note(
             tick: tick, kind: .danger,
             text: LocalizedText(values: [
                 .en: "\(camp.name.resolve(.en)) are on the granary road — \(placeName(of: camp, in: s, language: .en)).",

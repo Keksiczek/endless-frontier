@@ -122,10 +122,10 @@ public enum GenerationEngine {
                 made += 1
             }
 
-            s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
+            s.note(tick: tick, kind: .social, text: LocalizedText(values: [
                 .en: "\(young.name) is counted a grown colonist now, and takes a share of the work.",
                 .cs: "\(young.name) se dnes počítá mezi dospělé a bere si svůj díl práce."]),
-                             subject: .pawn(young.id))
+                             subject: .pawn(young.id), keptBy: [young.id])
         }
         return s
     }
@@ -196,10 +196,11 @@ public enum GenerationEngine {
         // trades — so the line says what happened without naming it, rather
         // than shipping an English enum case to a Czech player.
         for done in taught {
-            s.journal.append(tick: tick, kind: .work, text: LocalizedText(values: [
+            s.note(tick: tick, kind: .work, text: LocalizedText(values: [
                 .en: "\(s.pawns[done.pupil].name) has learned everything \(done.from) had to teach.",
                 .cs: "\(s.pawns[done.pupil].name) se od \(done.from) naučil(a) všemu, co uměl(a)."]),
-                             subject: .pawn(s.pawns[done.pupil].id))
+                             subject: .pawn(s.pawns[done.pupil].id),
+                             keptBy: [s.pawns[done.pupil].id])
         }
         return s
     }

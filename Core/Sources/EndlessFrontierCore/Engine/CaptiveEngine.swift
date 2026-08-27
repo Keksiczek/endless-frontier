@@ -110,7 +110,7 @@ public enum CaptiveEngine {
                                       takenFromTribeID: siege.attackerTribeID,
                                       takenTick: tick))
         }
-        s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
+        s.note(tick: tick, kind: .danger, text: LocalizedText(values: [
             .en: "\(taken) of \(siege.attackerName) were taken alive and are being held.",
             .cs: "\(taken) z \(siege.attackerName) padli živí do zajetí."]))
         return s
@@ -181,13 +181,18 @@ public enum CaptiveEngine {
             let names = joined.map(\.name)
             s.pawns.append(contentsOf: joined)
             s.stats.morale = min(100, s.stats.morale + 2)
-            s.journal.append(tick: tick, kind: .arrival, text: LocalizedText(values: [
+            // The day they stopped being prisoners is the first day of their
+            // life here — every one of them keeps it, and the camera goes to
+            // the first, because a camera has one target.
+            s.note(tick: tick, kind: .arrival, text: LocalizedText(values: [
                 .en: "\(names.joined(separator: " and ")) stopped being prisoners and started being neighbours.",
-                .cs: "\(names.joined(separator: " a ")) přestali být zajatci a stali se sousedy."]))
+                .cs: "\(names.joined(separator: " a ")) přestali být zajatci a stali se sousedy."]),
+                   subject: joined.first.map { .pawn($0.id) },
+                   keptBy: joined.map(\.id))
         }
         if escaped > 0 {
             s.stats.morale = max(0, s.stats.morale - 3)
-            s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
+            s.note(tick: tick, kind: .danger, text: LocalizedText(values: [
                 .en: "\(escaped) went over the wall in the night. Nobody here blamed them.",
                 .cs: "\(escaped) v noci přelezli hradbu. Nikdo se jim tu nedivil."]))
         }

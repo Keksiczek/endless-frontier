@@ -125,7 +125,7 @@ public enum LocalPOIEngine {
             s.settlements[seat].pawns[i].expeditionID = expedition.id
         }
         s.settlements[seat].expeditions.append(expedition)
-        s.settlements[seat].journal.append(
+        s.settlements[seat].note(
             tick: s.tick, kind: .work, text: departureLine(poi.kind, party: party.count))
         return s
     }
@@ -337,7 +337,7 @@ public enum LocalPOIEngine {
             worked.pois[poiIndex].lastVisitTick = tick
             s.localMap = worked
         }
-        s.journal.append(tick: tick, kind: journalKind(poi.kind), text: outcome.narrative)
+        s.note(tick: tick, kind: journalKind(poi.kind), text: outcome.narrative)
         return freeMembers(s, of: expedition)
     }
 
@@ -686,7 +686,7 @@ public enum LocalPOIEngine {
             en += "."
             cs += "."
         }
-        s.journal.append(tick: expedition.departedTick, kind: .work,
+        s.note(tick: expedition.departedTick, kind: .work,
                          text: LocalizedText(values: [.en: en, .cs: cs]))
         return s
     }

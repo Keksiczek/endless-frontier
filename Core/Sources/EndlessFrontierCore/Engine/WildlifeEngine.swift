@@ -123,7 +123,7 @@ public enum WildlifeEngine {
                     // Wolves eat; they do not loot a granary. Carrying the same
                     // share a warband does is how a colony starves.
                     carriesOff: 0.12)
-                s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
+                s.note(tick: tick, kind: .danger, text: LocalizedText(values: [
                     .en: "Wolves are at the herds — the watch is turning out.",
                     .cs: "Vlci jsou u stád — hlídka vybíhá."]))
                 // The hunt that answers them thins the wood either way.
@@ -266,15 +266,15 @@ public enum WildlifeEngine {
                 // sorts differently everywhere that asks the journal what kind
                 // of thing happened — which is how a mauling stopped being
                 // findable among two hundred lines of colony chatter.
-                s.journal.append(tick: tick, kind: .death, text: LocalizedText(values: [
+                s.note(tick: tick, kind: .death, text: LocalizedText(values: [
                     .en: "\(wound.hunterName) closed with a \(beast.resolve(.en).lowercased()) and did not come back.",
                     .cs: "\(wound.hunterName) šel na \(beast.resolve(.cs).lowercased())ho zblízka a už se nevrátil."]),
                     subject: .pawn(wound.hunterID))
             } else {
-                s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
+                s.note(tick: tick, kind: .danger, text: LocalizedText(values: [
                     .en: "\(wound.hunterName) was gored bringing down a \(beast.resolve(.en).lowercased()).",
                     .cs: "\(wound.hunterName) to schytal při lovu — \(beast.resolve(.cs).lowercased()) se bránil."]),
-                    subject: .pawn(wound.hunterID))
+                    subject: .pawn(wound.hunterID), keptBy: [wound.hunterID])
             }
         }
         return bag.map

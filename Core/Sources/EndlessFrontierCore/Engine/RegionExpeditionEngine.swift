@@ -71,7 +71,7 @@ public enum RegionExpeditionEngine {
         // generation handoff is about, in my own new system.
         s = RoadEngine.travelled(s, route: routeHexes(from: s.settlements[seat],
                                                      to: target, in: s))
-        s.settlements[seat].journal.append(
+        s.settlements[seat].note(
             tick: s.tick, kind: .work,
             text: LocalizedText(values: [
                 .en: "\(party.count) set out for \(target.name) — \(expedition.travelTicks * 2 + workTicks) ticks there and back.",
@@ -236,7 +236,7 @@ public enum RegionExpeditionEngine {
         // Nothing at all got done: they were driven out, and the place keeps
         // what it holds — including the right to be tried again.
         guard cleared > 0.05 else {
-            s.settlements[seat].journal.append(
+            s.settlements[seat].note(
                 tick: s.tick, kind: .danger, text: LocalizedText(values: [
                     .en: "The party came back from the far country with nothing.",
                     .cs: "Výprava se z daleké země vrátila s prázdnou."]))
@@ -261,7 +261,7 @@ public enum RegionExpeditionEngine {
                 s, tribeID: tribe.id, settlementIndex: seat, share: cleared)
             s = after
             if let march {
-                s.settlements[seat].journal.append(
+                s.settlements[seat].note(
                     tick: s.tick, kind: .diplomacy, text: line(for: march))
             }
             return s
@@ -277,7 +277,7 @@ public enum RegionExpeditionEngine {
                 s, regionID: region.id, settlementIndex: seat, share: cleared)
             s = after
             if let clearing {
-                s.settlements[seat].journal.append(
+                s.settlements[seat].note(
                     tick: s.tick, kind: clearing.broken ? .discovery : .danger,
                     text: clearing.broken
                         ? LocalizedText(values: [
@@ -305,7 +305,7 @@ public enum RegionExpeditionEngine {
             // `SiteOutcome.narrative` is a plain string — the world-map sites
             // predate `LocalizedText`, and translating them is a content job
             // the backlog already carries.
-            s.settlements[seat].journal.append(
+            s.settlements[seat].note(
                 tick: s.tick, kind: .discovery,
                 text: LocalizedText(outcome.narrative))
         }

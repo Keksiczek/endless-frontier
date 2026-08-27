@@ -128,7 +128,7 @@ public enum CookingEngine {
         if let headline = cooked.max(by: { ($0.value, $1.key) < ($1.value, $0.key) }),
            let meal = registry.meals[headline.key] ?? (registry.meals.isEmpty ? MealDefinition.fallback : nil),
            headline.value >= journalThreshold {
-            s.journal.append(tick: tick, kind: .work, text: LocalizedText(values: [
+            s.note(tick: tick, kind: .work, text: LocalizedText(values: [
                 .en: "The kitchens put up \(headline.value) of \(meal.name.resolve(.en).lowercased()).",
                 .cs: "V kuchyni nachystali \(headline.value)× \(meal.name.resolve(.cs).lowercased())."]))
         }
@@ -272,7 +272,7 @@ public enum CookingEngine {
             let keep = kept[kind] ?? 0
             s.stockpile[kind] = keep > 0 ? keep : nil
         }
-        s.journal.append(tick: tick, kind: .work, text: LocalizedText(values: [
+        s.note(tick: tick, kind: .work, text: LocalizedText(values: [
             .en: "There is more of the harvest than there is roof to keep it under, and some of it has gone over.",
             .cs: "Úrody je víc, než kolik je pod střechou místa, a část se zkazila."]))
         return s

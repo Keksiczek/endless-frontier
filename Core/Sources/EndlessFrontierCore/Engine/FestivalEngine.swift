@@ -120,7 +120,7 @@ public enum FestivalEngine {
         // that is its own kind of year.
         guard lavishness > 0.05 else {
             s.stats.morale = max(0, s.stats.morale - festivalMorale)
-            s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
+            s.note(tick: tick, kind: .social, text: LocalizedText(values: [
                 .en: "Midsummer came and there was nothing to put on the table. The fires were lit anyway, and everyone went home early.",
                 .cs: "Přišel slunovrat a nebylo co dát na stůl. Ohně se přesto zapálily a všichni šli brzy domů."]))
             return s
@@ -146,7 +146,7 @@ public enum FestivalEngine {
         //    be the one that is spoken for tonight.
         s = courtships(s, rng: &rng, tick: tick, ticksPerYear: ticksPerYear)
 
-        s.journal.append(tick: tick, kind: .social, text: lavishness < leanBelow
+        s.note(tick: tick, kind: .social, text: lavishness < leanBelow
             ? LocalizedText(values: [
                 .en: "A thin midsummer: the fires burned low and the tables were bare, but the young of the colony stood at them all the same.",
                 .cs: "Hubený slunovrat: ohně dohořívaly a stoly byly prázdné, ale mladí z osady u nich stejně stáli."])
@@ -238,10 +238,11 @@ public enum FestivalEngine {
                 s.relationships[e].strength = min(100, before + worth)
                 if before < SocialEngine.closeFriendStrength,
                    s.relationships[e].strength >= SocialEngine.closeFriendStrength {
-                    s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
+                    s.note(tick: tick, kind: .social, text: LocalizedText(values: [
                         .en: "\(first.name) and \(second.name) were inseparable at the fire.",
                         .cs: "\(first.name) a \(second.name) se u ohně nehnuli od sebe."]),
-                                     subject: .pawn(first.id))
+                                     subject: .pawn(first.id),
+                                     keptBy: [first.id, second.id])
                 }
                 return s
             }
@@ -285,10 +286,10 @@ public enum FestivalEngine {
                 s.pawns[i].needs.recreation = min(100, s.pawns[i].needs.recreation
                                                   + SocialEngine.weddingRecreation)
             }
-            s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
+            s.note(tick: tick, kind: .social, text: LocalizedText(values: [
                 .en: "\(first.name) and \(second.name) were promised to each other before the midsummer fire.",
                 .cs: "\(first.name) a \(second.name) si dali slovo před slunovratovým ohněm."]),
-                             subject: .pawn(first.id))
+                             subject: .pawn(first.id), keptBy: [first.id, second.id])
         }
         return s
     }

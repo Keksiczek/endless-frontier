@@ -360,7 +360,7 @@ public enum RoadEngine {
         var s = paid
         s.roads.lay(link)
         let what = link.grade.displayName
-        s.settlements[index].journal.append(
+        s.settlements[index].note(
             tick: s.tick, kind: .construction,
             text: LocalizedText(values: [
                 .en: "A \(what.resolve(.en).lowercased()) now runs to the next country.",
@@ -497,7 +497,7 @@ public enum RoadEngine {
         // rather than forgetting the route existed.
         if let index = s.settlements.firstIndex(where: { $0.id == settlementID }) {
             let what = worst.link.grade.displayName
-            s.settlements[index].journal.append(
+            s.settlements[index].note(
                 tick: s.tick, kind: .danger,
                 text: LocalizedText(values: [
                     .en: "They tore up the \(what.resolve(.en).lowercased()) behind them.",

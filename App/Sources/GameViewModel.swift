@@ -1480,28 +1480,37 @@ final class GameViewModel {
 
     /// **What the colony wrote about one colonist**, newest first.
     ///
-    /// `ColonyLogEntry` has carried a `subject` since it was written and almost
-    /// nothing set one — six of seventy-five appends — so the diary knew a
-    /// great deal about everybody and could not be asked about anybody. Keks:
-    /// *"nějaký poslední log když kliknu na pawn?"*
+    /// Two sources, on purpose. The colony's journal is a ring of 140 entries
+    /// shared by everybody, and `MemoryProbe` says what that means at real
+    /// colony size: it spans **1.0 in-game years at year 200** and four fifths
+    /// of it is people chatting by the well. So the ring gives the *recent*
+    /// half — what is going on with them this season — and `Pawn.keepsakes`
+    /// gives the half a life is made of: born, grown, wed, widowed.
+    ///
+    /// United by the journal id both carry, so a keepsake still inside the ring
+    /// is shown once.
     ///
     /// Capped, because this sits inside a card: a colonist of a hundred and
     /// sixty years has a lot of history and the last handful is the part that
     /// answers "what is going on with them".
     func history(of pawnID: UUID, limit: Int = 6) -> [PawnInspectorCard.Moment] {
-        guard let journal = selectedSettlement?.journal else { return [] }
-        return journal.entries
-            .filter { $0.subject == .pawn(pawnID) }
-            .suffix(limit)
-            .reversed()
-            .map { entry in
-                PawnInspectorCard.Moment(
-                    id: entry.id,
-                    year: Season.year(tick: entry.tick, ticksPerYear: ticksPerYear),
-                    text: entry.text.resolve(AppStrings.language),
-                    icon: Self.icon(for: entry.kind),
-                    kind: entry.kind)
-            }
+        guard let settlement = selectedSettlement else { return [] }
+        var byID: [Int: PawnInspectorCard.Moment] = [:]
+        func keep(id: Int, tick: Int, text: LocalizedText, kind: ColonyLogEntry.Kind) {
+            byID[id] = PawnInspectorCard.Moment(
+                id: id,
+                year: Season.year(tick: tick, ticksPerYear: ticksPerYear),
+                text: text.resolve(AppStrings.language),
+                icon: Self.icon(for: kind),
+                kind: kind)
+        }
+        for moment in settlement.pawns.first(where: { $0.id == pawnID })?.keepsakes ?? [] {
+            keep(id: moment.id, tick: moment.tick, text: moment.text, kind: moment.kind)
+        }
+        for entry in settlement.journal.entries where entry.subject == .pawn(pawnID) {
+            keep(id: entry.id, tick: entry.tick, text: entry.text, kind: entry.kind)
+        }
+        return byID.values.sorted { $0.id > $1.id }.prefix(limit).map { $0 }
     }
 
     /// The screen an objective is really about.

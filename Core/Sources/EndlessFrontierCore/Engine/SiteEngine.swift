@@ -79,7 +79,7 @@ public enum SiteEngine {
         // The day belongs in the colony's own diary too — and from there, the
         // toasts.
         if let capital = s.settlements.indices.first {
-            s.settlements[capital].journal.append(
+            s.settlements[capital].note(
                 tick: s.tick, kind: .discovery,
                 text: journalLine(for: region.kind, regionName: region.name))
         }

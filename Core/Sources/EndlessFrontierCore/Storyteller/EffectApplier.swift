@@ -113,7 +113,7 @@ public enum EffectApplier {
                 .en: "\(what.resolve(.en).capitalized) left \(result.ruined.count) buildings in ruins.",
                 .cs: "\(what.resolve(.cs).capitalized) nechala \(result.ruined.count) staveb v troskách."])
         }
-        s.settlements[capital].journal.append(tick: s.tick, kind: .danger, text: entry,
+        s.settlements[capital].note(tick: s.tick, kind: .danger, text: entry,
                                               subject: result.seat.map { .building($0) })
     }
 
@@ -164,7 +164,7 @@ public enum EffectApplier {
                 line: Array(muster))
             s.settlements[capital].stats = s.settlements[capital].stats.applying(delta: 6, to: "morale")
             s.globalStats = s.globalStats.applying(delta: -8, to: "threatLevel")
-            s.settlements[capital].journal.append(tick: s.tick, kind: .danger, text: LocalizedText(values: [
+            s.settlements[capital].note(tick: s.tick, kind: .danger, text: LocalizedText(values: [
                 .en: "\(raiderName) came for \(defenderName) — the wall held and turned them back.",
                 .cs: "\(raiderName) přišli na \(defenderName) — hradba vydržela a zahnala je."]))
             return
@@ -182,7 +182,7 @@ public enum EffectApplier {
         s.settlements[capital] = broken.settlement
         if !broken.ruined.isEmpty {
             let count = broken.ruined.count
-            s.settlements[capital].journal.append(
+            s.settlements[capital].note(
                 tick: s.tick, kind: .danger, text: LocalizedText(values: [
                     .en: "\(count) of the colony's buildings were left in ruins.",
                     .cs: "\(count) staveb v osadě zůstalo v troskách."]))
@@ -239,7 +239,7 @@ public enum EffectApplier {
                 .en: "\(raiderName) broke the line at \(defenderName) and carried off part of the stores.",
                 .cs: "\(raiderName) prorazili obranu \(defenderName) a odnesli část zásob."])
         }
-        s.settlements[capital].journal.append(tick: s.tick, kind: .danger, text: entry)
+        s.settlements[capital].note(tick: s.tick, kind: .danger, text: entry)
     }
 
     /// The defensive value the colonists themselves provide. Delegates to
@@ -377,8 +377,8 @@ public enum EffectApplier {
             : LocalizedText(values: [
                 .en: "\(who.name) came off worst, and is a while mending.",
                 .cs: "\(who.name) to odnesl(a) nejhůř a chvíli se bude sbírat."])
-        s.settlements[capital].journal.append(tick: s.tick, kind: .danger, text: text,
-                                              subject: .pawn(who.id))
+        s.settlements[capital].note(tick: s.tick, kind: .danger, text: text,
+                                    subject: .pawn(who.id), keptBy: [who.id])
     }
 
     private static func addPawn(_ s: inout WorldState) {

@@ -113,7 +113,7 @@ public enum CraftingEngine {
                 s.craftOrders[position].progress = min(s.craftOrders[position].progress, cost)
             }
             if s.craftOrders[position].isComplete {
-                s.journal.append(tick: tick, kind: .work, text: LocalizedText(values: [
+                s.note(tick: tick, kind: .work, text: LocalizedText(values: [
                     .en: "The bench finished the last of the \(recipe.name.resolve(.en)).",
                     .cs: "Na ponku dodělali poslední kus: \(recipe.name.resolve(.cs))."]))
                 s.craftOrders.remove(at: position)
@@ -324,7 +324,7 @@ public enum CraftingEngine {
         // Something worth talking about gets talked about.
         if quality == .masterwork {
             let thing = registry.item(recipe.outputItemID)?.name ?? recipe.name
-            s.journal.append(tick: tick, kind: .work, text: LocalizedText(values: [
+            s.note(tick: tick, kind: .work, text: LocalizedText(values: [
                 .en: "A masterwork came off the bench: \(thing.resolve(.en)).",
                 .cs: "Z ponku sešel mistrovský kus: \(thing.resolve(.cs))."]))
         }

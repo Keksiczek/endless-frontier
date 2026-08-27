@@ -111,7 +111,7 @@ public enum ExplorationEngine {
                 fired.append(contact)
                 if let capitalIndex = s.settlements.indices.first {
                     let tribeName = s.tribes[ti].name
-                    s.settlements[capitalIndex].journal.append(
+                    s.settlements[capitalIndex].note(
                         tick: s.tick, kind: .discovery, text: LocalizedText(values: [
                             .en: "The expedition met the \(tribeName) — a people of \(regionName), there long before us.",
                             .cs: "Výprava potkala lid \(tribeName) — národ z kraje \(regionName), který tu byl dávno před námi."

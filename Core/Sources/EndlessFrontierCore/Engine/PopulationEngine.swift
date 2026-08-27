@@ -192,7 +192,7 @@ public enum PopulationEngine {
                 // No subject: they are not standing anywhere any more, and a
                 // camera that flies to where a dead colonist *was* is pointing
                 // at empty ground.
-                s.journal.append(tick: tick, kind: .death, text: LocalizedText(values: [
+                s.note(tick: tick, kind: .death, text: LocalizedText(values: [
                     .en: "\(death.pawn.name) has died at \(years) — \(death.cause.label.resolve(.en)).",
                     .cs: "\(death.pawn.name) zemřel(a) v \(years) letech — \(death.cause.label.resolve(.cs))."
                 ]))
@@ -223,10 +223,11 @@ public enum PopulationEngine {
                 let namesCS = partnerID
                     .flatMap { id in s.pawns.first { $0.id == id } }
                     .map { "\(s.pawns[index].name) a \($0.name)" } ?? s.pawns[index].name
-                s.journal.append(tick: tick, kind: .birth, text: LocalizedText(values: [
+                s.note(tick: tick, kind: .birth, text: LocalizedText(values: [
                     .en: "\(names) welcomed a child — \(child.name).",
                     .cs: "\(namesCS) přivedli na svět dítě — \(child.name)."
-                ]), subject: .pawn(child.id))
+                ]), subject: .pawn(child.id),
+                   keptBy: [child.id, s.pawns[index].id] + (partnerID.map { [$0] } ?? []))
                 s.pawns.append(child)
                 s.birthTally += 1
                 // The bond remembers. It is what spaces the next one.

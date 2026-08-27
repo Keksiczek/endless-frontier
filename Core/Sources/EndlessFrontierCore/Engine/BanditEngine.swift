@@ -125,7 +125,7 @@ public enum BanditEngine {
             attackerTribeID: nil,
             fortification: s.stats.defense,
             tick: tick, registry: registry, seed: rng.next())
-        s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
+        s.note(tick: tick, kind: .danger, text: LocalizedText(values: [
             .en: "\(band.resolve(.en)) are on the granary road. Nobody sent them.",
             .cs: "\(band.resolve(.cs)) jsou na cestě k sýpce. Nikdo je neposlal."]))
         return s

@@ -251,7 +251,7 @@ public enum VisitorEngine {
             var updated = map
             updated.visitors.append(party)
             s.settlements[settlementIndex].localMap = updated
-            s.settlements[settlementIndex].journal.append(
+            s.settlements[settlementIndex].note(
                 tick: tick, kind: .arrival,
                 text: approachText(kind: .settler, from: party.fromName))
             return s
@@ -280,7 +280,7 @@ public enum VisitorEngine {
             id: rng.nextUUID(), kind: kind, fromName: name, tribeID: tribe?.id,
             position: entry, entry: entry))
         s.settlements[settlementIndex].localMap = updated
-        s.settlements[settlementIndex].journal.append(
+        s.settlements[settlementIndex].note(
             tick: tick, kind: .discovery, text: approachText(kind: kind, from: name))
         return s
     }
@@ -352,23 +352,23 @@ public enum VisitorEngine {
             let value = 18 + Double(s.buildings.reduce(0) { $0 + $1.count }) * 0.4
             s.storage[.influence] = min(s.storageCapacity[.influence], s.storage[.influence] + value * 0.5)
             s.storage[.materials] = min(s.storageCapacity[.materials], s.storage[.materials] + value)
-            s.journal.append(tick: tick, kind: .arrival, text: LocalizedText(values: [
+            s.note(tick: tick, kind: .arrival, text: LocalizedText(values: [
                 .en: "Traders from \(visitor.fromName) unpacked in the square and did good business.",
                 .cs: "Obchodníci z \(visitor.fromName) složili na návsi a odbyt byl dobrý."]))
         case .envoy:
             s.storage[.influence] = min(s.storageCapacity[.influence], s.storage[.influence] + 10)
             s.stats.morale = min(100, s.stats.morale + 2)
-            s.journal.append(tick: tick, kind: .arrival, text: LocalizedText(values: [
+            s.note(tick: tick, kind: .arrival, text: LocalizedText(values: [
                 .en: "An envoy of \(visitor.fromName) was heard in the square.",
                 .cs: "Vyslanec \(visitor.fromName) byl vyslechnut na návsi."]))
         case .refugee:
-            s.journal.append(tick: tick, kind: .arrival, text: LocalizedText(values: [
+            s.note(tick: tick, kind: .arrival, text: LocalizedText(values: [
                 .en: "Families out of \(visitor.fromName) came in off the road, with nothing.",
                 .cs: "Rodiny z \(visitor.fromName) přišly po cestě, bez ničeho."]))
         case .wanderer:
             s.storage[.knowledge] = min(s.storageCapacity[.knowledge], s.storage[.knowledge] + 8)
             s.stats.morale = min(100, s.stats.morale + 1)
-            s.journal.append(tick: tick, kind: .discovery, text: LocalizedText(values: [
+            s.note(tick: tick, kind: .discovery, text: LocalizedText(values: [
                 .en: "A traveller out of \(visitor.fromName) told the evening's stories.",
                 .cs: "Poutník z \(visitor.fromName) vyprávěl u ohně."]))
         case .settler:
@@ -382,7 +382,7 @@ public enum VisitorEngine {
             // Deterministic: the party's own id seeds the household, so the
             // same world always takes in the same people (rule 2).
             var rng = SeededRNG(seed: householdSeed(visitor.id) ^ UInt64(bitPattern: Int64(tick)))
-            var arrived: [String] = []
+            var arrived: [Pawn] = []
             for _ in 0..<VisitorKind.settler.partySize {
                 // They come **from somewhere**: a people the world knows has a
                 // character, and the settlers who join you carry it in. Without
@@ -401,15 +401,17 @@ public enum VisitorEngine {
                     ?? Genes.mean(of: s.pawns.map(\.genes))
                 let pawn = PawnFactory.generate(seed: rng.next(), language: world.language,
                                                 stock: stock)
-                arrived.append(pawn.name)
+                arrived.append(pawn)
                 s.pawns.append(pawn)
                 s.arrivalTally += 1
             }
-            let who = arrived.joined(separator: " a ")
-            let whoEN = arrived.joined(separator: " and ")
-            s.journal.append(tick: tick, kind: .arrival, text: LocalizedText(values: [
+            let who = arrived.map(\.name).joined(separator: " a ")
+            let whoEN = arrived.map(\.name).joined(separator: " and ")
+            s.note(tick: tick, kind: .arrival, text: LocalizedText(values: [
                 .en: "\(whoEN) came up the road from \(visitor.fromName), heard the place was doing well, and stayed.",
-                .cs: "\(who) přišli po cestě od \(visitor.fromName), slyšeli, že se tu daří, a zůstali."]))
+                .cs: "\(who) přišli po cestě od \(visitor.fromName), slyšeli, že se tu daří, a zůstali."]),
+                   subject: arrived.first.map { .pawn($0.id) },
+                   keptBy: arrived.map(\.id))
         }
         return s
     }

@@ -189,6 +189,35 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
     /// before anybody could notice. An event has to be *felt*, so what it does
     /// lands here and decays, and the mood formula reads it.
     public var moodShift: Double = 0
+
+    /// The handful of moments this colonist would tell you about.
+    ///
+    /// The colony's journal is a ring shared by everybody, so it keeps roughly
+    /// **one in-game year** once a town is two hundred strong (`MemoryProbe`) —
+    /// and four fifths of what it keeps is chatter. A life is longer than that,
+    /// so what is life-shaping is filed on the person: their birth, the day
+    /// they were counted grown, the friendship, the wedding, the sickness they
+    /// came through. `Settlement.note` writes them; nothing else does.
+    ///
+    /// Dies with them, which is why there is no cleanup to forget (rule 33).
+    public var keepsakes: [PawnMoment] = []
+
+    /// How many a colonist carries. A life, not a diary: twelve is enough for
+    /// birth, coming of age, a marriage, a couple of children and what the
+    /// world did to them, and it caps the save at a bounded cost per person.
+    public static let keepsakeCapacity = 12
+
+    /// Files a moment on this colonist, dropping the oldest past the cap.
+    ///
+    /// Idempotent on the journal id, because a line naming two people is filed
+    /// once for each of them and an engine may name somebody twice.
+    public mutating func remember(_ moment: PawnMoment) {
+        guard !keepsakes.contains(where: { $0.id == moment.id }) else { return }
+        keepsakes.append(moment)
+        if keepsakes.count > Self.keepsakeCapacity {
+            keepsakes.removeFirst(keepsakes.count - Self.keepsakeCapacity)
+        }
+    }
     public var assignedWork: WorkKind
     public var health: Double            // 0…100
     public var isBroken: Bool            // mental break — stops working until mood recovers
@@ -343,6 +372,7 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         case age, genes, wealth, pregnancyTicksRemaining, expeditionID, currentJob
         case envoyToTribeID
         case homeID, carrying, haulWalk, body, errand, moodShift
+        case keepsakes
     }
 
     /// Keys that no longer have a property behind them. Kept apart from
@@ -391,5 +421,8 @@ public struct Pawn: Codable, Sendable, Identifiable, Equatable {
         body = try c.decodeIfPresent(Body.self, forKey: .body) ?? Body()
         // …and one saved before events were felt is feeling nothing in particular.
         moodShift = try c.decodeIfPresent(Double.self, forKey: .moodShift) ?? 0
+        // A colonist from before anybody kept anything remembers nothing yet;
+        // the rest of their life still lands here (rule 3, rule 37).
+        keepsakes = try c.decodeIfPresent([PawnMoment].self, forKey: .keepsakes) ?? []
     }
 }

@@ -60,6 +60,38 @@ public struct ColonyLogEntry: Codable, Sendable, Equatable, Identifiable {
     }
 }
 
+/// One moment out of a single colonist's life, kept **on them**.
+///
+/// The journal is a ring of `ColonyLog.capacity` entries shared by the whole
+/// colony, and that is the right shape for a diary — but it is the wrong shape
+/// for a memory. Measured (`MemoryProbe`, seed 4242): the ring spans **8.5
+/// in-game years at year 10 and 1.0 at year 200**, and 118 of the 140 entries
+/// it holds are people chatting by the well. So a colonist's own card showed
+/// last spring's gossip and never their wedding, however many call sites set a
+/// subject — the subjects were already there (113–125 of 140), the *keeping*
+/// was not.
+///
+/// A keepsake therefore leaves the ring behind: an engine names the people for
+/// whom a line is a moment worth keeping, and they carry it for the rest of
+/// their lives. It dies with them, which is why it needs no cleanup and no
+/// second store (rule 33).
+public struct PawnMoment: Codable, Sendable, Equatable, Identifiable {
+    /// The `ColonyLogEntry.id` this was filed from — monotonic within the
+    /// settlement, so the inspector can union the ring and the keepsakes
+    /// without showing the same moment twice.
+    public let id: Int
+    public let tick: Int
+    public let kind: ColonyLogEntry.Kind
+    public let text: LocalizedText
+
+    public init(id: Int, tick: Int, kind: ColonyLogEntry.Kind, text: LocalizedText) {
+        self.id = id
+        self.tick = tick
+        self.kind = kind
+        self.text = text
+    }
+}
+
 /// A capped, append-only ring of the settlement's recent moments. Engines
 /// append as life happens; the UI reads it as the colony's living diary and
 /// surfaces fresh entries as toasts.
@@ -80,10 +112,16 @@ public struct ColonyLog: Codable, Sendable, Equatable {
 
     /// Appends a moment, trimming the oldest past `capacity`.
     ///
+    /// **Not the door an engine uses** — `Settlement.note` is, because a
+    /// moment may have to be filed twice (here, and on the colonist whose life
+    /// it is) and two call sites doing that by hand is rule 92 waiting to
+    /// happen. Deliberately not `public`: the log is the colony's, and nothing
+    /// outside the Core writes the simulation (rule 1).
+    ///
     /// `subject` defaults to nobody so the hundred existing call sites are
     /// unchanged; pass it wherever the engine already has the colonist or the
     /// lot in its hand, and the canvas can take the player there.
-    public mutating func append(tick: Int, kind: ColonyLogEntry.Kind, text: LocalizedText,
+    mutating func append(tick: Int, kind: ColonyLogEntry.Kind, text: LocalizedText,
                                 subject: ColonyLogEntry.Subject? = nil) {
         entries.append(ColonyLogEntry(id: nextID, tick: tick, kind: kind, text: text,
                                       subject: subject))

@@ -1108,7 +1108,7 @@ public enum StewardEngine {
         guard founded.settlements.count > state.settlements.count else { return state }
         var s = founded
         if let town = s.settlements.last {
-            s.settlements[index].journal.append(
+            s.settlements[index].note(
                 tick: s.tick, kind: .arrival, text: LocalizedText(values: [
                     .en: "A founding party walked out to raise \(town.name).",
                     .cs: "Skupina osadníků vyšla založit \(town.name)."]))

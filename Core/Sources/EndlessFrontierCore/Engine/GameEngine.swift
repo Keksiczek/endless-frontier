@@ -277,7 +277,7 @@ public enum GameEngine {
                                             + registry.config.giftStandingGain / 2)
         DiplomacyEngine.resent(&s.tribes[tribeIndex], by: -4)
         let what = link.grade.displayName
-        s.settlements[capitalIndex].journal.append(
+        s.settlements[capitalIndex].note(
             tick: s.tick, kind: .construction,
             text: LocalizedText(values: [
                 .en: "A \(what.resolve(.en).lowercased()) now reaches toward \(s.tribes[tribeIndex].name).",
@@ -360,7 +360,7 @@ public enum GameEngine {
         s.roads.lay(link)
         let what = link.grade.displayName
         let where_ = s.regions.first { $0.coord == b }?.name ?? ""
-        s.settlements[0].journal.append(
+        s.settlements[0].note(
             tick: s.tick, kind: .construction,
             text: LocalizedText(values: [
                 .en: "The people have laid a \(what.resolve(.en).lowercased()) toward \(where_).",
@@ -473,7 +473,7 @@ public enum GameEngine {
         s.settlements[capitalIndex].pawns[personIndex].currentJob = nil
         let name = s.settlements[capitalIndex].pawns[personIndex].name
         let them = s.tribes[tribeIndex].name
-        s.settlements[capitalIndex].journal.append(
+        s.settlements[capitalIndex].note(
             tick: s.tick, kind: .departure,
             text: LocalizedText(values: [
                 .en: "\(name) has gone to live among \(them), and speak for us there.",
@@ -551,7 +551,7 @@ public enum GameEngine {
         s.tribes[index].tributePerYear = perYear
         if let capital = s.settlements.indices.first {
             let them = s.tribes[index].name
-            s.settlements[capital].journal.append(
+            s.settlements[capital].note(
                 tick: s.tick, kind: .discovery,
                 text: perYear > 0
                     ? LocalizedText(values: [

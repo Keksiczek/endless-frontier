@@ -129,10 +129,10 @@ public enum PlagueEngine {
         outbreak.infected.insert(first.id)
         s = infect(s, pawnID: first.id, plague: plague, tick: tick, rng: &rng)
         s.outbreak = outbreak
-        s.journal.append(tick: tick, kind: .danger, text: LocalizedText(values: [
+        s.note(tick: tick, kind: .danger, text: LocalizedText(values: [
             .en: "\(plague.name.resolve(.en)) has started in the colony — \(first.name) first.",
             .cs: "V osadě se objevila nemoc: \(plague.name.resolve(.cs)) — první je \(first.name)."]),
-                         subject: .pawn(first.id))
+                         subject: .pawn(first.id), keptBy: [first.id])
         return s
     }
 
@@ -250,7 +250,7 @@ public enum PlagueEngine {
         s.pawns.removeAll { $0.health <= 0 }
         s.deathTallies[PawnDeathCause.sickness.rawValue, default: 0] += died.count
         s.stats.morale = max(0, s.stats.morale - Double(died.count) * 1.6)
-        s.journal.append(tick: tick, kind: .death, text: LocalizedText(values: [
+        s.note(tick: tick, kind: .death, text: LocalizedText(values: [
             .en: died.count == 1
                 ? "\(died[0]) did not get up. The sickness is still in the colony."
                 : "\(died.count) went in one round of the sickness.",
@@ -275,7 +275,7 @@ public enum PlagueEngine {
                 .en: "\(plague.name.resolve(.en)) has burned itself out. \(outbreak.deaths) are buried.",
                 .cs: "\(plague.name.resolve(.cs)) vyhořela. \(outbreak.deaths) pohřbených."])
         }
-        s.journal.append(tick: tick, kind: .danger, text: entry)
+        s.note(tick: tick, kind: .danger, text: entry)
         return s
     }
 

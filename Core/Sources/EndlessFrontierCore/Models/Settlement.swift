@@ -342,6 +342,33 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         self.policy = policy
     }
 
+    // MARK: - The colony's memory
+
+    /// Files one moment of the colony's day.
+    ///
+    /// **The single door.** A line goes in the journal always — that is the
+    /// diary the player reads and the toast that surfaces — and, when it is
+    /// one of the handful of things a person would still tell you about years
+    /// later, on the people it happened to as well. Two call sites doing that
+    /// by hand is a second list of the same thing (rule 92), so `ColonyLog`
+    /// does not take appends from engines any more.
+    ///
+    /// `subject` is for the *camera*: one target, because a camera has one.
+    /// `keptBy` is for the *people*: a wedding is a keepsake for both of them,
+    /// and a party of settlers arriving is one for every settler in it.
+    public mutating func note(tick: Int, kind: ColonyLogEntry.Kind, text: LocalizedText,
+                              subject: ColonyLogEntry.Subject? = nil,
+                              keptBy: [UUID] = []) {
+        let entryID = journal.nextID
+        journal.append(tick: tick, kind: kind, text: text, subject: subject)
+        guard !keptBy.isEmpty else { return }
+        let moment = PawnMoment(id: entryID, tick: tick, kind: kind, text: text)
+        for who in keptBy {
+            guard let index = pawns.firstIndex(where: { $0.id == who }) else { continue }
+            pawns[index].remember(moment)
+        }
+    }
+
     // MARK: - Codable (resilient to pre-specialisation saves)
 
     private enum CodingKeys: String, CodingKey {

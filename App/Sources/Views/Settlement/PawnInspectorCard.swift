@@ -62,8 +62,12 @@ struct PawnInspectorCard: View {
     /// The card said what a colonist *is* — health, mood, skills, genes, who
     /// they know — and nothing about what they had been through. Keks: *"nějaký
     /// poslední log když kliknu na pawn?"* The diary held it the whole time and
-    /// nothing joined the two up: `ColonyLogEntry` carries a `subject`, and
-    /// only six of seventy-five appends were setting one.
+    /// nothing joined the two up.
+    ///
+    /// It is not the diary alone any more: the colony's journal keeps about a
+    /// year at real colony size, so the moments a life is made of are carried
+    /// by the colonist (`Pawn.keepsakes`) and `GameViewModel.history(of:)`
+    /// unions the two.
     var history: [PawnInspectorCard.Moment] = []
     /// Why their mood is what it is, from `MoodLedger`.
     var moodFactors: [MoodFactor] = []

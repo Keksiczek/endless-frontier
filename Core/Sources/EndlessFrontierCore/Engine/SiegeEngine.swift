@@ -1794,7 +1794,7 @@ public enum SiegeEngine {
             s.pawns.removeAll { $0.health <= 0 }
             s.deathTallies[PawnDeathCause.battle.rawValue, default: 0] += fallen.count
             for pawn in fallen {
-                s.journal.append(
+                s.note(
                     tick: siege.startTick, kind: .death,
                     text: LocalizedText(values: [
                         .en: "\(pawn.name) fell defending the settlement.",
@@ -1832,7 +1832,7 @@ public enum SiegeEngine {
         // Where it happened, so the record can be walked back to. The muster is
         // the ground the two lines met on — the heart of the colony is where
         // they were headed, and pointing there says nothing about the fight.
-        s.journal.append(tick: siege.startTick, kind: .danger, text: entry,
+        s.note(tick: siege.startTick, kind: .danger, text: entry,
                          subject: .place(SiegeField(siege).muster))
         s.stats.morale = max(0, s.stats.morale - (siege.repelled ? 0 : 8))
         return s

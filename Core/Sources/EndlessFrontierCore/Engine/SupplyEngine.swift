@@ -144,7 +144,7 @@ public enum SupplyEngine {
                 guard s.caravans.count > before else { continue }
                 if let oi = s.settlements.firstIndex(where: { $0.id == originID }) {
                     let to = s.settlements[want.index].name
-                    s.settlements[oi].journal.append(
+                    s.settlements[oi].note(
                         tick: s.tick, kind: .departure, text: LocalizedText(values: [
                             .en: "A cart went out to \(to) with what they were short of.",
                             .cs: "Do \(to) vyjel vůz s tím, co jim chybělo."]))
@@ -198,7 +198,7 @@ public enum SupplyEngine {
             if let oi = s.settlements.firstIndex(where: { $0.id == originID }) {
                 let to = s.settlements[want.index].name
                 let goodName = registry.item(item)?.name
-                s.settlements[oi].journal.append(
+                s.settlements[oi].note(
                     tick: s.tick, kind: .departure, text: LocalizedText(values: [
                         .en: "A load of \(goodName?.resolve(.en) ?? item) went out to \(to).",
                         .cs: "Do \(to) vyjel náklad — \(goodName?.resolve(.cs) ?? item)."]))

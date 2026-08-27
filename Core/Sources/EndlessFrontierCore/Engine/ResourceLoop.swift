@@ -856,7 +856,7 @@ public enum ResourceLoop {
             deposit(.knowledge, 20)
             s.stats.morale = min(100, s.stats.morale + 3)
         }
-        s.journal.append(tick: tick, kind: .discovery, text: poi.kind.discoveryText)
+        s.note(tick: tick, kind: .discovery, text: poi.kind.discoveryText)
         return s
     }
 

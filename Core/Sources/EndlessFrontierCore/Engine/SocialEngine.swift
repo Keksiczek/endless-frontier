@@ -182,10 +182,10 @@ public enum SocialEngine {
                                                   * bondPull(first.genes, second.genes))
                 // The moment two colonists become proper friends is worth a line.
                 if before < closeFriendStrength, s.relationships[e].strength >= closeFriendStrength {
-                    s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
+                    s.note(tick: tick, kind: .social, text: LocalizedText(values: [
                         .en: "\(first.name) and \(second.name) have become fast friends.",
                         .cs: "\(first.name) a \(second.name) se skamarádili."
-                    ]), subject: .pawn(first.id))
+                    ]), subject: .pawn(first.id), keptBy: [first.id, second.id])
                 }
                 // …and old friends may become something more.
                 if s.relationships[e].kind == .friend {
@@ -203,7 +203,7 @@ public enum SocialEngine {
         // A sliver of chatter reaches the diary — enough to hear the village.
         if rng.nextUnit() < chatJournalChance {
             let spot = chatSpots[Int(rng.next() % UInt64(chatSpots.count))]
-            s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
+            s.note(tick: tick, kind: .social, text: LocalizedText(values: [
                 .en: "\(first.name) and \(second.name) shared stories \(spot.resolve(.en)).",
                 .cs: "\(first.name) a \(second.name) si povídali \(spot.resolve(.cs))."
             ]), subject: .pawn(first.id))
@@ -257,12 +257,12 @@ public enum SocialEngine {
         // always earns a line. A routine spat does not — like small talk, only
         // a sliver reaches the diary, so the page stays about what mattered.
         if friendshipBroke {
-            s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
+            s.note(tick: tick, kind: .social, text: LocalizedText(values: [
                 .en: "\(first.name) and \(second.name) fell out — a friendship soured into a grudge.",
                 .cs: "\(first.name) a \(second.name) se rozkmotřili — z přátelství se stala zášť."
-            ]), subject: .pawn(first.id))
+            ]), subject: .pawn(first.id), keptBy: [first.id, second.id])
         } else if rng.nextUnit() < quarrelJournalChance {
-            s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
+            s.note(tick: tick, kind: .social, text: LocalizedText(values: [
                 .en: "\(first.name) and \(second.name) quarrelled — hard words carried across the green.",
                 .cs: "\(first.name) a \(second.name) se pohádali — ostrá slova bylo slyšet přes náves."
             ]), subject: .pawn(first.id))
@@ -291,10 +291,10 @@ public enum SocialEngine {
         for i in s.pawns.indices {
             s.pawns[i].needs.recreation = min(100, s.pawns[i].needs.recreation + 2)
         }
-        s.journal.append(tick: tick, kind: .social, text: LocalizedText(values: [
+        s.note(tick: tick, kind: .social, text: LocalizedText(values: [
             .en: "\(first.name) and \(second.name) were wed — the whole settlement celebrated into the night.",
             .cs: "\(first.name) a \(second.name) měli svatbu — celá osada slavila dlouho do noci."
-        ]), subject: .pawn(first.id))
+        ]), subject: .pawn(first.id), keptBy: [first.id, second.id])
         return s
     }
 
@@ -333,10 +333,12 @@ public enum SocialEngine {
                   let survivorID = bond.other(than: dead.id),
                   let si = s.pawns.firstIndex(where: { $0.id == survivorID }) else { continue }
             s.pawns[si].needs.recreation = max(0, s.pawns[si].needs.recreation + griefRecreation)
-            s.journal.append(tick: tick, kind: .death, text: LocalizedText(values: [
+            // The subject is the *mourner*, not the dead: they are the one
+            // still standing somewhere, and the one whose card this belongs on.
+            s.note(tick: tick, kind: .death, text: LocalizedText(values: [
                 .en: "\(s.pawns[si].name) mourns \(dead.name).",
                 .cs: "\(s.pawns[si].name) truchlí pro \(dead.name)."
-            ]))
+            ]), subject: .pawn(s.pawns[si].id), keptBy: [s.pawns[si].id])
         }
         s.relationships.removeAll { $0.involves(dead.id) }
         return s

@@ -97,7 +97,7 @@ public enum TamingEngine {
         s.localMap = updated
         s.tamed.append(TamedAnimal(animal: beast, role: calling(beast.species, registry: registry),
                                    tamedTick: tick))
-        s.journal.append(tick: tick, kind: .arrival, text: LocalizedText(values: [
+        s.note(tick: tick, kind: .arrival, text: LocalizedText(values: [
             .en: "A \(registry.beast(beast.species)?.name.resolve(.en).lowercased() ?? beast.species) stopped running and stayed.",
             .cs: "\(registry.beast(beast.species)?.name.resolve(.cs) ?? beast.species) přestal utíkat a zůstal."]))
         return s
@@ -129,7 +129,7 @@ public enum TamingEngine {
             }
 
             guard beast.animal.isAlive else {
-                s.journal.append(tick: tick, kind: .death, text: LocalizedText(values: [
+                s.note(tick: tick, kind: .death, text: LocalizedText(values: [
                     .en: "The colony's \((registry.beast(beast.animal.species)?.name.resolve(.en) ?? beast.animal.species).lowercased()) did not last the season.",
                     .cs: "\((registry.beast(beast.animal.species)?.name.resolve(.cs) ?? beast.animal.species)) osady sezónu nepřečkal."]))
                 continue
@@ -137,7 +137,7 @@ public enum TamingEngine {
             // Badly kept, and it goes back to what it was.
             let condition = beast.animal.health / beast.animal.baseHealth
             if condition < neglectBelow, rng.nextUnit() < 0.05 {
-                s.journal.append(tick: tick, kind: .departure, text: LocalizedText(values: [
+                s.note(tick: tick, kind: .departure, text: LocalizedText(values: [
                     .en: "The \((registry.beast(beast.animal.species)?.name.resolve(.en) ?? beast.animal.species).lowercased()) went back to the woods.",
                     .cs: "\((registry.beast(beast.animal.species)?.name.resolve(.cs) ?? beast.animal.species)) se vrátil do lesa."]))
                 continue

@@ -72,7 +72,7 @@ public enum ItemEngine {
                 // Phrased so the Czech needs no agreement with the person —
                 // colonists have names and no grammatical gender, and a line
                 // that guesses one is a line that gets it wrong half the time.
-                s.journal.append(
+                s.note(
                     tick: tick, kind: .work,
                     text: LocalizedText(values: [
                         .en: "\(name): \(what?.resolve(.en).lowercased() ?? "gear") worn out, thrown on the scrap.",
