@@ -1,10 +1,17 @@
 # Docs — what is where
 
 > **Start here if you are picking this up cold:**
-> [`BACKLOG.md` §17–18](BACKLOG.md) (2026-08-26 evening) — why a long game ran
-> out of wood, and why **a quarter of the recipe book needed treasure**. Both
-> were found by measuring; the first disproved the hypothesis that started it.
-> Open list: §15.6, §16.3–16.4 and §17.4.
+> [`HANDOFF-2026-08-27-evening.md`](HANDOFF-2026-08-27-evening.md) — the newest
+> plan, and what the last five jobs turned into.
+> Then [`BACKLOG.md` §20](BACKLOG.md) (2026-08-27) — a colonist's memory (the
+> subjects were never the shortage, the 140-entry ring was), a recipe book that
+> turned out to be correctly tiered, the renderer in eight files, and **a
+> council bench that had been full since year 60**, so a colony that wanted
+> steel from year 130 made none in two centuries. Open list: §20.7.
+> Before it: [`BACKLOG.md` §17–18](BACKLOG.md) (2026-08-26 evening) — why a long
+> game ran out of wood, and why **a quarter of the recipe book needed
+> treasure**. Both were found by measuring; the first disproved the hypothesis
+> that started it.
 > Before them, [`§15–16`](BACKLOG.md) — the app audit: diplomacy's verbs were
 > off the edge of an iPhone, there were two build flows and one of them omitted
 > every early building, the objectives panel was in English, marching on a
@@ -27,7 +34,7 @@ Read in this order when picking work up cold:
 |---|---|---|
 | 1 | [NEXT.md](NEXT.md) | **Start here.** Where the game stands and what to work on next, with the evidence for each |
 | 2 | [CODEMAPS/architecture.md](CODEMAPS/architecture.md) | The three layers, the tick order, where a decision flows |
-| 3 | [RULES.md](RULES.md) | **96 rules, each of which cost a session.** Read before writing a threshold |
+| 3 | [RULES.md](RULES.md) | **102 rules, each of which cost a session.** Read before writing a threshold |
 | 4 | [BACKLOG.md](BACKLOG.md) | **The living record.** What was measured, what was built, what Keks asked for |
 
 ## Reference, by question
