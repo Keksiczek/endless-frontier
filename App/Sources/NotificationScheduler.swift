@@ -29,6 +29,7 @@ enum NotificationScheduler {
     private static let digestID = "ef.digest"
     private static let decisionID = "ef.decision"
     private static let dangerID = "ef.danger"
+    private static let raidID = "ef.raid"
 
     /// The most messages a single absence may produce.
     static let maxPerSpell = 3
@@ -91,6 +92,12 @@ enum NotificationScheduler {
 
         var messages: [(id: String, after: TimeInterval, title: String, body: String)] = []
 
+        // A raid outranks everything: it is the one with a clock on it, and
+        // half an hour is about how long one takes to play out.
+        if let raid = raidLine(world) {
+            messages.append((raidID, 30 * 60,
+                             s("Your walls are under attack", "Útok na osadu"), raid))
+        }
         // The one that actually loses the player progress: something is waiting
         // on a decision only they can make.
         if let waiting = pendingDecisionLine(world) {
@@ -149,10 +156,35 @@ enum NotificationScheduler {
 
     // MARK: - What there is to say
 
+    /// **Anything waiting on the player's word** — not just the assembly.
+    ///
+    /// This asked `pendingLawProposal` and nothing else, so the storyteller's
+    /// decision cards — the migrants at the gate, the contested border, every
+    /// card the player actually meets — never sent a thing. Two queues, one of
+    /// them wired. Keks: *"mělo by to poslat notifikaci pokud se bude dít něco
+    /// důležitého."*
     static func pendingDecisionLine(_ world: WorldState) -> String? {
-        guard world.pendingLawProposal != nil else { return nil }
-        return s("An assembly has voted and wants your word on it.",
-                 "Sněm hlasoval a čeká na tvé slovo.")
+        if world.pendingLawProposal != nil {
+            return s("An assembly has voted and wants your word on it.",
+                     "Sněm hlasoval a čeká na tvé slovo.")
+        }
+        let waiting = world.pendingEvents.count
+        guard waiting > 0 else { return nil }
+        return waiting == 1
+            ? s("Something is waiting on a decision.",
+                "Něco čeká na tvé rozhodnutí.")
+            : s("\(waiting) things are waiting on a decision.",
+                "\(waiting) věcí čeká na tvé rozhodnutí.")
+    }
+
+    /// A raid, going on right now. The one thing worth a message before
+    /// anything else in the queue — it has a clock on it and it is happening to
+    /// people with names.
+    static func raidLine(_ world: WorldState) -> String? {
+        guard let under = world.settlements.first(where: { $0.siege != nil }),
+              let siege = under.siege else { return nil }
+        return s("\(siege.attackerName) are at \(under.name).",
+                 "\(siege.attackerName) jsou u \(under.name).")
     }
 
     static func troubleLine(_ world: WorldState, registry: GameDataRegistry) -> String? {
