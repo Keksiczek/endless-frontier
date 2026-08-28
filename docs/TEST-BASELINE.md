@@ -11,7 +11,7 @@ nothing on its own.
 
 | Date | Commit | Core tests | Core suites | Wall clock | App tests | App suites | Note |
 |---|---|---|---|---|---|---|---|
-| 2026-08-28 | `pending` | 1614 | 224 | ~18 min | 210 | 33 | The wood drawn in the town's own sorted pass, seven structures that are not rooms, and the first sixty per-building fittings (`BACKLOG.md` §24) |
+| 2026-08-28 | `3378499` | 1614 | 224 | ~18 min | 210 | 33 | The wood drawn in the town's own sorted pass, seven structures that are not rooms, and the first sixty per-building fittings (`BACKLOG.md` §24) |
 | 2026-08-27 | `b6fea2e` | 1614 | 224 | ~25 min | 207 | 33 | The 2.5D assets: `structures.json` and its reader, the battle caption that was off the edge of the world, interiors that can name a building (`BACKLOG.md` §23) |
 | 2026-08-27 | `9319742` | 1611 | 224 | ~16 min | 207 | 33 | The raid commit measured at last, and the workshop move with it — two failures found and fixed (`BACKLOG.md` §22.1) |
 | 2026-08-27 | `29892c1` | 1604 | 224 | ~18 min | 202 | 32 | Re-counted rather than copied; `CLAUDE.md` had claimed 1233 tests in 42 minutes |
