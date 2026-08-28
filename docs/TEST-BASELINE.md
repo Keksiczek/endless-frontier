@@ -11,7 +11,7 @@ nothing on its own.
 
 | Date | Commit | Core tests | Core suites | Wall clock | App tests | App suites | Note |
 |---|---|---|---|---|---|---|---|
-| 2026-08-28 | `pending` | 1614 | 224 | ~19 min | 220 | 34 | A storyteller raid opens a siege you can answer, and a store holds what it is a store for (`BACKLOG.md` §28) |
+| 2026-08-28 | `cbd6505` | 1614 | 224 | ~19 min | 220 | 34 | A storyteller raid opens a siege you can answer, and a store holds what it is a store for (`BACKLOG.md` §28) |
 | 2026-08-28 | `d39e845` | 1614 | 224 | ~22 min | 220 | 34 | The height was being counted twice, so a warehouse hung over the town (`BACKLOG.md` §27.4) |
 | 2026-08-28 | `532baf1` | 1614 | 224 | ~22 min | 220 | 34 | The corner in the wall, the flicker that was reading screen coordinates, and the smithy the iron half was waiting for (`BACKLOG.md` §27) |
 | 2026-08-28 | `7f582ce` | 1614 | 224 | ~18 min | 219 | 34 | Every beast in the valley had been walking backwards half the time — the animals had no facing at all (`BACKLOG.md` §26.4) |
