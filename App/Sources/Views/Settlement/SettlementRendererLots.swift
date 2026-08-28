@@ -174,7 +174,11 @@ extension SettlementRenderer {
                         - building.footprint.height * CGFloat(SettlementStructures.yardShare),
                     fabric: building.variant.fabric, trim: building.variant.trim,
                     wall: SettlementStructures.wallTone(building.era, building.seed),
-                    ink: Theme.bone.opacity(0.8), night: night)
+                    ink: Theme.bone.opacity(0.8), night: night,
+                    plan: lotRect(building).insetBy(
+                        dx: building.footprint.width * CGFloat(SettlementStructures.yardShare),
+                        dy: building.footprint.height * CGFloat(SettlementStructures.yardShare)),
+                    sun: sun)
                 // The roof, as solid as the distance warrants.
                 var roofContext = context
                 roofContext.opacity = roof

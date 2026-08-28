@@ -11,6 +11,7 @@ nothing on its own.
 
 | Date | Commit | Core tests | Core suites | Wall clock | App tests | App suites | Note |
 |---|---|---|---|---|---|---|---|
+| 2026-08-28 | `pending` | 1614 | 224 | ~22 min | 220 | 34 | The corner in the wall, the flicker that was reading screen coordinates, and the smithy the iron half was waiting for (`BACKLOG.md` §27) |
 | 2026-08-28 | `7f582ce` | 1614 | 224 | ~18 min | 219 | 34 | Every beast in the valley had been walking backwards half the time — the animals had no facing at all (`BACKLOG.md` §26.4) |
 | 2026-08-28 | `faac494` | 1614 | 224 | ~18 min | 216 | 33 | The lift and the wall face it uncovers, five bank fields that were carried and never read, and the placement that was throwing the yards away (`BACKLOG.md` §26) |
 | 2026-08-28 | `853fe1a` | 1614 | 224 | ~18 min | 213 | 33 | The yard drawn at last (54 attachments), the foot on the plot, and everybody in the one sorted pass (`BACKLOG.md` §25) |

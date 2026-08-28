@@ -13,18 +13,28 @@ struct CraftOrderTests {
 
     private func registry() throws -> GameDataRegistry { try GameDataRegistry.bundled() }
 
-    /// A colony with a workshop, iron on the shelf, and hands to use it.
+    /// A colony with **the bench the recipe asks for**, iron on the shelf, and
+    /// hands to use it.
+    ///
+    /// The bench used to be named here, in the fixture: `workshop`, beside a
+    /// suite that orders `craft_iron_scythe`. The day the scythe moved to the
+    /// `smithy` — where iron belongs, since the bloomery wins it in the first
+    /// age — seven tests failed for a content change that was right, and every
+    /// one of them said *"no bench was posted"* about a colony that had been
+    /// given the wrong building. A fixture that hardcodes what the content says
+    /// has to be edited every time the content is (rule 89).
     /// Fixed ids: per-entity randomness is seeded from them (CLAUDE.md rule 3).
     private func workshop(
         crafters: Int = 3, skill: Int = 0, iron: Int = 20, timber: Int = 20,
-        materials: Double = 8000
+        materials: Double = 8000, for recipeID: String = "craft_iron_scythe"
     ) throws -> Settlement {
+        let bench = try registry().recipes[recipeID]?.requiresBuilding ?? "workshop"
         var s = Settlement(
             id: UUID(uuidString: "C4AF7000-0000-0000-0000-000000000001")!,
             name: "Bench",
             buildings: [BuildingInstance(
                 id: UUID(uuidString: "C4AF7000-1111-0000-0000-000000000001")!,
-                definitionID: "workshop")],
+                definitionID: bench)],
             storage: [.food: 500, .materials: materials], storageCapacity: .uniform(20_000))
         let ticksPerYear = try registry().config.ticksPerYear
         for i in 0..<crafters {
@@ -96,7 +106,7 @@ struct CraftOrderTests {
     @Test("More hands and better hands finish sooner")
     func handsAndSkillMatter() throws {
         func progress(crafters: Int, skill: Int) throws -> Double {
-            var s = try workshop(crafters: crafters, skill: skill)
+            var s = try workshop(crafters: crafters, skill: skill, for: "craft_plate_armor")
             s = CraftingEngine.place(s, recipeID: "craft_plate_armor", count: 4,
                                      tick: 0, registry: try registry())
             // Plate is early-industrial work now — it used to be a workshop and
@@ -187,7 +197,7 @@ struct CraftOrderTests {
     @Test("A paused order is set aside without losing its work")
     func pausingKeepsProgress() throws {
         let reg = try registry()
-        var s = try workshop()
+        var s = try workshop(for: "craft_plate_armor")
         s = CraftingEngine.place(s, recipeID: "craft_plate_armor", count: 2,
                                  tick: 0, registry: reg)
         s = try work(s, ticks: 10, researched: ["machining"])
@@ -293,11 +303,15 @@ struct CraftOrderTests {
     @Test("Two of the same shop is still one queue")
     func sameShopIsOneBench() throws {
         let reg = try registry()
-        var s = try workshop(crafters: 6)
+        // Two orders that genuinely share a shop. This used to be the scythe
+        // and the plate, which shared the workshop until the scythe moved to
+        // the `smithy` — after which the test asserted "one queue" about a
+        // colony working at two different ones.
+        var s = try workshop(crafters: 6, for: "craft_plate_armor")
         s.buildings.append(BuildingInstance(
             id: UUID(uuidString: "C4AF7000-1111-0000-0000-000000000003")!,
             definitionID: "workshop"))
-        s = CraftingEngine.place(s, recipeID: "craft_iron_scythe", count: 4,
+        s = CraftingEngine.place(s, recipeID: "craft_warden_plate", count: 4,
                                  tick: 0, registry: reg)
         s = CraftingEngine.place(s, recipeID: "craft_plate_armor", count: 4,
                                  tick: 1, registry: reg)
@@ -396,8 +410,9 @@ struct CraftOrderTests {
     func benchPostsAJob() throws {
         let reg = try registry()
         var s = try workshop()
+        let bench = try #require(reg.recipes["craft_iron_scythe"]?.requiresBuilding)
         s = ColonyBuilder.ensureMap(s)
-        s = ColonyBuilder.place(s, definitionID: "workshop",
+        s = ColonyBuilder.place(s, definitionID: bench,
                                 at: TileCoord(4, 4), registry: reg) ?? s
         s.localMap = LocalMapGenerator.generate(
             mapSeed: 3, regionID: s.id, biome: reg.biome("plains"), registry: reg)

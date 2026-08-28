@@ -106,6 +106,10 @@
       {
         "type": "unlock_building",
         "buildingId": "watermill"
+      },
+      {
+        "type": "unlock_building",
+        "buildingId": "smithy"
       }
     ],
     "description": {

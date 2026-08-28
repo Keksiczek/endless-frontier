@@ -1785,6 +1785,46 @@
     "look": "forge"
   },
   {
+    "id": "smithy",
+    "work": "crafting",
+    "look": "forge",
+    "era": "ancient",
+    "name": {
+      "en": "Smithy",
+      "cs": "Kovárna"
+    },
+    "cost": {
+      "materials": 45,
+      "knowledge": 10
+    },
+    "material_cost": {
+      "timber_bundle": 2,
+      "brick": 3
+    },
+    "workers": 3,
+    "production": {
+      "materials": 6
+    },
+    "consumption": {},
+    "pollution": 3,
+    "morale_effect": 0,
+    "adjacency": [
+      {
+        "neighbor": "bloomery",
+        "resource": "materials",
+        "bonus": 2
+      }
+    ],
+    "footprint": {
+      "w": 3,
+      "h": 2
+    },
+    "description": {
+      "en": "An anvil, a hearth and a slack tub. The bloomery wins the iron; this is where it becomes an axe, a pick or a blade.",
+      "cs": "Kovadlina, výheň a kalicí káď. Výheň železo vyzíská, tady se z něj stane sekera, krumpáč nebo čepel."
+    }
+  },
+  {
     "id": "stable",
     "era": "early_settlement",
     "name": {

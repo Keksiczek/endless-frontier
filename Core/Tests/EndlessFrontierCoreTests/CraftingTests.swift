@@ -49,16 +49,26 @@ struct CraftingTests {
                 "the order waits for the iron rather than vanishing")
     }
 
-    @Test("A workshop recipe needs the workshop building")
+    /// **The bench comes from the recipe, not from this test.** It used to name
+    /// `workshop` and `craft_iron_scythe` in the same breath, so the day the
+    /// scythe moved to the `smithy` — where iron belongs, since the bloomery
+    /// wins it in the first age — the test failed for a change that was right.
+    /// A fixture that hardcodes what the content says is a fixture that has to
+    /// be edited every time the content is (rule 89).
+    @Test("A recipe with a bench cannot be made without it")
     func buildingRequirement() throws {
         let r = try reg()
-        let without = capital(materials: ["iron_ingot", "iron_ingot", "timber_bundle"])
-        #expect(!CraftingEngine.canCraft(r.recipes["craft_iron_scythe"]!, in: without, registry: r))
+        let recipe = try #require(r.recipes["craft_iron_scythe"])
+        let bench = try #require(recipe.requiresBuilding)
+        let stock = ["iron_ingot", "iron_ingot", "timber_bundle"]
 
-        let with = capital(materials: ["iron_ingot", "iron_ingot", "timber_bundle"], buildings: ["workshop"])
-        #expect(CraftingEngine.canCraft(r.recipes["craft_iron_scythe"]!, in: with, registry: r))
-        let after = BenchTestSupport.craft(with, recipeID: "craft_iron_scythe", registry: r)
-        #expect(after.settlements[0].inventory.contains { $0.definitionID == "iron_scythe" })
+        let without = capital(materials: stock)
+        #expect(!CraftingEngine.canCraft(recipe, in: without, registry: r))
+
+        let with = capital(materials: stock, buildings: [bench])
+        #expect(CraftingEngine.canCraft(recipe, in: with, registry: r))
+        let after = BenchTestSupport.craft(with, recipeID: recipe.id, registry: r)
+        #expect(after.settlements[0].inventory.contains { $0.definitionID == recipe.outputItemID })
     }
 
     @Test("availableRecipes lists only craftable recipes")

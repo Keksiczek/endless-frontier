@@ -920,5 +920,21 @@
     ],
     "yard": "cobbles",
     "accent": "hearth"
+  },
+  {
+    "id": "smithy",
+    "standing": 1.2,
+    "roof": "gable",
+    "fabric": "stone",
+    "trim": "timber",
+    "rooftop": "vents",
+    "attachments": [
+      "charcoal_heap",
+      "anvil",
+      "water_butt",
+      "tool_rack"
+    ],
+    "yard": "beaten_earth",
+    "accent": "ember"
   }
 ]

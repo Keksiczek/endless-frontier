@@ -51,7 +51,7 @@
     "resourceCost": {
       "materials": 20
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "smithy",
     "description": {
       "en": "A workshop blade that doubles a farmer's reach.",
       "cs": "Dílenské ostří, které sedlákovi zdvojnásobí dosah."
@@ -71,7 +71,7 @@
     "resourceCost": {
       "materials": 40
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "smithy",
     "description": {
       "en": "Only a true workshop can shape a pick this fine.",
       "cs": "Vyvážení, které se nedá popsat — jen vyzkoušet."
@@ -1144,7 +1144,7 @@
     "resourceCost": {
       "materials": 20
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "smithy",
     "requiresTech": "bronze_tools",
     "description": {
       "en": "A loud horn to sound the alarm from the watchtower, its call echoing through the valley.",
@@ -1165,7 +1165,7 @@
     "resourceCost": {
       "materials": 12
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "smithy",
     "requiresTech": "agriculture",
     "description": {
       "en": "A specialized blade for joining one plant to another, key to developing new fruit varieties.",
@@ -1343,7 +1343,7 @@
     "resourceCost": {
       "materials": 20
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "smithy",
     "requiresTech": "bronze_tools",
     "description": {
       "en": "A heavy iron head on a sturdy handle. The only way to get at the mountain's riches.",
@@ -3977,7 +3977,7 @@
       "materials": 20,
       "knowledge": 20
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "smithy",
     "requiresTech": "writing",
     "description": {
       "en": "An iron neck ring, consecrated with offerings of precious food. Worn to honor the ancestors and guide the spirits of the dead.",
@@ -4080,7 +4080,7 @@
     "resourceCost": {
       "materials": 15
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "smithy",
     "requiresTech": "basic_tools",
     "description": {
       "en": "A solid iron head, properly hafted on a hardwood handle. Built to last.",
@@ -4188,7 +4188,7 @@
     "resourceCost": {
       "materials": 15
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "smithy",
     "requiresTech": "bronze_tools",
     "description": {
       "en": "A heavy iron head set deep in a hardwood handle. Built to last through many seasons of logging.",
@@ -6430,7 +6430,7 @@
     "resourceCost": {
       "materials": 8
     },
-    "requiresBuilding": "workshop",
+    "requiresBuilding": "smithy",
     "requiresTech": "basic_tools",
     "description": {
       "en": "A simple, hammered metal bell to help track livestock.",

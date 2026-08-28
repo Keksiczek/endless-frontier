@@ -1,6 +1,6 @@
 # Rules — what has already gone wrong, and must not again
 
-<!-- Extracted from BACKLOG.md 2026-08-13 | 108 rules -->
+<!-- Extracted from BACKLOG.md 2026-08-13 | 109 rules -->
 
 **Every one of these cost a session at least once.** They are the project's
 troubleshooting guide and its lessons learned in one list: when something in the
@@ -1103,3 +1103,19 @@ fires, do the arithmetic before you rewrite the mechanic.
    like: grep for what a key *could* hold before designing a new key, and when
    a specific and a general answer both exist, let the specific one replace
    rather than accompany — a bloomery's hearth instead of a forge's, never both.
+
+109. **A fixture that writes down what the content says has to be edited every
+   time the content is.** Moving nine recipes to a `smithy` — right, measured,
+   and guarded by two tests that read the chain fixpoint — failed **fourteen**
+   others, none of which was about the change. `CraftOrderTests` stood its
+   colony a `workshop` and then ordered a scythe at it, so the suite reported
+   *"the colony was asked for a scythe and no bench was posted"* about a colony
+   that had been handed the wrong building; `CraftingTests` named the bench and
+   the recipe in one breath. A fixture may state the *shape* it needs — a
+   bench, materials, hands — and must ask the registry for the **name**:
+   `recipe.requiresBuilding`, not `"workshop"`. The tell is a test that fails
+   for a content change with a message about the engine. Rule 89's sibling:
+   that one is a fixture missing data the feature reads, this one is a fixture
+   asserting data the content owns. Watch for the third case hiding in it — a
+   test whose *premise* really did move (two orders "at the same shop" stopped
+   being at the same shop) needs new inputs, not a new lookup.

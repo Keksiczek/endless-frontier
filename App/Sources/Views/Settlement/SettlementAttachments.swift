@@ -99,7 +99,7 @@ enum SettlementAttachments {
     /// behind; the rest take the sides, and a little overhang into the lane is
     /// allowed — a woodpile against a wall is not trespass.
     static func places(names: [String], body: CGRect, lot: CGRect, seed: UInt64)
-        -> [(form: Form, at: CGPoint, size: CGFloat)] {
+        -> [(form: Form, at: CGPoint, size: CGFloat, roll: Double)] {
         guard !names.isEmpty, body.width > 6 else { return [] }
         var h = seed | 1
         func roll() -> Double {
@@ -113,7 +113,7 @@ enum SettlementAttachments {
 
         let forms = names.compactMap(form(of:))
         let behind = max(0, body.minY - lot.minY)
-        var out: [(form: Form, at: CGPoint, size: CGFloat)] = []
+        var out: [(form: Form, at: CGPoint, size: CGFloat, roll: Double)] = []
         var sideward = 0
         var backward = 0
         let backCount = forms.filter { rises($0) || behind > unit * 0.9 }.count
@@ -139,7 +139,7 @@ enum SettlementAttachments {
                              y: body.maxY - body.height * CGFloat(0.08 + jitter * 0.1)
                                 - row * span * 0.9)
             }
-            out.append((form: form, at: at, size: span))
+            out.append((form: form, at: at, size: span, roll: jitter))
         }
         return out
     }
@@ -159,8 +159,7 @@ enum SettlementAttachments {
             let span = placed.size
             switch placed.form {
             case .heap:     heap(&context, at: at, size: span)
-            case .stack:    stack(&context, at: at, size: span,
-                                  roll: Double((placed.at.x.hashValue & 0xFF)) / 255)
+            case .stack:    stack(&context, at: at, size: span, roll: placed.roll)
             case .rack:     rack(&context, at: at, size: span)
             case .line:     line(&context, at: at, size: span, toward: body)
             case .rail:     rail(&context, at: at, size: span)
@@ -426,11 +425,39 @@ enum SettlementFabric {
     ///   - groundY: where the building actually stands, in the plan.
     static func skirt(
         _ context: inout GraphicsContext, body: CGRect, groundY: CGFloat,
-        fabric: String, trim: String, wall: Color, ink: Color, night: Double
+        fabric: String, trim: String, wall: Color, ink: Color, night: Double,
+        /// The ground the building actually covers. Wider than the drawn body,
+        /// so the two edges meeting is what gives the wall a **corner** — and
+        /// the corner is what says the thing has depth. Zero width falls back
+        /// to a flat face, which is what a thumbnail wants.
+        plan: CGRect = .zero,
+        /// Which way the light is going. The near wall is always drawn; the
+        /// **side** wall is drawn on the side the sun is not behind, because
+        /// that is the one a viewer standing in front of the building can see
+        /// (`RENDER_25D.md` §2 — two quads, never four).
+        sun: SettlementLight.Sun? = nil
     ) {
         let height = groundY - body.maxY
         guard height > 1.2, body.width > 3 else { return }
         let face = CGRect(x: body.minX, y: body.maxY, width: body.width, height: height)
+
+        // The side wall: a quad from the plot's edge on the ground up to the
+        // body's edge, on whichever side the light is coming *across*.
+        if plan.width > body.width + 1, let sun, sun.daylight > 0.05, height > 2 {
+            let leftLit = sun.shadow.dx > 0        // shadow thrown right = sun on the left
+            let ground = leftLit ? plan.maxX : plan.minX
+            let wallEdge = leftLit ? body.maxX : body.minX
+            var side = Path()
+            side.move(to: CGPoint(x: wallEdge, y: face.minY))
+            side.addLine(to: CGPoint(x: ground, y: face.maxY))
+            side.addLine(to: CGPoint(x: ground, y: face.maxY - height * 0.9))
+            side.addLine(to: CGPoint(x: wallEdge, y: face.minY - height * 0.15))
+            side.closeSubpath()
+            // Darker than the face it turns away from: one surface in the light
+            // and one out of it is the whole of the illusion.
+            context.fill(side, with: .color(wall.opacity(0.55 - night * 0.2)))
+            context.stroke(side, with: .color(ink.opacity(0.5)), lineWidth: 0.5)
+        }
 
         // A roof on posts has no wall: two legs and the daylight between them.
         guard fabric != "open" else {
@@ -528,29 +555,35 @@ enum SettlementFabric {
         var marks = Path()
         switch kind {
         case "planking":
-            let step = max(3, lot.height / 5)
-            var y = lot.minY + step
-            while y < lot.maxY {
+            let boards = max(3, min(9, Int(lot.height / 4)))
+            for board in 1..<boards {
+                let y = lot.minY + lot.height * CGFloat(board) / CGFloat(boards)
                 marks.move(to: CGPoint(x: lot.minX, y: y))
                 marks.addLine(to: CGPoint(x: lot.maxX, y: y))
-                y += step
             }
+        // **Everything below is laid out in fractions of the plot**, never in
+        // pixels. A loop that starts at `lot.minX` and steps four points walks
+        // a different set of stones every time the camera moves a fraction of a
+        // point, and the yard boils under the town — Keks: *"hromady nebo
+        // komíny při posunu kamery blikají"*. The plot's own fractions are the
+        // same on every frame, at every zoom.
         case "cobbles":
             var h = seed | 1
-            var y = lot.minY + 2
-            while y < lot.maxY - 1 {
-                var x = lot.minX + 2
-                while x < lot.maxX - 1 {
+            let columns = max(3, min(12, Int(lot.width / 4)))
+            let rows = max(3, min(12, Int(lot.height / 3)))
+            for row in 0..<rows {
+                for column in 0..<columns {
                     h ^= h >> 33; h = h &* 0xFF51_AFD7_ED55_8CCD; h ^= h >> 29
                     let r = CGFloat(Double((h >> 40) & 0xFF) / 255) * 0.8 + 0.6
-                    marks.addEllipse(in: CGRect(x: x, y: y, width: r * 2, height: r * 1.4))
-                    x += 4
+                    let x = lot.minX + lot.width * (CGFloat(column) + 0.5) / CGFloat(columns)
+                    let y = lot.minY + lot.height * (CGFloat(row) + 0.5) / CGFloat(rows)
+                    marks.addEllipse(in: CGRect(x: x - r, y: y - r * 0.7,
+                                                width: r * 2, height: r * 1.4))
                 }
-                y += 3
             }
         case "gravel":
             var h = seed | 3
-            for _ in 0..<Int(min(60, lot.width * lot.height / 24)) {
+            for _ in 0..<Int(min(60, max(6, lot.width * lot.height / 24))) {
                 h ^= h >> 33; h = h &* 0xFF51_AFD7_ED55_8CCD; h ^= h >> 29
                 let x = lot.minX + lot.width * CGFloat(Double((h >> 40) & 0xFFFF) / 65535)
                 h ^= h >> 31

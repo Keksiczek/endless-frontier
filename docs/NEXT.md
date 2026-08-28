@@ -4,7 +4,7 @@
 2026-08-28; its plan is still 2026-08-17 vintage** — check `BACKLOG.md` and the
 newest handoff before starting anything from §3 onwards. Read this, then
 [`CODEMAPS/architecture.md`](CODEMAPS/architecture.md) and **[`RULES.md`](RULES.md)**
-(108 rules, each of which cost a session). [`BACKLOG.md`](BACKLOG.md) is the long
+(109 rules, each of which cost a session). [`BACKLOG.md`](BACKLOG.md) is the long
 history; this file is the short answer to *"what should I work on?"*.
 
 ```bash
@@ -21,7 +21,7 @@ cd App && xcodegen generate && cd .. && xcodebuild -project App/EndlessFrontier.
 
 A deterministic colony simulation with a living top-down canvas. Seven founders,
 a two-minute tick, a five-real-minute drawn day. Content, counted 2026-08-28:
-62 buildings, 60 techs, 182 events, 7 biomes, 46 conveyances, 477 items,
+63 buildings, 60 techs, 182 events, 7 biomes, 46 conveyances, 477 items,
 420 recipes — all bilingual CZ/EN, guarded by a test.
 
 What works and is worth protecting:

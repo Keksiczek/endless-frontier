@@ -47,7 +47,7 @@ Read in this order when picking work up cold:
 |---|---|---|
 | 1 | [NEXT.md](NEXT.md) | **Start here.** Where the game stands and what to work on next, with the evidence for each |
 | 2 | [CODEMAPS/architecture.md](CODEMAPS/architecture.md) | The three layers, the tick order, where a decision flows |
-| 3 | [RULES.md](RULES.md) | **108 rules, each of which cost a session.** Read before writing a threshold |
+| 3 | [RULES.md](RULES.md) | **109 rules, each of which cost a session.** Read before writing a threshold |
 | 4 | [BACKLOG.md](BACKLOG.md) | **The living record.** What was measured, what was built, what Keks asked for |
 
 ## Routing table — by what you are about to do
@@ -130,9 +130,9 @@ overtaken without being updated, which is exactly how a stale doc does damage.
 
 Reality as of the newest row of [TEST-BASELINE.md](TEST-BASELINE.md)
 (**2026-08-28**): **1614 Core tests** in 224 suites in ~18 minutes, and
-**219 App tests** in 34 suites, all green; iOS build green. Nothing is
+**220 App tests** in 34 suites, all green; iOS build green. Nothing is
 unmeasured — append a row rather than editing this line.
-Content: **62 buildings**, **60 techs**, 182 events, 7 biomes, **477 items**,
+Content: **63 buildings**, **60 techs**, 182 events, 7 biomes, **477 items**,
 **420 recipes** — checked against the tree by `make verify-docs`. History lives
 in `BACKLOG.md`; the newest sections are §17 and §18. The open list is §15.6,
 §16.3–16.4 and §17.4.

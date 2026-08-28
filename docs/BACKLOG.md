@@ -4262,8 +4262,75 @@ mirrors the body about the point it stands on, which is what the colonists do.
 The alarm mark over a frightened beast stays unmirrored, and the kept stock in
 the pen gets the same treatment off the circle it walks.
 
-### 26.5 — still open
+### 26.5 — closed in §27
 
-1. The wall face is a flat quad. §2's *"only the near faces are drawn"* wants
-   the east or west face too, whichever the sun is not behind.
-2. Everything in §22.4.
+## 27. 2026-08-28 — the corner, the flicker, and the smithy
+
+The two §26 left, and one Keks caught in passing.
+
+### 27.1 — a wall with a corner in it
+
+`RENDER_25D.md` §2: *only the near faces are drawn* — the front, and whichever
+of the sides the sun is not behind. The face the lift uncovered was one flat
+quad, which reads as a *card* standing up rather than as a building with depth.
+
+The side comes out of geometry that was already there: the plot the building
+covers is **wider than the drawn body**, so the quad from the plot's edge on the
+ground up to the body's edge is the side wall, and it is drawn on the side the
+light comes across (`SettlementLight.Sun.shadow.dx` — the same vector the cast
+shadows use, so the two can never disagree about where the sun is). Darker than
+the front: one surface in the light and one out of it is the whole illusion.
+
+### 27.2 — a drawing may not read where it is on the screen
+
+Keks, panning: *"hromady nebo komíny při posunu kamery blikají"*. Mine, twice
+over, and both the same mistake: **the drawing was reading screen coordinates**,
+which change by a fraction of a point every time the camera moves.
+
+- A crate stack took its row count from `at.x.hashValue`, so it flickered
+  between two rows and three as you panned. The roll now travels with the
+  placement, worked out once from the building's own seed.
+- The cobbles and the gravel were laid out by walking pixels from `lot.minX` in
+  steps of four, so the whole yard boiled under the town. They are laid out in
+  **fractions of the plot** now, which are the same on every frame and at every
+  zoom.
+
+Guarded by *"What is drawn beside a building does not change as the camera
+moves"*: the same building, its lot moved 37.5 points across and 12.25 up,
+places the same things with the same rolls at the same offsets.
+
+### 27.3 — the iron half, and a bench for it
+
+§22.4.1, and the last thing the workshop was holding. Nine recipes — an iron
+scythe, a miner's pick, two sturdy axes, a grafting knife, a watchman's horn, a
+grave torc, a crude animal bell, a masterwork pick — sat at the **medieval**
+workshop while `iron_ingot` comes off the bloomery in the **first** age. Nothing
+about them was medieval; the bench was the gate, and it was the wrong bench.
+
+`smithy` is that bench: *ancient*, unlocked by `bronze_tools`, an anvil and a
+hearth beside the bloomery it works with (`adjacency`). The four that stay at
+the workshop — an iron sword, a crossbow and the two war bows — are held by the
+**damage band**, which is correct gating rather than an accident (§22.4.1 said
+so and it is still true).
+
+Guarded by what was already there: *"No bench is the only thing holding a book
+of recipes back"* and *"No single age hands over a sixth of the book at once"*,
+both of which read the chain fixpoint rather than a list of material names —
+which is what §22.1 warned about.
+
+**And fourteen tests failed for a change that was right** (rule 89). Every one
+of them was a fixture that had written down what the content says: `CraftingTests`
+named `workshop` and `craft_iron_scythe` in the same breath, and `CraftOrderTests`
+stood a colony a `workshop` and then ordered a scythe at it — so the suite said
+*"the colony was asked for a scythe and no bench was posted"* about a colony
+that had been given the wrong building. The fixtures ask the **recipe** which
+bench it wants now. One of them was a real premise change rather than a rot:
+*"Two of the same shop is still one queue"* ordered a scythe and a plate, which
+shared the workshop until the scythe left, and it now orders two things that
+genuinely share one.
+
+### 27.4 — still open
+
+1. Everything in §21.6 that §22.4.3 pointed at.
+2. The wall face is drawn for every building; §5's **vertical textures** are
+   nine hands and could be nine more.

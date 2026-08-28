@@ -95,6 +95,30 @@ struct BuildingLookTests {
         #expect(thin.isEmpty, "nothing was put in the yard of: \(thin.sorted().prefix(8))")
     }
 
+    /// **A drawing may not read where it is on the screen.** The crate stack
+    /// took its row count from the hash of its own x, which changes every time
+    /// the camera moves a fraction of a point — so a woodpile flickered between
+    /// two rows and three as you panned. Keks: *"hromady nebo komíny při posunu
+    /// kamery blikají"*. Same layout, same rolls, wherever the camera is.
+    @Test("What is drawn beside a building does not change as the camera moves")
+    func placementsDoNotFlicker() {
+        let lot = CGRect(x: 100, y: 100, width: 56, height: 42)
+        let body = lot.insetBy(dx: 6, dy: 7)
+        let names = ["woodpile", "crates", "brazier", "crane", "water_butt"]
+        let here = SettlementAttachments.places(names: names, body: body, lot: lot, seed: 7)
+        let panned = SettlementAttachments.places(
+            names: names, body: body.offsetBy(dx: 37.5, dy: -12.25),
+            lot: lot.offsetBy(dx: 37.5, dy: -12.25), seed: 7)
+
+        #expect(here.count == panned.count)
+        for (a, b) in zip(here, panned) {
+            #expect(a.roll == b.roll, "the same thing rolled differently after a pan")
+            #expect(abs((b.at.x - a.at.x) - 37.5) < 1e-6, "it slid relative to its own plot")
+            #expect(abs((b.at.y - a.at.y) + 12.25) < 1e-6)
+            #expect(abs(a.size - b.size) < 1e-6)
+        }
+    }
+
     @Test("Every attachment in the bank is a thing the canvas can draw")
     func attachmentsAreDrawable() throws {
         let registry = try GameDataRegistry.bundled()
