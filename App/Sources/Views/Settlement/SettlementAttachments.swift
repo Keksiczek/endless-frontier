@@ -107,8 +107,10 @@ enum SettlementAttachments {
             return Double((h >> 40) & 0xFFFF) / 65535
         }
         // Small against the walls: these name a building, they do not compete
-        // with it. Two fifths of the shorter wall is about a cart.
-        let unit = min(body.height, body.width) * 0.4
+        // with it. At two fifths of the wall they were reading as **panels
+        // standing beside the houses** — Keks, on a screenshot: *"takové panely
+        // nad tím"*. A quarter is about a cart, which is what these are.
+        let unit = min(body.height, body.width) * 0.25
         guard unit > 2 else { return [] }
 
         let forms = names.compactMap(form(of:))
@@ -179,8 +181,11 @@ enum SettlementAttachments {
 
     // MARK: - The forms
 
-    private static var ink: Color { Theme.bone.opacity(0.72) }
-    private static var faint: Color { Theme.bone.opacity(0.4) }
+    // Dimmer than a wall. These stand *beside* a building and must not out-draw
+    // it: bone at three quarters put a white crate stack in front of every
+    // house in the colony.
+    private static var ink: Color { Theme.bone.opacity(0.42) }
+    private static var faint: Color { Theme.bone.opacity(0.24) }
 
     private static func heap(_ context: inout GraphicsContext, at c: CGPoint, size s: CGFloat) {
         var mound = Path()

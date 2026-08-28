@@ -226,10 +226,33 @@ enum SettlementSeasons {
         case .bare:
             return
         case .snow, .drift:
-            // A scallop: the lip of a drift, seen from above.
-            path.move(to: CGPoint(x: p.x - size * 0.30, y: p.y + size * 0.08))
-            path.addQuadCurve(to: CGPoint(x: p.x + size * 0.30, y: p.y + size * 0.06),
-                              control: CGPoint(x: p.x, y: p.y - size * 0.24))
+            // **One mark repeated is wallpaper.** A single scallop, at one size,
+            // on a lattice is read by the eye as a pattern rather than as
+            // country — Keks, on a winter screenshot: *"textury mi přijdou
+            // pořád stejné."* Three marks and a size that varies is enough: the
+            // eye stops finding the repeat.
+            let scale = 0.7 + CGFloat(SettlementGround.unit(h >> 52)) * 0.7
+            switch SettlementGround.unit(h >> 56) {
+            case ..<0.45:
+                // The lip of a drift, seen from above.
+                path.move(to: CGPoint(x: p.x - size * 0.30 * scale, y: p.y + size * 0.08))
+                path.addQuadCurve(
+                    to: CGPoint(x: p.x + size * 0.30 * scale, y: p.y + size * 0.06),
+                    control: CGPoint(x: p.x, y: p.y - size * 0.24 * scale))
+            case ..<0.78:
+                // Wind-combed snow: two short parallel runs.
+                for k in 0..<2 {
+                    let dy = size * (0.05 + CGFloat(k) * 0.16) * scale
+                    path.move(to: CGPoint(x: p.x - size * 0.24 * scale, y: p.y + dy))
+                    path.addLine(to: CGPoint(x: p.x + size * 0.20 * scale, y: p.y + dy * 0.6))
+                }
+            default:
+                // Crust broken open — a speck of what is underneath.
+                path.addEllipse(in: CGRect(x: p.x - size * 0.09 * scale,
+                                           y: p.y - size * 0.06 * scale,
+                                           width: size * 0.18 * scale,
+                                           height: size * 0.12 * scale))
+            }
         case .mud:
             // A rut, as if something wheeled has been through.
             path.move(to: CGPoint(x: p.x - size * 0.26, y: p.y - size * 0.10))

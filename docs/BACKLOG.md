@@ -4329,7 +4329,33 @@ bench it wants now. One of them was a real premise change rather than a rot:
 shared the workshop until the scythe left, and it now orders two things that
 genuinely share one.
 
-### 27.4 — still open
+### 27.4 — the height was being counted twice
+
+Keks, with four screenshots: *"textury mi přijdou pořád stejné"*, *"sklady mají
+itemy v takových panelech nad tím"*. The second is the useful one and it is
+mine.
+
+`bodySize` multiplied the plan by the whole of `heightScale` — up to 2.4× — and
+then §26.1's `rise` lifted the drawing **on top of that**. A granary at
+`standing: 1.8` came out 1.6 times taller *and* held half a body above its own
+plot; the room is drawn inside those walls, so the goods went up with them and a
+warehouse read as a panel hanging over the town. Two expressions of one quantity
+is rule 35 read backwards: the number was right and it was spent twice.
+
+The plan keeps its proportions now, with a 15% nod so a tall building is a
+little bigger as well as higher, and everything else goes where §2 puts it — the
+lift, and the wall face the lift uncovers.
+
+Two more from the same screenshots:
+
+- **The attachments were panels.** Two fifths of the wall, in bone at 0.72 —
+  which is a crate stack out-drawing the house behind it. A quarter of the wall
+  at 0.42, which is a cart.
+- **Winter was wallpaper.** One scallop, one size, on a lattice: the eye reads
+  the repeat, not the country. Three marks — a drift's lip, wind-combed snow,
+  crust broken open — and a size that varies with the cell.
+
+### 27.5 — still open
 
 1. Everything in §21.6 that §22.4.3 pointed at.
 2. The wall face is drawn for every building; §5's **vertical textures** are

@@ -622,9 +622,9 @@ enum SettlementStructures {
     }
 
     /// How much of a storey's height is spent lifting rather than stretching.
-    /// The rest is still in the body, so a tall building is both higher and a
-    /// little bigger — which is what a tall building looks like.
-    static let riseFactor = 0.62
+    /// Nearly all of it: `bodySize` keeps a nod of 15%, and everything else a
+    /// tall building has goes into the lift and the wall face under it.
+    static let riseFactor = 0.45
 
     /// How much of its own plot a building leaves as yard at the front.
     static let yardShare = 0.07
@@ -690,7 +690,22 @@ enum SettlementStructures {
         // stretch, so the lot still decides the *shape* and the bank decides
         // the height — a watchtower on a wide lot is a tall building on a wide
         // lot, not a squat one.
-        return (width, height * max(0.4, heightScale))
+        // **A tall building is lifted, not inflated.**
+        //
+        // This used to multiply the plan by the whole of `heightScale`, and
+        // then `rise` lifted the drawing on top of that — so a granary at
+        // `standing: 1.8` came out 1.6× taller *and* held half a body above its
+        // own plot. Keks, on a warehouse: *"sklady mají itemy v takových
+        // panelech nad tím"* — the room is drawn inside these walls, so the
+        // goods went up with them and the building read as a panel hanging over
+        // the town rather than as a building standing in it.
+        //
+        // The plan keeps its proportions and the height goes where
+        // `RENDER_25D.md` §2 puts it: into the lift, and into the wall face the
+        // lift uncovers. What is left here is a nod, so a tall building is a
+        // little bigger as well as higher.
+        let nod = 1 + (max(0.4, heightScale) - 1) * 0.15
+        return (width, height * nod)
     }
 
     /// How far a body may be stretched toward its lot before it stops looking
