@@ -71,7 +71,7 @@ endless-frontier/
 Endless Frontier **V2** merges the original deterministic colony sim with the
 living-world and social systems of a Czech HTML civilisation sim. All V2 phases
 (A–F) are complete. Current: **1614 Core tests in 224 suites green**
-(`cd Core && swift test`, ~18 min) and **216 App tests in 33 suites**, iOS
+(`cd Core && swift test`, ~18 min) and **219 App tests in 34 suites**, iOS
 build green.
 
 Content, counted 2026-08-28: **62 buildings, 60 techs**, 182 events, **7

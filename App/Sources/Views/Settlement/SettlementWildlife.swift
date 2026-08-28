@@ -125,8 +125,13 @@ enum SettlementWildlife {
             // Kept stock is not roamed by `AnimalEngine`, so its `activity`
             // is whatever it held when it was gentled. A beast in the pen is a
             // beast at grass, and saying so beats reading a stale field.
+            // A kept beast walks its round of the pen, so it has a side too:
+            // sampled off the same circle the drawing puts it on.
+            let ago = SettlementRenderer.point(
+                tamedPosition(kept, index: index, time: time - 0.6), in: rect)
+            var penned = facing(context, at.x < ago.x ? -1 : 1, about: at)
             body(kept.animal.build, at: at, s: s, time: time, phase: phase,
-                 walking: false, context: &context)
+                 walking: false, context: &penned)
             // The collar: a small ring under it, in the colony's own amber, so
             // a tamed wolf never reads as one that came out of the trees.
             context.stroke(
@@ -234,6 +239,11 @@ enum SettlementWildlife {
             // and a twelfth beast could only ever have come out as the
             // fallback. A species names its build in `animals.json` and is
             // drawn as the animal it says it is.
+            // Turned to face the way it is walking. The alarm mark below is
+            // drawn in the *unmirrored* context: a beast can be going left and
+            // the mark over its head still reads left to right.
+            do {
+            var context = facing(context, heading(of: animal, at: continuousStep), about: at)
             switch animal.build {
             case .deer:
                 deer(&context, at: at, s: s, time: beat, phase: phase,
@@ -264,6 +274,7 @@ enum SettlementWildlife {
                 // starving wolf.
                 prowler(&context, at: at, s: s, time: beat, hungry: ailing,
                         doing: doing, urgency: urgency)
+            }
             }
             // Something has spooked it: a mark over the head, the way a herd
             // lifting all at once tells you a wolf came down the valley.
@@ -320,6 +331,42 @@ enum SettlementWildlife {
     }
 
     /// A stable number per beast, so its wander is its own and never jitters.
+    /// **Which way a beast is going**, −1 walking left, +1 walking right.
+    ///
+    /// Every animal in the game was drawn facing right, so half of them walked
+    /// backwards: a deer crossing the valley westward moved left across the
+    /// screen with its head pointing east. The colonists have had this since
+    /// they were drawn (`AgentMotion.Pose.facing`) and the beasts never did —
+    /// their bodies were drawn from a fixed outline with no side to them.
+    ///
+    /// Taken from the walk itself rather than from a field, so it cannot
+    /// disagree with where the beast actually is: two samples of the same
+    /// `position(at:)` the drawing uses. A beast standing still keeps a side of
+    /// its own, from its id, so a meadow of grazing deer does not all look one
+    /// way — and does not flicker between frames either.
+    static func heading(of animal: Animal, at step: Double) -> CGFloat {
+        if let walk = animal.walk, step < Double(walk.arrivesAt) {
+            let dx = animal.position(at: step + 0.08).x - animal.position(at: step).x
+            if abs(dx) > 1e-6 { return dx < 0 ? -1 : 1 }
+            let straight = walk.to.x - walk.from.x
+            if abs(straight) > 1e-6 { return straight < 0 ? -1 : 1 }
+        }
+        return hash(animal.id) % 2 == 0 ? -1 : 1
+    }
+
+    /// Mirror a drawing about the point it stands on. The body is drawn facing
+    /// right and turned round here, which is what `SettlementFigures` does for
+    /// a colonist walking west.
+    static func facing(_ context: GraphicsContext, _ heading: CGFloat,
+                       about at: CGPoint) -> GraphicsContext {
+        guard heading < 0 else { return context }
+        var mirrored = context
+        mirrored.translateBy(x: at.x, y: 0)
+        mirrored.scaleBy(x: -1, y: 1)
+        mirrored.translateBy(x: -at.x, y: 0)
+        return mirrored
+    }
+
     static func hash(_ id: UUID) -> UInt64 {
         var h: UInt64 = 0xCBF2_9CE4_8422_2325
         let b = id.uuid

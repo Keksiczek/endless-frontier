@@ -4243,7 +4243,26 @@ field of panels has no yard: **the structure is the plot**. `drawScale` gives
 those seven half again, and with the yard surface and the attachments under them
 the plot reads as a place rather than as a gap in the town.
 
-### 26.4 — still open
+### 26.4 — every beast in the valley walked backwards half the time
+
+Keks: *"zvířata chodí špatně, jen na pravou stranu, nikdy na levou"*. Exactly
+right, and it had been true since animals became entities: **the beasts had no
+facing at all.** `SettlementFigures` mirrors a colonist walking west
+(`Pose.facing`) and has since it was written; `SettlementWildlife` drew every
+body from a fixed outline, so a deer crossing the valley leftward moved left
+across the screen with its head pointing right.
+
+`SettlementWildlife.heading(of:at:)` takes it from **the walk the drawing is
+already reading** — two samples of the same `position(at:)`, so it cannot
+disagree with where the beast actually is — and falls back to the walk's own
+straight line, then to a stable side from the beast's id, so a meadow of grazing
+deer neither all faces one way nor flickers between frames. `facing(_:_:about:)`
+mirrors the body about the point it stands on, which is what the colonists do.
+
+The alarm mark over a frightened beast stays unmirrored, and the kept stock in
+the pen gets the same treatment off the circle it walks.
+
+### 26.5 — still open
 
 1. The wall face is a flat quad. §2's *"only the near faces are drawn"* wants
    the east or west face too, whichever the sun is not behind.

@@ -325,3 +325,45 @@ struct WalkPaceAgreementTests {
                 "\(String(format: "%.4f", simulated)) map widths a second is not visible motion")
     }
 }
+
+@Suite("A beast walks the way it is pointing")
+struct AnimalFacingTests {
+
+    private func beast(from: LocalPoint, to: LocalPoint) -> Animal {
+        var animal = Animal(id: UUID(uuidString: "00000000-0000-0000-3333-000000000001")!,
+                            species: "deer", sex: .female, age: 3, position: from)
+        animal.walk = WalkPath(from: from, to: to, leftAt: 0, arrivesAt: 40)
+        return animal
+    }
+
+    /// Every animal in the game was drawn facing right, so half of them walked
+    /// backwards — Keks: *"zvířata chodí jen na pravou stranu, nikdy na levou"*.
+    @Test("A beast walking west is turned to face west")
+    func westwardBeastsFaceWest() {
+        let west = beast(from: LocalPoint(x: 0.8, y: 0.5), to: LocalPoint(x: 0.2, y: 0.5))
+        let east = beast(from: LocalPoint(x: 0.2, y: 0.5), to: LocalPoint(x: 0.8, y: 0.5))
+        #expect(SettlementWildlife.heading(of: west, at: 5) == -1)
+        #expect(SettlementWildlife.heading(of: east, at: 5) == 1)
+    }
+
+    /// …and one standing still keeps a side of its own rather than flickering
+    /// or joining a meadow all facing one way.
+    @Test("A standing beast holds its side")
+    func standingBeastsHoldStill() {
+        var animal = Animal(id: UUID(uuidString: "00000000-0000-0000-3333-000000000002")!,
+                            species: "deer", sex: .male, age: 4,
+                            position: LocalPoint(x: 0.5, y: 0.5))
+        animal.walk = nil
+        let first = SettlementWildlife.heading(of: animal, at: 3)
+        #expect(SettlementWildlife.heading(of: animal, at: 9) == first)
+        #expect(abs(first) == 1)
+    }
+
+    /// A beast that has arrived is not still pointing at where it set off for.
+    @Test("A beast that has arrived keeps facing the way it came in")
+    func arrivedBeastsDoNotSpin() {
+        let west = beast(from: LocalPoint(x: 0.8, y: 0.5), to: LocalPoint(x: 0.2, y: 0.5))
+        let after = SettlementWildlife.heading(of: west, at: 90)
+        #expect(abs(after) == 1)
+    }
+}
