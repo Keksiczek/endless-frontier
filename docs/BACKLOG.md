@@ -4115,17 +4115,19 @@ from the file, so every per-building piece read as an invented word until the
 building ids were added to it. The Core guard had the same hole and would have
 refused the first one as a typo.
 
-Forty-eight pieces across the buildings that share a look most confusingly — a
-bloomery's furnace against a foundry's, a data centre's racks, an oil
-refinery's still, a wainwright's wheel jig. Twenty-one of the forty-seven
-furnishable buildings that share a look are covered; the remaining twenty-six
-are the next batch.
+A hundred and thirty pieces in two batches — a bloomery's furnace against a
+foundry's, a data centre's racks, an oil refinery's still, a wainwright's wheel
+jig — and `fittings.json` went from 117 to 245. **Forty-eight buildings have
+furniture of their own now**, which is every building that shares its look and
+has an inside. The five `plant` buildings are no longer one room drawn five
+times.
 
 ### 24.4 — still open
 
 1. **Agents in the sorted pass** — the same fault as §24.1 one layer on.
 2. **The attachments still draw nothing** (§23.5.2) — 43 names in the bank.
-3. **The remaining twenty-six buildings** want their own furniture (§24.3).
+3. **The furniture is written and not yet *seen*** — a room draws at zoom, so
+   the way to judge §24.3 is on the canvas, building by building.
 4. A building's body is still *centred* in its lot rather than standing on the
    bottom edge of it, so there is a band of bare apron below it. The height now
    goes up rather than out (§23.4b); the foot has not moved yet.

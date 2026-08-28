@@ -25,7 +25,7 @@ loads through `GameDataRegistry.bundled()`; views never read JSON directly.
 | `animals.json` | 11 | The wild and the tamed as **kinds**: `build`, diet, size, `baseHealth`, comfort band, biomes, `tameability` |
 | `flora.json` | 8 | Trees as data (rule 95): `crown`, `timber`, `maturityTicks`, `hardiness`, biomes |
 | `conveyances.json` | 46 | Mounts and vehicles in one bank — `riders`, `cargo`, `pace`, `region_pace`, `terrain` |
-| `fittings.json` | 175 | What stands **inside** a building: `shape`, `role`, `tint`, which `rooms` and which `eras` |
+| `fittings.json` | 245 | What stands **inside** a building: `shape`, `role`, `tint`, which `rooms` and which `eras` |
 | `ground.json` | 20 | The ground's own colours and textures, read by the canvas (rule 9 — opaque) |
 | `structures.json` | 62 | **How each building is put together** — `standing`, roof, fabric, what stands beside it. One per building: 51 of 62 share a `look` and the drawing never spent the difference (rule 107). See [RENDER_25D.md](../RENDER_25D.md) |
 | `scenery.json` | 23 | The colours of everything scattered over the ground |

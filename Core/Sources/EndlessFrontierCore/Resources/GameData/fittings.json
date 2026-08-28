@@ -3878,5 +3878,1524 @@
       "en": "A heavy, railed cart that feeds the log steadily into the great circular saw.",
       "cs": "Těžký vozík na kolejích, který plynule posouvá kládu do velké kotoučové pily."
     }
+  },
+  {
+    "id": "warehouse_goods_rack",
+    "name": {
+      "en": "Goods Rack",
+      "cs": "Regál na zboží"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.5,
+    "rooms": [
+      "warehouse"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "Tall, sturdy racks for storing crates of finished goods, from tools to textiles, waiting for shipment.",
+      "cs": "Vysoké, robustní regály pro uskladnění beden s hotovými výrobky, od nářadí po textilie, které čekají na expedici."
+    }
+  },
+  {
+    "id": "warehouse_manifest_desk",
+    "name": {
+      "en": "Manifest Desk",
+      "cs": "Stůl pro nákladní listy"
+    },
+    "shape": "counter",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.2,
+    "rooms": [
+      "warehouse"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "Where the warehouse foreman, Old Man Brukner, checks every crate in and out. His ledger is law.",
+      "cs": "Místo, kde skladník, starý Brukner, kontroluje každou bednu, která jde dovnitř nebo ven. Jeho kniha je zákon."
+    }
+  },
+  {
+    "id": "hospital_surgical_table",
+    "name": {
+      "en": "Surgical Table",
+      "cs": "Chirurgický stůl"
+    },
+    "shape": "table",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "hospital"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "A sterile metal table at the heart of the operating theatre. A place of last resort and quiet miracles.",
+      "cs": "Sterilní kovový stůl v srdci operačního sálu. Místo poslední naděje a tichých zázraků."
+    }
+  },
+  {
+    "id": "hospital_instrument_cabinet",
+    "name": {
+      "en": "Instrument Cabinet",
+      "cs": "Skříň na nástroje"
+    },
+    "shape": "shelf",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.0,
+    "rooms": [
+      "hospital"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "A glass-fronted cabinet holding rows of sterilized scalpels, clamps, and saws. Best not to look too closely.",
+      "cs": "Prosklená skříň s řadami sterilizovaných skalpelů, svorek a pil. Lepší se moc zblízka nedívat."
+    }
+  },
+  {
+    "id": "power_plant_furnace_grate",
+    "name": {
+      "en": "Furnace Grate",
+      "cs": "Pecní rošt"
+    },
+    "shape": "hearth",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.8,
+    "rooms": [
+      "power_plant"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "The glowing maw of the power plant, where stokers shovel coal to feed the settlement's endless hunger for energy.",
+      "cs": "Žhnoucí chřtán elektrárny, kam topiči házejí uhlí, aby nakrmili nekonečný hlad osady po energii."
+    }
+  },
+  {
+    "id": "fusion_reactor_containment_ring",
+    "name": {
+      "en": "Containment Ring",
+      "cs": "Zadržovací prstenec"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.7,
+    "rooms": [
+      "fusion_reactor"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "A toroidal ring of electromagnets holds a star in miniature. It hums with power that could light a continent.",
+      "cs": "Toroidní prstenec elektromagnetů drží v zajetí miniaturní hvězdu. Bzučí energií, která by mohla osvětlit kontinent."
+    }
+  },
+  {
+    "id": "hospital_patient_ward_bed",
+    "name": {
+      "en": "Patient Ward Bed",
+      "cs": "Nemocniční lůžko"
+    },
+    "shape": "bed",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.0,
+    "rooms": [
+      "hospital"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "A clean, adjustable bed for patient recovery. Nurse Aneta ensures the sheets are always fresh for the seriously ill or injured.",
+      "cs": "Čisté, polohovatelné lůžko pro zotavení. Sestřička Aneta dbá na to, aby povlečení pro vážně nemocné a zraněné bylo vždy čerstvé."
+    }
+  },
+  {
+    "id": "observatory_telescope_controls",
+    "name": {
+      "en": "Telescope Control Console",
+      "cs": "Ovládání teleskopu"
+    },
+    "shape": "console",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.5,
+    "rooms": [
+      "observatory"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "The main control station for the observatory's great telescope. From here, Astronomer Kaelen tracks comets and charts distant stars.",
+      "cs": "Hlavní ovládací stanice velkého teleskopu observatoře. Odtud astronom Kaelen sleduje komety a mapuje vzdálené hvězdy."
+    }
+  },
+  {
+    "id": "warehouse_dressed_stone_crates",
+    "name": {
+      "en": "Crates of Dressed Stone",
+      "cs": "Bedny s opracovaným kamenem"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.4,
+    "rooms": [
+      "warehouse"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Heavy wooden crates packed with precisely cut stone blocks from the quarry, waiting for the masons to call for them. Old Man Hemlock's joinery, solid and true.",
+      "cs": "Těžké dřevěné bedny plné přesně nařezaných kamenných bloků z lomu, čekající, až si je zedníci vyžádají. Poctivá truhlářská práce starého Hemlocka."
+    }
+  },
+  {
+    "id": "chemical_plant_sampling_station",
+    "name": {
+      "en": "Sampling Station",
+      "cs": "Odběrová stanice"
+    },
+    "shape": "counter",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "chemical_plant"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "A small, corrosion-resistant steel counter with taps and gauges, where technicians like Lena draw samples to test the batch's quality.",
+      "cs": "Malý pult z korozivzdorné oceli s kohoutky a měřidly, kde technici jako Lena odebírají vzorky pro kontrolu kvality šarže."
+    }
+  },
+  {
+    "id": "fusion_reactor_plasma_monitor",
+    "name": {
+      "en": "Plasma Confinement Monitor",
+      "cs": "Monitor plazmatu"
+    },
+    "shape": "panel",
+    "role": "clutter",
+    "tint": "glow",
+    "scale": 1.6,
+    "rooms": [
+      "fusion_reactor"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "A wall-sized display of glowing telemetry, showing the roiling plasma held in the reactor's heart. A single red light would mean disaster, but it has never blinked.",
+      "cs": "Zářící telemetrický panel přes celou stěnu, ukazující vířící plazma v srdci reaktoru. Jediné červené světlo by znamenalo katastrofu, ale ještě nikdy nebliklo."
+    }
+  },
+  {
+    "id": "assembly_plant_qa_station",
+    "name": {
+      "en": "Quality Assurance Station",
+      "cs": "Stanice kontroly kvality"
+    },
+    "shape": "desk",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "assembly_plant"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "The final checkpoint on the line. Here, a sharp-eyed worker like Zbynek inspects every finished product for flaws before it's cleared for shipping.",
+      "cs": "Poslední kontrolní bod na lince. Zde každý hotový výrobek prochází kontrolou bystrého oka pracovníka jako Zbyněk, který hledá vady, než je schválen k expedici."
+    }
+  },
+  {
+    "id": "irrigation_sluice_gate",
+    "name": {
+      "en": "Sluice Gate Controls",
+      "cs": "Ovládání stavidla"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.1,
+    "rooms": [
+      "farm_advanced"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A heavy wooden wheel and lever system for opening and closing the main irrigation sluice. Old Man Hemlock guards it jealously.",
+      "cs": "Těžké dřevěné kolo a pákový systém k otevírání a zavírání hlavního zavlažovacího stavidla. Starý Jedlička ho žárlivě střeží."
+    }
+  },
+  {
+    "id": "irrigated_farm_tool_rack",
+    "name": {
+      "en": "Ditching Tool Rack",
+      "cs": "Stojan na kopáčské nářadí"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "farm_advanced"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A rack of well-maintained shovels, mattocks, and scythes, kept sharp for maintaining the irrigation channels.",
+      "cs": "Stojan plný udržovaných lopat, motyk a kos, nabroušených pro údržbu zavlažovacích kanálů."
+    }
+  },
+  {
+    "id": "trade_post_weighing_scales",
+    "name": {
+      "en": "Merchant's Scales",
+      "cs": "Kupecké váhy"
+    },
+    "shape": "counter",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.2,
+    "rooms": [
+      "trade_post"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A large, carefully balanced scale for weighing bulk goods like grain and wool. The Quartermaster, Jana, ensures every measure is fair.",
+      "cs": "Velká, pečlivě vyvážená váha pro vážení sypkého zboží, jako je obilí a vlna. Provianťačka Jana dbá na to, aby každé měření bylo spravedlivé."
+    }
+  },
+  {
+    "id": "trade_goods_strongbox_crate",
+    "name": {
+      "en": "Trade Goods Strongbox",
+      "cs": "Bytelná truhla na zboží"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 0.8,
+    "rooms": [
+      "trade_post"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "An iron-banded chest for storing valuable trade items like spices, dyes, or finished tools.",
+      "cs": "Železem okovaná truhla pro skladování cenných obchodních artiklů, jako je koření, barviva nebo hotové nářadí."
+    }
+  },
+  {
+    "id": "oscilloscope_workbench",
+    "name": {
+      "en": "Oscilloscope Bench",
+      "cs": "Stůl s osciloskopem"
+    },
+    "shape": "desk",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "electronics_lab"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A workstation dominated by an oscilloscope, its green line dancing as technicians probe the secrets of their circuits.",
+      "cs": "Pracovní stanice, jíž dominuje osciloskop. Jeho zelená čára tančí, zatímco technici zkoumají tajemství svých obvodů."
+    }
+  },
+  {
+    "id": "gene_sequencer_console",
+    "name": {
+      "en": "Gene Sequencer",
+      "cs": "Genový sekvenátor"
+    },
+    "shape": "console",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.3,
+    "rooms": [
+      "research_campus"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "A bank of machines humming quietly as they map the building blocks of life. Dr. Aris Thorne spends more time here than in his own bed.",
+      "cs": "Řada strojů, které tiše bzučí při mapování stavebních kamenů života. Doktor Aris Thorne tu tráví víc času než ve vlastní posteli."
+    }
+  },
+  {
+    "id": "windmill_drive_shaft",
+    "name": {
+      "en": "Main Drive Shaft",
+      "cs": "Hlavní hřídel"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.5,
+    "rooms": [
+      "windmill"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A massive wooden shaft and set of gears that transfers power from the sails to the millstones. It must be kept greased by the miller's apprentice.",
+      "cs": "Mohutná dřevěná hřídel a soukolí, které přenáší sílu z lopatek na mlýnské kameny. Mlynářský učeň ji musí neustále mazat."
+    }
+  },
+  {
+    "id": "windmill_flour_sacks",
+    "name": {
+      "en": "Sacks of Flour",
+      "cs": "Pytle s moukou"
+    },
+    "shape": "sack",
+    "role": "clutter",
+    "tint": "cloth",
+    "scale": 1.1,
+    "rooms": [
+      "windmill"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Sacks of finely milled flour, ready for the bakery. Their dusty white coating covers everything in the mill.",
+      "cs": "Pytle s jemně mletou moukou, připravené pro pekaře. Jejich prachový bílý povlak pokrývá v mlýně úplně všechno."
+    }
+  },
+  {
+    "id": "townhouse_artisan_bench",
+    "name": {
+      "en": "Artisan's Bench",
+      "cs": "Řemeslnický ponk"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.1,
+    "rooms": [
+      "townhouse_row"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A compact workbench tucked into the ground floor workshop, where a weaver, cobbler, or tinker makes their living. Old Man Kovar claims he can fix anything on his.",
+      "cs": "Kompaktní pracovní stůl zastrčený v přízemní dílně, u kterého si vydělává na živobytí tkadlec, švec nebo dráteník. Starý Kovář tvrdí, že na tom svém dokáže opravit cokoli."
+    }
+  },
+  {
+    "id": "townhouse_cooking_hearth",
+    "name": {
+      "en": "Cooking Hearth",
+      "cs": "Kuchyňské ohniště"
+    },
+    "shape": "hearth",
+    "role": "clutter",
+    "tint": "stone",
+    "scale": 0.8,
+    "rooms": [
+      "townhouse_row"
+    ],
+    "eras": [
+      "medieval"
+    ],
+    "description": {
+      "en": "A small hearth for cooking, crammed into the living quarters. The smell of stew and woodsmoke fills the narrow house.",
+      "cs": "Malé ohniště na vaření, nacpané v obytných prostorách. Vůně dušeného masa a kouře z dřeva naplňuje celý úzký dům."
+    }
+  },
+  {
+    "id": "assembly_plant_qc_desk",
+    "name": {
+      "en": "Quality Control Desk",
+      "cs": "Stůl kontroly kvality"
+    },
+    "shape": "desk",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.0,
+    "rooms": [
+      "assembly_plant"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A station at the end of the line where products are inspected for flaws. A red tag from Supervisor Jana means the whole batch gets reworked.",
+      "cs": "Stanoviště na konci linky, kde se výrobky kontrolují kvůli vadám. Červená visačka od vedoucí Jany znamená, že se celá dávka musí předělat."
+    }
+  },
+  {
+    "id": "assembly_plant_component_bins",
+    "name": {
+      "en": "Component Bins",
+      "cs": "Přihrádky na součástky"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "assembly_plant"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Rows of standardized bins, each filled with a specific part, feeding the insatiable appetite of the assembly line.",
+      "cs": "Řady standardizovaných zásobníků, z nichž každý je naplněn konkrétním dílem a krmí nenasytný apetit montážní linky."
+    }
+  },
+  {
+    "id": "diagnostic_imaging_scanner",
+    "name": {
+      "en": "Diagnostic Scanner",
+      "cs": "Diagnostický skener"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "clinic"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "An advanced imaging machine that can see inside a person without a single cut. Dr. Lena says it's her best eye.",
+      "cs": "Pokročilý zobrazovací přístroj, který vidí do těla bez jediného řezu. Doktorka Lena říká, že je to její nejlepší oko."
+    }
+  },
+  {
+    "id": "clinic_waiting_chairs",
+    "name": {
+      "en": "Waiting Room Chairs",
+      "cs": "Židle do čekárny"
+    },
+    "shape": "bench",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "clinic"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "A row of sterile, slightly uncomfortable chairs. The universal symbol of waiting for your name to be called.",
+      "cs": "Řada sterilních, lehce nepohodlných židlí. Univerzální symbol čekání, až vás zavolají jménem."
+    }
+  },
+  {
+    "id": "satellite_uplink_console",
+    "name": {
+      "en": "Satellite Uplink Console",
+      "cs": "Konzole satelitního spojení"
+    },
+    "shape": "console",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.5,
+    "rooms": [
+      "orbital_array"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "The nerve center of the orbital array, where commands are sent to the satellites and data streams down from the heavens.",
+      "cs": "Nervové centrum orbitální soustavy, odkud jsou posílány příkazy satelitům a kudy proudí data z nebes."
+    }
+  },
+  {
+    "id": "orbital_data_server_rack",
+    "name": {
+      "en": "Data Server Rack",
+      "cs": "Serverový rack"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.3,
+    "rooms": [
+      "orbital_array"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "A humming rack of servers, processing and storing the immense volume of data collected by the orbital array.",
+      "cs": "Hučící stojan se servery, které zpracovávají a ukládají obrovské množství dat shromážděných orbitální soustavou."
+    }
+  },
+  {
+    "id": "longhouse_communal_table",
+    "name": {
+      "en": "Communal Feast Table",
+      "cs": "Společný hodovní stůl"
+    },
+    "shape": "table",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.8,
+    "rooms": [
+      "longhouse"
+    ],
+    "eras": [
+      "early_settlement",
+      "medieval"
+    ],
+    "description": {
+      "en": "A massive table built from a single, split log. Large enough for three families to share a meal and their stories.",
+      "cs": "Masivní stůl vyrobený z jediného rozpůleného kmene. Dost velký, aby se u něj tři rodiny podělily o jídlo a příběhy."
+    }
+  },
+  {
+    "id": "arcology_water_reclaimer",
+    "name": {
+      "en": "Atmospheric Water Reclaimer",
+      "cs": "Atmosférický regenerátor vody"
+    },
+    "shape": "machine",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.4,
+    "rooms": [
+      "arcology"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "This complex unit quietly hums in the corner, condensing fresh water from the arcology's air. Nothing is wasted here.",
+      "cs": "Tato složitá jednotka tiše hučí v rohu a kondenzuje čerstvou vodu ze vzduchu archologie. Tady se ničím neplýtvá."
+    }
+  },
+  {
+    "id": "longhouse_sleeping_platform",
+    "name": {
+      "en": "Sleeping Platform",
+      "cs": "Spací plošina"
+    },
+    "shape": "bench",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.8,
+    "rooms": [
+      "longhouse"
+    ],
+    "eras": [
+      "early_settlement",
+      "medieval"
+    ],
+    "description": {
+      "en": "A long, shared wooden platform for sleeping, covered with furs and straw. Private rooms are a luxury for another time.",
+      "cs": "Dlouhá sdílená dřevěná plošina na spaní, pokrytá kožešinami a slámou. Soukromé pokoje jsou luxus, na který teprve přijde čas."
+    }
+  },
+  {
+    "id": "circuit_etching_station",
+    "name": {
+      "en": "Circuit Etching Station",
+      "cs": "Leptací stanice obvodů"
+    },
+    "shape": "table",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "electronics_lab"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A shallow basin of chemicals where printed circuit boards are carefully etched. Fumes fill the air, the sharp scent of progress.",
+      "cs": "Mělká nádrž s chemikáliemi, kde se pečlivě leptají desky plošných spojů. Vzduch plní výpary, ostrá vůně pokroku."
+    }
+  },
+  {
+    "id": "warehouse_sawn_timber_stack",
+    "name": {
+      "en": "Sawn Timber Stack",
+      "cs": "Hráň řeziva"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.8,
+    "rooms": [
+      "warehouse"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Neatly stacked planks and beams, seasoned and ready for the carpenters. The smell of pine fills this corner of the warehouse.",
+      "cs": "Úhledně srovnaná prkna a trámy, vyschlé a připravené pro tesaře. Vůně borovice plní tento kout skladiště."
+    }
+  },
+  {
+    "id": "arcology_air_scrubber_unit",
+    "name": {
+      "en": "Air Scrubber Unit",
+      "cs": "Jednotka čištění vzduchu"
+    },
+    "shape": "machine",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.5,
+    "rooms": [
+      "arcology"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "A silent, efficient machine that constantly recycles and purifies the arcology's atmosphere. Its low hum is a comfort to residents like young Kai.",
+      "cs": "Tichý, účinný stroj, který neustále recykluje a čistí atmosféru arkologie. Jeho tiché hučení je pro obyvatele, jako je mladý Kai, uklidňující."
+    }
+  },
+  {
+    "id": "power_plant_coal_hopper",
+    "name": {
+      "en": "Coal Hopper",
+      "cs": "Násypka na uhlí"
+    },
+    "shape": "machine",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.8,
+    "rooms": [
+      "power_plant"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "A huge metal funnel that feeds a constant stream of coal into the roaring furnace. Old Man Hemlock says he can tell the colony's output by the rhythm of its conveyor.",
+      "cs": "Obrovská kovová nálevka, která sype neustálý proud uhlí do řvoucí pece. Stařík Hemlock říká, že podle rytmu jejího dopravníku pozná výkon celé osady."
+    }
+  },
+  {
+    "id": "chemical_vat_access_platform",
+    "name": {
+      "en": "Vat Access Platform",
+      "cs": "Plošina k reaktoru"
+    },
+    "shape": "watchpost",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 0.8,
+    "rooms": [
+      "chemical_plant"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "A small metal platform with a guardrail, allowing workers to safely monitor the chemical reactions below. It's always slick with condensation.",
+      "cs": "Malá kovová plošina se zábradlím, která umožňuje pracovníkům bezpečně sledovat chemické reakce pod sebou. Je neustále kluzká od kondenzace."
+    }
+  },
+  {
+    "id": "apartment_laundry_machine",
+    "name": {
+      "en": "Communal Washing Machine",
+      "cs": "Společná pračka"
+    },
+    "shape": "machine",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "apartment_block"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A robust washing machine in the basement. It rumbles day and night, a constant reminder of shared living.",
+      "cs": "Robustní pračka v suterénu. Duní dnem i nocí, neustálá připomínka společného bydlení."
+    }
+  },
+  {
+    "id": "apartment_intercom_panel",
+    "name": {
+      "en": "Door Intercom",
+      "cs": "Domovní telefon"
+    },
+    "shape": "panel",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 0.8,
+    "rooms": [
+      "apartment_block"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A panel of buttons and a crackly speaker. It's how you know if it's the Kovac family visiting, or just someone trying to sell you something.",
+      "cs": "Panel s tlačítky a praskajícím reproduktorem. Díky němu víte, jestli jdou na návštěvu Kováčovi, nebo se vám jen někdo snaží něco prodat."
+    }
+  },
+  {
+    "id": "electronics_lab_soldering_station",
+    "name": {
+      "en": "Soldering Station",
+      "cs": "Pájecí stanice"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "electronics_lab"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A workbench cluttered with soldering irons, spools of wire, and magnifying lamps. The sharp smell of flux hangs in the air.",
+      "cs": "Pracovní stůl zavalený páječkami, cívkami drátu a lupami. Ve vzduchu visí ostrý pach tavidla."
+    }
+  },
+  {
+    "id": "electronics_lab_component_shelf",
+    "name": {
+      "en": "Component Shelves",
+      "cs": "Regály se součástkami"
+    },
+    "shape": "shelf",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.3,
+    "rooms": [
+      "electronics_lab"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Shelves filled with tiny drawers, each meticulously labeled: resistors, capacitors, transistors. Young Lena knows where every single one is.",
+      "cs": "Police plné malých zásuvek, každá pečlivě označená: rezistory, kondenzátory, tranzistory. Mladá Lena ví, kde která je."
+    }
+  },
+  {
+    "id": "market_notice_board",
+    "name": {
+      "en": "Market Notice Board",
+      "cs": "Tržní vývěska"
+    },
+    "shape": "panel",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.2,
+    "rooms": [
+      "market"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A large wooden board covered in notices: a lost goat, a call for harvest hands, the announcement of the Novak wedding.",
+      "cs": "Velká dřevěná deska pokrytá vzkazy: ztracená koza, výzva k pomoci při sklizni, oznámení svatby Novákových."
+    }
+  },
+  {
+    "id": "market_gossip_bench",
+    "name": {
+      "en": "Gossip Bench",
+      "cs": "Klevetící lavička"
+    },
+    "shape": "bench",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "market"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A worn, sturdy bench where market-goers rest their feet and exchange the day's news. More rumors start here than at the tavern.",
+      "cs": "Opotřebovaná, pevná lavička, kde si návštěvníci trhu odpočinou a vymění si novinky. Vznikne tu víc drbů než v hospodě."
+    }
+  },
+  {
+    "id": "market_stall_awning",
+    "name": {
+      "en": "Market Stall Awning",
+      "cs": "Trhovecká stříška"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "cloth",
+    "scale": 1.5,
+    "rooms": [
+      "market"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A striped canvas awning stretched over a wooden frame, providing shade for produce and trader alike. Old Man Hemlock sells his prize-winning cabbages from under this one.",
+      "cs": "Pruhovaná plátěná stříška natažená na dřevěném rámu poskytuje stín jak zboží, tak trhovci. Starý Doubek pod ní prodává své nejlepší zelí."
+    }
+  },
+  {
+    "id": "live_poultry_cages",
+    "name": {
+      "en": "Live Poultry Cages",
+      "cs": "Klece na drůbež"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.1,
+    "rooms": [
+      "market"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A stack of noisy, clucking crates. Fresh chicken for dinner, if you can stand the commotion.",
+      "cs": "Štos hlučných, kdákajících beden. Čerstvé kuře k večeři, pokud vám nevadí ten povyk."
+    }
+  },
+  {
+    "id": "miller_account_desk",
+    "name": {
+      "en": "Miller's Desk",
+      "cs": "Mlynářův stůl"
+    },
+    "shape": "desk",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 0.8,
+    "rooms": [
+      "windmill"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A small, flour-dusted desk where the miller, often young Tomas, tallies sacks and calculates shares. A lopsided stool sits before it.",
+      "cs": "Malý, moukou zaprášený stůl, u kterého mlynář, často mladý Tomáš, počítá pytle a vypočítává podíly. Před ním stojí nakřivo jedna stolička."
+    }
+  },
+  {
+    "id": "particle_containment_unit",
+    "name": {
+      "en": "Particle Containment Unit",
+      "cs": "Jednotka na udržení částic"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.2,
+    "rooms": [
+      "research_campus"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "A humming cylinder of glass and metal, holding a faintly glowing plasma in a magnetic field. Dr. Aris says it's perfectly safe.",
+      "cs": "Bzučící válec ze skla a kovu, v němž magnetické pole drží slabě zářící plazmu. Doktorka Arisová říká, že je to naprosto bezpečné."
+    }
+  },
+  {
+    "id": "genetic_sample_library",
+    "name": {
+      "en": "Genetic Sample Library",
+      "cs": "Knihovna genetických vzorků"
+    },
+    "shape": "shelf",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.3,
+    "rooms": [
+      "research_campus"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "Cryogenically preserved samples from every known species in the valley, catalogued and stored for future study or revival.",
+      "cs": "Kryogenicky uchované vzorky všech známých druhů z údolí, zkatalogizované a uložené pro budoucí studium nebo oživení."
+    }
+  },
+  {
+    "id": "hut_water_barrel",
+    "name": {
+      "en": "Water Barrel",
+      "cs": "Sud na vodu"
+    },
+    "shape": "barrel",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "hut"
+    ],
+    "eras": [
+      "early_settlement",
+      "medieval"
+    ],
+    "description": {
+      "en": "A simple barrel for storing fresh water, a fixture in the corner of every family's hut. It's little Janek's job to keep it full.",
+      "cs": "Prostý sud na čerstvou vodu, který stojí v rohu každé chatrče. Malý Janek má za úkol ho plnit."
+    }
+  },
+  {
+    "id": "hide_drying_rack",
+    "name": {
+      "en": "Hide Drying Rack",
+      "cs": "Stojan na sušení kůží"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.2,
+    "rooms": [
+      "hunters_lodge"
+    ],
+    "eras": [
+      "early_settlement",
+      "medieval"
+    ],
+    "description": {
+      "en": "A wooden frame where fresh hides are stretched and cured. Old Man Hemming insists the smell keeps the pests away.",
+      "cs": "Dřevěný rám, na kterém se napínají a suší čerstvé kůže. Stařík Hemming tvrdí, že ten pach odhání škůdce."
+    }
+  },
+  {
+    "id": "skinning_and_butchering_table",
+    "name": {
+      "en": "Skinning Table",
+      "cs": "Stahovací stůl"
+    },
+    "shape": "table",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.1,
+    "rooms": [
+      "hunters_lodge"
+    ],
+    "eras": [
+      "early_settlement",
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A sturdy, blood-stained table where game is dressed and portioned. Not for the faint of heart, but it keeps the colony fed.",
+      "cs": "Pevný, krví zbarvený stůl, kde se zvěř stahuje z kůže a porcuje. Není to pro slabé povahy, ale živí to osadu."
+    }
+  },
+  {
+    "id": "rough_work_stump",
+    "name": {
+      "en": "Work Stump",
+      "cs": "Pracovní pařez"
+    },
+    "shape": "anvil",
+    "role": "station",
+    "tint": "wood",
+    "scale": 0.8,
+    "rooms": [
+      "work_shelter"
+    ],
+    "eras": [
+      "early_settlement"
+    ],
+    "description": {
+      "en": "A broad, flat-topped log used as a makeshift workbench. It's where young Janek learned to carve his first spoon.",
+      "cs": "Široký špalek s plochým vrškem, používaný jako provizorní pracovní stůl. Právě tady se mladý Janek naučil vyřezat svou první lžíci."
+    }
+  },
+  {
+    "id": "work_shelter_raw_lumber",
+    "name": {
+      "en": "Raw Lumber Pile",
+      "cs": "Hromada surového dříví"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.3,
+    "rooms": [
+      "work_shelter"
+    ],
+    "eras": [
+      "early_settlement"
+    ],
+    "description": {
+      "en": "A heap of untrimmed logs and rough-sawn planks waiting to be turned into something useful.",
+      "cs": "Hromada neotesaných klád a nahrubo nařezaných prken, která čekají, až se z nich stane něco užitečného."
+    }
+  },
+  {
+    "id": "materials_stress_tester",
+    "name": {
+      "en": "Materials Stress Tester",
+      "cs": "Zátěžová zkoušečka materiálů"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "research_campus"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "This machine bends, stretches, and breaks new alloys until they're strong enough for the next generation of construction. Dr. Orlova calls it 'The Heartbreaker'.",
+      "cs": "Tento stroj ohýbá, natahuje a láme nové slitiny, dokud nejsou dostatečně pevné pro další generaci staveb. Doktorka Orlová mu říká „Lamač srdcí“."
+    }
+  },
+  {
+    "id": "chemical_process_monitor",
+    "name": {
+      "en": "Process Monitoring Console",
+      "cs": "Konzole pro sledování procesů"
+    },
+    "shape": "console",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.1,
+    "rooms": [
+      "chemical_plant"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "A bank of screens and gauges tracking pressures and temperatures inside the reaction vats. A single mistake here could be disastrous.",
+      "cs": "Řada obrazovek a měřidel sledujících tlaky a teploty uvnitř reakčních kádí. Jediná chyba zde by mohla být katastrofální."
+    }
+  },
+  {
+    "id": "hunters_trophy_rack",
+    "name": {
+      "en": "Trophy Rack",
+      "cs": "Stojan na trofeje"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.1,
+    "rooms": [
+      "hunters_lodge"
+    ],
+    "eras": [
+      "early_settlement",
+      "medieval"
+    ],
+    "description": {
+      "en": "A sturdy wooden rack for displaying prized antlers, horns, and the skull of a particularly memorable dire wolf. A testament to the skill of the colony's hunters.",
+      "cs": "Pevný dřevěný stojan na vystavení cenných paroží, rohů a lebky jednoho obzvláště pamětihodného smrtonoše. Svědectví o zručnosti osadních lovců."
+    }
+  },
+  {
+    "id": "hunters_map_table",
+    "name": {
+      "en": "Hunting Map Table",
+      "cs": "Stůl s loveckými mapami"
+    },
+    "shape": "table",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.2,
+    "rooms": [
+      "hunters_lodge"
+    ],
+    "eras": [
+      "early_settlement",
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A rough-plank table covered in hide maps of the valley, marked with animal trails. Old Man Hemlock argues with young Kael about where the deer herds have moved this season.",
+      "cs": "Stůl z hrubých prken pokrytý koženými mapami údolí, se zakreslenými zvířecími stezkami. Stařík Jalovec se s mladým Kaelem hádá, kam se letos přesunula stáda jelenů."
+    }
+  },
+  {
+    "id": "apartment_mailbox_panel",
+    "name": {
+      "en": "Mailbox Panel",
+      "cs": "Poštovní schránky"
+    },
+    "shape": "panel",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.0,
+    "rooms": [
+      "apartment_block"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A wall of identical metal mailboxes in the building's lobby, one for each family. A small, quiet hub for news, bills, and the occasional postcard.",
+      "cs": "Zeď plná stejných plechových schránek ve vstupní hale, jedna pro každou rodinu. Malé, tiché centrum pro zprávy, účty a občasné pohlednice."
+    }
+  },
+  {
+    "id": "prefabricated_kitchen_counter",
+    "name": {
+      "en": "Prefabricated Kitchenette",
+      "cs": "Prefabrikovaný kuchyňský kout"
+    },
+    "shape": "counter",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "apartment_block"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A simple, mass-produced counter with a built-in sink and hotplate. Just enough space for the Novotny family to prepare their evening meal.",
+      "cs": "Jednoduchá, sériově vyráběná linka s vestavěným dřezem a vařičem. Právě tak akorát, aby si na ní rodina Novotných připravila večeři."
+    }
+  },
+  {
+    "id": "windmill_brake_lever",
+    "name": {
+      "en": "Sail Brake Lever",
+      "cs": "Brzdová páka lopatek"
+    },
+    "shape": "console",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 0.8,
+    "rooms": [
+      "windmill"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A heavy wooden lever and winch system used to apply the brake to the sails in a high wind. It takes all of Miller Jan's strength to pull it home.",
+      "cs": "Těžká dřevěná páka a systém navijáku, kterým se v silném větru brzdí lopatky mlýna. Mlynář Jan musí napnout všechny síly, aby ji utáhl."
+    }
+  },
+  {
+    "id": "trade_post_ledger_desk",
+    "name": {
+      "en": "Ledger Desk",
+      "cs": "Účetní pult"
+    },
+    "shape": "desk",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.0,
+    "rooms": [
+      "trade_post"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "The factor's standing desk, where every caravan's arrival and every ounce of spice is recorded. Its thick, leather-bound ledger holds the colony's commercial history.",
+      "cs": "Vysoký pult faktora, u kterého se zaznamenává příjezd každé karavany a každá unce koření. Tlustá, v kůži vázaná kniha obsahuje obchodní historii celé osady."
+    }
+  },
+  {
+    "id": "chemical_waste_barrel",
+    "name": {
+      "en": "Chemical Waste Barrel",
+      "cs": "Sud s chemickým odpadem"
+    },
+    "shape": "barrel",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "chemical_plant"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "Sealed drums of hazardous byproducts, awaiting safe disposal. Old Man Tomas swears they glow faintly at night.",
+      "cs": "Zapečetěné sudy s nebezpečnými vedlejšími produkty, které čekají na bezpečnou likvidaci. Starý Tomáš přísahá, že v noci slabě světélkují."
+    }
+  },
+  {
+    "id": "windmill_grinding_stones",
+    "name": {
+      "en": "Windmill Grinding Stones",
+      "cs": "Větrné mlýnské kameny"
+    },
+    "shape": "millstone",
+    "role": "station",
+    "tint": "stone",
+    "scale": 1.5,
+    "rooms": [
+      "windmill"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A pair of massive, carefully dressed stones. The top 'runner' stone is turned by the wind, grinding grain against the fixed 'bed' stone.",
+      "cs": "Dvojice masivních, pečlivě opracovaných kamenů. Horní, běhoun, se otáčí silou větru a mele zrní o spodní, pevně usazený spodek."
+    }
+  },
+  {
+    "id": "campus_experimental_apparatus",
+    "name": {
+      "en": "Experimental Apparatus",
+      "cs": "Experimentální aparatura"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.8,
+    "rooms": [
+      "research_campus"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "A sprawling assembly of vacuum chambers, particle beams, and sensor arrays. Dr. Anya Petrova says it's for 'fundamental physics,' but nobody else understands the schematics.",
+      "cs": "Rozlehlá sestava vakuových komor, částicových paprsků a senzorových polí. Dr. Aňa Petrová říká, že je to na 'základní fyziku', ale nikdo jiný těm schématům nerozumí."
+    }
+  },
+  {
+    "id": "campus_theory_whiteboard",
+    "name": {
+      "en": "Theory Whiteboard",
+      "cs": "Teoretická tabule"
+    },
+    "shape": "panel",
+    "role": "clutter",
+    "tint": "cloth",
+    "scale": 1.5,
+    "rooms": [
+      "research_campus"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "A wall-sized whiteboard, completely covered in a chaotic web of equations, diagrams, and furious annotations. The birthplace of the next big idea, or a dead end.",
+      "cs": "Tabule přes celou stěnu, kompletně pokrytá chaotickou sítí rovnic, diagramů a zběsilých poznámek. Rodiště příštího velkého objevu, nebo slepá ulička."
+    }
+  },
+  {
+    "id": "townhouse_storage_shelf",
+    "name": {
+      "en": "Tall Storage Shelf",
+      "cs": "Vysoká police"
+    },
+    "shape": "shelf",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.2,
+    "rooms": [
+      "townhouse_row"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A narrow, tall shelving unit reaching for the ceiling. When land is precious, you build up. The Novaks keep their winter preserves on the very top.",
+      "cs": "Úzká a vysoká police, která sahá až ke stropu. Když je půda drahá, staví se do výšky. Novákovi na ní mají úplně nahoře zavařeniny na zimu."
+    }
+  },
+  {
+    "id": "orbital_array_geospatial_display",
+    "name": {
+      "en": "Geospatial Display",
+      "cs": "Geoprostorový displej"
+    },
+    "shape": "console",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.3,
+    "rooms": [
+      "orbital_array"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "A holographic projection of the planet, showing weather patterns, satellite paths, and ground activity in real time. Operator Kaelen spends hours just watching the clouds swirl.",
+      "cs": "Holografická projekce planety, která v reálném čase ukazuje počasí, dráhy satelitů a pozemní aktivitu. Operátor Kaelen tráví hodiny jen pozorováním vířících mraků."
+    }
+  },
+  {
+    "id": "arcology_food_synthesizer",
+    "name": {
+      "en": "Automated Nutrition Dispenser",
+      "cs": "Automatický výdejník stravy"
+    },
+    "shape": "counter",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "arcology"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "A sleek counter that dispenses tailored nutritional paste. Some older residents miss chewing, but young Kaelen says it tastes like victory.",
+      "cs": "Elegantní pult, který vydává nutriční pastu na míru. Starousedlíkům se stýská po starém dobrém žvýkání, ale mladý Kaelen tvrdí, že ta pasta má příchuť vítězství."
+    }
+  },
+  {
+    "id": "arcology_transit_panel",
+    "name": {
+      "en": "Transit System Map",
+      "cs": "Mapa dopravního systému"
+    },
+    "shape": "panel",
+    "role": "clutter",
+    "tint": "glow",
+    "scale": 1.3,
+    "rooms": [
+      "arcology"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "A glowing map showing the routes of the internal transit pods that whisk people between the arcology's many levels.",
+      "cs": "Zářící mapa ukazuje trasy vnitřních dopravních modulů, které obyvatele bleskově přepravují mezi jednotlivými patry arkologie."
+    }
+  },
+  {
+    "id": "campus_material_analyzer",
+    "name": {
+      "en": "Material Composition Analyzer",
+      "cs": "Analyzátor složení materiálů"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.4,
+    "rooms": [
+      "research_campus"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "A sophisticated machine that determines a sample's precise structure. Dr. Petrova hopes to discover the secret of a new alloy here.",
+      "cs": "Sofistikovaný přístroj, který určuje přesnou strukturu vzorku. Doktorka Petrova doufá, že tu objeví tajemství nové slitiny."
+    }
+  },
+  {
+    "id": "factory_stamping_press",
+    "name": {
+      "en": "Stamping Press",
+      "cs": "Lisovací stroj"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.8,
+    "rooms": [
+      "factory"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "A massive press that stamps out metal parts with a deafening crash. The floor trembles with every stroke, a rhythm of industrial might.",
+      "cs": "Obrovský lis, který s ohlušujícím rachotem razí kovové díly. Podlaha se třese s každým úderem v rytmu průmyslové síly."
+    }
   }
 ]
