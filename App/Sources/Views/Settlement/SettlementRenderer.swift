@@ -318,7 +318,7 @@ enum SettlementRenderer {
                               continuousTick: continuousTick, time: time, zoom: zoom,
                               secondsPerTick: registry.config.realSecondsPerTick,
                               replay: battleReplay, selectedPawnID: selectedPawnID,
-                              beat: battleBeat)
+                              beat: battleBeat, viewport: viewRect)
         fog(&context, rect: rect, map: map, time: time)
         // The seasonal wash is atmosphere over the lens, not part of the world,
         // so it stays in view space and doesn't slide when you pan.

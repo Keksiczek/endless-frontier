@@ -521,12 +521,24 @@ enum SettlementStructures {
     /// drawing: a number that must equal another number should *be* it.
     static func bodyRect(
         _ glyph: SettlementRenderer.BuildingGlyph, at c: CGPoint, s s0: CGFloat,
-        seed: UInt64, footprint: CGSize
+        seed: UInt64, footprint: CGSize, variant: StructureVariant = .plain
     ) -> CGRect {
         let aspect = footprint.height > 0
             ? Double(footprint.width / footprint.height) : 1
-        let size = bodySize(glyph, s: Double(s0), seed: seed, aspect: aspect)
-        return CGRect(x: c.x - CGFloat(size.width) / 2, y: c.y - CGFloat(size.height) / 2,
+        let size = bodySize(glyph, s: Double(s0), seed: seed, aspect: aspect,
+                            height: Double(variant.heightScale))
+        // **A tall building rises; it does not swell.**
+        //
+        // The height from `structures.json` is added at the *top*, with the
+        // foot left where the plan put it. Centring it would grow a watchtower
+        // downward as well as up — through its own doorstep and into whatever
+        // stands in front of it — and the plan is what the footprint, the walk
+        // and every hit test agree on. So the extra goes where a storey
+        // actually goes, and this is the first half of `RENDER_25D.md` §2: the
+        // ground stays in plan and only the drawing lifts.
+        let plan = bodySize(glyph, s: Double(s0), seed: seed, aspect: aspect)
+        let foot = c.y + CGFloat(plan.height) / 2
+        return CGRect(x: c.x - CGFloat(size.width) / 2, y: foot - CGFloat(size.height),
                       width: CGFloat(size.width), height: CGFloat(size.height))
     }
 
@@ -538,7 +550,18 @@ enum SettlementStructures {
     /// smith was drawn hammering an anvil that was somewhere else.
     static func bodySize(
         _ glyph: SettlementRenderer.BuildingGlyph, s s0: Double,
-        seed: UInt64, aspect rawAspect: Double
+        seed: UInt64, aspect rawAspect: Double,
+        /// **How tall this one stands**, against an ordinary shed —
+        /// `StructureVariant.heightScale`, which reads `standing` out of
+        /// `structures.json`. One when the bank says nothing, so a colony
+        /// without the bank draws exactly as it did.
+        ///
+        /// It belongs *here* rather than in the drawing because three callers
+        /// share this formula and have to agree: the structure draws these
+        /// walls, the interior furnishes inside them, and `AgentMotion` stands
+        /// people at the fittings. A height applied in one of the three is a
+        /// smith hammering an anvil that is somewhere else.
+        height heightScale: Double = 1
     ) -> (width: Double, height: Double) {
         let sizeJ = Double((seed &* 0x9E37_79B9_7F4A_7C15) >> 40 & 0xFFFF) / 65535
         let s = s0 * (0.9 + sizeJ * 0.2)
@@ -576,7 +599,11 @@ enum SettlementStructures {
         } else if slack > 0 {
             width *= min(maxStretch, 1 / slack)
         }
-        return (width, height)
+        // …and last of all, how tall this particular building stands. After the
+        // stretch, so the lot still decides the *shape* and the bank decides
+        // the height — a watchtower on a wide lot is a tall building on a wide
+        // lot, not a squat one.
+        return (width, height * max(0.4, heightScale))
     }
 
     /// How far a body may be stretched toward its lot before it stops looking
@@ -647,7 +674,13 @@ enum SettlementStructures {
     /// are drawn from, so a lamp cannot land where its window is not.
     static func dwelling(
         at c: CGPoint, s s0: CGFloat, seed: UInt64, footprint: CGSize, floors: Int,
-        glyph: SettlementRenderer.BuildingGlyph = .house
+        glyph: SettlementRenderer.BuildingGlyph = .house,
+        /// How this kind of dwelling is put together. The walls are read out of
+        /// `bodyRect`, which now takes a height from `structures.json`, and a
+        /// lamp hung against walls of a different height is a lamp outside the
+        /// window it is supposed to be shining from — the exact fault the note
+        /// above describes.
+        variant: StructureVariant = .plain
     ) -> (body: CGRect, door: CGRect, panes: [Pane]) {
         // A block of flats is not a cottage with more storeys — it has its own
         // walls and its own grid of windows, drawn in `SettlementTrades`. Ask
@@ -663,7 +696,8 @@ enum SettlementStructures {
         let sizeJ = Double((seed &* 0x9E37_79B9_7F4A_7C15) >> 40 & 0xFFFF) / 65535
         let s = s0 * CGFloat(0.9 + sizeJ * 0.2)
         let storeys = max(1, min(3, floors))
-        let shell = bodyRect(.house, at: c, s: s0, seed: seed, footprint: footprint)
+        let shell = bodyRect(.house, at: c, s: s0, seed: seed, footprint: footprint,
+                             variant: variant)
         let h = shell.height * (1 + CGFloat(storeys - 1) * 0.62)
         let body = CGRect(x: shell.minX, y: shell.maxY - h, width: shell.width, height: h)
 
@@ -910,7 +944,8 @@ enum SettlementStructures {
             // are. The lamps that burn behind them after dark read the same
             // function, which is the whole point of it being one.
             let openings = dwelling(at: c, s: s0, seed: seed,
-                                    footprint: footprint, floors: floors)
+                                    footprint: footprint, floors: floors,
+                                    variant: variant)
             let body = openings.body
             let w = body.width
             let h = body.height

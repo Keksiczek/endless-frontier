@@ -248,8 +248,8 @@
     "red": 0.12,
     "green": 0.1,
     "blue": 0.09,
-    "texture": "stipple",
-    "texture_alpha": 0.32,
+    "texture": "chips",
+    "texture_alpha": 0.3,
     "description": {
       "en": "Sodden, half-rotted ground, more plant than earth. Good for cutting as fuel, but nothing will grow here.",
       "cs": "Promočená, napůl zetlelá zem, víc rostlina než hlína. Dobrá k řezání na otop, ale nic tu neporoste."
@@ -264,7 +264,7 @@
     "red": 0.16,
     "green": 0.2,
     "blue": 0.19,
-    "texture": "stipple",
+    "texture": "sprig",
     "texture_alpha": 0.35,
     "description": {
       "en": "A low, hardy carpet of moss that clings to rock in the high, cold places.",

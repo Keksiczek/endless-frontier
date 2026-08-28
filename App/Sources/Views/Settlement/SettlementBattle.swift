@@ -441,7 +441,11 @@ enum SettlementBattle {
         _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement,
         continuousTick: Double, time: Double, zoom: CGFloat,
         secondsPerTick: Double = 60, replay: Replay? = nil,
-        selectedPawnID: UUID? = nil, beat: Beat? = nil
+        selectedPawnID: UUID? = nil, beat: Beat? = nil,
+        /// **The screen, not the world.** Everything else here is drawn into
+        /// the world rect and pans with it, which is right — a body stands
+        /// where it stands. The caption is chrome: it belongs to the lens.
+        viewport: CGRect? = nil
     ) {
         guard let (log, progress) = live(settlement, continuousTick: continuousTick,
                                          secondsPerTick: secondsPerTick,
@@ -458,7 +462,8 @@ enum SettlementBattle {
             self.within($0, beat: beat, time: time, continuousTick: continuousTick)
         } ?? 1
         draw(&context, rect: rect, log: log, progress: progress, time: time,
-             zoom: zoom, siege: siege, selectedPawnID: selectedPawnID, within: within)
+             zoom: zoom, siege: siege, selectedPawnID: selectedPawnID, within: within,
+             viewport: viewport)
     }
 
     /// **The torches a warband carries**, as lamps for the night wash.
@@ -551,7 +556,7 @@ enum SettlementBattle {
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, log: BattleLog,
         progress: Double, time: Double, zoom: CGFloat, siege: Siege? = nil,
-        selectedPawnID: UUID? = nil, within: Double = 1
+        selectedPawnID: UUID? = nil, within: Double = 1, viewport: CGRect? = nil
     ) {
         let field = ground(log)
         let unit = min(rect.width, rect.height)
@@ -651,7 +656,7 @@ enum SettlementBattle {
             }
         }
 
-        banner(&context, rect: rect, log: log, progress: progress, siege: siege)
+        banner(&context, in: viewport ?? rect, log: log, progress: progress, siege: siege)
     }
 
     /// A fight that is **happening**: everybody is drawn where the simulation
@@ -883,8 +888,21 @@ enum SettlementBattle {
 
     /// The caption: who is fighting whom, how many of each are up, and which
     /// part of the fight this is. Drawn over the field, high enough to clear it.
+    /// **The line across the top of a fight — on the screen, not on the map.**
+    ///
+    /// This was placed at `rect.minY + rect.height * 0.06`, and `rect` is the
+    /// *world* rect: the whole valley mapped into the camera's space. The
+    /// settlement opens at a zoom of 2.8, so the world is nearly three times
+    /// the height of the phone and six per cent down from its top is a long way
+    /// above the viewport. The caption has therefore never been visible at any
+    /// zoom a player actually uses — Keks, in the middle of a raid: *"nikdy se
+    /// neukáže ten banner s bojem."*
+    ///
+    /// It is chrome, and chrome lives in view space. Exactly the note
+    /// `SettlementRenderer.seasonWash` already carries: atmosphere over the
+    /// lens is not part of the world and must not slide when you pan.
     private static func banner(
-        _ context: inout GraphicsContext, rect: CGRect, log: BattleLog,
+        _ context: inout GraphicsContext, in rect: CGRect, log: BattleLog,
         progress: Double, siege: Siege?
     ) {
         let text = Text(caption(log, progress: progress,

@@ -1,0 +1,924 @@
+[
+  {
+    "id": "hut",
+    "standing": 0.9,
+    "roof": "gable",
+    "fabric": "daub",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "woodpile",
+      "wash_line"
+    ],
+    "yard": "beaten_earth",
+    "accent": "hearth"
+  },
+  {
+    "id": "longhouse",
+    "standing": 1.1,
+    "roof": "gable",
+    "fabric": "timber",
+    "trim": "timber",
+    "rooftop": "vents",
+    "attachments": [
+      "woodpile",
+      "bench",
+      "hitching_rail"
+    ],
+    "yard": "beaten_earth",
+    "accent": "hearth"
+  },
+  {
+    "id": "farm_basic",
+    "standing": 1.2,
+    "roof": "gable",
+    "fabric": "daub",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "hitching_rail",
+      "water_butt",
+      "woodpile"
+    ],
+    "yard": "beaten_earth",
+    "accent": "hearth"
+  },
+  {
+    "id": "lumberyard",
+    "standing": 1.0,
+    "roof": "flat",
+    "fabric": "open",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "saw_frame",
+      "timber_stack",
+      "sawdust_pile"
+    ],
+    "yard": "planking",
+    "accent": "none"
+  },
+  {
+    "id": "saw_pit",
+    "standing": 0.9,
+    "roof": "gable",
+    "fabric": "open",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "log_trestle",
+      "timber_stack",
+      "sawdust_pile"
+    ],
+    "yard": "beaten_earth",
+    "accent": "none"
+  },
+  {
+    "id": "powered_sawmill",
+    "standing": 2.0,
+    "roof": "sawtooth",
+    "fabric": "brick",
+    "trim": "sheet",
+    "rooftop": "vents",
+    "attachments": [
+      "chimney_stack",
+      "log_conveyor",
+      "timber_stack"
+    ],
+    "yard": "cobbles",
+    "accent": "ember"
+  },
+  {
+    "id": "work_shelter",
+    "standing": 0.8,
+    "roof": "gable",
+    "fabric": "open",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "work_block",
+      "tool_rack",
+      "timber_stack"
+    ],
+    "yard": "beaten_earth",
+    "accent": "none"
+  },
+  {
+    "id": "charcoal_kiln",
+    "standing": 1.0,
+    "roof": "stepped",
+    "fabric": "daub",
+    "trim": "none",
+    "rooftop": "vents",
+    "attachments": [
+      "turf_mound",
+      "timber_stack"
+    ],
+    "yard": "beaten_earth",
+    "accent": "ember"
+  },
+  {
+    "id": "hunters_lodge",
+    "standing": 1.1,
+    "roof": "gable",
+    "fabric": "timber",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "drying_racks",
+      "antler_mount",
+      "hitching_rail"
+    ],
+    "yard": "beaten_earth",
+    "accent": "none"
+  },
+  {
+    "id": "quarry",
+    "standing": 1.2,
+    "roof": "gable",
+    "fabric": "stone",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "crane",
+      "ore_pile",
+      "tool_rack"
+    ],
+    "yard": "gravel",
+    "accent": "none"
+  },
+  {
+    "id": "farm_advanced",
+    "standing": 1.5,
+    "roof": "gable",
+    "fabric": "timber",
+    "trim": "stone",
+    "rooftop": "vents",
+    "attachments": [
+      "cart_under_awning",
+      "sack_stack",
+      "water_butt"
+    ],
+    "yard": "gravel",
+    "accent": "hearth"
+  },
+  {
+    "id": "library",
+    "standing": 1.7,
+    "roof": "gable",
+    "fabric": "timber",
+    "trim": "stone",
+    "rooftop": "none",
+    "attachments": [
+      "bench",
+      "hitching_rail",
+      "water_butt"
+    ],
+    "yard": "gravel",
+    "accent": "none"
+  },
+  {
+    "id": "windmill",
+    "standing": 2.5,
+    "roof": "stepped",
+    "fabric": "stone",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "sails",
+      "loading_step",
+      "sack_stack"
+    ],
+    "yard": "gravel",
+    "accent": "none"
+  },
+  {
+    "id": "watermill",
+    "standing": 1.5,
+    "roof": "gable",
+    "fabric": "timber",
+    "trim": "stone",
+    "rooftop": "vents",
+    "attachments": [
+      "water_wheel",
+      "chute",
+      "sack_stack"
+    ],
+    "yard": "planking",
+    "accent": "none"
+  },
+  {
+    "id": "trade_post",
+    "standing": 1.3,
+    "roof": "gable",
+    "fabric": "timber",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "loading_step",
+      "hitching_rail",
+      "sack_stack"
+    ],
+    "yard": "gravel",
+    "accent": "awning"
+  },
+  {
+    "id": "school",
+    "standing": 2.0,
+    "roof": "gable",
+    "fabric": "stone",
+    "trim": "timber",
+    "rooftop": "vents",
+    "attachments": [
+      "long_table",
+      "bench",
+      "hitching_rail"
+    ],
+    "yard": "cobbles",
+    "accent": "none"
+  },
+  {
+    "id": "palisade",
+    "standing": 2.2,
+    "roof": "flat",
+    "fabric": "timber",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "ladder",
+      "brazier"
+    ],
+    "yard": "beaten_earth",
+    "accent": "ember"
+  },
+  {
+    "id": "watchtower",
+    "standing": 3.4,
+    "roof": "flat",
+    "fabric": "timber",
+    "trim": "stone",
+    "rooftop": "aerial",
+    "attachments": [
+      "ladder",
+      "brazier"
+    ],
+    "yard": "gravel",
+    "accent": "ember"
+  },
+  {
+    "id": "barracks",
+    "standing": 1.8,
+    "roof": "gable",
+    "fabric": "stone",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "hitching_rail",
+      "long_table",
+      "brazier"
+    ],
+    "yard": "beaten_earth",
+    "accent": "none"
+  },
+  {
+    "id": "granary",
+    "standing": 1.8,
+    "roof": "gable",
+    "fabric": "timber",
+    "trim": "stone",
+    "rooftop": "none",
+    "attachments": [
+      "raised_floor",
+      "sack_stack",
+      "loading_step"
+    ],
+    "yard": "gravel",
+    "accent": "none"
+  },
+  {
+    "id": "warehouse",
+    "standing": 2.2,
+    "roof": "barrel",
+    "fabric": "brick",
+    "trim": "sheet",
+    "rooftop": "none",
+    "attachments": [
+      "loading_step",
+      "crates",
+      "crane"
+    ],
+    "yard": "cobbles",
+    "accent": "none"
+  },
+  {
+    "id": "cookhouse",
+    "standing": 1.2,
+    "roof": "gable",
+    "fabric": "daub",
+    "trim": "timber",
+    "rooftop": "vents",
+    "attachments": [
+      "long_table",
+      "water_butt",
+      "woodpile"
+    ],
+    "yard": "beaten_earth",
+    "accent": "hearth"
+  },
+  {
+    "id": "well",
+    "standing": 0.7,
+    "roof": "gable",
+    "fabric": "open",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "water_butt",
+      "bench"
+    ],
+    "yard": "cobbles",
+    "accent": "none"
+  },
+  {
+    "id": "observatory",
+    "standing": 2.0,
+    "roof": "barrel",
+    "fabric": "stone",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "raised_floor",
+      "ladder",
+      "bench"
+    ],
+    "yard": "gravel",
+    "accent": "none"
+  },
+  {
+    "id": "stone_walls",
+    "standing": 2.8,
+    "roof": "flat",
+    "fabric": "stone",
+    "trim": "stone",
+    "rooftop": "none",
+    "attachments": [
+      "ladder",
+      "water_butt"
+    ],
+    "yard": "cobbles",
+    "accent": "none"
+  },
+  {
+    "id": "aqueduct",
+    "standing": 1.5,
+    "roof": "barrel",
+    "fabric": "stone",
+    "trim": "stone",
+    "rooftop": "none",
+    "attachments": [
+      "tool_rack",
+      "ladder",
+      "crates"
+    ],
+    "yard": "gravel",
+    "accent": "none"
+  },
+  {
+    "id": "university",
+    "standing": 2.8,
+    "roof": "stepped",
+    "fabric": "stone",
+    "trim": "stone",
+    "rooftop": "aerial",
+    "attachments": [
+      "bench",
+      "cart_under_awning",
+      "crates"
+    ],
+    "yard": "cobbles",
+    "accent": "none"
+  },
+  {
+    "id": "market",
+    "standing": 1.0,
+    "roof": "flat",
+    "fabric": "open",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "awning_row",
+      "crates",
+      "scales"
+    ],
+    "yard": "cobbles",
+    "accent": "awning"
+  },
+  {
+    "id": "bank",
+    "standing": 2.0,
+    "roof": "flat",
+    "fabric": "stone",
+    "trim": "stone",
+    "rooftop": "none",
+    "attachments": [
+      "loading_step",
+      "scales",
+      "crates"
+    ],
+    "yard": "cobbles",
+    "accent": "none"
+  },
+  {
+    "id": "workshop",
+    "standing": 1.6,
+    "roof": "gable",
+    "fabric": "timber",
+    "trim": "stone",
+    "rooftop": "vents",
+    "attachments": [
+      "anvil",
+      "tool_rack",
+      "crates"
+    ],
+    "yard": "cobbles",
+    "accent": "none"
+  },
+  {
+    "id": "horse_mill",
+    "standing": 1.2,
+    "roof": "stepped",
+    "fabric": "daub",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "hitching_rail",
+      "yoke_beam",
+      "grindstone"
+    ],
+    "yard": "beaten_earth",
+    "accent": "none"
+  },
+  {
+    "id": "factory",
+    "standing": 3.0,
+    "roof": "sawtooth",
+    "fabric": "brick",
+    "trim": "sheet",
+    "rooftop": "vents",
+    "attachments": [
+      "chimney_bank",
+      "coal_heap",
+      "loading_step"
+    ],
+    "yard": "cobbles",
+    "accent": "ember"
+  },
+  {
+    "id": "foundry",
+    "standing": 2.6,
+    "roof": "sawtooth",
+    "fabric": "brick",
+    "trim": "sheet",
+    "rooftop": "vents",
+    "attachments": [
+      "slag_heap",
+      "crane",
+      "ore_pile"
+    ],
+    "yard": "cobbles",
+    "accent": "ember"
+  },
+  {
+    "id": "power_plant",
+    "standing": 3.2,
+    "roof": "sawtooth",
+    "fabric": "brick",
+    "trim": "sheet",
+    "rooftop": "vents",
+    "attachments": [
+      "chimney_bank",
+      "coal_heap",
+      "crane"
+    ],
+    "yard": "cobbles",
+    "accent": "ember"
+  },
+  {
+    "id": "railyard",
+    "standing": 2.5,
+    "roof": "sawtooth",
+    "fabric": "brick",
+    "trim": "sheet",
+    "rooftop": "vents",
+    "attachments": [
+      "crane",
+      "coal_heap",
+      "loading_step"
+    ],
+    "yard": "gravel",
+    "accent": "ember"
+  },
+  {
+    "id": "chemical_plant",
+    "standing": 2.8,
+    "roof": "flat",
+    "fabric": "brick",
+    "trim": "sheet",
+    "rooftop": "vents",
+    "attachments": [
+      "crane",
+      "crates",
+      "water_butt"
+    ],
+    "yard": "cobbles",
+    "accent": "cold_green"
+  },
+  {
+    "id": "hospital",
+    "standing": 3.2,
+    "roof": "flat",
+    "fabric": "brick",
+    "trim": "stone",
+    "rooftop": "vents",
+    "attachments": [
+      "awning_row",
+      "bench",
+      "hitching_rail"
+    ],
+    "yard": "cobbles",
+    "accent": "none"
+  },
+  {
+    "id": "hydro_dam",
+    "standing": 3.5,
+    "roof": "flat",
+    "fabric": "sheet",
+    "trim": "panel",
+    "rooftop": "vents",
+    "attachments": [
+      "crane",
+      "cable_run",
+      "cooling_fins"
+    ],
+    "yard": "gravel",
+    "accent": "cold_green"
+  },
+  {
+    "id": "oil_refinery",
+    "standing": 3.5,
+    "roof": "flat",
+    "fabric": "sheet",
+    "trim": "panel",
+    "rooftop": "vents",
+    "attachments": [
+      "chimney_bank",
+      "crane",
+      "cable_run"
+    ],
+    "yard": "gravel",
+    "accent": "ember"
+  },
+  {
+    "id": "vehicle_works",
+    "standing": 2.8,
+    "roof": "barrel",
+    "fabric": "sheet",
+    "trim": "panel",
+    "rooftop": "none",
+    "attachments": [
+      "wide_door",
+      "vehicle_apron",
+      "tyre_stack"
+    ],
+    "yard": "cobbles",
+    "accent": "none"
+  },
+  {
+    "id": "assembly_plant",
+    "standing": 3.2,
+    "roof": "sawtooth",
+    "fabric": "sheet",
+    "trim": "panel",
+    "rooftop": "vents",
+    "attachments": [
+      "chimney_bank",
+      "loading_step",
+      "crane"
+    ],
+    "yard": "cobbles",
+    "accent": "ember"
+  },
+  {
+    "id": "apartment_block",
+    "standing": 4.0,
+    "roof": "flat",
+    "fabric": "sheet",
+    "trim": "panel",
+    "rooftop": "aerial",
+    "attachments": [
+      "cooling_fins",
+      "cable_run",
+      "bench"
+    ],
+    "yard": "gravel",
+    "accent": "none"
+  },
+  {
+    "id": "clinic",
+    "standing": 2.5,
+    "roof": "flat",
+    "fabric": "glass",
+    "trim": "panel",
+    "rooftop": "aerial",
+    "attachments": [
+      "wide_door",
+      "bench",
+      "cable_run"
+    ],
+    "yard": "planking",
+    "accent": "cold_green"
+  },
+  {
+    "id": "electronics_lab",
+    "standing": 2.4,
+    "roof": "flat",
+    "fabric": "glass",
+    "trim": "panel",
+    "rooftop": "aerial",
+    "attachments": [
+      "cable_run",
+      "cooling_fins"
+    ],
+    "yard": "gravel",
+    "accent": "cold_green"
+  },
+  {
+    "id": "data_center",
+    "standing": 2.2,
+    "roof": "flat",
+    "fabric": "sheet",
+    "trim": "panel",
+    "rooftop": "vents",
+    "attachments": [
+      "cooling_towers",
+      "cable_ducts",
+      "backup_generator"
+    ],
+    "yard": "cobbles",
+    "accent": "cold_green"
+  },
+  {
+    "id": "research_campus",
+    "standing": 2.6,
+    "roof": "flat",
+    "fabric": "glass",
+    "trim": "panel",
+    "rooftop": "aerial",
+    "attachments": [
+      "walkway_canopy",
+      "courtyard_planting",
+      "satellite_dish"
+    ],
+    "yard": "gravel",
+    "accent": "none"
+  },
+  {
+    "id": "solar_array",
+    "standing": 1.5,
+    "roof": "flat",
+    "fabric": "sheet",
+    "trim": "panel",
+    "rooftop": "aerial",
+    "attachments": [
+      "cable_run",
+      "cooling_fins"
+    ],
+    "yard": "gravel",
+    "accent": "cold_green"
+  },
+  {
+    "id": "wind_farm",
+    "standing": 1.4,
+    "roof": "flat",
+    "fabric": "sheet",
+    "trim": "panel",
+    "rooftop": "aerial",
+    "attachments": [
+      "cable_run",
+      "cooling_fins",
+      "tool_rack"
+    ],
+    "yard": "gravel",
+    "accent": "cold_green"
+  },
+  {
+    "id": "automated_factory",
+    "standing": 3.2,
+    "roof": "flat",
+    "fabric": "sheet",
+    "trim": "panel",
+    "rooftop": "aerial",
+    "attachments": [
+      "cooling_fins",
+      "cable_run",
+      "wide_door"
+    ],
+    "yard": "gravel",
+    "accent": "cold_green"
+  },
+  {
+    "id": "fusion_reactor",
+    "standing": 4.0,
+    "roof": "flat",
+    "fabric": "sheet",
+    "trim": "panel",
+    "rooftop": "vents",
+    "attachments": [
+      "cooling_fins",
+      "cable_run",
+      "loading_step"
+    ],
+    "yard": "gravel",
+    "accent": "cold_green"
+  },
+  {
+    "id": "ai_core",
+    "standing": 3.2,
+    "roof": "flat",
+    "fabric": "sheet",
+    "trim": "panel",
+    "rooftop": "aerial",
+    "attachments": [
+      "hologram_emitter",
+      "waveguide_array",
+      "coolant_pipes"
+    ],
+    "yard": "planking",
+    "accent": "cold_green"
+  },
+  {
+    "id": "spaceport",
+    "standing": 4,
+    "roof": "flat",
+    "fabric": "glass",
+    "trim": "panel",
+    "rooftop": "aerial",
+    "attachments": [
+      "crane",
+      "cable_run",
+      "cooling_fins"
+    ],
+    "yard": "gravel",
+    "accent": "cold_green"
+  },
+  {
+    "id": "orbital_array",
+    "standing": 2.5,
+    "roof": "flat",
+    "fabric": "sheet",
+    "trim": "panel",
+    "rooftop": "aerial",
+    "attachments": [
+      "cooling_fins",
+      "cable_run",
+      "ladder"
+    ],
+    "yard": "gravel",
+    "accent": "cold_green"
+  },
+  {
+    "id": "arcology",
+    "standing": 4.0,
+    "roof": "stepped",
+    "fabric": "glass",
+    "trim": "panel",
+    "rooftop": "aerial",
+    "attachments": [
+      "cooling_fins",
+      "cable_run",
+      "wide_door"
+    ],
+    "yard": "gravel",
+    "accent": "cold_green"
+  },
+  {
+    "id": "bloomery",
+    "standing": 1.4,
+    "roof": "gable",
+    "fabric": "stone",
+    "trim": "timber",
+    "rooftop": "vents",
+    "attachments": [
+      "charcoal_heap",
+      "bellows",
+      "ore_pile"
+    ],
+    "yard": "beaten_earth",
+    "accent": "ember"
+  },
+  {
+    "id": "stable",
+    "standing": 1.2,
+    "roof": "gable",
+    "fabric": "timber",
+    "trim": "timber",
+    "rooftop": "vents",
+    "attachments": [
+      "hitching_rail",
+      "sawdust_pile",
+      "water_butt"
+    ],
+    "yard": "beaten_earth",
+    "accent": "none"
+  },
+  {
+    "id": "wainwright",
+    "standing": 1.4,
+    "roof": "gable",
+    "fabric": "timber",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "cart_under_awning",
+      "wheel_rack",
+      "timber_stack"
+    ],
+    "yard": "beaten_earth",
+    "accent": "none"
+  },
+  {
+    "id": "garage",
+    "standing": 2.4,
+    "roof": "barrel",
+    "fabric": "sheet",
+    "trim": "sheet",
+    "rooftop": "vents",
+    "attachments": [
+      "wide_door",
+      "tyre_stack",
+      "tool_rack"
+    ],
+    "yard": "cobbles",
+    "accent": "none"
+  },
+  {
+    "id": "airfield",
+    "standing": 3.2,
+    "roof": "barrel",
+    "fabric": "sheet",
+    "trim": "sheet",
+    "rooftop": "aerial",
+    "attachments": [
+      "wide_door",
+      "vehicle_apron",
+      "crates"
+    ],
+    "yard": "cobbles",
+    "accent": "none"
+  },
+  {
+    "id": "courtyard_house",
+    "standing": 1.1,
+    "roof": "flat",
+    "fabric": "stone",
+    "trim": "timber",
+    "rooftop": "none",
+    "attachments": [
+      "long_table",
+      "water_butt",
+      "wash_line"
+    ],
+    "yard": "cobbles",
+    "accent": "hearth"
+  },
+  {
+    "id": "townhouse_row",
+    "standing": 2.2,
+    "roof": "gable",
+    "fabric": "timber",
+    "trim": "stone",
+    "rooftop": "vents",
+    "attachments": [
+      "bench",
+      "water_butt",
+      "wash_line"
+    ],
+    "yard": "cobbles",
+    "accent": "hearth"
+  },
+  {
+    "id": "brick_tenement",
+    "standing": 3.2,
+    "roof": "flat",
+    "fabric": "brick",
+    "trim": "stone",
+    "rooftop": "vents",
+    "attachments": [
+      "ladder",
+      "wash_line",
+      "crates"
+    ],
+    "yard": "cobbles",
+    "accent": "hearth"
+  }
+]

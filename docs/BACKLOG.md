@@ -3937,3 +3937,116 @@ Unchanged from §21.6, less the two the suite closed. Nearest first:
 2. Steps 1–2 of `docs/RENDER_25D.md` §6 — the lift and the depth sort, no data.
    Cheap to abandon if it does not look right, which is why they are first.
 3. The rest of §21.6.
+
+## 23. 2026-08-27 — the 2.5D assets, and two surfaces nobody could see
+
+Keks, watching a staged raid: *"když je nájezd, tak se nikdy neukáže ten banner
+s bojem"*, *"budovy stále neleží jakoby na zemi a nějaké stromy levitují okolo"*,
+and *"chci, aby byly zpracované mapy, osady, budovy — každá unikátní a graficky
+rozeznatelná"*.
+
+### 23.1 — the battle caption was drawn off the edge of the world
+
+`SettlementBattle.banner` placed itself at `rect.minY + rect.height * 0.06` —
+and `rect` is the **world** rect, the whole valley mapped into the camera's
+space. The settlement opens at a zoom of 2.8, so the world is nearly three times
+the height of the phone and six per cent down from its top is a long way above
+the viewport. The caption naming who is on the field and what the fight has cost
+has therefore never been visible at any zoom a player actually uses.
+
+Chrome belongs in view space, which `SettlementRenderer.seasonWash` has said in
+a comment since it was written: *atmosphere over the lens is not part of the
+world*. The battle draw takes a `viewport` now. Nothing else moved — a body
+still stands where it stands.
+
+### 23.2 — sixty-two buildings that are told apart, in data
+
+Measured before writing anything: **62 buildings, 30 `look` values, 51 sharing
+theirs with something else** — and `StructureVariant`'s derived axes separate
+all 62 with **zero** collisions. So "the buildings all look the same" was never
+a data problem and there was nothing to disambiguate: the signature was complete
+and the drawing spent almost none of it (rule 107).
+
+`structures.json` is where the difference goes — one composition per building:
+`standing` in map units, a closed `roof` and `fabric`, `attachments` for what
+stands *beside* it and names it from across the valley, and at most one warm
+`accent`. Eighteen hand-written exemplars; Gemini 2.5 Pro wrote the other
+forty-four against a note listing what every building actually is.
+
+**The reader landed in the same change** (rule 47 — `texture` in `ground.json`
+was validated, generated and read by nothing for weeks). `StructureDefinition` →
+the registry → `StructureVariant.standing` → `SettlementStructures.bodySize`.
+That last hop is deliberate: **three callers share that formula and have to
+agree** — the structure draws the walls, the interior furnishes inside them, and
+`AgentMotion` stands people at the fittings. A height applied in one of the three
+is a smith hammering an anvil that is somewhere else.
+
+Three guards, and the third is the one worth having: *buildings that share a
+look do not share a silhouette*. A bank giving every building the same height
+and the same three attachments would load, pass every other check, and leave the
+town exactly as indistinguishable as it was.
+
+### 23.3 — the interiors had the same fault, and the door was already open
+
+117 fittings across 31 "room types" — and the room types are simply the glyph
+names, so the five `plant` buildings were furnished from the same 36 pieces and
+the four `lab`s from the same 27.
+
+`FittingDefinition.rooms` is a free `[String]` and the registry keys its index on
+whatever is in it, so **a fitting has been able to name a building since the day
+the bank was written**. Nothing ever asked it to. `furnishing` asks for the
+building first now, and a piece written for a building *replaces* the archetype's
+piece of the same `shape` rather than standing beside it — the rule an age's
+furniture already follows. A building nobody has furnished by name is furnished
+by its archetype, exactly as every building was before. Rule 108.
+
+### 23.4 — `Tools/revise.py`, and the two holes in it
+
+`generate.py` adds entries; nothing could correct a bank **as a set**, which is
+the only way to see that four of twenty grounds share `stipple`. The first run
+found two faults in the tool itself: `references.py` walks every kind and took
+the whole toolchain down on a bank that did not exist yet, and `check` refused
+the revision because every id collided — which is a draft's rule and a
+revision's whole point. `merge` tells the two verbs apart by the draft's name
+now, and **replaces** rather than appending.
+
+The ground pass merged: `stipple` held four grounds and now holds fewer.
+
+### 23.4b — a tall building rises, it does not swell
+
+The suite caught what reading `standing` actually means, and it is worth
+stating. `bodyRect` centred the body on the building's map point, so making a
+watchtower taller grew it **downward as well as up** — through its own doorstep
+and into whatever stands in front of it. The plan is the thing the footprint,
+the walk and every hit test agree on, and a drawing number must not move it.
+
+So the extra height is added at the **top**, with the foot left where the plan
+put it. That is the first half of `RENDER_25D.md` §2 arriving early and by
+accident: the ground stays in plan and only the drawing lifts.
+
+Two tests then had to be told apart, and the difference is the useful part.
+*Does the body fit its lot* is a question about the **plan** and asks for the
+walls without their height — a tall building rises out of its footprint rather
+than spilling sideways into next door's. *Is the room the walls inset* is a
+question about the **drawing** and must ask for exactly the walls three callers
+already share. A test that asked for the walls without the height was a fourth
+caller disagreeing with the other three: the very fault it exists to catch,
+pointed at itself.
+
+### 23.5 — still open
+
+1. **The floating** — the one Keks named and the one still there. A tree is
+   drawn anchored at its **foot**; a building is drawn **centred** on its map
+   point, with its body smaller than its footprint, so it sits in the middle of
+   its own apron with bare ground above and below. And `SettlementFlora` draws
+   as a block *before* the buildings, so a tree standing in front of a house is
+   drawn behind it. Reading `standing` improves it and does not fix it: the fix
+   is §6 steps 1–2 of `RENDER_25D.md` — anchor at the foot, and one depth-sorted
+   pass across footings, bodies, attachments and agents.
+2. **The attachments are data with no drawing yet.** 43 distinct names across
+   the bank and the renderer draws none of them; a name it does not know draws
+   nothing, which reads as a plainer building rather than a fault. That is the
+   half of §23.2 that is still only a promise.
+3. **Per-building fittings** (§23.3) — the reader is in, the content is not. 51
+   buildings share a look and want two or three pieces each.
+4. Everything in §22.4.

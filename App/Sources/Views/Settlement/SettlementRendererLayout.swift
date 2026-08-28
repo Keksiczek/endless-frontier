@@ -488,7 +488,8 @@ extension SettlementRenderer {
                 underConstruction: placement.underConstruction,
                 progress: placement.underConstruction ? (progress ?? 0) : 1,
                 seed: buildingSeed(placement.id),
-                variant: def.map { StructureVariant.of($0, housesConveyances: sheds.contains($0.id)) }
+                variant: def.map { StructureVariant.of($0, housesConveyances: sheds.contains($0.id),
+                                              composition: registry.structure($0.id)) }
                     ?? .plain,
                 era: def?.era ?? .earlySettlement,
                 fabric: def.map { Cover.substance(of: $0, registry: registry) } ?? .wood,
@@ -518,7 +519,8 @@ extension SettlementRenderer {
                                  g, def?.era ?? .earlySettlement,
                                  def.map { Cover.substance(of: $0, registry: registry) } ?? .wood,
                                  max(1, def?.floors ?? 1),
-                                 def.map { StructureVariant.of($0, housesConveyances: sheds.contains($0.id)) }
+                                 def.map { StructureVariant.of($0, housesConveyances: sheds.contains($0.id),
+                                                              composition: registry.structure($0.id)) }
                                     ?? .plain))
             }
         }

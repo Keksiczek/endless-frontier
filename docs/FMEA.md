@@ -92,7 +92,9 @@ mechanic.
 | Walking looks wrong after a "correct" tuning | the rate was per tick and the eye judges per real second (rule 34) | `Core/Sources/EndlessFrontierCore/Data/WorldConfig.swift` · `realSecondsPerTick` |
 | A system exists in the sim and the player can never see it | the recurring shape — grep for it before rebuilding anything | `docs/RULES.md` · `A surface only reachable while the app is in the foreground` |
 
+| Two buildings sharing a `look` are furnished identically inside | the interior asked for the *archetype*; `rooms` has always accepted a building id (rule 108) | `App/Sources/Views/Settlement/SettlementInterior.swift` · `furnishing` |
 | A building is on screen and you cannot tell which one it is | 51 of 62 buildings share a `look`; the signature separates them and the drawing does not spend it | `docs/RENDER_25D.md` · `Sixty-two buildings you can name` |
+| A caption or badge drawn on the canvas is never visible | it was placed in the **world** rect, which at any real zoom is far larger than the screen; chrome belongs in view space | `App/Sources/Views/Settlement/SettlementBattle.swift` · `banner` |
 | The town reads flat — marks lying on the ground, nothing standing up | there is no height axis; a body is drawn inside its own footprint | `docs/RENDER_25D.md` · `The projection` |
 | A shadow points somewhere the light does not | a shadow with its own angle constant instead of `SettlementLight.sun` (rule 35) | `App/Sources/Views/Settlement/SettlementLight.swift` · `sun` |
 | A tall thing covers somebody standing in front of it | buildings and agents drawn as two blocks instead of one depth-sorted pass | `docs/RENDER_25D.md` · `The layers` |

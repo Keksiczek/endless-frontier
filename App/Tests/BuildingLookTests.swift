@@ -91,6 +91,11 @@ struct BuildingLookTests {
         //
         // The widest a body ever gets is at the top of its own size jitter, so
         // that is what has to fit.
+        //
+        // **Deliberately without `height:`.** Whether a building fits its lot
+        // is a question about the *plan*, and `standing` is not part of the
+        // plan: a tall building rises out of its footprint rather than spilling
+        // sideways into next door's (`SettlementStructures.bodyRect`).
         let walls = SettlementStructures.bodySize(
             b.glyph, s: b.size * SettlementRenderer.maxBodyJitter, seed: b.seed,
             aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1)
@@ -223,9 +228,12 @@ struct InteriorFitTests {
         let b = SettlementRenderer.normalizedLayout(settlement: colony(w: w, h: h),
                                                     registry: reg)[0]
         let site = AgentMotion.WorkSite(b, era: .earlySettlement, registry: reg)
+        // The walls as they are actually drawn — height and all. See the note
+        // in `roomIsTheWallsNotTheLot`.
         let walls = SettlementStructures.bodySize(
             b.glyph, s: b.size, seed: b.seed,
-            aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1)
+            aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1,
+            height: Double(b.variant.heightScale))
         let beds = SettlementInterior.bedSlots(seed: b.seed, sleepers: 8).map(site.place)
         #expect(!beds.isEmpty)
         for bed in beds {
@@ -243,9 +251,16 @@ struct InteriorFitTests {
         let b = SettlementRenderer.normalizedLayout(settlement: colony(w: 3, h: 3),
                                                     registry: reg)[0]
         let site = AgentMotion.WorkSite(b, era: .earlySettlement, registry: reg)
+        // **The same walls, height and all.** `bodySize` reads `standing` out
+        // of `structures.json` now (`StructureVariant.heightScale`), and three
+        // callers share the formula precisely so they cannot disagree — a test
+        // that asks for the walls without the height is a fourth caller
+        // disagreeing with the other three, which is the fault this test exists
+        // to catch, pointed at itself.
         let walls = SettlementStructures.bodySize(
             b.glyph, s: b.size, seed: b.seed,
-            aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1)
+            aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1,
+            height: Double(b.variant.heightScale))
         let inset = 1 - SettlementInterior.wallInset * 2
         #expect(abs(site.roomW - walls.width * inset) < 1e-9)
         #expect(abs(site.roomH - walls.height * inset) < 1e-9)

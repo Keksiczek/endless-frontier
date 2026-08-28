@@ -1,6 +1,6 @@
 # Rules — what has already gone wrong, and must not again
 
-<!-- Extracted from BACKLOG.md 2026-08-13 | 107 rules -->
+<!-- Extracted from BACKLOG.md 2026-08-13 | 108 rules -->
 
 **Every one of these cost a session at least once.** They are the project's
 troubleshooting guide and its lessons learned in one list: when something in the
@@ -1089,3 +1089,17 @@ fires, do the arithmetic before you rewrite the mechanic.
    and is simply not being drawn — the fix is then a composition and a
    vocabulary, and every other entry gets it too, rather than one more
    special-cased shape.
+108. **A field that accepts any string is a door nobody thought to open.**
+   `FittingDefinition.rooms` is a free `[String]` and the registry keys its
+   index on whatever is in it, so a piece of furniture has been able to name a
+   *building* since the day the bank was written. Nothing ever asked it to:
+   `SettlementInterior.furnishing` looked up `glyph.rawValue` and nothing else.
+   The result was rule 107's fault one storey down and invisible from outside —
+   117 fittings across 31 "room types" that are simply the glyph names, so all
+   five `plant` buildings were furnished from the same thirty-six pieces and the
+   four `lab`s from the same twenty-seven. Inside, it was one room drawn over
+   and over. **The capability was already there and the question was too
+   narrow**, which is a different failure from the missing-feature it looks
+   like: grep for what a key *could* hold before designing a new key, and when
+   a specific and a general answer both exist, let the specific one replace
+   rather than accompany — a bloomery's hearth instead of a forge's, never both.

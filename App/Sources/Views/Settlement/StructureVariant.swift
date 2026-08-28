@@ -91,19 +91,37 @@ struct StructureVariant: Equatable, Hashable {
     /// signature did not.
     let lot: Int
 
+    /// **How high this one stands**, from `structures.json`, in map units.
+    ///
+    /// Every axis above is *derived* from the definition, which is why they
+    /// separate all 62 buildings and still draw nearly alike: cost, workers and
+    /// footprint say how substantial a building is and never say how **tall**.
+    /// A watchtower and a granary on the same plot, costing about the same,
+    /// came out the same size. This is the first thing the composition bank
+    /// says that nothing could be inferred from (`StructureDefinition`).
+    ///
+    /// Around 1 is one storey. Nil for a building the bank has nothing to say
+    /// about, and then the drawing is exactly what it was.
+    var standing: Double?
+
+    /// The one warm colour this building is allowed, from the same bank —
+    /// `hearth`, `ember`, `awning`, `cold_green`, `lamp`, or `none`.
+    var accent: String = "none"
+
     /// The fallback for a building the registry does not know — a definition
     /// that has been deleted from under a save, or a test with a bare registry.
     static let plain = StructureVariant(
         kindSeed: 0, bays: 3, stacks: 0, wideDoor: false,
         roofline: .gable, rooftop: .none, nightShift: false,
         tier: 0, heft: 0, stores: nil, storeys: 1,
-        era: .earlySettlement, lot: 3)
+        era: .earlySettlement, lot: 3, standing: nil, accent: "none")
 
     // MARK: - Derivation
 
     /// Everything below reads the definition and nothing else, so the same
     /// building always looks like itself — across frames, launches and saves.
-    static func of(_ def: BuildingDefinition, housesConveyances: Bool) -> StructureVariant {
+    static func of(_ def: BuildingDefinition, housesConveyances: Bool,
+                   composition: StructureDefinition? = nil) -> StructureVariant {
         let seed = kindSeed(for: def.id)
         return StructureVariant(
             kindSeed: seed,
@@ -118,8 +136,25 @@ struct StructureVariant: Equatable, Hashable {
             stores: mostOf(def.storage),
             storeys: max(1, def.floors),
             era: def.era,
-            lot: lotShape(def))
+            lot: lotShape(def),
+            standing: composition?.standing,
+            accent: composition?.accent ?? "none")
     }
+
+    /// **How much taller or shorter than an ordinary shed this stands.**
+    ///
+    /// One, when the bank says nothing — so a colony whose `structures.json`
+    /// is missing or half-written draws exactly as it did before. Clamped hard
+    /// on both sides: the point is that a watchtower reads as tall, not that a
+    /// spaceport leaves the screen.
+    var heightScale: CGFloat {
+        guard let standing else { return 1 }
+        return CGFloat(min(2.4, max(0.65, standing / Self.ordinaryStanding)))
+    }
+
+    /// What one storey of an ordinary building is, in map units — the height
+    /// every other is read against. A hut is 0.9 and a longhouse 1.1.
+    static let ordinaryStanding: Double = 1.1
 
     /// How the ground a building owns is shaped, in thirds of its width — the
     /// same quantity `bodySize` clamps its stretch to, so two lots that draw
@@ -219,7 +254,12 @@ struct StructureVariant: Equatable, Hashable {
         [String(bays), String(stacks), wideDoor ? "1" : "0",
          roofline.rawValue, rooftop.rawValue, nightShift ? "1" : "0",
          "t\(tier)", "h\(heft)", stores?.rawValue ?? "-",
-         "f\(storeys)", era.rawValue, "l\(lot)"].joined(separator: "/")
+         "f\(storeys)", era.rawValue, "l\(lot)",
+         // **An axis the drawing reads belongs in here** — the note `storeys`
+         // and `era` above both carry, for the third time. `heightScale` is
+         // read by `SettlementStructures.bodySize`, so a watchtower and a
+         // granary that agreed on every other axis must not agree here.
+         String(format: "s%.2f", heightScale), accent].joined(separator: "/")
     }
 }
 

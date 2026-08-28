@@ -4,7 +4,7 @@
 2026-08-28; its plan is still 2026-08-17 vintage** — check `BACKLOG.md` and the
 newest handoff before starting anything from §3 onwards. Read this, then
 [`CODEMAPS/architecture.md`](CODEMAPS/architecture.md) and **[`RULES.md`](RULES.md)**
-(107 rules, each of which cost a session). [`BACKLOG.md`](BACKLOG.md) is the long
+(108 rules, each of which cost a session). [`BACKLOG.md`](BACKLOG.md) is the long
 history; this file is the short answer to *"what should I work on?"*.
 
 ```bash

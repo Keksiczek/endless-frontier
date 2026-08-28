@@ -38,6 +38,9 @@ public struct GameDataRegistry: Sendable {
     /// What each kind of ground looks like. Presentation reads this; the
     /// simulation decides *where* the covers lie and never what colour.
     public let ground: [String: GroundDefinition]
+    /// **How each building is put together**, keyed by building id. Presentation
+    /// reads this and the simulation never does — see `StructureDefinition`.
+    public let structures: [String: StructureDefinition]
     /// The colour of everything standing on the ground — crops, trees, rock,
     /// landforms. Presentation only, like the two banks beside it.
     public let scenery: [String: SceneryDefinition]
@@ -110,6 +113,7 @@ public struct GameDataRegistry: Sendable {
         meals: [MealDefinition] = [],
         motions: [MotionDefinition] = [],
         ground: [GroundDefinition] = [],
+        structures: [StructureDefinition] = [],
         scenery: [SceneryDefinition] = [],
         flora: [FloraDefinition] = [],
         animals: [AnimalDefinition] = [],
@@ -125,6 +129,8 @@ public struct GameDataRegistry: Sendable {
         self.meals = mealTable
         self.motions = Dictionary(uniqueKeysWithValues: motions.map { ($0.id, $0) })
         self.ground = Dictionary(uniqueKeysWithValues: ground.map { ($0.id, $0) })
+        self.structures = Dictionary(structures.map { ($0.id, $0) },
+                                     uniquingKeysWith: { first, _ in first })
         self.scenery = Dictionary(uniqueKeysWithValues: scenery.map { ($0.id, $0) })
         self.flora = Dictionary(uniqueKeysWithValues: flora.map { ($0.id, $0) })
         self.animals = Dictionary(uniqueKeysWithValues: animals.map { ($0.id, $0) })
@@ -166,6 +172,13 @@ public struct GameDataRegistry: Sendable {
     /// not a hole.
     public func ground(_ id: String) -> GroundDefinition {
         ground[id] ?? .plain
+    }
+
+    /// Never nil: a building the bank has nothing to say about is drawn as an
+    /// ordinary one-storey shed, which is what every building looked like
+    /// before the bank existed.
+    public func structure(_ id: String) -> StructureDefinition {
+        structures[id] ?? .plain
     }
 
     /// Never nil: an unlisted thing is drawn a plain green rather than not at all.
@@ -438,6 +451,7 @@ public struct GameDataRegistry: Sendable {
         let meals = try optional([MealDefinition].self, "meals", else: [])
         let motions = try optional([MotionDefinition].self, "motions", else: [])
         let ground = try optional([GroundDefinition].self, "ground", else: [])
+        let structures = try optional([StructureDefinition].self, "structures", else: [])
         let scenery = try optional([SceneryDefinition].self, "scenery", else: [])
         let flora = try optional([FloraDefinition].self, "flora", else: [])
         let animals = try optional([AnimalDefinition].self, "animals", else: [])
@@ -458,6 +472,7 @@ public struct GameDataRegistry: Sendable {
             meals: meals,
             motions: motions,
             ground: ground,
+            structures: structures,
             scenery: scenery,
             flora: flora,
             animals: animals,

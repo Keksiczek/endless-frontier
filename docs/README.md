@@ -1,7 +1,12 @@
 # Docs — what is where
 
 > **Start here if you are picking this up cold:**
-> [`BACKLOG.md` §22](BACKLOG.md) — the newest plan. What the suite said about the
+> [`BACKLOG.md` §23](BACKLOG.md) — the newest plan. The 2.5D assets
+> ([`RENDER_25D.md`](RENDER_25D.md)): `structures.json`, one composition per
+> building, with its reader; the battle caption that was drawn off the edge of
+> the world; and interiors that can finally name a building. Its §23.5 is the
+> open list, and the floating buildings are the top of it.
+> Before it: [`BACKLOG.md` §22](BACKLOG.md). What the suite said about the
 > workshop move (two failures, both the move's fault), the **2.5D layer
 > specified and not built** ([`RENDER_25D.md`](RENDER_25D.md)), and
 > `Tools/revise.py`. Its §22.4 is the open list.
@@ -42,7 +47,7 @@ Read in this order when picking work up cold:
 |---|---|---|
 | 1 | [NEXT.md](NEXT.md) | **Start here.** Where the game stands and what to work on next, with the evidence for each |
 | 2 | [CODEMAPS/architecture.md](CODEMAPS/architecture.md) | The three layers, the tick order, where a decision flows |
-| 3 | [RULES.md](RULES.md) | **107 rules, each of which cost a session.** Read before writing a threshold |
+| 3 | [RULES.md](RULES.md) | **108 rules, each of which cost a session.** Read before writing a threshold |
 | 4 | [BACKLOG.md](BACKLOG.md) | **The living record.** What was measured, what was built, what Keks asked for |
 
 ## Routing table — by what you are about to do
@@ -124,7 +129,7 @@ overtaken without being updated, which is exactly how a stale doc does damage.
 | [NEXT.md](NEXT.md) | plan 2026-08-17, counts 2026-08-28 | Still the best short answer to "what next". Its counts are checked by `make verify-docs` now; **its plan is not** — read `BACKLOG.md` and the newest handoff beside it |
 
 Reality as of the newest row of [TEST-BASELINE.md](TEST-BASELINE.md)
-(**2026-08-27**): **1611 Core tests** in 224 suites in ~16 minutes, and
+(**2026-08-27**): **1614 Core tests** in 224 suites in ~25 minutes, and
 **207 App tests** in 33 suites, all green; iOS build green. Nothing is
 unmeasured — append a row rather than editing this line.
 Content: **62 buildings**, **60 techs**, 182 events, 7 biomes, **477 items**,

@@ -58,7 +58,21 @@ REGION_KINDS = (
 
 
 def _load(kind: str):
-    return json.loads(path_for(kind).read_text(encoding="utf-8"))
+    """A kind's bank, or nothing if it has not been created yet.
+
+    A kind may legitimately be registered before its file exists — the
+    specification and the generator's brief come first, and the bank arrives
+    with the reader that will draw it (rule 47). Everything here walks *every*
+    kind to collect ids and world flags, so without this an unwritten bank takes
+    the whole toolchain down: `revise.py ground` crashed on
+    `structures.json` having been described and not yet written.
+
+    A bank that is not there contributes no ids and no flags, which is exactly
+    true."""
+    path = path_for(kind)
+    if not path.exists():
+        return []
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def ids_of(kind: str) -> set[str]:

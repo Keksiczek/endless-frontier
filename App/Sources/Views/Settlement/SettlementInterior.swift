@@ -102,13 +102,15 @@ enum SettlementInterior {
     /// one that keeps people from being drawn on top of each other.
     static func slots(for glyph: SettlementRenderer.BuildingGlyph,
                       seed: UInt64, stations: Int,
-                      era: Era, registry: GameDataRegistry) -> [Slot] {
-        let plan = furnishing(glyph, era: era, registry: registry)
+                      era: Era, registry: GameDataRegistry,
+                      building: String? = nil) -> [Slot] {
+        let plan = furnishing(glyph, era: era, registry: registry, building: building)
         guard !plan.stations.isEmpty else {
             // A room the book furnishes with nothing to stand at is still a
             // room: it gets its corners and no ring. Better than seating people
             // at furniture that does not exist.
-            return clutterSlots(for: glyph, seed: seed, era: era, registry: registry)
+            return clutterSlots(for: glyph, seed: seed, era: era, registry: registry,
+                                building: building)
         }
         // Enough seats for everyone the engine posted here, within reason: a
         // room is a room, not a stadium.
@@ -151,7 +153,8 @@ enum SettlementInterior {
         // hut with the furniture jittered a few pixels. A household keeps some
         // of what it could keep: the seed picks which corners are used and what
         // stands in them, so two houses on one street are two houses.
-        slots += clutterSlots(for: glyph, seed: h, era: era, registry: registry)
+        slots += clutterSlots(for: glyph, seed: h, era: era, registry: registry,
+                              building: building)
         return slots
     }
 
@@ -162,9 +165,9 @@ enum SettlementInterior {
     /// corners furnished at all.
     static func clutterSlots(
         for glyph: SettlementRenderer.BuildingGlyph, seed: UInt64,
-        era: Era, registry: GameDataRegistry
+        era: Era, registry: GameDataRegistry, building: String? = nil
     ) -> [Slot] {
-        let plan = furnishing(glyph, era: era, registry: registry)
+        let plan = furnishing(glyph, era: era, registry: registry, building: building)
         guard !plan.clutter.isEmpty else { return [] }
         var h = seed | 1
         func roll() -> Double {
@@ -201,8 +204,10 @@ enum SettlementInterior {
     /// The stations alone, in the order colonists take them.
     static func stationSlots(for glyph: SettlementRenderer.BuildingGlyph,
                              seed: UInt64, stations: Int,
-                             era: Era, registry: GameDataRegistry) -> [Slot] {
-        slots(for: glyph, seed: seed, stations: stations, era: era, registry: registry)
+                             era: Era, registry: GameDataRegistry,
+                             building: String? = nil) -> [Slot] {
+        slots(for: glyph, seed: seed, stations: stations, era: era, registry: registry,
+              building: building)
             .filter { $0.fitting.isStation }
     }
 
@@ -344,11 +349,33 @@ enum SettlementInterior {
     ///
     /// The floor and ceiling on how many places a room lays out stay here:
     /// they are about the room's geometry, not about its furniture.
+    /// **A building's own room outranks its archetype's.**
+    ///
+    /// `rooms` is a free list of strings and the index keys on whatever is in
+    /// it, so a fitting has always been able to name a *building* — nothing
+    /// ever asked it to. The question was `glyph.rawValue` and nothing else,
+    /// which is why the interiors had exactly the fault the exteriors had, one
+    /// level down: measured 2026-08-27, 117 fittings across 31 room types that
+    /// are the glyph names, so all five `plant` buildings shared the same 36
+    /// pieces and the four `lab`s the same 27. Inside, it was one room drawn
+    /// over and over (rule 107 again).
+    ///
+    /// So ask for the building first. Anything written for `bloomery` wins;
+    /// what is left comes from `forge`, which is what a bloomery still is. A
+    /// building nobody has furnished by name is furnished by its archetype,
+    /// exactly as every building was before.
     static func furnishing(
-        _ glyph: SettlementRenderer.BuildingGlyph, era: Era, registry: GameDataRegistry
+        _ glyph: SettlementRenderer.BuildingGlyph, era: Era, registry: GameDataRegistry,
+        building: String? = nil
     ) -> (stations: [FittingDefinition], clutter: [FittingDefinition],
           minimum: Int, maximum: Int) {
-        let all = registry.fittings(inRoom: glyph.rawValue, era: era)
+        let own = building.map { registry.fittings(inRoom: $0, era: era) } ?? []
+        // The archetype's furniture, less anything this building has its own
+        // version of — a bloomery's hearth replaces a forge's rather than
+        // standing beside it, the same rule an age's furniture already follows.
+        let named = Set(own.map(\.shape))
+        let all = own + registry.fittings(inRoom: glyph.rawValue, era: era)
+            .filter { !named.contains($0.shape) }
         // An age's own furniture wins outright. A room with a `machine` written
         // for the industrial age should show that machine, not that machine
         // *and* the timeless one — otherwise every age adds clutter and a
@@ -396,6 +423,15 @@ enum SettlementInterior {
         /// full*, and it is what stops a warehouse of timber and a warehouse of
         /// hides being the same drawing.
         goods: [(kind: Goods, count: Int)] = [],
+        /// How this kind of building is put together — the room is furnished
+        /// inside the walls the structure draws, and `structures.json` now says
+        /// how tall those are (`StructureVariant.heightScale`). Without it a
+        /// tall building's walls grew and its room did not.
+        variant: StructureVariant = .plain,
+        /// **Which building this is**, so its own furniture outranks its
+        /// archetype's — see `furnishing`. Nil furnishes by archetype, which is
+        /// what every room did before the bank could name a building.
+        building: String? = nil,
         /// The book the room is furnished out of (`FittingDefinition`).
         registry: GameDataRegistry
     ) {
@@ -405,7 +441,8 @@ enum SettlementInterior {
         // the footprint and the house off `s`, so the floor and its lamplight
         // spilled past the walls and the building glowed through them at night.
         let shell = SettlementStructures.bodyRect(glyph, at: c, s: size,
-                                                   seed: seed, footprint: footprint)
+                                                   seed: seed, footprint: footprint,
+                                                   variant: variant)
         let room = shell.insetBy(dx: shell.width * wallInset,
                                  dy: shell.height * wallInset)
         guard room.width > 4, room.height > 4 else { return }
@@ -433,10 +470,10 @@ enum SettlementInterior {
             plan = bedSlots(seed: seed, sleepers: residents)
                 + [Slot(dx: 0, dy: 0.12, fitting: .hearth)]
                 + clutterSlots(for: glyph, seed: seed &* 0x9E37_79B9,
-                               era: era, registry: registry)
+                               era: era, registry: registry, building: building)
         } else {
             plan = slots(for: glyph, seed: seed, stations: workers,
-                         era: era, registry: registry)
+                         era: era, registry: registry, building: building)
         }
         // …and the goods, over the furniture rather than instead of it: a
         // granary still has its scales and its shelf, it just also has the
@@ -474,16 +511,18 @@ enum SettlementInterior {
     static func stationPoints(
         glyph: SettlementRenderer.BuildingGlyph, at c: CGPoint,
         footprint: CGSize, size: CGFloat, seed: UInt64, workers: Int,
-        era: Era, registry: GameDataRegistry
+        era: Era, registry: GameDataRegistry, variant: StructureVariant = .plain,
+        building: String? = nil
     ) -> [CGPoint] {
         // The same room the fittings were drawn in — a worker standing at a
         // bench that is inside the walls must be inside them too.
         let shell = SettlementStructures.bodyRect(glyph, at: c, s: size,
-                                                   seed: seed, footprint: footprint)
+                                                   seed: seed, footprint: footprint,
+                                                   variant: variant)
         let room = shell.insetBy(dx: shell.width * wallInset,
                                  dy: shell.height * wallInset)
         return stationSlots(for: glyph, seed: seed, stations: workers,
-                            era: era, registry: registry).map {
+                            era: era, registry: registry, building: building).map {
             CGPoint(x: room.midX + CGFloat($0.dx) * room.width,
                     y: room.midY + CGFloat($0.dy) * room.height)
         }

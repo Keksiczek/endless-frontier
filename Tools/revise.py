@@ -207,8 +207,14 @@ def run(kind: str, fields: set[str] | None, note: str | None,
         print(f"  … and {len(moved) - 80} more")
 
     # The same three checks a draft answers to. A revision is content going into
-    # `GameData` and gets no discount for having been there before.
-    problems = check(kind, revised)
+    # `GameData` and gets no discount for having been there before — with one
+    # exception, and it is the difference between the two verbs. `check` refuses
+    # an id that is **already in the file**, because a draft is adding entries
+    # and a collision is a clash. Here every id collides and that is the point:
+    # `roster_faults` above has already required a one-for-one match, which is a
+    # stronger statement than "no duplicates" rather than a weaker one.
+    collision = f"already in {KINDS[kind]['file']}"
+    problems = [p for p in check(kind, revised) if not p.endswith(collision)]
     if problems:
         print(f"\n{len(problems)} thing(s) to fix before this can be merged:")
         for problem in problems[:40]:
@@ -221,7 +227,7 @@ def run(kind: str, fields: set[str] | None, note: str | None,
             print(f"  ? {line}")
 
     DRAFTS.mkdir(exist_ok=True)
-    out = DRAFTS / f"{kind}-{time.strftime('%Y%m%d-%H%M%S')}.json"
+    out = DRAFTS / f"{kind}-revision-{time.strftime('%Y%m%d-%H%M%S')}.json"
     out.write_text(json.dumps(revised, ensure_ascii=False, indent=2) + "\n")
     print(f"\nclean — read the diff above, then:\n  python3 Tools/generate.py merge {out}")
     return 0

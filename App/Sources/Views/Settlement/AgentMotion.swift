@@ -271,7 +271,8 @@ enum AgentMotion {
             // yard hammering nothing.
             let walls = SettlementStructures.bodySize(
                 b.glyph, s: b.size, seed: b.seed,
-                aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1)
+                aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1,
+                height: Double(b.variant.heightScale))
             let roomW = walls.width * (1 - SettlementInterior.wallInset * 2)
             let roomH = walls.height * (1 - SettlementInterior.wallInset * 2)
             self.roomW = roomW
@@ -279,7 +280,8 @@ enum AgentMotion {
             let places = SettlementInterior
                 .stationSlots(for: b.glyph, seed: b.seed,
                               stations: b.assignedPawnIDs.count,
-                              era: era, registry: registry)
+                              era: era, registry: registry,
+                              building: b.definitionID)
                 .map { LocalPoint(x: b.center.x + $0.dx * roomW,
                                   y: b.center.y + $0.dy * roomH) }
             stations = places

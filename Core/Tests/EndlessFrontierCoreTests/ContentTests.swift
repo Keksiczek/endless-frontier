@@ -318,6 +318,91 @@ struct ContentIntegrityTests {
         #expect(stranded.isEmpty, "\(stranded.prefix(8).joined(separator: "; "))")
     }
 
+    // MARK: - What a building looks like
+
+    /// **Every building has a composition, and every composition has a
+    /// building.**
+    ///
+    /// Measured 2026-08-27: 62 buildings share 30 `look` values and 51 of them
+    /// share theirs with something else, while `StructureVariant`'s derived
+    /// axes separate all 62 with no collisions at all. So the buildings looking
+    /// alike was never a data problem — the drawing did not spend the
+    /// difference it was handed (rule 107). `structures.json` is where the
+    /// difference goes, and this is the pair of holes it can fall through: a
+    /// building nobody wrote a composition for is drawn as a plain shed for
+    /// ever, and a composition for a building that does not exist is a drawing
+    /// nothing will ever ask for (rule 47).
+    @Test("Every building says how it is put together")
+    func everyBuildingHasAComposition() throws {
+        let reg = try registry()
+        let buildings = Set(reg.buildings.keys)
+        let described = Set(reg.structures.keys)
+        let bare = buildings.subtracting(described).sorted()
+        let orphans = described.subtracting(buildings).sorted()
+        let plain = bare.prefix(8).joined(separator: ", ")
+        let stray = orphans.prefix(8).joined(separator: ", ")
+        #expect(bare.isEmpty, "\(bare.count) buildings are drawn as a plain shed: \(plain)")
+        #expect(orphans.isEmpty, "\(orphans.count) compositions name no building: \(stray)")
+    }
+
+    /// The closed sets, stated once. A word the renderer does not know draws
+    /// nothing at all — the quiet failure `texture` in `ground.json` had for
+    /// weeks — so an invented `roof` or `fabric` is a building that silently
+    /// loses a wall rather than a build error.
+    @Test("A composition uses only the parts the renderer knows")
+    func compositionsSpeakTheVocabulary() throws {
+        let reg = try registry()
+        let roofs: Set = ["gable", "sawtooth", "flat", "barrel", "stepped"]
+        let fabrics: Set = ["open", "thatch", "daub", "timber", "stone",
+                            "brick", "panel", "glass", "sheet"]
+        let trims: Set = ["none", "timber", "stone", "brick", "panel", "sheet"]
+        let rooftops: Set = ["none", "vents", "array", "aerial", "tank"]
+        let yards: Set = ["none", "beaten_earth", "gravel", "cobbles", "planking"]
+        let accents: Set = ["none", "hearth", "ember", "awning", "cold_green", "lamp"]
+        var strange: [String] = []
+        for one in reg.structures.values.sorted(by: { $0.id < $1.id }) {
+            if !roofs.contains(one.roof) { strange.append("\(one.id).roof=\(one.roof)") }
+            if !fabrics.contains(one.fabric) { strange.append("\(one.id).fabric=\(one.fabric)") }
+            if !trims.contains(one.trim) { strange.append("\(one.id).trim=\(one.trim)") }
+            if !rooftops.contains(one.rooftop) { strange.append("\(one.id).rooftop=\(one.rooftop)") }
+            if !yards.contains(one.yard) { strange.append("\(one.id).yard=\(one.yard)") }
+            if !accents.contains(one.accent) { strange.append("\(one.id).accent=\(one.accent)") }
+        }
+        let odd = strange.prefix(10).joined(separator: ", ")
+        #expect(strange.isEmpty, "\(odd)")
+    }
+
+    /// **The point of the bank, stated as a number.**
+    ///
+    /// A composition that gives every building the same height and the same
+    /// three attachments would load, pass every check above, and leave the town
+    /// exactly as indistinguishable as it was. So the guard is on the *spread*:
+    /// buildings sharing a `look` must not share a silhouette.
+    @Test("Buildings that share a look do not share a silhouette")
+    func aSharedLookIsNotASharedBuilding() throws {
+        let reg = try registry()
+        var byLook: [String: [String]] = [:]
+        for building in reg.buildings.values {
+            guard let look = building.look else { continue }
+            byLook[look, default: []].append(building.id)
+        }
+        var clones: [String] = []
+        for (look, ids) in byLook.sorted(by: { $0.key < $1.key }) where ids.count > 1 {
+            var seen: Set<String> = []
+            for id in ids.sorted() {
+                let one = reg.structure(id)
+                // Height to a tenth, the roof, and what stands beside it. Two
+                // buildings agreeing on all three are one drawing twice.
+                let mark = "\(Int(one.standing * 10))/\(one.roof)/"
+                    + one.attachments.sorted().joined(separator: "+")
+                if !seen.insert(mark).inserted { clones.append("\(look): \(id)") }
+            }
+        }
+        let twins = clones.prefix(8).joined(separator: ", ")
+        #expect(clones.isEmpty,
+                "\(clones.count) buildings are a twin of something sharing their look: \(twins)")
+    }
+
     /// **A bench must not be the only thing a recipe is waiting for.**
     ///
     /// Measured 2026-08-27, before the fix: **101 recipes in the book were

@@ -70,8 +70,8 @@ endless-frontier/
 
 Endless Frontier **V2** merges the original deterministic colony sim with the
 living-world and social systems of a Czech HTML civilisation sim. All V2 phases
-(A–F) are complete. Current: **1611 Core tests in 224 suites green**
-(`cd Core && swift test`, ~16 min) and **207 App tests in 33 suites**, iOS
+(A–F) are complete. Current: **1614 Core tests in 224 suites green**
+(`cd Core && swift test`, ~25 min) and **207 App tests in 33 suites**, iOS
 build green.
 
 Content, counted 2026-08-27: **62 buildings, 60 techs**, 182 events, **7
@@ -221,7 +221,7 @@ to build next".
 Read these three, in order, when picking work up cold:
 
 1. `docs/CODEMAPS/architecture.md` — three layers, tick order, how a decision flows
-2. **`docs/RULES.md`** — 107 rules, each of which cost a session. Read *before*
+2. **`docs/RULES.md`** — 108 rules, each of which cost a session. Read *before*
    writing a threshold, not after
 3. `docs/BACKLOG.md` — the living plan
 

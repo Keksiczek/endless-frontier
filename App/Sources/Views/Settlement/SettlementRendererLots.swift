@@ -107,7 +107,8 @@ extension SettlementRenderer {
                     seed: building.seed, era: era,
                     workers: building.workers, residents: building.residents,
                     night: night, time: time, stock: building.stock,
-                    goods: building.goods, registry: registry)
+                    goods: building.goods, variant: building.variant,
+                    building: building.definitionID, registry: registry)
             }
         }
         for building in placed {

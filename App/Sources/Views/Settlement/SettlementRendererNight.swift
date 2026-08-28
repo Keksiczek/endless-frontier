@@ -171,7 +171,7 @@ extension SettlementRenderer {
             let openings = SettlementStructures.dwelling(
                 at: building.center, s: s, seed: building.seed,
                 footprint: building.footprint, floors: building.floors,
-                glyph: building.glyph)
+                glyph: building.glyph, variant: building.variant)
             let windows = openings.panes.filter(\.lit)
             guard !windows.isEmpty else { return [] }
             // Four to a dwelling is a full house; past that it is not any

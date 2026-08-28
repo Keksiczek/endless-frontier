@@ -278,7 +278,19 @@ def load_drafted_items() -> list:
     return out
 
 
-def check(kind: str, draft: list) -> list[str]:
+def is_revision(path: Path) -> bool:
+    """Whether this draft **replaces** the bank rather than adding to it.
+
+    `revise.py` writes the whole file back with the same ids, so every one of
+    them collides with the file and the collision check — which is right for a
+    draft — refuses the merge outright. Marked in the name because the merge is
+    the one place both verbs meet, and a flag would let a revision be merged as
+    a draft by mistake: appending twenty grounds that are already there.
+    """
+    return "-revision-" in path.name
+
+
+def check(kind: str, draft: list, revision: bool = False) -> list[str]:
     """Everything wrong with a draft, in one list. Empty means it may be merged."""
     existing = load(path_for(kind))
     allowed = vocabulary(existing, kind)
@@ -297,7 +309,7 @@ def check(kind: str, draft: list) -> list[str]:
         if not isinstance(entry_id, str) or not re.fullmatch(r"[a-z0-9_]+", entry_id):
             faults.append(f"[{i}] id {entry_id!r} is not lowercase snake_case")
             continue
-        if entry_id in known:
+        if entry_id in known and not revision:
             faults.append(f"{entry_id}: already in {KINDS[kind]['file']}")
         if entry_id in seen:
             faults.append(f"{entry_id}: appears twice in the draft")
@@ -631,7 +643,7 @@ def do_batch(jobs: list[str], per_call: int, examples: int, note: str | None) ->
         print(f"  python3 Tools/generate.py merge {path.relative_to(ROOT)}")
 
 
-def report(kind: str, draft) -> bool:
+def report(kind: str, draft, revision: bool = False) -> bool:
     # Nothing is not clean. Every check below passes trivially on an empty
     # array, so a run that failed every call still printed "ready to merge" and
     # handed over a merge command — the same silent-success shape as a decoder
@@ -640,7 +652,7 @@ def report(kind: str, draft) -> bool:
         print("\nempty — the run produced nothing. Read the errors above; "
               "there is nothing here to merge.")
         return False
-    faults = check(kind, draft)
+    faults = check(kind, draft, revision=revision)
     if faults:
         print(f"\n{len(faults)} thing(s) to fix before this can be merged:")
         for fault in faults[:40]:
@@ -691,10 +703,19 @@ def do_merge(draft_path: Path) -> None:
             "drafting it has not finished. Wait for it, then merge."
         )
     draft = load(draft_path)
-    if not report(kind, draft):
+    revision = is_revision(draft_path)
+    if not report(kind, draft, revision=revision):
         raise SystemExit("not merged")
 
     target = path_for(kind)
+    if revision:
+        was = ids_in(load(target))
+        now = ids_in(draft)
+        if was != now:
+            raise SystemExit(
+                f"not merged: a revision must carry every id and no others — "
+                f"{len(was - now)} missing, {len(now - was)} invented"
+            )
     backup = target.with_suffix(".json.before-merge")
     # A run killed between the copy and the outcome leaves its backup behind,
     # and `GameData` is a **bundled resource directory** — so the stray file is
@@ -704,9 +725,12 @@ def do_merge(draft_path: Path) -> None:
     for stale in target.parent.glob("*.json.before-merge"):
         stale.unlink()
     shutil.copy(target, backup)
-    merged = load(target) + draft
+    # A revision **replaces**; a draft appends. Merging a revision as a draft
+    # would put twenty grounds into a file that already has them.
+    merged = draft if revision else load(target) + draft
     target.write_text(json.dumps(merged, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"merged {len(draft)} into {target.name} ({len(merged)} total) — running the tests")
+    print(f"{'revised' if revision else 'merged'} {len(draft)} in {target.name} "
+          f"({len(merged)} total) — running the tests")
 
     result = subprocess.run(
         # **Not just `ContentTests`.** That suite checks the shape of the
