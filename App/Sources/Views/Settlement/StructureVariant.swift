@@ -108,6 +108,22 @@ struct StructureVariant: Equatable, Hashable {
     /// `hearth`, `ember`, `awning`, `cold_green`, `lamp`, or `none`.
     var accent: String = "none"
 
+    /// **What the wall face is made of** — `open`, `thatch`, `daub`, `timber`,
+    /// `stone`, `brick`, `panel`, `glass`, `sheet`. Out of `structures.json`,
+    /// and drawn on the one surface that faces the viewer: the lift's wall
+    /// (`SettlementStructures.skirt`). `open` is a roof on posts with no wall
+    /// at all — a work lean-to, a market row.
+    var fabric: String = "timber"
+
+    /// What frames that face: the timber crucks across daub, the stone quoins
+    /// at a brick corner.
+    var trim: String = "none"
+
+    /// **What the ground does around it** — `beaten_earth`, `gravel`,
+    /// `cobbles`, `planking`, `none`. The plot is drawn every frame and was
+    /// always the same swept earth, whatever the building was.
+    var yard: String = "beaten_earth"
+
     /// **What stands beside it and names it from across the valley** — a
     /// charcoal heap, a hitching rail, a crane. Straight out of
     /// `structures.json`; `SettlementAttachments` is what draws them.
@@ -133,7 +149,8 @@ struct StructureVariant: Equatable, Hashable {
         kindSeed: 0, bays: 3, stacks: 0, wideDoor: false,
         roofline: .gable, rooftop: .none, nightShift: false,
         tier: 0, heft: 0, stores: nil, storeys: 1,
-        era: .earlySettlement, lot: 3, standing: nil, accent: "none", attachments: [])
+        era: .earlySettlement, lot: 3, standing: nil, accent: "none",
+        fabric: "timber", trim: "none", yard: "beaten_earth", attachments: [])
 
     // MARK: - Derivation
 
@@ -147,8 +164,13 @@ struct StructureVariant: Equatable, Hashable {
             bays: bays(def),
             stacks: stacks(def, seed),
             wideDoor: housesConveyances,
-            roofline: roofline(def, seed),
-            rooftop: rooftop(def),
+            // **The bank first, the derivation second.** `roofline` and
+            // `rooftop` were inferred from the definition — a good guess, and a
+            // guess is what `structures.json` exists to replace. A composition
+            // that says `barrel` and is drawn `gable` is a bank nobody is
+            // reading (rule 47).
+            roofline: composition.flatMap { Roofline(rawValue: $0.roof) } ?? roofline(def, seed),
+            rooftop: composition.flatMap { Rooftop(rawValue: $0.rooftop) } ?? rooftop(def),
             nightShift: def.workers > 0,
             tier: bucket(price(def), [40, 120, 320]),
             heft: bucket(def.defense, [1, 20, 60]),
@@ -158,6 +180,9 @@ struct StructureVariant: Equatable, Hashable {
             lot: lotShape(def),
             standing: composition?.standing,
             accent: composition?.accent ?? "none",
+            fabric: composition?.fabric ?? "timber",
+            trim: composition?.trim ?? "none",
+            yard: composition?.yard ?? "beaten_earth",
             attachments: composition?.attachments ?? [])
     }
 
@@ -279,7 +304,9 @@ struct StructureVariant: Equatable, Hashable {
          // and `era` above both carry, for the third time. `heightScale` is
          // read by `SettlementStructures.bodySize`, so a watchtower and a
          // granary that agreed on every other axis must not agree here.
-         String(format: "s%.2f", heightScale), accent].joined(separator: "/")
+         String(format: "s%.2f", heightScale), accent,
+         // Everything else the bank says and the drawing now spends.
+         fabric, trim, yard, attachments.joined(separator: "+")].joined(separator: "/")
     }
 }
 

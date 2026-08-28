@@ -102,6 +102,12 @@ extension SettlementRenderer {
                       // crop* read as a yard with some green in it. Only the
                       // top row — the yard the shed stands in — is swept.
                       yardOnly: building.glyph == .farm)
+            // …and what the ground is *made* of, which the bank has said since
+            // the compositions shipped and nothing read (rule 47). Cobbles at a
+            // market, planking at a mill, gravel at a works.
+            SettlementFabric.yard(
+                &context, kind: building.underConstruction ? "none" : building.variant.yard,
+                lot: lotRect(building), seed: building.seed)
         }
         // Then what the town throws across its own ground. Every shadow in one
         // path, filled once: a shadow must never fall on the *building* next
@@ -154,16 +160,31 @@ extension SettlementRenderer {
                 SettlementStructures.site(at: building.center, s: building.size,
                                           progress: building.progress, time: time, context: &context)
             } else if roof > 0.001 {
+                // **The surface the lift uncovers.** Under the drawing and over
+                // the plot: the building is held above its own footprint and
+                // this is the wall standing in the gap — the only face in this
+                // world that looks at the viewer (`RENDER_25D.md` §2).
+                SettlementFabric.skirt(
+                    &context,
+                    body: SettlementStructures.bodyRect(
+                        building.glyph, at: standingCentre(building), s: building.size,
+                        seed: building.seed, footprint: building.footprint,
+                        variant: building.variant),
+                    groundY: lotRect(building).maxY
+                        - building.footprint.height * CGFloat(SettlementStructures.yardShare),
+                    fabric: building.variant.fabric, trim: building.variant.trim,
+                    wall: SettlementStructures.wallTone(building.era, building.seed),
+                    ink: Theme.bone.opacity(0.8), night: night)
                 // The roof, as solid as the distance warrants.
                 var roofContext = context
                 roofContext.opacity = roof
-                SettlementStructures.building(building.glyph, at: standingCentre(building),
-                                              s: building.size, time: time, night: night,
-                                              seed: building.seed, era: building.era,
-                                              footprint: building.footprint,
-                                              fabric: building.fabric, floors: building.floors,
-                                              variant: building.variant,
-                                              context: &roofContext)
+                SettlementStructures.building(
+                    building.glyph, at: standingCentre(building),
+                    s: building.size * SettlementStructures.drawScale(for: building.glyph),
+                    time: time, night: night, seed: building.seed, era: building.era,
+                    footprint: building.footprint, fabric: building.fabric,
+                    floors: building.floors, variant: building.variant,
+                    context: &roofContext)
             }
             // …and what stands beside it and says what it is. After the walls,
             // because a woodpile leans against the house rather than the house
@@ -176,10 +197,7 @@ extension SettlementRenderer {
                     body: SettlementStructures.bodyRect(
                         building.glyph, at: centre, s: building.size, seed: building.seed,
                         footprint: building.footprint, variant: building.variant),
-                    lot: CGRect(x: building.center.x - building.footprint.width / 2,
-                                y: building.center.y - building.footprint.height / 2,
-                                width: building.footprint.width,
-                                height: building.footprint.height),
+                    lot: lotRect(building),
                     seed: building.seed, night: night,
                     accent: building.variant.accentColour)
             }
@@ -209,6 +227,13 @@ extension SettlementRenderer {
                                          y: building.center.y + building.size * 2.5))
             }
         }
+    }
+
+    /// The ground a building owns, in pixels — the plot the plan gave it.
+    static func lotRect(_ building: PlacedBuilding) -> CGRect {
+        CGRect(x: building.center.x - building.footprint.width / 2,
+               y: building.center.y - building.footprint.height / 2,
+               width: building.footprint.width, height: building.footprint.height)
     }
 
     /// **Where the building is drawn**, as against where it stands.
@@ -276,7 +301,11 @@ extension SettlementRenderer {
         guard sun.strength > 0.01 else { return }
         var shadows = Path()
         for building in placed where !building.underConstruction {
-            let tall = building.size * height(of: building.glyph)
+            // **The bank decides how long the shadow is**, because it decides
+            // how high the building stands. A watchtower and a granary on the
+            // same plot threw the same shadow while `standing` said 3.4 against
+            // 1.8 — the axis was carried and spent on nothing (rule 47).
+            let tall = building.size * height(of: building.glyph) * building.variant.heightScale
             // A shadow starts at the foot of the wall, not at the roof line.
             let foot = CGPoint(x: building.center.x, y: building.center.y + building.size * 0.3)
             let base = CGSize(width: max(4, building.footprint.width * 0.78),

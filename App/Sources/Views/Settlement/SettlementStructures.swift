@@ -415,6 +415,27 @@ enum SettlementStructures {
         }
     }
 
+    /// **How much of its plot a structure's drawing may take.**
+    ///
+    /// A roofed building is drawn small enough that its plot reads as a yard
+    /// with a house in it. A well, a wall, a dam, a field of panels has no roof
+    /// and no yard: the *structure is the plot*. Drawn at the roofed size they
+    /// came out as a small mark in the middle of an empty square — Keks, on a
+    /// well: *"není studna na zemi, jen prázdná plocha"*.
+    static func drawScale(for glyph: SettlementRenderer.BuildingGlyph) -> CGFloat {
+        switch glyph {
+        case .well, .aqueduct, .wall, .dam, .array, .turbine, .pad: return 1.5
+        default: return 1
+        }
+    }
+
+    /// The wall colour a building of this age is built in, per building. The
+    /// same two calls the glyph routines make, in one place, because the wall
+    /// face under a building has to be the colour of the building on top of it.
+    static func wallTone(_ era: Era, _ seed: UInt64) -> Color {
+        tone(materials(era).wall, seed)
+    }
+
     /// A base tone shifted a little — lighter/darker and warmer/cooler — from a
     /// per-building seed, so a row of houses isn't a row of identical stamps.
     static func tone(_ rgb: (Double, Double, Double), _ seed: UInt64,
@@ -569,15 +590,41 @@ enum SettlementStructures {
         footprintHeight: Double = 0
     ) -> Double {
         let raised = bodySize(glyph, s: s0, seed: seed, aspect: aspect, height: heightScale)
+        let stands = rise(glyph, s: s0, seed: seed, aspect: aspect, height: heightScale)
         guard footprintHeight > 0 else {
             let plan = bodySize(glyph, s: s0, seed: seed, aspect: aspect)
-            return (raised.height - plan.height) / 2
+            return (raised.height - plan.height) / 2 + stands
         }
         // The yard it keeps between its own wall and the edge of its plot, so
         // two buildings on adjacent lots do not read as one terrace.
         let yard = footprintHeight * yardShare
-        return raised.height / 2 - (footprintHeight / 2 - yard)
+        return raised.height / 2 - (footprintHeight / 2 - yard) + stands
     }
+
+    /// **How far off the ground the drawing is held**, which is the whole 2.5D
+    /// layer in one number (`RENDER_25D.md` §2).
+    ///
+    /// A tall building was drawn as a *taller box* sitting on the same ground.
+    /// That says "big", not "high": there was no surface facing the viewer, so
+    /// a granary and a watchtower differed by how much sky they took up and by
+    /// nothing else. Lifting the whole drawing instead leaves a gap between the
+    /// footprint and the walls, and **that gap is the wall face** — the one
+    /// surface a fabric can be seen on (`SettlementStructures.skirt`).
+    ///
+    /// Zero for an ordinary shed, so a colony whose bank says nothing is drawn
+    /// exactly where it was.
+    static func rise(
+        _ glyph: SettlementRenderer.BuildingGlyph, s s0: Double,
+        seed: UInt64, aspect: Double, height heightScale: Double
+    ) -> Double {
+        let plan = bodySize(glyph, s: s0, seed: seed, aspect: aspect)
+        return max(0, heightScale - 1) * plan.height * riseFactor
+    }
+
+    /// How much of a storey's height is spent lifting rather than stretching.
+    /// The rest is still in the body, so a tall building is both higher and a
+    /// little bigger — which is what a tall building looks like.
+    static let riseFactor = 0.62
 
     /// How much of its own plot a building leaves as yard at the front.
     static let yardShare = 0.07

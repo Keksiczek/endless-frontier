@@ -72,6 +72,29 @@ struct BuildingLookTests {
     /// in `structures.json` for a day being validated, generated and drawn by
     /// nobody (rule 47). Fifty-four names, fifteen forms; a new composition
     /// with a new name fails here before anybody wonders why the yard is empty.
+    /// **The one that would have caught it.** The first placement refused
+    /// anything that did not fit whole inside the plot — and a body is nearly
+    /// as wide as its lot, so for an ordinary house every side position tested
+    /// false and the yards stayed empty. The drawing was written, the data was
+    /// there, and the arithmetic between them threw the work away without a
+    /// word. Counting is the whole guard.
+    @Test("Everything a composition names is actually placed",
+          arguments: [(2, 2), (3, 3), (4, 3), (3, 2)])
+    func compositionsArePlaced(w: Int, h: Int) throws {
+        let registry = try GameDataRegistry.bundled()
+        let lot = CGRect(x: 100, y: 100, width: CGFloat(w) * 14, height: CGFloat(h) * 14)
+        let body = lot.insetBy(dx: lot.width * 0.1, dy: lot.height * 0.16)
+            .offsetBy(dx: 0, dy: lot.height * 0.05)
+        var thin: [String] = []
+        for (id, composition) in registry.structures where !composition.attachments.isEmpty {
+            let drawable = composition.attachments.filter { SettlementAttachments.form(of: $0) != nil }
+            let placed = SettlementAttachments.places(
+                names: composition.attachments, body: body, lot: lot, seed: 99)
+            if placed.count < drawable.count { thin.append(id) }
+        }
+        #expect(thin.isEmpty, "nothing was put in the yard of: \(thin.sorted().prefix(8))")
+    }
+
     @Test("Every attachment in the bank is a thing the canvas can draw")
     func attachmentsAreDrawable() throws {
         let registry = try GameDataRegistry.bundled()
@@ -129,6 +152,33 @@ struct BuildingLookTests {
             #expect(item.foot >= rect.minY && item.foot <= rect.maxY,
                     "somebody is standing off the map at \(item.foot)")
         }
+    }
+
+    /// **Every field the bank carries is spent somewhere.** `attachments` sat
+    /// unread for a day, and `fabric`, `trim`, `roof`, `rooftop` and `yard` sat
+    /// beside it — a composition that says `barrel` and is drawn `gable` is a
+    /// bank nobody reads (rule 47). This asks the variant, which is what the
+    /// drawing asks.
+    @Test("A composition's roof, fabric, yard and attachments all reach the drawing")
+    func compositionsAreSpent() throws {
+        let registry = try GameDataRegistry.bundled()
+        var checked = 0
+        for def in registry.buildings.values {
+            let bank = registry.structure(def.id)
+            let variant = StructureVariant.of(def, housesConveyances: false, composition: bank)
+            #expect(variant.fabric == bank.fabric, "\(def.id) draws a wall the bank did not name")
+            #expect(variant.yard == bank.yard, "\(def.id) draws a yard the bank did not name")
+            #expect(variant.attachments == bank.attachments,
+                    "\(def.id) drops what the bank stands beside it")
+            if let named = StructureVariant.Roofline(rawValue: bank.roof) {
+                #expect(variant.roofline == named,
+                        "\(def.id) is roofed \(variant.roofline.rawValue), the bank says \(bank.roof)")
+                checked += 1
+            }
+            #expect(SettlementFabric.known(variant.fabric),
+                    "\(def.id) is walled in '\(variant.fabric)', which the canvas cannot draw")
+        }
+        #expect(checked > 40, "only \(checked) rooflines came from the bank")
     }
 
     @Test("Buildings that are nothing alike are not drawn alike")
@@ -319,6 +369,25 @@ struct InteriorFitTests {
             structures: standing.map { [StructureDefinition(id: "b", standing: $0)] } ?? [],
             fittings: TestBook.fittings,
             config: .default)
+    }
+
+    /// A tall building is *held above its own footprint*, and the gap is the
+    /// wall face (`RENDER_25D.md` §2). Zero for an ordinary shed, so a colony
+    /// without a bank draws where it always did.
+    @Test("What stands taller is lifted, not just stretched")
+    func standingLiftsTheDrawing() {
+        let shed = registry(w: 3, h: 3)
+        let tower = registry(w: 3, h: 3, standing: 3.2)
+        func lift(_ reg: GameDataRegistry) -> Double {
+            let b = SettlementRenderer.normalizedLayout(settlement: colony(w: 3, h: 3),
+                                                        registry: reg)[0]
+            return SettlementStructures.rise(
+                b.glyph, s: b.size, seed: b.seed,
+                aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1,
+                height: Double(b.variant.heightScale))
+        }
+        #expect(lift(shed) == 0, "a shed with no bank entry is lifted off the ground")
+        #expect(lift(tower) > 0, "a tower that stands 3.2 is drawn flat on its plot")
     }
 
     /// **A storey goes on at the top, and everybody in the building goes up

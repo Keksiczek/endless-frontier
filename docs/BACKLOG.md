@@ -4184,12 +4184,67 @@ before the whole pass rather than between two halves of it.
 The pass now sorts footings, bodies, attachments, wear, trees and people
 together, on the foot. That is `RENDER_25D.md` §3 as specified.
 
-### 25.4 — still open
+### 25.4 — the placement was wrong, and nothing showed
 
-1. **The lift itself** — §6 step 1 of `RENDER_25D.md`: the two wall quads, the
-   fabric on them and a sun-derived shadow. What is built is the *ordering*;
-   the buildings are still flat marks standing in the right order.
-2. **`fabric`, `trim`, `roof`, `rooftop` and `yard`** are still carried and
-   unread, the same shape as `attachments` was — `StructureVariant` derives its
-   own roofline instead of reading the bank's.
-3. Everything in §22.4.
+Keks, on the build: *"v tomhle buildu appky jsem nové věci neviděl"* — and he
+was right. The first placement refused any attachment that did not fit **whole**
+inside the plot, and a body is nearly as wide as its lot: for an ordinary house
+the test came out false for every side position, so almost every attachment in
+the colony was silently dropped. Rule 47 again, self-inflicted one layer up —
+the drawing existed, the data existed, and the arithmetic between them threw the
+work away.
+
+`places(names:body:lot:seed:)` is pulled out of the drawing so it can be
+*counted*, which is what *"Everything a composition names is actually placed"*
+does. And since a building now stands on the bottom edge of its plot, the open
+ground is the strip behind it: the tall things go there, the rest take the sides
+with a little honest overhang.
+
+## 26. 2026-08-28 — the lift, and the five fields nobody read
+
+### 26.1 — a building is held above its own footprint
+
+`RENDER_25D.md` §6 step 1. A tall building was drawn as a **taller box on the
+same ground**, which says *big* and not *high*: there was no surface facing the
+viewer, so a granary and a watchtower differed by how much sky they took and by
+nothing else.
+
+`SettlementStructures.rise` lifts the drawing off the plan instead, and the gap
+between the two **is the wall face** — the one surface in this world that looks
+at the viewer. `SettlementFabric.skirt` draws it, and `structures.json`'s
+`fabric` finally has somewhere to be seen: log courses for timber, offset blocks
+for stone, finer courses for brick, combing for thatch and sheet, crucks across
+daub, a grid for panel, verticals and a transom for glass — and `open` is two
+posts and the daylight between them, because a market row has no wall.
+`trim` is the quoins at its corners.
+
+### 26.2 — `roof`, `rooftop`, `yard`, and the length of a shadow
+
+All carried, none read. The roofline was **derived** from the definition while
+the bank sat there naming it — a good guess, and a guess is what the bank exists
+to replace; the same for what stands on top. Both now take the bank first and
+fall back to the derivation, so a colony without a composition draws exactly as
+it did.
+
+`yard` is the ground the building owns: cobbles at a market, planking at a mill,
+gravel at a works, beaten earth otherwise. Every plot in the colony was the same
+swept earth whatever stood on it.
+
+And the shadow: `castShadows` read a per-glyph height and never `standing`, so a
+watchtower at 3.4 and a granary at 1.8 threw the same shadow.
+
+### 26.3 — a well is not an empty square
+
+Keks: *"a třeba studna není studna na zemi, jen prázdná plocha"*. Two causes on
+top of each other. The interior stopped being drawn in a roofless structure
+(§24.2, right) — and the structure itself is drawn at the size a *roofed*
+building wants, small enough to leave a yard around it. A well, a wall, a dam, a
+field of panels has no yard: **the structure is the plot**. `drawScale` gives
+those seven half again, and with the yard surface and the attachments under them
+the plot reads as a place rather than as a gap in the town.
+
+### 26.4 — still open
+
+1. The wall face is a flat quad. §2's *"only the near faces are drawn"* wants
+   the east or west face too, whichever the sun is not behind.
+2. Everything in §22.4.

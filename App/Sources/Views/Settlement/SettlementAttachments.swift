@@ -84,47 +84,83 @@ enum SettlementAttachments {
         }
     }
 
-    /// Draw everything the composition names, around the walls it belongs to.
+    /// **Where each thing stands**, before anything is drawn.
     ///
-    /// - Parameters:
-    ///   - body: the walls as drawn (`SettlementStructures.bodyRect`), so the
-    ///     things beside a building move with it rather than with its plot.
-    ///   - lot: the plot, so nothing is put down in the neighbour's yard.
-    static func draw(
-        _ context: inout GraphicsContext, names: [String], body: CGRect, lot: CGRect,
-        seed: UInt64, night: Double, accent: Color?
-    ) {
-        guard !names.isEmpty, body.width > 6 else { return }
+    /// Pulled out of the drawing so it can be *measured*: the first version
+    /// refused anything that did not fit whole inside the plot, and a body is
+    /// nearly as wide as its lot — so almost every attachment in the colony was
+    /// silently dropped and the yards stayed as empty as before the bank
+    /// existed. That is rule 47 again, self-inflicted one layer up, and it is
+    /// why *"Everything a composition names is actually placed"* counts them.
+    ///
+    /// A building now stands on the **bottom** edge of its plot
+    /// (`SettlementStructures.bodyLift`), so the open ground is the strip
+    /// behind it and a hand's width down each side. Tall things go in the strip
+    /// behind; the rest take the sides, and a little overhang into the lane is
+    /// allowed — a woodpile against a wall is not trespass.
+    static func places(names: [String], body: CGRect, lot: CGRect, seed: UInt64)
+        -> [(form: Form, at: CGPoint, size: CGFloat)] {
+        guard !names.isEmpty, body.width > 6 else { return [] }
         var h = seed | 1
         func roll() -> Double {
             h ^= h >> 33; h = h &* 0xFF51_AFD7_ED55_8CCD; h ^= h >> 29
             return Double((h >> 40) & 0xFFFF) / 65535
         }
         // Small against the walls: these name a building, they do not compete
-        // with it. A quarter of the wall height is about a cart.
-        let unit = min(body.height, body.width) * 0.34
-        guard unit > 2 else { return }
+        // with it. Two fifths of the shorter wall is about a cart.
+        let unit = min(body.height, body.width) * 0.4
+        guard unit > 2 else { return [] }
 
-        var left = true
-        for name in names {
-            guard let form = form(of: name) else { continue }
+        let forms = names.compactMap(form(of:))
+        let behind = max(0, body.minY - lot.minY)
+        var out: [(form: Form, at: CGPoint, size: CGFloat)] = []
+        var sideward = 0
+        var backward = 0
+        let backCount = forms.filter { rises($0) || behind > unit * 0.9 }.count
+
+        for form in forms {
             let jitter = roll()
-            let side: CGFloat = left ? -1 : 1
-            left.toggle()
-            let span = unit * CGFloat(0.85 + jitter * 0.4)
-            let x = side < 0
-                ? body.minX - span * 0.75
-                : body.maxX + span * 0.75
-            let y = rises(form)
-                ? body.minY + body.height * CGFloat(0.15 + jitter * 0.2)
-                : body.maxY - body.height * CGFloat(0.04 + jitter * 0.12)
-            // Never into next door's plot: what does not fit stays unbuilt,
-            // which is the honest answer for a building crammed onto its lot.
-            guard x - span > lot.minX - span * 0.4, x + span < lot.maxX + span * 0.4 else { continue }
-            let at = CGPoint(x: x, y: y)
-            switch form {
+            let span = unit * CGFloat(0.8 + jitter * 0.45)
+            let at: CGPoint
+            if rises(form) || behind > unit * 0.9 {
+                // The back yard: spread across it, so three sheds do not stack.
+                let step = lot.width / CGFloat(max(1, backCount) + 1)
+                backward += 1
+                at = CGPoint(x: lot.minX + step * CGFloat(backward),
+                             y: max(lot.minY + span * 0.6,
+                                    body.minY - span * CGFloat(0.1 + jitter * 0.25)))
+            } else {
+                // Down the side, against the wall, alternating so a building
+                // with four does not grow them all out of one hip.
+                let side: CGFloat = sideward % 2 == 0 ? -1 : 1
+                sideward += 1
+                let row = CGFloat(sideward / 2)
+                at = CGPoint(x: side < 0 ? body.minX - span * 0.45 : body.maxX + span * 0.45,
+                             y: body.maxY - body.height * CGFloat(0.08 + jitter * 0.1)
+                                - row * span * 0.9)
+            }
+            out.append((form: form, at: at, size: span))
+        }
+        return out
+    }
+
+    /// Draw everything the composition names, around the walls it belongs to.
+    ///
+    /// - Parameters:
+    ///   - body: the walls as drawn (`SettlementStructures.bodyRect`), so the
+    ///     things beside a building move with it rather than with its plot.
+    ///   - lot: the plot, which says where the open ground is.
+    static func draw(
+        _ context: inout GraphicsContext, names: [String], body: CGRect, lot: CGRect,
+        seed: UInt64, night: Double, accent: Color?
+    ) {
+        for placed in places(names: names, body: body, lot: lot, seed: seed) {
+            let at = placed.at
+            let span = placed.size
+            switch placed.form {
             case .heap:     heap(&context, at: at, size: span)
-            case .stack:    stack(&context, at: at, size: span, roll: jitter)
+            case .stack:    stack(&context, at: at, size: span,
+                                  roll: Double((placed.at.x.hashValue & 0xFF)) / 255)
             case .rack:     rack(&context, at: at, size: span)
             case .line:     line(&context, at: at, size: span, toward: body)
             case .rail:     rail(&context, at: at, size: span)
@@ -361,5 +397,169 @@ enum SettlementAttachments {
                              control: CGPoint(x: x - s * 0.06, y: c.y - s * 0.2))
         }
         context.stroke(bed, with: .color(Theme.bone.opacity(0.5)), lineWidth: 0.55)
+    }
+}
+
+/// **The wall face the lift uncovers, and the ground it stands on.**
+///
+/// `RENDER_25D.md` §2 and §5: a building drawn a little above its own
+/// footprint leaves a quadrilateral between the two, and that quad is the only
+/// surface in this world that faces the viewer. Before it there was nowhere for
+/// a fabric to be *seen* — `structures.json` named nine of them and the drawing
+/// had no place to put one.
+enum SettlementFabric {
+
+    /// What a wall face is made of. Nine names, nine hands — a name the canvas
+    /// does not know is drawn plain, which is honest and guarded.
+    static func known(_ name: String) -> Bool {
+        switch name {
+        case "open", "thatch", "daub", "timber", "stone",
+             "brick", "panel", "glass", "sheet": return true
+        default: return false
+        }
+    }
+
+    /// Draw the standing wall between the drawn body and the ground it owns.
+    ///
+    /// - Parameters:
+    ///   - body: the walls as drawn — its bottom edge is the top of the face.
+    ///   - groundY: where the building actually stands, in the plan.
+    static func skirt(
+        _ context: inout GraphicsContext, body: CGRect, groundY: CGFloat,
+        fabric: String, trim: String, wall: Color, ink: Color, night: Double
+    ) {
+        let height = groundY - body.maxY
+        guard height > 1.2, body.width > 3 else { return }
+        let face = CGRect(x: body.minX, y: body.maxY, width: body.width, height: height)
+
+        // A roof on posts has no wall: two legs and the daylight between them.
+        guard fabric != "open" else {
+            var posts = Path()
+            for x in [face.minX + face.width * 0.08, face.maxX - face.width * 0.08] {
+                posts.move(to: CGPoint(x: x, y: face.minY))
+                posts.addLine(to: CGPoint(x: x, y: face.maxY))
+            }
+            context.stroke(posts, with: .color(ink.opacity(0.8)), lineWidth: 1)
+            return
+        }
+
+        // The face itself, a shade under the roof above it so the two read as
+        // two surfaces rather than one silhouette.
+        context.fill(Path(face), with: .color(wall.opacity(0.9 - night * 0.25)))
+        context.stroke(Path(face), with: .color(ink.opacity(0.75)), lineWidth: 0.7)
+
+        var marks = Path()
+        switch fabric {
+        case "timber":                       // log courses, fat and few
+            courses(&marks, in: face, count: 4)
+        case "brick":                        // finer courses than stone
+            courses(&marks, in: face, count: 7, stagger: 0.5)
+        case "stone":                        // offset blocks, coarse
+            courses(&marks, in: face, count: 4, stagger: 0.5)
+        case "thatch":                        // combed straight down
+            combed(&marks, in: face, count: 9)
+        case "sheet":                        // corrugation
+            combed(&marks, in: face, count: 12)
+        case "daub":                         // smooth, with a frame across it
+            frame(&marks, in: face)
+        case "panel":                        // a grid of joints
+            courses(&marks, in: face, count: 3)
+            combed(&marks, in: face, count: 4)
+        case "glass":                        // verticals and one transom
+            combed(&marks, in: face, count: 5)
+            marks.move(to: CGPoint(x: face.minX, y: face.midY))
+            marks.addLine(to: CGPoint(x: face.maxX, y: face.midY))
+        default:
+            break
+        }
+        context.stroke(marks, with: .color(ink.opacity(0.45)), lineWidth: 0.5)
+
+        // The trim: what frames the face at its corners.
+        guard trim != "none", face.height > 4 else { return }
+        var quoins = Path()
+        quoins.move(to: CGPoint(x: face.minX, y: face.minY))
+        quoins.addLine(to: CGPoint(x: face.minX, y: face.maxY))
+        quoins.move(to: CGPoint(x: face.maxX, y: face.minY))
+        quoins.addLine(to: CGPoint(x: face.maxX, y: face.maxY))
+        context.stroke(quoins, with: .color(ink.opacity(0.85)), lineWidth: 1)
+    }
+
+    private static func courses(_ path: inout Path, in face: CGRect,
+                                count: Int, stagger: CGFloat = 0) {
+        guard count > 0 else { return }
+        let step = face.height / CGFloat(count)
+        for i in 1..<max(1, count) {
+            let y = face.minY + step * CGFloat(i)
+            path.move(to: CGPoint(x: face.minX, y: y))
+            path.addLine(to: CGPoint(x: face.maxX, y: y))
+            guard stagger > 0 else { continue }
+            let x = face.minX + face.width * (i % 2 == 0 ? stagger : stagger * 0.5)
+            path.move(to: CGPoint(x: x, y: y))
+            path.addLine(to: CGPoint(x: x, y: y - step))
+        }
+    }
+
+    private static func combed(_ path: inout Path, in face: CGRect, count: Int) {
+        guard count > 0 else { return }
+        let step = face.width / CGFloat(count)
+        for i in 1..<max(1, count) {
+            let x = face.minX + step * CGFloat(i)
+            path.move(to: CGPoint(x: x, y: face.minY))
+            path.addLine(to: CGPoint(x: x, y: face.maxY))
+        }
+    }
+
+    private static func frame(_ path: inout Path, in face: CGRect) {
+        // The crucks: two verticals and a brace, the timber in a daub wall.
+        for x in [face.minX + face.width * 0.3, face.minX + face.width * 0.7] {
+            path.move(to: CGPoint(x: x, y: face.minY))
+            path.addLine(to: CGPoint(x: x, y: face.maxY))
+        }
+        path.move(to: CGPoint(x: face.minX, y: face.midY))
+        path.addLine(to: CGPoint(x: face.maxX, y: face.midY))
+    }
+
+    /// **What the ground does around a building.** Four surfaces out of the
+    /// bank, drawn on the plot the building owns — before this every yard in
+    /// the colony was the same swept earth whatever stood on it.
+    static func yard(_ context: inout GraphicsContext, kind: String,
+                     lot: CGRect, seed: UInt64) {
+        guard lot.width > 4, kind != "none" else { return }
+        var marks = Path()
+        switch kind {
+        case "planking":
+            let step = max(3, lot.height / 5)
+            var y = lot.minY + step
+            while y < lot.maxY {
+                marks.move(to: CGPoint(x: lot.minX, y: y))
+                marks.addLine(to: CGPoint(x: lot.maxX, y: y))
+                y += step
+            }
+        case "cobbles":
+            var h = seed | 1
+            var y = lot.minY + 2
+            while y < lot.maxY - 1 {
+                var x = lot.minX + 2
+                while x < lot.maxX - 1 {
+                    h ^= h >> 33; h = h &* 0xFF51_AFD7_ED55_8CCD; h ^= h >> 29
+                    let r = CGFloat(Double((h >> 40) & 0xFF) / 255) * 0.8 + 0.6
+                    marks.addEllipse(in: CGRect(x: x, y: y, width: r * 2, height: r * 1.4))
+                    x += 4
+                }
+                y += 3
+            }
+        case "gravel":
+            var h = seed | 3
+            for _ in 0..<Int(min(60, lot.width * lot.height / 24)) {
+                h ^= h >> 33; h = h &* 0xFF51_AFD7_ED55_8CCD; h ^= h >> 29
+                let x = lot.minX + lot.width * CGFloat(Double((h >> 40) & 0xFFFF) / 65535)
+                h ^= h >> 31
+                let y = lot.minY + lot.height * CGFloat(Double((h >> 24) & 0xFFFF) / 65535)
+                marks.addEllipse(in: CGRect(x: x, y: y, width: 0.9, height: 0.7))
+            }
+        default:
+            return                      // beaten earth is the plot's own colour
+        }
+        context.stroke(marks, with: .color(Theme.bone.opacity(0.16)), lineWidth: 0.45)
     }
 }
