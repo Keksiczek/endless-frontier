@@ -397,7 +397,8 @@ extension SettlementRenderer {
                            residents: b.placementID.map { household[$0] ?? 0 } ?? 0,
                            condition: b.condition,
                            stock: stock(of: b.definitionID, in: settlement, registry: registry),
-                           goods: goods(of: b.definitionID, in: settlement, registry: registry))
+                           goods: goods(of: b.definitionID, in: settlement, registry: registry,
+                                        seed: b.seed))
         }
         return onScreen(all, viewport: viewport)
     }

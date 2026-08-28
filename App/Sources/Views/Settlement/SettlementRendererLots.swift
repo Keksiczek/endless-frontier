@@ -42,20 +42,48 @@ extension SettlementRenderer {
     /// ledger. A warehouse draws the first, because that is what a person
     /// walking into it would see.
     static func goods(
-        of definitionID: String, in settlement: Settlement, registry: GameDataRegistry
+        of definitionID: String, in settlement: Settlement, registry: GameDataRegistry,
+        /// The building's own seed, so two warehouses in one colony do not lay
+        /// their floors out identically. **Every store used to draw the whole
+        /// colony's stockpile**, which is why a town's four stores were one
+        /// store drawn four times — Keks: *"vadí mi, že sklady nejsou
+        /// jedinečné."*
+        seed: UInt64 = 0
     ) -> [(kind: SettlementInterior.Goods, count: Int)] {
         guard let def = registry.building(definitionID),
               !def.storage.amounts.filter({ $0.value > 0 }).isEmpty,
               !settlement.stockpile.isEmpty else { return [] }
+        // **A store holds what it is a store for.** A granary is roofed against
+        // rain and full of grain; a timber yard is not. The building already
+        // says which resources it keeps, and that is the filter.
+        let keeps = Set(def.storage.amounts.filter { $0.value > 0 }.keys)
         var byKind: [SettlementInterior.Goods: Int] = [:]
         for (itemID, count) in settlement.stockpile where count > 0 {
-            byKind[SettlementInterior.Goods.of(itemID), default: 0] += count
+            let kind = SettlementInterior.Goods.of(itemID)
+            guard keeps.contains(resource(of: kind)) else { continue }
+            byKind[kind, default: 0] += count
         }
         // Sorted by how much of it there is, ties on the kind's own name so a
-        // store does not reshuffle its floor between frames.
-        return byKind.sorted {
+        // store does not reshuffle its floor between frames…
+        let sorted = byKind.sorted {
             $0.value == $1.value ? $0.key.rawValue < $1.key.rawValue : $0.value > $1.value
         }.map { (kind: $0.key, count: heapHeight($0.value)) }
+        // …and rotated by the building, so the second warehouse leads with what
+        // the first one has least of. The colony's ledger is one ledger; what
+        // stands on *this* floor is a share of it, and a share drawn the same
+        // in every store is a town of identical rooms.
+        guard sorted.count > 1 else { return sorted }
+        let turn = Int(seed % UInt64(sorted.count))
+        return Array(sorted[turn...] + sorted[..<turn])
+    }
+
+    /// Which ledger a heap belongs to. `Goods` is what a thing looks like on a
+    /// floor; `ResourceType` is what the colony counts it as.
+    static func resource(of kind: SettlementInterior.Goods) -> ResourceType {
+        switch kind {
+        case .grain: return .food
+        default:     return .materials
+        }
     }
 
     /// How high a heap of `count` goods stands, 1…3. A store is not a bar

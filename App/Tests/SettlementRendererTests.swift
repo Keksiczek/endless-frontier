@@ -151,6 +151,9 @@ struct StoreContentsTests {
                 BuildingDefinition(id: "granary", era: .earlySettlement, name: "Granary",
                                    cost: [.materials: 30], storage: [.food: 500],
                                    footprint: TileSize(width: 2, height: 2), look: "granary"),
+                BuildingDefinition(id: "warehouse", era: .earlySettlement, name: "Warehouse",
+                                   cost: [.materials: 40], storage: [.materials: 500],
+                                   footprint: TileSize(width: 3, height: 2), look: "granary"),
                 BuildingDefinition(id: "hut", era: .earlySettlement, name: "Hut",
                                    cost: [.materials: 10], housing: 30)
             ],
@@ -188,18 +191,38 @@ struct StoreContentsTests {
     /// The half the first pass missed: a store showed *how full* and never
     /// *what of*, so a warehouse of timber and one of hides were the same
     /// drawing.
+    ///
+    /// And then the second half of that: it showed the **whole colony's**
+    /// stockpile, so every store in the town was the same drawing again — a
+    /// granary with a pile of ore in it and four warehouses laid out alike.
+    /// Keks: *"vadí mi, že sklady nejsou jedinečné."* A store holds what it is
+    /// a store *for*, and two of a kind lead with different heaps.
     @Test("A store shows the goods it is actually holding")
     func goodsFollowTheStockpile() {
         var s = town(food: 100, capacity: 1000)
-        s.stockpile = ["wood": 300, "hide": 8, "rough_stone": 60]
-        let goods = SettlementRenderer.goods(of: "granary", in: s, registry: granaryRegistry())
-        #expect(goods.map(\.kind) == [.timber, .stone, .hide],
+        s.stockpile = ["wood": 300, "hide": 8, "rough_stone": 60, "grain": 200]
+        let reg = granaryRegistry()
+
+        // The granary keeps food, so the timber in the colony's ledger is not
+        // on its floor.
+        let granary = SettlementRenderer.goods(of: "granary", in: s, registry: reg)
+        #expect(granary.map(\.kind) == [.grain], "a granary is full of what a granary holds")
+
+        // The warehouse keeps materials, and reads as what it mostly is.
+        let store = SettlementRenderer.goods(of: "warehouse", in: s, registry: reg, seed: 0)
+        #expect(store.map(\.kind) == [.timber, .stone, .hide],
                 "biggest heap first, so a store reads as what it mostly is")
         // …and a heap is a heap, not a bar chart: past a wagonload more of the
         // same thing looks the same.
-        #expect(goods[0].count == 3)
-        #expect(goods[2].count == 1)
-        #expect(SettlementRenderer.goods(of: "hut", in: s, registry: granaryRegistry()).isEmpty,
+        #expect(store[0].count == 3)
+        #expect(store[2].count == 1)
+
+        // Two warehouses in one colony do not lay their floors out identically.
+        let second = SettlementRenderer.goods(of: "warehouse", in: s, registry: reg, seed: 1)
+        #expect(second.map(\.kind) != store.map(\.kind),
+                "the second warehouse is the first one drawn again")
+
+        #expect(SettlementRenderer.goods(of: "hut", in: s, registry: reg).isEmpty,
                 "a house is not a warehouse")
     }
 

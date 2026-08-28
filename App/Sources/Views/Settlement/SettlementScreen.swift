@@ -259,6 +259,12 @@ struct SettlementScreen: View {
                     onPosture: { game.order(posture: $0) },
                     onToggle: { game.setInLine($0, holding: $1) })
                 .transition(cardEntrance)
+            } else if case let .heap(store, kind) = selection {
+                HeapCard(kind: kind, building: store,
+                         holdings: game.holdings(of: kind)) {
+                    withAnimation(.easeOut(duration: 0.15)) { selection = .none }
+                }
+                .transition(cardEntrance)
             } else if let outbreak = game.outbreak, let plague = game.outbreakPlague {
                 // Second only to a raid: it is happening now, it has a clock on
                 // it, and laying out a granary can wait.

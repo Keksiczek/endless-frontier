@@ -39,11 +39,23 @@ struct CombatTests {
             return WorldState(settlements: [capital])
         }
 
-        let overrun = EffectApplier.apply([.raid(strength: 25)], to: world(armed: false), registry: reg)
-        #expect(overrun.settlements[0].storage[.materials] < 100)   // unarmed → losses
+        // A raid opens a `Siege` now rather than resolving itself, so the fight
+        // has to be walked before there is anything to weigh.
+        func fought(_ world: WorldState) -> WorldState {
+            var w = world
+            guard let siege = w.settlements[0].siege else { return w }
+            w.settlements[0] = SiegeEngine.advance(
+                w.settlements[0], to: siege.openedAt + siege.steps + 2, registry: reg)
+            w.settlements[0] = SiegeEngine.conclude(w.settlements[0], registry: reg)
+            return w
+        }
+        let overrun = fought(EffectApplier.apply([.raid(strength: 25)],
+                                                 to: world(armed: false), registry: reg))
+        #expect(overrun.settlements[0].lastBattle?.repelled == false)   // unarmed → they get in
+        #expect(overrun.settlements[0].storage[.food] < 100)            // and the stores go
 
-        let held = EffectApplier.apply([.raid(strength: 25)], to: world(armed: true), registry: reg)
-        #expect(held.settlements[0].storage[.materials] == 100)     // armed garrison repels
-        #expect(held.settlements[0].pawns.allSatisfy { $0.health == 100 })
+        let held = fought(EffectApplier.apply([.raid(strength: 25)],
+                                              to: world(armed: true), registry: reg))
+        #expect(held.settlements[0].lastBattle?.repelled == true)       // armed garrison holds
     }
 }

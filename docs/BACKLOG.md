@@ -4355,7 +4355,55 @@ Two more from the same screenshots:
   the repeat, not the country. Three marks — a drift's lip, wind-combed snow,
   crust broken open — and a size that varies with the cell.
 
-### 27.5 — still open
+## 28. 2026-08-28 — a raid you can answer, and stores that are not one store
+
+Keks, after playing: *"to, co vyskočí, když na tebe teď zaútočí, nevidím — jen
+jinou, že nájezd odražen nebo ne"*, and *"vadí mi, že sklady nejsou jedinečné,
+nebo ať aspoň můžu danou věc vybrat, pokud tam leží"*.
+
+### 28.1 — the storyteller's raid was over before it was announced
+
+`EffectApplier.resolveRaid` computed the whole fight in one step and left a
+`BattleLog`. So there was nothing to take part in: the raid was announced by its
+own report card, and the fight that card described had already happened. Nothing
+was being missed; there was nothing to miss.
+
+`SiegeEngine.begin` has carried the answer in its own doc comment since it was
+written — *"a raid becomes a siege where somebody might be watching"* — and
+every other raid in the game goes through it. This one does too now, so all
+raids are one thing: a line forms, the warband comes on, and whoever is here can
+order the defence. Nobody watching costs nothing — `ActionLoop` fights the steps
+out on the world clock and `conclude` leaves the same record the report reads.
+
+**And the suite said something true about it.** Two fixtures were colonies of
+*no people* with `stats.defense` set, which the old arithmetic turned a raid away
+with. A siege is fought by a **line**: a wall with nobody behind it is not a
+defence, and neither is a colony of unarmed farmers. The fixtures muster ten
+armed defenders out of the shipped book now — an axe is only an axe where one is
+defined, which the fixture registry had no profile for.
+
+### 28.2 — every store in the town was the same store
+
+`SettlementRendererLots.goods` read the **whole colony's stockpile** and drew it
+into every building that stores anything. Four warehouses were one warehouse
+drawn four times, and a granary had a pile of ore in it.
+
+A store holds what it is a store *for*: `def.storage` already says which
+resources it keeps, and that is the filter. And the order rotates with the
+building's seed, so the second warehouse leads with what the first has least of
+— the colony's ledger is one ledger, but what stands on *this* floor is a share
+of it.
+
+### 28.3 — and you can ask what is lying there
+
+A heap was drawn and answered nothing: you could see the grain and not ask whose
+it was or how much. `SettlementInterior.goodsPlaces` is one formula with two
+readers (rule 35) — the drawing places the heaps and the hit test finds exactly
+those points — and `HeapCard` says what the kind is, which building's floor it
+is on, and what the pile is actually made of, biggest item first. Only with the
+roof off: a heap you cannot see is not a heap you meant to tap.
+
+### 28.4 — still open
 
 1. Everything in §21.6 that §22.4.3 pointed at.
 2. The wall face is drawn for every building; §5's **vertical textures** are

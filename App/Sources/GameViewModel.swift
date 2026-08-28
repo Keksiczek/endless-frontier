@@ -1070,6 +1070,21 @@ final class GameViewModel {
         return Int(settlement.storage[.food] / perTick)
     }
 
+    /// **What the colony holds of one kind of goods**, biggest first.
+    ///
+    /// A store's floor is drawn out of `stockpile` (`SettlementRendererLots.goods`)
+    /// and said nothing about itself; this is what a tap on a heap asks. Names
+    /// come from `items.json`, so a pile of `timber_bundle` reads as what a
+    /// person would call it.
+    func holdings(of kind: SettlementInterior.Goods) -> [(name: String, count: Int)] {
+        guard let settlement = selectedSettlement else { return [] }
+        return settlement.stockpile
+            .filter { $0.value > 0 && SettlementInterior.Goods.of($0.key) == kind }
+            .map { (name: registry.item($0.key)?.name.resolve(AppStrings.language) ?? $0.key,
+                    count: $0.value) }
+            .sorted { $0.count == $1.count ? $0.name < $1.name : $0.count > $1.count }
+    }
+
     var viewedPawns: [Pawn] { selectedSettlement?.pawns ?? [] }
 
     /// The colonists of the viewed settlement, gathered by the trade they work.

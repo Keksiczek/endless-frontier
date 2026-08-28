@@ -507,13 +507,10 @@ enum SettlementInterior {
         } ?? []
         // The goods themselves, along the back wall, before the furniture so
         // a bench stands in front of the pile rather than under it.
-        for (index, heap) in goods.prefix(3).enumerated() {
-            let across = -0.24 + Double(index) * 0.24
-            goodsStack(&context, heap.kind,
-                       at: CGPoint(x: c.x + CGFloat(across) * footprint.width,
-                                   y: c.y - footprint.height * 0.30),
+        for placed in goodsPlaces(goods, room: room) {
+            goodsStack(&context, placed.kind, at: placed.at,
                        scale: min(room.width, room.height), palette: palette,
-                       count: heap.count)
+                       count: placed.count)
         }
         for slot in plan + stocked {
             let p = CGPoint(x: c.x + CGFloat(slot.dx) * footprint.width,
@@ -687,6 +684,27 @@ enum SettlementInterior {
     // MARK: - Furniture
 
     /// One fitting, drawn small and flat — this is a room seen from above.
+    /// **Where the heaps stand on a floor.**
+    ///
+    /// Pulled out of the drawing so a *tap* can find them: a pile of grain you
+    /// can see and cannot ask about is a thing the game knows and will not say
+    /// — Keks: *"ať aspoň můžu danou věc vybrat, pokud tam leží."* One formula,
+    /// two readers (rule 35): this places them and `SettlementCanvasView`
+    /// hit-tests exactly the same points.
+    ///
+    /// Along the back wall, because a bench belongs in front of the pile rather
+    /// than under it.
+    static func goodsPlaces(
+        _ goods: [(kind: Goods, count: Int)], room: CGRect
+    ) -> [(kind: Goods, count: Int, at: CGPoint)] {
+        goods.prefix(3).enumerated().map { index, heap in
+            let across = -0.24 + Double(index) * 0.24
+            return (kind: heap.kind, count: heap.count,
+                    at: CGPoint(x: room.midX + CGFloat(across) * room.width,
+                                y: room.midY - room.height * 0.30))
+        }
+    }
+
     /// One stack of goods: shapes that read from across the valley — log ends,
     /// squared blocks, a rolled hide — rather than the same crate six times.
     static func goodsStack(

@@ -46,6 +46,10 @@ enum CanvasSelection: Equatable {
     /// is and not only what you may do to it. Without it those descriptions
     /// were content nothing read (rule 47).
     case thing(target: Designation.Target, label: String, detail: String? = nil)
+    /// **A tapped heap on a store's floor.** The goods a warehouse is holding
+    /// are drawn, and were the one thing on the canvas with no answer in it:
+    /// you could see the grain and not ask whose it was or how much.
+    case heap(building: String, kind: SettlementInterior.Goods)
 }
 
 /// Somewhere the canvas is being asked to take the player.
@@ -508,9 +512,26 @@ struct SettlementCanvasView: View {
 
         // The same cull the drawing uses, so a tap can only ever land on a
         // roof that is actually on screen.
-        for building in SettlementRenderer.layout(
-            settlement: settlement, registry: registry, rect: rect,
-            viewport: viewRect) {
+        let placed = SettlementRenderer.layout(
+            settlement: settlement, registry: registry, rect: rect, viewport: viewRect)
+        // **What is lying on the floor answers before the floor does.** Only
+        // when the roof is off, because a heap you cannot see is not a heap you
+        // meant to tap.
+        if SettlementInterior.roofFade(zoom: camera.scale) < 0.999 {
+            for building in placed where !building.underConstruction && !building.goods.isEmpty {
+                let shell = SettlementStructures.bodyRect(
+                    building.glyph, at: SettlementRenderer.standingCentre(building),
+                    s: building.size, seed: building.seed,
+                    footprint: building.footprint, variant: building.variant)
+                let room = shell.insetBy(dx: shell.width * SettlementInterior.wallInset,
+                                         dy: shell.height * SettlementInterior.wallInset)
+                for heap in SettlementInterior.goodsPlaces(building.goods, room: room) {
+                    probe.offer(.heap(building: building.name, kind: heap.kind), at: heap.at)
+                }
+            }
+            if let hit = probe.take() { return hit }
+        }
+        for building in placed {
             // The whole lot answers, not the pin in the middle of it. Widened a
             // touch so a thumb on the eaves still counts.
             let lot = CGRect(
