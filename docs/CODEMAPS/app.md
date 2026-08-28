@@ -27,14 +27,26 @@ App/Sources/
 ground tiles (SettlementGround)      seeded per (terrainSeed, biome, cell)
 landforms    (SettlementLandforms)   ravines, mesas, oases — ground with extent
 stone        (SettlementStone)       massifs and blocks
-flora        (SettlementFlora)       trees by species, outcrops
+flora shadow (SettlementFlora)       the wood's shadows and its outcrops
 crops/piles/sites                    plots, HaulPiles, build sites
-structures   (SettlementStructures)  buildings on their footprints
-figures      (SettlementFigures)     colonists — PawnLook + AgentMotion
-wildlife/visitors/convoys/battle
+── one depth-sorted pass, on the foot each thing stands on ──
+  footings   (SettlementRendererLots)      plots and cast shadows, first
+  buildings  (SettlementStructures)        walls, roof, wear
+  interiors  (SettlementInterior)          under the roof, as it fades
+  attachments(SettlementAttachments)       what stands beside and names it
+  trees      (SettlementFlora)             one trunk at a time
+  people     (SettlementRendererAgents)    figures and crowd marks
 light+season (SettlementLight, SettlementSeasons)   day/night, snow
 fog of war
 ```
+
+**One pass, or the illusion does not hold** (`RENDER_25D.md` §3). Drawn as
+blocks, a tree in the village was behind every roof and a colonist in front of
+every one — whatever the ground said. The sort compares the *foot*: the bottom
+of a lot, the point a tree grows at, the ground a person stands on (a rider's
+horse, not the saddle). The drawing of a building sits on the bottom edge of its
+plot and rises out of it — `SettlementStructures.bodyLift`, the one number the
+walls, the room, the furniture and the people at it all read.
 
 **Motion is presentation-only.** `AgentMotion` derives a colonist's position from
 `(pawn.id, frame clock)` and the `WalkPath` the engine wrote. Nothing feeds back.

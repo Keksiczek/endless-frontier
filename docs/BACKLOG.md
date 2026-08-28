@@ -4122,12 +4122,74 @@ furniture of their own now**, which is every building that shares its look and
 has an inside. The five `plant` buildings are no longer one room drawn five
 times.
 
-### 24.4 — still open
+### 24.4 — the rest of it, same day
 
-1. **Agents in the sorted pass** — the same fault as §24.1 one layer on.
-2. **The attachments still draw nothing** (§23.5.2) — 43 names in the bank.
-3. **The furniture is written and not yet *seen*** — a room draws at zoom, so
-   the way to judge §24.3 is on the canvas, building by building.
-4. A building's body is still *centred* in its lot rather than standing on the
-   bottom edge of it, so there is a band of bare apron below it. The height now
-   goes up rather than out (§23.4b); the foot has not moved yet.
+All four of what §24.4 listed as open, in one pass — see §25.
+
+## 25. 2026-08-28 — the yard, the foot, and everybody in one pass
+
+The three things §24 left open, which between them are what the settlement
+looked *flat* for.
+
+### 25.1 — fifty-four names that drew nothing
+
+`structures.json` names what stands beside a building — `charcoal_heap`,
+`hitching_rail`, `crane`, `drying_racks` — and the renderer drew **none** of
+them. 54 distinct names, validated by the schema, written by a generator,
+carried in the registry and read by nobody: rule 47 whole, and the half of
+§23.2 that was only a promise.
+
+Two faults, one on top of the other. `StructureVariant` was carrying `standing`
+and `accent` from the composition and **dropping `attachments` on the floor**,
+so the field never reached the drawing at all; and there was no drawing to
+reach. Both are now guarded — *"A building's own composition reaches the
+drawing"* is the one that would have caught the first in a minute.
+
+`SettlementAttachments` is the second, and it is composition rather than
+routines (rule 92): **54 names onto 15 forms** — heap, stack, rack, line, rail,
+block, canopy, platform, mast, dish, pipes, wheel, glow, barrel, planting. A
+name with no form draws nothing, which reads as a plainer building rather than
+a fault, so *"Every attachment in the bank is a thing the canvas can draw"*
+refuses one. They are placed against the walls — alternating sides, the tall
+ones behind — and never over the plot line, because a crane in the neighbour's
+yard is worse than no crane.
+
+`accent` was in the same position and is now the colour a brazier glows.
+
+### 25.2 — a building stands on its plot, it does not float in the middle of it
+
+The other half of §24.1. The body is smaller than the lot, and it was **centred
+in it**, so every building had a band of bare apron above *and* below — nothing
+touching the ground. The foot belongs on the bottom edge of the plot, a hair of
+yard short of it (`yardShare`), and the storeys go on at the top.
+
+That is `SettlementStructures.bodyLift`, which was already the one number three
+readers shared and now decides both halves. The plot, the shadow and every hit
+test keep the map point — **the ground stays in plan and only the drawing
+lifts** (`RENDER_25D.md` §2) — and `SettlementRendererLots.standingCentre` is
+the one place the drawing asks where that is.
+
+### 25.3 — and everybody walks in the same pass
+
+§24.1 for the last layer. The people were a block drawn after the town, so
+every colonist in the colony was in front of every roof in it: somebody walking
+behind the granary walked over its roof.
+
+`SettlementRenderer.standingAgents` hands each person — or each crowd mark, when
+the camera is pulled back — to the town's sorted pass with **the ground they
+stand on**, which for a rider is the horse's feet and not the seat two thirds of
+a body higher (guarded). Blood moved with them: it is ground, so it is drawn
+before the whole pass rather than between two halves of it.
+
+The pass now sorts footings, bodies, attachments, wear, trees and people
+together, on the foot. That is `RENDER_25D.md` §3 as specified.
+
+### 25.4 — still open
+
+1. **The lift itself** — §6 step 1 of `RENDER_25D.md`: the two wall quads, the
+   fabric on them and a sun-derived shadow. What is built is the *ordering*;
+   the buildings are still flat marks standing in the right order.
+2. **`fabric`, `trim`, `roof`, `rooftop` and `yard`** are still carried and
+   unread, the same shape as `attachments` was — `StructureVariant` derives its
+   own roofline instead of reading the bank's.
+3. Everything in §22.4.

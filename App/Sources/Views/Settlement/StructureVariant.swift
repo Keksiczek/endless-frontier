@@ -108,13 +108,32 @@ struct StructureVariant: Equatable, Hashable {
     /// `hearth`, `ember`, `awning`, `cold_green`, `lamp`, or `none`.
     var accent: String = "none"
 
+    /// **What stands beside it and names it from across the valley** — a
+    /// charcoal heap, a hitching rail, a crane. Straight out of
+    /// `structures.json`; `SettlementAttachments` is what draws them.
+    var attachments: [String] = []
+
+    /// The accent as a colour, or nil for a building with nothing warm about
+    /// it. Kept here rather than in the drawing because two things read it —
+    /// the attachment that glows and the lamp after dark — and a second table
+    /// is a second answer (rule 35).
+    var accentColour: Color? {
+        switch accent {
+        case "hearth", "ember": return Theme.accent
+        case "awning":          return Theme.accent.opacity(0.8)
+        case "cold_green":      return Color(red: 0.45, green: 0.85, blue: 0.72)
+        case "lamp":            return Theme.bone
+        default:                return nil
+        }
+    }
+
     /// The fallback for a building the registry does not know — a definition
     /// that has been deleted from under a save, or a test with a bare registry.
     static let plain = StructureVariant(
         kindSeed: 0, bays: 3, stacks: 0, wideDoor: false,
         roofline: .gable, rooftop: .none, nightShift: false,
         tier: 0, heft: 0, stores: nil, storeys: 1,
-        era: .earlySettlement, lot: 3, standing: nil, accent: "none")
+        era: .earlySettlement, lot: 3, standing: nil, accent: "none", attachments: [])
 
     // MARK: - Derivation
 
@@ -138,7 +157,8 @@ struct StructureVariant: Equatable, Hashable {
             era: def.era,
             lot: lotShape(def),
             standing: composition?.standing,
-            accent: composition?.accent ?? "none")
+            accent: composition?.accent ?? "none",
+            attachments: composition?.attachments ?? [])
     }
 
     /// **How much taller or shorter than an ordinary shed this stands.**

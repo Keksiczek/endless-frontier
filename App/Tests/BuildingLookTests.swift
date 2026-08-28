@@ -67,6 +67,70 @@ struct BuildingLookTests {
         }
     }
 
+    /// **A name the renderer does not know draws nothing** — which reads as a
+    /// plainer building rather than as a fault, and is exactly how 54 names sat
+    /// in `structures.json` for a day being validated, generated and drawn by
+    /// nobody (rule 47). Fifty-four names, fifteen forms; a new composition
+    /// with a new name fails here before anybody wonders why the yard is empty.
+    @Test("Every attachment in the bank is a thing the canvas can draw")
+    func attachmentsAreDrawable() throws {
+        let registry = try GameDataRegistry.bundled()
+        var unknown: Set<String> = []
+        for (_, composition) in registry.structures {
+            for name in composition.attachments where SettlementAttachments.form(of: name) == nil {
+                unknown.insert(name)
+            }
+        }
+        #expect(unknown.isEmpty, "nothing is drawn for: \(unknown.sorted())")
+    }
+
+    /// …and the bank has to actually reach the drawing. `StructureVariant` was
+    /// carrying `standing` and `accent` and dropping `attachments` on the floor,
+    /// so every yard in the colony was empty however full the composition was.
+    @Test("A building's own composition reaches the drawing")
+    func compositionsCarryTheirAttachments() throws {
+        let registry = try GameDataRegistry.bundled()
+        let furnished = registry.buildings.values.filter {
+            !(registry.structure($0.id).attachments.isEmpty)
+        }
+        #expect(furnished.count > 30,
+                "only \(furnished.count) buildings have anything standing beside them")
+        for def in furnished {
+            let variant = StructureVariant.of(def, housesConveyances: false,
+                                              composition: registry.structure(def.id))
+            #expect(!variant.attachments.isEmpty,
+                    "\(def.id) has attachments in the bank and none in its variant")
+        }
+    }
+
+    /// **A rider is deep where the horse's feet are.** The town's sorted pass
+    /// compares the ground a thing stands on, so handing it the seat of a mount
+    /// — which is drawn two thirds of a body higher — would put a rider behind
+    /// the house they are riding past.
+    @Test("Everybody is handed over with the ground they stand on")
+    func agentsCarryTheirFoot() throws {
+        let registry = try GameDataRegistry.bundled()
+        var settlement = Settlement(
+            id: UUID(uuidString: "00000000-0000-0000-2222-000000000001")!,
+            name: "Footville",
+            buildings: [BuildingInstance(definitionID: "hut", count: 2)])
+        settlement.pawns = (0..<6).map { PawnFactory.generate(seed: UInt64($0 + 1)) }
+        settlement.colony = ColonyMap(width: 16, height: 16)
+        let map = LocalMap(river: RiverShape(baseY: 0.5, amplitude: 0.05, phase: 0),
+                           nodes: [], pois: [],
+                           exploredCells: Set(0..<(LocalMap.gridColumns * LocalMap.gridRows)))
+        let rect = CGRect(x: 0, y: 0, width: 400, height: 400)
+
+        let standing = SettlementRenderer.standingAgents(
+            rect: rect, settlement: settlement, map: map, continuousTick: 3,
+            registry: registry, time: 12, zoom: 3, selectedPawnID: nil)
+        #expect(!standing.isEmpty, "nobody was handed over to the sorted pass")
+        for item in standing {
+            #expect(item.foot >= rect.minY && item.foot <= rect.maxY,
+                    "somebody is standing off the map at \(item.foot)")
+        }
+    }
+
     @Test("Buildings that are nothing alike are not drawn alike")
     func landmarkBuildingsGetTheirOwnShape() throws {
         let defs = try allBuildings()
@@ -274,7 +338,8 @@ struct InteriorFitTests {
         let aspect = b.footprintH > 0 ? b.footprintW / b.footprintH : 1
         let lift = SettlementStructures.bodyLift(b.glyph, s: b.size, seed: b.seed,
                                                  aspect: aspect,
-                                                 height: Double(b.variant.heightScale))
+                                                 height: Double(b.variant.heightScale),
+                                                 footprintHeight: b.footprintH)
         // Not a vacuous test: this building really is taller than a shed.
         #expect(b.variant.heightScale > 1.05, "the structure bank did not make it tall")
         #expect(lift > 0, "a taller building has to lift its room")
@@ -322,7 +387,8 @@ struct InteriorFitTests {
         let middle = b.center.y - SettlementStructures.bodyLift(
             b.glyph, s: b.size, seed: b.seed,
             aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1,
-            height: Double(b.variant.heightScale))
+            height: Double(b.variant.heightScale),
+            footprintHeight: b.footprintH)
         for bed in beds {
             #expect(abs(bed.x - b.center.x) <= walls.width / 2 + 1e-9,
                     "a bed is drawn outside the walls it belongs to")

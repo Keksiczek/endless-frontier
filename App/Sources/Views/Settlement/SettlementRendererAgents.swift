@@ -22,12 +22,59 @@ extension SettlementRenderer {
         return away + home.prefix(max(0, maxVisibleAgents - away.count))
     }
 
+    /// **The people, as standing things.**
+    ///
+    /// One entry per person or crowd mark, each with the ground it stands on,
+    /// so the town's own sorted pass can draw a colonist in front of the house
+    /// they are walking past and behind the one they are walking behind. Drawn
+    /// as a block after the buildings — which is what this was — every
+    /// colonist in the colony stood in front of every roof in it.
+    static func standingAgents(
+        rect: CGRect, settlement: Settlement,
+        map: LocalMap, continuousTick: Double, registry: GameDataRegistry,
+        time: Double, zoom: CGFloat, selectedPawnID: UUID?,
+        battleReplay: SettlementBattle.Replay? = nil,
+        battleBeat: SettlementBattle.Beat? = nil
+    ) -> [(foot: CGFloat, draw: (inout GraphicsContext) -> Void)] {
+        var standing: [(foot: CGFloat, draw: (inout GraphicsContext) -> Void)] = []
+        agents(rect: rect, settlement: settlement, map: map, continuousTick: continuousTick,
+               registry: registry, time: time, zoom: zoom, selectedPawnID: selectedPawnID,
+               battleReplay: battleReplay, battleBeat: battleBeat) { foot, draw in
+            standing.append((foot: foot, draw: draw))
+        }
+        return standing
+    }
+
+    /// Draw everybody where they stand, ignoring what they are standing in
+    /// front of. Kept for a thumbnail and for the tests, which want the whole
+    /// crowd and no town.
     static func agents(
         _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement,
         map: LocalMap, continuousTick: Double, registry: GameDataRegistry,
         time: Double, zoom: CGFloat, selectedPawnID: UUID?,
         battleReplay: SettlementBattle.Replay? = nil,
         battleBeat: SettlementBattle.Beat? = nil
+    ) {
+        var copy = context
+        for item in standingAgents(rect: rect, settlement: settlement, map: map,
+                                   continuousTick: continuousTick, registry: registry,
+                                   time: time, zoom: zoom, selectedPawnID: selectedPawnID,
+                                   battleReplay: battleReplay, battleBeat: battleBeat)
+            .sorted(by: { $0.foot < $1.foot }) {
+            item.draw(&copy)
+        }
+        context = copy
+    }
+
+    /// The one place a person is turned into a drawing. Everything above is
+    /// about *when* to run these; this is what they are.
+    private static func agents(
+        rect: CGRect, settlement: Settlement,
+        map: LocalMap, continuousTick: Double, registry: GameDataRegistry,
+        time: Double, zoom: CGFloat, selectedPawnID: UUID?,
+        battleReplay: SettlementBattle.Replay?,
+        battleBeat: SettlementBattle.Beat?,
+        emit: (CGFloat, @escaping (inout GraphicsContext) -> Void) -> Void
     ) {
         let scene = AgentMotion.Scene(settlement: settlement, registry: registry,
                                       continuousTick: continuousTick, replay: battleReplay,
@@ -56,25 +103,31 @@ extension SettlementRenderer {
                         guard let pawn = settlement.pawns.first(where: { $0.id == id }) else { continue }
                         let pose = AgentMotion.pose(for: pawn, map: map, scene: scene,
                                                     time: time, ticksPerYear: ticksPerYear)
-                        SettlementFigures.draw(
-                            pawn: pawn, pose: pose, at: point(pose.position, in: rect),
-                            time: time, ticksPerYear: ticksPerYear,
-                            selected: pawn.id == selectedPawnID, zoom: zoom,
-                            motion: registry.motion(activity: pose.activity.motionID,
-                                        work: pawn.assignedWork.rawValue,
-                                        phase: AgentMotion.huntPhase(
-                                            for: pawn,
-                                            reported: settlement.huntPhases[pawn.id],
-                                            map: map, at: pose.position),
-                                        variant: AgentMotion.motionVariant(for: pawn),
-                                        building: AgentMotion.workBuilding(for: pawn, scene: scene)),
-                            registry: registry, context: &context)
+                        let at = point(pose.position, in: rect)
+                        let motion = registry.motion(
+                            activity: pose.activity.motionID,
+                            work: pawn.assignedWork.rawValue,
+                            phase: AgentMotion.huntPhase(
+                                for: pawn,
+                                reported: settlement.huntPhases[pawn.id],
+                                map: map, at: pose.position),
+                            variant: AgentMotion.motionVariant(for: pawn),
+                            building: AgentMotion.workBuilding(for: pawn, scene: scene))
+                        emit(at.y) { context in
+                            SettlementFigures.draw(
+                                pawn: pawn, pose: pose, at: at,
+                                time: time, ticksPerYear: ticksPerYear,
+                                selected: pawn.id == selectedPawnID, zoom: zoom,
+                                motion: motion, registry: registry, context: &context)
+                        }
                     }
                     continue
                 }
-                SettlementCrowd.draw(&context, cluster: cluster,
-                                     at: point(cluster.position, in: rect),
-                                     time: time, zoom: zoom)
+                let mark = point(cluster.position, in: rect)
+                emit(mark.y) { context in
+                    SettlementCrowd.draw(&context, cluster: cluster, at: mark,
+                                         time: time, zoom: zoom)
+                }
             }
             return
         }
@@ -99,36 +152,44 @@ extension SettlementRenderer {
             // of the motion bank too, because a rider's legs do not walk.
             let ridden = scene.ridden[pawn.id]
             let carriage = ridden.flatMap { registry.conveyance($0.definitionID) }
-            var at = point(pose.position, in: rect)
-            if let ridden, let carriage {
-                SettlementConveyances.draw(
-                    carriage, thing: ridden, at: at,
-                    s: SettlementFigures.bodyHeight(zoom: zoom), facing: CGFloat(pose.facing),
-                    time: time, loaded: pawn.carrying != nil,
-                    beast: ridden.animalID.flatMap { id in
-                        settlement.tamed.first { $0.id == id }?.animal.build
-                    },
-                    context: &context)
-                // Somebody on a beast sits above it; somebody walking beside a
-                // cart does not move at all.
-                if carriage.kind == .mount {
-                    at.y -= SettlementFigures.bodyHeight(zoom: zoom) * 0.62
-                }
+            let ground = point(pose.position, in: rect)
+            var at = ground
+            // Somebody on a beast sits above it; somebody walking beside a
+            // cart does not move at all. The **foot** is the ground either way
+            // — that is what the depth sort compares.
+            if let carriage, carriage.kind == .mount {
+                at.y -= SettlementFigures.bodyHeight(zoom: zoom) * 0.62
             }
-            SettlementFigures.draw(
-                pawn: pawn, pose: pose, at: at,
-                time: time, ticksPerYear: ticksPerYear,
-                selected: pawn.id == selectedPawnID, zoom: zoom, armed: armed,
-                motion: registry.motion(activity: pose.activity.motionID,
-                                        work: pawn.assignedWork.rawValue,
-                                        phase: AgentMotion.huntPhase(
-                                            for: pawn,
-                                            reported: settlement.huntPhases[pawn.id],
-                                            map: map, at: pose.position),
-                                        variant: AgentMotion.motionVariant(for: pawn),
-                                        building: AgentMotion.workBuilding(for: pawn, scene: scene),
-                                        conveyance: carriage),
-                registry: registry, context: &context)
+            let beast = ridden?.animalID.flatMap { id in
+                settlement.tamed.first { $0.id == id }?.animal.build
+            }
+            let motion = registry.motion(
+                activity: pose.activity.motionID,
+                work: pawn.assignedWork.rawValue,
+                phase: AgentMotion.huntPhase(
+                    for: pawn,
+                    reported: settlement.huntPhases[pawn.id],
+                    map: map, at: pose.position),
+                variant: AgentMotion.motionVariant(for: pawn),
+                building: AgentMotion.workBuilding(for: pawn, scene: scene),
+                conveyance: carriage)
+            let carrying = pawn.carrying != nil
+            emit(ground.y) { context in
+                // What they are on, if the yard put them on something. Drawn
+                // first, so the body sits on it rather than behind it.
+                if let ridden, let carriage {
+                    SettlementConveyances.draw(
+                        carriage, thing: ridden, at: ground,
+                        s: SettlementFigures.bodyHeight(zoom: zoom),
+                        facing: CGFloat(pose.facing),
+                        time: time, loaded: carrying, beast: beast, context: &context)
+                }
+                SettlementFigures.draw(
+                    pawn: pawn, pose: pose, at: at,
+                    time: time, ticksPerYear: ticksPerYear,
+                    selected: pawn.id == selectedPawnID, zoom: zoom, armed: armed,
+                    motion: motion, registry: registry, context: &context)
+            }
         }
     }
 

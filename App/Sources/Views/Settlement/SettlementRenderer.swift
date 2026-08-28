@@ -298,27 +298,29 @@ enum SettlementRenderer {
                             viewport: CGRect(origin: .zero, size: size))
         // Pushed in close, every structure says what it is — the answer to
         // "which roof is the library?" without a single tap.
+        // Blood is on the ground, so it goes under everything standing on it —
+        // under the town as much as under the people, which is why it is drawn
+        // before the sorted pass rather than between two halves of it.
+        SettlementBattle.drawGround(&context, rect: rect, settlement: settlement,
+                                    continuousTick: continuousTick, zoom: zoom,
+                                    secondsPerTick: registry.config.realSecondsPerTick,
+                                    replay: battleReplay, beat: battleBeat, time: time)
         buildings(&context, placed: placed, time: time, night: night,
                   showLabels: showLabels, zoom: zoom, sun: sun,
                   selectedBuildingID: selectedBuildingID,
                   trees: SettlementFlora.standing(map: map, rect: rect, viewport: viewRect),
                   rect: rect, season: season,
+                  people: standingAgents(
+                      rect: rect, settlement: settlement, map: map,
+                      continuousTick: continuousTick, registry: registry, time: time,
+                      zoom: zoom, selectedPawnID: selectedPawnID,
+                      battleReplay: battleReplay, battleBeat: battleBeat),
                   registry: registry, era: era)
         SettlementFigures.smoke(
             &context,
             houses: placed.filter { $0.glyph == .house && !$0.underConstruction },
             time: time, zoom: zoom)
 
-        // Blood is on the ground, so it goes under the people standing on it —
-        // the only part of a battle that is drawn before the figures.
-        SettlementBattle.drawGround(&context, rect: rect, settlement: settlement,
-                                    continuousTick: continuousTick, zoom: zoom,
-                                    secondsPerTick: registry.config.realSecondsPerTick,
-                                    replay: battleReplay, beat: battleBeat, time: time)
-
-        agents(&context, rect: rect, settlement: settlement, map: map, continuousTick: continuousTick,
-               registry: registry, time: time, zoom: zoom, selectedPawnID: selectedPawnID,
-               battleReplay: battleReplay, battleBeat: battleBeat)
         SettlementFigures.birds(&context, rect: rect, season: season, time: time, zoom: zoom)
         // A raid plays out over the scene it happens to — above the people,
         // under the fog, so the dark still hides what the colony cannot see.

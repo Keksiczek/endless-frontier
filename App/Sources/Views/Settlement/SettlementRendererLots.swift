@@ -80,6 +80,11 @@ extension SettlementRenderer {
         /// was behind every roof in it (`RENDER_25D.md` §3). Empty draws the
         /// town alone, which is what the tests and the thumbnail want.
         trees: [Tree] = [], rect: CGRect = .zero, season: Season = .summer,
+        /// **The people, in the same pass.** Each with the ground they stand
+        /// on (`SettlementRenderer.standingAgents`). Drawn as a block after the
+        /// town — which is what this was — every colonist stood in front of
+        /// every roof, so anybody walking behind a granary walked over it.
+        people: [(foot: CGFloat, draw: (inout GraphicsContext) -> Void)] = [],
         /// The book the rooms are furnished out of (`FittingDefinition`), and
         /// the age they are furnished for.
         registry: GameDataRegistry,
@@ -109,7 +114,7 @@ extension SettlementRenderer {
         if roof < 0.999 {
             for building in placed where !building.underConstruction {
                 SettlementInterior.draw(
-                    &context, glyph: building.glyph, at: building.center,
+                    &context, glyph: building.glyph, at: standingCentre(building),
                     footprint: building.footprint, size: building.size,
                     seed: building.seed, era: era,
                     workers: building.workers, residents: building.residents,
@@ -124,17 +129,24 @@ extension SettlementRenderer {
         enum Standing {
             case built(PlacedBuilding)
             case tree(Tree)
+            case person((inout GraphicsContext) -> Void)
         }
         let standing: [(foot: CGFloat, thing: Standing)] =
             placed.map { (foot: $0.center.y + $0.footprint.height / 2, thing: .built($0)) }
             + trees.map { (foot: SettlementRenderer.point($0.position, in: rect).y,
                            thing: .tree($0)) }
+            + people.map { (foot: $0.foot, thing: .person($0.draw)) }
 
         for entry in standing.sorted(by: { $0.foot < $1.foot }) {
             guard case .built(let building) = entry.thing else {
-                if case .tree(let tree) = entry.thing {
+                switch entry.thing {
+                case .tree(let tree):
                     SettlementFlora.draw(&context, tree: tree, rect: rect,
                                          season: season, time: time, registry: registry)
+                case .person(let draw):
+                    draw(&context)
+                case .built:
+                    break
                 }
                 continue
             }
@@ -145,7 +157,7 @@ extension SettlementRenderer {
                 // The roof, as solid as the distance warrants.
                 var roofContext = context
                 roofContext.opacity = roof
-                SettlementStructures.building(building.glyph, at: building.center,
+                SettlementStructures.building(building.glyph, at: standingCentre(building),
                                               s: building.size, time: time, night: night,
                                               seed: building.seed, era: building.era,
                                               footprint: building.footprint,
@@ -153,10 +165,28 @@ extension SettlementRenderer {
                                               variant: building.variant,
                                               context: &roofContext)
             }
+            // …and what stands beside it and says what it is. After the walls,
+            // because a woodpile leans against the house rather than the house
+            // standing behind the wood, and inside this sorted pass so the
+            // building in front covers them both.
+            if !building.underConstruction {
+                let centre = standingCentre(building)
+                SettlementAttachments.draw(
+                    &context, names: building.variant.attachments,
+                    body: SettlementStructures.bodyRect(
+                        building.glyph, at: centre, s: building.size, seed: building.seed,
+                        footprint: building.footprint, variant: building.variant),
+                    lot: CGRect(x: building.center.x - building.footprint.width / 2,
+                                y: building.center.y - building.footprint.height / 2,
+                                width: building.footprint.width,
+                                height: building.footprint.height),
+                    seed: building.seed, night: night,
+                    accent: building.variant.accentColour)
+            }
             // What time and trouble have done to it, over whatever is drawn —
             // a ruin has to read as one whether its roof is on or off.
             if !building.underConstruction, building.condition < 0.92 {
-                SettlementStructures.wear(&context, at: building.center,
+                SettlementStructures.wear(&context, at: standingCentre(building),
                                           footprint: building.footprint,
                                           condition: building.condition, seed: building.seed)
             }
@@ -179,6 +209,23 @@ extension SettlementRenderer {
                                          y: building.center.y + building.size * 2.5))
             }
         }
+    }
+
+    /// **Where the building is drawn**, as against where it stands.
+    ///
+    /// The plot, the shadow it throws and every hit test are the *ground* and
+    /// keep the map point. The walls, the room inside them and the wear on them
+    /// are the *drawing*, and the drawing sits on the bottom edge of the plot
+    /// and rises out of it — see `SettlementStructures.bodyLift`, which is the
+    /// one place that number is worked out.
+    static func standingCentre(_ building: PlacedBuilding) -> CGPoint {
+        let lift = SettlementStructures.bodyLift(
+            building.glyph, s: Double(building.size), seed: building.seed,
+            aspect: building.footprint.height > 0
+                ? Double(building.footprint.width / building.footprint.height) : 1,
+            height: Double(building.variant.heightScale),
+            footprintHeight: Double(building.footprint.height))
+        return CGPoint(x: building.center.x, y: building.center.y - CGFloat(lift))
     }
 
     /// How tall a structure stands, as a multiple of its glyph size — what

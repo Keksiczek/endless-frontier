@@ -291,7 +291,8 @@ enum AgentMotion {
             let middle = b.center.y - SettlementStructures.bodyLift(
                 b.glyph, s: b.size, seed: b.seed,
                 aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1,
-                height: Double(b.variant.heightScale))
+                height: Double(b.variant.heightScale),
+                footprintHeight: b.footprintH)
             self.roomY = middle
             let places = SettlementInterior
                 .stationSlots(for: b.glyph, seed: b.seed,

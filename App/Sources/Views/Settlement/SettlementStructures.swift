@@ -536,32 +536,51 @@ enum SettlementStructures {
         // and every hit test agree on. So the extra goes where a storey
         // actually goes, and this is the first half of `RENDER_25D.md` §2: the
         // ground stays in plan and only the drawing lifts.
-        let lift = bodyLift(glyph, s: Double(s0), seed: seed, aspect: aspect,
-                            height: Double(variant.heightScale))
-        let middle = c.y - CGFloat(lift)
-        return CGRect(x: c.x - CGFloat(size.width) / 2, y: middle - CGFloat(size.height) / 2,
+        return CGRect(x: c.x - CGFloat(size.width) / 2, y: c.y - CGFloat(size.height) / 2,
                       width: CGFloat(size.width), height: CGFloat(size.height))
     }
 
-    /// **How far a tall building's middle sits above its map point**, in the
-    /// units the caller measures in.
+    /// **A building stands on the bottom of its plot, and rises out of it.**
     ///
-    /// The foot stays where the plan put it and the storeys go on top, so the
-    /// *centre* of the drawn body rises by half of whatever height was added.
-    /// That is one number and three readers again (`bodySize`): the structure
-    /// draws these walls, the interior furnishes inside them, and `AgentMotion`
-    /// stands people at the fittings. `bodyRect` had the shift built into its
-    /// own arithmetic, which left the third reader measuring from the map point
-    /// — so in a two-storey building the workers stood half a storey below the
-    /// room they were supposed to be working in.
+    /// How far the drawn body's middle sits above the building's map point, in
+    /// whatever units the caller measures in. Two things go into it and they
+    /// pull opposite ways:
+    ///
+    /// - The body is **smaller than the lot**, and centring it left a band of
+    ///   bare apron above *and* below — a building sitting in the middle of its
+    ///   own yard with nothing touching the ground, which is half of what read
+    ///   as floating (`BACKLOG.md` §24.1). The foot belongs on the bottom edge
+    ///   of the plot, a hair of yard short of it.
+    /// - A **storey is added at the top** (`RENDER_25D.md` §2), so the more a
+    ///   building stands, the further its middle rises above that foot.
+    ///
+    /// One number, four readers (rule 35): `SettlementStructures.building`
+    /// draws the walls here, `bodyRect` frames them, `SettlementInterior`
+    /// furnishes inside them and `AgentMotion` stands people at the fittings.
+    /// When the third and fourth measured from the map point instead, the
+    /// workers in a two-storey building stood half a storey under their floor.
+    ///
+    /// `footprintHeight` of zero means the caller does not know its lot — a
+    /// thumbnail, a test fixture — and then the foot stays where the plan put
+    /// it, exactly as before.
     static func bodyLift(
         _ glyph: SettlementRenderer.BuildingGlyph, s s0: Double,
-        seed: UInt64, aspect: Double, height heightScale: Double
+        seed: UInt64, aspect: Double, height heightScale: Double,
+        footprintHeight: Double = 0
     ) -> Double {
         let raised = bodySize(glyph, s: s0, seed: seed, aspect: aspect, height: heightScale)
-        let plan = bodySize(glyph, s: s0, seed: seed, aspect: aspect)
-        return (raised.height - plan.height) / 2
+        guard footprintHeight > 0 else {
+            let plan = bodySize(glyph, s: s0, seed: seed, aspect: aspect)
+            return (raised.height - plan.height) / 2
+        }
+        // The yard it keeps between its own wall and the edge of its plot, so
+        // two buildings on adjacent lots do not read as one terrace.
+        let yard = footprintHeight * yardShare
+        return raised.height / 2 - (footprintHeight / 2 - yard)
     }
+
+    /// How much of its own plot a building leaves as yard at the front.
+    static let yardShare = 0.07
 
     /// The same walls in whatever units the caller measures in.
     ///
