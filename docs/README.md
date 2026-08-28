@@ -129,8 +129,8 @@ overtaken without being updated, which is exactly how a stale doc does damage.
 | [NEXT.md](NEXT.md) | plan 2026-08-17, counts 2026-08-28 | Still the best short answer to "what next". Its counts are checked by `make verify-docs` now; **its plan is not** — read `BACKLOG.md` and the newest handoff beside it |
 
 Reality as of the newest row of [TEST-BASELINE.md](TEST-BASELINE.md)
-(**2026-08-27**): **1614 Core tests** in 224 suites in ~25 minutes, and
-**207 App tests** in 33 suites, all green; iOS build green. Nothing is
+(**2026-08-28**): **1614 Core tests** in 224 suites in ~18 minutes, and
+**210 App tests** in 33 suites, all green; iOS build green. Nothing is
 unmeasured — append a row rather than editing this line.
 Content: **62 buildings**, **60 techs**, 182 events, 7 biomes, **477 items**,
 **420 recipes** — checked against the tree by `make verify-docs`. History lives

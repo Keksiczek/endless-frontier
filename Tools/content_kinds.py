@@ -325,7 +325,7 @@ gives as its `work` — or the ask the canvas makes will never carry it.""",
     },
     "fittings": {
         "file": "fittings.json",
-        "wants": """entries that name **eras**. The twenty-one timeless shapes already exist; what is missing is what replaces them later — an industrial bench, a modern anvil, a near-future store. An entry with an empty `eras` is almost always a wasted one""",
+        "wants": """entries that name **a building**, by its id, in `rooms`. The archetypes are furnished; what is missing is the piece that tells two buildings sharing one `look` apart — a bloomery's hearth against a forge's, a brewery's vats against a kitchen's. Fifty-one of sixty-two buildings share their look with something else. An entry naming only an archetype is almost always a wasted one now""",
         "brief": """One **thing that stands in a room**. What you see when the roof lifts off a
 building.
 
@@ -345,8 +345,17 @@ in those ages — so write `{"shape": "bench", "eras": ["early_industrial",
 medieval one. An empty `eras` means every age; use it sparingly, for things
 that genuinely do not change (a bed, a barrel).
 
-`rooms` is which building shapes it belongs in, by the same names — `workshop`,
-`forge`, `granary`, `temple`, `lab`, `plant`, `pad`. At least one.
+`rooms` is where the piece stands, and it takes **two kinds of name**. An
+**archetype** — `workshop`, `forge`, `granary`, `temple`, `lab`, `plant`, `pad`
+— furnishes every building drawn with that glyph. A **building id** —
+`bloomery`, `brewery`, `vehicle_works` — furnishes that one building alone. At
+least one, and a building id is worth two archetypes: five buildings share
+`plant` and were furnished from the same thirty-six pieces.
+
+**A named building's piece replaces the archetype's piece of the same `shape`**,
+it does not stand beside it. So a `machine` written for `vehicle_works` is the
+machine that building has *instead of* the generic one — write the thing that
+tells the room apart, not a second copy of what is already there.
 
 `tint` is what it is made of — `wood`, `cloth`, `metal`, `stone`, `glow` (a
 fire, a screen, a furnace mouth) — and `scale` 0.5…1.8 is how big it is drawn

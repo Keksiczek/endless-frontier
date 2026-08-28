@@ -248,8 +248,13 @@ enum SettlementRenderer {
                                  zoom: zoom, showLabels: showLabels)
         SettlementStone.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
                              registry: registry)
+        // The wood's shadows and its rock, on the ground where they belong. The
+        // **trunks** are held back and drawn with the town below, in one pass
+        // sorted on the foot — otherwise every tree in the settlement stands
+        // behind every roof in it, which is the "levitating trees" Keks named.
         SettlementFlora.draw(&context, rect: rect, map: map, season: season, time: time,
-                             sun: sun, viewport: viewRect, registry: registry)
+                             sun: sun, viewport: viewRect, standingTrees: false,
+                             registry: registry)
         // The fields, over the ground and under everything standing on it —
         // a plot is worked earth, so a figure reaping it stands in front.
         SettlementCrops.draw(&context, rect: rect, map: map, season: season, zoom: zoom,
@@ -295,7 +300,10 @@ enum SettlementRenderer {
         // "which roof is the library?" without a single tap.
         buildings(&context, placed: placed, time: time, night: night,
                   showLabels: showLabels, zoom: zoom, sun: sun,
-                  selectedBuildingID: selectedBuildingID, registry: registry, era: era)
+                  selectedBuildingID: selectedBuildingID,
+                  trees: SettlementFlora.standing(map: map, rect: rect, viewport: viewRect),
+                  rect: rect, season: season,
+                  registry: registry, era: era)
         SettlementFigures.smoke(
             &context,
             houses: placed.filter { $0.glyph == .house && !$0.underConstruction },

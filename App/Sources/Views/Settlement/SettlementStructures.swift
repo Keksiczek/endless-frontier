@@ -536,10 +536,31 @@ enum SettlementStructures {
         // and every hit test agree on. So the extra goes where a storey
         // actually goes, and this is the first half of `RENDER_25D.md` §2: the
         // ground stays in plan and only the drawing lifts.
-        let plan = bodySize(glyph, s: Double(s0), seed: seed, aspect: aspect)
-        let foot = c.y + CGFloat(plan.height) / 2
-        return CGRect(x: c.x - CGFloat(size.width) / 2, y: foot - CGFloat(size.height),
+        let lift = bodyLift(glyph, s: Double(s0), seed: seed, aspect: aspect,
+                            height: Double(variant.heightScale))
+        let middle = c.y - CGFloat(lift)
+        return CGRect(x: c.x - CGFloat(size.width) / 2, y: middle - CGFloat(size.height) / 2,
                       width: CGFloat(size.width), height: CGFloat(size.height))
+    }
+
+    /// **How far a tall building's middle sits above its map point**, in the
+    /// units the caller measures in.
+    ///
+    /// The foot stays where the plan put it and the storeys go on top, so the
+    /// *centre* of the drawn body rises by half of whatever height was added.
+    /// That is one number and three readers again (`bodySize`): the structure
+    /// draws these walls, the interior furnishes inside them, and `AgentMotion`
+    /// stands people at the fittings. `bodyRect` had the shift built into its
+    /// own arithmetic, which left the third reader measuring from the map point
+    /// — so in a two-storey building the workers stood half a storey below the
+    /// room they were supposed to be working in.
+    static func bodyLift(
+        _ glyph: SettlementRenderer.BuildingGlyph, s s0: Double,
+        seed: UInt64, aspect: Double, height heightScale: Double
+    ) -> Double {
+        let raised = bodySize(glyph, s: s0, seed: seed, aspect: aspect, height: heightScale)
+        let plan = bodySize(glyph, s: s0, seed: seed, aspect: aspect)
+        return (raised.height - plan.height) / 2
     }
 
     /// The same walls in whatever units the caller measures in.

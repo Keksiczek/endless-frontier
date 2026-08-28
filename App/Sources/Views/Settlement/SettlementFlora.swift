@@ -34,6 +34,31 @@ enum SettlementFlora {
     ///
     /// Culling before the sort is the point: the sort is `n log n` over
     /// whatever survives.
+    /// **The wood that is going to be drawn**, nearest last, already culled to
+    /// the screen. The renderer asks for this so it can merge the trees into
+    /// the one depth-sorted pass the buildings are drawn in — a tree standing
+    /// in front of a house has to be drawn *after* it, and a whole-wood pass
+    /// before a whole-town pass can never do that (`RENDER_25D.md` §3).
+    static func standing(map: LocalMap, rect: CGRect, viewport: CGRect?) -> [Tree] {
+        let frame = viewport?.insetBy(dx: -offscreenMargin, dy: -offscreenMargin)
+        return map.trees
+            .filter {
+                guard map.isExplored($0.position) else { return false }
+                guard let frame else { return true }
+                return frame.contains(SettlementRenderer.point($0.position, in: rect))
+            }
+            .sorted(by: { $0.position.y < $1.position.y })
+    }
+
+    /// One tree, at its own place. The foot is where it stands, which is what
+    /// the depth sort compares.
+    static func draw(_ context: inout GraphicsContext, tree: Tree, rect: CGRect,
+                     season: Season, time: Double, registry: GameDataRegistry) {
+        trunk(&context, tree, at: SettlementRenderer.point(tree.position, in: rect),
+              unit: min(rect.width, rect.height), season: season, time: time,
+              registry: registry)
+    }
+
     static func draw(
         _ context: inout GraphicsContext, rect: CGRect, map: LocalMap,
         season: Season, time: Double,
@@ -41,6 +66,10 @@ enum SettlementFlora {
         /// The screen, when the caller knows it. Nil draws the whole wood —
         /// which is what the tests want and what a thumbnail wants.
         viewport: CGRect? = nil,
+        /// **Leave the trunks to the caller.** The renderer draws the wood in
+        /// the same sorted pass as the town; a test or a thumbnail draws it
+        /// here and gets the whole wood, exactly as before.
+        standingTrees: Bool = true,
         registry: GameDataRegistry
     ) {
         let unit = min(rect.width, rect.height)
@@ -51,9 +80,7 @@ enum SettlementFlora {
             guard let frame else { return true }
             return frame.contains(SettlementRenderer.point(p, in: rect))
         }
-        let standing = map.trees
-            .filter { map.isExplored($0.position) && onScreen($0.position) }
-            .sorted(by: { $0.position.y < $1.position.y })
+        let wood = standing(map: map, rect: rect, viewport: viewport)
         let outcrops = map.rocks.filter {
             map.isExplored($0.position) && onScreen($0.position)
         }
@@ -70,7 +97,7 @@ enum SettlementFlora {
                     at: CGPoint(x: c.x, y: c.y + s * 0.2), halfWidth: s * 0.72,
                     height: s * 1.1, sun: sun))
             }
-            for tree in standing {
+            for tree in wood {
                 let s = unit * 0.013 * (0.35 + CGFloat(tree.growth) * 0.95)
                 let c = SettlementRenderer.point(tree.position, in: rect)
                 shadows.addPath(SettlementLight.blobShadow(
@@ -88,7 +115,8 @@ enum SettlementFlora {
                     unit: unit, season: season, registry: registry)
         }
         // Back to front, so nearer trees overlap the ones behind them.
-        for tree in standing {
+        guard standingTrees else { return }
+        for tree in wood {
             trunk(&context, tree, at: SettlementRenderer.point(tree.position, in: rect),
                   unit: unit, season: season, time: time, registry: registry)
         }

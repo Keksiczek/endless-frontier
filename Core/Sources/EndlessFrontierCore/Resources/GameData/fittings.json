@@ -39,26 +39,6 @@
     }
   },
   {
-    "id": "barrel",
-    "name": {
-      "en": "Barrel",
-      "cs": "Sud"
-    },
-    "shape": "barrel",
-    "role": "station",
-    "tint": "wood",
-    "scale": 1.0,
-    "rooms": [
-      "aqueduct",
-      "well"
-    ],
-    "eras": [],
-    "description": {
-      "en": "Water, ale, or something that keeps better wet.",
-      "cs": "Voda, pivo, nebo něco, co v mokru vydrží."
-    }
-  },
-  {
     "id": "barrel_stored",
     "name": {
       "en": "Barrel (stored)",
@@ -184,10 +164,8 @@
     "tint": "glow",
     "scale": 1.0,
     "rooms": [
-      "dam",
       "dish",
       "lab",
-      "pad",
       "tanks"
     ],
     "eras": [],
@@ -227,10 +205,7 @@
     "tint": "wood",
     "scale": 1.0,
     "rooms": [
-      "aqueduct",
-      "array",
       "clinic",
-      "dam",
       "forge",
       "granary",
       "hall",
@@ -239,15 +214,12 @@
       "lodge",
       "market",
       "mine",
-      "pad",
       "plant",
       "rail",
       "sawmill",
       "tanks",
       "tenement",
-      "turbine",
       "vault",
-      "well",
       "workshop"
     ],
     "eras": [],
@@ -350,11 +322,9 @@
     "tint": "metal",
     "scale": 1.0,
     "rooms": [
-      "dam",
       "generator",
       "plant",
-      "tanks",
-      "turbine"
+      "tanks"
     ],
     "eras": [],
     "description": {
@@ -380,26 +350,6 @@
     "description": {
       "en": "Turns whether or not anybody is watching.",
       "cs": "Točí se, ať se dívá kdo chce."
-    }
-  },
-  {
-    "id": "panel",
-    "name": {
-      "en": "Panel",
-      "cs": "Panel"
-    },
-    "shape": "panel",
-    "role": "station",
-    "tint": "glow",
-    "scale": 1.0,
-    "rooms": [
-      "array",
-      "pad"
-    ],
-    "eras": [],
-    "description": {
-      "en": "Lit from behind, and it means something to somebody.",
-      "cs": "Podsvícený, a někomu něco říká."
     }
   },
   {
@@ -472,12 +422,10 @@
     "scale": 1.0,
     "rooms": [
       "barracks",
-      "dam",
       "forge",
       "generator",
       "house",
       "mine",
-      "pad",
       "rail",
       "sawmill",
       "tower",
@@ -570,8 +518,7 @@
     "tint": "wood",
     "scale": 1.0,
     "rooms": [
-      "tower",
-      "wall"
+      "tower"
     ],
     "eras": [],
     "description": {
@@ -592,8 +539,7 @@
     "rooms": [
       "barracks",
       "lodge",
-      "tower",
-      "wall"
+      "tower"
     ],
     "eras": [],
     "description": {
@@ -749,9 +695,7 @@
     "scale": 1.3,
     "rooms": [
       "lab",
-      "pad",
-      "tower",
-      "array"
+      "tower"
     ],
     "eras": [
       "near_future"
@@ -931,9 +875,7 @@
     "scale": 1.5,
     "rooms": [
       "lab",
-      "pad",
-      "tower",
-      "array"
+      "tower"
     ],
     "eras": [
       "near_future"
@@ -1092,8 +1034,7 @@
     "scale": 1.4,
     "rooms": [
       "lab",
-      "hall",
-      "pad"
+      "hall"
     ],
     "eras": [
       "near_future"
@@ -2042,9 +1983,7 @@
     "tint": "glow",
     "scale": 1.1,
     "rooms": [
-      "lab",
-      "pad",
-      "array"
+      "lab"
     ],
     "eras": [
       "near_future"
@@ -2155,8 +2094,7 @@
     "scale": 1.5,
     "rooms": [
       "barracks",
-      "tower",
-      "pad"
+      "tower"
     ],
     "eras": [
       "modern"
@@ -2178,8 +2116,7 @@
     "scale": 1.6,
     "rooms": [
       "lab",
-      "vault",
-      "array"
+      "vault"
     ],
     "eras": [
       "near_future"
@@ -2289,8 +2226,7 @@
     "scale": 1.5,
     "rooms": [
       "lab",
-      "plant",
-      "pad"
+      "plant"
     ],
     "eras": [
       "near_future"
@@ -2634,6 +2570,1313 @@
     "description": {
       "en": "Adjusts to the sleeper's needs for optimal rest and health monitoring.",
       "cs": "Přizpůsobuje se potřebám spáče pro optimální odpočinek a monitorování zdraví."
+    }
+  },
+  {
+    "id": "bloomery_smelting_furnace",
+    "name": {
+      "en": "Bloomery Furnace",
+      "cs": "Dýmačka"
+    },
+    "shape": "hearth",
+    "role": "station",
+    "tint": "stone",
+    "scale": 1.3,
+    "rooms": [
+      "bloomery"
+    ],
+    "eras": [
+      "early_settlement",
+      "medieval"
+    ],
+    "description": {
+      "en": "A tall clay furnace, hungry for charcoal and ore, where the first iron is painstakingly won from the rock.",
+      "cs": "Vysoká hliněná pec, nenasytná po dřevěném uhlí a rudě. Tady se pracně získává první železo z kamene."
+    }
+  },
+  {
+    "id": "charcoal_supply_sacks",
+    "name": {
+      "en": "Charcoal Sacks",
+      "cs": "Pytle s uhlím"
+    },
+    "shape": "sack",
+    "role": "clutter",
+    "tint": "cloth",
+    "scale": 1.2,
+    "rooms": [
+      "bloomery"
+    ],
+    "eras": [
+      "early_settlement",
+      "medieval"
+    ],
+    "description": {
+      "en": "Piles of coarse sacks filled with charcoal, fuel for the bloomery's constant fire.",
+      "cs": "Hromady hrubých pytlů naplněných dřevěným uhlím, palivo pro neustálý oheň dýmačky."
+    }
+  },
+  {
+    "id": "saw_pit_trestle",
+    "name": {
+      "en": "Sawing Trestle",
+      "cs": "Pilařská koza"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.5,
+    "rooms": [
+      "saw_pit"
+    ],
+    "eras": [
+      "early_settlement",
+      "medieval"
+    ],
+    "description": {
+      "en": "A heavy timber frame built over a pit. One sawyer stands above, one below, pulling the long blade through the log.",
+      "cs": "Těžký dřevěný rám postavený nad jámou. Jeden pilař stojí nahoře, druhý dole a společně táhnou dlouhou pilu kládou."
+    }
+  },
+  {
+    "id": "log_pile_saw_pit",
+    "name": {
+      "en": "Log Pile",
+      "cs": "Hromada klád"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.8,
+    "rooms": [
+      "saw_pit",
+      "lumberyard"
+    ],
+    "eras": [
+      "early_settlement",
+      "medieval"
+    ],
+    "description": {
+      "en": "Trunks waiting to be hoisted onto the trestle. There's a whole winter's work in this pile for Old Man Yakov.",
+      "cs": "Kmeny čekající na vyzdvižení na kozu. V téhle hromadě má starý Jakov práci na celou zimu."
+    }
+  },
+  {
+    "id": "vehicle_assembly_line",
+    "name": {
+      "en": "Vehicle Assembly Line",
+      "cs": "Montážní linka vozidel"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.6,
+    "rooms": [
+      "vehicle_works"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "A moving track where chassis become trucks and tractors. This is where the colony's workhorses are born.",
+      "cs": "Pohyblivý pás, na kterém se z podvozků stávají náklaďáky a traktory. Tady se rodí pracovní koně osady."
+    }
+  },
+  {
+    "id": "engine_block_rack",
+    "name": {
+      "en": "Engine Block Rack",
+      "cs": "Stojan na bloky motorů"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.3,
+    "rooms": [
+      "vehicle_works",
+      "garage"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "Heavy iron engine blocks, waiting their turn on the line. Each one is the heart of a new machine.",
+      "cs": "Těžké železné bloky motorů čekají, až na ně přijde řada na lince. Každý z nich je srdcem nového stroje."
+    }
+  },
+  {
+    "id": "casting_mould_frame",
+    "name": {
+      "en": "Casting Mould Frame",
+      "cs": "Rám licí formy"
+    },
+    "shape": "machine",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.5,
+    "rooms": [
+      "foundry"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "A heavy iron frame for holding sand moulds, ready for the molten metal pour. Old Man Havelka swears by his own design.",
+      "cs": "Těžký železný rám na pískové formy, připravený k lití roztaveného kovu. Starý Havelka na tenhle svůj návrh nedá dopustit."
+    }
+  },
+  {
+    "id": "pig_iron_stack",
+    "name": {
+      "en": "Pig Iron Ingots",
+      "cs": "Housky surového železa"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 0.8,
+    "rooms": [
+      "foundry"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Stacks of rough-cast iron pigs, waiting to be remelted and refined in the cupola furnace.",
+      "cs": "Stohy nahrubo odlitých housek, které čekají na přetavení a zušlechtění v kuplovně."
+    }
+  },
+  {
+    "id": "server_rack_row",
+    "name": {
+      "en": "Server Rack Row",
+      "cs": "Řada serverových stojanů"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.6,
+    "rooms": [
+      "data_center"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "Aisle after aisle of humming servers, their blinking lights a constant river of data. The heart of the colony's digital mind.",
+      "cs": "Nekonečné uličky bzučících serverů, jejichž blikající světla jsou stálým proudem dat. Srdce digitální mysli celé kolonie."
+    }
+  },
+  {
+    "id": "liquid_cooling_distributor",
+    "name": {
+      "en": "Cooling Distributor",
+      "cs": "Distributor chlazení"
+    },
+    "shape": "panel",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "data_center"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "Pumps and manifolds for the liquid cooling system that keeps the server halls from melting down. Eva is the only one who understands its gurgles.",
+      "cs": "Čerpadla a rozvody kapalinového chlazení, které brání roztavení serverových sálů. Těmhle zvukům rozumí jenom Eva."
+    }
+  },
+  {
+    "id": "wheel_assembly_bench",
+    "name": {
+      "en": "Wheel Assembly Bench",
+      "cs": "Kolařský ponk"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.3,
+    "rooms": [
+      "wainwright"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A low, sturdy bench used for assembling wheel hubs, spokes, and felloes. Covered in wood shavings and specialized tools.",
+      "cs": "Nízký, bytelný ponk pro sestavování nábojů, paprsků a loukotí kol. Je věčně pokrytý hoblinami a zvláštním nářadím."
+    }
+  },
+  {
+    "id": "vehicle_lift_station",
+    "name": {
+      "en": "Vehicle Lift",
+      "cs": "Zvedák na vozidla"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.8,
+    "rooms": [
+      "garage"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "A hydraulic lift for raising cars and trucks, allowing mechanics to work underneath. The ground is permanently stained with oil.",
+      "cs": "Hydraulický zvedák pro osobní a nákladní vozy, aby se mechanici dostali i na podvozek. Podlaha je tu věčně od oleje."
+    }
+  },
+  {
+    "id": "cupola_furnace",
+    "name": {
+      "en": "Cupola Furnace",
+      "cs": "Kupolová pec"
+    },
+    "shape": "hearth",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.6,
+    "rooms": [
+      "foundry"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "A tall, cylindrical furnace that melts iron for casting. Its roar is the foundry's heartbeat.",
+      "cs": "Vysoká válcová pec, která taví železo k odlévání. Její hukot je tlukotem srdce slévárny."
+    }
+  },
+  {
+    "id": "casting_floor_moulds",
+    "name": {
+      "en": "Casting Moulds",
+      "cs": "Odlévací formy"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "stone",
+    "scale": 1.2,
+    "rooms": [
+      "foundry"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "Sand and clay moulds for casting large machine parts. The foundry floor is littered with them.",
+      "cs": "Pískové a hliněné formy pro odlévání velkých strojních dílů. Podlaha slévárny je jimi posetá."
+    }
+  },
+  {
+    "id": "circular_saw_bench",
+    "name": {
+      "en": "Circular Saw",
+      "cs": "Cirkulárka"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.3,
+    "rooms": [
+      "powered_sawmill"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "A great, screaming steel disc that turns whole logs into planks in minutes. Old Man Tomas lost a finger to one just like it.",
+      "cs": "Velký, ječící ocelový kotouč, který během pár minut promění celé klády v prkna. Starý Tomáš přišel o prst na jedné přesně takové."
+    }
+  },
+  {
+    "id": "sawn_lumber_stack",
+    "name": {
+      "en": "Sawn Lumber Stack",
+      "cs": "Hromada řeziva"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.4,
+    "rooms": [
+      "powered_sawmill"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "Neatly stacked boards, ready for the wainwright or the carpenter. The air smells of fresh-cut pine.",
+      "cs": "Pečlivě srovnaná prkna, připravená pro koláře nebo tesaře. Vzduch voní čerstvě řezanou borovicí."
+    }
+  },
+  {
+    "id": "school_blackboard",
+    "name": {
+      "en": "Blackboard",
+      "cs": "Tabule"
+    },
+    "shape": "panel",
+    "role": "clutter",
+    "tint": "stone",
+    "scale": 1.3,
+    "rooms": [
+      "school"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "A large slate panel for writing lessons in chalk. Every day, Teacher Elara fills it with letters and numbers.",
+      "cs": "Velká břidlicová deska pro psaní lekcí křídou. Učitelka Elara ji každý den zaplní písmeny a čísly."
+    }
+  },
+  {
+    "id": "university_lectern",
+    "name": {
+      "en": "Lectern",
+      "cs": "Řečnický pult"
+    },
+    "shape": "desk",
+    "role": "station",
+    "tint": "wood",
+    "scale": 0.8,
+    "rooms": [
+      "university"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "From this podium, professors share the colony's accumulated knowledge with the next generation of scholars.",
+      "cs": "Z tohoto pultu profesoři sdílejí nashromážděné znalosti osady s další generací učenců."
+    }
+  },
+  {
+    "id": "vehicle_chassis_jig",
+    "name": {
+      "en": "Chassis Jig",
+      "cs": "Montážní rám podvozku"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.5,
+    "rooms": [
+      "vehicle_works"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "The skeleton of a new truck takes shape on this heavy steel frame. This is where Vaclav's team builds the colony's workhorses.",
+      "cs": "Na tomto těžkém ocelovém rámu dostává kostra nového náklaďáku svůj tvar. Právě zde Václavova parta staví tahače pro celou osadu."
+    }
+  },
+  {
+    "id": "vehicle_works_tire_rack",
+    "name": {
+      "en": "Tire Rack",
+      "cs": "Stojan na pneumatiky"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "vehicle_works"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "Rows of new tires, waiting for the chassis to be ready. The smell of vulcanized rubber fills the air.",
+      "cs": "Řady nových pneumatik čekají, až bude podvozek připraven. Vzduch je plný vůně vulkanizované gumy."
+    }
+  },
+  {
+    "id": "bloomery_charcoal_bins",
+    "name": {
+      "en": "Charcoal Bins",
+      "cs": "Zásobníky na dřevěné uhlí"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.3,
+    "rooms": [
+      "bloomery"
+    ],
+    "eras": [
+      "early_settlement",
+      "medieval"
+    ],
+    "description": {
+      "en": "Kept as close to the furnace as is safe. The bloomery consumes charcoal without end, a constant task for the younger apprentices.",
+      "cs": "Jsou co nejblíže peci, ale stále v bezpečí. Dýmačka spotřebovává dřevěné uhlí bez přestání, což je stálý úkol pro mladší učedníky."
+    }
+  },
+  {
+    "id": "iron_bloom_cooling_rack",
+    "name": {
+      "en": "Bloom Cooling Rack",
+      "cs": "Stojan na chladnutí lupy"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 0.9,
+    "rooms": [
+      "bloomery"
+    ],
+    "eras": [
+      "early_settlement",
+      "medieval"
+    ],
+    "description": {
+      "en": "A heavy iron rack where the spongy mass of new-won iron, the 'bloom', cools before the smiths hammer it into shape.",
+      "cs": "Těžký železný stojan, kde houbovitá hmota nově vytaveného železa, lupa, chladne, než ji kováři zpracují."
+    }
+  },
+  {
+    "id": "data_center_mainframe_cabinet",
+    "name": {
+      "en": "Mainframe Cabinet",
+      "cs": "Skříň sálového počítače"
+    },
+    "shape": "panel",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.6,
+    "rooms": [
+      "data_center"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "The heart of the data center, a dense block of processing power. Its fans produce a constant, low hum that is the new sound of thought.",
+      "cs": "Srdce datového centra, hustý blok výpočetního výkonu. Jeho ventilátory vydávají stálý, tichý hukot, který je novým zvukem myšlení."
+    }
+  },
+  {
+    "id": "data_center_power_unit",
+    "name": {
+      "en": "Power Distribution Unit",
+      "cs": "Napájecí jednotka"
+    },
+    "shape": "console",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.1,
+    "rooms": [
+      "data_center"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "Regulates the immense power flow required by the server racks. A bank of screens shows that everything is, as always, green.",
+      "cs": "Reguluje obrovský tok energie, který vyžadují serverové stojany. Řada obrazovek ukazuje, že vše je jako vždy v zelených číslech."
+    }
+  },
+  {
+    "id": "wheelwrights_forming_bench",
+    "name": {
+      "en": "Wheelwright's Bench",
+      "cs": "Kolářský ponk"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.2,
+    "rooms": [
+      "wainwright"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A sturdy bench where spokes are hammered into hubs and rims are fitted. The Marek family has been making wheels here for three generations.",
+      "cs": "Pevný ponk, kde se zatloukají paprsky do nábojů a nasazují ráfky. Rodina Marků tu vyrábí kola už po tři generace."
+    }
+  },
+  {
+    "id": "finished_wheels_stack",
+    "name": {
+      "en": "Stack of Wheels",
+      "cs": "Stoh hotových kol"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.1,
+    "rooms": [
+      "wainwright"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "Finished wheels lean against the wall, waiting for axles and cart bodies.",
+      "cs": "Hotová kola opřená o zeď čekají na osy a korby vozů."
+    }
+  },
+  {
+    "id": "distillation_column_panel",
+    "name": {
+      "en": "Distillation Control Panel",
+      "cs": "Panel frakční destilace"
+    },
+    "shape": "panel",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.3,
+    "rooms": [
+      "oil_refinery"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A wall of gauges and levers monitoring the temperature gradients in the cracking tower. Old Man Hasek claims he can smell when the pressure is off.",
+      "cs": "Stěna měřáků a pák sledující teplotní gradienty v destilační koloně. Starý Hásek tvrdí, že pozná po čichu, když je něco s tlakem."
+    }
+  },
+  {
+    "id": "crude_oil_barrels",
+    "name": {
+      "en": "Crude Oil Barrels",
+      "cs": "Sudy se surovou ropou"
+    },
+    "shape": "barrel",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1,
+    "rooms": [
+      "oil_refinery"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "Thick, black crude waiting to be fed into the refinery's hungry maw.",
+      "cs": "Hustá, černá ropa čeká, až ji spolkne nenasytný chřtán rafinerie."
+    }
+  },
+  {
+    "id": "consciousness_matrix_core",
+    "name": {
+      "en": "Consciousness Matrix",
+      "cs": "Matrice vědomí"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.8,
+    "rooms": [
+      "ai_core"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "The glowing, crystalline heart of the machine mind. Its thoughts flicker too fast for the human eye to follow.",
+      "cs": "Zářící, krystalické srdce strojové mysli. Její myšlenky problikávají příliš rychle, než aby je lidské oko stačilo sledovat."
+    }
+  },
+  {
+    "id": "quantum_coolant_pump",
+    "name": {
+      "en": "Quantum Coolant Pump",
+      "cs": "Kvantové chladicí čerpadlo"
+    },
+    "shape": "console",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "ai_core"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "A silent, humming unit that circulates superfluid helium to keep the core from melting down. Aneta spends her days checking its delicate balance.",
+      "cs": "Tichá, bzučící jednotka, která cirkuluje supratekuté helium, aby se jádro neroztavilo. Aneta tráví dny kontrolováním jeho křehké rovnováhy."
+    }
+  },
+  {
+    "id": "bellows_assembly",
+    "name": {
+      "en": "Bellows Assembly",
+      "cs": "Sestava měchů"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.3,
+    "rooms": [
+      "bloomery"
+    ],
+    "eras": [
+      "medieval"
+    ],
+    "description": {
+      "en": "A pair of large leather bellows, worked by a long lever. The heart of the bloomery, feeding the fire the air it craves.",
+      "cs": "Pár velkých kožených měchů ovládaných dlouhou pákou. Srdce dýmačky, které živí oheň vzduchem, po němž prahne."
+    }
+  },
+  {
+    "id": "bloomery_hammering_block",
+    "name": {
+      "en": "Hammering Block",
+      "cs": "Kovací špalek"
+    },
+    "shape": "anvil",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.2,
+    "rooms": [
+      "bloomery"
+    ],
+    "eras": [
+      "medieval"
+    ],
+    "description": {
+      "en": "A massive, fire-scarred log stump where the hot bloom is hammered to consolidate the iron and beat out the slag.",
+      "cs": "Mohutný, ohněm ožehnutý špalek, na kterém se za horka kuje železná houba, aby se z ní vytloukla struska a kov se zhutnil."
+    }
+  },
+  {
+    "id": "steam_engine_flywheel",
+    "name": {
+      "en": "Steam Engine Flywheel",
+      "cs": "Setrvačník parního stroje"
+    },
+    "shape": "machine",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.6,
+    "rooms": [
+      "powered_sawmill"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "The heavy, spinning heart of the sawmill. It smooths the jerky power of the steam piston into a steady rotation for the main saw.",
+      "cs": "Těžké, rotující srdce pily. Vyhlazuje trhavý pohyb parního pístu na plynulou rotaci pro hlavní pilu."
+    }
+  },
+  {
+    "id": "saw_blade_sharpening_bench",
+    "name": {
+      "en": "Blade Sharpening Bench",
+      "cs": "Bruska na pilové listy"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.0,
+    "rooms": [
+      "powered_sawmill"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A dedicated bench with jigs and files for maintaining the great circular saw blades. A sharp blade is a safe and efficient blade.",
+      "cs": "Speciální stůl s přípravky a pilníky pro údržbu velkých kotoučových pil. Ostrý list je bezpečný a efektivní list."
+    }
+  },
+  {
+    "id": "cracking_unit_monitor_panel",
+    "name": {
+      "en": "Cracking Unit Monitor",
+      "cs": "Monitor krakovací jednotky"
+    },
+    "shape": "panel",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.2,
+    "rooms": [
+      "oil_refinery"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A bank of gauges, dials, and warning lights tracking the temperatures and pressures inside the catalytic cracker. One eye on it at all times.",
+      "cs": "Řada měřidel, číselníků a varovných světel, které sledují teploty a tlaky uvnitř katalytické krakovací jednotky. Neustále pod dohledem."
+    }
+  },
+  {
+    "id": "pipe_and_valve_cluster",
+    "name": {
+      "en": "Pipe and Valve Cluster",
+      "cs": "Spleť potrubí a ventilů"
+    },
+    "shape": "machine",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.4,
+    "rooms": [
+      "oil_refinery"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A dense knot of pipes, valves, and pressure regulators. The circulatory system of the refinery, routing fluids between vessels.",
+      "cs": "Hustý uzel potrubí, ventilů a regulátorů tlaku. Oběhový systém rafinerie, který vede tekutiny mezi jednotlivými nádržemi."
+    }
+  },
+  {
+    "id": "sawmill_control_station",
+    "name": {
+      "en": "Saw Control Station",
+      "cs": "Ovládací stanoviště pily"
+    },
+    "shape": "panel",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.0,
+    "rooms": [
+      "powered_sawmill"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "The levers and gauges that command the great circular blade. Old Man Hemlock lost a finger here learning the trade.",
+      "cs": "Páky a měřidla, kterými se ovládá velký pilový kotouč. Starý Habr se tu při zaučování připravil o prst."
+    }
+  },
+  {
+    "id": "courtyard_cistern",
+    "name": {
+      "en": "Courtyard Cistern",
+      "cs": "Dvorní cisterna"
+    },
+    "shape": "barrel",
+    "role": "clutter",
+    "tint": "stone",
+    "scale": 1.4,
+    "rooms": [
+      "courtyard_house"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A stone-lined wellhead in the center of the yard, where the household draws its water. The Kovac family's children are forever dropping things in.",
+      "cs": "Vykroužená kamenná studna uprostřed dvora, odkud domácnost bere vodu. Děti Kováčových do ní pořád něco házejí."
+    }
+  },
+  {
+    "id": "coolant_distribution_manifold",
+    "name": {
+      "en": "Coolant Manifold",
+      "cs": "Rozvaděč chladiva"
+    },
+    "shape": "machine",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "data_center"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "A knot of insulated pipes and valves, distributing coolant to the server racks. It hums with a quiet, vital chill.",
+      "cs": "Spleť izolovaných trubek a ventilů, které rozvádějí chladicí kapalinu k serverovým stojanům. Hučí tichým, životně důležitým chladem."
+    }
+  },
+  {
+    "id": "refinery_sample_station",
+    "name": {
+      "en": "Sample Analysis Station",
+      "cs": "Stanice pro analýzu vzorků"
+    },
+    "shape": "counter",
+    "role": "station",
+    "tint": "metal",
+    "scale": 0.9,
+    "rooms": [
+      "oil_refinery"
+    ],
+    "eras": [
+      "modern"
+    ],
+    "description": {
+      "en": "A small, stained bench where technicians test the viscosity and purity of distillates drawn from the cracking towers.",
+      "cs": "Malý, ušpiněný pult, kde technici testují viskozitu a čistotu destilátů odebíraných z krakovacích věží."
+    }
+  },
+  {
+    "id": "school_pupils_desk",
+    "name": {
+      "en": "Pupil's Desk",
+      "cs": "Školní lavice"
+    },
+    "shape": "desk",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 0.8,
+    "rooms": [
+      "school"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A simple wooden desk, its surface covered in carvings and ink stains from generations of bored children.",
+      "cs": "Jednoduchý dřevěný stůl, jehož deska je pokryta řezbami a inkoustovými skvrnami od generací znuděných dětí."
+    }
+  },
+  {
+    "id": "tenement_yard_pump",
+    "name": {
+      "en": "Yard Water Pump",
+      "cs": "Dvorní pumpa"
+    },
+    "shape": "machine",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 0.7,
+    "rooms": [
+      "brick_tenement"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "The cast-iron pump in the yard, shared by all the families. Its squeal is the first sound of the morning.",
+      "cs": "Litinová pumpa na dvoře, společná pro všechny rodiny. Její skřípání je první zvuk, který se ráno ozývá."
+    }
+  },
+  {
+    "id": "foundry_furnace_controls",
+    "name": {
+      "en": "Furnace Control Panel",
+      "cs": "Ovládací panel pece"
+    },
+    "shape": "panel",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.0,
+    "rooms": [
+      "foundry"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "Gauges and heavy levers to manage the intense heat and airflow of the foundry's main furnace.",
+      "cs": "Měřidla a těžké páky pro řízení intenzivního žáru a proudění vzduchu v hlavní slévárenské peci."
+    }
+  },
+  {
+    "id": "foundry_casting_cooler",
+    "name": {
+      "en": "Casting Cooling Rack",
+      "cs": "Chladicí stojan na odlitky"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.3,
+    "rooms": [
+      "foundry"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "Heavy steel racks where freshly-poured castings are left to slowly cool and solidify before finishing.",
+      "cs": "Těžké ocelové regály, kde se čerstvě nalité odlitky nechávají pomalu chladnout a tuhnout před dokončením."
+    }
+  },
+  {
+    "id": "robot_fleet_command_console",
+    "name": {
+      "en": "Robotic Fleet Command",
+      "cs": "Velitelský pult robotické flotily"
+    },
+    "shape": "console",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.2,
+    "rooms": [
+      "automated_factory"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "From this terminal, an overseer monitors and directs the entire automated workforce of the factory floor.",
+      "cs": "Z tohoto terminálu dohlíží operátor na celou automatizovanou pracovní sílu v tovární hale a řídí ji."
+    }
+  },
+  {
+    "id": "automated_parts_kiosk",
+    "name": {
+      "en": "Automated Parts Kiosk",
+      "cs": "Automatizovaný výdej dílů"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.4,
+    "rooms": [
+      "automated_factory"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "A large carousel rack that rotates to present the correct component to the assembly robots as needed.",
+      "cs": "Velký karuselový regál, který se otáčí, aby podle potřeby podal montážním robotům správnou součástku."
+    }
+  },
+  {
+    "id": "library_book_stacks",
+    "name": {
+      "en": "Library Book Stacks",
+      "cs": "Knihovní regály"
+    },
+    "shape": "shelf",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.6,
+    "rooms": [
+      "library"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "Tall, sturdy wooden shelves, packed with scrolls and bound volumes of the colony's collected knowledge.",
+      "cs": "Vysoké, robustní dřevěné police, napěchované svitky a vázanými svazky sebraných vědomostí osady."
+    }
+  },
+  {
+    "id": "lumberyard_log_stacks",
+    "name": {
+      "en": "Log Stacks",
+      "cs": "Hráně klád"
+    },
+    "shape": "crate",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.6,
+    "rooms": [
+      "lumberyard"
+    ],
+    "eras": [
+      "early_settlement",
+      "medieval"
+    ],
+    "description": {
+      "en": "Raw timber, felled and dragged from the nearby woods, awaiting processing at the saw pit or by hand.",
+      "cs": "Surové dřevo, pokácené a přivlečené z okolních lesů, čekající na zpracování na pile nebo ručně."
+    }
+  },
+  {
+    "id": "refinery_pipe_junction",
+    "name": {
+      "en": "Pipe Junction",
+      "cs": "Potrubní uzel"
+    },
+    "shape": "machine",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.4,
+    "rooms": [
+      "oil_refinery"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "A maze of pipes, valves, and gauges where different refined products are directed. A constant hissing sound fills the air.",
+      "cs": "Bludiště trubek, ventilů a měřidel, kudy se směrují různé rafinované produkty. Vzduchem se nese neustálé syčení."
+    }
+  },
+  {
+    "id": "fractionation_column_console",
+    "name": {
+      "en": "Fractionation Console",
+      "cs": "Konzole frakční kolony"
+    },
+    "shape": "panel",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.1,
+    "rooms": [
+      "oil_refinery"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "Monitors and controls for the distillation process. A worker here ensures the crude oil separates into its valuable components at the right temperatures.",
+      "cs": "Monitory a ovládací prvky pro proces destilace. Dělník zde zajišťuje, že se ropa při správných teplotách oddělí na své cenné složky."
+    }
+  },
+  {
+    "id": "watermill_main_gearing",
+    "name": {
+      "en": "Main Gearing",
+      "cs": "Hlavní soukolí"
+    },
+    "shape": "machine",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.7,
+    "rooms": [
+      "watermill"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A massive assembly of wooden gears and shafts that transfers the relentless power of the river to the millstones. The whole building trembles with its turning.",
+      "cs": "Mohutná soustava dřevěných ozubených kol a hřídelí, která přenáší neúnavnou sílu řeky na mlýnské kameny. Celá budova se jejím otáčením třese."
+    }
+  },
+  {
+    "id": "robotic_assembly_arm",
+    "name": {
+      "en": "Robotic Assembly Arm",
+      "cs": "Robotické montážní rameno"
+    },
+    "shape": "machine",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.4,
+    "rooms": [
+      "automated_factory"
+    ],
+    "eras": [
+      "modern",
+      "near_future"
+    ],
+    "description": {
+      "en": "A multi-jointed arm that performs assembly tasks with inhuman speed and precision. It doesn't tire, it doesn't complain, it just builds.",
+      "cs": "Vícekloubové rameno, které provádí montážní úkony s nelidskou rychlostí a přesností. Neunaví se, nestěžuje si, jen staví."
+    }
+  },
+  {
+    "id": "charcoal_smouldering_mound",
+    "name": {
+      "en": "Smouldering Mound",
+      "cs": "Doutnající milíř"
+    },
+    "shape": "hearth",
+    "role": "station",
+    "tint": "stone",
+    "scale": 1.8,
+    "rooms": [
+      "charcoal_kiln"
+    ],
+    "eras": [
+      "early_settlement",
+      "medieval"
+    ],
+    "description": {
+      "en": "A carefully constructed pile of wood covered in turf and soil, slowly burning to produce charcoal. A thin plume of smoke is the only sign of the fire within.",
+      "cs": "Pečlivě postavená hromada dřeva pokrytá drny a hlínou, která pomalu hoří a vyrábí dřevěné uhlí. Tenký pramínek kouře je jediným znamením ohně uvnitř."
+    }
+  },
+  {
+    "id": "stable_horse_stall",
+    "name": {
+      "en": "Horse Stall",
+      "cs": "Koňské stání"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.5,
+    "rooms": [
+      "stable"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A sturdy wooden partition and manger, giving a horse its own space. The scent of hay and horse is the smell of the settlement's reach and speed.",
+      "cs": "Pevná dřevěná přepážka a žlab, které dávají koni vlastní prostor. Vůně sena a koně je vůní dosahu a rychlosti celé osady."
+    }
+  },
+  {
+    "id": "ai_core_central_nexus",
+    "name": {
+      "en": "AI Central Nexus",
+      "cs": "Centrální nexus UI"
+    },
+    "shape": "console",
+    "role": "station",
+    "tint": "glow",
+    "scale": 1.4,
+    "rooms": [
+      "ai_core"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "The heart of the machine mind, a lattice of light where raw data is woven into thought.",
+      "cs": "Srdce strojové mysli, světelná mřížka, kde se surová data splétají v myšlenky."
+    }
+  },
+  {
+    "id": "quantum_state_stabilizer",
+    "name": {
+      "en": "Quantum State Stabilizer",
+      "cs": "Stabilizátor kvantových stavů"
+    },
+    "shape": "rack",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 1.2,
+    "rooms": [
+      "ai_core"
+    ],
+    "eras": [
+      "near_future"
+    ],
+    "description": {
+      "en": "Racks of humming cryo-coolers and magnetic fields, holding the delicate quantum bits in superposition.",
+      "cs": "Řady hučících kryochladičů a magnetických polí, které udržují křehké kvantové bity v superpozici."
+    }
+  },
+  {
+    "id": "cartwrights_frame_jig",
+    "name": {
+      "en": "Cart Frame Jig",
+      "cs": "Montážní přípravek na rámy vozů"
+    },
+    "shape": "bench",
+    "role": "station",
+    "tint": "wood",
+    "scale": 1.3,
+    "rooms": [
+      "wainwright"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A heavy wooden frame used to hold the pieces of a cart chassis in place for assembly. Essential for consistent quality.",
+      "cs": "Těžký dřevěný rám, který drží díly podvozku vozu na místě při montáži. Nezbytný pro stálou kvalitu."
+    }
+  },
+  {
+    "id": "horse_mill_fodder_trough",
+    "name": {
+      "en": "Fodder Trough",
+      "cs": "Krmný žlab"
+    },
+    "shape": "bench",
+    "role": "clutter",
+    "tint": "wood",
+    "scale": 1.1,
+    "rooms": [
+      "horse_mill"
+    ],
+    "eras": [
+      "medieval",
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A long wooden trough filled with oats and hay. The price of power before the age of steam.",
+      "cs": "Dlouhý dřevěný žlab naplněný ovsem a senem. Cena za energii před věkem páry."
+    }
+  },
+  {
+    "id": "tenement_potbelly_stove",
+    "name": {
+      "en": "Pot-belly Stove",
+      "cs": "Krbová kamna 'amerikánky'"
+    },
+    "shape": "hearth",
+    "role": "clutter",
+    "tint": "metal",
+    "scale": 0.8,
+    "rooms": [
+      "brick_tenement"
+    ],
+    "eras": [
+      "early_industrial"
+    ],
+    "description": {
+      "en": "A cast-iron stove for heat and a little cooking. Better than an open fire, and cheaper than a proper fireplace.",
+      "cs": "Litinová kamna na teplo a trochu vaření. Lepší než otevřený oheň a levnější než pořádný krb."
+    }
+  },
+  {
+    "id": "sawmill_log_carriage",
+    "name": {
+      "en": "Log Carriage",
+      "cs": "Vozík na klády"
+    },
+    "shape": "cart",
+    "role": "station",
+    "tint": "metal",
+    "scale": 1.5,
+    "rooms": [
+      "powered_sawmill"
+    ],
+    "eras": [
+      "early_industrial",
+      "modern"
+    ],
+    "description": {
+      "en": "A heavy, railed cart that feeds the log steadily into the great circular saw.",
+      "cs": "Těžký vozík na kolejích, který plynule posouvá kládu do velké kotoučové pily."
     }
   }
 ]

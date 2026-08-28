@@ -4050,3 +4050,82 @@ pointed at itself.
 3. **Per-building fittings** (§23.3) — the reader is in, the content is not. 51
    buildings share a look and want two or three pieces each.
 4. Everything in §22.4.
+
+## 24. 2026-08-28 — the wood in the town's pass, and rooms that were never rooms
+
+Keks, on the same screenshot: *"nějaké stromy levitují okolo"*, and then
+*"nějaké budovy jsou interiérově prostě špatně, třeba studna, tak ať ty
+interiéry sedí"*.
+
+### 24.1 — every tree in the settlement stood behind every roof in it
+
+`SettlementFlora.draw` drew the whole wood in one pass, and the town was drawn
+in another pass after it. Sorting inside each is no help at all: a block drawn
+before a block is behind it, so a tree growing in the middle of the village was
+painted *under* the house next to it, whatever their real order on the ground.
+That is what read as levitation — a crown with a roof through it has no ground
+to stand on.
+
+**One pass, sorted on the foot** (`RENDER_25D.md` §3, build step 2). The trunks
+are held out of the wood pass — its shadows and its rock still go down with the
+ground, where they belong — and drawn with the buildings in a single list keyed
+on where each thing *stands*: a building's foot is the bottom of its lot, a
+tree's is the point it grows at. `SettlementFlora.standing` is the cull, and
+`SettlementFlora.draw(_:tree:…)` is one trunk; the whole-wood entry point still
+exists and still draws everything, because a test and a thumbnail want that.
+
+Agents are **not** in the sorted pass yet: they are still drawn after the town,
+so a colonist walking behind a granary is drawn over it. Same fault, one layer
+further on, and the same fix — see §24.4.
+
+### 24.2 — a well is not a room
+
+`SettlementInterior.draw` asked one question before furnishing: *is the
+footprint big enough to read*. So a well got a floor, lamplight after dark and a
+barrel standing in it; so did an aqueduct, a palisade, a dam, a field of solar
+panels, a wind farm and a launch apron. Seven glyphs that are a surface, a shaft
+or a line and have no inside at all.
+
+`SettlementInterior.roofless` names them and the draw returns before the floor
+is laid. `dish` and `tanks` are deliberately not in the set — an observatory has
+a desk under it and a refinery a control room, and both read as rooms at zoom.
+The test is not *is it a building* but **would lifting the roof off show you
+anything**.
+
+The furniture written for those rooms went with them: fifteen fittings named a
+roofless room, and two of them — a barrel in the well and the aqueduct, a panel
+in the array and the pad — stood nowhere else and are gone. Guarded by *"No
+fitting stands only in a room nobody furnishes"*, which is rule 47 in the
+furniture: content that loads, validates and draws nothing.
+
+**And the merge gate caught the consequence, which is what it is for.** Emptying
+those rooms failed *"Every room a building can be drawn as has something in
+it"* — a guard written when every glyph was a room, now asking after seven that
+are not, and the batch was put back rather than shipped. Two lists of the same
+idea will drift (rule 92), so they are held to each other against the shipped
+book instead of by hand: *"The book furnishes exactly the rooms that have an
+inside"* fails if a roofless room is furnished **or** if a real room is left
+bare.
+
+### 24.3 — the first per-building furniture
+
+§23.5's third open item. `Tools/generate.py` learned the door rule 108 opened —
+a fitting's `rooms` may name a **building id**, and the vocabulary is measured
+from the file, so every per-building piece read as an invented word until the
+building ids were added to it. The Core guard had the same hole and would have
+refused the first one as a typo.
+
+Forty-eight pieces across the buildings that share a look most confusingly — a
+bloomery's furnace against a foundry's, a data centre's racks, an oil
+refinery's still, a wainwright's wheel jig. Twenty-one of the forty-seven
+furnishable buildings that share a look are covered; the remaining twenty-six
+are the next batch.
+
+### 24.4 — still open
+
+1. **Agents in the sorted pass** — the same fault as §24.1 one layer on.
+2. **The attachments still draw nothing** (§23.5.2) — 43 names in the bank.
+3. **The remaining twenty-six buildings** want their own furniture (§24.3).
+4. A building's body is still *centred* in its lot rather than standing on the
+   bottom edge of it, so there is a band of bare apron below it. The height now
+   goes up rather than out (§23.4b); the foot has not moved yet.

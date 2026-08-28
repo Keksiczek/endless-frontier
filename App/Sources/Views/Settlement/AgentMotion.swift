@@ -243,6 +243,13 @@ enum AgentMotion {
         /// `SettlementInterior.Slot` is measured against.
         let roomW: Double
         let roomH: Double
+        /// **Where that floor is**, which is not the building's map point once
+        /// the building has more than one storey: a storey is added at the top
+        /// (`SettlementStructures.bodyRect`), so the drawn room's middle rises
+        /// by half of it. `center` stays the point on the ground — the door,
+        /// the walk and every hit test are measured from it — and this is where
+        /// the furniture and the people at it belong.
+        let roomY: Double
 
         /// Where a furniture slot actually stands on the map.
         ///
@@ -255,7 +262,7 @@ enum AgentMotion {
         /// tight ring inside the walls: nobody was on a mattress, and the ones
         /// the lot pushed together were drawn standing in each other.
         func place(_ slot: SettlementInterior.Slot) -> LocalPoint {
-            LocalPoint(x: center.x + slot.dx * roomW, y: center.y + slot.dy * roomH)
+            LocalPoint(x: center.x + slot.dx * roomW, y: roomY + slot.dy * roomH)
         }
 
         init(_ b: SettlementRenderer.NormalizedBuilding,
@@ -277,13 +284,22 @@ enum AgentMotion {
             let roomH = walls.height * (1 - SettlementInterior.wallInset * 2)
             self.roomW = roomW
             self.roomH = roomH
+            // …and at the height the walls are actually drawn at. A storey is
+            // added at the top (`bodyRect`), so the room's middle is above the
+            // building's map point by half of it — measuring from the point
+            // itself put the workers half a storey under their own floor.
+            let middle = b.center.y - SettlementStructures.bodyLift(
+                b.glyph, s: b.size, seed: b.seed,
+                aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1,
+                height: Double(b.variant.heightScale))
+            self.roomY = middle
             let places = SettlementInterior
                 .stationSlots(for: b.glyph, seed: b.seed,
                               stations: b.assignedPawnIDs.count,
                               era: era, registry: registry,
                               building: b.definitionID)
                 .map { LocalPoint(x: b.center.x + $0.dx * roomW,
-                                  y: b.center.y + $0.dy * roomH) }
+                                  y: middle + $0.dy * roomH) }
             stations = places
             var seating: [UUID: LocalPoint] = [:]
             for (index, id) in b.assignedPawnIDs.enumerated() where !places.isEmpty {

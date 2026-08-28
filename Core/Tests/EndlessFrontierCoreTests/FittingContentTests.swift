@@ -44,14 +44,19 @@ struct FittingContentTests {
         }
     }
 
+    /// A room is either an **archetype** — the glyph a building's `look` draws —
+    /// or a **building by id** (rule 108). The second was always legal and
+    /// nobody had written one, so this guard knew only the first and would have
+    /// refused the first per-building piece as a typo.
     @Test("Every fitting stands in a room somebody builds")
     func roomsAreReal() throws {
         let registry = try GameDataRegistry.bundled()
+        let buildings = Set(registry.buildings.keys)
         for (id, def) in registry.fittings {
             #expect(!def.rooms.isEmpty, "\(id) belongs in no room, so it stands nowhere")
             for room in def.rooms {
-                #expect(Self.rooms.contains(room),
-                        "\(id) stands in '\(room)', which is not a kind of building")
+                #expect(Self.rooms.contains(room) || buildings.contains(room),
+                        "\(id) stands in '\(room)', which is neither a kind of building nor a building anybody builds")
             }
         }
     }
@@ -89,6 +94,16 @@ struct FittingContentTests {
         Issue.record("every room is furnished identically in the first age and the last")
     }
 
+    /// **What has no inside at all.** A well is a shaft, an aqueduct a run of
+    /// arches, a wall a wall — the app draws no room in any of them
+    /// (`SettlementInterior.roofless`), so furniture written for one is
+    /// furniture nobody sees. Mirrored here because the glyphs are: the app's
+    /// own suite holds the two lists to each other in *"The book furnishes
+    /// exactly the rooms that have an inside"*.
+    static let roofless: Set<String> = [
+        "well", "aqueduct", "wall", "dam", "array", "turbine", "pad",
+    ]
+
     @Test("Every room a building can be drawn as has something in it")
     func noBareRooms() throws {
         let registry = try GameDataRegistry.bundled()
@@ -96,7 +111,8 @@ struct FittingContentTests {
         // into and find empty — which is what the interiors looked like before
         // any of this, and is worth refusing outright.
         var bare: [String] = []
-        for room in Self.rooms where registry.fittings(inRoom: room, era: .medieval).isEmpty {
+        for room in Self.rooms.subtracting(Self.roofless)
+        where registry.fittings(inRoom: room, era: .medieval).isEmpty {
             bare.append(room)
         }
         #expect(bare.isEmpty, "nothing stands in: \(bare.sorted())")

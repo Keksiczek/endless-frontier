@@ -123,6 +123,12 @@ def vocabulary(entries, kind: str | None = None) -> dict[str, set[str]]:
     # outright. See `SUPPLEMENTS_BY_KIND`.
     for key, own in (SUPPLEMENTS_BY_KIND.get(kind or "", {})).items():
         found[key] = set(own)
+    # A fitting's `rooms` names either an **archetype** — the glyph a building's
+    # `look` draws — or a **building by id** (rule 108). Only the first is in
+    # `fittings.json` today, so a vocabulary measured from the file alone reads
+    # every per-building piece as an invented word and refuses the batch.
+    if kind == "fittings" and "rooms" in found:
+        found["rooms"] |= ids_in(load(path_for("buildings")))
     return found
 
 

@@ -73,6 +73,13 @@ extension SettlementRenderer {
         time: Double, night: Double = 0, showLabels: Bool = false,
         zoom: CGFloat = 1, sun: SettlementLight.Sun = SettlementLight.sun(time: 0),
         selectedBuildingID: Int?,
+        /// **The wood, drawn in the same pass as the town.** A tree standing in
+        /// front of a house has to be drawn after it and one behind it before,
+        /// and no amount of ordering two whole passes can do both — the wood
+        /// was a block drawn before the buildings, so every tree in the town
+        /// was behind every roof in it (`RENDER_25D.md` §3). Empty draws the
+        /// town alone, which is what the tests and the thumbnail want.
+        trees: [Tree] = [], rect: CGRect = .zero, season: Season = .summer,
         /// The book the rooms are furnished out of (`FittingDefinition`), and
         /// the age they are furnished for.
         registry: GameDataRegistry,
@@ -111,7 +118,26 @@ extension SettlementRenderer {
                     building: building.definitionID, registry: registry)
             }
         }
-        for building in placed {
+        // **One sorted pass, on the foot.** Depth is where a thing *stands*, not
+        // which array it came out of: a building's foot is the bottom of its
+        // lot, a tree's is the point it grows at.
+        enum Standing {
+            case built(PlacedBuilding)
+            case tree(Tree)
+        }
+        let standing: [(foot: CGFloat, thing: Standing)] =
+            placed.map { (foot: $0.center.y + $0.footprint.height / 2, thing: .built($0)) }
+            + trees.map { (foot: SettlementRenderer.point($0.position, in: rect).y,
+                           thing: .tree($0)) }
+
+        for entry in standing.sorted(by: { $0.foot < $1.foot }) {
+            guard case .built(let building) = entry.thing else {
+                if case .tree(let tree) = entry.thing {
+                    SettlementFlora.draw(&context, tree: tree, rect: rect,
+                                         season: season, time: time, registry: registry)
+                }
+                continue
+            }
             if building.underConstruction {
                 SettlementStructures.site(at: building.center, s: building.size,
                                           progress: building.progress, time: time, context: &context)

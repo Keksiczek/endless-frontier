@@ -20,6 +20,53 @@ struct BuildingLookTests {
         defs.first { $0.id == id }.map(SettlementRenderer.glyph(for:))
     }
 
+    /// **Furniture written for a room nobody furnishes is furniture nobody
+    /// sees.** A well, an aqueduct, a wall, a dam, a panel field, a turbine and
+    /// a launch apron have no inside (`SettlementInterior.roofless`), so a
+    /// fitting whose only rooms are those is content that loads, validates and
+    /// draws nothing — rule 47 in the furniture.
+    @Test("No fitting stands only in a room nobody furnishes")
+    func fittingsStandWhereSomebodyLooks() throws {
+        let registry = try GameDataRegistry.bundled()
+        let defs = Array(registry.buildings.values)
+        let byID = Dictionary(uniqueKeysWithValues: defs.map { ($0.id, $0) })
+
+        /// A room name is either an archetype — the glyph a `look` draws — or a
+        /// building by id (rule 108). Both resolve to the glyph that decides
+        /// whether anything is drawn inside.
+        func glyphs(of room: String) -> SettlementRenderer.BuildingGlyph? {
+            if let named = SettlementRenderer.glyph(named: room) { return named }
+            return byID[room].map(SettlementRenderer.glyph(for:))
+        }
+
+        for (id, fitting) in registry.fittings {
+            let rooms = fitting.rooms.compactMap(glyphs(of:))
+            #expect(!rooms.isEmpty,
+                    "\(id) stands in \(fitting.rooms), none of which is a room or a building")
+            #expect(rooms.contains { !SettlementInterior.roofless.contains($0) },
+                    "\(id) stands only in \(fitting.rooms), which have no inside")
+        }
+    }
+
+    /// The set that decides whether a room is drawn and the book that furnishes
+    /// rooms are two lists of the same idea, and rule 92 says they will drift.
+    /// So they are held to each other against the **shipped** content: nothing
+    /// stands in a roofless structure, and everything else has something in it.
+    @Test("The book furnishes exactly the rooms that have an inside")
+    func rooflessRoomsAreUnfurnished() throws {
+        let registry = try GameDataRegistry.bundled()
+        for glyph in SettlementRenderer.BuildingGlyph.allCases {
+            let furniture = registry.fittings(inRoom: glyph.rawValue, era: .medieval)
+            if SettlementInterior.roofless.contains(glyph) {
+                #expect(furniture.isEmpty,
+                        "\(glyph.rawValue) has no inside, and \(furniture.count) things stand in it")
+            } else {
+                #expect(!furniture.isEmpty,
+                        "\(glyph.rawValue) is drawn as a room and the book furnishes it with nothing")
+            }
+        }
+    }
+
     @Test("Buildings that are nothing alike are not drawn alike")
     func landmarkBuildingsGetTheirOwnShape() throws {
         let defs = try allBuildings()
@@ -198,13 +245,49 @@ struct BuildingLookTests {
 @Suite("The room is the room, wherever you ask from")
 struct InteriorFitTests {
 
-    private func registry(w: Int, h: Int, housing: Double = 30) -> GameDataRegistry {
+    private func registry(w: Int, h: Int, housing: Double = 30,
+                          standing: Double? = nil) -> GameDataRegistry {
         GameDataRegistry(
             buildings: [BuildingDefinition(id: "b", era: .earlySettlement, name: "B",
                                            cost: [.materials: 10], housing: housing,
                                            footprint: TileSize(width: w, height: h))],
             techs: [], eras: [], biomes: [], events: [],
-            fittings: TestBook.fittings, config: .default)
+            structures: standing.map { [StructureDefinition(id: "b", standing: $0)] } ?? [],
+            fittings: TestBook.fittings,
+            config: .default)
+    }
+
+    /// **A storey goes on at the top, and everybody in the building goes up
+    /// with it.**
+    ///
+    /// `bodyRect` leaves the foot where the plan put it and adds the height
+    /// above, so the drawn body's middle rises by half of whatever was added.
+    /// `AgentMotion` measured its stations from the building's *map point*,
+    /// which is the plan's middle — so in a tall building the workers stood
+    /// half a storey below the floor they were drawn on. One number, three
+    /// readers (rule 35): `SettlementStructures.bodyLift`.
+    @Test("A storey lifts the room and the people in it together")
+    func tallRoomsCarryTheirWorkers() {
+        let reg = registry(w: 3, h: 3, standing: 2.6)
+        let b = SettlementRenderer.normalizedLayout(settlement: colony(w: 3, h: 3),
+                                                    registry: reg)[0]
+        let aspect = b.footprintH > 0 ? b.footprintW / b.footprintH : 1
+        let lift = SettlementStructures.bodyLift(b.glyph, s: b.size, seed: b.seed,
+                                                 aspect: aspect,
+                                                 height: Double(b.variant.heightScale))
+        // Not a vacuous test: this building really is taller than a shed.
+        #expect(b.variant.heightScale > 1.05, "the structure bank did not make it tall")
+        #expect(lift > 0, "a taller building has to lift its room")
+
+        let site = AgentMotion.WorkSite(b, era: .earlySettlement, registry: reg)
+        let walls = SettlementStructures.bodySize(b.glyph, s: b.size, seed: b.seed,
+                                                  aspect: aspect,
+                                                  height: Double(b.variant.heightScale))
+        let middle = b.center.y - lift
+        for bed in SettlementInterior.bedSlots(seed: b.seed, sleepers: 6).map(site.place) {
+            #expect(abs(bed.y - middle) <= walls.height / 2 + 1e-9,
+                    "somebody is standing outside the walls that were drawn for them")
+        }
     }
 
     private func colony(w: Int, h: Int) -> Settlement {
@@ -236,10 +319,14 @@ struct InteriorFitTests {
             height: Double(b.variant.heightScale))
         let beds = SettlementInterior.bedSlots(seed: b.seed, sleepers: 8).map(site.place)
         #expect(!beds.isEmpty)
+        let middle = b.center.y - SettlementStructures.bodyLift(
+            b.glyph, s: b.size, seed: b.seed,
+            aspect: b.footprintH > 0 ? b.footprintW / b.footprintH : 1,
+            height: Double(b.variant.heightScale))
         for bed in beds {
             #expect(abs(bed.x - b.center.x) <= walls.width / 2 + 1e-9,
                     "a bed is drawn outside the walls it belongs to")
-            #expect(abs(bed.y - b.center.y) <= walls.height / 2 + 1e-9)
+            #expect(abs(bed.y - middle) <= walls.height / 2 + 1e-9)
         }
     }
 

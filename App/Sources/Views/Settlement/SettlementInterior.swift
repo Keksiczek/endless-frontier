@@ -410,6 +410,18 @@ enum SettlementInterior {
 
     /// Draws one building's inside: floor, fittings, walls and a door. Call
     /// under the silhouette — the roof is drawn over this, fading as you zoom.
+    /// **What has no inside.** Not a room with the furniture left out — a
+    /// structure that is a surface, a shaft or a line, and whose whole substance
+    /// is what the structure pass already draws.
+    ///
+    /// `dish` and `tanks` are deliberately *not* here: an observatory has a desk
+    /// under it and a refinery has a control room, and both read as rooms at
+    /// zoom. The test is not "is it a building" but "would lifting the roof off
+    /// show you anything".
+    static let roofless: Set<SettlementRenderer.BuildingGlyph> = [
+        .well, .aqueduct, .wall, .dam, .array, .turbine, .pad,
+    ]
+
     static func draw(
         _ context: inout GraphicsContext,
         glyph: SettlementRenderer.BuildingGlyph,
@@ -436,6 +448,18 @@ enum SettlementInterior {
         registry: GameDataRegistry
     ) {
         guard isLegible(footprint: footprint) else { return }
+        // **Some structures have no inside.** A well is a ring of stones over a
+        // shaft, an aqueduct is a run of arches, a wall is a wall — and every
+        // one of them was being drawn with a floor, lamplight after dark and a
+        // barrel standing in it, because the interior asked only whether the
+        // footprint was big enough to read. Keks: *"nějaké budovy jsou
+        // interiérově prostě špatně, třeba studna"*.
+        //
+        // The furniture that named those rooms went with them: a fitting whose
+        // only room is one nobody furnishes is content that cannot be seen,
+        // which is the fault rule 47 exists for. Guarded by *"No fitting stands
+        // only in a room nobody furnishes"*.
+        guard !roofless.contains(glyph) else { return }
         // **Inside the walls that are actually drawn**, not inside the lot.
         // See `SettlementStructures.bodyRect`: the room used to be sized off
         // the footprint and the house off `s`, so the floor and its lamplight
