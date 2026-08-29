@@ -171,10 +171,30 @@ public enum ResourceLoop {
         return factors
     }
 
+    /// **Knowledge is not maintenance.**
+    ///
+    /// Upkeep is derived from what a building cost *in the resources it cost*,
+    /// and thirty-five buildings are priced partly in knowledge — so every one
+    /// of them drew knowledge for ever, at 0.5% a tick, which is **30% of the
+    /// build price a year** (rule 24: say a per-tick rate out loud times
+    /// `ticksPerYear`). Twenty-six of the thirty-five produce no knowledge at
+    /// all: a fusion reactor drew 72 a year and made nothing.
+    ///
+    /// Measured over two centuries (`BACKLOG.md` §31.1), that is a colony
+    /// banking **nothing for thirty years** in the middle of the game — rule 25
+    /// exactly, a sink growing with everything you own against an income that
+    /// only grows when you build one of the ten things that make knowledge. A
+    /// colony that industrialises stopped being able to study.
+    ///
+    /// So a building costs knowledge to *raise* and none to keep: it does not
+    /// forget how it was built. What a building genuinely spends on study while
+    /// it runs is `consumption`, which is hand-authored and untouched — and an
+    /// explicit `upkeep` in the JSON still overrides everything, so a monument
+    /// that is *meant* to drink knowledge can say so outright.
     public static func upkeep(for def: BuildingDefinition, config: WorldConfig) -> Resources {
         if let explicit = def.upkeep { return explicit }
         var derived = Resources()
-        for resource in ResourceType.allCases {
+        for resource in ResourceType.allCases where resource != .knowledge {
             derived[resource] = def.cost[resource] * config.upkeepRateOfCost
         }
         return derived

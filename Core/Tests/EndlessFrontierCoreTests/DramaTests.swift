@@ -167,6 +167,34 @@ struct UpkeepTests {
                 "a costlier building should cost more to maintain, so upkeep scales with era for free")
     }
 
+    /// **A building does not forget how it was built.**
+    ///
+    /// Upkeep is derived in the resources a building cost, and thirty-five
+    /// buildings are priced partly in knowledge — so each of them drew study
+    /// for ever at 30% of its build price a year (rule 24), while twenty-six of
+    /// them produce no knowledge at all. Measured over two centuries that is a
+    /// colony banking nothing for thirty years in the middle of the game
+    /// (`BACKLOG.md` §31.1, §31.5): rule 25's sink, growing with everything you
+    /// own. Knowledge costs to raise a thing and nothing to keep it.
+    @Test("A building costs knowledge to raise and none to keep")
+    func knowledgeIsNotMaintenance() {
+        let campus = BuildingDefinition(id: "research_campus", era: .modern, name: "Campus",
+                                        cost: [.materials: 200, .knowledge: 110])
+        let upkeep = ResourceLoop.upkeep(for: campus, config: .default)
+        #expect(upkeep[.knowledge] == 0, "a building that stands is still studying to stay up")
+        #expect(upkeep[.materials] > 0, "and the roof still needs mending")
+    }
+
+    /// …unless the content says so outright: a thing that is *meant* to drink
+    /// study can still be written that way.
+    @Test("Data can still charge knowledge if it means to")
+    func explicitKnowledgeUpkeepIsHonoured() {
+        let engine = BuildingDefinition(
+            id: "oracle", era: .nearFuture, name: "Oracle",
+            cost: [.knowledge: 300], upkeep: [.knowledge: 2])
+        #expect(ResourceLoop.upkeep(for: engine, config: .default)[.knowledge] == 2)
+    }
+
     @Test("An explicit upkeep in the data overrides the derived one")
     func explicitUpkeepWins() {
         let monument = BuildingDefinition(

@@ -4652,20 +4652,30 @@ against an income that only grows when you build one of the ten things that
 make knowledge*. A colony that industrialises stops being able to study, which
 is the opposite of what an industrial age should mean.
 
-**Not fixed here**, because the two candidate fixes point different ways and one
-measurement will tell them apart:
+**Fixed, and it is the first of the two candidates.** Keks: *"knowledge ať to
+stojí jen postavit."* Materials and food are consumed by keeping a thing
+standing; knowledge is not, and arguably never should have been — **a building
+does not forget how it was built.** The derived upkeep skips `.knowledge` and
+nothing else, so:
 
-1. **Knowledge is not maintenance.** Materials and food are consumed by keeping
-   a thing standing; *knowledge is not*, and arguably never should have been —
-   a building does not forget how it was built. Dropping knowledge from the
-   derived upkeep is one line and would leave the sink the comment wanted only
-   where a building genuinely spends study (`consumption`, hand-authored).
-2. **Or the rate is wrong for this one resource** — 30% a year of a 240-point
-   reactor is 72, against a university's 960 a year of output.
+- a campus still costs its materials to keep the roof on, and no study;
+- `consumption` is untouched — what a building genuinely *spends* on study while
+  it runs is hand-authored and stays;
+- an explicit `upkeep` in the JSON still overrides everything, so a thing that
+  is meant to drink knowledge can say so outright.
 
-Measure first: print knowledge output against knowledge upkeep per year across
-two centuries, the way `OreProbe` printed the seam. `ResearchProbe` is the place
-and it already runs the years.
+Guarded both ways: *"A building costs knowledge to raise and none to keep"* and
+*"Data can still charge knowledge if it means to"*.
+
+The second candidate — that the rate is simply wrong for this resource — is
+moot for knowledge now, but the *shape* is worth remembering for the resources
+still charged: 30% of the build price a year is a building repaying its own
+price every three and a third years, for ever.
+
+**What this does not answer:** whether the tree now paces well. §31.1's wall was
+measured with the old draw in place, so it wants re-running (`ResearchProbe`,
+seed 4242) before anybody touches a tech price — one change, one measurement
+(rule 72), and this is the change.
 
 ### 31.6 — still open
 
