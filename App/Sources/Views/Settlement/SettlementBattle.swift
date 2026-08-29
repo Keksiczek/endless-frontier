@@ -258,7 +258,12 @@ enum SettlementBattle {
     static func live(
         _ settlement: Settlement, continuousTick: Double,
         secondsPerTick: Double = 60, replay: Replay? = nil, now: Date = Date(),
-        beat: Beat? = nil, time: Double = 0
+        beat: Beat? = nil, time: Double = 0,
+        /// **When the last blow landed**, for the fight that has just stopped.
+        /// The seconds after a raid cannot be measured on the world clock,
+        /// because a raid pauses it — so the field cleared the instant the
+        /// siege ended instead of lingering (`GameViewModel.siegeEnded`).
+        ended: (id: UUID, at: Date)? = nil
     ) -> (log: BattleLog, progress: Double)? {
         // A fight that is **still going on** outranks everything: this is not a
         // recording being played back, it is the thing itself, and the record
@@ -277,6 +282,13 @@ enum SettlementBattle {
             }
         }
         guard let log = settlement.lastBattle else { return nil }
+        // The fight that has only just stopped: its afterglow runs on real
+        // seconds, like the fight itself did.
+        if let ended, ended.id == log.id {
+            let since = now.timeIntervalSince(ended.at)
+            guard since >= 0, since <= lingerSeconds else { return nil }
+            return (log, 1)
+        }
         let speed = max(1, secondsPerTick) / playSeconds
         let elapsed = (continuousTick - Double(log.tick)) * speed
         guard elapsed >= 0, elapsed <= 1 + lingerFraction else { return nil }
@@ -445,12 +457,14 @@ enum SettlementBattle {
         /// **The screen, not the world.** Everything else here is drawn into
         /// the world rect and pans with it, which is right — a body stands
         /// where it stands. The caption is chrome: it belongs to the lens.
-        viewport: CGRect? = nil
+        viewport: CGRect? = nil,
+        /// When the fighting stopped, for the seconds after it.
+        ended: (id: UUID, at: Date)? = nil
     ) {
         guard let (log, progress) = live(settlement, continuousTick: continuousTick,
                                          secondsPerTick: secondsPerTick,
                                          replay: replay, beat: beat,
-                                         time: time) else { return }
+                                         time: time, ended: ended) else { return }
         // A fight that is happening has real people standing in real places. A
         // record being played back has neither, and has to be staged.
         let siege = settlement.siege.flatMap { $0.id == log.id ? $0 : nil }
@@ -479,12 +493,12 @@ enum SettlementBattle {
     static func torchlight(
         _ settlement: Settlement, rect: CGRect, continuousTick: Double,
         secondsPerTick: Double = 60, replay: Replay? = nil, zoom: CGFloat,
-        beat: Beat? = nil, time: Double = 0
+        beat: Beat? = nil, time: Double = 0, ended: (id: UUID, at: Date)? = nil
     ) -> [SettlementLight.Lamp] {
         guard let (log, progress) = live(settlement, continuousTick: continuousTick,
                                          secondsPerTick: secondsPerTick,
                                          replay: replay, beat: beat,
-                                         time: time) else { return [] }
+                                         time: time, ended: ended) else { return [] }
         let siege = settlement.siege.flatMap { $0.id == log.id ? $0 : nil }
         let within = siege.map {
             self.within($0, beat: beat, time: time, continuousTick: continuousTick)
@@ -540,12 +554,12 @@ enum SettlementBattle {
         _ context: inout GraphicsContext, rect: CGRect, settlement: Settlement,
         continuousTick: Double, zoom: CGFloat,
         secondsPerTick: Double = 60, replay: Replay? = nil,
-        beat: Beat? = nil, time: Double = 0
+        beat: Beat? = nil, time: Double = 0, ended: (id: UUID, at: Date)? = nil
     ) {
         guard let (log, progress) = live(settlement, continuousTick: continuousTick,
                                          secondsPerTick: secondsPerTick,
                                          replay: replay, beat: beat,
-                                         time: time) else { return }
+                                         time: time, ended: ended) else { return }
         let siege = settlement.siege.flatMap { $0.id == log.id ? $0 : nil }
         SettlementBlood.ground(&context, rect: rect, log: log, progress: progress,
                                siege: siege, field: ground(log), zoom: zoom)

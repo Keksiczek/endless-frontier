@@ -195,6 +195,9 @@ enum SettlementRenderer {
         /// carries a body between two steps of a fight — see
         /// `SettlementBattle.Beat`.
         battleBeat: SettlementBattle.Beat? = nil,
+        /// When the last raid stopped, so the field can linger on real seconds
+        /// rather than on a world clock a raid has paused (`BACKLOG.md` §21.6).
+        battleEnded: (id: UUID, at: Date)? = nil,
         selectedPawnID: UUID?,
         selectedBuildingID: Int?
     ) {
@@ -304,7 +307,8 @@ enum SettlementRenderer {
         SettlementBattle.drawGround(&context, rect: rect, settlement: settlement,
                                     continuousTick: continuousTick, zoom: zoom,
                                     secondsPerTick: registry.config.realSecondsPerTick,
-                                    replay: battleReplay, beat: battleBeat, time: time)
+                                    replay: battleReplay, beat: battleBeat, time: time,
+                                    ended: battleEnded)
         buildings(&context, placed: placed, time: time, night: night,
                   showLabels: showLabels, zoom: zoom, sun: sun,
                   selectedBuildingID: selectedBuildingID,
@@ -328,7 +332,7 @@ enum SettlementRenderer {
                               continuousTick: continuousTick, time: time, zoom: zoom,
                               secondsPerTick: registry.config.realSecondsPerTick,
                               replay: battleReplay, selectedPawnID: selectedPawnID,
-                              beat: battleBeat, viewport: viewRect)
+                              beat: battleBeat, viewport: viewRect, ended: battleEnded)
         fog(&context, rect: rect, map: map, time: time)
         // The seasonal wash is atmosphere over the lens, not part of the world,
         // so it stays in view space and doesn't slide when you pan.
@@ -345,7 +349,8 @@ enum SettlementRenderer {
             nightLamps(placed: placed) + SettlementBattle.torchlight(
                 settlement, rect: rect, continuousTick: continuousTick,
                 secondsPerTick: registry.config.realSecondsPerTick,
-                replay: battleReplay, zoom: zoom, beat: battleBeat, time: time),
+                replay: battleReplay, zoom: zoom, beat: battleBeat, time: time,
+                ended: battleEnded),
             night: night, moonlight: moonlight, time: time)
     }
 

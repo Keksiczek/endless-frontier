@@ -25,7 +25,12 @@ struct SettlementScopeTests {
             storage: [.materials: outpostMaterials], storageCapacity: .uniform(9999),
             inventory: outpostInventory.map { ItemInstance(definitionID: $0) }
         )
-        return WorldState(settlements: [capital, outpost])
+        var world = WorldState(settlements: [capital, outpost])
+        // **Which settlement** is what these measure, not what anybody has
+        // learned: the world knows its whole book, so a gated recipe cannot be
+        // the reason a craft did not happen (rule 109, `BACKLOG.md` §30).
+        world.researchedTechs = Set((try? GameDataRegistry.bundled())?.techs.keys ?? [:].keys)
+        return world
     }
 
     // MARK: - Build

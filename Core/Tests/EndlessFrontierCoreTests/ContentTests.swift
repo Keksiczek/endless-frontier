@@ -487,10 +487,15 @@ struct ContentIntegrityTests {
     /// **They are not deleted, and that is deliberate.** The crafting panel
     /// folds to one row per thing, so the player never meets them unless they
     /// search; and a recipe id can be sitting in a standing order in somebody's
-    /// save, where removing it would silently stop a bench (rule 3). What is
-    /// wanted is that the number does not *grow*: whether the fourteen are cut
-    /// or made the good route at their own age is a content decision, and this
-    /// holds the line until somebody makes it.
+    /// save, where removing it would silently stop a bench (rule 3).
+    ///
+    /// **The decision, made 2026-08-29: a later route buys time.** A second way
+    /// of making a thing does not have to be cheaper — it has to be *better at
+    /// something*, and the thing a later age is actually better at is speed.
+    /// All fourteen carry a `workTicks` well under the work the earlier route
+    /// costs, so the choice is real: spend more stuff and have it today, or
+    /// spend less and wait. Dominance is therefore measured on **both** axes
+    /// now, and a route beaten on both is a route nobody would choose.
     @Test("A second way of making a thing is worth taking")
     func noBookOfRoutesNobodyWouldChoose() throws {
         let reg = try registry()
@@ -509,12 +514,44 @@ struct ContentIntegrityTests {
                     other.id != way.id
                         && reachableEra(other, reg, &cache) < mine
                         && price(other) <= price(way)
+                        // …and no slower. A later route that costs more stuff
+                        // and less *work* is a real choice — have it today, or
+                        // spend less and wait — so it is not dominated.
+                        && other.workPerUnit <= way.workPerUnit
                 }
                 if beaten { pointless.append(way.id) }
             }
         }
-        #expect(pointless.count <= 14,
+        #expect(pointless.isEmpty,
                 "\(pointless.count) recipes nobody would ever choose: \(pointless.sorted().prefix(8))")
+    }
+
+    /// **A worn thing must not claim what the line already counts.**
+    ///
+    /// Measured 2026-08-29: 53 wearable items carried `colony_*` effects from a
+    /// slot nothing read — 38 of them `colony_defense`, worth **+217** to a
+    /// colony whose defence is thirty or forty. Switching them on would have
+    /// been the same fact counted twice, because `CombatEngine.militia` already
+    /// weighs every real weapon and every piece of armour into the line. They
+    /// came off the items instead, and this keeps them off: a generator writing
+    /// "+6 colony defence" onto a helmet is writing a claim the game will
+    /// refuse to honour (rule 47's cousin — content that *would* be read and
+    /// must not be).
+    @Test("No worn thing claims a defence the line already counts")
+    func wornGearDoesNotDoubleCount() throws {
+        let reg = try registry()
+        var claiming: [String] = []
+        for item in reg.items.values where item.slot != .artifact {
+            for effect in item.effects {
+                if case .colonyDefense = effect { claiming.append(item.id) }
+                // A sack of ore in a store does not run a workshop either.
+                if case .colonyProduction = effect, item.slot == .material {
+                    claiming.append(item.id)
+                }
+            }
+        }
+        #expect(claiming.isEmpty,
+                "\(claiming.count) wearable things claim the colony's own numbers: \(claiming.sorted().prefix(6))")
     }
 
     /// **A weapon must not arrive before the age its damage belongs to.**

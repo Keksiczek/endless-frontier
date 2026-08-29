@@ -1305,12 +1305,6 @@
     "rarity": "epic",
     "slot": "equipment",
     "equipSlot": "weapon",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 6
-      }
-    ],
     "description": {
       "en": "Laid on a chest four hundred years and not a spot of rust on it. Nobody asks why.",
       "cs": "Čtyři sta let ležel na hrudi a nemá skvrnu rzi. Nikdo se neptá proč."
@@ -1364,10 +1358,6 @@
     "slot": "equipment",
     "equipSlot": "weapon",
     "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 9
-      },
       {
         "type": "mood_bonus",
         "amount": 4
@@ -1876,7 +1866,6 @@
     "rarity": "common",
     "slot": "equipment",
     "equipSlot": "weapon",
-    "effects": [],
     "description": {
       "en": "A sharp shard of flint, carefully hafted. Good for skinning game or as a last-ditch weapon.",
       "cs": "Ostrý úlomek pazourku pečlivě zasazený do rukojeti. Dobrý na stahování zvěře nebo jako poslední zbraň."
@@ -1965,7 +1954,6 @@
     "rarity": "common",
     "slot": "equipment",
     "equipSlot": "weapon",
-    "effects": [],
     "description": {
       "en": "A stout branch, hardened by fire and weighted with a heavy stone. Simple, brutal, effective.",
       "cs": "Silná větev, zpevněná ohněm a zatížená těžkým kamenem. Jednoduchá, brutální, účinná."
@@ -2254,13 +2242,6 @@
     "rarity": "common",
     "slot": "material",
     "substance": "stone",
-    "effects": [
-      {
-        "type": "colony_production",
-        "resource": "food",
-        "perTick": 0.3
-      }
-    ],
     "description": {
       "en": "A simple, fire-hardened vessel. Keeps grains and dried foods safe from pests for longer.",
       "cs": "Prostá, v ohni vypálená nádoba. Udrží obilí a sušené jídlo déle v bezpečí před škůdci."
@@ -2320,13 +2301,6 @@
     "rarity": "uncommon",
     "slot": "material",
     "substance": "foliage",
-    "effects": [
-      {
-        "type": "colony_production",
-        "resource": "food",
-        "perTick": 1
-      }
-    ],
     "description": {
       "en": "Sweet, sticky, and full of energy. A rare find in the old woods, usually requiring a perilous climb.",
       "cs": "Sladká, lepkavá a plná energie. Vzácný nález ve starém lese, obvykle vyžaduje nebezpečný výstup."
@@ -2519,12 +2493,6 @@
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 1
-      }
-    ],
     "description": {
       "en": "Roughly stitched leather strips, offering some protection against thorns and scrapes. Better than bare legs in the wilderness.",
       "cs": "Hrubě sešité kožené pásy, poskytující ochranu proti trnům a odřeninám. Lepší než holé nohy v divočině."
@@ -3883,7 +3851,6 @@
     },
     "rarity": "common",
     "slot": "material",
-    "effects": [],
     "description": {
       "en": "Strips of dried river fish, cured with salt. A lightweight and nutritious food source for journeys or trade.",
       "cs": "Plátky sušených říčních ryb, nasolené a zakonzervované. Lehký a výživný zdroj potravy na cesty nebo k obchodu."
@@ -4867,12 +4834,6 @@
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "weapon",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 3
-      }
-    ],
     "description": {
       "en": "Layers of tightly woven reeds and stiff branches form a surprisingly effective lightweight shield.",
       "cs": "Vrsty pevně spleteného rákosu a tuhých větví tvoří překvapivě účinný lehký štít."
@@ -5616,12 +5577,6 @@
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 1
-      }
-    ],
     "description": {
       "en": "Bracers fashioned from several layers of tough animal hide, providing decent protection to the forearms during skirmishes or heavy work.",
       "cs": "Nátepníky zhotovené z několika vrstev tuhé zvířecí kůže, poskytující slušnou ochranu předloktí při šarvátkách nebo těžké práci."
@@ -5949,13 +5904,6 @@
     "rarity": "rare",
     "slot": "material",
     "substance": "stone",
-    "effects": [
-      {
-        "type": "colony_production",
-        "resource": "influence",
-        "perTick": 3
-      }
-    ],
     "description": {
       "en": "A smooth, iridescent pearl found in the deeper riverbeds. Highly sought after by passing traders, it subtly boosts the colony's influence.",
       "cs": "Hladká, duhově lesklá perla nalezená v hlubších částech říčního koryta. Je vyhledávaná kolemjdoucími obchodníky a diskrétně posiluje vliv osady."
@@ -5991,7 +5939,6 @@
     "rarity": "common",
     "slot": "equipment",
     "equipSlot": "weapon",
-    "effects": [],
     "description": {
       "en": "A light, well-balanced spear carved from dense hardwood. Effective for hunting small to medium game from a distance.",
       "cs": "Lehké, dobře vyvážené kopí vyřezané z tvrdého dřeva. Účinné pro lov malé až střední zvěře na dálku."
@@ -6281,13 +6228,6 @@
     "rarity": "common",
     "slot": "material",
     "substance": "foliage",
-    "effects": [
-      {
-        "type": "colony_production",
-        "resource": "food",
-        "perTick": 2
-      }
-    ],
     "description": {
       "en": "A tightly woven basket overflowing with nutrient-rich roots, gathered from the deeper parts of the valley. Enough to feed a few mouths for a day.",
       "cs": "Pevně pletený koš plný výživných kořenů, nasbíraných z hlubších částí údolí. Dost na nakrmení několika úst na jeden den."
@@ -6839,7 +6779,6 @@
     },
     "rarity": "common",
     "slot": "material",
-    "effects": [],
     "description": {
       "en": "Black rock that burns hotter and longer than wood. Dug, not gathered.",
       "cs": "Černý kámen, co hoří žhavěji a déle než dřevo. Kope se, nesbírá."
@@ -6853,7 +6792,6 @@
     },
     "rarity": "common",
     "slot": "material",
-    "effects": [],
     "description": {
       "en": "Thick and black out of the ground, and worth nothing until it is split.",
       "cs": "Hustá a černá ze země, a k ničemu, dokud se nerozdělí."
@@ -6867,7 +6805,6 @@
     },
     "rarity": "common",
     "slot": "material",
-    "effects": [],
     "description": {
       "en": "The light fraction. Burns fast, goes off if you look at it wrong.",
       "cs": "Lehká frakce. Hoří rychle a vzplane, když se na ni křivě podíváš."
@@ -6881,7 +6818,6 @@
     },
     "rarity": "common",
     "slot": "material",
-    "effects": [],
     "description": {
       "en": "The heavy fraction: slower, safer, and what pulls a load.",
       "cs": "Těžká frakce: pomalejší, bezpečnější — a tahá náklad."
@@ -6895,7 +6831,6 @@
     },
     "rarity": "common",
     "slot": "material",
-    "effects": [],
     "description": {
       "en": "Refined until it will burn cold and thin, high up where the air is not.",
       "cs": "Rafinovaný, dokud nehoří i v mrazu a řídkém vzduchu tam nahoře."
@@ -6962,12 +6897,6 @@
       "en": "Sturdy leather panels, stitched together by Tanner Borin, offering more protection than simple hide. A reliable piece for guards on the valley perimeter.",
       "cs": "Pevné kožené panely, sešité dohromady koželuhou Borinem, nabízející větší ochranu než pouhá kůže. Spolehlivý kus pro stráže na obvodu údolí."
     },
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 4
-      }
-    ],
     "armour": {
       "material": "leather",
       "coverage": "torso"
@@ -7008,12 +6937,6 @@
       "en": "Forged by Blacksmith Greta, this heavy plate protects the vital organs. It's cumbersome, but offers superior defense against raiders.",
       "cs": "Ukováno kovářkou Gretou, tento těžký plát chrání životně důležité orgány. Je těžkopádný, ale nabízí vynikající obranu proti nájezdníkům."
     },
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 8
-      }
-    ],
     "armour": {
       "material": "plate",
       "coverage": "torso"
@@ -7055,12 +6978,6 @@
       "en": "Advanced materials and design protect the head from most threats. Standard issue for the valley's elite defenders.",
       "cs": "Pokročilé materiály a design chrání hlavu před většinou hrozeb. Standardní výbava pro elitní obránce údolí."
     },
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 12
-      }
-    ],
     "armour": {
       "material": "composite",
       "coverage": "head",
@@ -7155,12 +7072,6 @@
       "coverage": "head",
       "helm": true
     },
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 1
-      }
-    ],
     "description": {
       "en": "A simple cap made from cured hides, stitched together. It offers minor protection from the elements and light blows. Young Marta often wears hers.",
       "cs": "Jednoduchá čepice ze surových kůží, sešitá dohromady. Poskytuje mírnou ochranu před živly a lehkými údery. Mladá Marta svou často nosí."
@@ -7197,13 +7108,6 @@
     "rarity": "common",
     "slot": "material",
     "substance": "foliage",
-    "effects": [
-      {
-        "type": "colony_production",
-        "resource": "food",
-        "perTick": 1.5
-      }
-    ],
     "description": {
       "en": "Fish preserved with salt, a staple food that keeps well. The Fisher family's secret recipe makes it quite palatable.",
       "cs": "Ryby konzervované solí, základní potravina, která se dobře uchovává. Tajný recept rodiny Rybářů ji činí docela chutnou."
@@ -7246,12 +7150,6 @@
       "coverage": "torso",
       "tint": 0.1
     },
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 5
-      }
-    ],
     "description": {
       "en": "Thick, hardened leather reinforced with metal rivets across the chest. A significant upgrade in protection, crafted by master leatherworker Anya.",
       "cs": "Silná, tvrzená kůže zpevněná kovovými nýty přes hruď. Výrazné vylepšení ochrany, vyrobila mistryně koželuhyně Anya."
@@ -7371,12 +7269,6 @@
       "coverage": "head",
       "helm": true
     },
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 1
-      }
-    ],
     "description": {
       "en": "A simple cap made from cured leather, offering basic protection against bumps and minor scrapes. Worn by newly assigned guards before they earn better gear.",
       "cs": "Jednoduchá čapka z vyčiněné kůže, poskytující základní ochranu proti nárazům a drobným odřeninám. Nosí ji noví strážci, než si zaslouží lepší výstroj."
@@ -7583,12 +7475,6 @@
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 8
-      }
-    ],
     "description": {
       "en": "A modern composite vest offering significant protection against small arms fire. Standard issue for the valley's peacekeepers, often seen on Sergeant Lena.",
       "cs": "Moderní kompozitní vesta poskytující značnou ochranu proti střelbě z ručních zbraní. Standardní výzbroj strážců míru v údolí, často ji nosí seržantka Lena."
@@ -7736,12 +7622,6 @@
       "coverage": "head",
       "helm": true
     },
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 7
-      }
-    ],
     "description": {
       "en": "Lightweight yet incredibly strong, offering superior head protection. Standard issue for any colonist venturing into unexplored territories.",
       "cs": "Lehká, a přesto neuvěřitelně pevná, nabízí vynikající ochranu hlavy. Standardní výbava pro každého kolonistu, který se vydává do neprobádaných území."
@@ -7784,14 +7664,7 @@
     "description": {
       "en": "Intricate silicon chips containing vast amounts of information. The backbone of advanced technology, vital for upgrading the Research Lab.",
       "cs": "Složité křemíkové čipy obsahující obrovské množství informací. Páteř pokročilých technologií, klíčové pro modernizaci výzkumné laboratoře."
-    },
-    "effects": [
-      {
-        "type": "colony_production",
-        "resource": "knowledge",
-        "perTick": 1.0
-      }
-    ]
+    }
   },
   {
     "id": "hunting_shotgun",
@@ -7913,12 +7786,6 @@
     "rarity": "common",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 4
-      }
-    ],
     "description": {
       "en": "Made from thick, tanned hides, offering decent protection against the elements and minor blows. A common sight among the prospectors exploring the upper valley.",
       "cs": "Vyrobena z tlustých, vyčiněných kůží, nabízí slušnou ochranu proti živlům i menším úderům. Běžný pohled mezi prospektory prozkoumávajícími horní údolí."
@@ -7982,12 +7849,6 @@
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 8
-      }
-    ],
     "description": {
       "en": "A modern combat helmet made from advanced composite materials, offering superior head protection. A must-have for anyone venturing into hostile territories.",
       "cs": "Moderní bojová přilba z pokročilých kompozitních materiálů, nabízející vynikající ochranu hlavy. Nezbytnost pro každého, kdo se vydá na nepřátelské území."
@@ -8006,13 +7867,6 @@
     },
     "rarity": "rare",
     "slot": "material",
-    "effects": [
-      {
-        "type": "colony_production",
-        "resource": "materials",
-        "perTick": 2.0
-      }
-    ],
     "description": {
       "en": "Precisely manufactured components essential for advanced machinery and automated systems. Traded at a premium by the desert nomads for water and rare minerals.",
       "cs": "Přesně vyrobené komponenty nezbytné pro pokročilé stroje a automatizované systémy. Pouštní nomádi s nimi obchodují za vodu a vzácné minerály."
@@ -8049,12 +7903,6 @@
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 5
-      }
-    ],
     "description": {
       "en": "Thick leather panels sewn onto a sturdy coat, offering decent protection against the elements and minor threats. Crafted by skilled tailor, Elara.",
       "cs": "Silné kožené panely přišité na robustní kabát, nabízející slušnou ochranu proti živlům a drobným hrozbám. Dílo zručné švadleny Elary."
@@ -8103,12 +7951,6 @@
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 7
-      }
-    ],
     "description": {
       "en": "A modern combat helmet designed for maximum head protection in skirmishes. The Patrol Leader, Kael, insists all his scouts wear them.",
       "cs": "Moderní bojová helma navržená pro maximální ochranu hlavy v šarvátkách. Velitel hlídky Kael trvá na tom, aby ji nosili všichni jeho průzkumníci."
@@ -8241,12 +8083,6 @@
       "material": "plate",
       "coverage": "torso"
     },
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 15
-      }
-    ],
     "description": {
       "en": "Heavy plates of steel, expertly shaped by the colony's smith, Borin. Offers significant protection but restricts movement. A true symbol of emerging industrial might.",
       "cs": "Těžké ocelové pláty, mistrovsky tvarované kolonijním kovářem Borinem. Nabízí značnou ochranu, ale omezuje pohyb. Skutečný symbol nastupující industriální síly."
@@ -8316,12 +8152,6 @@
       "helm": true,
       "tint": 0.1
     },
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 1
-      }
-    ],
     "description": {
       "en": "A simple, lightweight helmet woven from tough river reeds. Provides basic head protection against minor blows or the glare of the sun. Crafted by young Elara for her brother, who kept bumping his head.",
       "cs": "Jednoduchá, lehká přilba upletená z pevných říčních rákosů. Poskytuje základní ochranu hlavy proti drobným úderům nebo slunečnímu svitu. Vytvořila ji mladá Elara pro svého bratra, který si stále někam narážel hlavu."
@@ -8359,12 +8189,6 @@
       "material": "leather",
       "coverage": "torso_arms"
     },
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 5
-      }
-    ],
     "description": {
       "en": "A long, heavy leather coat offering protection from the elements and minor scrapes. It's a sign of a traveler or a rancher, like old Barnaby who's always out tending the herds.",
       "cs": "Dlouhý, těžký kožený kabát, který nabízí ochranu před povětrnostními vlivy a drobnými odřeninami. Je to znamení cestovatele nebo rančera, jako je starý Barnaby, který je vždy venku u stád."
@@ -8379,13 +8203,6 @@
     "rarity": "uncommon",
     "slot": "material",
     "substance": "stone",
-    "effects": [
-      {
-        "type": "colony_production",
-        "perTick": 5,
-        "resource": "materials"
-      }
-    ],
     "description": {
       "en": "A carefully mixed and granulated explosive compound, crucial for the functioning of early firearms. Its manufacture is a closely guarded secret of the industrious Oakhart family.",
       "cs": "Pečlivě smíchaná a granulovaná výbušná směs, klíčová pro fungování raných střelných zbraní. Její výroba je pečlivě střeženým tajemstvím průmyslové rodiny Oakhartů."
@@ -8419,12 +8236,6 @@
     "rarity": "common",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 2
-      }
-    ],
     "description": {
       "en": "Stitched together from several tough animal hides. Provides basic protection, though it's stiff and smells of smoke. Made by Elara for her son, Ben.",
       "cs": "Sešito z několika tvrdých zvířecích kůží. Poskytuje základní ochranu, i když je tuhá a voní kouřem. Vyrobila Elara pro svého syna Bena."
@@ -8511,12 +8322,6 @@
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 4
-      }
-    ],
     "description": {
       "en": "Heavy leather reinforced with metal studs, offering better protection than simple hides. A common sight among the colony's guards.",
       "cs": "Těžká kůže vyztužená kovovými nýty, nabízí lepší ochranu než jednoduché kůže. Běžný pohled mezi strážci kolonie."
@@ -8559,12 +8364,6 @@
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 8
-      }
-    ],
     "description": {
       "en": "Advanced composite armor with integrated protective layers. Offers comprehensive protection against modern threats, often worn by exploration teams venturing into the wilds.",
       "cs": "Pokročilá kompozitní zbroj s integrovanými ochrannými vrstvami. Nabízí komplexní ochranu proti moderním hrozbám, často ji nosí průzkumné týmy vydávající se do divočiny."
@@ -8798,12 +8597,6 @@
     "rarity": "common",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 4
-      }
-    ],
     "description": {
       "en": "A thick canvas jacket, well-worn but still provides decent protection against the elements and minor abrasions. Often worn by Foreman Bjorn.",
       "cs": "Silná plátěná bunda, sice opotřebovaná, ale stále poskytuje slušnou ochranu před živly a drobnými odřeninami. Často ji nosí mistr Bjorn."
@@ -8886,13 +8679,6 @@
     },
     "rarity": "uncommon",
     "slot": "material",
-    "effects": [
-      {
-        "type": "colony_production",
-        "resource": "materials",
-        "perTick": 3
-      }
-    ],
     "description": {
       "en": "A viscous, refined oil, crucial for the smooth operation and longevity of advanced machinery. A key product from the colony's refinery.",
       "cs": "Viskózní, rafinovaný olej, nezbytný pro hladký chod a dlouhou životnost pokročilých strojů. Klíčový produkt z kolonijní rafinerie."
@@ -8955,12 +8741,6 @@
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 4
-      }
-    ],
     "description": {
       "en": "A practical, durable jacket reinforced with padding, often worn by prospectors working the outer hills. It provides decent protection against the elements and minor scrapes.",
       "cs": "Praktická a odolná bunda vyztužená polstrováním, často nošená prospektory pracujícími ve vnějších kopcích. Poskytuje slušnou ochranu proti živlům a drobným škrábancům."
@@ -9004,13 +8784,6 @@
     },
     "rarity": "uncommon",
     "slot": "material",
-    "effects": [
-      {
-        "type": "colony_production",
-        "perTick": 5,
-        "resource": "materials"
-      }
-    ],
     "description": {
       "en": "Distilled from crude oil, this clear fluid powers early lamps and lubricates delicate machinery in the workshops of the Ironbrook family, boosting their output.",
       "cs": "Destilovaný z ropy, tato čirá kapalina pohání rané lampy a maže citlivé stroje v dílnách rodiny Ironbrooků, čímž zvyšuje jejich produkci."
@@ -9044,12 +8817,6 @@
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 8
-      }
-    ],
     "description": {
       "en": "Utilizing advanced layered materials, this vest offers superior protection without hindering mobility. A recent innovation from the Valley's engineers at the 'Forge of Tomorrow' facility.",
       "cs": "Vesta využívající pokročilé vrstvené materiály nabízí vynikající ochranu, aniž by omezovala pohyblivost. Nedávná inovace inženýrů Údolí z komplexu 'Kovárna zítřka'."
@@ -9196,13 +8963,7 @@
       "material": "cloth",
       "coverage": "torso_arms",
       "tint": 0.1
-    },
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 1
-      }
-    ]
+    }
   },
   {
     "id": "reinforced_leather_helmet",
@@ -9221,13 +8982,7 @@
       "material": "leather",
       "coverage": "head",
       "helm": true
-    },
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 2
-      }
-    ]
+    }
   },
   {
     "id": "manual_boring_tool",
@@ -9289,13 +9044,7 @@
     "armour": {
       "material": "composite",
       "coverage": "torso"
-    },
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 7
-      }
-    ]
+    }
   },
   {
     "id": "settlers_percussion_pistol",
@@ -9375,10 +9124,6 @@
     "equipSlot": "armor",
     "effects": [
       {
-        "type": "colony_defense",
-        "amount": 4
-      },
-      {
         "type": "skill_bonus",
         "work": "building",
         "amount": 3
@@ -9402,12 +9147,6 @@
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 8
-      }
-    ],
     "description": {
       "en": "A lightweight yet exceptionally strong helmet, designed to protect against shrapnel and head impacts. A critical piece of gear for the prospecting teams exploring new, dangerous territories.",
       "cs": "Lehká, ale mimořádně pevná přilba, navržená k ochraně proti střepinám a nárazům do hlavy. Klíčová výstroj pro průzkumné týmy objevující nová, nebezpečná území."
@@ -9527,12 +9266,6 @@
       "material": "leather",
       "coverage": "torso"
     },
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 2
-      }
-    ],
     "description": {
       "en": "Tough leather strips stitched to protect the forearms. Popular among hunters moving through dense undergrowth.",
       "cs": "Pevné kožené pásy sešité k ochraně předloktí. Oblíbené mezi lovci, kteří se pohybují hustým podrostem."
@@ -9622,12 +9355,6 @@
       "material": "composite",
       "coverage": "torso"
     },
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 8
-      }
-    ],
     "description": {
       "en": "Lightweight but highly resistant composite plates offer superior protection against modern threats. Standard issue for advanced patrols.",
       "cs": "Lehké, ale vysoce odolné kompozitní pláty nabízejí vynikající ochranu proti moderním hrozbám. Standardní výbava pro pokročilé hlídky."
@@ -9697,12 +9424,6 @@
     "rarity": "uncommon",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 4
-      }
-    ],
     "description": {
       "en": "A functional leather tunic, reinforced at the shoulders and chest. A staple from Master Weaver Lena's workshop, providing good protection.",
       "cs": "Funkční kožená tunika, vyztužená na ramenou a hrudi. Základ z dílny mistryně tkalcovny Leny, poskytující dobrou ochranu."
@@ -9788,12 +9509,6 @@
     "rarity": "epic",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 15
-      }
-    ],
     "description": {
       "en": "Lightweight and durable, using advanced synthetic fibers and ceramic plates. Standard issue for the colony's special defense unit, providing superior protection.",
       "cs": "Lehká a odolná, využívající pokročilých syntetických vláken a keramických plátů. Standardní výbava pro speciální obrannou jednotku kolonie, poskytující vynikající ochranu."
@@ -9923,12 +9638,6 @@
     "rarity": "common",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 2
-      }
-    ],
     "description": {
       "en": "Thick canvas, treated for durability and water resistance. Offers protection against the elements and minor scrapes, a staple for logger Jakub.",
       "cs": "Silné plátno, ošetřené pro odolnost a voděodolnost. Poskytuje ochranu před živly a drobnými odřeninami, základní kus oděvu pro dřevorubce Jakuba."
@@ -9988,12 +9697,6 @@
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "weapon",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 8
-      }
-    ],
     "description": {
       "en": "A compact and versatile submachine gun, ideal for close-quarters engagements and rapid suppression. Issued to patrol leader Lena.",
       "cs": "Kompaktní a všestranný samopal, ideální pro boj zblízka a rychlou potlačovací palbu. Vydán velitelce hlídky Leně."
@@ -10017,12 +9720,6 @@
     "rarity": "rare",
     "slot": "equipment",
     "equipSlot": "armor",
-    "effects": [
-      {
-        "type": "colony_defense",
-        "amount": 15
-      }
-    ],
     "description": {
       "en": "Lightweight composite plates integrated into a durable textile carrier. Offers excellent protection without sacrificing mobility, standard issue for guard commander Karel.",
       "cs": "Lehké kompozitní pláty integrované do odolného textilního nosiče. Nabízí vynikající ochranu bez obětování mobility, standardní výbava velitele stráže Karla."

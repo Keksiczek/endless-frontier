@@ -51,10 +51,20 @@ struct CraftOrderTests {
         return s
     }
 
+    /// **The colony knows what its own orders need.**
+    ///
+    /// `researched` used to default to nothing, which was true while the early
+    /// book was ungated. Gating it by chain depth (`BACKLOG.md` §30) gave the
+    /// scythe `yokes`, and every test that placed one then measured a bench
+    /// that could not start. The default now reads the techs off the orders
+    /// standing on the bench; a test that wants to withhold one still can.
     private func work(
-        _ settlement: Settlement, ticks: Int, researched: Set<String> = []
+        _ settlement: Settlement, ticks: Int, researched: Set<String>? = nil
     ) throws -> Settlement {
         let reg = try registry()
+        let researched = researched ?? Set(settlement.craftOrders.compactMap {
+            reg.recipes[$0.recipeID]?.requiresTech
+        })
         var s = settlement
         for tick in 0..<ticks {
             s = CraftingEngine.advanceOneTick(
@@ -294,7 +304,9 @@ struct CraftOrderTests {
         s = CraftingEngine.place(s, recipeID: "smelt_steel", count: 4,
                                  tick: 1, registry: reg)
         s.storage[.energy] = 500
-        let after = try work(s, ticks: 30, researched: ["machining"])
+        // Whatever each of the two orders asks to have been learned — the
+        // point here is that two shops work at once, not which rung they sit on.
+        let after = try work(s, ticks: 30)
         #expect(after.craftOrders.allSatisfy { $0.progress > 0 || $0.made > 0 },
                 "the second shop stood idle while the first worked")
     }

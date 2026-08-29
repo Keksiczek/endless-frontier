@@ -35,7 +35,8 @@
     "description": {
       "en": "Cure and stitch hides into hard-wearing garb.",
       "cs": "Vydělat kůže a sešít je do šatu, co vydrží."
-    }
+    },
+    "requiresTech": "agriculture"
   },
   {
     "id": "craft_iron_scythe",
@@ -55,7 +56,8 @@
     "description": {
       "en": "A workshop blade that doubles a farmer's reach.",
       "cs": "Dílenské ostří, které sedlákovi zdvojnásobí dosah."
-    }
+    },
+    "requiresTech": "currency"
   },
   {
     "id": "craft_masterwork_pick",
@@ -75,7 +77,8 @@
     "description": {
       "en": "Only a true workshop can shape a pick this fine.",
       "cs": "Vyvážení, které se nedá popsat — jen vyzkoušet."
-    }
+    },
+    "requiresTech": "currency"
   },
   {
     "id": "craft_plate_armor",
@@ -204,7 +207,8 @@
     "description": {
       "en": "Steel teeth on a roaring motor — the logger's best friend.",
       "cs": "Zuby na řetězu a motor, který se nezastaví."
-    }
+    },
+    "requiresTech": "refrigeration"
   },
   {
     "id": "craft_power_drill",
@@ -439,7 +443,8 @@
     "description": {
       "en": "Season, shave and string a stave of yew.",
       "cs": "Ohnuté dřevo a tětiva. Stádo nic neuslyší."
-    }
+    },
+    "requiresTech": "snares"
   },
   {
     "id": "craft_iron_sword",
@@ -458,7 +463,8 @@
     "description": {
       "en": "Fold and quench honest iron into an honest blade.",
       "cs": "Rovná čepel, poctivě kovaná."
-    }
+    },
+    "requiresTech": "guilds"
   },
   {
     "id": "craft_crossbow",
@@ -478,7 +484,8 @@
     "description": {
       "en": "A stock, a steel prod and a windlass — patience made lethal.",
       "cs": "Naučí se z ní střílet každý — v tom je její síla."
-    }
+    },
+    "requiresTech": "guilds"
   },
   {
     "id": "saw_timber",
@@ -527,7 +534,8 @@
     "description": {
       "en": "Ore and charcoal packed in together, and hours at the bellows for one bloom.",
       "cs": "Ruda a dřevěné uhlí namačkané dohromady a hodiny u měchů pro jedinou houbu železa."
-    }
+    },
+    "requiresTech": "writing"
   },
   {
     "id": "tan_leather",
@@ -576,7 +584,8 @@
     "description": {
       "en": "The same iron, from a furnace that does not need coaxing.",
       "cs": "Totéž železo z pece, kterou není třeba přemlouvat."
-    }
+    },
+    "requiresTech": "machining"
   },
   {
     "id": "craft_flint_and_tinder",
@@ -596,7 +605,8 @@
     "description": {
       "en": "A reliable way to start a fire. A sharp piece of flint and some dry tinder wrapped in a leather pouch.",
       "cs": "Spolehlivý způsob, jak rozdělat oheň. Ostrý pazourek a suchý troud v koženém váčku."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "dip_tallow_candles",
@@ -616,7 +626,8 @@
     "description": {
       "en": "A simple wick repeatedly dipped in rendered fat creates a slow-burning source of light for the dark months.",
       "cs": "Jednoduchý knot opakovaně máčený v roztaveném tuku. Pomalu hořící zdroj světla pro tmavé měsíce."
-    }
+    },
+    "requiresTech": "agriculture"
   },
   {
     "id": "craft_longbow",
@@ -656,7 +667,8 @@
     "description": {
       "en": "Tightly woven reeds form a sturdy basket, perfect for carrying foraged goods back to the granary.",
       "cs": "Pevně spletené rákosí tvoří bytelný koš, ideální pro přenášení nasbíraných plodin do sýpky."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "prepare_herbal_compress",
@@ -722,7 +734,8 @@
     "description": {
       "en": "A long polearm with a heavy steel blade, capable of keeping dangers at a distance.",
       "cs": "Dlouhá tyčová zbraň s těžkou ocelovou čepelí, schopná udržet nebezpečí na distanc."
-    }
+    },
+    "requiresTech": "steam_power"
   },
   {
     "id": "weave_grass_hat",
@@ -741,7 +754,8 @@
     "description": {
       "en": "Simple protection from the sun, woven from dried valley grasses.",
       "cs": "Jednoduchá ochrana před sluncem, upletená ze suché údolní trávy."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "render_beeswax_block",
@@ -760,7 +774,8 @@
     "description": {
       "en": "Melt down and filter raw honeycomb to create a pure, stable block of wax.",
       "cs": "Roztavit a přefiltrovat surové plástve a vytvořit tak čistý, stabilní blok vosku."
-    }
+    },
+    "requiresTech": "snares"
   },
   {
     "id": "carve_barbed_fishing_spear",
@@ -780,7 +795,8 @@
     "description": {
       "en": "A simple spear with bone barbs lashed to the tip. It's harder for a fish to wriggle free.",
       "cs": "Jednoduchý oštěp s kostěnými ostny přivázanými na špičku. Rybě se z něj hůř vyvlékne."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "make_tanning_solution",
@@ -800,7 +816,8 @@
     "description": {
       "en": "Soak tree bark in water to draw out the tannins, a crucial step for turning stiff hides into usable leather.",
       "cs": "Louhováním kůry ve vodě se získá odvar plný tříslovin, který promění zvířecí kůži v pevnou useň."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "craft_heavy_leather_apron",
@@ -860,7 +877,8 @@
     "description": {
       "en": "Scrape, stretch, and treat a raw hide to turn it into a tough, workable material.",
       "cs": "Oškrabat, napnout a ošetřit surovou kůži, aby z ní vznikla pevná, použitelná useň."
-    }
+    },
+    "requiresTech": "writing"
   },
   {
     "id": "smoke_meat",
@@ -919,7 +937,8 @@
     "description": {
       "en": "A simple bag for carrying small items, stitched from cured hide.",
       "cs": "Jednoduchý pytlík na nošení drobností, sešitý z vydělané kůže."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "assemble_simple_cart",
@@ -940,7 +959,8 @@
     "description": {
       "en": "A pair of wheels on an axle and a simple frame. It can't carry much, but it's a start.",
       "cs": "Dvě kola na ose a prostý rám. Moc toho neuveze, ale pro začátek to stačí."
-    }
+    },
+    "workTicks": 12.2
   },
   {
     "id": "weave_grass_pouch",
@@ -958,7 +978,8 @@
     "description": {
       "en": "A simple pouch woven from tough valley grasses. Better than carrying everything in your hands.",
       "cs": "Jednoduchá mošna spletená z tuhých údolních travin. Lepší než nosit všechno v rukách."
-    }
+    },
+    "requiresTech": "writing"
   },
   {
     "id": "haft_stone_axe",
@@ -1128,7 +1149,8 @@
     "description": {
       "en": "Sturdy, comfortable boots that will last for years of walking the valley.",
       "cs": "Pevné, pohodlné boty, které vydrží roky chození po údolí."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "craft_watchmans_horn",
@@ -1192,7 +1214,8 @@
     "description": {
       "en": "A sturdy cart for hauling goods around the valley. It's not fast, but it beats carrying everything on your back.",
       "cs": "Pevný vozík pro převážení věcí po údolí. Není rychlý, ale je lepší než nosit všechno na zádech."
-    }
+    },
+    "workTicks": 12.2
   },
   {
     "id": "bake_berry_cakes",
@@ -1290,7 +1313,8 @@
     "description": {
       "en": "A sharpened stone head bound tightly to a balanced haft. More accurate and deadly than a simple rock.",
       "cs": "Naostřená kamenná hlavice pevně svázaná s vyváženým topůrkem. Přesnější a smrtelnější než obyčejný kámen."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "weave_fiber_rope",
@@ -1308,7 +1332,8 @@
     "description": {
       "en": "Twisting and braiding strong plant fibers creates a versatile rope for building, hauling, and climbing.",
       "cs": "Zkroucením a spletením pevných rostlinných vláken vzniká všestranný provaz pro stavbu, tahání a lezení."
-    }
+    },
+    "requiresTech": "snares"
   },
   {
     "id": "weave_fishing_net",
@@ -1327,7 +1352,8 @@
     "description": {
       "en": "Knotted fibers, woven into a net to bring in a bigger catch from the river.",
       "cs": "Vlákna svázaná do sítě. Z řeky se dá vytáhnout víc než jen jedna ryba najednou."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "forge_miners_pick",
@@ -1390,7 +1416,8 @@
     "description": {
       "en": "A stitched leather bag, sealed with beeswax. Allows a colonist to carry water far from the well.",
       "cs": "Sešitý kožený vak, utěsněný včelím voskem. Umožňuje kolonistovi nosit vodu daleko od studny."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "forge_skyfall_blade",
@@ -1432,7 +1459,8 @@
     "description": {
       "en": "Two long poles and some rope. Crude, but lets one person haul more than they can carry.",
       "cs": "Dvě dlouhé tyče a kus provazu. Primitivní, ale člověk s tím odtáhne víc, než unese."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "smoke_fish",
@@ -1584,7 +1612,8 @@
     "description": {
       "en": "A simple loop of tough fiber, good for catching rabbits unaware.",
       "cs": "Jednoduchá smyčka z pevných vláken, dobrá na chytání nepozorných králíků."
-    }
+    },
+    "requiresTech": "writing"
   },
   {
     "id": "carve_stone_mortar",
@@ -1623,7 +1652,8 @@
     "description": {
       "en": "The most basic axe: a sharpened rock tied to a stick. Better than nothing.",
       "cs": "Nejzákladnější sekera: naostřený kámen přivázaný ke klacku. Lepší než nic."
-    }
+    },
+    "requiresTech": "snares"
   },
   {
     "id": "carve_heavy_club",
@@ -1685,7 +1715,8 @@
     "description": {
       "en": "A symbol of our people, to be carried into the future.",
       "cs": "Znamení našeho lidu, které poneseme do budoucnosti."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "assemble_bone_carving_kit",
@@ -1705,7 +1736,8 @@
     "description": {
       "en": "A roll of fine, sharp tools for detailed work.",
       "cs": "Kožená rulička s jemnými, ostrými nástroji pro detailní práci."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "grind_mushroom_powder",
@@ -1725,7 +1757,8 @@
     "description": {
       "en": "Preserving the forest's bounty for a lean winter.",
       "cs": "Uchovat dary lesa na hubenou zimu."
-    }
+    },
+    "requiresTech": "agriculture"
   },
   {
     "id": "tan_rabbit_hide",
@@ -1745,7 +1778,8 @@
     "description": {
       "en": "The cured pelt is worked until it is soft and supple, ready for sewing.",
       "cs": "Zpracovaná kožešina se změkčuje, dokud není vláčná a připravená k šití."
-    }
+    },
+    "requiresTech": "porterage"
   },
   {
     "id": "craft_simple_hammer",
@@ -1765,7 +1799,8 @@
     "description": {
       "en": "A heavy block of wood lashed to a handle. Crude, but it gets the job done.",
       "cs": "Těžký kus dřeva přivázaný k topůrku. Surové, ale svou práci odvede."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "weave_reed_shield",
@@ -1785,7 +1820,8 @@
     "description": {
       "en": "A simple shield of woven reeds over a wooden frame. Better than nothing.",
       "cs": "Jednoduchý štít z proutí na dřevěném rámu. Lepší než nic."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "twist_grass_rope",
@@ -1824,7 +1860,8 @@
     "description": {
       "en": "A simple loop trap made of rope and a bent sapling, for catching small game.",
       "cs": "Jednoduchá past z provazu a ohnutého proutku. Na lapání drobné zvěře."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "break_obsidian_core",
@@ -1924,7 +1961,8 @@
     "description": {
       "en": "A simple sling for hunting small game. A good stone and a strong arm are all it needs.",
       "cs": "Jednoduchý prak k lovu malé zvěře. Stačí dobrý kámen a silná paže."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "sew_hide_vest",
@@ -1943,7 +1981,8 @@
     "description": {
       "en": "A simple vest of cured hide to protect the torso from scrapes and the wind.",
       "cs": "Prostá vesta z vydělané kůže. Ochrání tělo před škrábanci a větrem."
-    }
+    },
+    "requiresTech": "porterage"
   },
   {
     "id": "chip_flint_scraper",
@@ -1982,7 +2021,8 @@
     "description": {
       "en": "Pound dried meat and berries into a dense, high-energy cake that lasts for months.",
       "cs": "Sušené maso a bobule stlučené do hutné, energetické placky, co vydrží měsíce."
-    }
+    },
+    "requiresTech": "agriculture"
   },
   {
     "id": "make_woven_grass_rope",
@@ -2020,7 +2060,8 @@
     "description": {
       "en": "A simple, rough mat woven from grass rope. Better than sleeping on the bare ground.",
       "cs": "Jednoduchá, hrubá rohož upletená z travnatého lana. Lepší než spát na holé zemi."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "break_obsidian_for_shards",
@@ -2138,7 +2179,8 @@
     "description": {
       "en": "A simple but effective cape made from cured hides, offering protection from wind and rain.",
       "cs": "Jednoduchý, ale účinný plášť z vydělané kůže. Ochrání před větrem i deštěm."
-    }
+    },
+    "requiresTech": "porterage"
   },
   {
     "id": "shape_river_stone_axe_head",
@@ -2218,7 +2260,8 @@
     "description": {
       "en": "A simple snare made from a flexible branch and a rope loop, for catching rabbits and other small game.",
       "cs": "Jednoduchá smyčka z ohebné větve a provazu k chytání králíků a jiné drobné zvěře."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "craft_stone_hammer",
@@ -2358,7 +2401,8 @@
     "description": {
       "en": "A pair of reed mats and some rope can be fashioned into a pack for carrying things.",
       "cs": "Ze dvou rákosových rohoží a kusu provazu se dá vyrobit nůše na nošení věcí."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "haft_stone_spear",
@@ -2379,7 +2423,8 @@
     "description": {
       "en": "Fixing a flint point to a long shaft of wood. A real weapon for a real hunter.",
       "cs": "Připevnění pazourkového hrotu na dlouhou dřevěnou násadu. Zbraň pro skutečného lovce."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "braid_grass_for_rope",
@@ -2418,7 +2463,8 @@
     "description": {
       "en": "A simple net woven from grass rope, suitable for catching small fish in the shallows.",
       "cs": "Jednoduchá síť upletená z travěného provazu. Hodí se k lovu drobných ryb na mělčině."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "form_small_clay_pot",
@@ -2479,7 +2525,8 @@
     "description": {
       "en": "Stitch together pieces of tough, cured hide to make a simple vest for protection from scrapes and weather.",
       "cs": "Sešitím kusů houževnaté kůže vznikne vesta, co chrání před odřeninami a nepohodou."
-    }
+    },
+    "requiresTech": "porterage"
   },
   {
     "id": "twist_grass_into_rope",
@@ -2517,7 +2564,8 @@
     "description": {
       "en": "A simple snare made from a bent sapling and a rope loop, for catching small game unawares.",
       "cs": "Jednoduchá past z ohnutého proutku a provazové smyčky. Na chytání malé zvěře, když nedává pozor."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "sew_simple_moccasins",
@@ -2612,7 +2660,8 @@
     "description": {
       "en": "A simple net woven from plant fibers. Not pretty, but it might catch something from the river.",
       "cs": "Jednoduchá síť upletená z rostlinných vláken. Není hezká, ale třeba něco z řeky chytí."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "chip_river_stone_head",
@@ -2694,7 +2743,8 @@
     "description": {
       "en": "Stitching together smaller hides to make a simple cape that offers some protection from the wind and rain.",
       "cs": "Sešitím menších kůží vznikne jednoduchá pelerína, která nabízí určitou ochranu před větrem a deštěm."
-    }
+    },
+    "requiresTech": "porterage"
   },
   {
     "id": "chip_basic_axe_head",
@@ -2733,7 +2783,8 @@
     "description": {
       "en": "Lash a stone axe head to a sturdy branch with a strip of hide. A fundamental tool for survival.",
       "cs": "Přivázat kamennou hlavici k pevné větvi pruhem kůže. Základní nástroj pro přežití."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "process_flax_fibers",
@@ -2771,7 +2822,8 @@
     "description": {
       "en": "Knot processed flax fibers into a crude but functional net for catching river fish. Small sticks serve as floats.",
       "cs": "Spletením lněných vláken vznikne hrubá, ale funkční síť na chytání říčních ryb. Malé klacíky slouží jako plováky."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "gather_petrified_wood",
@@ -2849,7 +2901,8 @@
     "description": {
       "en": "Simple foot coverings made from cured hide, stitched together with strong flax thread.",
       "cs": "Jednoduchá obuv z kůže, sešitá pevnou lněnou nití."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "chip_river_stone_axehead",
@@ -2890,7 +2943,8 @@
     "description": {
       "en": "A long wooden shaft fitted with a sharp stone head, secured with hide lashings. A hunter's best friend.",
       "cs": "Dlouhá dřevěná násada s ostrou kamennou hlavicí, zajištěná koženými řemínky. Nejlepší přítel lovce."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "make_berry_pemmican",
@@ -2989,7 +3043,8 @@
     "description": {
       "en": "Bundle dried fish into a leather pouch to create a durable, lightweight ration for travelers or scouts.",
       "cs": "Zabalit sušené ryby do koženého váčku. Vznikne trvanlivý a lehký příděl pro cestovatele nebo zvědy."
-    }
+    },
+    "requiresTech": "agriculture"
   },
   {
     "id": "sew_leather_leggings",
@@ -3009,7 +3064,8 @@
     "description": {
       "en": "Stitch together pieces of tough leather and softer rabbit hide to protect the legs from thorns and scrapes.",
       "cs": "Sešít kousky tuhé kůže a měkčí králičiny. Ochrání nohy před trny a škrábanci."
-    }
+    },
+    "requiresTech": "porterage"
   },
   {
     "id": "assemble_stone_chisel",
@@ -3049,7 +3105,8 @@
     "description": {
       "en": "Select smooth, dense stones from the riverbed and store them in a simple leather pouch.",
       "cs": "Vybrat z říčního dna hladké, hutné kameny a uložit je do jednoduchého koženého váčku."
-    }
+    },
+    "requiresTech": "snares"
   },
   {
     "id": "grind_bone_chisel",
@@ -3069,7 +3126,8 @@
     "description": {
       "en": "Grind a sturdy animal bone against smooth river stones to create a sharp chisel for fine work.",
       "cs": "Broušením pevné zvířecí kosti o hladké říční kameny vznikne ostré dláto pro jemnou práci."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "prepare_salt_crock",
@@ -3109,7 +3167,8 @@
     "description": {
       "en": "Cure thick animal hides with salt to make a durable apron for messy or dangerous work.",
       "cs": "Nasolit tlusté zvířecí kůže a vyrobit z nich trvanlivou zástěru pro špinavou nebo nebezpečnou práci."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "harvest_wild_honeycomb",
@@ -3146,7 +3205,8 @@
     "description": {
       "en": "Crush and press wild honeycomb to separate the liquid honey, leaving a chunk of raw wax.",
       "cs": "Rozdrtit a vylisovat divoké plástve, oddělit tekutý med a zanechat kus surového vosku."
-    }
+    },
+    "requiresTech": "agriculture"
   },
   {
     "id": "collect_wild_honeycomb",
@@ -3184,7 +3244,8 @@
     "description": {
       "en": "Heat and press honeycomb to separate the raw, unrefined wax.",
       "cs": "Zahřát a vylisovat plástve a oddělit tak surový, nerafinovaný vosk."
-    }
+    },
+    "requiresTech": "agriculture"
   },
   {
     "id": "craft_waxed_hide_apron",
@@ -3204,7 +3265,8 @@
     "description": {
       "en": "A heavy apron of layered hide, rubbed with beeswax for water resistance.",
       "cs": "Těžká zástěra z vrstvené kůže, napuštěná včelím voskem proti vodě."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "fire_salt_crock",
@@ -3300,7 +3362,8 @@
     "description": {
       "en": "Breaking apart a honeycomb to separate the raw, sticky wax from the honey.",
       "cs": "Rozlámat plástev a oddělit surový, lepkavý vosk od medu."
-    }
+    },
+    "requiresTech": "agriculture"
   },
   {
     "id": "sew_waxed_leather_gloves",
@@ -3320,7 +3383,8 @@
     "description": {
       "en": "Heavy leather gloves, with seams sealed with beeswax for durability and water resistance.",
       "cs": "Silné kožené rukavice se švy zalitými včelím voskem pro větší odolnost a nepromokavost."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "make_pouch_of_stones",
@@ -3340,7 +3404,8 @@
     "description": {
       "en": "A small leather pouch filled with smooth river stones, chosen for their shape and feel.",
       "cs": "Malý kožený váček naplněný hladkými říčními kameny, vybranými pro jejich tvar a omak."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "string_mushrooms_to_dry",
@@ -3416,7 +3481,8 @@
     "description": {
       "en": "Weave strips of flexible bark into simple footwear, using a sticky berry paste to seal and strengthen the joints.",
       "cs": "Proužky ohebné kůry spletené do prosté obuvi. Lepkavá pasta z bobulí utěsní a zpevní spoje."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "polish_a_river_pearl",
@@ -3436,7 +3502,8 @@
     "description": {
       "en": "Find a promising river stone and polish it against a leather strap until a gleam of pearl emerges.",
       "cs": "Nadějný říční kámen se tře o kus kůže tak dlouho, dokud se neobjeví perleťový lesk."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "assemble_decorated_needle_kit",
@@ -3456,7 +3523,8 @@
     "description": {
       "en": "A set of fine bone needles in a leather roll, the tie adorned with a single polished pearl as a mark of its value.",
       "cs": "Sada jemných kostěných jehel v koženém pouzdře. Sponu zdobí jediná leštěná perla na znamení ceny."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "wax_hide_apron",
@@ -3476,7 +3544,8 @@
     "description": {
       "en": "A heavy hide apron, rubbed with tallow to make it resistant to water and workshop stains.",
       "cs": "Těžká kožená zástěra, potřená lojem, aby odolala vodě a dílenským skvrnám."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "weave_dyed_wool_blanket",
@@ -3496,7 +3565,8 @@
     "description": {
       "en": "A simple woven blanket made from spun fleece, using mushroom powder to dye it a deep, earthy color.",
       "cs": "Prostá tkaná deka z předeného rouna, obarvená houbovým prachem do syté, zemité barvy."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "prepare_dried_mushrooms",
@@ -3573,7 +3643,8 @@
     "description": {
       "en": "The flat, sturdy base of a cart, for hauling goods around the valley.",
       "cs": "Plochý, bytelný základ vozu pro převážení nákladu po údolí."
-    }
+    },
+    "requiresTech": "snares"
   },
   {
     "id": "seal_gourd_canteen",
@@ -3593,7 +3664,8 @@
     "description": {
       "en": "Dry a hollowed-out gourd and seal it with beeswax to make a simple, lightweight waterskin.",
       "cs": "Vysušit vydlabanou tykev a zalepit ji včelím voskem. Vznikne tak prostá a lehká čutora na vodu."
-    }
+    },
+    "requiresTech": "porterage"
   },
   {
     "id": "craft_flint_skinning_knife",
@@ -3613,7 +3685,8 @@
     "description": {
       "en": "A sharp flint blade for skinning game, bundled with a strip of smoked meat — a hunter's first tools.",
       "cs": "Ostrá pazourková čepel na stahování zvěře, svázaná s proužkem uzeného masa — první nástroje lovce."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "collect_wild_berries",
@@ -3668,7 +3741,8 @@
     "description": {
       "en": "Assemble heavy timbers into a flat bed for a cart, capable of hauling heavy loads.",
       "cs": "Sestavit z těžkých trámů plochou korbu pro vozík, schopnou unést těžké náklady."
-    }
+    },
+    "requiresTech": "snares"
   },
   {
     "id": "dry_mushroom_assortment",
@@ -3707,7 +3781,8 @@
     "description": {
       "en": "Stiff leather forearm guards, waterproofed and hardened with a coating of beeswax.",
       "cs": "Tuhé kožené chrániče předloktí, napuštěné a zpevněné vrstvou včelího vosku."
-    }
+    },
+    "requiresTech": "writing"
   },
   {
     "id": "forge_surgeons_saw",
@@ -3729,7 +3804,8 @@
     "description": {
       "en": "Forge a fine-toothed saw for amputations. The work is grim, so it's prepared with a compress to manage the bleeding.",
       "cs": "Ukovat jemnozubou pilu na amputace. Práce je to ponurá, proto je dodávána s obkladem na zastavení krvácení."
-    }
+    },
+    "workTicks": 12.2
   },
   {
     "id": "prepare_mushroom_assortment",
@@ -3789,7 +3865,8 @@
     "description": {
       "en": "A large, hollowed-out gourd is dried and sealed with beeswax to make a lightweight water carrier.",
       "cs": "Velká, vydlabaná tykev se vysuší a zalije včelím voskem. Vznikne tak lehká nádoba na vodu."
-    }
+    },
+    "requiresTech": "snares"
   },
   {
     "id": "fashion_bone_saw",
@@ -3812,7 +3889,8 @@
     "description": {
       "en": "A crude saw for amputations, with sharp stone teeth in a wooden frame. Bundled with a poultice to treat the wound.",
       "cs": "Hrubá pila na amputace, s ostrými kamennými zuby v dřevěném rámu. Dodává se s obkladem k ošetření rány."
-    }
+    },
+    "workTicks": 12.2
   },
   {
     "id": "craft_rough_leather_bracers",
@@ -3832,7 +3910,8 @@
     "description": {
       "en": "Stiff pieces of cured leather tied with hide thongs to protect a worker's forearms.",
       "cs": "Tuhé kusy vydělané kůže svázané řemínky. Chrání předloktí při práci."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "braid_fiber_sling",
@@ -3852,7 +3931,8 @@
     "description": {
       "en": "Tough plant fibres braided into a cradle and a pair of cords, with a pouch of river stones picked to fit it.",
       "cs": "Pevná rostlinná vlákna spletená do lůžka a dvou šňůr, k tomu váček říčních oblázků vybraných tak, aby padly."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "sew_thick_fur_hood",
@@ -3872,7 +3952,8 @@
     "description": {
       "en": "A deep hood of heavy fur, lined with leather. It keeps the wind and snow out of the eyes.",
       "cs": "Hluboká kapuce z těžké kožešiny, podšitá kůží. Chrání oči před větrem a sněhem."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "construct_simple_cart",
@@ -3893,7 +3974,8 @@
     "description": {
       "en": "Assemble the pre-made bed, axle and frame into a simple cart for hauling goods.",
       "cs": "Sestavit předem vyrobenou korbu, nápravu a rám do jednoduchého vozíku na přepravu zboží."
-    }
+    },
+    "requiresTech": "husbandry"
   },
   {
     "id": "mash_berry_paste",
@@ -3912,7 +3994,8 @@
     "description": {
       "en": "Crush foraged berries into a thick, sweet paste that can be stored for later use.",
       "cs": "Drcením lesních plodů vznikne hustá, sladká pasta, kterou lze uskladnit na později."
-    }
+    },
+    "requiresTech": "agriculture"
   },
   {
     "id": "prepare_wild_root_poultice",
@@ -4002,7 +4085,8 @@
     "description": {
       "en": "A heavy hood of layered furs and leather straps, offering excellent protection against biting winds and winter cold.",
       "cs": "Těžká kapuce z několika vrstev kožešin a kožených řemínků. Poskytuje vynikající ochranu před kousavým větrem a zimním chladem."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "carve_harvest_idol",
@@ -4022,7 +4106,8 @@
     "description": {
       "en": "A small totem carved to encourage a bountiful harvest, assembled from valley roots and wood.",
       "cs": "Malý totem vyřezaný pro povzbuzení hojné sklizně, sestavený z kořenů a dřeva z údolí."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "mix_mushroom_pigment",
@@ -4043,7 +4128,8 @@
     "description": {
       "en": "Dried caps ground into clay and worked wet in a fired bowl until the colour holds.",
       "cs": "Sušené klobouky rozetřené do hlíny a za mokra míchané ve vypálené misce, dokud barva nedrží."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "cobble_together_worn_tools",
@@ -4128,7 +4214,8 @@
     "description": {
       "en": "Cloth beaten with rendered fat until the rain runs off it instead of through it.",
       "cs": "Látka vyklepaná se škvařeným lojem, dokud po ní déšť stéká místo aby jí prosákl."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "forge_barrow_blade",
@@ -4552,7 +4639,8 @@
     "description": {
       "en": "Carving a piece of hollow bone, tuning it to mimic an animal call. A strip of hide makes a lanyard.",
       "cs": "Vyřezání kusu duté kosti a její naladění tak, aby napodobovala volání zvěře. Proužek kůže poslouží jako šňůrka."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "shape_flint_grinding_stone",
@@ -4673,7 +4761,8 @@
     "description": {
       "en": "A large hide worked with rendered animal fat until it sheds water. Anya's trick for keeping the damp out on a long watch; she swears it works better than any modern weave.",
       "cs": "Velká kůže zpracovaná se škvařeným zvířecím tukem, dokud neodpuzuje vodu. Fígl staré Anny, jak se udržet v suchu na dlouhé hlídce; přísahá, že to funguje lépe než jakékoli moderní tkaniny."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "braid_flax_fishing_line",
@@ -4692,7 +4781,8 @@
     "description": {
       "en": "Twisting and braiding fine flax fibers together makes a line strong enough for the river's biggest fish. Young Finn spends hours by the fire doing this, dreaming of his next big catch.",
       "cs": "Spletením jemných lněných vláken vznikne vlasec dost silný i na největší ryby v řece. Mladý Finn tím u ohně tráví hodiny a sní o svém dalším velkém úlovku."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "sharpen_hunting_stick",
@@ -4730,7 +4820,8 @@
     "description": {
       "en": "A simple conical basket woven from branches and strong fibers, left in the shallows of the river overnight. Lia and Finn made the first one; now everyone copies their design.",
       "cs": "Jednoduchý kónický koš upletený z větví a pevných vláken, ponechaný přes noc v říčních mělčinách. První takový vyrobili Lia a Finn; teď už jejich vzor všichni kopírují."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "construct_spiked_pitfall",
@@ -4867,7 +4958,8 @@
     "description": {
       "en": "Stitch together thick hide mittens and line them with soft rabbit fur for warmth during the harshest frosts.",
       "cs": "Sešít tlusté kožené palčáky a pro teplo je vystlat měkkou králičí kožešinou proti nejtužším mrazům."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "carve_bone_comb",
@@ -4925,7 +5017,8 @@
     "description": {
       "en": "A larger, sturdier satchel made of tanned leather, with extra pockets for separating delicate herbs from heavy roots.",
       "cs": "Větší a pevnější brašna z vydělané kůže, s dalšími kapsami pro oddělení křehkých bylin od těžkých kořenů."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "treat_foragers_satchel",
@@ -4945,7 +5038,8 @@
     "description": {
       "en": "Rubbing rendered fat into a leather satchel to make it waterproof, protecting delicate herbs and mushrooms from the rain.",
       "cs": "Vmasírovat sádlo do kožené mošny, aby nepromokla a chránila křehké byliny a houby před deštěm."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "assemble_stiff_bristle_brush",
@@ -5144,7 +5238,8 @@
     "description": {
       "en": "Weaving dried river reeds into a tight, wide-brimmed hat to keep the rain off one's face.",
       "cs": "Spletení suchého rákosí do pevného klobouku se širokou krempou, který ochrání tvář před deštěm."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "sew_thick_leather_gauntlets",
@@ -5185,7 +5280,8 @@
     "description": {
       "en": "A simple spring-snare trap made from a bent sapling and a woven fiber noose.",
       "cs": "Prostá pružinová past z ohnutého proutku a smyčky z rostlinných vláken."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "knit_thick_wool_scarf",
@@ -5224,7 +5320,8 @@
     "description": {
       "en": "Braiding tough plant fibers into a strong cord and securely attaching a weighted stone to one end.",
       "cs": "Spletení pevných rostlinných vláken do silné šňůry a bezpečné připevnění kamenného závaží na jeden konec."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "weave_broad_brim_hat",
@@ -5243,7 +5340,8 @@
     "description": {
       "en": "Weave dried plant fibers into a wide hat to shield from the sun during long hours in the fields.",
       "cs": "Splést sušená rostlinná vlákna do širokého klobouku, který ochrání před sluncem během dlouhých hodin na poli."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "sew_rabbit_fur_mittens",
@@ -5263,7 +5361,8 @@
     "description": {
       "en": "Two rabbit skins turned fur-in and stitched at the wrist, stuffed with dry herb against the cold.",
       "cs": "Dvě králičí kůže obrácené srstí dovnitř a sešité u zápěstí, vycpané suchou bylinou proti mrazu."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "weave_nettle_tunic",
@@ -5282,7 +5381,8 @@
     "description": {
       "en": "Process and weave tough nettle fibers into a rough but durable tunic. It's scratchy, but it's warm.",
       "cs": "Zpracovat a utkat tuhá kopřivová vlákna do hrubé, ale odolné tuniky. Škrábe, ale hřeje."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "cut_hide_leg_wraps",
@@ -5321,7 +5421,8 @@
     "description": {
       "en": "Lash sharp flint heads to a sturdy wooden shaft to create a light throwing spear, good for hunting small game.",
       "cs": "Přivázat ostré pazourkové hroty na pevnou dřevěnou násadu a vytvořit lehký vrhací oštěp, dobrý k lovu malé zvěře."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "weave_straw_sun_hat",
@@ -5340,7 +5441,8 @@
     "description": {
       "en": "Twisting and weaving dried grasses into a wide hat to keep the sun off during a long day's work.",
       "cs": "Spletání sušené trávy do širokého klobouku, který chrání před sluncem během dlouhého pracovního dne."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "stitch_rabbit_fur_mittens",
@@ -5360,7 +5462,8 @@
     "description": {
       "en": "Stitching together soft rabbit pelts to make warm, flexible mittens for cold mornings.",
       "cs": "Sešití měkkých králičích kožek do teplých, ohebných rukavic pro chladná rána."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "fashion_flint_javelin",
@@ -5462,7 +5565,8 @@
     "description": {
       "en": "Lengths of fiber rope knotted around sturdy wooden rungs to create a simple, portable ladder.",
       "cs": "Kusy vláknitého lana svázané kolem pevných dřevěných příček tvoří jednoduchý přenosný žebřík."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "weave_reed_muzzle",
@@ -5580,7 +5684,8 @@
     "description": {
       "en": "A strip of cured leather with a small, dense stone sewn into the pouch for better weight and aim.",
       "cs": "Pruh vydělané kůže s malým, hutným kamenem všitým do kapsy pro lepší váhu a míření."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "fashion_bone_hoe",
@@ -5620,7 +5725,8 @@
     "description": {
       "en": "Long, tough grasses are woven tightly and bound with fiber rope to create a surprisingly water-resistant cape.",
       "cs": "Dlouhé, tuhé trávy jsou pevně spleteny a svázány vláknitým provazem, aby vytvořily překvapivě voděodolnou pláštěnku."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "select_river_throwing_stone",
@@ -5755,7 +5861,8 @@
     "description": {
       "en": "Twisting and braiding bundles of dried reeds into a strong, simple rope for leading animals.",
       "cs": "Svinout a splést svazky sušeného rákosí do pevného, jednoduchého provazu na vedení zvířat."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "fashion_crude_mitts",
@@ -5954,7 +6061,8 @@
     "description": {
       "en": "Stitching sturdy hide boots and coating them with animal fat to make them waterproof for the marshy lowlands.",
       "cs": "Ušít pevné kožené boty a potřít je zvířecím tukem, aby nepromokly v podmáčených nížinách."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "shape_hardwood_throwing_spear",
@@ -5993,7 +6101,8 @@
     "description": {
       "en": "A coarse, tightly woven cloak of river reeds. It won't keep out a downpour, but it's enough to stay dry in a drizzle.",
       "cs": "Hrubý, pevně utkaný plášť z říčního rákosí. Před lijákem neochrání, ale v mrholení stačí, aby člověk zůstal v suchu."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "braid_simple_animal_lead_rope",
@@ -6011,7 +6120,8 @@
     "description": {
       "en": "Twisting and braiding long strands of tough plant fiber into a sturdy rope for leading pack animals.",
       "cs": "Spletením dlouhých pramenů tuhých rostlinných vláken vznikne pevné lano pro vedení nákladních zvířat."
-    }
+    },
+    "requiresTech": "porterage"
   },
   {
     "id": "sharpen_bone_splinter",
@@ -6255,7 +6365,8 @@
     "description": {
       "en": "Stitch together a cured rabbit pelt into a simple cap, offering basic warmth and protection from the elements.",
       "cs": "Sešít vyčiněnou králičí kůži do jednoduché čepice, která poskytuje základní teplo a ochranu před nepřízní počasí."
-    }
+    },
+    "workTicks": 6.8
   },
   {
     "id": "forge_iron_pickaxe",
@@ -6320,7 +6431,8 @@
     "description": {
       "en": "Stitch multiple layers of treated leather, reinforced with metal buckles, to create a protective apron for demanding tasks.",
       "cs": "Sešít více vrstev ošetřené kůže, vyztužené kovovými sponami, k vytvoření ochranné zástěry pro náročné úkoly."
-    }
+    },
+    "workTicks": 12.2
   },
   {
     "id": "assemble_power_chainsaw",
@@ -6525,7 +6637,8 @@
     "description": {
       "en": "Lightweight yet incredibly strong body armor, offering superior protection against ballistic threats.",
       "cs": "Lehká, ale neuvěřitelně pevná neprůstřelná vesta, nabízející vynikající ochranu proti balistickým hrozbám."
-    }
+    },
+    "workTicks": 9.5
   },
   {
     "id": "fabricate_plasma_arc_emitter",
@@ -6687,7 +6800,8 @@
     "description": {
       "en": "Carefully processed plant fibers, ready for spinning into thread or weaving.",
       "cs": "Pečlivě zpracovaná rostlinná vlákna, připravená k předení nití nebo tkaní."
-    }
+    },
+    "workTicks": 8.1
   },
   {
     "id": "fabricate_auto_harvester",
@@ -6711,7 +6825,8 @@
     "description": {
       "en": "A complex autonomous machine designed to efficiently gather and process resources without direct human intervention.",
       "cs": "Složitý autonomní stroj navržený k efektivnímu sběru a zpracování zdrojů bez přímého lidského zásahu."
-    }
+    },
+    "workTicks": 12.2
   },
   {
     "id": "craft_recurve_war_bow",
@@ -6770,7 +6885,8 @@
     "description": {
       "en": "A finely woven net from dried reeds, suitable for catching smaller fish in shallow waters.",
       "cs": "Jemně upletená síť ze sušených rákosů, vhodná pro chytání menších ryb v mělké vodě."
-    }
+    },
+    "requiresTech": "snares"
   },
   {
     "id": "craft_stone_hafted_axe",
@@ -6791,7 +6907,8 @@
     "description": {
       "en": "A sharpened stone blade securely lashed to a sturdy wooden handle, effective for felling small trees.",
       "cs": "Nabroušená kamenná čepel bezpečně upevněná na pevném dřevěném topůrku, účinná pro kácení menších stromů."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "knit_thick_wool_poncho",
@@ -6993,7 +7110,8 @@
     "description": {
       "en": "A collection of fine bone chisels and tools, carefully arranged in a leather pouch for delicate artistic work or detailed crafting.",
       "cs": "Sada jemných kostěných dlát a nástrojů, pečlivě uspořádaná v koženém pouzdře pro jemnou uměleckou práci nebo detailní řemeslo."
-    }
+    },
+    "workTicks": 14.8
   },
   {
     "id": "fabricate_fusion_cell",
@@ -7039,7 +7157,8 @@
     "description": {
       "en": "A sturdy clay pot, fired and sealed with beeswax, ideal for long-term food preservation, keeping perishables fresh for seasons.",
       "cs": "Pevný hliněný hrnec, vypálený a utěsněný včelím voskem, ideální pro dlouhodobé uchovávání potravin, udržující kazící se věci čerstvé po mnoho sezón."
-    }
+    },
+    "workTicks": 12.2
   },
   {
     "id": "manufacture_heavy_combat_shotgun",
@@ -7286,7 +7405,8 @@
     "description": {
       "en": "A simple tool for boring small holes, useful in early crafts and construction.",
       "cs": "Prostý nástroj pro vrtání malých otvorů, užitečný v počátečních řemeslech a stavbě."
-    }
+    },
+    "requiresTech": "agriculture"
   },
   {
     "id": "weave_rough_wool_blanket",
@@ -7305,7 +7425,8 @@
     "description": {
       "en": "A crude but warm covering made from plant fibers and animal hide. Offers protection from the cold.",
       "cs": "Hrubá, ale teplá pokrývka z rostlinných vláken a zvířecí kůže. Nabízí ochranu před chladem."
-    }
+    },
+    "requiresTech": "writing"
   },
   {
     "id": "bundle_dried_reeds",
@@ -7323,7 +7444,8 @@
     "description": {
       "en": "Dried reeds bundled together for easier transport and use in construction or weaving.",
       "cs": "Sušené rákosí svázané dohromady pro snadnější přepravu a použití ve stavbě nebo pletení."
-    }
+    },
+    "requiresTech": "porterage"
   },
   {
     "id": "craft_stone_pestle_mortar",
@@ -7363,7 +7485,8 @@
     "description": {
       "en": "A simple harness designed to help pack animals carry more. Crude, but effective.",
       "cs": "Jednoduchý postroj navržený tak, aby pomohl nákladním zvířatům nést více. Hrubý, ale účinný."
-    }
+    },
+    "requiresTech": "husbandry"
   },
   {
     "id": "craft_rough_bridle",
@@ -7515,7 +7638,8 @@
     "description": {
       "en": "Interlace dried reeds and plant fibers to create a light but effective defensive shield.",
       "cs": "Propleťte sušené rákosí a rostlinná vlákna k vytvoření lehkého, ale účinného obranného štítu."
-    }
+    },
+    "requiresTech": "snares"
   },
   {
     "id": "sew_crude_hide_leg_wraps",
@@ -7534,7 +7658,8 @@
     "description": {
       "en": "Cut and stitch basic hide pieces to protect legs from brush and minor injuries.",
       "cs": "Nařežte a sešijte základní kusy kůže k ochraně nohou před křovím a drobnými zraněními."
-    }
+    },
+    "requiresTech": "porterage"
   },
   {
     "id": "construct_automation_hub_advanced",
@@ -7584,7 +7709,8 @@
     "description": {
       "en": "Put together precision-machined parts to create a rapid-fire personal defense weapon.",
       "cs": "Sestavte přesně opracované díly k vytvoření rychlopalné zbraně pro osobní obranu."
-    }
+    },
+    "workTicks": 22.9
   },
   {
     "id": "forge_warden_plate_advanced",
@@ -7608,7 +7734,8 @@
     "description": {
       "en": "Craft advanced plate armor from reinforced steel and exotic alloys, providing superior protection.",
       "cs": "Ukováte pokročilé plátové brnění z vyztužené oceli a exotických slitin, poskytující vynikající ochranu."
-    }
+    },
+    "workTicks": 12.2
   },
   {
     "id": "craft_cavalry_blunderbuss",
@@ -7987,7 +8114,8 @@
     "description": {
       "en": "A sturdy frame to distribute heavy loads, essential for more efficient carrying or constructing larger packs.",
       "cs": "Pevná konstrukce k rozložení těžkých nákladů, základ pro efektivnější transport nebo stavbu objemnějších zavazadel."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "craft_leather_packsaddle_basic",
@@ -8070,7 +8198,8 @@
     "description": {
       "en": "A densely woven mantle of dried reeds, offering substantial protection against heavy rain and damp conditions.",
       "cs": "Hustě upletený plášť ze sušeného rákosu, poskytující značnou ochranu proti silnému dešti a vlhkosti."
-    }
+    },
+    "requiresTech": "pottery"
   },
   {
     "id": "craft_polished_stone_amulet_basic",
@@ -8090,7 +8219,8 @@
     "description": {
       "en": "A smooth, river-worn stone, polished to a shine and strung on a simple cord. Often carried for luck or as a personal token.",
       "cs": "Hladký, říční kámen, vyleštěný do lesku a navlečený na jednoduchou šňůrku. Často se nosí pro štěstí nebo jako osobní předmět."
-    }
+    },
+    "requiresTech": "snares"
   },
   {
     "id": "manufacture_pump_action_shotgun_basic",
@@ -8271,7 +8401,8 @@
     "description": {
       "en": "A compact and efficient power source, converting hydrogen into clean energy for advanced devices.",
       "cs": "Kompaktní a účinný zdroj energie, přeměňující vodík na čistou energii pro pokročilá zařízení."
-    }
+    },
+    "workTicks": 12.2
   },
   {
     "id": "weave_fodder_sack",
@@ -8333,7 +8464,8 @@
     "description": {
       "en": "A simple snare made from bent wood and plant fibers, used to catch small game.",
       "cs": "Jednoduchá past z ohýbaného dřeva a rostlinných vláken, sloužící k chytání malé zvěře."
-    }
+    },
+    "requiresTech": "basic_tools"
   },
   {
     "id": "weave_reed_bridle",
@@ -8374,7 +8506,8 @@
     "description": {
       "en": "Bundling several straight timber logs together for easier transport or storage.",
       "cs": "Svazování několika rovných kmenů dohromady pro snazší přepravu nebo skladování."
-    }
+    },
+    "requiresTech": "porterage"
   },
   {
     "id": "craft_dried_foragers_satchel",
@@ -8394,7 +8527,8 @@
     "description": {
       "en": "A simple satchel made from dried hide and woven plant fibers, useful for carrying gathered goods.",
       "cs": "Jednoduchá brašna vyrobená ze sušené kůže a pletených rostlinných vláken, užitečná pro nošení nasbíraných věcí."
-    }
+    },
+    "requiresTech": "porterage"
   },
   {
     "id": "gather_plant_fibers",
@@ -8496,7 +8630,8 @@
     "description": {
       "en": "The comb warmed through and the wax lifted off the honey.",
       "cs": "Plást se prohřeje a vosk se sebere z medu."
-    }
+    },
+    "requiresTech": "agriculture"
   },
   {
     "id": "pack_river_clay",

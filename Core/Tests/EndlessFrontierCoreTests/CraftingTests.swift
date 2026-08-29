@@ -6,12 +6,28 @@ import Testing
 struct CraftingTests {
     private func reg() throws -> GameDataRegistry { try GameDataRegistry.bundled() }
 
-    private func capital(materials: [String], buildings: [String] = [], resources: Resources = [.materials: 100]) -> WorldState {
+    /// A colony with the stuff, the benches **and the study** a recipe needs.
+    ///
+    /// `for:` names the recipes the test is about and the fixture reads their
+    /// `requiresTech` out of the book, so a gating change is a change to the
+    /// book and not to fourteen tests (rule 109).
+    private func capital(materials: [String], buildings: [String] = [],
+                         for recipeIDs: [String] = [],
+                         resources: Resources = [.materials: 100]) -> WorldState {
         let inv = materials.map { ItemInstance(definitionID: $0) }
         let bld = buildings.map { BuildingInstance(definitionID: $0, count: 1) }
         let c = Settlement(id: UUID(uuidString: "00000000-0000-0000-0F00-7b233e2c671d")!, name: "C", kind: .capital, pawns: Fixtures.pawns(5), buildings: bld,
                            storage: resources, storageCapacity: .uniform(9999), inventory: inv)
-        return WorldState(settlements: [c])
+        var world = WorldState(settlements: [c])
+        // **The colony knows what the recipes here need.** The book was gated
+        // by chain depth on 2026-08-29 (`BACKLOG.md` §30) and a leather garb —
+        // depth two, a hide cured and stitched — picked up `snares` along with
+        // everything else at its depth. A fixture that assumed "no bench" also
+        // meant "no study" then failed for a content change that was right,
+        // which is rule 109 for the third time in two days. It asks the book.
+        let book = try? GameDataRegistry.bundled()
+        world.researchedTechs = Set(recipeIDs.compactMap { book?.recipes[$0]?.requiresTech })
+        return world
     }
 
     @Test("Recipes load from data")
@@ -25,7 +41,7 @@ struct CraftingTests {
         // Chainmail used to be the sample here, and it was the sample because
         // it was the bug: mail out of two ingots with no bench and no study.
         // A leather garb is what a colony with no workshop can honestly make.
-        let world = capital(materials: ["leather", "leather"])   // 2 leather + 10 materials
+        let world = capital(materials: ["leather", "leather"], for: ["craft_leather_garb"])
         #expect(CraftingEngine.canCraft(r.recipes["craft_leather_garb"]!, in: world, registry: r))
         let after = BenchTestSupport.craft(world, recipeID: "craft_leather_garb", registry: r)
         // Materials consumed, output added.
@@ -37,7 +53,7 @@ struct CraftingTests {
     @Test("Crafting fails without the required materials")
     func missingMaterials() throws {
         let r = try reg()
-        let world = capital(materials: ["leather"])   // only 1, needs 2
+        let world = capital(materials: ["leather"], for: ["craft_leather_garb"])   // only 1, needs 2
         #expect(!CraftingEngine.canCraft(r.recipes["craft_leather_garb"]!, in: world, registry: r))
         let after = BenchTestSupport.craft(world, recipeID: "craft_leather_garb", registry: r)
         // Nothing is made, and nothing is spent. The whole state is no longer
@@ -62,10 +78,10 @@ struct CraftingTests {
         let bench = try #require(recipe.requiresBuilding)
         let stock = ["iron_ingot", "iron_ingot", "timber_bundle"]
 
-        let without = capital(materials: stock)
+        let without = capital(materials: stock, for: [recipe.id])
         #expect(!CraftingEngine.canCraft(recipe, in: without, registry: r))
 
-        let with = capital(materials: stock, buildings: [bench])
+        let with = capital(materials: stock, buildings: [bench], for: [recipe.id])
         #expect(CraftingEngine.canCraft(recipe, in: with, registry: r))
         let after = BenchTestSupport.craft(with, recipeID: recipe.id, registry: r)
         #expect(after.settlements[0].inventory.contains { $0.definitionID == recipe.outputItemID })
@@ -75,7 +91,7 @@ struct CraftingTests {
     func available() throws {
         let r = try reg()
         // Leather garb is stitched from leather, not from a bundle of timber.
-        let world = capital(materials: ["leather", "leather"])
+        let world = capital(materials: ["leather", "leather"], for: ["craft_leather_garb"])
         let ids = Set(CraftingEngine.availableRecipes(world, registry: r).map(\.id))
         #expect(ids.contains("craft_leather_garb"))
         #expect(!ids.contains("craft_warden_plate"))   // needs rare materials + workshop + tech
@@ -84,7 +100,7 @@ struct CraftingTests {
     @Test("Crafting is deterministic")
     func deterministic() throws {
         let r = try reg()
-        let world = capital(materials: ["leather", "leather"])
+        let world = capital(materials: ["leather", "leather"], for: ["craft_leather_garb"])
         let a = BenchTestSupport.craft(world, recipeID: "craft_leather_garb", registry: r)
         let b = BenchTestSupport.craft(world, recipeID: "craft_leather_garb", registry: r)
         #expect(a == b)

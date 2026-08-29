@@ -155,6 +155,10 @@ struct SettlementCanvasView: View {
     /// runs on a loop of its own, so this is the only clock that can say how
     /// far through a step the drawing is — see `SettlementBattle.Beat`.
     var battleBeat: SettlementBattle.Beat?
+    /// When the last raid stopped. The field lingers a few seconds after the
+    /// fighting, and those seconds cannot be counted on a clock the raid
+    /// paused.
+    var battleEnded: (id: UUID, at: Date)?
     /// Somewhere the game is asking the camera to go. Set it and the view pans
     /// and closes in once, then leaves the camera alone — a camera that keeps
     /// correcting the player is worse than one that never moves.
@@ -203,6 +207,7 @@ struct SettlementCanvasView: View {
                         weather: weather,
                         battleReplay: battleReplay,
                         battleBeat: battleBeat,
+                        battleEnded: battleEnded,
                         selectedPawnID: selectedPawnID,
                         selectedBuildingID: selectedBuildingID)
                     if let plan = buildPlan {

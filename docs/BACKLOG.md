@@ -4403,8 +4403,162 @@ those points — and `HeapCard` says what the kind is, which building's floor it
 is on, and what the pile is actually made of, biggest item first. Only with the
 roof off: a heap you cannot see is not a heap you meant to tap.
 
-### 28.4 — still open
+### 28.4 — carried into §29
 
-1. Everything in §21.6 that §22.4.3 pointed at.
-2. The wall face is drawn for every building; §5's **vertical textures** are
-   nine hands and could be nine more.
+## 29. 2026-08-29 — the field that cleared too soon, the fourteen, and the mine
+
+Three from the plan, in the order they were cheap in.
+
+### 29.1 — a raid that ends while the world is paused cleared its field at once
+
+§21.6.5, and the thing Keks reported about the record: *"i při raidu v záznamu
+je špatné světlo a špatné efekty."* The field is supposed to linger a few
+seconds after the last blow — the dead lie where they fell, the blood stays, the
+torches gutter. That linger was measured off `continuousTick`, and **a raid
+pauses the world**: the clock sits a tick past the one the fight opened in,
+which is nine whole play-throughs of elapsed time, so the moment the siege
+concluded everything vanished between one frame and the next.
+
+Rule 103 a third time, and the same cure both earlier times took:
+`GameViewModel.siegeEnded` stamps the end against the clock the fight is
+actually happening on, and the afterglow runs on real seconds. Guarded by *"A
+field that has just been fought over does not clear at once"*.
+
+### 29.2 — the fourteen: a later route buys time, not stuff
+
+§21.6.2, and the decision that was left open. A second way of making a thing
+does not have to be **cheaper** — it has to be better at *something*, and what a
+later age is actually better at is speed.
+
+Cutting their prices was never going to work: `fabricate_auto_harvester` costs
+392 against `craft_auto_harvester`'s 43, and a near-future recipe priced under a
+modern one is not a recipe, it is an apology. All fourteen carry a `workTicks`
+at 45% of the work the earlier route costs instead — which nothing in the book
+used before, though `RecipeDefinition.workPerUnit` has honoured it since it was
+written (rule 47, caught in time for once).
+
+So the choice is real: spend more stuff and have it today, or spend less and
+wait. The guard measures **both** axes now — a route is dominated only when the
+rival is cheaper *and* no slower — and its cap went from fourteen to zero.
+
+### 29.3 — the mine, measured: the seam was never the surprise
+
+§21.6.3, open since §20.7 with the note *"print the distribution first"*.
+`OreProbe` prints it, seed 4242, two centuries:
+
+| year | ore | miners | at a face | seams | left in them |
+|---|---|---|---|---|---|
+| 10 | 0 | 1 | 1 | 1 | 158 |
+| 20 | 169 | 2 | 2 | 1 | 13 |
+| 30 | 187 | 3 | **0** | 1 | **0** |
+| 90 | 311 | 5 | 0 | 1 | 0 |
+| 200 | 155 | **14** | **0** | 1 | 0 |
+
+**One seam, empty by year twenty.** That half is deliberate and says so out
+loud: `LocalMapGenerator.depositMix` gives the plains a single iron deposit
+because *"a forge needs either a trade route or a second settlement up in the
+hills — which is the point of having a world map at all"*. The ore after year 30
+is bought, not dug, and the colony does fine on it.
+
+What is not deliberate is the other column. The colony went on posting miners at
+bare rock: **fourteen of them at year two hundred, with nobody ever at a face**
+— a tenth of the town swinging picks at nothing while the fields wanted hands.
+Rule 9c's family: the trade exists and the work cannot reach it.
+
+`LaborEngine.poolFullness` measures what is left in the ground per *work*, and
+the quota table scales a deposit-backed trade by it — down to a floor of 15%,
+because somebody has to be there when a new seam opens. The forest is untouched
+by this, having not run out. Guarded by *"An empty seam keeps a token watch and
+not a shift"*.
+
+### 29.4 — taken up in §30
+
+## 30. 2026-08-29 — the ladder, the nine hands, the file, and the worn thing
+
+Four off the plan in one sitting, at Keks's *"klidně udělej 1, 2, 3, 4"*.
+
+### 30.1 — the crafting gate was data, and now it is a ladder
+
+§15.6.1, measured first (rule 72). **242 of 420 recipes carried no
+`requiresTech`, 233 of them in the first age**, and **27 of the 60 techs gated
+nothing at all** — `snares` held one recipe, `pit_props` and `yokes` none. A hut
+opened 64 crafts the day it went up.
+
+Derived rather than guessed, on two axes that are both in the data:
+
+- **Chain depth.** Depth one stays open — a colony has to be able to make
+  something on the day it lands — and everything made *of* something takes a
+  rung. 121 recipes gated, none of them pushed past the era its own inputs come
+  from, which is the rule §21.4 was measured against.
+- **The bench keeps its own study.** Among its era's techs, one that this
+  bench's other work already needs beats an idle one. The first pass had no such
+  term and put `ramparts` — a wall tech — on an iron sword: derived, and
+  nonsense. Now the smithy's book sits under `basic_tools` and `bronze_tools`,
+  the workshop's under `apprenticeship`, `guilds` and `machining`, the
+  cookhouse's under `agriculture`, `preservation` and `snares`.
+
+Idle techs 27 → 24, and a hut now opens 42 rather than 64.
+
+**And rule 109 for the third time in two days.** `CraftingTests` said "no
+bench" and meant "no study"; `CraftOrderTests` researched nothing by default;
+`ProductionChainTests` stood a workshop and expected a sword. All three now ask
+the book — `capital(…, for: ["craft_iron_sword"])` reads the recipe's own tech,
+and `work(…)` researches whatever the orders on the bench need.
+
+### 30.2 — nine fabrics, nine hands
+
+§5's vertical textures. The wall face the lift uncovers was drawn by four
+routines at different densities, which at a wall's size is **one texture in four
+weights**: the bank names nine materials and a viewer could tell three apart.
+
+Each has its own hand now: log courses with the trunk ends showing, brick with
+its perpends staggered half a brick, coursed stone laid by eye, thatch combed
+under a thick eave with a ragged hem, corrugated sheet with a fixing hem, daub
+with the crucks and a brace through them, panel with one seam standing proud,
+glass with a transom and a glint, and `open` — two posts and the daylight
+between them.
+
+### 30.3 — the view model, split along what it writes
+
+§20.4 looked at `GameViewModel.swift` (2,534 lines against a stated 800) and
+left it *deliberately*: methods in an extension live in another file, `world` is
+`private(set)` — **file** scope for the setter — so every mutating method that
+moved would force the setter open, and that one modifier is what keeps a view
+from writing the simulation (rule 1).
+
+So the split went along that line instead of along the subject. The bench's
+**list** — grouping, folding one row per thing, affordability, search, the gear
+comparison — only ever reads, and is now `GameViewModel+Crafting.swift` (318
+lines). The bench's **orders** — place, cancel, pause — stayed where the setter
+is. 2,534 → 2,235.
+
+The rule that came out of it: **a file splits along what it writes, never along
+what it is about.**
+
+### 30.4 — a worn thing must not claim what the line already counts
+
+§16.3, and the answer was not the one the section expected. **53 wearable items
+carried `colony_*` effects out of a slot nothing reads** — 38 of them
+`colony_defense`, worth **+217** to a colony whose whole defence is thirty or
+forty.
+
+Switching them on would have been the same fact counted twice:
+`CombatEngine.militia` already weighs every real weapon and every piece of
+armour into the line that fights, so a helmet claiming "+6 colony defence" is
+the helmet paying twice. The claims came off the items rather than into the sum.
+Ten `colony_production` claims on **materials** went with them — a sack of ore
+in a store does not run a workshop.
+
+What is left is three trinkets that lift a town's spirits while somebody wears
+them, which nothing else models, and `ItemEngine.ownedEffects` counts them now.
+No `DangerProbe` run either side, because nothing that was ever counted changed
+— which is the honest reason and worth saying rather than running a probe to
+produce a number that cannot move.
+
+### 30.5 — still open
+
+1. **Catch-up sits at "0 years · 0%" for about forty seconds** at real colony
+   size (§16.4). Slice by *time* rather than by a fixed tick count.
+2. `charcoal` at 2 in year 200 with `Smelt Iron` short of it (§17.4.1) — worth
+   re-measuring now the smithy exists.
+3. Everything in §15.6 and §16.4 not listed above.

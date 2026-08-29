@@ -106,15 +106,33 @@ public enum ItemEngine {
 
     // MARK: - Artifacts (per colony)
 
-    private static func artifactEffects(_ settlement: Settlement, registry: GameDataRegistry) -> [ItemEffect] {
-        settlement.inventory.compactMap { registry.item($0.definitionID) }
+    /// **What the colony gets out of the things it owns.**
+    ///
+    /// The artifacts in the store, and what a colonist is *wearing*.
+    ///
+    /// Measured 2026-08-29: 53 wearable items carried `colony_*` effects out of
+    /// a slot this never read — 38 of them `colony_defense`. Turning them on as
+    /// they stood would have added **+217 defence** to a colony whose whole
+    /// defence is thirty or forty, and it would have been the same fact counted
+    /// twice: `CombatEngine.militia` already weighs every real weapon and every
+    /// piece of armour into the line that fights. So the claims came off the
+    /// items rather than into the sum (`ContentTests`), and what is left —
+    /// three trinkets that lift a town's spirits while somebody wears them —
+    /// is a thing nothing else models, and now counts.
+    private static func ownedEffects(_ settlement: Settlement, registry: GameDataRegistry) -> [ItemEffect] {
+        let stored = settlement.inventory.compactMap { registry.item($0.definitionID) }
             .filter { $0.slot == .artifact }
             .flatMap(\.effects)
+        let worn = settlement.pawns
+            .flatMap { $0.equipment.values }
+            .compactMap { registry.item($0.definitionID) }
+            .flatMap(\.effects)
+        return stored + worn
     }
 
     public static func colonyProduction(_ settlement: Settlement, registry: GameDataRegistry) -> Resources {
         var resources = Resources()
-        for effect in artifactEffects(settlement, registry: registry) {
+        for effect in ownedEffects(settlement, registry: registry) {
             if case let .colonyProduction(resource, perTick) = effect {
                 resources[resource] = resources[resource] + perTick
             }
@@ -123,14 +141,14 @@ public enum ItemEngine {
     }
 
     public static func colonyDefenseBonus(_ settlement: Settlement, registry: GameDataRegistry) -> Double {
-        artifactEffects(settlement, registry: registry).reduce(0) { acc, effect in
+        ownedEffects(settlement, registry: registry).reduce(0) { acc, effect in
             if case let .colonyDefense(amount) = effect { return acc + amount }
             return acc
         }
     }
 
     public static func colonyMoraleBonus(_ settlement: Settlement, registry: GameDataRegistry) -> Double {
-        artifactEffects(settlement, registry: registry).reduce(0) { acc, effect in
+        ownedEffects(settlement, registry: registry).reduce(0) { acc, effect in
             if case let .colonyMorale(amount) = effect { return acc + amount }
             return acc
         }

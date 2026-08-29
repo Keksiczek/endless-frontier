@@ -1,6 +1,6 @@
 # Rules — what has already gone wrong, and must not again
 
-<!-- Extracted from BACKLOG.md 2026-08-13 | 109 rules -->
+<!-- Extracted from BACKLOG.md 2026-08-13 | 110 rules -->
 
 **Every one of these cost a session at least once.** They are the project's
 troubleshooting guide and its lessons learned in one list: when something in the
@@ -1119,3 +1119,15 @@ fires, do the arithmetic before you rewrite the mechanic.
    asserting data the content owns. Watch for the third case hiding in it — a
    test whose *premise* really did move (two orders "at the same shop" stopped
    being at the same shop) needs new inputs, not a new lookup.
+
+110. **A file splits along what it writes, never along what it is about.**
+   `GameViewModel.swift` sat at 2,534 lines against a stated 800 and §20.4 left
+   it there on purpose: a class split across files puts its methods in
+   extensions, `world` is `private(set)` — which in Swift is *file* scope for
+   the setter — and every mutating method that moved out would force that
+   setter open. One modifier is what keeps a view from writing the simulation
+   (rule 1), and no line count is worth it. What *can* leave is everything that
+   only **reads**: the bench's list — grouping, folding, affordability, search
+   — went out as an extension and the bench's orders stayed home. Ask of any
+   split: does the piece leaving write anything? If it does, it is not a
+   seam — it is the class.

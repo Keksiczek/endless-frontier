@@ -119,3 +119,43 @@ struct LaborTests {
         #expect(a.pawns.map(\.assignedWork) == b.pawns.map(\.assignedWork))
     }
 }
+
+/// **A trade whose ground is worked out does not keep its hands.**
+///
+/// Measured 2026-08-29 (`OreProbe`): a plains colony has one iron seam by
+/// design, it is empty by year thirty — and the colony went on posting miners
+/// at it. Fourteen at year two hundred, with **nobody ever at a face**: a
+/// tenth of a town swinging picks at bare rock while the fields wanted hands.
+@Suite("Hands follow the ground")
+struct WorkedOutGroundTests {
+
+    private func map(stone: Double) -> LocalMap {
+        LocalMap(
+            river: RiverShape(baseY: 0.5, amplitude: 0.05, phase: 0),
+            nodes: [ResourceNode(id: 1, kind: .stone, position: LocalPoint(x: 0.3, y: 0.3),
+                                 amount: stone, capacity: 200),
+                    ResourceNode(id: 2, kind: .forest, position: LocalPoint(x: 0.6, y: 0.4),
+                                 amount: 200, capacity: 200)],
+            pois: [], exploredCells: Set(0..<(LocalMap.gridColumns * LocalMap.gridRows)))
+    }
+
+    @Test("An empty seam keeps a token watch and not a shift")
+    func minersLeaveABareSeam() {
+        let full = LaborEngine.quotaTable(
+            hasTemple: false, hasWalls: false, policy: ColonyPolicy(),
+            fullness: LaborEngine.poolFullness(map(stone: 200)))
+        let bare = LaborEngine.quotaTable(
+            hasTemple: false, hasWalls: false, policy: ColonyPolicy(),
+            fullness: LaborEngine.poolFullness(map(stone: 0)))
+        let mining: ([(work: WorkKind, share: Double)]) -> Double = { table in
+            table.first { $0.work == .mining }?.share ?? 0
+        }
+        #expect(mining(bare) < mining(full), "a bare seam asks for as many hands as a full one")
+        #expect(mining(bare) > 0, "and not none: somebody has to notice a new seam")
+        // The wood is untouched, so logging is not punished for the rock.
+        let logging: ([(work: WorkKind, share: Double)]) -> Double = { table in
+            table.first { $0.work == .logging }?.share ?? 0
+        }
+        #expect(logging(bare) == logging(full), "the forest was not the thing that ran out")
+    }
+}

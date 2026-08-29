@@ -116,4 +116,36 @@ struct BattleBeatTests {
         let next = SettlementBattle.liveProgress(of: siege(step: 11), within: 0)
         #expect(abs((later - at) - (next - later)) < 1e-9)
     }
+
+    /// **The seconds after the fighting cannot be counted on a stopped clock.**
+    ///
+    /// The field lingers when a raid ends — the dead lie where they fell, the
+    /// blood stays, the torches gutter out. That linger was measured off
+    /// `continuousTick`, and a raid pauses the world: the clock sits a tick past
+    /// the one the fight began in, which is nine play-throughs of elapsed time,
+    /// so the whole field vanished between one frame and the next. Rule 103 a
+    /// third time (`BACKLOG.md` §21.6.5).
+    @Test("A field that has just been fought over does not clear at once")
+    func theFieldLingersOnRealSeconds() {
+        var town = Settlement(
+            id: UUID(uuidString: "B0A70000-0000-0000-0000-0000000000FF")!, name: "Held")
+        let id = UUID(uuidString: "B0A70000-0000-0000-0000-000000000001")!
+        town.lastBattle = BattleLog(
+            id: id, tick: 100, attackerName: "Raiders", defenderName: "Held",
+            moments: [], repelled: true, approach: 0, attackers: 12, line: [])
+        let ended = Date()
+        // The world clock is where the pause left it: a tick past the fight.
+        let stalled = 101.0
+
+        let justAfter = SettlementBattle.live(
+            town, continuousTick: stalled, secondsPerTick: 60,
+            now: ended.addingTimeInterval(2), ended: (id: id, at: ended))
+        #expect(justAfter != nil, "the field cleared the instant the fighting stopped")
+
+        let longAfter = SettlementBattle.live(
+            town, continuousTick: stalled, secondsPerTick: 60,
+            now: ended.addingTimeInterval(SettlementBattle.lingerSeconds + 1),
+            ended: (id: id, at: ended))
+        #expect(longAfter == nil, "the field never goes home")
+    }
 }

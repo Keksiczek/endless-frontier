@@ -148,6 +148,7 @@ struct SettlementScreen: View {
                     clock: game.tickClock, selection: $selection,
                     buildPlan: $buildPlan, battleReplay: battleReplay,
                     battleBeat: game.battleBeat,
+                    battleEnded: game.siegeEnded,
                     focus: game.spotlight,
                     onSiegeOrder: { game.command($0) })
                 .overlay(alignment: .topTrailing) {

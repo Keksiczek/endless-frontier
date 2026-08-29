@@ -193,7 +193,8 @@ public enum LaborEngine {
                                     needsScouts: needsScouts, hasWalls: hasWalls,
                                     hasCraftWork: hasCraftWork,
                                     masonShare: masons,
-                                    policy: settlement.policy)
+                                    policy: settlement.policy,
+                                    fullness: poolFullness(settlement.localMap))
             s.pawns[index].assignedWork = best
             counts[best, default: 0] += 1
         }
@@ -258,7 +259,8 @@ public enum LaborEngine {
         let table = quotaTable(hasTemple: hasTemple, hasWalls: hasWalls,
                                hasCraftWork: hasCraftWork,
                                masonShare: masonShare(settlement, adultCount: adultCount),
-                               policy: policy)
+                               policy: policy,
+                               fullness: poolFullness(settlement.localMap))
 
         var overWork: WorkKind?, overBy = 0.0
         var underWork: WorkKind?, underBy = 0.0
@@ -446,7 +448,10 @@ public enum LaborEngine {
         hasTemple: Bool = false, hasBuildWork: Bool = true,
         needsScouts: Bool = false, hasWalls: Bool = false,
         hasCraftWork: Bool = false, masonShare: Double? = nil,
-        policy: ColonyPolicy = ColonyPolicy()
+        policy: ColonyPolicy = ColonyPolicy(),
+        /// What is left in the ground, per work — see `quotaTable`. Empty means
+        /// "not asked", and then the table stands as it always did.
+        fullness: [WorkKind: Double] = [:]
     ) -> WorkKind {
         // Scouting's floor still applies — unless the orders say nobody scouts.
         if needsScouts, counts[.scouting, default: 0] == 0,
@@ -461,7 +466,7 @@ public enum LaborEngine {
 
         let table = quotaTable(hasTemple: hasTemple, hasWalls: hasWalls,
                                hasCraftWork: hasCraftWork, masonShare: masonShare,
-                               policy: policy)
+                               policy: policy, fullness: fullness)
         var best: WorkKind?
         var bestDeficit = -Double.infinity
         for (work, share) in table {
@@ -490,12 +495,44 @@ public enum LaborEngine {
     /// — "priority" would have meant "only". Scaling the set back to its
     /// original total means a priority trade takes a bigger slice of the same
     /// town rather than the whole town.
+    /// **How much is left in the ground a trade works.** 1 is untouched, 0 is
+    /// worked out. Keyed by the *work*, because mining covers plain rock, iron
+    /// and clay and a miner does not care which of them is left.
+    static func poolFullness(_ map: LocalMap?) -> [WorkKind: Double] {
+        guard let map else { return [:] }
+        var pool: [WorkKind: (amount: Double, capacity: Double)] = [:]
+        for node in map.nodes {
+            var entry = pool[node.kind.work] ?? (0, 0)
+            entry.amount += node.amount
+            entry.capacity += node.capacity
+            pool[node.kind.work] = entry
+        }
+        return pool.compactMapValues { $0.capacity > 0 ? $0.amount / $0.capacity : nil }
+    }
+
+    /// What a trade keeps even when its ground is bare — somebody has to be
+    /// there to notice when a new seam is opened or a claim is cleared.
+    static let workedOutShare = 0.15
+
     static func quotaTable(
         hasTemple: Bool, hasWalls: Bool, hasCraftWork: Bool = false,
         masonShare: Double? = nil,
-        policy: ColonyPolicy
+        policy: ColonyPolicy,
+        /// **What is left in the ground**, per work (`poolFullness`).
+        ///
+        /// Measured 2026-08-29 (`OreProbe`): a plains colony has **one** iron
+        /// seam by design, it is empty by year thirty, and the colony went on
+        /// posting miners at it — fourteen of them at year two hundred, with
+        /// nobody ever at a face. A trade whose ground is worked out is a trade
+        /// standing idle in the colony's own ledger, and the hands belong
+        /// somewhere else until there is something to dig.
+        fullness: [WorkKind: Double] = [:]
     ) -> [(work: WorkKind, share: Double)] {
         var table = quotas
+        for i in table.indices {
+            guard let left = fullness[table[i].work] else { continue }
+            table[i].share *= max(workedOutShare, min(1, left))
+        }
         // What the town's own roofs are asking for, if anybody worked it out.
         // Left alone the base share stands, so nothing that does not care about
         // upkeep sees a different table than it used to.

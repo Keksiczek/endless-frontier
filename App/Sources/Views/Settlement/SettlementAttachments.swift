@@ -480,27 +480,82 @@ enum SettlementFabric {
         context.fill(Path(face), with: .color(wall.opacity(0.9 - night * 0.25)))
         context.stroke(Path(face), with: .color(ink.opacity(0.75)), lineWidth: 0.7)
 
+        // **Nine fabrics, nine hands.** They shared four routines with different
+        // counts, which at a wall's size is one texture at four densities — the
+        // bank names nine materials and a viewer could tell three apart.
         var marks = Path()
         switch fabric {
-        case "timber":                       // log courses, fat and few
+        case "timber":
+            // Log courses: fat, few, and rounded off at the ends where the
+            // trunk shows.
             courses(&marks, in: face, count: 4)
-        case "brick":                        // finer courses than stone
-            courses(&marks, in: face, count: 7, stagger: 0.5)
-        case "stone":                        // offset blocks, coarse
+            let step = face.height / 4
+            for i in 1..<4 {
+                let y = face.minY + step * CGFloat(i)
+                marks.addEllipse(in: CGRect(x: face.minX - 0.4, y: y - step * 0.32,
+                                            width: 1.6, height: step * 0.64))
+            }
+        case "brick":
+            // Finer courses, and the perpends staggered half a brick.
+            courses(&marks, in: face, count: 7)
+            let step = face.height / 7
+            for row in 1..<7 {
+                let y = face.minY + step * CGFloat(row)
+                let offset = row % 2 == 0 ? 0.33 : 0.66
+                let x = face.minX + face.width * CGFloat(offset)
+                marks.move(to: CGPoint(x: x, y: y))
+                marks.addLine(to: CGPoint(x: x, y: y - step))
+            }
+        case "stone":
+            // Coarse blocks, unequal: a wall laid by eye rather than a kiln.
             courses(&marks, in: face, count: 4, stagger: 0.5)
-        case "thatch":                        // combed straight down
+            let step = face.height / 4
+            for row in 0..<4 where row % 2 == 1 {
+                let y = face.minY + step * CGFloat(row) + step * 0.5
+                marks.move(to: CGPoint(x: face.minX + face.width * 0.2, y: y))
+                marks.addLine(to: CGPoint(x: face.minX + face.width * 0.2, y: y - step * 0.5))
+            }
+        case "thatch":
+            // Combed straight down, with a thick eave across the top and an
+            // uneven hem at the bottom.
             combed(&marks, in: face, count: 9)
-        case "sheet":                        // corrugation
+            marks.move(to: CGPoint(x: face.minX, y: face.minY + face.height * 0.14))
+            marks.addLine(to: CGPoint(x: face.maxX, y: face.minY + face.height * 0.14))
+            var x = face.minX
+            var up = true
+            while x < face.maxX {
+                let next = min(face.maxX, x + face.width / 6)
+                marks.move(to: CGPoint(x: x, y: face.maxY - (up ? 1.2 : 0)))
+                marks.addLine(to: CGPoint(x: next, y: face.maxY - (up ? 0 : 1.2)))
+                x = next; up.toggle()
+            }
+        case "sheet":
+            // Corrugation: tight verticals and a hem where the sheet is fixed.
             combed(&marks, in: face, count: 12)
-        case "daub":                         // smooth, with a frame across it
+            let hem = face.maxY - face.height * 0.12
+            marks.move(to: CGPoint(x: face.minX, y: hem))
+            marks.addLine(to: CGPoint(x: face.maxX, y: hem))
+        case "daub":
+            // Smooth, with the crucks showing through it and a rail across.
             frame(&marks, in: face)
-        case "panel":                        // a grid of joints
+            marks.move(to: CGPoint(x: face.minX + face.width * 0.3,
+                                   y: face.minY + face.height * 0.25))
+            marks.addLine(to: CGPoint(x: face.minX + face.width * 0.7,
+                                      y: face.minY + face.height * 0.75))
+        case "panel":
+            // A grid of joints, and one seam standing proud of the rest.
             courses(&marks, in: face, count: 3)
             combed(&marks, in: face, count: 4)
-        case "glass":                        // verticals and one transom
+            let seam = face.minX + face.width * 0.5
+            marks.move(to: CGPoint(x: seam - 0.8, y: face.minY))
+            marks.addLine(to: CGPoint(x: seam - 0.8, y: face.maxY))
+        case "glass":
+            // Verticals, one transom, and a glint across the corner.
             combed(&marks, in: face, count: 5)
             marks.move(to: CGPoint(x: face.minX, y: face.midY))
             marks.addLine(to: CGPoint(x: face.maxX, y: face.midY))
+            marks.move(to: CGPoint(x: face.minX + face.width * 0.12, y: face.maxY))
+            marks.addLine(to: CGPoint(x: face.minX + face.width * 0.42, y: face.minY))
         default:
             break
         }

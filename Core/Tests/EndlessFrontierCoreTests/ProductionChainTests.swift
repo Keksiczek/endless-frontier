@@ -276,6 +276,12 @@ struct ProductionChainTests {
                            storage: [.materials: 500], storageCapacity: .uniform(2000))
         s.stockpile["iron_ingot"] = 2
         var world = WorldState(tick: 0, settlements: [s])
+        // This is a test about a *thing* arriving in the inventory, not about
+        // the ladder: the colony has read whatever the sword asks for. The book
+        // was gated by chain depth on 2026-08-29 and a fixture that says "a
+        // workshop" and means "and nothing to learn" fails for a change that is
+        // right (rule 109).
+        world.researchedTechs = Set([reg.recipes["craft_iron_sword"]?.requiresTech].compactMap { $0 })
         world = BenchTestSupport.craft(world, recipeID: "craft_iron_sword",
                                      settlementID: s.id, registry: reg)
         #expect(world.settlements[0].inventory.contains { $0.definitionID == "iron_sword" })
@@ -294,6 +300,7 @@ struct ProductionChainTests {
         s.inventory = [ItemInstance(id: UUID(), definitionID: "iron_ingot"),
                        ItemInstance(id: UUID(), definitionID: "iron_ingot")]
         var world = WorldState(tick: 0, settlements: [s])
+        world.researchedTechs = Set([reg.recipes["craft_iron_sword"]?.requiresTech].compactMap { $0 })
         #expect(CraftingEngine.canCraft(reg.recipes["craft_iron_sword"]!, in: world,
                                         settlementID: s.id, registry: reg))
         world = BenchTestSupport.craft(world, recipeID: "craft_iron_sword",

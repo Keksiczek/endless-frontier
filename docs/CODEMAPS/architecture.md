@@ -80,7 +80,7 @@ different rolls every run and silently breaks determinism.
 
 | Question | File |
 |---|---|
-| What must not break | [../RULES.md](../RULES.md) — 109 rules, each cost a session |
+| What must not break | [../RULES.md](../RULES.md) — 110 rules, each cost a session |
 | What to build next | [../BACKLOG.md](../BACKLOG.md) — the living plan |
 | Engine responsibilities | [engines.md](engines.md) |
 | What is an entity vs a number | [models.md](models.md) |

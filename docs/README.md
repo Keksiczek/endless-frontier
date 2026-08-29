@@ -47,7 +47,7 @@ Read in this order when picking work up cold:
 |---|---|---|
 | 1 | [NEXT.md](NEXT.md) | **Start here.** Where the game stands and what to work on next, with the evidence for each |
 | 2 | [CODEMAPS/architecture.md](CODEMAPS/architecture.md) | The three layers, the tick order, where a decision flows |
-| 3 | [RULES.md](RULES.md) | **109 rules, each of which cost a session.** Read before writing a threshold |
+| 3 | [RULES.md](RULES.md) | **110 rules, each of which cost a session.** Read before writing a threshold |
 | 4 | [BACKLOG.md](BACKLOG.md) | **The living record.** What was measured, what was built, what Keks asked for |
 
 ## Routing table — by what you are about to do
@@ -129,8 +129,8 @@ overtaken without being updated, which is exactly how a stale doc does damage.
 | [NEXT.md](NEXT.md) | plan 2026-08-17, counts 2026-08-28 | Still the best short answer to "what next". Its counts are checked by `make verify-docs` now; **its plan is not** — read `BACKLOG.md` and the newest handoff beside it |
 
 Reality as of the newest row of [TEST-BASELINE.md](TEST-BASELINE.md)
-(**2026-08-28**): **1614 Core tests** in 224 suites in ~18 minutes, and
-**220 App tests** in 34 suites, all green; iOS build green. Nothing is
+(**2026-08-29**): **1617 Core tests** in 226 suites in ~19 minutes, and
+**221 App tests** in 34 suites, all green; iOS build green. Nothing is
 unmeasured — append a row rather than editing this line.
 Content: **63 buildings**, **60 techs**, 182 events, 7 biomes, **477 items**,
 **420 recipes** — checked against the tree by `make verify-docs`. History lives

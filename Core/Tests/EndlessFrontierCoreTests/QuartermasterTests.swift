@@ -50,9 +50,18 @@ struct QuartermasterTests {
         return s
     }
 
+    /// A world that has learned its whole book.
+    ///
+    /// The quartermaster asks for the materials of the gear the colony **can**
+    /// make, so gating the book by chain depth (`BACKLOG.md` §30) changed what
+    /// a colony with nothing researched wants — correctly: a town that has not
+    /// learned to sew a coat has no business tanning hides for one. These tests
+    /// are about the *chain*, not the ladder, so the world here knows
+    /// everything and the chain is the only thing being measured (rule 109).
     private func world(_ settlement: Settlement, _ registry: GameDataRegistry) -> WorldState {
         var w = GameWorldFactory.newGame(registry: registry, seed: 7)
         w.settlements = [settlement]
+        w.researchedTechs = Set(registry.techs.keys)
         return w
     }
 
