@@ -58,4 +58,29 @@ struct CatchUpPacingTests {
         #expect(work >= 240 * 40 * 8 / 10)
         #expect(work <= 240 * 40 * 12 / 10)
     }
+
+    /// **The slice sizes itself to the clock, not to a head-count.**
+    ///
+    /// Head-count was a proxy for what a tick costs, fixed at the start of an
+    /// absence the colony grows all the way through. Timing the last slice is
+    /// the measurement itself: aim at a couple of frames, correct by the ratio,
+    /// and never move by more than half or double in one step so one throttled
+    /// slice does not send the size to an end.
+    @Test("A slow slice shrinks the next one, a fast slice grows it")
+    func slicesFollowTheClock() {
+        let slow = GameViewModel.resized(240, took: 4.0)
+        #expect(slow < 240, "four seconds a slice and the next one is no smaller")
+        #expect(slow >= GameViewModel.minSlice)
+        #expect(slow >= 120, "one slow slice must not send the size to the floor")
+
+        let fast = GameViewModel.resized(240, took: 0.001)
+        #expect(fast > 240, "a slice that costs nothing stays small for ever")
+        #expect(fast <= 480, "and does not double twice in one step")
+        #expect(fast <= GameViewModel.maxSlice)
+
+        // On target, it holds — a size that oscillates around the right answer
+        // reports at an uneven pace, which reads worse than a slower steady one.
+        let steady = GameViewModel.resized(240, took: GameViewModel.sliceSeconds)
+        #expect(steady == 240)
+    }
 }

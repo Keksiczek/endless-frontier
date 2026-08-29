@@ -11,6 +11,7 @@ nothing on its own.
 
 | Date | Commit | Core tests | Core suites | Wall clock | App tests | App suites | Note |
 |---|---|---|---|---|---|---|---|
+| 2026-08-29 | `pending` | 1620 | 227 | ~18 min | 225 | 35 | The catch-up bar sized by the clock, a feast on the green, the readouts lifted out, and the research ladder measured (`BACKLOG.md` §31) |
 | 2026-08-29 | `3b83128` | 1617 | 226 | ~19 min | 221 | 34 | The field that cleared too soon, the fourteen, the mine, the crafting ladder, nine fabrics, the view model split and the worn things (`BACKLOG.md` §29–30) |
 | 2026-08-28 | `cbd6505` | 1614 | 224 | ~19 min | 220 | 34 | A storyteller raid opens a siege you can answer, and a store holds what it is a store for (`BACKLOG.md` §28) |
 | 2026-08-28 | `d39e845` | 1614 | 224 | ~22 min | 220 | 34 | The height was being counted twice, so a warehouse hung over the town (`BACKLOG.md` §27.4) |

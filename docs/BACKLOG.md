@@ -4555,7 +4555,79 @@ No `DangerProbe` run either side, because nothing that was ever counted changed
 — which is the honest reason and worth saying rather than running a probe to
 produce a number that cannot move.
 
-### 30.5 — still open
+## 31. 2026-08-29 (evening) — the bar, the fire, the files, and a ladder measured
+
+§2 of the handoff, worked down in order.
+
+### 31.1 — the research ladder, measured, and the hole in the middle
+
+The first thing the handoff asked for: nobody had looked at pacing since the
+gate went in. `ResearchProbe` and `EraProbe`, seed 4242, 250 years:
+
+| years | what happens |
+|---|---|
+| 0–40 | twelve techs; ancient at 20, medieval at 40 |
+| 50–80 | 18 → 37 done, knowledge coming in at 456–2,136 a year |
+| **90–120** | **stuck at 38–40 for thirty years**: `statecraft` 13,200, `selective_breeding` 17,496, `preservation` 18,589 — and income reading **0, −2, −14** |
+| 130–160 | away again, and the whole tree is finished in **year 160 of 250** |
+
+Two findings, neither fixed here (rule 72 — one change, one measurement, and
+this measurement has not been acted on yet):
+
+1. **The price jumps an order of magnitude and the income does not.** Techs cost
+   thousands to year 80 and tens of thousands from 90, while the colony banks
+   nothing at all for three decades. Rule 6 in its plainest form: a threshold
+   beyond the reach of the rate meant to cross it. Rule 88 fixed this shape once
+   for era milestones; this is the next storey.
+2. **The income goes negative** — `in/yr` of −2 and −14 is not "nothing was
+   banked", it is "some was lost". Something spends or clears knowledge outside
+   research, and that wants its own measurement **before** anybody touches a
+   price.
+
+And what is still unmeasured: this is the *research* ladder. Nobody has printed
+what the **crafting** gate did — recipes available per year — and the guards
+only say the book is reachable and arrives gradually.
+
+### 31.2 — the catch-up bar sizes itself by the clock now
+
+§16.4 said the bar reads "0 years · 0 %" for forty seconds at real colony size.
+Half of that was fixed already — `sliceTicks(forPawns:)` scaled the slice by
+head-count — and head-count is a **proxy** for what a tick costs, fixed at the
+start of an absence the colony grows all the way through.
+
+So the caller may now hand `GameEngine.openSession` a new slice size after every
+slice, having timed the last one, and aims at two frames. Halved or doubled at
+most per step, so one throttled slice does not send the size to an end.
+
+**The clock stays outside the engine**: `openSession` reads no wall clock, and
+`TickEngine.advance` is the same pure loop, so a slice of 13 and a slice of
+10,000 still land on the same world (`CatchUpSliceTests`, rule 3).
+
+### 31.3 — a feast you can see
+
+`FestivalEngine` spends three months' rations in a night, lifts every mood in
+the colony and writes a line in the journal — and the canvas drew **nothing**,
+because the feast is one tick's arithmetic and left nothing behind to draw
+from. Rule 18 with a system-sized hole in it.
+
+`Settlement.lastFestival` is the record (when, and how lavish), decoded
+if-present like every field added after the first save. `SettlementFestival`
+draws the ring of stones, three flames on their own beat, and the light the fire
+throws across the town. A lean year burns thin — the drawing is as sparse as the
+feast was — and the stones stay when the flames have gone.
+
+### 31.4 — the files, by rule 110
+
+`GameViewModel.swift` **2,534 → 2,132**: the bench's list (§30.3) and now the
+panels' readouts — quests, the tech tree as a ladder, the regions a party could
+walk to, what an expedition costs. Everything lifted only ever *reads*; the
+verbs it sat beside stayed with the setter.
+
+Still over the line, in order of how much of them is read-only:
+`SiegeEngine` 1,949 · `SettlementStructures` 1,633 · `SettlementFigures` 1,368 ·
+`AgentMotion` 1,286 · `StewardEngine` 1,283.
+
+### 31.5 — still open
 
 1. **Catch-up sits at "0 years · 0%" for about forty seconds** at real colony
    size (§16.4). Slice by *time* rather than by a fixed tick count.

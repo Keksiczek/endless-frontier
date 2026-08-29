@@ -120,11 +120,16 @@ public enum FestivalEngine {
         // that is its own kind of year.
         guard lavishness > 0.05 else {
             s.stats.morale = max(0, s.stats.morale - festivalMorale)
+            // Even a year with nothing on the table is a year the fires were
+            // lit, and the canvas should say so — thinly (`FestivalRecord`).
+            s.lastFestival = FestivalRecord(tick: tick, lavishness: lavishness)
             s.note(tick: tick, kind: .social, text: LocalizedText(values: [
                 .en: "Midsummer came and there was nothing to put on the table. The fires were lit anyway, and everyone went home early.",
                 .cs: "Přišel slunovrat a nebylo co dát na stůl. Ohně se přesto zapálily a všichni šli brzy domů."]))
             return s
         }
+
+        s.lastFestival = FestivalRecord(tick: tick, lavishness: lavishness)
 
         // 2. Everybody eats, and it sits with them into the autumn.
         for i in s.pawns.indices {

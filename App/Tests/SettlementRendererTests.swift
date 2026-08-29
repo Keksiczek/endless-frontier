@@ -591,3 +591,45 @@ struct RenderBudgetTests {
         }
     }
 }
+
+/// **The fire on the green, and how long it burns.**
+@MainActor
+@Suite("Midsummer is a thing you can see")
+struct FestivalDrawingTests {
+
+    private func town(festival: FestivalRecord?) -> Settlement {
+        var s = Settlement(id: UUID(uuidString: "F0000000-0000-0000-0000-00000000000B")!,
+                           name: "Green")
+        s.lastFestival = festival
+        return s
+    }
+
+    @Test("A colony that has never held one has no fire")
+    func noFestivalNoFire() {
+        #expect(SettlementFestival.burning(town(festival: nil), tick: 100) == nil)
+    }
+
+    @Test("The fire burns for a while and then goes out")
+    func theFireGutters() {
+        let held = town(festival: FestivalRecord(tick: 100, lavishness: 1))
+        let fresh = SettlementFestival.burning(held, tick: 100)
+        #expect(fresh?.age == 0)
+        let later = SettlementFestival.burning(held, tick: 102)
+        #expect((later?.age ?? 0) > 0 && (later?.age ?? 1) < 1)
+        #expect(SettlementFestival.burning(
+            held, tick: Double(100 + SettlementFestival.burnsFor + 1)) == nil,
+                "the square is still at a party a week later")
+        #expect(SettlementFestival.burning(held, tick: 90) == nil,
+                "a fire lit before it was lit")
+    }
+
+    /// A lean year's fire is a small one — the drawing is as thin as the feast.
+    @Test("A lean year burns thinner than a full one")
+    func leanYearsBurnLow() {
+        let lean = SettlementFestival.burning(
+            town(festival: FestivalRecord(tick: 10, lavishness: 0.05)), tick: 10)
+        let full = SettlementFestival.burning(
+            town(festival: FestivalRecord(tick: 10, lavishness: 1)), tick: 10)
+        #expect((lean?.lavishness ?? 1) < (full?.lavishness ?? 0))
+    }
+}

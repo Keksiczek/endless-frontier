@@ -231,3 +231,48 @@ struct FestivalTests {
             """)
     }
 }
+
+/// **A feast the canvas can draw.**
+///
+/// Midsummer spent three months' rations, lifted every mood in the colony and
+/// left *nothing behind* — so the fires the whole town gathers at were a thing
+/// the simulation did and the player could not see (rule 18). The record is
+/// what a picture needs.
+@Suite("Midsummer leaves a mark on the town")
+struct FestivalRecordTests {
+
+    private func colony(food: Double) -> Settlement {
+        Settlement(id: UUID(uuidString: "F0000000-0000-0000-0000-00000000000A")!,
+                   name: "Green", pawns: Fixtures.pawns(8),
+                   storage: [.food: food], storageCapacity: .uniform(999))
+    }
+
+    @Test("A feast is remembered, with how good it was")
+    func aFeastIsRecorded() {
+        let held = FestivalEngine.hold(colony(food: 500), tick: 120,
+                                       ticksPerYear: 60, mapSeed: 42)
+        let record = held.lastFestival
+        #expect(record?.tick == 120)
+        #expect((record?.lavishness ?? 0) > 0.9, "a full larder is a full table")
+    }
+
+    /// A year with nothing on the table is still a year the fires were lit —
+    /// and the drawing should be as thin as the feast was.
+    @Test("A lean year is remembered as a lean one")
+    func aLeanYearIsRecordedToo() {
+        let held = FestivalEngine.hold(colony(food: 0), tick: 180,
+                                       ticksPerYear: 60, mapSeed: 42)
+        #expect(held.lastFestival?.tick == 180)
+        #expect((held.lastFestival?.lavishness ?? 1) < 0.1)
+    }
+
+    /// Decode-if-present (rule 3): a save from before this existed has simply
+    /// not held one yet, and must still load.
+    @Test("A colony from before the record loads without one")
+    func oldSavesLoad() throws {
+        let before = colony(food: 100)
+        let data = try JSONEncoder().encode(before)
+        let back = try JSONDecoder().decode(Settlement.self, from: data)
+        #expect(back.lastFestival == nil)
+    }
+}

@@ -220,6 +220,10 @@ enum SettlementRenderer {
                                                        approaches: approaches),
                               registry: registry)
         zones(&context, rect: rect, settlement: settlement, season: season)
+        // Midsummer, if the fires are still burning: on the green, under
+        // everything that stands on it.
+        SettlementFestival.draw(&context, rect: rect, settlement: settlement,
+                                tick: continuousTick, time: time, zoom: zoom)
         // The square in the middle of it all. Reserved in the Core since
         // districts went in and never drawn, so a town's one open place read as
         // the gap the houses had not filled yet (`SettlementGreen`).
@@ -346,7 +350,10 @@ enum SettlementRenderer {
         // you can see rather than a rumour in the dark.
         SettlementLight.lamps(
             &context,
-            nightLamps(placed: placed) + SettlementBattle.torchlight(
+            nightLamps(placed: placed)
+                + SettlementFestival.lamps(settlement, rect: rect,
+                                           tick: continuousTick, zoom: zoom)
+                + SettlementBattle.torchlight(
                 settlement, rect: rect, continuousTick: continuousTick,
                 secondsPerTick: registry.config.realSecondsPerTick,
                 replay: battleReplay, zoom: zoom, beat: battleBeat, time: time,

@@ -243,6 +243,15 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
     /// too sick to farm.
     public var lastOutbreakTick: Int?
 
+    /// **The last midsummer this colony kept**, and how well it kept it.
+    ///
+    /// The feast was one tick's arithmetic and left nothing behind: food spent,
+    /// moods lifted, a line in the journal — and the canvas drew no fire,
+    /// because there was nothing on the settlement to draw *from*. A thing the
+    /// simulation does and the player cannot see is the recurring fault of this
+    /// project (rule 18), and a record is what a picture needs.
+    public var lastFestival: FestivalRecord?
+
     /// People taken off the field when a raid broke, who are not colonists yet.
     ///
     /// Kept apart from `pawns` on purpose — see `Captive`. They eat, they do no
@@ -384,6 +393,7 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         case craftOrders, kitchenProgress
         case outbreak, lastOutbreakTick, captives
         case paths
+        case lastFestival
     }
 
     public init(from decoder: Decoder) throws {
@@ -444,6 +454,10 @@ public struct Settlement: Codable, Sendable, Identifiable, Equatable {
         // Every save written before anybody was ever taken alive holds nobody.
         captives = try c.decodeIfPresent([Captive].self, forKey: .captives) ?? []
         lastOutbreakTick = try c.decodeIfPresent(Int.self, forKey: .lastOutbreakTick)
+        // Decode-if-present, like every field added after the first save
+        // (rule 3): a colony from before midsummer was recorded simply has not
+        // held one yet.
+        lastFestival = try c.decodeIfPresent(FestivalRecord.self, forKey: .lastFestival)
         craftOrders = try c.decodeIfPresent([CraftOrder].self, forKey: .craftOrders) ?? []
         kitchenProgress = try c.decodeIfPresent(Double.self, forKey: .kitchenProgress) ?? 0
         // Decode-if-present: a save from before standing orders loads as a

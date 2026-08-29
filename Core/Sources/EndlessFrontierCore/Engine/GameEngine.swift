@@ -58,6 +58,20 @@ public enum GameEngine {
         registry: GameDataRegistry,
         sliceTicks: Int = 240,
         stoppingWhen halt: (@Sendable (WorldState) -> Bool)?,
+        /// **How big the next slice should be**, asked after each one.
+        ///
+        /// A slice sized once cannot be right: the cost of a tick is the cost of
+        /// walking the colony, and the colony grows *during the absence being
+        /// caught up*. Sizing by head-count at the start helped and did not
+        /// finish the job — at a hundred and sixty colonists the first slice is
+        /// still seconds long, and the bar reads "0 years · 0 %" while it runs.
+        ///
+        /// So the caller may hand back a new size after every slice, having
+        /// timed the last one. **The clock stays outside**: nothing here reads a
+        /// wall clock, and `TickEngine.advance` is the same pure loop it always
+        /// was, so a slice of 13 and a slice of 10,000 still land on the same
+        /// world (`CatchUpSliceTests`, rule 3).
+        nextSlice: ((_ lastSlice: Int) -> Int)? = nil,
         onProgress: (Int, Int) -> Void
     ) -> (result: PlannerResult, stoppedShort: Bool) {
         let total = TickEngine.ticksElapsed(
@@ -65,9 +79,10 @@ public enum GameEngine {
         var result = PlannerResult(state: state, fired: [])
         var done = 0
         var short = false
+        var size = sliceTicks
         onProgress(0, total)
         while done < total {
-            let slice = min(max(1, sliceTicks), total - done)
+            let slice = min(max(1, size), total - done)
             let step = TickEngine.advance(result.state, ticks: slice,
                                           registry: registry, stoppingWhen: halt)
             result.state = step.result.state
@@ -75,6 +90,7 @@ public enum GameEngine {
             done += step.ticksRun
             onProgress(done, total)
             if step.ticksRun < slice { short = true; break }
+            if let nextSlice { size = max(1, nextSlice(slice)) }
         }
         // Stopped short, the remaining absence is still owed: the stamp moves
         // on by what was actually simulated and no further.
