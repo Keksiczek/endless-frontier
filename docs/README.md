@@ -1,7 +1,12 @@
 # Docs — what is where
 
 > **Start here if you are picking this up cold:**
-> [`BACKLOG.md` §23](BACKLOG.md) — the newest plan. The 2.5D assets
+> [`handoffs/HANDOFF-2026-08-29.md`](handoffs/HANDOFF-2026-08-29.md) — the
+> newest. Two days on what the player can see: the 2.5D layer argued down to
+> something that stands on the ground, a raid you can answer, and four items
+> off the plan. **Its §2 is what to do next**, in order, with what each is
+> worth. Then [`BACKLOG.md` §27–30](BACKLOG.md) for how each of them went.
+> Before it: [`BACKLOG.md` §23](BACKLOG.md). The 2.5D assets
 > ([`RENDER_25D.md`](RENDER_25D.md)): `structures.json`, one composition per
 > building, with its reader; the battle caption that was drawn off the edge of
 > the world; and interiors that can finally name a building. Its §23.5 is the

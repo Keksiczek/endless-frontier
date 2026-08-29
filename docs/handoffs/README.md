@@ -15,7 +15,9 @@ current one.
 
 | Session | What it is safe for |
 |---|---|
-| [2026-08-28](HANDOFF-2026-08-28.md) | **The newest.** Three raid faults none of which were in the fight — the wrong colony, a stopped clock, a surface only reachable in the foreground — and the workshop avalanche measured and moved. Its open list is the plan |
+| [2026-08-29](HANDOFF-2026-08-29.md) | **The newest.** The 2.5D layer argued down to something that stands on the ground, a raid you can answer, and four off the plan — the crafting ladder, the fourteen, the mine measured, nine fabrics. §2 is what to do next |
+| [2026-08-29](HANDOFF-2026-08-29.md) | **The newest.** The 2.5D layer argued down to something that stands on the ground, a raid you can answer, and four off the plan — the crafting ladder, the fourteen, the mine measured, nine fabrics. §2 is what to do next |
+| [2026-08-28](HANDOFF-2026-08-28.md) | Three raid faults none of which were in the fight — the wrong colony, a stopped clock, a surface only reachable in the foreground — and the workshop avalanche measured and moved. Its open list is the plan |
 | [2026-08-27, evening](HANDOFF-2026-08-27-evening.md) | What five jobs turned into, and the observation that three sessions running began with a plan a probe then disproved |
 | [2026-08-27](HANDOFF-2026-08-27.md) | The five jobs themselves, measured on `caf5ace` |
 | [2026-08-25, evening](HANDOFF-2026-08-25-evening.md) | The batch Keks planned; 1548 tests in 218 suites at the time |
