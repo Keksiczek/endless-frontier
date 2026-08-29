@@ -4627,7 +4627,47 @@ Still over the line, in order of how much of them is read-only:
 `SiegeEngine` 1,949 · `SettlementStructures` 1,633 · `SettlementFigures` 1,368 ·
 `AgentMotion` 1,286 · `StewardEngine` 1,283.
 
-### 31.5 — still open
+### 31.5 — where the negative knowledge comes from
+
+Keks, reading §31.1: *"stojí to nějaké budovy, mám pocit."* He is right, and the
+answer is in `ResourceLoop.upkeep`'s own comment: **upkeep is a standing
+fraction of what a building cost to raise, in the same resources it cost** —
+which for the thirty-five buildings that cost knowledge means they draw
+knowledge every tick they stand.
+
+The arithmetic, and it is rule 24's shape again (say a per-tick rate out loud
+times `ticksPerYear` before believing it):
+
+- `upkeepRateOfCost` is 0.005 a tick — **30% of the build price a year, for
+  ever**. A building repays its own price in upkeep every three and a third
+  years.
+- 35 buildings cost knowledge and **26 of them produce none**: a fusion reactor
+  draws 72 a year and makes nothing, an arcology 60, an automated factory 48.
+- One of each standing draws 858 a year, 488 of it from buildings with no
+  knowledge output at all.
+
+So the negative income at years 90–120 is not a mystery and not a bug in the
+tree: it is rule 25 exactly — *a sink that grows with everything you own,
+against an income that only grows when you build one of the ten things that
+make knowledge*. A colony that industrialises stops being able to study, which
+is the opposite of what an industrial age should mean.
+
+**Not fixed here**, because the two candidate fixes point different ways and one
+measurement will tell them apart:
+
+1. **Knowledge is not maintenance.** Materials and food are consumed by keeping
+   a thing standing; *knowledge is not*, and arguably never should have been —
+   a building does not forget how it was built. Dropping knowledge from the
+   derived upkeep is one line and would leave the sink the comment wanted only
+   where a building genuinely spends study (`consumption`, hand-authored).
+2. **Or the rate is wrong for this one resource** — 30% a year of a 240-point
+   reactor is 72, against a university's 960 a year of output.
+
+Measure first: print knowledge output against knowledge upkeep per year across
+two centuries, the way `OreProbe` printed the seam. `ResearchProbe` is the place
+and it already runs the years.
+
+### 31.6 — still open
 
 1. **Catch-up sits at "0 years · 0%" for about forty seconds** at real colony
    size (§16.4). Slice by *time* rather than by a fixed tick count.
